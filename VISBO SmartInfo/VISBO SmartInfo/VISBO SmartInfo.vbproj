@@ -41,7 +41,7 @@
     <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.0.10</ApplicationVersion>
+    <ApplicationVersion>1.0.0.11</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -227,8 +227,16 @@
   -->
   <ItemGroup>
     <AppDesigner Include="My Project\" />
+    <Compile Include="clsChangeItem.vb" />
+    <Compile Include="clsChangeListe.vb" />
     <Compile Include="clsLanguages.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
+    <Compile Include="frmChanges.Designer.vb">
+      <DependentUpon>frmChanges.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmChanges.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmPPTTimeMachine.Designer.vb">
       <DependentUpon>frmPPTTimeMachine.vb</DependentUpon>
     </Compile>
@@ -272,6 +280,9 @@
     <Compile Include="ThisAddIn.vb">
       <SubType>Code</SubType>
     </Compile>
+    <EmbeddedResource Include="frmChanges.resx">
+      <DependentUpon>frmChanges.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmPPTTimeMachine.resx">
       <DependentUpon>frmPPTTimeMachine.vb</DependentUpon>
     </EmbeddedResource>

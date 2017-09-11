@@ -175,7 +175,7 @@ Public Class frmProjektEingabe1
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-
+        Dim msgtxt As String = ""
 
         With projectName
 
@@ -190,21 +190,48 @@ Public Class frmProjektEingabe1
 
             If Len(.Text) < 2 Then
 
-
-                MsgBox("Projektname muss mindestens zwei Zeichen haben!")
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Projektname has to be at least 2 characters!"
+                Else
+                    msgtxt = "Projektname muss mindestens zwei Zeichen haben!"
+                End If
+                Call MsgBox(msgtxt)
                 .Text = ""
                 .Undo()
                 DialogResult = System.Windows.Forms.DialogResult.None
 
             Else
                 If IsNumeric(.Text) Then
-                    MsgBox("Zahlen sind nicht zugelassen")
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "numbers are not permitted as projectnames"
+                    Else
+                        msgtxt = "Zahlen sind nicht zugelassen"
+                    End If
+                    Call MsgBox(msgtxt)
+
                     .Text = ""
                     .Undo()
                     DialogResult = System.Windows.Forms.DialogResult.None
 
                 ElseIf inProjektliste(.Text) Then
-                    MsgBox("Projekt-Name bereits vorhanden !")
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "projectname does already exist"
+                    Else
+                        msgtxt = "Projekt-Name bereits vorhanden !"
+                    End If
+                    Call MsgBox(msgtxt)
+
+                    .Text = ""
+                    .Undo()
+                    DialogResult = System.Windows.Forms.DialogResult.None
+                ElseIf Not isValidProjectName(.Text) Then
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "projectname must not contain any #, (, ) characters"
+                    Else
+                        msgtxt = "Der Projekt-Name darf keine #, (, ) Zeichen enthalten"
+                    End If
+                    Call MsgBox(msgtxt)
+
                     .Text = ""
                     .Undo()
                     DialogResult = System.Windows.Forms.DialogResult.None
@@ -648,6 +675,8 @@ Public Class frmProjektEingabe1
 
         ' jetzt das Vorlagen Projekt bestimmen 
         vproj = Projektvorlagen.getProject(vorlagenDropbox.Text)
+
+
         If vproj.getSummeKosten > 0 Then
             Me.lblProfitField.Visible = True
             Me.profitAskedFor.Visible = True

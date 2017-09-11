@@ -17,7 +17,6 @@ Public Class frmOptimizeKPI
         Dim title As String
         Dim selectedIndex As Integer = 0
         Dim lfdNr As Integer = 0
-        Dim activeChart As xlNS.Chart
         Dim tmpstr(3) As String
 
         ' hier müssen die Buttons sichtbar gesetzt werden
@@ -37,13 +36,8 @@ Public Class frmOptimizeKPI
         ' gibt es ein ActiveChart? ja, dann als Default Eintrag nehmen 
 
 
-        Try
-            activeChart = appInstance.ActiveWorkbook.ActiveChart
-        Catch ex As Exception
-            activeChart = Nothing
-        End Try
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), xlNS.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPfCharts)), xlNS.Worksheet)
 
 
             For Each chtobj As xlNS.ChartObject In CType(.ChartObjects, xlNS.ChartObjects)
@@ -56,12 +50,6 @@ Public Class frmOptimizeKPI
                             title = tmpstr(0)
                             tmpListe.Add(tmpKennung, title)
                             Me.auswahlKPI.Items.Add(title)
-                            If Not IsNothing(activeChart) Then
-                                If activeChart.ChartTitle.Text = title Then
-                                    selectedIndex = lfdNr
-                                    kennung = tmpKennung
-                                End If
-                            End If
                             lfdNr = lfdNr + 1
                         End If
                     End If

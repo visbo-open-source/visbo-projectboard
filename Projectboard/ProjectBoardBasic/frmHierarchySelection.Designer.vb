@@ -92,7 +92,7 @@ Partial Class frmHierarchySelection
         'hryStufenLabel
         '
         Me.hryStufenLabel.AutoSize = True
-        Me.hryStufenLabel.Location = New System.Drawing.Point(202, 45)
+        Me.hryStufenLabel.Location = New System.Drawing.Point(122, 93)
         Me.hryStufenLabel.Name = "hryStufenLabel"
         Me.hryStufenLabel.Size = New System.Drawing.Size(264, 13)
         Me.hryStufenLabel.TabIndex = 35
@@ -101,9 +101,9 @@ Partial Class frmHierarchySelection
         '
         'hryStufen
         '
-        Me.hryStufen.Location = New System.Drawing.Point(489, 43)
+        Me.hryStufen.Location = New System.Drawing.Point(439, 86)
         Me.hryStufen.Name = "hryStufen"
-        Me.hryStufen.Size = New System.Drawing.Size(57, 20)
+        Me.hryStufen.Size = New System.Drawing.Size(113, 20)
         Me.hryStufen.TabIndex = 34
         Me.hryStufen.Value = New Decimal(New Integer() {10, 0, 0, 0})
         Me.hryStufen.Visible = False
@@ -225,6 +225,7 @@ Partial Class frmHierarchySelection
         Me.SelectionSet.Location = New System.Drawing.Point(12, 455)
         Me.SelectionSet.Name = "SelectionSet"
         Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionSet.TabIndex = 51
         Me.SelectionSet.TabStop = False
         '
@@ -235,6 +236,7 @@ Partial Class frmHierarchySelection
         Me.collapseCompletely.Location = New System.Drawing.Point(67, 455)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.collapseCompletely.TabIndex = 47
         Me.collapseCompletely.TabStop = False
         '
@@ -245,6 +247,7 @@ Partial Class frmHierarchySelection
         Me.expandCompletely.Location = New System.Drawing.Point(89, 455)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.expandCompletely.TabIndex = 46
         Me.expandCompletely.TabStop = False
         '
@@ -256,6 +259,7 @@ Partial Class frmHierarchySelection
         Me.SelectionReset.Location = New System.Drawing.Point(34, 455)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.SelectionReset.TabIndex = 45
         Me.SelectionReset.TabStop = False
         '
@@ -414,7 +418,7 @@ Partial Class frmHierarchySelection
         'rdbProjStruktProj
         '
         Me.rdbProjStruktProj.AutoSize = True
-        Me.rdbProjStruktProj.Location = New System.Drawing.Point(394, 5)
+        Me.rdbProjStruktProj.Location = New System.Drawing.Point(368, 3)
         Me.rdbProjStruktProj.Name = "rdbProjStruktProj"
         Me.rdbProjStruktProj.Size = New System.Drawing.Size(140, 17)
         Me.rdbProjStruktProj.TabIndex = 67
@@ -447,7 +451,7 @@ Partial Class frmHierarchySelection
         Me.Panel1.Controls.Add(Me.pictureRoles)
         Me.Panel1.Controls.Add(Me.pictureCosts)
         Me.Panel1.Controls.Add(Me.rdbCosts)
-        Me.Panel1.Location = New System.Drawing.Point(12, 69)
+        Me.Panel1.Location = New System.Drawing.Point(12, 12)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(540, 41)
         Me.Panel1.TabIndex = 70
@@ -464,11 +468,11 @@ Partial Class frmHierarchySelection
         '
         'picturePhaseMilest
         '
-        Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.gear
+        Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.phases_und_milestones_248x248
         Me.picturePhaseMilest.Location = New System.Drawing.Point(193, 5)
         Me.picturePhaseMilest.Name = "picturePhaseMilest"
         Me.picturePhaseMilest.Size = New System.Drawing.Size(33, 33)
-        Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
+        Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.picturePhaseMilest.TabIndex = 66
         Me.picturePhaseMilest.TabStop = False
         Me.picturePhaseMilest.Visible = False
@@ -478,7 +482,7 @@ Partial Class frmHierarchySelection
         Me.Panel2.Controls.Add(Me.rdbProjStruktTyp)
         Me.Panel2.Controls.Add(Me.rdbNameList)
         Me.Panel2.Controls.Add(Me.rdbProjStruktProj)
-        Me.Panel2.Location = New System.Drawing.Point(12, 12)
+        Me.Panel2.Location = New System.Drawing.Point(12, 59)
         Me.Panel2.Name = "Panel2"
         Me.Panel2.Size = New System.Drawing.Size(542, 25)
         Me.Panel2.TabIndex = 71
@@ -500,6 +504,7 @@ Partial Class frmHierarchySelection
         Me.Controls.Add(Me.auswLaden)
         Me.Controls.Add(Me.Panel2)
         Me.Controls.Add(Me.Panel1)
+        Me.Controls.Add(Me.hryStufen)
         Me.Controls.Add(Me.filterBox)
         Me.Controls.Add(Me.headerLine)
         Me.Controls.Add(Me.SelectionSet)
@@ -517,7 +522,6 @@ Partial Class frmHierarchySelection
         Me.Controls.Add(Me.repVorlagenDropbox)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.hryStufenLabel)
-        Me.Controls.Add(Me.hryStufen)
         Me.Controls.Add(Me.hryTreeView)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmHierarchySelection"

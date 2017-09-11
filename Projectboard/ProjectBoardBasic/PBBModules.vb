@@ -198,10 +198,11 @@ Public Module PBBModules
         ElseIf controlID = "PT0G1B8" Then
 
             Dim currentFilterConstellation As clsConstellation = currentSessionConstellation.copy("Filter Result")
+            beforeFilterConstellation = currentSessionConstellation.copy("beforeFilter")
 
             Dim formerEoU As Boolean = enableOnUpdate
             enableOnUpdate = False
-
+            Dim filter As clsFilter = Nothing
 
             Try
                 With nameFormular
@@ -209,8 +210,11 @@ Public Module PBBModules
                     Dim anzP As Integer = ShowProjekte.Count
                     .menuOption = PTmenue.sessionFilterDefinieren
                     .actionCode = PTTvActions.chgInSession
+
+
                     returnValue = .ShowDialog
-                    Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
+                    filter = filterDefinitions.retrieveFilter("Last")
+
 
                     ' Anzeigen ...
                     Dim removeList As New Collection
@@ -272,7 +276,7 @@ Public Module PBBModules
                         Call showConstellations(constellationsToShow:=tmpConstellation, _
                                                 clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
 
-                        Call awinNeuZeichnenDiagramme(2)
+                        ''Call awinNeuZeichnenDiagramme(2)
 
                     End If
 
@@ -283,6 +287,53 @@ Public Module PBBModules
             End Try
 
             enableOnUpdate = formerEoU
+
+        ElseIf controlID = "PT0G1B9" Then
+
+            Dim formerEoU As Boolean = enableOnUpdate
+            enableOnUpdate = False
+            Dim filter As clsFilter = Nothing
+
+            Try
+                If IsNothing(beforeFilterConstellation) Then
+
+                    If awinSettings.visboDebug Then
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("There is no active filter!")
+                        Else
+                            Call MsgBox("Es ist kein Filter gesetzt!")
+                        End If
+
+                    End If
+                Else
+
+                    ' erst am Ende alle Diagramme neu machen ...
+                    Dim tmpConstellations As New clsConstellations
+                    tmpConstellations.Add(beforeFilterConstellation)
+
+                    '' es in der Session Liste verfügbar machen
+                    'If projectConstellations.Contains(beforeFilterConstellation.constellationName) Then
+                    '    projectConstellations.Remove(beforeFilterConstellation.constellationName)
+                    'End If
+
+                    'projectConstellations.Add(beforeFilterConstellation)
+
+                    Call showConstellations(constellationsToShow:=tmpConstellations, _
+                                            clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                End If
+
+            Catch ex As Exception
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("Fehler beim Zurücksetzen des Filters")
+                End If
+
+            End Try
+
+            enableOnUpdate = formerEoU
+
 
         ElseIf ShowProjekte.Count > 0 Then
 
@@ -430,7 +481,7 @@ Public Module PBBModules
                     End If
                     Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
-                    
+
                 End If
 
                 awinSettings.useHierarchy = True
@@ -518,7 +569,7 @@ Public Module PBBModules
                     ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
                     ' dalse, dann auf True gesetzt werden
                     ' bei .show darf das nicht gemacht werden ! 
-                    
+
 
                 Else
 
@@ -877,8 +928,6 @@ Public Module PBBModules
                             .timeStamp = Date.Now
                             .shpUID = hproj.shpUID
                             .tfZeile = hproj.tfZeile
-                            ' war vorher immer ProjektStatus(0)
-                            .Status = ProjektStatus(1)
 
                         End With
 
@@ -1187,6 +1236,7 @@ Public Module PBBModules
 
         Dim changePortfolio As New frmProjPortfolioAdmin
 
+        Call awinDeSelect(True)
 
         If AlleProjekte.Count > 0 Then
             ' das letzte Portfolio speichern 
@@ -1226,8 +1276,12 @@ Public Module PBBModules
                 Call MsgBox(ex.Message)
             End Try
         Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no projects loaded ...")
+            Else
+                Call MsgBox("keine Projekte geladen ...")
+            End If
 
-            Call MsgBox("keine Projekte geladen ...")
         End If
         
 

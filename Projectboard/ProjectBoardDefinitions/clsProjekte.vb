@@ -485,7 +485,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleNames() As Collection
+    Public ReadOnly Property getRoleNames(Optional ByVal includingParentRoles As Boolean = False) As Collection
         Get
             Dim tmpListe As New Collection
 
@@ -497,6 +497,25 @@ Public Class clsProjekte
                 For Each tmpName As String In tmpCollection
                     If Not tmpListe.Contains(tmpName) Then
                         tmpListe.Add(tmpName, tmpName)
+                        If includingParentRoles Then
+                            Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(tmpName)
+                            Dim parentRole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
+                            Dim grandparentRole As clsRollenDefinition = Nothing
+                            If Not IsNothing(parentRole) Then
+                                If Not tmpListe.Contains(parentRole.name) Then
+                                    tmpListe.Add(parentRole.name, parentRole.name)
+                                    grandparentRole = RoleDefinitions.getParentRoleOf(parentRole.UID)
+                                    Do While Not IsNothing(grandparentRole)
+                                        If Not tmpListe.Contains(grandparentRole.name) Then
+                                            tmpListe.Add(grandparentRole.name, grandparentRole.name)
+                                            grandparentRole = RoleDefinitions.getParentRoleOf(grandparentRole.UID)
+                                        Else
+                                            grandparentRole = Nothing
+                                        End If
+                                    Loop
+                                End If
+                            End If
+                        End If
                     End If
                 Next
 

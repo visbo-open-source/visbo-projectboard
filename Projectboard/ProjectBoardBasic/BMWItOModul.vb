@@ -347,11 +347,10 @@ Public Module BMWItOModul
 
                         Try
 
-                            hproj.name = pName
+                            hproj.name = makeValidProjectName(pName)
                             hproj.startDate = startDate
                             ' Projekte sollten erstmal nicht verschoben werden können
                             ' dazu muss eine Variante erzeugt werden , die kann dann verschoben werden 
-                            hproj.Status = ProjektStatus(1)
 
                             If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
                                 hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)

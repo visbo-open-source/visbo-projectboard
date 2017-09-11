@@ -73,7 +73,7 @@ Public Class clsawinSettings
     Public Property propAnpassRess As Boolean
 
     ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
-    Public Property phasesProzentual As Boolean = False
+    Public Property phasesProzentual As Boolean
 
     
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
@@ -224,7 +224,7 @@ Public Class clsawinSettings
     Sub New()
 
         ' Chart Settings
-        _fontsizeTitle = 12
+        _fontsizeTitle = 10
         _fontsizeLegend = 8
         _fontsizeItems = 8
         _CPfontsizeTitle = 10
@@ -263,7 +263,7 @@ Public Class clsawinSettings
         _milestoneFreeFloat = True
         _autoCorrectBedarfe = True
         _propAnpassRess = False
-        _phasesProzentual = False
+        _phasesProzentual = True
         _drawphases = False
         _showValuesOfSelected = False
         _applyFilter = False

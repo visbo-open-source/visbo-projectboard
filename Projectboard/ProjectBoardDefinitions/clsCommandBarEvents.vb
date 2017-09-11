@@ -161,10 +161,6 @@ Public Class clsCommandBarEvents
 
                                 zeile = calcYCoordToZeile(shpelement.Top)
 
-                                ' wenn Röntgen Blick an ist: 
-                                If roentgenBlick.isOn Then
-                                    Call NoshowNeedsofProject(hproj.name)
-                                End If
 
                                 If zeile = 0 Or shpelement.Rotation <> 0 And _
                                     (shapeType = PTshty.projektC Or shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
@@ -177,7 +173,7 @@ Public Class clsCommandBarEvents
                                     updateKennung = 3
                                     ChartsNeedUpdate = True
 
-                                ElseIf hproj.Status = ProjektStatus(0) Then
+                                ElseIf hproj.movable Then
                                     ' nur dann kann verschoben/gedehnt/gestaucht werden - das wird in der Property sync gemacht
                                     ' hier wird das Projekt mit den Shape Werten "synchronisiert" 
                                     projectboardShapes.sync(shpelement, selCollection)
@@ -190,15 +186,6 @@ Public Class clsCommandBarEvents
                                     projectboardShapes.sync(shpelement, selCollection)
 
                                     ChartsNeedUpdate = False
-
-                                End If
-
-
-                                ' wenn Röntgen Blick an ist und notMovedToNoshow
-                                If roentgenBlick.isOn And Not movedToNoshow Then
-                                    With roentgenBlick
-                                        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=hproj.name)
-                                    End With
 
                                 End If
 
@@ -256,7 +243,7 @@ Public Class clsCommandBarEvents
                                 '.dauer = laenge
                                 .tfZeile = zeile + anzahlZeilen - 1
                                 '.tfSpalte = spalte
-                                .Status = ProjektStatus(0)
+                                .Status = ProjektStatus(PTProjektStati.geplant)
                                 ' Änderung 8.11 : ein neues Projekt sollte in der Zukunft angelegt werden, wenn oldproj.startdate in der Vergangenheit liegt - 
                                 ' ansonsten ein Termin ein Monat nach oldproj ..
 
@@ -320,12 +307,6 @@ Public Class clsCommandBarEvents
                             End Try
 
 
-                            If roentgenBlick.isOn Then
-                                With roentgenBlick
-                                    Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
-                                End With
-                            End If
-
                             If shapeType = PTshty.projektE Or shapeType = PTshty.projektC Then
                                 '
                                 ' zusammengesetztes Shape 
@@ -377,8 +358,10 @@ Public Class clsCommandBarEvents
 
                         ' Änderung 8.6.14 hier werden jetzt die Projekt Charts aktualisiert, sofern welche da sind und die Time Machine nicht aktiv ist
                         If Not timeMachineIsOn Then
+                            ' Änderung tk , Charts ollen jetzt nicht mehr mit Selektion geupdated werden , sondern 
+                            ' nur mit Selektion aus Portfolio Browser
                             Call aktualisierePMSForms(hproj)
-                            Call aktualisiereCharts(hproj, True)
+                            'Call aktualisiereCharts(hproj, True)
                         End If
 
 
@@ -400,7 +383,7 @@ Public Class clsCommandBarEvents
 
                                 projectboardShapes.sync(shpelement, selCollection)
 
-                                If hproj.Status = ProjektStatus(0) Then
+                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
                                     ' Charts müssen aktualisiert werden 
                                     updateKennung = 2
                                     ChartsNeedUpdate = True
@@ -453,7 +436,7 @@ Public Class clsCommandBarEvents
 
                             If somethingChanged Then
 
-                                If hproj.Status = ProjektStatus(0) Then
+                                If hproj.movable Then
                                     ' nur dann kann verschoben werden - das wird in der Property sync gemacht
                                     ' hier wird das Projekt mit den Shape Werten "synchronisiert" 
                                     projectboardShapes.sync(shpelement, selCollection)
@@ -552,11 +535,6 @@ Public Class clsCommandBarEvents
 
                 For i = 1 To tmpDelListe.Count
                     pname = CStr(tmpDelListe.Item(i))
-
-                    If roentgenBlick.isOn Then
-                        Call NoshowNeedsofProject(pname)
-                        somethingChanged = False
-                    End If
 
 
                     ' Änderung 18.6.2013: notwendig, weil durch Drücken der Del Taste das Shape gelöscht wurde; 

@@ -194,30 +194,7 @@ Public Class clsEventsPrcCharts
                                  "Visualisieren - Phasen")
 
                 ElseIf name <> "" Then
-                    Dim screenUpdateFormerState As Boolean = appInstance.ScreenUpdating
-                    appInstance.ScreenUpdating = False
-
-                    With roentgenBlick
-                        If .isOn And .name = name And .type = diagrammTyp Then
-                            .isOn = False
-                            .name = ""
-                            .myCollection = Nothing
-                            .type = ""
-                            Call awinNoshowProjectNeeds()
-                        Else
-                            If .isOn Then
-                                Call awinNoshowProjectNeeds()
-                            End If
-                            .isOn = True
-                            .name = name
-                            .myCollection = myCollection
-                            .type = diagrammTyp
-                            Call awinShowProjectNeeds1(myCollection, diagrammTyp)
-                        End If
-                    End With
-
-
-                    appInstance.ScreenUpdating = screenUpdateFormerState
+                    
                 Else
                     Call MsgBox("für dieses Diagramm ist der Röntgenblick nicht verfügbar")
                 End If
@@ -252,7 +229,7 @@ Public Class clsEventsPrcCharts
 
                                 With kvp.Value
 
-                                    If .StartOffset <> 0 And .Status = ProjektStatus(0) Then
+                                    If .StartOffset <> 0 And .Status = ProjektStatus(PTProjektStati.geplant) Then
                                         .startDate = .startDate.AddMonths(.StartOffset)
 
                                         If .StartOffset < 0 Then
@@ -268,7 +245,7 @@ Public Class clsEventsPrcCharts
                                             Call .syncXWertePhases()
                                         End If
 
-                                        
+
                                         Dim phaseList As Collection = projectboardShapes.getPhaseList(.name)
                                         Dim milestoneList As Collection = projectboardShapes.getMilestoneList(.name)
 
@@ -554,20 +531,6 @@ Public Class clsEventsPrcCharts
                         ElseIf diagOBJ.gsCollection.Count > 1 Then
                             name = "Collection"
                         End If
-
-
-                        With roentgenBlick
-                            If .isOn Then
-                                Call awinNoshowProjectNeeds()
-                            End If
-                            .isOn = True
-                            .name = name
-                            .myCollection = diagOBJ.gsCollection
-                            .type = diagOBJ.diagrammTyp
-                            Call awinShowProjectNeeds1(diagOBJ.gsCollection, diagOBJ.diagrammTyp)
-                            'End If
-                        End With
-
 
 
 

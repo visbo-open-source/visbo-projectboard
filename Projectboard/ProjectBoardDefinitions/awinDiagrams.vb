@@ -526,12 +526,18 @@ Public Module awinDiagrams
 
                         Else
                             Dim legendName As String = ""
-                            If awinSettings.englishLanguage Then
-                                legendName = "Sum over all projects"
-                            Else
-                                legendName = "Summe über alle Projekte"
-                            End If
+                            If Not calledfromReporting Then
+                                If awinSettings.englishLanguage Then
+                                    legendName = "Sum over all projects"
+                                Else
+                                    legendName = "Summe über alle Projekte"
+                                End If
 
+                            Else
+                                'legendName = "Summe über alle Projekte"
+                                legendName = repMessages.getmsg(275)
+                            End If
+                         
                             If prcTyp = DiagrammTypen(5) Then
 
                                 ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
@@ -561,11 +567,17 @@ Public Module awinDiagrams
 
                                     If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                         ' repmsg!
-                                        If awinSettings.englishLanguage Then
-                                            .Name = legendName & ": placeholder"
+                                        If Not calledfromReporting Then
+                                            If awinSettings.englishLanguage Then
+                                                .Name = legendName & ": placeholder"
+                                            Else
+                                                .Name = legendName & ": Platzhalter"
+                                            End If
                                         Else
-                                            .Name = legendName & ": Platzhalter"
+                                            '.Name = legendName & ": Platzhalter"
+                                            .Name = legendName & ": " & repMessages.getmsg(276)
                                         End If
+                                        
                                     Else
                                         .Name = legendName
                                     End If
@@ -589,10 +601,15 @@ Public Module awinDiagrams
                                     ' alle anderen zeigen 
                                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                                        If awinSettings.englishLanguage Then
-                                            .Name = legendName & ": assigned"
+                                        If calledfromReporting Then
+                                            '.Name = legendName & ": zugeordnet"
+                                            .Name = legendName & ": " & repMessages.getmsg(277)
                                         Else
-                                            .Name = legendName & ": zugeordnet"
+                                            If awinSettings.englishLanguage Then
+                                                .Name = legendName & ": assigned"
+                                            Else
+                                                .Name = legendName & ": zugeordnet"
+                                            End If
                                         End If
 
                                         .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -751,7 +768,7 @@ Public Module awinDiagrams
                                 .Name = repMessages.getmsg(260)
                             End If
 
-                            .Border.Color = rollenKapaFarbe
+                            '.Border.Color = rollenKapaFarbe
                             .Values = kdatenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlLine
@@ -1392,6 +1409,7 @@ Public Module awinDiagrams
                                     If selectedProjekte.Count = 1 Then
                                         .Name = selectedProjekte.getProject(1).name
                                     Else
+
                                         If awinSettings.englishLanguage Then
                                             .Name = "selected projects"
                                         Else
@@ -1417,7 +1435,6 @@ Public Module awinDiagrams
                         With CType(CType(chtobj.Chart.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                             If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
-                                ' repmsg!
                                 If awinSettings.englishLanguage Then
                                     .Name = legendName & ": placeholder"
                                 Else
@@ -1554,7 +1571,7 @@ Public Module awinDiagrams
                         .Name = repMessages.getmsg(260)
                     End If
 
-                    .Border.Color = rollenKapaFarbe
+                    '.Border.Color = rollenKapaFarbe
                     .Values = kdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
@@ -5243,341 +5260,341 @@ Public Module awinDiagrams
 
     End Sub
 
-    '
-    ' zeigt für alle/die selektierten Projekte die Bedarfe für die jeweilige Rolle an
-    '
-    Sub awinShowProjectNeeds1(ByRef mycollection As Collection, type As String)
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
+    ''
+    '' zeigt für alle/die selektierten Projekte die Bedarfe für die jeweilige Rolle an
+    ''
+    'Sub awinShowProjectNeeds1(ByRef mycollection As Collection, type As String)
+    '    Dim formerSU As Boolean = appInstance.ScreenUpdating
 
-        appInstance.ScreenUpdating = False
+    '    appInstance.ScreenUpdating = False
 
-        ' jetzt überprüfen, ob Projekte selektiert sind
-        If selectedProjekte.Count > 0 Then
-            ' dann die Werte in die Excel Zellen der selektierten Projekte schreiben 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
-                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
-            Next kvp
-        Else
+    '    ' jetzt überprüfen, ob Projekte selektiert sind
+    '    If selectedProjekte.Count > 0 Then
+    '        ' dann die Werte in die Excel Zellen der selektierten Projekte schreiben 
+    '        For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+    '            Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+    '        Next kvp
+    '    Else
 
-            ' sonst die Werte aller geladenen Projekte in die Excel Zellen schreiben 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
-            Next kvp
-        End If
-
-
-        ' jetzt wieder alle Shapes sichtbar machen 
-
-        appInstance.ScreenUpdating = formerSU
+    '        ' sonst die Werte aller geladenen Projekte in die Excel Zellen schreiben 
+    '        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+    '            Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+    '        Next kvp
+    '    End If
 
 
-    End Sub
+    '    ' jetzt wieder alle Shapes sichtbar machen 
+
+    '    appInstance.ScreenUpdating = formerSU
 
 
+    'End Sub
+
+    ' tk 21.8.17 wird nicht mehr angeboten 
     '
     ' löscht für alle Projekte die Bedarfe für die jeweilige Rolle an
     '
-    Sub awinNoshowProjectNeeds()
+    'Sub awinNoshowProjectNeeds()
 
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        appInstance.ScreenUpdating = False
-
-
-        Call diagramsVisible(False)
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            Call NoshowNeedsofProject(kvp.Key)
-        Next kvp
-
-        Call diagramsVisible(True)
+    '    Dim formerSU As Boolean = appInstance.ScreenUpdating
+    '    appInstance.ScreenUpdating = False
 
 
-        appInstance.ScreenUpdating = formerSU
+    '    Call diagramsVisible(False)
+
+    '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+    '        Call NoshowNeedsofProject(kvp.Key)
+    '    Next kvp
+
+    '    Call diagramsVisible(True)
 
 
-    End Sub
-
-    '
-    ' zeigt für das gewählte Projekt die Bedarfe für die angegebene Rolle an
-    '
-    ''' <summary>
-    ''' zeigt für das entsprechende Diagramm-Typ und jeweiligen prcname die entsprechenden Werte  
-    ''' </summary>
-    ''' <param name="mycollection">enthält ggf die zu betrachtende Menge an Werten</param>
-    ''' <param name="type">wert aus DiagrammTypen 0..4 </param>
-    ''' <param name="projektname">NAme des Projekts aus ShowProjekte</param>
-    ''' <remarks></remarks>
-    Sub awinShowNeedsofProject1(ByRef mycollection As Collection, ByVal type As String, ByVal projektname As String)
-
-        Dim i As Integer, k As Integer, l As Integer, m As Integer
-
-        Dim tempArray() As Double
-        Dim pname As String = " "
-        'Dim showKostenart As Boolean
-        Dim hproj As New clsProjekt
-        Dim sfarbe As Object
-        Dim sgroesse As Integer
-        'Dim prcName As String
-        'Dim itemName As String
-        Dim persCost As String = CostDefinitions.getCostdef(CostDefinitions.Count).name
-        Dim shpelement As Excel.Shape
-        Dim tmpshapes As Excel.Shapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+    '    appInstance.ScreenUpdating = formerSU
 
 
-        Try
-            hproj = ShowProjekte.getProject(projektname)
-        Catch ex As Exception
-            Call MsgBox("Projekt nicht gefunden (in ShowNeedsofProject): " & projektname)
-            Exit Sub
-        End Try
+    'End Sub
+
+    ''
+    '' zeigt für das gewählte Projekt die Bedarfe für die angegebene Rolle an
+    ''
+    ' ''' <summary>
+    ' ''' zeigt für das entsprechende Diagramm-Typ und jeweiligen prcname die entsprechenden Werte  
+    ' ''' </summary>
+    ' ''' <param name="mycollection">enthält ggf die zu betrachtende Menge an Werten</param>
+    ' ''' <param name="type">wert aus DiagrammTypen 0..4 </param>
+    ' ''' <param name="projektname">NAme des Projekts aus ShowProjekte</param>
+    ' ''' <remarks></remarks>
+    'Sub awinShowNeedsofProject1(ByRef mycollection As Collection, ByVal type As String, ByVal projektname As String)
+
+    '    Dim i As Integer, k As Integer, l As Integer, m As Integer
+
+    '    Dim tempArray() As Double
+    '    Dim pname As String = " "
+    '    'Dim showKostenart As Boolean
+    '    Dim hproj As New clsProjekt
+    '    Dim sfarbe As Object
+    '    Dim sgroesse As Integer
+    '    'Dim prcName As String
+    '    'Dim itemName As String
+    '    Dim persCost As String = CostDefinitions.getCostdef(CostDefinitions.Count).name
+    '    Dim shpelement As Excel.Shape
+    '    Dim tmpshapes As Excel.Shapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
 
 
-        Dim anzahlTage As Integer = hproj.dauerInDays
+    '    Try
+    '        hproj = ShowProjekte.getProject(projektname)
+    '    Catch ex As Exception
+    '        Call MsgBox("Projekt nicht gefunden (in ShowNeedsofProject): " & projektname)
+    '        Exit Sub
+    '    End Try
 
 
-
-        Try
-            shpelement = tmpshapes.Item(projektname)
-            ' jetzt muss unterschieden werden, um welche Art es sich handelt 
-
-            With shpelement
-
-                Try
-                    If .GroupItems.Count > 1 Then
-
-                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
-                            .GroupItems.Item(1).TextFrame2.TextRange.Text = ""
-                        End If
-
-                        For i = 1 To .GroupItems.Count
-
-                            If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
-                                .GroupItems.Item(i).Line.Transparency = 0.8
-                                .GroupItems.Item(i).Fill.Transparency = 1.0
-                                .TextFrame2.TextRange.Text = ""
-                            Else
-                                If awinSettings.drawProjectLine And i = 1 Then
-
-                                    .GroupItems.Item(i).Line.Transparency = 0.8
-
-                                Else
-
-                                    .GroupItems.Item(i).Fill.Transparency = 0.8
-
-                                End If
-                            End If
+    '    Dim anzahlTage As Integer = hproj.dauerInDays
 
 
 
-                        Next
-                    Else
-                        .Fill.Transparency = 0.8
-                        .TextFrame2.TextRange.Text = ""
-                    End If
+    '    Try
+    '        shpelement = tmpshapes.Item(projektname)
+    '        ' jetzt muss unterschieden werden, um welche Art es sich handelt 
 
-                Catch ex1 As Exception
+    '        With shpelement
 
-                    .Fill.Transparency = 0.8
-                    .TextFrame2.TextRange.Text = ""
+    '            Try
+    '                If .GroupItems.Count > 1 Then
 
-                End Try
+    '                    If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
+    '                        .GroupItems.Item(1).TextFrame2.TextRange.Text = ""
+    '                    End If
 
-            End With
+    '                    For i = 1 To .GroupItems.Count
 
-        Catch ex As Exception
+    '                        If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
+    '                            .GroupItems.Item(i).Line.Transparency = 0.8
+    '                            .GroupItems.Item(i).Fill.Transparency = 1.0
+    '                            .TextFrame2.TextRange.Text = ""
+    '                        Else
+    '                            If awinSettings.drawProjectLine And i = 1 Then
 
-        End Try
+    '                                .GroupItems.Item(i).Line.Transparency = 0.8
 
-        If Not hproj Is Nothing Then
-            With hproj
-                sfarbe = RGB(0, 0, 0) '.Schriftfarbe
-                sgroesse = .Schrift
-                ' in L steht jetzt die Lä nge
-                l = .anzahlRasterElemente
-                i = .tfZeile + 1
-                k = .tfspalte
-            End With
+    '                            Else
 
-            ReDim tempArray(l - 1)
+    '                                .GroupItems.Item(i).Fill.Transparency = 0.8
 
-            tempArray = hproj.getBedarfeInMonths(mycollection, type)
-
-            Dim formerEE = appInstance.EnableEvents
-            appInstance.EnableEvents = False
-
-            ' hier muss jetzt tempArray gesetzt werden
-
-            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
-
-                Dim atleastOne As Boolean = False
-                For m = 1 To l
-                    If tempArray(m - 1) > 0 And istInTimezone(k + m - 1) Then
-
-                        Try
-                            .Cells(i, k).Offset(0, m - 1).Value = tempArray(m - 1)
-                            atleastOne = True
-                        Catch ex As Exception
-
-                        End Try
-
-                    End If
-                Next m
-
-                Dim tmpgroesse As Integer
-                If tempArray.Max > 999 Or tempArray.Min < -999 Then
-                    tmpgroesse = sgroesse - 2
-                ElseIf tempArray.Max > 9999 Or tempArray.Min < -9999 Then
-                    tmpgroesse = sgroesse - 4
-                Else
-                    tmpgroesse = sgroesse
-                End If
-
-                If atleastOne Then
-
-                    Try
-                        .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Color = sfarbe
-                        .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Size = tmpgroesse
-                    Catch ex As Exception
-
-                    End Try
-
-                End If
-
-            End With
-
-            appInstance.EnableEvents = formerEE
-
-        End If
+    '                            End If
+    '                        End If
 
 
 
-    End Sub
+    '                    Next
+    '                Else
+    '                    .Fill.Transparency = 0.8
+    '                    .TextFrame2.TextRange.Text = ""
+    '                End If
+
+    '            Catch ex1 As Exception
+
+    '                .Fill.Transparency = 0.8
+    '                .TextFrame2.TextRange.Text = ""
+
+    '            End Try
+
+    '        End With
+
+    '    Catch ex As Exception
+
+    '    End Try
+
+    '    If Not hproj Is Nothing Then
+    '        With hproj
+    '            sfarbe = RGB(0, 0, 0) '.Schriftfarbe
+    '            sgroesse = .Schrift
+    '            ' in L steht jetzt die Lä nge
+    '            l = .anzahlRasterElemente
+    '            i = .tfZeile + 1
+    '            k = .tfspalte
+    '        End With
+
+    '        ReDim tempArray(l - 1)
+
+    '        tempArray = hproj.getBedarfeInMonths(mycollection, type)
+
+    '        Dim formerEE = appInstance.EnableEvents
+    '        appInstance.EnableEvents = False
+
+    '        ' hier muss jetzt tempArray gesetzt werden
+
+    '        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+
+    '            Dim atleastOne As Boolean = False
+    '            For m = 1 To l
+    '                If tempArray(m - 1) > 0 And istInTimezone(k + m - 1) Then
+
+    '                    Try
+    '                        .Cells(i, k).Offset(0, m - 1).Value = tempArray(m - 1)
+    '                        atleastOne = True
+    '                    Catch ex As Exception
+
+    '                    End Try
+
+    '                End If
+    '            Next m
+
+    '            Dim tmpgroesse As Integer
+    '            If tempArray.Max > 999 Or tempArray.Min < -999 Then
+    '                tmpgroesse = sgroesse - 2
+    '            ElseIf tempArray.Max > 9999 Or tempArray.Min < -9999 Then
+    '                tmpgroesse = sgroesse - 4
+    '            Else
+    '                tmpgroesse = sgroesse
+    '            End If
+
+    '            If atleastOne Then
+
+    '                Try
+    '                    .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Color = sfarbe
+    '                    .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Size = tmpgroesse
+    '                Catch ex As Exception
+
+    '                End Try
+
+    '            End If
+
+    '        End With
+
+    '        appInstance.EnableEvents = formerEE
+
+    '    End If
 
 
+
+    'End Sub
+
+    ' tk, 21.8.17 Funktion wird nicht mehr angebeoten 
     '
     ' löscht für das gewählte Projekt die Bedarfe für die angegebene Rolle
     '
-    Sub NoshowNeedsofProject(ByVal projektname As String)
-        Dim hproj As clsProjekt
-        Dim sfarbe As Object
-        Dim sgroesse As Double
-        Dim i As Integer, k As Integer, l As Integer, m As Integer
-        Dim shpelement As Excel.Shape
-        Dim worksheetShapes As Excel.Shapes
-        Dim pStatus As String
+    ''Sub NoshowNeedsofProject(ByVal projektname As String)
+    ''    Dim hproj As clsProjekt
+    ''    Dim sfarbe As Object
+    ''    Dim sgroesse As Double
+    ''    Dim i As Integer, k As Integer, l As Integer, m As Integer
+    ''    Dim shpelement As Excel.Shape
+    ''    Dim worksheetShapes As Excel.Shapes
+    ''    Dim pStatus As String
 
 
-        Try
+    ''    Try
 
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
+    ''        worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
-        Catch ex As Exception
-            Throw New Exception("in NoshowNeedsofProject: keine Shapes Zuordnung möglich ")
-        End Try
-
-
-        Try
-            hproj = ShowProjekte.getProject(projektname)
-            pStatus = hproj.Status
-        Catch ex As Exception
-            Call MsgBox("Projekt nicht gefunden (in NoShowNeedsofProject): " & projektname)
-            Exit Sub
-        End Try
+    ''    Catch ex As Exception
+    ''        Throw New Exception("in NoshowNeedsofProject: keine Shapes Zuordnung möglich ")
+    ''    End Try
 
 
-        Try
-            'tmpshapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
-            shpelement = worksheetShapes.Item(projektname)
-            With shpelement
-
-                Try
-                    If .GroupItems.Count > 1 Then
-
-                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
-                            .GroupItems.Item(1).TextFrame2.TextRange.Text = projektname
-                        End If
-
-                        For i = 1 To .GroupItems.Count
-
-                            If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
-                                .GroupItems.Item(i).Line.Transparency = 0.0
-                                .GroupItems.Item(i).Fill.Transparency = 0.0
-                                .TextFrame2.TextRange.Text = hproj.getShapeText
-
-                            ElseIf awinSettings.drawProjectLine And i = 1 Then
-
-                                .GroupItems.Item(i).Line.Transparency = 0.0
-
-                            Else
-                                If pStatus = ProjektStatus(0) Then
-                                    .GroupItems.Item(i).Fill.Transparency = 0.35
-                                Else
-                                    .GroupItems.Item(i).Fill.Transparency = 0.0
-                                End If
-                            End If
-
-                        Next
-                    Else
-
-                        If pStatus = ProjektStatus(0) Then
-                            .Fill.Transparency = 0.35
-                        Else
-                            .Fill.Transparency = 0.0
-                        End If
-
-                        .TextFrame2.TextRange.Text = projektname
-                    End If
-
-                Catch ex1 As Exception
-
-                    If pStatus = ProjektStatus(0) Then
-                        .Fill.Transparency = 0.35
-                    Else
-                        .Fill.Transparency = 0.0
-                    End If
-
-                    .TextFrame2.TextRange.Text = projektname
-                End Try
+    ''    Try
+    ''        hproj = ShowProjekte.getProject(projektname)
+    ''        pStatus = hproj.Status
+    ''    Catch ex As Exception
+    ''        Call MsgBox("Projekt nicht gefunden (in NoShowNeedsofProject): " & projektname)
+    ''        Exit Sub
+    ''    End Try
 
 
-                '.Shadow.Transparency = 0.0
-            End With
+    ''    Try
+    ''        'tmpshapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
+    ''        shpelement = worksheetShapes.Item(projektname)
+    ''        With shpelement
 
-        Catch ex As Exception
+    ''            Try
+    ''                If .GroupItems.Count > 1 Then
 
-        End Try
+    ''                    If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
+    ''                        .GroupItems.Item(1).TextFrame2.TextRange.Text = projektname
+    ''                    End If
 
-        ' jetzt muss das Shape wieder auf "ohne Transparenz" gesetzt werden 
+    ''                    For i = 1 To .GroupItems.Count
 
-        If Not hproj Is Nothing Then
-            With hproj
-                sfarbe = RGB(0, 0, 0) '.Schriftfarbe
-                sgroesse = .Schrift
-                ' in L steht jetzt die Länge
-                l = .anzahlRasterElemente
-                i = .tfZeile + 1
-                k = .tfspalte
-            End With
+    ''                        If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
+    ''                            .GroupItems.Item(i).Line.Transparency = 0.0
+    ''                            .GroupItems.Item(i).Fill.Transparency = 0.0
+    ''                            .TextFrame2.TextRange.Text = hproj.getShapeText
 
-            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+    ''                        ElseIf awinSettings.drawProjectLine And i = 1 Then
 
-                appInstance.EnableEvents = False
+    ''                            .GroupItems.Item(i).Line.Transparency = 0.0
 
-                For m = 1 To l
-                    If istInTimezone(k + m - 1) Then
-                        .Cells(i, k).Offset(0, m - 1).Value = ""
-                    End If
-                Next m
+    ''                        Else
+    ''                            If pStatus = ProjektStatus(0) Then
+    ''                                .GroupItems.Item(i).Fill.Transparency = 0.35
+    ''                            Else
+    ''                                .GroupItems.Item(i).Fill.Transparency = 0.0
+    ''                            End If
+    ''                        End If
+
+    ''                    Next
+    ''                Else
+
+    ''                    If pStatus = ProjektStatus(0) Then
+    ''                        .Fill.Transparency = 0.35
+    ''                    Else
+    ''                        .Fill.Transparency = 0.0
+    ''                    End If
+
+    ''                    .TextFrame2.TextRange.Text = projektname
+    ''                End If
+
+    ''            Catch ex1 As Exception
+
+    ''                If pStatus = ProjektStatus(0) Then
+    ''                    .Fill.Transparency = 0.35
+    ''                Else
+    ''                    .Fill.Transparency = 0.0
+    ''                End If
+
+    ''                .TextFrame2.TextRange.Text = projektname
+    ''            End Try
 
 
-                appInstance.EnableEvents = True
+    ''            '.Shadow.Transparency = 0.0
+    ''        End With
 
-            End With
+    ''    Catch ex As Exception
+
+    ''    End Try
+
+    ''    ' jetzt muss das Shape wieder auf "ohne Transparenz" gesetzt werden 
+
+    ''    If Not hproj Is Nothing Then
+    ''        With hproj
+    ''            sfarbe = RGB(0, 0, 0) '.Schriftfarbe
+    ''            sgroesse = .Schrift
+    ''            ' in L steht jetzt die Länge
+    ''            l = .anzahlRasterElemente
+    ''            i = .tfZeile + 1
+    ''            k = .tfspalte
+    ''        End With
+
+    ''        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+
+    ''            appInstance.EnableEvents = False
+
+    ''            For m = 1 To l
+    ''                If istInTimezone(k + m - 1) Then
+    ''                    .Cells(i, k).Offset(0, m - 1).Value = ""
+    ''                End If
+    ''            Next m
 
 
-        End If
+    ''            appInstance.EnableEvents = True
 
-    End Sub
+    ''        End With
+
+
+    ''    End If
+
+    ''End Sub
 
 
 
@@ -5849,6 +5866,7 @@ Public Module awinDiagrams
                 Next i
 
                 ' wenn das ActiveSheet ungleich dem currentSheetName war, muss jetzt zurück gewechselt werden ... 
+                Dim xName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
                 If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> formerActiveSheet.Name Then
                     CType(formerActiveSheet, Excel.Worksheet).Activate()
                     If appInstance.EnableEvents <> formerEE Then

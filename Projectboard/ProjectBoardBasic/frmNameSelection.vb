@@ -1042,9 +1042,9 @@ Public Class frmNameSelection
                 Else
                     ' alle anderen Optionen
                     If selectedProjekte.Count > 0 Then
-                        allRoles = selectedProjekte.getRoleNames
+                        allRoles = selectedProjekte.getRoleNames(True)
                     ElseIf ShowProjekte.Count > 0 Then
-                        allRoles = ShowProjekte.getRoleNames
+                        allRoles = ShowProjekte.getRoleNames(True)
                     Else
                         For i As Integer = 1 To RoleDefinitions.Count
                             Dim tmpName As String = RoleDefinitions.getRoledef(i).name
