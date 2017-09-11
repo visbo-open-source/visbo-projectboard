@@ -98,40 +98,31 @@ Partial Friend NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
-    Public Property mongoDBURL() As String
+    Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
         End Get
-        Set
-            Me("mongoDBURL") = value
-        End Set
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("bhtc")>  _
-    Public Property mongoDBname() As String
+    Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
         End Get
-        Set
-            Me("mongoDBname") = value
-        End Set
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
-    Public Property VISBODebug() As Boolean
+    Public ReadOnly Property VISBODebug() As Boolean
         Get
             Return CType(Me("VISBODebug"),Boolean)
         End Get
-        Set
-            Me("VISBODebug") = value
-        End Set
     End Property
 End Class
 

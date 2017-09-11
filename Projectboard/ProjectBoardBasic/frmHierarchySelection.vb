@@ -692,7 +692,9 @@ Public Class frmHierarchySelection
 
             Case PTmenue.visualisieren
 
-                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                ' ur: 11.09.2017: beginnt mit ProjektStruktur
+                'auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                auswahl = PTProjektType.projekt
 
                 Select Case auswahl
                     Case PTProjektType.nameList
@@ -700,14 +702,14 @@ Public Class frmHierarchySelection
                         Me.rdbNameList.Checked = True
                         Me.rdbPhases.Checked = True
 
-                        Call buildHryTreeViewNew(auswahl)
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
 
 
                     Case PTProjektType.vorlage
 
                         Me.rdbProjStruktTyp.Checked = True
 
-                        Call buildHryTreeViewNew(auswahl)
+                        Call buildHryTreeViewNew(PTProjektType.vorlage)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                         '    hryTreeView.ExpandAll()
@@ -717,7 +719,7 @@ Public Class frmHierarchySelection
 
                         Me.rdbProjStruktProj.Checked = True
 
-                        Call buildHryTreeViewNew(auswahl)
+                        Call buildHryTreeViewNew(PTProjektType.projekt)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                         '    hryTreeView.ExpandAll()
@@ -3536,8 +3538,6 @@ Public Class frmHierarchySelection
                         selectedPhases.Clear()
                         selectedMilestones.Clear()
 
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
-
                         Me.rdbMilestones.Visible = True
                         Me.rdbPhases.Visible = True
                         Me.pictureMilestones.Visible = True
@@ -3548,6 +3548,9 @@ Public Class frmHierarchySelection
                         Me.rdbPhaseMilest.Visible = False
                         Me.picturePhaseMilest.Visible = False
                         Me.rdbNameList.Checked = True
+
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
+
                     Else
                         Call buildHryTreeViewNew(PTProjektType.vorlage)
                         Me.rdbProjStruktTyp.Checked = True
@@ -3626,13 +3629,14 @@ Public Class frmHierarchySelection
 
             End Select
 
-            If lastAuswahl <> auswahl Then
-                Call buildHryTreeViewNew(auswahl)
-            End If
+            ' ''If lastAuswahl <> auswahl Then
+            ' ''    'Call buildHryTreeViewNew(auswahl)
+            ' ''    Call MsgBox("lastAuswahl=" & lastAuswahl.ToString & vbLf & "auswahl=" & auswahl.ToString)
+            ' ''End If
 
 
         Else
-            lastAuswahl = PTProjektType.nameList
+            '??? lastAuswahl = PTProjektType.nameList
 
             auswahl = selectionTyp(selectedBUs, selectedTyps, _
                                    selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
@@ -4641,4 +4645,8 @@ Public Class frmHierarchySelection
 
 
     'End Sub
+
+    Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
+
+    End Sub
 End Class
