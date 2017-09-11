@@ -3668,7 +3668,7 @@ Public Module Module1
                 .Tags.Add("CRD", projectTimeStamp.ToString)
 
 
-                If Not noDB Then
+                If awinSettings.databaseURL.Length > 0 And awinSettings.databaseName.Length > 0 Then
                     If awinSettings.databaseURL.Length > 0 Then
                         If .Tags.Item("DBURL").Length > 0 Then
                             .Tags.Delete("DBURL")
@@ -4534,6 +4534,7 @@ Public Module Module1
 
     ''' <summary>
     ''' bestimmt in Abhängigkeit von TableTyp die Größe und Position des Fensters
+    ''' je nachdem, wieviele LegendenEinträge das Chart hat, wird die Höhe etws höher bestimmt ... 
     ''' </summary>
     ''' <param name="tableTyp"></param>
     ''' <param name="chtop"></param>
@@ -4542,6 +4543,7 @@ Public Module Module1
     ''' <param name="chHeight"></param>
     ''' <remarks></remarks>
     Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer, _
+                                            ByVal anzLegendEintraege As Integer, _
                                                 ByRef chtop As Double, _
                                                 ByRef chleft As Double, _
                                                 ByRef chwidth As Double, _
@@ -4552,8 +4554,27 @@ Public Module Module1
 
         Dim tmpTop As Double = 2.0
         Dim tmpLeft As Double = 2
+
+        Dim korrfaktorH1 As Double = 1.2
+        Dim korrfaktorH2 As Double = 1.0
+        Dim korrfaktorB As Double = 1.0
+
+        Try
+            If My.Computer.Screen.Bounds.Height < 1080 Then
+                korrfaktorH1 = 1.66
+            End If
+
+            If anzLegendEintraege > 2 Then
+                korrfaktorH2 = 1 + 0.15 * (CInt(anzLegendEintraege / 2) - 1)
+            End If
+            'korrfaktorH = 1080 / My.Computer.Screen.Bounds.Height
+            'korrfaktorB = 1920 / My.Computer.Screen.Bounds.Width
+        Catch ex As Exception
+
+        End Try
         Dim tmpWidth As Double = maxScreenWidth / 5 - 29
-        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5
+        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH1 * korrfaktorH2
+
 
         ' wenn schon Charts existieren: ein neues Chart wird immer als letztes  angehängt ..
         With currentWorksheet

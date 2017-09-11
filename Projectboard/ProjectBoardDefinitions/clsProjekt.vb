@@ -4007,6 +4007,10 @@ Public Class clsProjekt
                 ' es wird nur eine Zeile benötigt 
                 tmpValue = 1
 
+            ElseIf swimlaneID = rootPhaseName Then
+                ' für die Darstellung der Meilensteine einer Swimlane wird nur eine Zeile benötigt  
+                tmpValue = 1
+
             Else
                 ' Schleife über alle Kind Phasen der Swimlane (startnr+1 bis zu endNr)
                 ' muss erst ab startnr + 1 beginnen, da phase(startNr) ja die swimlane selber ist ... 

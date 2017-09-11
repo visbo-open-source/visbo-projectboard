@@ -4569,4 +4569,12 @@ Public Class frmProjPortfolioAdmin
         End If
 
     End Sub
+
+    Private Sub settingsBtn_Click(sender As Object, e As EventArgs)
+
+    End Sub
+
+    Private Sub frmProjPortfolioAdmin_Resize(sender As Object, e As EventArgs) Handles Me.Resize
+
+    End Sub
 End Class

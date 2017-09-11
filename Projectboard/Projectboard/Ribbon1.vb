@@ -6346,27 +6346,39 @@ Imports System.Windows
 
             repObj = Nothing
 
+            Dim tmpAnzRollen As Integer = 0
+            Dim tmpAnzCosts As Integer = 0
+
+            Try
+                tmpAnzRollen = hproj.getRoleNames.Count
+                tmpAnzCosts = hproj.getCostNames.Count
+            Catch ex As Exception
+
+            End Try
+            
+
+
             Try
                 ' Projekt-Ergebnis
-                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
 
                 Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
                                                          top, left, width, height, False)
 
                 ' Rollen-Balken
-                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                 auswahl = 1 ' zeige Personalbedarfe
                 Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                 ' Kosten-Balken
-                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                 auswahl = 1 ' zeige Sonstige Kosten
                 Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                 ' Strategie / Risiko / Marge
-                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
 
                 Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
 
@@ -6436,13 +6448,23 @@ Imports System.Windows
 
                     repObj = Nothing
 
+                    Dim tmpAnzRollen As Integer = 0
+                    Dim tmpAnzCosts As Integer = 0
+
                     Try
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                        tmpAnzRollen = hproj.getRoleNames.Count
+                        tmpAnzCosts = hproj.getCostNames.Count
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                         Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                         repObj = Nothing
                         Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
@@ -6521,14 +6543,21 @@ Imports System.Windows
                 appInstance.ScreenUpdating = False
                 Dim repObj As Excel.ChartObject = Nothing
 
+                Dim tmpAnzCosts As Integer = 0
 
                 Try
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                    tmpAnzCosts = hproj.getCostNames.Count
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                     Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                     ' jetzt wird das Pie-Diagramm gezeichnet 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                     repObj = Nothing
                     Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
@@ -6611,7 +6640,7 @@ Imports System.Windows
                     repObj = Nothing
 
                     Try
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                         Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
 
@@ -7111,7 +7140,7 @@ Imports System.Windows
 
                 Try
 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     If typ = "Curve" Then
                         Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
@@ -7998,12 +8027,12 @@ Imports System.Windows
             If myCollection.Count > 0 Then
 
                 ' Portfolio Ergebnis
-                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
 
                 Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
 
                 ' Top 3 Bottlenecks
-                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
 
                 Try
 
@@ -8020,7 +8049,7 @@ Imports System.Windows
                                 Dim roleName As String = CStr(top3Collection.Item(i))
                                 Dim tmpCollection As New Collection
                                 tmpCollection.Add(roleName)
-                                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+                                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
                                 Call awinCreateprcCollectionDiagram(tmpCollection, obj, top, left, width, height, False, DiagrammTypen(1), False)
                             Next
                         End If
@@ -8097,7 +8126,7 @@ Imports System.Windows
 
             If myCollection.Count > 0 Then
 
-                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
 
                 Try
 
@@ -8114,7 +8143,7 @@ Imports System.Windows
                                 Dim roleName As String = CStr(top3Collection.Item(i))
                                 Dim tmpCollection As New Collection
                                 tmpCollection.Add(roleName)
-                                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+                                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
                                 Call awinCreateprcCollectionDiagram(tmpCollection, obj, top, left, width, height, False, DiagrammTypen(1), False)
                             Next
                         End If
@@ -9338,7 +9367,7 @@ Imports System.Windows
 
             If myCollection.Count > 0 Then
 
-                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
 
                 Dim obj As Excel.ChartObject = Nothing
                 Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
@@ -9546,7 +9575,7 @@ Imports System.Windows
                         Dim height As Double = 0
                         Dim width As Double = 0
 
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, top, left, width, height)
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                         Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, _
                                                                  top, left, width, height, False)

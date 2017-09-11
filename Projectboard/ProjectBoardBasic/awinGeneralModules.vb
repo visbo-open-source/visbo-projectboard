@@ -1031,7 +1031,6 @@ Public Module awinGeneralModules
 
                 With appInstance.ActiveWindow
 
-
                     If .WindowState = Excel.XlWindowState.xlMaximized Then
                         'maxScreenHeight = .UsableHeight
                         maxScreenHeight = .Height
@@ -3608,8 +3607,8 @@ Public Module awinGeneralModules
                             ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                             Dim cphaseStartOffset As Long
                             Dim dauerIndays As Long
-                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start).Date)
-                            dauerIndays = calcDauerIndays(CDate(msTask.Start).Date, CDate(msTask.Finish).Date)
+                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
+                            dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
                             .changeStartandDauer(cphaseStartOffset, dauerIndays)
                             .offset = 0
 
@@ -3667,8 +3666,8 @@ Public Module awinGeneralModules
                                                 Dim work As Double = CType(ass.Work, Double)
                                                 Dim cost As Double = CType(ass.Cost, Double)
 
-                                                Dim startdate As Date = CDate(msTask.Start).Date
-                                                Dim endedate As Date = CDate(msTask.Finish).Date
+                                                Dim startdate As Date = CDate(msTask.Start)
+                                                Dim endedate As Date = CDate(msTask.Finish)
 
                                                 Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
                                                 Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
@@ -3762,8 +3761,8 @@ Public Module awinGeneralModules
                                                 Dim unit As Double = CType(ass.Units, Double)
                                                 Dim budgetWork As Double = CType(ass.BudgetWork, Double)
 
-                                                Dim startdate As Date = CDate(msTask.Start).Date
-                                                Dim endedate As Date = CDate(msTask.Finish).Date
+                                                Dim startdate As Date = CDate(msTask.Start)
+                                                Dim endedate As Date = CDate(msTask.Finish)
 
                                                 ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
                                                 ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
@@ -3958,7 +3957,7 @@ Public Module awinGeneralModules
                             Or missingMilestoneDefinitions.Contains(msTask.Name) Then
 
                             Dim msBewertung As New clsBewertung
-                            cmilestone.setDate = CType(msTask.Start, Date).Date
+                            cmilestone.setDate = CType(msTask.Start, Date)
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
                             msBewertung.description = msTask.Notes
                             If visbo_ampel <> 0 Then
@@ -4012,8 +4011,8 @@ Public Module awinGeneralModules
                     Dim anzNachfolger As Integer = msTask.SuccessorTasks.Count
                     Dim dependencies As MSProject.TaskDependencies = msTask.TaskDependencies
 
-                    Dim startTask As Date = CType(msTask.Start, Date).Date
-                    Dim endeTask As Date = CType(msTask.Finish, Date).Date
+                    Dim startTask As Date = CType(msTask.Start, Date)
+                    Dim endeTask As Date = CType(msTask.Finish, Date)
 
 
 
@@ -14241,29 +14240,33 @@ Public Module awinGeneralModules
                 'chtop = 3
                 'chleft = 3
 
-                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, chtop, chleft, chwidth, chHeight)
+
 
 
                 If selectedPhases.Count > 0 Then
                     chTyp = DiagrammTypen(0)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedPhases.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
                                                    chtop, chleft, chwidth, chheight)
                 End If
 
                 If selectedMilestones.Count > 0 Then
                     chTyp = DiagrammTypen(5)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedMilestones.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart, _
                                                    chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedRoles.Count > 0 Then
                     chTyp = DiagrammTypen(1)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedRoles.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, oneChart, _
                                                    chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedCosts.Count > 0 Then
                     chTyp = DiagrammTypen(2)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedCosts.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, oneChart, _
                                                    chtop, chleft, chwidth, chHeight)
                 End If
@@ -19316,6 +19319,8 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' schreibt die Daten der in einer todoListe übergebenen Projekt-Namen in ein extra Tabellenblatt 
     ''' die Info-Daten werden in einer Range mit Name informationColumns zusammengefasst   
+    ''' Dabei wird überprüft, was der längste mögliche Ressourcen und Kosten-Namen überhaupt ist 
+    ''' und was der längste eingetragene Namen ist ... Am Schluss wird notfalls die Spaltenbreite verlängert, damit auch der längste Namen reingeht ... 
     ''' </summary>
     ''' <param name="von"></param>
     ''' <param name="bis"></param>
@@ -19324,6 +19329,8 @@ Public Module awinGeneralModules
                                            ByVal von As Integer, ByVal bis As Integer)
 
         Dim mahleRange As Excel.Range
+        Dim maxRCLengthAbsolut As Integer = 0
+        Dim maxRCLengthVorkommen As Integer = 0
 
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
@@ -19348,6 +19355,21 @@ Public Module awinGeneralModules
             Dim ressCostColumn As Integer
             Dim tmpName As String
 
+            ' jetzt wird die maximale Länge eines Trings für Mass-Edit ermittelt 
+            For i As Integer = 1 To RoleDefinitions.Count
+                Dim curItemLength As Integer = RoleDefinitions.getRoledef(i).name.Length
+                If curItemLength > maxRCLengthAbsolut Then
+                    maxRCLengthAbsolut = curItemLength
+                End If
+            Next
+
+            For i As Integer = 1 To CostDefinitions.Count
+                Dim curItemLength As Integer = CostDefinitions.getCostdef(i).name.Length
+                If curItemLength > maxRCLengthAbsolut Then
+                    maxRCLengthAbsolut = curItemLength
+                End If
+            Next
+
             ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
             Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
             Dim anzahlRollen As Integer = RoleDefinitions.Count
@@ -19359,7 +19381,7 @@ Public Module awinGeneralModules
             rcValidation(0) = "alleKosten"
             rcValidation(anzahlRollen + 1) = "alles"
 
-            For i = 1 To anzahlRollen
+            For i As Integer = 1 To anzahlRollen
                 Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
                 If tmprole.isCombinedRole Then
                     rcValidation(i) = tmprole.name
@@ -19430,6 +19452,7 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
+                    maxRCLengthVorkommen = 14
                     CType(.Cells(1, 6), Excel.Range).Value = "Sum"
 
                     If awinSettings.mePrzAuslastung Then
@@ -19443,6 +19466,7 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+                    maxRCLengthVorkommen = 20
                     CType(.Cells(1, 6), Excel.Range).Value = "Summe"
 
                     If awinSettings.mePrzAuslastung Then
@@ -19685,6 +19709,10 @@ Public Module awinGeneralModules
 
                                     With CType(.Cells(zeile, 5), Excel.Range)
                                         .Value = roleName
+                                        ' maximal vorkommende Länge 
+                                        If maxRCLengthVorkommen < roleName.Length Then
+                                            maxRCLengthVorkommen = roleName.Length
+                                        End If
                                         If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
@@ -19779,7 +19807,7 @@ Public Module awinGeneralModules
                                                                     Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
                                                     Catch ex As Exception
-                                                        
+
                                                     End Try
                                                 End If
 
@@ -19856,6 +19884,11 @@ Public Module awinGeneralModules
 
                                     With CType(.Cells(zeile, 5), Excel.Range)
                                         .Value = costName
+                                        ' maximal vorkommende Länge 
+                                        If maxRCLengthVorkommen < costName.Length Then
+                                            maxRCLengthVorkommen = costName.Length
+                                        End If
+
                                         If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
@@ -20187,6 +20220,15 @@ Public Module awinGeneralModules
                     isPrz = Not isPrz
                 Next
 
+                ' jetzt muss noch ggf die Spaltenbreite angepasst werden ...
+                If maxRCLengthVorkommen < maxRCLengthAbsolut Then
+                    If maxRCLengthVorkommen > 0 Then
+                        Dim neueBreite As Integer = CInt(CType(.Cells(zeile, 5), Excel.Range).ColumnWidth * maxRCLengthAbsolut / maxRCLengthVorkommen) + 1
+                        CType(.Cells(zeile, 5), Excel.Range).ColumnWidth = neueBreite
+                    End If
+                End If
+
+
             End With
 
             ' jetzt wird ggf der MahleRange ausgeblendet ... 
@@ -20199,6 +20241,8 @@ Public Module awinGeneralModules
                 End Try
 
             End If
+
+            
 
             appInstance.EnableEvents = True
 

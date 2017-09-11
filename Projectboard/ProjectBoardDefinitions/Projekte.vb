@@ -11546,9 +11546,11 @@ Public Module Projekte
 
 
             ' TOP/Left - Position der Portfolio-Cockpits-Charts bestimmen
-            Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, minPfTop, minPfLeft, pfwidth, pfheight)
+            ' hier sollte eigentlich die Höhe der Cockpit Chars genommen werden 
+            Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, minPfTop, minPfLeft, pfwidth, pfheight)
+            ' hier sollte eigentlich die Höhe der cockpit Charts genommen werden 
             ' TOP/Left - Position der Projekt-Cockpits-Charts bestimmen
-            Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, minPrTop, minPrLeft, prwidth, prheight)
+            Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, minPrTop, minPrLeft, prwidth, prheight)
 
 
             fileName = awinPath & cockpitsFile

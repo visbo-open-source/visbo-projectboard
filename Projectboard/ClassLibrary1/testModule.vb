@@ -8840,6 +8840,7 @@ Public Module testModule
 
         Dim vglDate As Date = Date.Now
         Dim vergleichstyp As Integer = PThis.current
+        Dim istVglMitKonkretemDatum As Boolean = False
 
         If Not IsNothing(qualifier) Then
             Try
@@ -8847,8 +8848,17 @@ Public Module testModule
                     vergleichstyp = PThis.ersterStand
                 ElseIf qualifier.Trim = "L" Or qualifier.Trim = "N" Then
                     vergleichstyp = PThis.letzterStand
+                    vglDate = Date.Now
                 Else
-                    vglDate = CDate(qualifier)
+                    istVglMitKonkretemDatum = True
+                    Try
+                        vglDate = CDate(qualifier)
+
+                    Catch ex As Exception
+                        vglDate = Date.Now.AddMonths(-1)
+
+                    End Try
+
                     vergleichstyp = PThis.letzterStand
                 End If
 
@@ -9239,7 +9249,12 @@ Public Module testModule
                         spalte = 12
                         If Not IsNothing(vproj) Then
                             Dim timeStamp As Date = vproj.timeStamp
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                            If istVglMitKonkretemDatum Then
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglDate.ToShortDateString
+                            Else
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = timeStamp.ToShortDateString
+                            End If
+
                         Else
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                         End If
@@ -13144,145 +13159,150 @@ Public Module testModule
 
         End If
 
+        ' das Folgende muss nur gemacht werden, wenn es sich nicht um die RootPhase handelt ... 
 
-        ' hier werden jetzt alle Phasen-Kinder inkl ihrer Meilensteine untersucht, ob sie gezeichnet werden sollen ... 
-        For swlIX As Integer = startNr + 1 To endNr
-            curPhase = hproj.getPhase(swlIX)
+        If Not swimlaneNameID = rootPhaseName Then
+            ' hier werden jetzt alle Phasen-Kinder inkl ihrer Meilensteine untersucht, ob sie gezeichnet werden sollen ... 
+            For swlIX As Integer = startNr + 1 To endNr
+                curPhase = hproj.getPhase(swlIX)
 
 
-            If Not IsNothing(curPhase) Then
+                If Not IsNothing(curPhase) Then
 
-                If considerAll Or childPhaseIDs.Contains(curPhase.nameID) Then
-                    If Not considerZeitraum _
-                                Or _
-                                (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
-                                                                            zeitraumGrenzeL, zeitraumGrenzeR)) Then
+                    If considerAll Or childPhaseIDs.Contains(curPhase.nameID) Then
+                        If Not considerZeitraum _
+                                    Or _
+                                    (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
+                                                                                zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
-                        Dim requiredZeilen As Integer
+                            Dim requiredZeilen As Integer
 
-                        ' ermittle den Zeilenoffset
-                        If extended Then
-                            requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID, _
-                                                                                    selectedPhaseIDs, _
-                                                                                    selectedMilestoneIDs, _
-                                                                                    extended, _
-                                                                                    considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
-                                                                                    considerAll)
+                            ' ermittle den Zeilenoffset
+                            If extended Then
+                                requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID, _
+                                                                                        selectedPhaseIDs, _
+                                                                                        selectedMilestoneIDs, _
+                                                                                        extended, _
+                                                                                        considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                        considerAll)
 
-                            Dim bestStart As Integer = 0
-                            ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
-                            ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
+                                Dim bestStart As Integer = 0
+                                ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
+                                ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
 
-                            Dim parentFound As Boolean = False
-                            Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
-                            Dim ix As Integer = maxOffsetZeile
+                                Dim parentFound As Boolean = False
+                                Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
+                                Dim ix As Integer = maxOffsetZeile
 
-                            While ix > 0 And Not parentFound
-                                If listOfPhases(ix - 1).Count > 0 Then
-                                    Dim kx As Integer = 1
+                                While ix > 0 And Not parentFound
+                                    If listOfPhases(ix - 1).Count > 0 Then
+                                        Dim kx As Integer = 1
 
-                                    While kx <= listOfPhases(ix - 1).Count And Not parentFound
-                                        Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
-                                        If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
-                                            parentFound = True
-                                        Else
-                                            kx = kx + 1
+                                        While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                            Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
+                                            If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                                parentFound = True
+                                            Else
+                                                kx = kx + 1
+                                            End If
+                                        End While
+
+                                        If Not parentFound Then
+                                            ix = ix - 1
                                         End If
-                                    End While
 
-                                    If Not parentFound Then
+                                    Else
                                         ix = ix - 1
                                     End If
+                                End While
 
+                                If parentFound Then
+                                    bestStart = ix
                                 Else
-                                    ix = ix - 1
+                                    bestStart = 0
                                 End If
-                            End While
 
-                            If parentFound Then
-                                bestStart = ix
+                                zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
                             Else
-                                bestStart = 0
+                                requiredZeilen = 1
+                                zeilenoffset = 1
                             End If
 
-                            zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
-                        Else
-                            requiredZeilen = 1
-                            zeilenoffset = 1
+                            'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
+                            ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
+                            maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
+
+                            ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
+                            If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
+                                listOfPhases(zeilenoffset - 1).Add(curPhase.nameID, curPhase.nameID)
+                            End If
+
+                            ' merken, bis wohin in dieser Zeile bereits gezeichnet wurde 
+                            If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
+                                lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
+                            End If
+
+                            aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
+
+                            Try
+                                Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
+                                                        curPhase.nameID, aktuelleYPosition)
+                            Catch ex As Exception
+                                'Dim a As Integer = 1
+                            End Try
+
+                            'lastEndDate = curPhase.getEndDate
                         End If
 
-                        'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
-                        ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
-                        maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
-
-                        ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
-                        If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
-                            listOfPhases(zeilenoffset - 1).Add(curPhase.nameID, curPhase.nameID)
-                        End If
-
-                        ' merken, bis wohin in dieser Zeile bereits gezeichnet wurde 
-                        If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
-                            lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
-                        End If
-
-                        aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
-
-                        Try
-                            Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
-                                                    curPhase.nameID, aktuelleYPosition)
-                        Catch ex As Exception
-                            'Dim a As Integer = 1
-                        End Try
-
-                        'lastEndDate = curPhase.getEndDate
                     End If
+
+                    ' für jeden Meilenstein dieser Phase untersuchen, ob er gezeigt werden soll 
+
+                    For msIX As Integer = 1 To curPhase.countMilestones
+                        Dim curMs As clsMeilenstein = curPhase.getMilestone(msIX)
+
+                        If Not IsNothing(curMs) Then
+
+                            If considerAll Or childMilestoneIDs.Contains(curMs.nameID) Then
+                                If Not considerZeitraum _
+                                            Or _
+                                            (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
+                                                                                        zeitraumGrenzeL, zeitraumGrenzeR)) Then
+
+
+                                    ' zeichne den Meilenstein 
+                                    ' die aktuelle Y-Position muss nicht bestimmt werden, weil das ja bereits mit der Phase geschehen ist 
+                                    ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
+                                    Dim tmpCollection As New Collection
+                                    Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
+                                                                      swimlaneNameID, curMs.nameID, aktuelleYPosition)
+
+                                    ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
+                                    Try
+                                        For Each tmpName As String In tmpCollection
+                                            shapeNameCollection.Add(tmpName)
+                                            ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                                            swlMilestoneCollection.Add(tmpName)
+                                        Next
+                                    Catch ex As Exception
+                                        Dim a As Integer = 1
+                                    End Try
+
+
+                                End If
+
+                            End If
+
+                        End If
+
+                    Next
 
                 End If
 
-                ' für jeden Meilenstein dieser Phase untersuchen, ob er gezeigt werden soll 
-
-                For msIX As Integer = 1 To curPhase.countMilestones
-                    Dim curMs As clsMeilenstein = curPhase.getMilestone(msIX)
-
-                    If Not IsNothing(curMs) Then
-
-                        If considerAll Or childMilestoneIDs.Contains(curMs.nameID) Then
-                            If Not considerZeitraum _
-                                        Or _
-                                        (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
-                                                                                    zeitraumGrenzeL, zeitraumGrenzeR)) Then
+            Next
+        End If
 
 
-                                ' zeichne den Meilenstein 
-                                ' die aktuelle Y-Position muss nicht bestimmt werden, weil das ja bereits mit der Phase geschehen ist 
-                                ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
-                                Dim tmpCollection As New Collection
-                                Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
-                                                                  swimlaneNameID, curMs.nameID, aktuelleYPosition)
-
-                                ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
-                                Try
-                                    For Each tmpName As String In tmpCollection
-                                        shapeNameCollection.Add(tmpName)
-                                        ' die Milestones werden nachher alle in den Vordergrund geholt ...
-                                        swlMilestoneCollection.Add(tmpName)
-                                    Next
-                                Catch ex As Exception
-                                    Dim a As Integer = 1
-                                End Try
-
-
-                            End If
-
-                        End If
-
-                    End If
-
-                Next
-
-            End If
-
-        Next
 
 
 
