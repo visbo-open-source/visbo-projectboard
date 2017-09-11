@@ -675,6 +675,8 @@ Public Class frmProjektEingabe1
 
         ' jetzt das Vorlagen Projekt bestimmen 
         vproj = Projektvorlagen.getProject(vorlagenDropbox.Text)
+
+
         If vproj.getSummeKosten > 0 Then
             Me.lblProfitField.Visible = True
             Me.profitAskedFor.Visible = True
