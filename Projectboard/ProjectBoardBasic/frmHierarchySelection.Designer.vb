@@ -84,7 +84,7 @@ Partial Class frmHierarchySelection
         '
         Me.hryTreeView.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.hryTreeView.FullRowSelect = True
-        Me.hryTreeView.Location = New System.Drawing.Point(12, 146)
+        Me.hryTreeView.Location = New System.Drawing.Point(12, 147)
         Me.hryTreeView.Name = "hryTreeView"
         Me.hryTreeView.Size = New System.Drawing.Size(540, 302)
         Me.hryTreeView.TabIndex = 32
@@ -330,7 +330,7 @@ Partial Class frmHierarchySelection
         'rdbRoles
         '
         Me.rdbRoles.AutoSize = True
-        Me.rdbRoles.Location = New System.Drawing.Point(247, 16)
+        Me.rdbRoles.Location = New System.Drawing.Point(188, 16)
         Me.rdbRoles.Name = "rdbRoles"
         Me.rdbRoles.Size = New System.Drawing.Size(14, 13)
         Me.rdbRoles.TabIndex = 58
@@ -339,7 +339,7 @@ Partial Class frmHierarchySelection
         'pictureRoles
         '
         Me.pictureRoles.Image = CType(resources.GetObject("pictureRoles.Image"), System.Drawing.Image)
-        Me.pictureRoles.Location = New System.Drawing.Point(267, 3)
+        Me.pictureRoles.Location = New System.Drawing.Point(208, 3)
         Me.pictureRoles.Name = "pictureRoles"
         Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
         Me.pictureRoles.TabIndex = 59
@@ -348,7 +348,7 @@ Partial Class frmHierarchySelection
         'rdbCosts
         '
         Me.rdbCosts.AutoSize = True
-        Me.rdbCosts.Location = New System.Drawing.Point(319, 16)
+        Me.rdbCosts.Location = New System.Drawing.Point(286, 16)
         Me.rdbCosts.Name = "rdbCosts"
         Me.rdbCosts.Size = New System.Drawing.Size(14, 13)
         Me.rdbCosts.TabIndex = 60
@@ -357,7 +357,7 @@ Partial Class frmHierarchySelection
         'pictureCosts
         '
         Me.pictureCosts.Image = CType(resources.GetObject("pictureCosts.Image"), System.Drawing.Image)
-        Me.pictureCosts.Location = New System.Drawing.Point(339, 3)
+        Me.pictureCosts.Location = New System.Drawing.Point(310, 3)
         Me.pictureCosts.Name = "pictureCosts"
         Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
         Me.pictureCosts.TabIndex = 61
@@ -366,7 +366,7 @@ Partial Class frmHierarchySelection
         'rdbBU
         '
         Me.rdbBU.AutoSize = True
-        Me.rdbBU.Location = New System.Drawing.Point(397, 16)
+        Me.rdbBU.Location = New System.Drawing.Point(379, 16)
         Me.rdbBU.Name = "rdbBU"
         Me.rdbBU.Size = New System.Drawing.Size(14, 13)
         Me.rdbBU.TabIndex = 62
@@ -376,7 +376,7 @@ Partial Class frmHierarchySelection
         'pictureBU
         '
         Me.pictureBU.Image = Global.ProjectBoardBasic.My.Resources.Resources.branch
-        Me.pictureBU.Location = New System.Drawing.Point(416, 3)
+        Me.pictureBU.Location = New System.Drawing.Point(405, 5)
         Me.pictureBU.Name = "pictureBU"
         Me.pictureBU.Size = New System.Drawing.Size(33, 33)
         Me.pictureBU.TabIndex = 63
@@ -459,7 +459,7 @@ Partial Class frmHierarchySelection
         'rdbPhaseMilest
         '
         Me.rdbPhaseMilest.AutoSize = True
-        Me.rdbPhaseMilest.Location = New System.Drawing.Point(173, 16)
+        Me.rdbPhaseMilest.Location = New System.Drawing.Point(6, 16)
         Me.rdbPhaseMilest.Name = "rdbPhaseMilest"
         Me.rdbPhaseMilest.Size = New System.Drawing.Size(14, 13)
         Me.rdbPhaseMilest.TabIndex = 67
@@ -469,7 +469,7 @@ Partial Class frmHierarchySelection
         'picturePhaseMilest
         '
         Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.phases_und_milestones_248x248
-        Me.picturePhaseMilest.Location = New System.Drawing.Point(193, 5)
+        Me.picturePhaseMilest.Location = New System.Drawing.Point(26, 3)
         Me.picturePhaseMilest.Name = "picturePhaseMilest"
         Me.picturePhaseMilest.Size = New System.Drawing.Size(33, 33)
         Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
