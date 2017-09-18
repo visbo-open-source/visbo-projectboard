@@ -68,6 +68,12 @@ Public Class ThisAddIn
                    
                     appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
                 End If
+
+                If Not IsNothing(appInstance.Workbooks(myLogfile)) Then
+                    ' Schließen des LogFiles
+                    Call logfileSchliessen()
+                End If
+
                 appInstance.ScreenUpdating = True
             End If
         Catch ex As Exception
