@@ -607,6 +607,7 @@ Public Module Module1
         createVariant = 20
         listInfo = 21
         projInfoPL = 22
+        rolecostME = 23
     End Enum
 
     Public Enum PTpinfo

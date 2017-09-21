@@ -19525,10 +19525,11 @@ Public Module awinGeneralModules
                                                     .Validation.Delete()
                                                 End If
 
-                                                ' jetzt wird die ValidationList aufgebaut 
+                                                '' '' ur:20.09.2017: Mahle
+                                                '' '' jetzt wird die ValidationList aufgebaut 
 
-                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                           Formula1:=validationStrings.Item(rcValidation(roleUID)))
+                                                '' ''    .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                '' ''                               Formula1:=validationStrings.Item(rcValidation(roleUID)))
                                             Catch ex As Exception
 
                                             End Try
@@ -19548,6 +19549,7 @@ Public Module awinGeneralModules
                                                     If Not IsNothing(.Validation) Then
                                                         .Validation.Delete()
                                                     End If
+
                                                     ' jetzt wird die ValidationList aufgebaut 
                                                     .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
                                                                     AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
@@ -19694,10 +19696,11 @@ Public Module awinGeneralModules
                                                 If Not IsNothing(.Validation) Then
                                                     .Validation.Delete()
                                                 End If
-                                                ' jetzt wird die ValidationList aufgebaut 
-                                                'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
-                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                               Formula1:=validationStrings.Item(rcValidation(0)))
+                                                ' '' '' ur: 20.09.2017
+                                                ' '' '' jetzt wird die ValidationList aufgebaut 
+                                                ' '' ''Dim tmpVal As String = validationStrings.Item(rcValidation(0))
+                                                '' ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                '' ''                               Formula1:=validationStrings.Item(rcValidation(0)))
                                             Catch ex As Exception
 
                                             End Try
@@ -19859,9 +19862,10 @@ Public Module awinGeneralModules
                                                 If Not IsNothing(.Validation) Then
                                                     .Validation.Delete()
                                                 End If
-                                                ' jetzt wird die ValidationList aufgebaut 
-                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                               Formula1:=defaultEmptyValidation)
+                                                ' '' '' ur:20.09.2017: Mahle
+                                                ' '' '' jetzt wird die ValidationList aufgebaut 
+                                                '' ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                '' ''                               Formula1:=defaultEmptyValidation)
                                             Catch ex As Exception
                                                 Dim a As Integer = 0
                                             End Try

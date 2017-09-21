@@ -184,6 +184,57 @@ Public Class Tabelle2
 
     End Sub
 
+    Private Sub Tabelle2_BeforeDoubleClick(Target As Microsoft.Office.Interop.Excel.Range, ByRef Cancel As Boolean) Handles Me.BeforeDoubleClick
+
+        ' damit nicht eine immerwährende Event Orgie durch Änderung in den Zellen abgeht ...
+        appInstance.EnableEvents = False
+        Dim currentCell As Excel.Range = Target
+
+        Try
+
+            Dim auslastungChanged As Boolean = False
+            Dim summenChanged As Boolean = False
+            ' muss extra überwacht werden, um das ProjectInfo1 Fenster auch immer zu aktualisieren
+            Dim kostenChanged As Boolean = False
+            Dim newStrValue As String = ""
+
+            Dim meWB As Excel.Workbook = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+            Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+
+            If Target.Cells.Count = 1 Then
+
+                Dim roleCostNames As New Collection
+
+                Dim zeile As Integer = Target.Row
+                Dim pName As String = CStr(meWS.Cells(zeile, visboZustaende.meColpName).value)
+                Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+                Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+                Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                If Not IsNothing(curComment) Then
+                    phaseNameID = curComment.Text
+                End If
+
+                If Target.Column = columnRC Then
+                    ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
+                    ' Jetzt muss ein Formular mit den Rollen und Kosten im TreeView angezeigt werden
+                End If
+
+            Else
+                Call MsgBox("bitte nur eine Zelle selektieren ...")
+                Target.Cells(1, 1).value = visboZustaende.oldValue
+            End If
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Massen-Edit, Ändern : " & vbLf & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+    End Sub
+
     ''' <summary>
     ''' wird aufgerufen, sobald sich der Wert in einer Zelle verändert hat ...
     ''' entweder nachdem eine Dropbox Selection getroffen wurde oder eine Eingabe duch Pfeiltaste / Eingabe beendet wurde
