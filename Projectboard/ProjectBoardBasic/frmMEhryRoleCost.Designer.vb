@@ -26,7 +26,6 @@ Partial Class frmMEhryRoleCost
         Me.hryRoleCost = New System.Windows.Forms.TreeView()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
-        Me.FontDialog1 = New System.Windows.Forms.FontDialog()
         Me.SuspendLayout()
         '
         'hryRoleCost
@@ -47,7 +46,7 @@ Partial Class frmMEhryRoleCost
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(438, 578)
+        Me.AbbrButton.Location = New System.Drawing.Point(430, 578)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(129, 23)
         Me.AbbrButton.TabIndex = 2
@@ -71,5 +70,4 @@ Partial Class frmMEhryRoleCost
     Friend WithEvents hryRoleCost As System.Windows.Forms.TreeView
     Friend WithEvents OKButton As System.Windows.Forms.Button
     Friend WithEvents AbbrButton As System.Windows.Forms.Button
-    Friend WithEvents FontDialog1 As System.Windows.Forms.FontDialog
 End Class
