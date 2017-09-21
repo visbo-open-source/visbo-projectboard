@@ -14,6 +14,42 @@
     Public Property kapazitaet As Double()
     Public Property externeKapazitaet As Double()
 
+    ''' <summary>
+    ''' bestimmt die aktuelle Instanz irgendein Kind oder Kindeskind hat, das in tmpCollection aufgeführt ist
+    ''' wird nur aufgerufen, wenn myRoleName eine Sammelrolle ist
+    ''' </summary>
+    ''' <param name="tmpCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property hasAnyOfThemAsChild(ByVal tmpCollection As Collection) As Boolean
+        Get
+            Dim tmpCheck As Boolean = False
+            Dim myRoleName As String = Me.name
+
+            For Each kvp As KeyValuePair(Of Integer, String) In Me.getSubRoleIDs
+                If tmpCollection.Contains(kvp.Value) Then
+                    tmpCheck = True
+                Else
+                    ' 
+                    If RoleDefinitions.containsUid(kvp.Key) Then
+                        Dim tmpRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+                        If tmpRoleDef.isCombinedRole Then
+                            tmpCheck = tmpRoleDef.hasAnyOfThemAsChild(tmpCollection)
+                        End If
+                    End If
+
+                End If
+
+                If tmpCheck = True Then
+                    Exit For
+                End If
+
+            Next
+
+            hasAnyOfThemAsChild = tmpCheck
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die Liste an SubRole IDs als sortierte Liste zurück; 

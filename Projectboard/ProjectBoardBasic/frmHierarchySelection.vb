@@ -4556,8 +4556,16 @@ Public Class frmHierarchySelection
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
         Dim childIds As SortedList(Of Integer, String) = currentRole.getSubRoleIDs
+        Dim doItAnyWay As Boolean = False
+        Dim listOfroleNames As Collection = ShowProjekte.getRoleNames()
 
-        If ShowProjekte.getRoleNames().Contains(currentRole.name) Then
+        If currentRole.isCombinedRole Then
+            If currentRole.hasAnyOfThemAsChild(listOfroleNames) Then
+                doItAnyWay = True
+            End If
+        End If
+
+        If ShowProjekte.getRoleNames().Contains(currentRole.name) Or doItAnyWay Then
 
             Dim newNode As TreeNode
             With parentNode
