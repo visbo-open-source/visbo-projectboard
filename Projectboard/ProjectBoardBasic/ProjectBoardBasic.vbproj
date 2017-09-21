@@ -268,10 +268,10 @@
     </Compile>
     <Compile Include="PBBModules.vb" />
     <Compile Include="clsRplanRXF.vb" />
-    <Compile Include="Resources\frmMEhryRoleCost.Designer.vb">
+    <Compile Include="frmMEhryRoleCost.Designer.vb">
       <DependentUpon>frmMEhryRoleCost.vb</DependentUpon>
     </Compile>
-    <Compile Include="Resources\frmMEhryRoleCost.vb">
+    <Compile Include="frmMEhryRoleCost.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Settings.vb" />
@@ -377,7 +377,7 @@
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\frmMEhryRoleCost.resx">
+    <EmbeddedResource Include="frmMEhryRoleCost.resx">
       <DependentUpon>frmMEhryRoleCost.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
