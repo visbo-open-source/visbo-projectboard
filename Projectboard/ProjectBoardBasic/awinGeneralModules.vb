@@ -2819,8 +2819,10 @@ Public Module awinGeneralModules
                 laenge = showRangeRight - showRangeLeft
 
                 If laenge > 0 And showRangeLeft > 0 Then
-                    .Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)).Interior.Color = showtimezone_color
-                    .Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)).Font.Color = calendarFontColor
+
+                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Interior.Color = showtimezone_color
+                    CType(.Range(.Cells(1, showRangeLeft), .Cells(1, showRangeLeft + laenge)), Excel.Range).Font.Color = calendarFontColor
+
                 End If
 
             End With

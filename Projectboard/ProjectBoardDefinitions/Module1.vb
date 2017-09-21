@@ -4439,7 +4439,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub closeAllWindowsExceptMPT()
 
-        ' ''Dim tmpWindow As Excel.Window
+
         Dim vglName As String = CType(projectboardWindows(PTwindows.mpt).ActiveSheet, Excel.Worksheet).Name
         If vglName <> arrWsNames(ptTables.MPT) Then
             Call MsgBox("Window 0 zeigt auf das falsche Sheet: " & vglName)
