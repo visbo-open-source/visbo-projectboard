@@ -11777,6 +11777,7 @@ Public Module Projekte
                             ' hier wird die maximale Anzahl an Phasen oder Rollen oder Kosten herausgefunden
                             Dim maxAnz As Integer = System.Math.Max(RoleDefinitions.Count, PhaseDefinitions.Count)
                             maxAnz = System.Math.Max(maxAnz, CostDefinitions.Count)
+                            maxAnz = System.Math.Max(maxAnz, MilestoneDefinitions.Count)
 
                             Dim tmpArray1() As String
                             Dim myCollection As New Collection
@@ -22071,7 +22072,7 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' falls ein TF-key bereits existiert, wird durch Append von . ein neuer key erteugt
+    ''' falls ein TF-key bereits existiert, wird durch Append von "x" ein neuer key erzeugt
     ''' </summary>
     ''' <param name="oldStr"></param>
     ''' <returns></returns>
@@ -22081,7 +22082,7 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' ein CustomTF Schlüssel ist immer aufgebaut zeile.toString("00000000"), evtl ergänzt um ., um den key eindeutig zu machen 
+    ''' ein CustomTF Schlüssel ist immer aufgebaut zeile.toString("00000000"), evtl ergänzt um "x", um den key eindeutig zu machen 
     ''' um die Zeile herauszufinden, muss demzufolge der .-Anteil weggenommen werden und die Zeile extrahiert werden 
     ''' </summary>
     ''' <param name="key"></param>
