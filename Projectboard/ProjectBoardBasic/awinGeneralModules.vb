@@ -1319,6 +1319,8 @@ Public Module awinGeneralModules
 
                     End If
 
+                    RoleDefinitions.buildTopNodes()
+
 
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
                     Call readVorlagen(True)
@@ -1375,7 +1377,7 @@ Public Module awinGeneralModules
                 windowNames(PTwindows.mptpf) = "Portfolio Charts: "
                 windowNames(PTwindows.mptpr) = "Projekt Charts"
             End If
-            
+
 
             projectboardViews(PTview.mpt) = Nothing
             projectboardViews(PTview.mptpr) = Nothing
