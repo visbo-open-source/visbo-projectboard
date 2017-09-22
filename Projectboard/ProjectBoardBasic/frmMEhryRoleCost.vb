@@ -8,6 +8,12 @@ Public Class frmMEhryRoleCost
     Private allCosts As New Collection
     Private allRoles As New Collection
 
+    Public pName As String
+    Public vName As String
+    Public phaseName As String
+    Public rcName As String
+    Public phaseNameID As String
+
     Private Sub frmMEhryRoleCost_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         If frmCoord(PTfrm.rolecostME, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.rolecostME, PTpinfo.top))
@@ -16,6 +22,8 @@ Public Class frmMEhryRoleCost
             Me.Top = 60
             Me.Left = 100
         End If
+
+        Call buildMERoleTree()
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
@@ -47,9 +55,9 @@ Public Class frmMEhryRoleCost
             .CheckBoxes = True
 
 
-            ' alle Rollen in geladenen Projekte zeigen 
+            ' alle Rollen zeigen 
 
-            If allRoles.Count > 0 Then
+            If RoleDefinitions.Count > 0 Then
                 Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
 

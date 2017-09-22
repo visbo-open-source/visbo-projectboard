@@ -8,7 +8,7 @@ Public Class clsRollen
 
 
     Private _allRollen As SortedList(Of Integer, clsRollenDefinition)
-
+    Private _topLevelNodeIDs As List(Of Integer)
 
 
     Public Sub Add(roledef As clsRollenDefinition)
@@ -23,6 +23,34 @@ Public Class clsRollen
 
 
     End Sub
+    ''' <summary>
+    ''' gibt den Standard TopNode Name zurück, das ist der erste vorkommende Top Node 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getDefaultTopNodeName() As String
+        Get
+            Dim tmpName As String = ""
+            If Not IsNothing(_topLevelNodeIDs) Then
+                If _topLevelNodeIDs.Count > 0 Then
+                    tmpName = _allRollen.Item(_topLevelNodeIDs.First).name
+                End If
+            End If
+            getDefaultTopNodeName = tmpName
+        End Get
+    End Property
+    ''' <summary>
+    ''' gibt die Toplevel NodeIds zurück ...
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTopLevelNodeIDs() As List(Of Integer)
+        Get
+            getTopLevelNodeIDs = _topLevelNodeIDs
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die eindeutige Liste an SammelRollen bzw. EinzelRollen wieder, die keiner Sammelrolle angehören 
@@ -453,11 +481,30 @@ Public Class clsRollen
         End Get
 
     End Property
+    ''' <summary>
+    ''' gibt die Rolle mit der entsprechenden ID zurück ...
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRoleDefByID(ByVal uid As Integer) As clsRollenDefinition
+        Get
+            If _allRollen.ContainsKey(uid) Then
+                getRoleDefByID = _allRollen.Item(uid)
+            Else
+                getRoleDefByID = Nothing
+            End If
+        End Get
+    End Property
 
     Public Sub New()
 
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
+        _topLevelNodeIDs = New List(Of Integer)
 
     End Sub
+
+   
 
 End Class

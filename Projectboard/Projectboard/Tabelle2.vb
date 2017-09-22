@@ -191,7 +191,7 @@ Public Class Tabelle2
         Dim currentCell As Excel.Range = Target
 
         Try
-
+            Dim frmMERollen As New frmMEhryRoleCost
             Dim auslastungChanged As Boolean = False
             Dim summenChanged As Boolean = False
             ' muss extra überwacht werden, um das ProjectInfo1 Fenster auch immer zu aktualisieren
@@ -219,6 +219,13 @@ Public Class Tabelle2
                 If Target.Column = columnRC Then
                     ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
                     ' Jetzt muss ein Formular mit den Rollen und Kosten im TreeView angezeigt werden
+                    frmMERollen.pName = pName
+                    frmMERollen.vName = vName
+                    frmMERollen.phaseName = phaseName
+                    frmMERollen.rcName = rcName
+                    frmMERollen.phaseNameID = phaseNameID
+                    frmMERollen.ShowDialog()
+
                 End If
 
             Else
