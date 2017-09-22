@@ -19197,7 +19197,7 @@ Public Module awinGeneralModules
                 If tmprole.isCombinedRole Then
                     rcValidation(i) = tmprole.name
                 Else
-                    Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.name)
+                    Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.name).name
                     If parentName = "" Then
                         rcValidation(i) = "alleRollen"
                     Else
