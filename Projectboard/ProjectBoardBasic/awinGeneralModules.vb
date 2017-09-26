@@ -19145,10 +19145,11 @@ Public Module awinGeneralModules
 
         createMassEditRcValidations = validationStrings
     End Function
-
     ''' <summary>
     ''' schreibt die Daten der in einer todoListe übergebenen Projekt-Namen in ein extra Tabellenblatt 
     ''' die Info-Daten werden in einer Range mit Name informationColumns zusammengefasst   
+    ''' Dabei wird überprüft, was der längste mögliche Ressourcen und Kosten-Namen überhaupt ist 
+    ''' und was der längste eingetragene Namen ist ... Am Schluss wird notfalls die Spaltenbreite verlängert, damit auch der längste Namen reingeht ... 
     ''' </summary>
     ''' <param name="von"></param>
     ''' <param name="bis"></param>
@@ -19157,6 +19158,8 @@ Public Module awinGeneralModules
                                            ByVal von As Integer, ByVal bis As Integer)
 
         Dim mahleRange As Excel.Range
+        Dim maxRCLengthAbsolut As Integer = 0
+        Dim maxRCLengthVorkommen As Integer = 0
 
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
@@ -19181,6 +19184,21 @@ Public Module awinGeneralModules
             Dim ressCostColumn As Integer
             Dim tmpName As String
 
+            ' jetzt wird die maximale Länge eines Trings für Mass-Edit ermittelt 
+            For i As Integer = 1 To RoleDefinitions.Count
+                Dim curItemLength As Integer = RoleDefinitions.getRoledef(i).name.Length
+                If curItemLength > maxRCLengthAbsolut Then
+                    maxRCLengthAbsolut = curItemLength
+                End If
+            Next
+
+            For i As Integer = 1 To CostDefinitions.Count
+                Dim curItemLength As Integer = CostDefinitions.getCostdef(i).name.Length
+                If curItemLength > maxRCLengthAbsolut Then
+                    maxRCLengthAbsolut = curItemLength
+                End If
+            Next
+
             ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
             Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
             Dim anzahlRollen As Integer = RoleDefinitions.Count
@@ -19192,17 +19210,18 @@ Public Module awinGeneralModules
             rcValidation(0) = "alleKosten"
             rcValidation(anzahlRollen + 1) = "alles"
 
-            For i = 1 To anzahlRollen
+            For i As Integer = 1 To anzahlRollen
                 Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
                 If tmprole.isCombinedRole Then
                     rcValidation(i) = tmprole.name
                 Else
-                    Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.name).name
-                    If parentName = "" Then
+                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
+                    If IsNothing(parentRole) Then
                         rcValidation(i) = "alleRollen"
                     Else
-                        rcValidation(i) = parentName
+                        rcValidation(i) = parentRole.name
                     End If
+
                 End If
             Next
 
@@ -19262,6 +19281,7 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
+                    maxRCLengthVorkommen = 14
                     CType(.Cells(1, 6), Excel.Range).Value = "Sum"
 
                     If awinSettings.mePrzAuslastung Then
@@ -19275,6 +19295,7 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
                     CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
+                    maxRCLengthVorkommen = 20
                     CType(.Cells(1, 6), Excel.Range).Value = "Summe"
 
                     If awinSettings.mePrzAuslastung Then
@@ -19517,6 +19538,10 @@ Public Module awinGeneralModules
 
                                     With CType(.Cells(zeile, 5), Excel.Range)
                                         .Value = roleName
+                                        ' maximal vorkommende Länge 
+                                        If maxRCLengthVorkommen < roleName.Length Then
+                                            maxRCLengthVorkommen = roleName.Length
+                                        End If
                                         If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
@@ -19527,11 +19552,12 @@ Public Module awinGeneralModules
                                                     .Validation.Delete()
                                                 End If
 
-                                                '' '' ur:20.09.2017: Mahle
-                                                '' '' jetzt wird die ValidationList aufgebaut 
+                                                '' ur: 25.09.2017
 
-                                                '' ''    .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                '' ''                               Formula1:=validationStrings.Item(rcValidation(roleUID)))
+                                                ' jetzt wird die ValidationList aufgebaut 
+                                               
+                                                ' ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                ' ''                           Formula1:=validationStrings.Item(rcValidation(roleUID)))
                                             Catch ex As Exception
 
                                             End Try
@@ -19551,7 +19577,6 @@ Public Module awinGeneralModules
                                                     If Not IsNothing(.Validation) Then
                                                         .Validation.Delete()
                                                     End If
-
                                                     ' jetzt wird die ValidationList aufgebaut 
                                                     .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
                                                                     AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
@@ -19613,7 +19638,7 @@ Public Module awinGeneralModules
                                                                     Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
                                                     Catch ex As Exception
-                                                        
+
                                                     End Try
                                                 End If
 
@@ -19690,6 +19715,11 @@ Public Module awinGeneralModules
 
                                     With CType(.Cells(zeile, 5), Excel.Range)
                                         .Value = costName
+                                        ' maximal vorkommende Länge 
+                                        If maxRCLengthVorkommen < costName.Length Then
+                                            maxRCLengthVorkommen = costName.Length
+                                        End If
+
                                         If isProtectedbyOthers Then
                                         Else
                                             .Locked = False
@@ -19698,11 +19728,12 @@ Public Module awinGeneralModules
                                                 If Not IsNothing(.Validation) Then
                                                     .Validation.Delete()
                                                 End If
-                                                ' '' '' ur: 20.09.2017
-                                                ' '' '' jetzt wird die ValidationList aufgebaut 
-                                                ' '' ''Dim tmpVal As String = validationStrings.Item(rcValidation(0))
-                                                '' ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                '' ''                               Formula1:=validationStrings.Item(rcValidation(0)))
+
+                                                '' ur: 26.09.2017
+                                                ' jetzt wird die ValidationList aufgebaut 
+                                                'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
+                                                ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                ''                               Formula1:=validationStrings.Item(rcValidation(0)))
                                             Catch ex As Exception
 
                                             End Try
@@ -19864,10 +19895,11 @@ Public Module awinGeneralModules
                                                 If Not IsNothing(.Validation) Then
                                                     .Validation.Delete()
                                                 End If
-                                                ' '' '' ur:20.09.2017: Mahle
-                                                ' '' '' jetzt wird die ValidationList aufgebaut 
-                                                '' ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                '' ''                               Formula1:=defaultEmptyValidation)
+
+                                                '' ur: 26.09.2017
+                                                ' jetzt wird die ValidationList aufgebaut 
+                                                ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                ''                               Formula1:=defaultEmptyValidation)
                                             Catch ex As Exception
                                                 Dim a As Integer = 0
                                             End Try
@@ -20023,6 +20055,15 @@ Public Module awinGeneralModules
                     isPrz = Not isPrz
                 Next
 
+                ' jetzt muss noch ggf die Spaltenbreite angepasst werden ...
+                If maxRCLengthVorkommen < maxRCLengthAbsolut Then
+                    If maxRCLengthVorkommen > 0 Then
+                        Dim neueBreite As Integer = CInt(CType(.Cells(zeile, 5), Excel.Range).ColumnWidth * maxRCLengthAbsolut / maxRCLengthVorkommen) + 1
+                        CType(.Cells(zeile, 5), Excel.Range).ColumnWidth = neueBreite
+                    End If
+                End If
+
+
             End With
 
             ' jetzt wird ggf der MahleRange ausgeblendet ... 
@@ -20036,13 +20077,15 @@ Public Module awinGeneralModules
 
             End If
 
+
+
             appInstance.EnableEvents = True
 
         Catch ex As Exception
             Dim a As Integer = 0
         End Try
 
-        
+
 
 
     End Sub
