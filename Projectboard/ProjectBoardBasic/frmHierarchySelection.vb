@@ -4559,6 +4559,7 @@ Public Class frmHierarchySelection
         Dim doItAnyWay As Boolean = False
         Dim listOfroleNames As Collection = ShowProjekte.getRoleNames()
 
+        ' wenn die vorhandenen Rollen als Kind oder Kindeskind von currentRole vorkommen, dann doItAnyWay
         If currentRole.isCombinedRole Then
             If currentRole.hasAnyOfThemAsChild(listOfroleNames) Then
                 doItAnyWay = True

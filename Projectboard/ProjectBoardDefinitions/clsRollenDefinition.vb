@@ -15,8 +15,8 @@
     Public Property externeKapazitaet As Double()
 
     ''' <summary>
-    ''' bestimmt die aktuelle Instanz irgendein Kind oder Kindeskind hat, das in tmpCollection aufgeführt ist
-    ''' wird nur aufgerufen, wenn myRoleName eine Sammelrolle ist
+    ''' bestimmt, ob die aktuelle Instanz irgendein Kind oder Kindeskind hat, das in tmpCollection aufgeführt ist
+    ''' wird nur aufgerufen, wenn Instanz eine Sammelrolle ist
     ''' </summary>
     ''' <param name="tmpCollection"></param>
     ''' <value></value>
