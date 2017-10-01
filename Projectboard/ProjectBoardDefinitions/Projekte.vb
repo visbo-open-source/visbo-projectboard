@@ -11127,10 +11127,6 @@ Public Module Projekte
                 End With
             End If
 
-            If selectedCharts.Contains(chtobj.Name) Then
-                selectedCharts.Remove(chtobj.Name)
-            End If
-
         Catch ex As Exception
 
         End Try

@@ -2258,9 +2258,9 @@ Imports System.Windows
 
             Case "PTfreezeB2" ' Fixierung aufheben
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Fixierung zum Bewegen aufheben"
+                    tmpLabel = "Fixierung aufheben"
                 Else
-                    tmpLabel = "De-Freeze for moving"
+                    tmpLabel = "De-Freeze"
                 End If
 
             Case "PTunmarkBT"
@@ -2268,6 +2268,13 @@ Imports System.Windows
                     tmpLabel = "Reset Markierung"
                 Else
                     tmpLabel = "Reset Marker"
+                End If
+
+            Case "PTMarkBT"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Markieren"
+                Else
+                    tmpLabel = "Set Mark"
                 End If
 
             Case "PT2G1M1B4" ' Status ändern
@@ -4023,6 +4030,85 @@ Imports System.Windows
     End Sub
 
     ''' <summary>
+    ''' markiert die selektierten oder alle Projekte, die aktuell angezeigt werden 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTMarkProjects(control As IRibbonControl)
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+        Dim atleastOne As Boolean = False
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+                                If hproj.marker = False Then
+                                    hproj.marker = True
+                                    atleastOne = True
+                                    Dim tmpCollection As New Collection
+                                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+                                End If
+                                
+
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+        Else
+
+            Call markAllProjects(atleastOne)
+            
+        End If
+
+        If atleastOne Then
+            ' jetzt müssen alle Charts de-selektiert werden ...
+            Call unmarkPfDiagrams()
+
+            ' und jetzt muss noch ggf das BubbleDiagramm neu, d.h ohne Markierungen gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(99)
+        End If
+        
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+    End Sub
+
+    ''' <summary>
     ''' setzt die Markierungen der Projekte zurück ... 
     ''' </summary>
     ''' <param name="control"></param>
@@ -4030,6 +4116,7 @@ Imports System.Windows
     Sub PTUnMarkProject(control As IRibbonControl)
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
+        Dim atleastOne As Boolean = False
 
         Call projektTafelInit()
 
@@ -4078,13 +4165,24 @@ Imports System.Windows
             Next
 
         Else
-            If awinSettings.englishLanguage Then
-                Call MsgBox("select project(s first ...")
-            Else
-                Call MsgBox("vorher Projekt(e selektieren ...")
-            End If
+
+            Call unMarkAllProjects(atleastOne)
+            'If awinSettings.englishLanguage Then
+            '    Call MsgBox("select project(s first ...")
+            'Else
+            '    Call MsgBox("vorher Projekt(e selektieren ...")
+            'End If
 
         End If
+
+        If atleastOne Then
+            ' jetzt müssen alle Charts de-selektiert werden ...
+            Call unmarkPfDiagrams()
+
+            ' und jetzt muss noch ggf das BubbleDiagramm neu, d.h ohne Markierungen gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(99)
+        End If
+        
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -8497,7 +8595,7 @@ Imports System.Windows
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim myCollection As New Collection
         Dim top As Double, left As Double, width As Double, height As Double
-        Dim sichtbarerBereich As Excel.Range
+        'Dim sichtbarerBereich As Excel.Range
 
         Call projektTafelInit()
 
@@ -8507,34 +8605,44 @@ Imports System.Windows
             appInstance.EnableEvents = False
             enableOnUpdate = False
 
+
             myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
             If myCollection.Count > 0 Then
 
-                With appInstance.ActiveWindow
-                    sichtbarerBereich = .VisibleRange
-                    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
-                    If left < CDbl(sichtbarerBereich.Left) Then
-                        left = CDbl(sichtbarerBereich.Left) + 2
-                    End If
+                ' tk 30.9 wird jetzt durch bestimmeChartPositionandSize geregelt  
+                ''With appInstance.ActiveWindow
+                ''    sichtbarerBereich = .VisibleRange
+                ''    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                ''    If left < CDbl(sichtbarerBereich.Left) Then
+                ''        left = CDbl(sichtbarerBereich.Left) + 2
+                ''    End If
 
-                    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
-                    If top < CDbl(sichtbarerBereich.Top) Then
-                        top = CDbl(sichtbarerBereich.Top) + 2
-                    End If
+                ''    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                ''    If top < CDbl(sichtbarerBereich.Top) Then
+                ''        top = CDbl(sichtbarerBereich.Top) + 2
+                ''    End If
 
-                End With
+                ''End With
 
-                width = 600
-                height = 450
+                ''width = 600
+                ''height = 450
 
                 Dim obj As Excel.ChartObject = Nothing
 
+
+                ' bestimme Position ... 
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+
                 Try
-                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.AmpelFarbe, False, False, True, top, left, width, height, False)
                 Catch ex As Exception
 
                 End Try
+
+                If thereAreAnyCharts(PTwindows.mptpf) Then
+                    Call showVisboWindow(PTwindows.mptpf)
+                End If
 
             Else
 
