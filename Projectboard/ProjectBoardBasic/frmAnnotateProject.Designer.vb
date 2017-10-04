@@ -22,6 +22,7 @@ Partial Class frmAnnotateProject
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmAnnotateProject))
         Me.annotatePhases = New System.Windows.Forms.CheckBox()
         Me.annotateMilestones = New System.Windows.Forms.CheckBox()
         Me.showStdNames = New System.Windows.Forms.RadioButton()
@@ -118,8 +119,11 @@ Partial Class frmAnnotateProject
         Me.Controls.Add(Me.showStdNames)
         Me.Controls.Add(Me.annotateMilestones)
         Me.Controls.Add(Me.annotatePhases)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.MaximizeBox = False
+        Me.MinimizeBox = False
         Me.Name = "frmAnnotateProject"
-        Me.Text = "Projekt beschriften"
+        Me.Text = "Plan-Elemente beschriften"
         Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()

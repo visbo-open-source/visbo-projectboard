@@ -1,7 +1,7 @@
 ﻿Imports xlNS = Microsoft.Office.Interop.Excel
 Public Class clsMeilensteine
 
-    Private allMilestones As SortedList(Of String, clsMeilensteinDefinition)
+    Private _allMilestones As SortedList(Of String, clsMeilensteinDefinition)
 
     ''' <summary>
     ''' fügt der nach key=name sortierten Liste einen weiteren Eintrag hinzu 
@@ -15,19 +15,19 @@ Public Class clsMeilensteine
 
         If Not IsNothing(milestone) Then
             Dim key As String = milestone.name
-            If allMilestones.ContainsKey(key) Then
+            If _allMilestones.ContainsKey(key) Then
                 ' einfach nichts machen 
                 'Throw New ArgumentException("Identifier " & key & _
                 '                            " existiert bereits!")
             Else
-                allMilestones.Add(key, milestone)
+                _allMilestones.Add(key, milestone)
             End If
 
         Else
             ' nichts machen
             'Throw New ArgumentException("Meilenstein Definition ist Nothing")
         End If
-        
+
 
     End Sub
 
@@ -41,7 +41,7 @@ Public Class clsMeilensteine
     Public ReadOnly Property Count() As Integer
 
         Get
-            Count = allMilestones.Count
+            Count = _allMilestones.Count
         End Get
 
     End Property
@@ -56,8 +56,8 @@ Public Class clsMeilensteine
     ''' <remarks></remarks>
     Public ReadOnly Property elementAt(ByVal index As Integer) As clsMeilensteinDefinition
         Get
-            If index >= 0 And index <= Me.allMilestones.Count - 1 Then
-                elementAt = Me.allMilestones.ElementAt(index).Value
+            If index >= 0 And index <= Me._allMilestones.Count - 1 Then
+                elementAt = Me._allMilestones.ElementAt(index).Value
             Else
                 elementAt = Nothing
             End If
@@ -78,7 +78,7 @@ Public Class clsMeilensteine
             'Dim key As String = calcKey(name, belongsTo)
             'Dim key As String = name
 
-            Contains = allMilestones.ContainsKey(name)
+            Contains = _allMilestones.ContainsKey(name)
 
 
         End Get
@@ -94,7 +94,7 @@ Public Class clsMeilensteine
     Public ReadOnly Property getAnzahl(ByVal name As String) As Integer
         Get
             Dim anzahl As Integer = 0
-            For Each ms As KeyValuePair(Of String, clsMeilensteinDefinition) In allMilestones
+            For Each ms As KeyValuePair(Of String, clsMeilensteinDefinition) In _allMilestones
                 If ms.Value.name = name Then
                     anzahl = anzahl + 1
                 End If
@@ -143,8 +143,8 @@ Public Class clsMeilensteine
         Get
             'Dim key As String = calcKey(name, belongsTo)
 
-            If allMilestones.ContainsKey(name) Then
-                getMilestoneDef = allMilestones.Item(name)
+            If _allMilestones.ContainsKey(name) Then
+                getMilestoneDef = _allMilestones.Item(name)
             Else
                 getMilestoneDef = Nothing
             End If
@@ -165,8 +165,8 @@ Public Class clsMeilensteine
     Public ReadOnly Property getMilestoneDef(ByVal index As Integer) As clsMeilensteinDefinition
         Get
 
-            If index > 0 And index <= allMilestones.Count Then
-                getMilestoneDef = allMilestones.ElementAt(index - 1).Value
+            If index > 0 And index <= _allMilestones.Count Then
+                getMilestoneDef = _allMilestones.ElementAt(index - 1).Value
             Else
                 getMilestoneDef = Nothing
             End If
@@ -189,8 +189,8 @@ Public Class clsMeilensteine
 
             'Dim key As String = calcKey(name, belongsTo)
 
-            If allMilestones.ContainsKey(name) Then
-                appearanceID = allMilestones.Item(name).darstellungsKlasse
+            If _allMilestones.ContainsKey(name) Then
+                appearanceID = _allMilestones.Item(name).darstellungsKlasse
                 If appearanceID = "" Then
                     appearanceID = defaultMilestoneAppearance
                 End If
@@ -234,10 +234,8 @@ Public Class clsMeilensteine
         Get
             Dim msAbbrev As String = name
 
-            'Dim key As String = calcKey(name, belongsTo)
-
-            If allMilestones.ContainsKey(name) Then
-                msAbbrev = allMilestones.Item(name).shortName
+            If _allMilestones.ContainsKey(name) Then
+                msAbbrev = _allMilestones.Item(name).shortName
             End If
 
             getAbbrev = msAbbrev
@@ -245,9 +243,26 @@ Public Class clsMeilensteine
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Darstellungsklasse des Elements zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAppearance(ByVal name As String) As String
+        Get
+            Dim tmpErg As String = ""
+            If _allMilestones.ContainsKey(name) Then
+                tmpErg = _allMilestones.Item(name).darstellungsKlasse
+            End If
+            getAppearance = tmpErg
+        End Get
+    End Property
+
 
     Public Sub New()
-        allMilestones = New SortedList(Of String, clsMeilensteinDefinition)
+        _allMilestones = New SortedList(Of String, clsMeilensteinDefinition)
     End Sub
 
     ''' <summary>
@@ -258,14 +273,14 @@ Public Class clsMeilensteine
     ''' <remarks></remarks>
     Public Sub remove(ByVal name As String)
 
-        If allMilestones.ContainsKey(name) Then
-            allMilestones.Remove(name)
+        If _allMilestones.ContainsKey(name) Then
+            _allMilestones.Remove(name)
         End If
 
     End Sub
 
     Public Sub Clear()
-        allMilestones.Clear()
+        _allMilestones.Clear()
     End Sub
 
 End Class

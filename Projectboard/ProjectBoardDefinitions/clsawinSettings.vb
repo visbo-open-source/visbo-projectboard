@@ -15,9 +15,13 @@ Public Class clsawinSettings
     Public Property SollIstFarbeL As Long
     Public Property SollIstFarbeC As Long
     Public Property SollIstFarbeArea As Long
+    Public Property gridLineColor As Long
     Public Property timeSpanColor As Long
     Public Property missingDefinitionColor As Long
     Public Property showTimeSpanInPT As Boolean
+
+    ' wieviel Ressourcen Top Bottlenecks sollen gezeigt werden ? Default = 3 
+    Public Property anzTopBottlenecks As Integer
 
     Public Property AmpelGruen As Long
     Public Property AmpelGelb As Long
@@ -44,6 +48,7 @@ Public Class clsawinSettings
 
     Public Property databaseName As String
     Public Property databaseURL As String
+    
     Public Property globalPath As String
     Public Property awinPath As String
 
@@ -68,7 +73,7 @@ Public Class clsawinSettings
     Public Property propAnpassRess As Boolean
 
     ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
-    Public Property phasesProzentual As Boolean = False
+    Public Property phasesProzentual As Boolean
 
     
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
@@ -162,7 +167,10 @@ Public Class clsawinSettings
     Public Property meEnableSorting As Boolean
     ' soll beim Berechnen der auslastungs-Values im Mass-Edit die bereits beauftragte externe Kapazität mit berücksichtigt werden 
     ' Default = no 
-    Public Property meAuslastungIsInclExt As Boolean = True
+    Public Property meAuslastungIsInclExt As Boolean
+
+    ' steuert, ob im Massen-Edit zu jedem Monat auch die Monats-Auslastung / freien Tage angezeigt werden sollen 
+    Public Property meExtendedColumnsView As Boolean
 
     ' die Farben und Fonts des Schutzes 
     Public Property protectedPermanentFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
@@ -205,7 +213,7 @@ Public Class clsawinSettings
 
     ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
     Public Property isHryNameFrmActive As Boolean
-
+    
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
@@ -216,9 +224,9 @@ Public Class clsawinSettings
     Sub New()
 
         ' Chart Settings
-        _fontsizeTitle = 14
-        _fontsizeLegend = 10
-        _fontsizeItems = 10
+        _fontsizeTitle = 10
+        _fontsizeLegend = 8
+        _fontsizeItems = 8
         _CPfontsizeTitle = 10
         _CPfontsizeItems = 8
         _ChartHoehe1 = 150.0
@@ -228,9 +236,10 @@ Public Class clsawinSettings
         _SollIstFarbeC = RGB(80, 240, 80)
         _SollIstFarbeArea = RGB(200, 200, 200)
         _timeSpanColor = RGB(242, 242, 242)
+        _gridLineColor = RGB(220, 220, 220)
         _missingDefinitionColor = XlRgbColor.rgbCoral
         _showTimeSpanInPT = True
-
+        _anzTopBottlenecks = 3
 
         ' Projekteingabe Settings
         _lastProjektTyp = ""
@@ -254,7 +263,7 @@ Public Class clsawinSettings
         _milestoneFreeFloat = True
         _autoCorrectBedarfe = True
         _propAnpassRess = False
-        _phasesProzentual = False
+        _phasesProzentual = True
         _drawphases = False
         _showValuesOfSelected = False
         _applyFilter = False
@@ -318,6 +327,8 @@ Public Class clsawinSettings
         _meAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
+        _meExtendedColumnsView = False
+
 
         ' Settings für den Schutz von Projekten 
         _protectedPermanentFont = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
@@ -344,7 +355,7 @@ Public Class clsawinSettings
 
         _useHierarchy = True
         _isHryNameFrmActive = False
-
+   
         _visboDebug = False
 
 

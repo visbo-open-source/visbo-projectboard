@@ -90,14 +90,14 @@ Public Module BMWItOModul
 
 
         Dim suchstr(7) As String
-        suchstr(ptRplanNamen.Name) = "Name"
-        suchstr(ptRplanNamen.Anfang) = "Anfang"
-        suchstr(ptRplanNamen.Ende) = "Ende"
-        suchstr(ptRplanNamen.Beschreibung) = "Beschreibung"
-        suchstr(ptRplanNamen.Vorgangsklasse) = "Vorgangsklasse"
-        suchstr(ptRplanNamen.Produktlinie) = "Spalte A"
-        suchstr(ptRplanNamen.Protocol) = "Übernommen als"
-        suchstr(ptRplanNamen.Dauer) = "Dauer"
+        suchstr(ptPlanNamen.Name) = "Name"
+        suchstr(ptPlanNamen.Anfang) = "Anfang"
+        suchstr(ptPlanNamen.Ende) = "Ende"
+        suchstr(ptPlanNamen.Beschreibung) = "Beschreibung"
+        suchstr(ptPlanNamen.Vorgangsklasse) = "Vorgangsklasse"
+        suchstr(ptPlanNamen.BusinessUnit) = "Spalte A"
+        suchstr(ptPlanNamen.Protocol) = "Übernommen als"
+        suchstr(ptPlanNamen.Dauer) = "Dauer"
 
 
         zeile = 2
@@ -137,31 +137,31 @@ Public Module BMWItOModul
 
         ' diese Daten müssen vorhanden sein - andernfalls Abbruch 
         Try
-            colName = firstZeile.Find(What:=suchstr(ptRplanNamen.Name), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
-            colAnfang = firstZeile.Find(What:=suchstr(ptRplanNamen.Anfang), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
-            colEnde = firstZeile.Find(What:=suchstr(ptRplanNamen.Ende), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colName = firstZeile.Find(What:=suchstr(ptPlanNamen.Name), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colAnfang = firstZeile.Find(What:=suchstr(ptPlanNamen.Anfang), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colEnde = firstZeile.Find(What:=suchstr(ptPlanNamen.Ende), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
         End Try
 
         Try
-            colDauer = firstZeile.Find(What:=suchstr(ptRplanNamen.Dauer), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colDauer = firstZeile.Find(What:=suchstr(ptPlanNamen.Dauer), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
             colDauer = -1
         End Try
 
 
         Try
-            colProduktlinie = firstZeile.Find(What:=suchstr(ptRplanNamen.Produktlinie), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colProduktlinie = firstZeile.Find(What:=suchstr(ptPlanNamen.BusinessUnit), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
             colProduktlinie = -1
         End Try
 
         ' diese Daten können vorhanden sein - wenn nicht, weitermachen ...  
         Try
-            colAbbrev = firstZeile.Find(What:=suchstr(ptRplanNamen.Beschreibung), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
-            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptRplanNamen.Vorgangsklasse), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colAbbrev = firstZeile.Find(What:=suchstr(ptPlanNamen.Beschreibung), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptPlanNamen.Vorgangsklasse), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
 
         End Try
@@ -232,7 +232,7 @@ Public Module BMWItOModul
             End If
 
             ' wird immer geschrieben 
-            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptRplanNamen.Protocol)
+            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptPlanNamen.Protocol)
             CType(.Cells(1, colProtocol + 7), Excel.Range).Value = "Grund"
 
         End With
@@ -347,11 +347,10 @@ Public Module BMWItOModul
 
                         Try
 
-                            hproj.name = pName
+                            hproj.name = makeValidProjectName(pName)
                             hproj.startDate = startDate
                             ' Projekte sollten erstmal nicht verschoben werden können
                             ' dazu muss eine Variante erzeugt werden , die kann dann verschoben werden 
-                            hproj.Status = ProjektStatus(1)
 
                             If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
                                 hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)

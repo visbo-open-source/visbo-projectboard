@@ -81,7 +81,7 @@ Public Class clsReport
     ''' </summary>
     ''' <param name="newReport"></param>
     ''' <remarks></remarks>
-    Public Sub CopyTo(ByRef newReport As clsReport)
+    Public Sub CopyTo(ByRef newReport As clsReportAll)
         Try
 
             With newReport
@@ -115,6 +115,9 @@ Public Class clsReport
                 .OnePage = Me.reportOnePage
                 .ExtendedMode = Me.reportExtendedMode
                 .KwInMilestone = Me.reportKwInMilestone
+                ' ur: 31.03.2017 kopieren von clsReport in clsReportall
+                .description = Nothing
+                .projectsWithNoMPmayPass = Nothing
             End With
 
         Catch ex As Exception

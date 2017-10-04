@@ -22,6 +22,7 @@ Partial Class frmCreateReportMeldungen
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmCreateReportMeldungen))
         Me.FileReportMessages = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.OKButton = New System.Windows.Forms.Button()
@@ -62,6 +63,7 @@ Partial Class frmCreateReportMeldungen
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.FileReportMessages)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmCreateReportMeldungen"
         Me.Text = "Meldungen der Reports in XML"
         Me.ResumeLayout(False)

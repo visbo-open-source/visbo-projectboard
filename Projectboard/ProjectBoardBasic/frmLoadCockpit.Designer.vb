@@ -22,6 +22,7 @@ Partial Class frmLoadCockpit
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmLoadCockpit))
         Me.ListBox1 = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
@@ -70,6 +71,7 @@ Partial Class frmLoadCockpit
         Me.deleteOtherCharts.TabIndex = 5
         Me.deleteOtherCharts.Text = "andere Charts löschen"
         Me.deleteOtherCharts.UseVisualStyleBackColor = True
+        Me.deleteOtherCharts.Visible = False
         '
         'frmLoadCockpit
         '
@@ -80,6 +82,7 @@ Partial Class frmLoadCockpit
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmLoadCockpit"
         Me.Text = "Chart - Cockpit Laden"

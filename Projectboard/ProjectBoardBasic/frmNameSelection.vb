@@ -353,12 +353,12 @@ Public Class frmNameSelection
             ElseIf menuOption = PTmenue.excelExport Then
 
                 If awinSettings.englishLanguage Then
-                    .Text = "Create Excel Report"
-                    .OKButton.Text = "Create Report"
+                    .Text = "Export to Excel"
+                    .OKButton.Text = "Export"
                     .filterLabel.Text = "Selection"
                 Else
-                    .Text = "Excel Report erzeugen"
-                    .OKButton.Text = "Report erstellen"
+                    .Text = "Export nach Excel"
+                    .OKButton.Text = "Export"
                     .filterLabel.Text = "Auswahl"
                 End If
 
@@ -514,6 +514,7 @@ Public Class frmNameSelection
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub frmShowPlanElements_Load(sender As Object, e As EventArgs) Handles Me.Load
+
 
         If frmCoord(PTfrm.listselP, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.listselP, PTpinfo.top))
@@ -794,6 +795,7 @@ Public Class frmNameSelection
         If Me.menuOption = PTmenue.excelExport Or _
             menuOption = PTmenue.filterdefinieren Or _
             menuOption = PTmenue.sessionFilterDefinieren Or _
+            menuOption = PTmenue.leistbarkeitsAnalyse Or _
             (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
             Me.DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
@@ -1040,9 +1042,9 @@ Public Class frmNameSelection
                 Else
                     ' alle anderen Optionen
                     If selectedProjekte.Count > 0 Then
-                        allRoles = selectedProjekte.getRoleNames
+                        allRoles = selectedProjekte.getRoleNames(True)
                     ElseIf ShowProjekte.Count > 0 Then
-                        allRoles = ShowProjekte.getRoleNames
+                        allRoles = ShowProjekte.getRoleNames(True)
                     Else
                         For i As Integer = 1 To RoleDefinitions.Count
                             Dim tmpName As String = RoleDefinitions.getRoledef(i).name

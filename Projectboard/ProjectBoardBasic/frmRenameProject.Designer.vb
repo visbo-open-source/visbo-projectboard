@@ -22,6 +22,7 @@ Partial Class frmRenameProject
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmRenameProject))
         Me.oldName = New System.Windows.Forms.TextBox()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.newName = New System.Windows.Forms.TextBox()
@@ -86,6 +87,7 @@ Partial Class frmRenameProject
         Me.Controls.Add(Me.newName)
         Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.oldName)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmRenameProject"
         Me.Text = "Rename"
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()

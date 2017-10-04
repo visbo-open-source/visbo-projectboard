@@ -22,6 +22,7 @@ Partial Class frmOutputWindow
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmOutputWindow))
         Me.lblOutput = New System.Windows.Forms.Label()
         Me.ListBoxOutput = New System.Windows.Forms.ListBox()
         Me.SuspendLayout()
@@ -52,6 +53,7 @@ Partial Class frmOutputWindow
         Me.ClientSize = New System.Drawing.Size(395, 397)
         Me.Controls.Add(Me.ListBoxOutput)
         Me.Controls.Add(Me.lblOutput)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmOutputWindow"
         Me.Text = "Meldungen"
         Me.TopMost = True

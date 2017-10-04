@@ -22,16 +22,17 @@ Public Class Tabelle1
                 .DisplayWorkbookTabs = False
                 .DisplayHeadings = False
 
+                .SplitColumn = 0
+                .SplitRow = 1
+                'If .SplitRow = 1 Then
+                '    ' nichts tun
+                'Else
+                '    .SplitColumn = 0
+                '    .SplitRow = 1
+                'End If
 
-                If .SplitRow = 1 Then
-                    ' nichts tun
-                Else
-                    .SplitColumn = 0
-                    .SplitRow = 1
-                End If
-
-
-                .GridlineColor = RGB(220, 220, 220)
+                .GridlineColor = CInt(awinSettings.gridLineColor)
+                '.GridlineColor = RGB(220, 220, 220)
                 a = Application.ActiveWindow.Panes.Count
 
                 .FreezePanes = True
@@ -44,11 +45,11 @@ Public Class Tabelle1
             Dim b As Integer = a
         End Try
 
-        If appInstance.ScreenUpdating = False Then
-            appInstance.ScreenUpdating = True
-        End If
+        ' nicht setzen, weil es sonst oft flackert; insbesondere beim Zurückgehen von Massen-Edit auf ProjectBoard 
+        'appInstance.ScreenUpdating = True
+        'Call awinNeuZeichnenDiagramme(2)
 
-        Call awinNeuZeichnenDiagramme(2)
+
 
     End Sub
 

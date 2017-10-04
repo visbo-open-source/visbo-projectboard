@@ -5,14 +5,12 @@ Imports System.ComponentModel
 
 Public Class frmReportProfil
 
+    Public zeitraum_definiert As Boolean = False
+    Public reportProfil As New clsReportAll
+
     ' für calledfrom ="MS Project"
-    Public reportProfil As New clsReport
     Public hproj As clsProjekt
     Public profileBearbeiten As New frmHierarchySelection
-
-
-    'für calledfrom = "Multiprojekt-Tafel"
-    Public reportAllProfil As New clsReportAll
 
 
     ' an der aufrufenden Stelle muss hier entweder "Multiprojekt-Tafel" oder
@@ -38,7 +36,7 @@ Public Class frmReportProfil
                     e.Cancel = True 'Fenster wird nicht geschlossen
             End Select
         End If
-
+      
     End Sub
 
     Private Sub languageSettings()
@@ -58,6 +56,9 @@ Public Class frmReportProfil
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Call languageSettings()
+
+        zeitraum_definiert = (showRangeLeft > 0 And showRangeRight > showRangeLeft)
+
 
         If Me.calledFrom = "MS Project" Then
 
@@ -180,6 +181,8 @@ Public Class frmReportProfil
             End Try
 
         ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+
+        
             Try
                 If currentReportProfil.name = "Last" Then
                     ' Profil von letztem Report unter Name "Last" speichern
@@ -210,9 +213,11 @@ Public Class frmReportProfil
 
                     If listOfFiles.Count < 1 Then
 
-                        Dim msgTxt As String = " Es existiert noch kein Report-Profil! "
+                        Dim msgTxt As String
                         If awinSettings.englishLanguage Then
                             msgTxt = "no Report Profile existing!"
+                        Else
+                            msgTxt = " Es existiert noch kein Report-Profil! "
                         End If
                         Call MsgBox(msgTxt)
 
@@ -231,7 +236,7 @@ Public Class frmReportProfil
                                     hhstr = Split(hstr(0), "\")
                                     profilName = hhstr(hhstr.Length - 1)
 
-                                    Dim hreportAll As clsReportAll = XMLImportReportAllProfil(profilName)
+                                    Dim hreportAll As clsReportAll = XMLImportReportProfil(profilName)
 
                                     If listofProfils.ContainsKey(profilName) Then
                                         listofProfils.Remove(profilName)
@@ -241,9 +246,11 @@ Public Class frmReportProfil
 
                                 Catch ex As Exception
                                     'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
-                                    Dim msgTxt As String = "ReportProfil '" & profilName & "' konnte nicht eingelesen werden!"
+                                    Dim msgTxt As String
                                     If awinSettings.englishLanguage Then
                                         msgTxt = "Report Profile '" & profilName & "' could not be read!"
+                                    Else
+                                        msgTxt = "ReportProfil '" & profilName & "' konnte nicht eingelesen werden!"
                                     End If
                                     Call MsgBox(msgTxt)
                                 End Try
@@ -260,6 +267,16 @@ Public Class frmReportProfil
                         ' Report mit Constellation - Multiprojektreport
                         If rdbMPreports.Checked Then
 
+                            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                                ' alles ok , bereits gesetzt 
+                                zeitraum_definiert = True
+                            Else
+                                zeitraum_definiert = False
+                                showRangeLeft = ShowProjekte.getMinMonthColumn
+                                showRangeRight = ShowProjekte.getMaxMonthColumn
+                                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                            End If
+
                             For Each kvp In listofProfils
 
                                 If kvp.Value.isMpp Then
@@ -274,6 +291,15 @@ Public Class frmReportProfil
                         ' Einzelprojektreport
                         If rdbEPreports.Checked Then
 
+                            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                                ' alles ok , bereits gesetzt 
+                                zeitraum_definiert = True
+                            Else
+                                zeitraum_definiert = False
+                                showRangeLeft = 0
+                                showRangeRight = 0
+                            End If
+
                             For Each kvp In listofProfils
 
                                 If Not kvp.Value.isMpp Then
@@ -286,9 +312,9 @@ Public Class frmReportProfil
                         End If
 
 
-                        If listOfFiles.Count > 0 Then
-                            '  RepProfilListbox.SelectedIndex = 1
-                        End If
+                            If listOfFiles.Count > 0 Then
+                                '  RepProfilListbox.SelectedIndex = 1
+                            End If
 
                     End If
 
@@ -305,7 +331,7 @@ Public Class frmReportProfil
                 Me.zeitLabel.Visible = False
                 Me.vonDate.Visible = False
                 Me.bisDate.Visible = False
-                Me.changeProfil.Visible = False
+                Me.changeProfil.Visible = True
                 Me.statusLabel.Visible = False
 
             Catch ex As Exception
@@ -314,7 +340,12 @@ Public Class frmReportProfil
                 Me.statusLabel.Visible = True
             End Try
 
-            Me.rdbEPreports.Checked = True
+            If selectedProjekte.Count > 0 Then
+                Me.rdbEPreports.Checked = True
+            Else
+                Me.rdbMPreports.Checked = True
+            End If
+
 
         End If
 
@@ -349,11 +380,11 @@ Public Class frmReportProfil
         ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
 
             ' '' Einlesen des ausgewählten ReportProfils
-            reportAllProfil = XMLImportReportAllProfil(reportProfilName)
-            currentReportProfil = reportAllProfil
+            reportProfil = XMLImportReportProfil(reportProfilName)
+            currentReportProfil = reportProfil
 
-            If Not IsNothing(reportAllProfil) Then
-                ToolTipProfil.Show(reportAllProfil.description, RepProfilListbox, 6000)
+            If Not IsNothing(reportProfil) Then
+                ToolTipProfil.Show(reportProfil.description, RepProfilListbox, 6000)
             End If
 
         End If
@@ -503,14 +534,14 @@ Public Class frmReportProfil
                     Dim reportProfilName As String = RepProfilListbox.Text
 
                     ' Einlesen des ausgewählten ReportProfils
-                    reportAllProfil = XMLImportReportAllProfil(reportProfilName)
+                    reportProfil = XMLImportReportProfil(reportProfilName)
 
                     ' ausgewähltes ReportPRofil in current-Variable speichern
-                    currentReportProfil = reportAllProfil
+                    currentReportProfil = reportProfil
 
-                    If Not IsNothing(reportAllProfil) Then
+                    If Not IsNothing(reportProfil) Then
 
-                        If reportAllProfil.isMpp Then
+                        If reportProfil.isMpp Then
 
 
                             If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then  ' Zeitraum wurde nicht gesetzt
@@ -524,7 +555,7 @@ Public Class frmReportProfil
                                 Me.statusLabel.Text = msgTxt
 
                                 Call MsgBox(msgTxt)
-                                MyBase.Close()
+                                ' MyBase.Close()
 
                             Else
 
@@ -536,7 +567,7 @@ Public Class frmReportProfil
                                 Me.ReportErstellen.Visible = False
                                 Me.ReportErstellen.Enabled = False
 
-                                BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
+                                BGWorkerReportGen.RunWorkerAsync(reportProfil)
                             End If
 
 
@@ -554,18 +585,18 @@ Public Class frmReportProfil
                                 Me.statusLabel.Text = msgTxt
 
                                 Call MsgBox(msgTxt)
-                                MyBase.Close()
+                                'MyBase.Close()
                             Else
                                 Me.statusLabel.Visible = True
                                 Me.statusLabel.Text = "...started"
                                 Me.ReportErstellen.Visible = False
                                 Me.ReportErstellen.Enabled = False
 
-                                BGWorkerReportGen.RunWorkerAsync(reportAllProfil)
+                                BGWorkerReportGen.RunWorkerAsync(reportProfil)
                             End If
 
                         End If
-                        End If
+                    End If
 
                 Else
                     Dim msgTxt As String = "Es wurde noch kein Report-Profil ausgewählt ! oder " & vbLf & _
@@ -595,87 +626,221 @@ Public Class frmReportProfil
     Private Sub changeProfil_Click(sender As Object, e As EventArgs) Handles changeProfil.Click
 
         Try
+            If Me.calledFrom = "MS Project" Then
 
 
-            ''ist bereits erfolgt ''
-            '' '' Einlesen des ausgewählten ReportProfils 
-            '' '' ''reportProfil = XMLImportReportProfil(RepProfilListbox.Text)
+                ''ist bereits erfolgt ''
+                '' '' Einlesen des ausgewählten ReportProfils 
+                '' '' ''reportProfil = XMLImportReportProfil(RepProfilListbox.Text)
 
-            If Not IsNothing(reportProfil) Then
+                If Not IsNothing(reportProfil) Then
 
-                reportProfil.Projects.Clear()
-                reportProfil.Projects.Add(1, hproj.name)
+                    reportProfil.Projects.Clear()
+                    reportProfil.Projects.Add(1, hproj.name)
 
-                Try
-                    reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
-                Catch ex As Exception
-                    'Call MsgBox(ex.Message)
-                    Me.statusLabel.Text = ex.Message
-                    Me.statusLabel.Visible = True
-                    Exit Sub
-                End Try
-
-
+                    Try
+                        reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+                    Catch ex As Exception
+                        'Call MsgBox(ex.Message)
+                        Me.statusLabel.Text = ex.Message
+                        Me.statusLabel.Visible = True
+                        Exit Sub
+                    End Try
 
 
-                Me.statusLabel.Visible = False
-
-                ' frmHierarchySelection aufrufen für BHTC
-                Call PBBBHTCHierarchySelAction("BHTC", reportProfil)
 
 
-                'RepVorlagenListBox neu aufbauen, falls ein oder mehrere ReportProfile gespeichert wurden.
-                ' hier müssen die ReportProfile erneut aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
+                    Me.statusLabel.Visible = False
 
-                Dim selectedItem As Object = RepProfilListbox.SelectedItem
-
-                RepProfilListbox.Items.Clear()  ' entfernt alle elemente aus Listbox um sie dann neu aufzubauen
-
-                Dim dirName As String
-                Dim dateiName As String
-                Dim profilName As String = ""
-
-                dirName = awinPath & ReportProfileOrdner
+                    ' frmHierarchySelection aufrufen für BHTC
+                    Call PBBBHTCHierarchySelAction("BHTC", reportProfil)
 
 
-                If My.Computer.FileSystem.DirectoryExists(dirName) Then
+                    'RepVorlagenListBox neu aufbauen, falls ein oder mehrere ReportProfile gespeichert wurden.
+                    ' hier müssen die ReportProfile erneut aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
+
+                    Dim selectedItem As Object = RepProfilListbox.SelectedItem
+
+                    RepProfilListbox.Items.Clear()  ' entfernt alle elemente aus Listbox um sie dann neu aufzubauen
+
+                    Dim dirName As String
+                    Dim dateiName As String
+                    Dim profilName As String = ""
+
+                    dirName = awinPath & ReportProfileOrdner
 
 
-                    Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
+                    If My.Computer.FileSystem.DirectoryExists(dirName) Then
 
-                    For k As Integer = 1 To listOfFiles.Count
 
-                        dateiName = listOfFiles.Item(k - 1)
-                        If dateiName.Contains(".xml") Then
+                        Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
 
-                            Try
+                        For k As Integer = 1 To listOfFiles.Count
 
-                                Dim hstr() As String
-                                hstr = Split(dateiName, ".xml", 2)
-                                Dim hhstr() As String
-                                hhstr = Split(hstr(0), "\")
-                                profilName = hhstr(hhstr.Length - 1)
-                                RepProfilListbox.Items.Add(profilName)
+                            dateiName = listOfFiles.Item(k - 1)
+                            If dateiName.Contains(".xml") Then
 
-                            Catch ex As Exception
+                                Try
 
-                            End Try
+                                    Dim hstr() As String
+                                    hstr = Split(dateiName, ".xml", 2)
+                                    Dim hhstr() As String
+                                    hhstr = Split(hstr(0), "\")
+                                    profilName = hhstr(hhstr.Length - 1)
+                                    RepProfilListbox.Items.Add(profilName)
 
-                        End If
+                                Catch ex As Exception
 
-                    Next k
-                    RepProfilListbox.SelectedItem = selectedItem
+                                End Try
+
+                            End If
+
+                        Next k
+                        RepProfilListbox.SelectedItem = selectedItem
+
+                    Else
+                        Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+
+                    End If
+                    'RepVorlagenListBox ist nun  neu aufgebaut
 
                 Else
-                    Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+                    Throw New ArgumentException("Fehler: es ist kein ReportProfil geladen")
 
+                End If    ' von if not isnothing(reportProfil)
+
+
+            ElseIf Me.calledFrom = "Multiprojekt-Tafel" Then
+
+                ''ist bereits erfolgt ''
+                '' '' Einlesen des ausgewählten ReportProfils 
+                '' '' ''reportAllProfil = XMLImportReportAllProfil(reportProfilName)
+
+
+                ' TO DO :nun muss das Formular zum Ändern gefüllt und angezeigt werden
+
+                If Not IsNothing(reportProfil) Then
+                    ToolTipProfil.Show(reportProfil.description, RepProfilListbox, 6000)
+
+
+                    Me.statusLabel.Visible = False
+
+                    ' frmHierarchySelection aufrufen für BHTC
+                    Call PBBBHTCHierarchySelAction("Multiprojekt-Tafel", reportProfil)
+
+
+                    'RepVorlagenListBox neu aufbauen, falls ein oder mehrere ReportProfile gespeichert wurden.
+                    ' hier müssen die ReportProfile erneut aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
+
+                    Dim selectedItem As Object = RepProfilListbox.SelectedItem
+
+                    RepProfilListbox.Items.Clear()  ' entfernt alle elemente aus Listbox um sie dann neu aufzubauen
+
+                    Dim dirName As String
+                    Dim dateiName As String
+                    Dim profilName As String = ""
+
+                    dirName = awinPath & ReportProfileOrdner
+
+
+                    If My.Computer.FileSystem.DirectoryExists(dirName) Then
+
+
+                        Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
+
+                        ' Existiert kein ReportProfil.XML, so wird ein Dummy.xml erzeugt und anschließend eingelesen
+
+                        If listOfFiles.Count < 1 Then
+
+                            Dim msgTxt As String = " Es existiert noch kein Report-Profil! "
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "no Report Profile existing!"
+                            End If
+                            Call MsgBox(msgTxt)
+
+                        Else
+
+                            For k As Integer = 1 To listOfFiles.Count
+
+                                dateiName = listOfFiles.Item(k - 1)
+                                If dateiName.Contains(".xml") Then
+
+                                    Try
+
+                                        Dim hstr() As String
+                                        hstr = Split(dateiName, ".xml", 2)
+                                        Dim hhstr() As String
+                                        hhstr = Split(hstr(0), "\")
+                                        profilName = hhstr(hhstr.Length - 1)
+
+                                        Dim hreportAll As clsReportAll = XMLImportReportProfil(profilName)
+
+                                        If listofProfils.ContainsKey(profilName) Then
+                                            listofProfils.Remove(profilName)
+                                        End If
+                                        listofProfils.Add(profilName, hreportAll)
+
+
+                                    Catch ex As Exception
+                                        'Throw New ArgumentException("ReportProfil '" & profilName & "' konnte nicht eingelesen werden!")
+                                        Dim msgTxt As String = "ReportProfil '" & profilName & "' konnte nicht eingelesen werden!"
+                                        If awinSettings.englishLanguage Then
+                                            msgTxt = "Report Profile '" & profilName & "' could not be read!"
+                                        End If
+                                        Call MsgBox(msgTxt)
+                                    End Try
+
+                                End If
+
+                            Next k
+
+                            ' anzeige löschen
+                            RepProfilListbox.Items.Clear()
+
+                            ' Anzeigen der Profile, abhängig vom gecheckten Radiobutton
+
+                            ' Report mit Constellation - Multiprojektreport
+                            If rdbMPreports.Checked Then
+
+                                For Each kvp In listofProfils
+
+                                    If kvp.Value.isMpp Then
+                                        ' Profil profilName in Auswahl eintragen
+                                        RepProfilListbox.Items.Add(kvp.Value.name)
+
+                                    End If
+                                Next
+
+                            End If
+
+                            ' Einzelprojektreport
+                            If rdbEPreports.Checked Then
+
+                                For Each kvp In listofProfils
+
+                                    If Not kvp.Value.isMpp Then
+                                        ' Profil profilName in Auswahl eintragen
+                                        RepProfilListbox.Items.Add(kvp.Value.name)
+
+                                    End If
+                                Next
+
+                            End If
+
+
+                        End If
+                        'RepVorlagenListBox ist nun  neu aufgebaut
+
+
+                    Else
+                        Throw New ArgumentException("Fehler: Directory ReportProfile existiert nicht")
+
+                    End If
+                Else
+                    Throw New ArgumentException("Fehler: es ist kein ReportProfil geladen")
                 End If
-                'RepVorlagenListBox ist nun  neu aufgebaut
 
-            Else
-                Throw New ArgumentException("Fehler: es ist kein ReportProfil geladen")
-
-            End If    ' von if not isnothing(reportProfil)
+            End If   ' end of Me.calledFrom = "Multiprojekt-Tafel"
 
         Catch ex As Exception
             'Call MsgBox(ex.Message)
@@ -721,7 +886,7 @@ Public Class frmReportProfil
 
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         ' ''Dim vorlagenDateiName As String = CType(e.Argument, String)
-        Dim reportProfil As clsReport = CType(e.Argument, clsReport)
+        Dim reportProfil As clsReportAll = CType(e.Argument, clsReportAll)
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
 
@@ -947,33 +1112,51 @@ Public Class frmReportProfil
     Private Sub rdbEPreports_CheckedChanged(sender As Object, e As EventArgs) Handles rdbEPreports.CheckedChanged
 
 
-        If Me.calledFrom = "Multiprojekt-Tafel" Then
-            Try
+        If rdbEPreports.Checked Then
 
-                RepProfilListbox.Items.Clear()
+            If Me.calledFrom = "Multiprojekt-Tafel" Then
+                Try
 
-                For Each kvp In listofProfils
+                    RepProfilListbox.Items.Clear()
 
-                    If Not kvp.Value.isMpp Then
-                        ' Profil profilName in Auswahl eintragen
-                        RepProfilListbox.Items.Add(kvp.Value.name)
+                    For Each kvp In listofProfils
 
+                        If Not kvp.Value.isMpp Then
+                            ' Profil profilName in Auswahl eintragen
+                            RepProfilListbox.Items.Add(kvp.Value.name)
+
+                        End If
+                    Next
+
+                    ' es wurde noch kein Projekt selektiert
+                    If selectedProjekte.Count < 1 Then
+
+                        Me.statusLabel.Visible = True
+
+                        Dim msgTxt As String = "bitte zuerst Projekte selektieren!"
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "please select one or more projects!"
+                        End If
+
+                        Me.statusLabel.Text = msgTxt
+
+                        Call MsgBox(msgTxt)
                     End If
-                Next
+
+                Catch ex As Exception
+                    'Throw New ArgumentException("Fehler beim Filtern")
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                End Try
 
 
-            Catch ex As Exception
-                'Throw New ArgumentException("Fehler beim Filtern")
-                Me.statusLabel.Text = ex.Message
-                Me.statusLabel.Visible = True
-            End Try
+                Me.zeitLabel.Visible = False
+                Me.vonDate.Visible = False
+                Me.bisDate.Visible = False
+                Me.changeProfil.Visible = True
+                Me.statusLabel.Visible = False
+            End If
 
-
-            Me.zeitLabel.Visible = False
-            Me.vonDate.Visible = False
-            Me.bisDate.Visible = False
-            Me.changeProfil.Visible = False
-            Me.statusLabel.Visible = False
         End If
 
     End Sub
@@ -981,7 +1164,9 @@ Public Class frmReportProfil
 
     Private Sub rdbMPreports_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMPreports.CheckedChanged
 
-        If Me.calledFrom = "Multiprojekt-Tafel" Then
+        If rdbMPreports.Checked Then
+
+            If Me.calledFrom = "Multiprojekt-Tafel" Then
                 Try
 
                     RepProfilListbox.Items.Clear()
@@ -995,6 +1180,13 @@ Public Class frmReportProfil
                         End If
                     Next
 
+                    ' es ist kein Zeitraum selektiert
+                    If Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                    End If
+
 
                 Catch ex As Exception
                     'Throw New ArgumentException("Fehler beim Filtern")
@@ -1006,10 +1198,18 @@ Public Class frmReportProfil
                 Me.zeitLabel.Visible = False
                 Me.vonDate.Visible = False
                 Me.bisDate.Visible = False
-                Me.changeProfil.Visible = False
+                Me.changeProfil.Visible = True
                 Me.statusLabel.Visible = False
-            End If
 
+            End If
+        Else
+            If zeitraum_definiert = False Then
+                ' zu Beginn war kein zeitraum definiert, also zurücksetzen
+                Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+                showRangeLeft = 0
+                showRangeRight = 0
+            End If
+        End If
 
     End Sub
 

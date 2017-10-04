@@ -12,7 +12,7 @@ Public Class frmAnnotateProject
 
         Try
 
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
         Catch ex As Exception
             Call MsgBox("keine Shapes Zuordnung möglich ")
@@ -45,7 +45,7 @@ Public Class frmAnnotateProject
 
 
                 'Try
-                '    worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+                '    worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
                 '    projectshape = worksheetShapes.Item(kvp.Value.name)
                 'Catch ex As Exception
 
@@ -73,11 +73,36 @@ Public Class frmAnnotateProject
     End Sub
 
     Private Sub frmAnnotateProject_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        If selectedProjekte.Count = 0 Then
-            OKButton.Text = "Alle beschriften"
-        End If
+
+        ' Button Visibility uind Sprachen Texte definieren 
+        Call defineFrmButtonVisibility()
+        
     End Sub
 
+    Private Sub defineFrmButtonVisibility()
+
+        If awinSettings.englishLanguage Then
+            Me.Text = "Annotate plan-elements"
+            annotatePhases.Text = "annotate Phases"
+            annotateMilestones.Text = "annotate Milestones"
+            showStdNames.Text = "Standard Names"
+            showOrigNames.Text = "Original Names"
+            showAbbrev.Text = "show Abbreviation"
+
+            If selectedProjekte.Count = 0 Then
+                OKButton.Text = "Annotate all"
+            Else
+                OKButton.Text = "Annotate"
+            End If
+
+            deleteAnnotations.Text = "Delete"
+        Else
+            If selectedProjekte.Count = 0 Then
+                OKButton.Text = "Alle beschriften"
+            End If
+        End If
+
+    End Sub
     Private Sub deleteAnnotations_Click(sender As Object, e As EventArgs) Handles deleteAnnotations.Click
 
         If selectedProjekte.Count = 0 Then

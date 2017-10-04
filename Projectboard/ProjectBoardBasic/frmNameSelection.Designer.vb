@@ -158,6 +158,7 @@ Partial Class frmNameSelection
         Me.pictureCosts.Location = New System.Drawing.Point(344, 21)
         Me.pictureCosts.Name = "pictureCosts"
         Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
+        Me.pictureCosts.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.pictureCosts.TabIndex = 17
         Me.pictureCosts.TabStop = False
         '
@@ -167,6 +168,7 @@ Partial Class frmNameSelection
         Me.pictureRoles.Location = New System.Drawing.Point(242, 21)
         Me.pictureRoles.Name = "pictureRoles"
         Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
+        Me.pictureRoles.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.pictureRoles.TabIndex = 14
         Me.pictureRoles.TabStop = False
         '
@@ -176,6 +178,7 @@ Partial Class frmNameSelection
         Me.picturePhasen.Location = New System.Drawing.Point(38, 21)
         Me.picturePhasen.Name = "picturePhasen"
         Me.picturePhasen.Size = New System.Drawing.Size(33, 33)
+        Me.picturePhasen.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.picturePhasen.TabIndex = 18
         Me.picturePhasen.TabStop = False
         '
@@ -185,6 +188,7 @@ Partial Class frmNameSelection
         Me.pictureMilestones.Location = New System.Drawing.Point(140, 21)
         Me.pictureMilestones.Name = "pictureMilestones"
         Me.pictureMilestones.Size = New System.Drawing.Size(33, 33)
+        Me.pictureMilestones.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.pictureMilestones.TabIndex = 19
         Me.pictureMilestones.TabStop = False
         '
@@ -263,6 +267,7 @@ Partial Class frmNameSelection
         Me.pictureTyp.Location = New System.Drawing.Point(554, 21)
         Me.pictureTyp.Name = "pictureTyp"
         Me.pictureTyp.Size = New System.Drawing.Size(33, 33)
+        Me.pictureTyp.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.pictureTyp.TabIndex = 24
         Me.pictureTyp.TabStop = False
         '
@@ -291,7 +296,8 @@ Partial Class frmNameSelection
         Me.pictureBU.Image = Global.ProjectBoardBasic.My.Resources.Resources.branch
         Me.pictureBU.Location = New System.Drawing.Point(449, 21)
         Me.pictureBU.Name = "pictureBU"
-        Me.pictureBU.Size = New System.Drawing.Size(33, 33)
+        Me.pictureBU.Size = New System.Drawing.Size(32, 32)
+        Me.pictureBU.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.pictureBU.TabIndex = 27
         Me.pictureBU.TabStop = False
         '
@@ -388,6 +394,7 @@ Partial Class frmNameSelection
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.nameListBox)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmNameSelection"
         Me.Text = "Visualisieren von Plan-Objekten"
         Me.TopMost = True

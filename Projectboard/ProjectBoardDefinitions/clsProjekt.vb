@@ -9,10 +9,10 @@ Public Class clsProjekt
 
 
     'Private AllPhases As List(Of clsPhase)
-    Private relStart As Integer
-    Private imarge As Double
-    Private uuid As Long
-    Private iDauer As Integer
+    Private _relStart As Integer
+    Private _imarge As Double
+    Private _uuid As Long
+    Private _iDauer As Integer
     Private _StartOffset As Integer
     Private _Start As Integer
     Private _earliestStart As Integer
@@ -33,9 +33,45 @@ Public Class clsProjekt
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
 
+    ' ergänzt am 20.8.17 
+    ' Marker für Projekte, um anzuzeigen, dass es zu einer bestimmten Menge gehört ; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
+    Private _marker As Boolean = False
+    Public Property marker As Boolean
+        Get
+            marker = _marker
+        End Get
+        Set(value As Boolean)
+            _marker = value
+        End Set
+    End Property
+
+    ' Kennzeichnung, ob ein Projekt manuell verschoben werden kann; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
+    Private _movable As Boolean = False
+    Public Property movable As Boolean
+        Get
+            movable = _movable
+        End Get
+        Set(value As Boolean)
+            If _Status = ProjektStatus(PTProjektStati.geplant) Or _
+                _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or _
+                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Then
+                _movable = value
+
+            Else
+                Dim errmsg As String
+                If awinSettings.englishLanguage Then
+                    errmsg = "project status does not allow movement!"
+                Else
+                    errmsg = "Projekt Status erlaubt keine Verschiebung / Dehnung / Kürzung"
+                End If
+                Throw New ArgumentException(errmsg)
+            End If
+
+        End Set
+    End Property
 
 
-    ' Deklarationen der Events 
+    ' die ShapeUID des Projektes  
     Private _shpUID As String = ""
     Public Property shpUID As String
         Get
@@ -319,23 +355,23 @@ Public Class clsProjekt
 
     ' ergänzt am 30.1.14 - diffToPrev , wird benutzt, um zu kennzeichnen , welches Projekt sich im Vergleich zu vorher verändert hat 
 
-    Private _diffToPrev As Boolean = False
-    Public Property diffToPrev As Boolean
-        Get
-            If Not IsNothing(_diffToPrev) Then
-                diffToPrev = _diffToPrev
-            Else
-                diffToPrev = False
-            End If
-        End Get
-        Set(value As Boolean)
-            If Not IsNothing(value) Then
-                _diffToPrev = value
-            Else
-                _diffToPrev = False
-            End If
-        End Set
-    End Property
+    'Private _diffToPrev As Boolean = False
+    'Public Property diffToPrev As Boolean
+    '    Get
+    '        If Not IsNothing(_diffToPrev) Then
+    '            diffToPrev = _diffToPrev
+    '        Else
+    '            diffToPrev = False
+    '        End If
+    '    End Get
+    '    Set(value As Boolean)
+    '        If Not IsNothing(value) Then
+    '            _diffToPrev = value
+    '        Else
+    '            _diffToPrev = False
+    '        End If
+    '    End Set
+    'End Property
 
     ' ergänzt am 16.09.2015 - extendedView , wird benutzt, um zu kennzeichnen , welches Projekt in extended View dargestellt werden soll
     Private _extendedView As Boolean = False
@@ -377,8 +413,8 @@ Public Class clsProjekt
                         Me.variantDescription = .variantDescription And _
                         Me.description = .description Then
 
-                        If Me.startDate = .startDate And _
-                            Me.endeDate = .endeDate Then
+                        If Me.startDate.Date = .startDate.Date And _
+                            Me.endeDate.Date = .endeDate.Date Then
 
                             If Me.ampelStatus = .ampelStatus And _
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then
@@ -535,37 +571,47 @@ Public Class clsProjekt
             fullPhaseName = CStr(selPhases.Item(ix))
 
             Dim breadcrumb As String = ""
-            Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
-            Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+            Dim type As Integer = -1
+            Dim pvName As String = ""
+            Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb, type, pvName)
 
-            For px As Integer = 0 To phaseIndices.Length - 1
+            If type = -1 Or _
+                (type = PTProjektType.projekt And pvName = Me.name) Or _
+                (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
-                cphase = Me.getPhase(phaseIndices(px))
+                Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
-                If Not IsNothing(cphase) Then
-                    Try
-                        tmpStartDate = cphase.getStartDate
-                        tmpEndDate = cphase.getEndDate
+                For px As Integer = 0 To phaseIndices.Length - 1
 
-                        If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
-                            earliestDate = tmpStartDate
-                            earliestfound = True
-                        End If
+                    cphase = Me.getPhase(phaseIndices(px))
 
-                        If DateDiff(DateInterval.Day, latestDate, tmpEndDate) > 0 Then
-                            latestDate = tmpEndDate
-                            latestfound = True
-                        End If
+                    If Not IsNothing(cphase) Then
+                        Try
+                            tmpStartDate = cphase.getStartDate
+                            tmpEndDate = cphase.getEndDate
 
-                    Catch ex As Exception
-                        ' nichts tun 
-                    End Try
-                Else
-                    ' nichts tun
-                End If
+                            If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
+                                earliestDate = tmpStartDate
+                                earliestfound = True
+                            End If
+
+                            If DateDiff(DateInterval.Day, latestDate, tmpEndDate) > 0 Then
+                                latestDate = tmpEndDate
+                                latestfound = True
+                            End If
+
+                        Catch ex As Exception
+                            ' nichts tun 
+                        End Try
+                    Else
+                        ' nichts tun
+                    End If
 
 
-            Next
+                Next
+
+            End If
+
 
         Next
 
@@ -579,37 +625,47 @@ Public Class clsProjekt
             fullMsName = CStr(selMilestones.Item(ix))
 
             Dim breadcrumb As String = ""
-            Call splitHryFullnameTo2(fullMsName, msName, breadcrumb)
-            Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
-            ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+            Dim type As Integer = -1
+            Dim pvName As String = ""
+            Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
 
-            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+            If type = -1 Or _
+                (type = PTProjektType.projekt And pvName = Me.name) Or _
+                (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
-                milestone = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
+                ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
-                If Not IsNothing(milestone) Then
-                    Try
-                        tmpStartDate = milestone.getDate
+                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                        If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
-                            earliestDate = tmpStartDate
-                            earliestfound = True
-                        End If
+                    milestone = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                        If DateDiff(DateInterval.Day, latestDate, tmpStartDate) > 0 Then
-                            latestDate = tmpStartDate
-                            latestfound = True
-                        End If
+                    If Not IsNothing(milestone) Then
+                        Try
+                            tmpStartDate = milestone.getDate
 
-                    Catch ex As Exception
-                        ' nichts tun
-                    End Try
-                Else
-                    ' nichts tun 
+                            If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
+                                earliestDate = tmpStartDate
+                                earliestfound = True
+                            End If
 
-                End If
+                            If DateDiff(DateInterval.Day, latestDate, tmpStartDate) > 0 Then
+                                latestDate = tmpStartDate
+                                latestfound = True
+                            End If
 
-            Next
+                        Catch ex As Exception
+                            ' nichts tun
+                        End Try
+                    Else
+                        ' nichts tun 
+
+                    End If
+
+                Next
+
+            End If
+
 
         Next
 
@@ -775,13 +831,32 @@ Public Class clsProjekt
         End Set
     End Property
 
-
     ''' <summary>
-    ''' stellt sicher, daß variantName niemals Nothing sein kann
+    ''' gibt als Erläuterung die volle Description, Projekt- plus Varianten - Beschreibung zurück; 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    Public ReadOnly Property fullDescription As String
+        Get
+            If IsNothing(_description) Then
+                _description = ""
+            End If
+            If IsNothing(_variantDescription) Or _variantName = "" Then
+                fullDescription = _description
+            Else
+                fullDescription = _description & "; [" & _variantDescription & "]"
+            End If
+
+        End Get
+    End Property
+
+        ''' <summary>
+        ''' stellt sicher, daß variantName niemals Nothing sein kann
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
     Public Property variantName As String
         Get
             If IsNothing(_variantName) Then
@@ -891,8 +966,17 @@ Public Class clsProjekt
 
             Try
                 If value.Trim.Length > 0 Then
-                    _name = value.Trim
-
+                    If isValidProjectName(value.Trim) Then
+                        _name = value.Trim
+                    Else
+                        Dim msgTxt As String = ""
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "name must not contain any #, (, or )-characters"
+                        Else
+                            msgTxt = "Name darf keine #, (, or )-Zeichen enthalten"
+                        End If
+                        Throw New ArgumentException(msgTxt)
+                    End If
                 Else
                     _name = ""
                 End If
@@ -1834,7 +1918,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property withinTimeFrame(ByVal areMilestones As Boolean, von As Integer, bis As Integer, ByVal namenListe As Collection) As Collection
+    Public ReadOnly Property phasesWithinTimeFrame(ByVal areMilestones As Boolean, von As Integer, bis As Integer, ByVal namenListe As Collection) As Collection
         Get
             Dim tmpListe As New Collection
             ' selection type wird aktuell noch ignoriert .... 
@@ -1844,7 +1928,7 @@ Public Class clsProjekt
 
             ' ein Zeitraum muss definiert sein 
             If von <= 0 Or bis <= 0 Or bis - von < 0 Then
-                withinTimeFrame = tmpListe
+                phasesWithinTimeFrame = tmpListe
             Else
                 Dim ix As Integer
                 Dim anzElements As Integer
@@ -1913,10 +1997,32 @@ Public Class clsProjekt
 
             End If
 
-            withinTimeFrame = tmpListe
+            phasesWithinTimeFrame = tmpListe
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zuück, ob das Projekt in dem TimeFrame, definiert durch Moant von und Monat bis, liegt 
+    ''' </summary>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isWithinTimeFrame(ByVal von As Integer, ByVal bis As Integer) As Boolean
+        Get
+            Dim tmpResult As Boolean
+            If bis - von < 1 Then
+                tmpResult = True
+            Else
+                tmpResult = Not (getColumnOfDate(Me.startDate) > bis Or _
+                    getColumnOfDate(Me.endeDate) < von)
+            End If
+            isWithinTimeFrame = tmpResult
+        End Get
+    End Property
+
 
     Public Sub clearPhases()
 
@@ -2151,7 +2257,13 @@ Public Class clsProjekt
                 Case ptSortCriteria.strategyProfitLossRisk
                     Dim tmp(4) As Double
                     Call Me.calculateRoundedKPI(tmp(0), tmp(1), tmp(2), tmp(3), tmp(4))
-                    tmpResult = CInt(Me.StrategicFit * 1000 + tmp(4) * 60 - Me.Risiko * 800).ToString(formatStr) & Me.name
+                    tmpResult = CInt(Me.StrategicFit * 10000 + tmp(4) * 1000 - Me.Risiko * 800).ToString(formatStr) & Me.name
+
+                Case ptSortCriteria.strategyRiskProfitLoss
+                    Dim tmp(4) As Double
+                    Call Me.calculateRoundedKPI(tmp(0), tmp(1), tmp(2), tmp(3), tmp(4))
+                    tmpResult = CInt(Me.StrategicFit * 10000 - Me.Risiko * 1000 + tmp(4) * 10).ToString(formatStr) & Me.name
+
 
                 Case Else
                     ' nimm die Default- Lösung 
@@ -2719,13 +2831,14 @@ Public Class clsProjekt
     End Sub
 
 
-    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
+    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date, _
+                                      Optional ByVal zielRenditenVorgabe As Double = -99999.0)
         Dim p As Integer
         Dim newphase As clsPhase
         Dim oldphase As clsPhase
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
-
+        Dim newPhaseNameID As String = ""
         Call copyAttrTo(newproject)
 
         With newproject
@@ -2742,7 +2855,7 @@ Public Class clsProjekt
                 oldphase = Me.getPhase(p)
                 newphase = New clsPhase(newproject)
 
-                oldphase.korrCopyTo(newphase, CorrectFactor)
+                oldphase.korrCopyTo(newphase, CorrectFactor, newPhaseNameID, zielRenditenVorgabe)
 
                 .AddPhase(newphase)
 
@@ -3209,20 +3322,14 @@ Public Class clsProjekt
             Status = _Status
         End Get
         Set(value As String)
-            If value = ProjektStatus(0) Then
+            If value = ProjektStatus(0) Or _
+                value = ProjektStatus(1) Or _
+                value = ProjektStatus(2) Or _
+                value = ProjektStatus(3) Or _
+                value = ProjektStatus(4) Then
                 _Status = value
-            ElseIf value = ProjektStatus(1) Or value = ProjektStatus(2) Or _
-                                               value = ProjektStatus(3) Or _
-                                               value = ProjektStatus(4) Then
-                _Status = value
-                ' 2.5.2014 ur: Die nächsten Befehle sind auskommentiert, weil ein beauftragtes Projekt
-                ' nicht zwangsweise bereits gestartet wurde 
-                '_earliestStart = 0
-                '_latestStart = 0
-                '_earliestStartDate = _startDate
-                '_latestStartDate = _startDate
             Else
-                Call MsgBox("unzulässiger Wert für Status")
+                Call MsgBox("Wert als Status nicht zugelassen: " & value)
             End If
         End Set
     End Property
@@ -3715,11 +3822,19 @@ Public Class clsProjekt
                             Dim j As Integer = 1
                             While j <= selectedPhases.Count And Not found
 
-                                Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb)
+                                Dim type As Integer = -1
+                                Dim pvName As String = ""
+                                Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
+                                If type = -1 Or _
+                                    (type = PTProjektType.projekt And pvName = Me.name) Or _
+                                    (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
-                                If cphase.name = selPhaseName Then
-                                    found = True
+                                    If cphase.name = selPhaseName Then
+                                        found = True
+                                    End If
+
                                 End If
+
                                 j = j + 1
                             End While
 
@@ -3890,6 +4005,10 @@ Public Class clsProjekt
 
             ElseIf childPhaseIDs.Count <= 1 And Not considerAll Then
                 ' es wird nur eine Zeile benötigt 
+                tmpValue = 1
+
+            ElseIf swimlaneID = rootPhaseName Then
+                ' für die Darstellung der Meilensteine einer Swimlane wird nur eine Zeile benötigt  
                 tmpValue = 1
 
             Else
@@ -4078,6 +4197,355 @@ Public Class clsProjekt
     End Property
 
     ''' <summary>
+    ''' gibt zu einer als als voller Name (Breadcrumb + Elemename) übergebenen Phase zurück, ob die so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    '''  
+    ''' </summary>
+    ''' <param name="fullName">der volle Name, das heisst Breadcrum plus Name</param>
+    ''' <param name="strict">gibt an, ob der volle Breadcrumb berücksichtigt werden soll oder nur der Name</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPhase(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+            Dim type As Integer = -1
+            Dim pvName As String = ""
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
+            If type = -1 Or _
+                (type = PTProjektType.projekt And Me.name = pvName) Or _
+                (type = PTProjektType.vorlage And Me.VorlagenName = pvName) Then
+
+                If strict Then
+                    ' breadcrumb soll unverändert beachtet werden 
+                Else
+                    breadcrumb = ""
+                End If
+
+                Dim cphase As clsPhase = Me.getPhase(elemName, breadcrumb, 1)
+                If IsNothing(cphase) Then
+                    containsPhase = False
+                Else
+                    containsPhase = True
+                End If
+            Else
+                containsPhase = False
+            End If
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu einem als als voller Name (Breadcrumb + Elemename) übergebenen Meilenstein zurück, ob der so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    ''' </summary>
+    ''' <param name="fullName"></param>
+    ''' <param name="strict"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsMilestone(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+            Dim type As Integer = -1
+            Dim pvName As String = ""
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
+
+            If type = -1 Or _
+                (type = PTProjektType.projekt And Me.name = pvName) Or _
+                (type = PTProjektType.vorlage And Me.VorlagenName = pvName) Then
+
+                If strict Then
+                    ' breadcrumb soll unverändert beachtet werden 
+                Else
+                    breadcrumb = ""
+                End If
+
+                Dim cMilestone As clsMeilenstein = Me.getMilestone(elemName, breadcrumb, 1)
+                If IsNothing(cMilestone) Then
+                    containsMilestone = False
+                Else
+                    containsMilestone = True
+                End If
+            Else
+                containsMilestone = False
+            End If
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn in der Vorlage irgendeiner der Meilensteine, entweder über BreadCrumb oder nur als Name angegeben, vorhanden ist
+    ''' </summary>
+    ''' <param name="msCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Overrides ReadOnly Property containsAnyMilestonesOfCollection(ByVal msCollection As Collection) As Boolean
+        Get
+            Dim ix As Integer
+            Dim fullName As String
+            Dim tmpResult As Boolean = False
+            Dim containsMS As Boolean = False
+            Dim tmpMilestone As clsMeilenstein
+
+            If msCollection.Count = 0 Then
+                tmpResult = True
+            Else
+                While ix <= msCollection.Count And Not containsMS
+
+                    fullName = CStr(msCollection.Item(ix))
+                    Dim curMsName As String = ""
+                    Dim breadcrumb As String = ""
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+
+                    ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                    Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
+
+                    If type = -1 Or _
+                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                        (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
+
+                        Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
+                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+
+                        For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                            tmpMilestone = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                            If IsNothing(tmpMilestone) Then
+
+                            Else
+                                containsMS = True
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+                    ix = ix + 1
+
+                End While
+                tmpResult = containsMS
+            End If
+
+            containsAnyMilestonesOfCollection = tmpResult
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn in der Vorlage irgendeiner der Meilensteine, entweder über BreadCrumb oder nur als Name angegeben, vorhanden ist
+    ''' </summary>
+    ''' <param name="phCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Overrides ReadOnly Property containsAnyPhasesOfCollection(ByVal phCollection As Collection) As Boolean
+        Get
+            Dim ix As Integer
+            Dim fullName As String
+            Dim tmpResult As Boolean = False
+            Dim containsPH As Boolean = False
+            Dim tmpPhase As clsPhase
+
+            If phCollection.Count = 0 Then
+                tmpResult = True
+            Else
+                While ix <= phCollection.Count And Not containsPH
+
+                    fullName = CStr(phCollection.Item(ix))
+                    Dim curPhName As String = ""
+                    Dim breadcrumb As String = ""
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+
+                    ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                    Call splitHryFullnameTo2(fullName, curPhName, breadcrumb, type, pvName)
+
+                    If type = -1 Or _
+                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                        (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
+
+                        Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(curPhName, breadcrumb)
+                        ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+
+                        For mx As Integer = 0 To CInt(phaseIndices.Length) - 1
+
+                            tmpPhase = Me.getPhase(phaseIndices(mx))
+                            If IsNothing(tmpPhase) Then
+
+                            Else
+                                containsPH = True
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+                    ix = ix + 1
+
+                End While
+                tmpResult = containsPH
+            End If
+
+            containsAnyPhasesOfCollection = tmpResult
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
+    ''' so wird er ersetzt durch alle Elem-IDs, die diesen Namen tragen 
+    ''' es wird sichergestellt, dass jede ID tatsächlich nur einmal aufgeführt ist 
+    ''' </summary>
+    ''' <param name="namenListe"></param>
+    ''' <param name="namesAreMilestones"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getElemIdsOf(ByVal namenListe As Collection, ByVal namesAreMilestones As Boolean) As Collection
+        Get
+            Dim iDCollection As New Collection
+            Dim tmpSortList As New SortedList(Of DateTime, String)
+            Dim sortDate As DateTime
+            Dim itemName As String = ""
+            Dim itemBreadcrumb As String = ""
+            Dim iDItem As String
+            Dim phaseIndices() As Integer
+            Dim milestoneIndices(,) As Integer
+
+            For i As Integer = 1 To namenListe.Count
+
+                itemName = CStr(namenListe.Item(i))
+
+                If istElemID(itemName) Then
+
+                    Dim ok As Boolean = True
+                    If namesAreMilestones Then
+                        Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(itemName)
+                        If Not IsNothing(cMilestone) Then
+                            sortDate = cMilestone.getDate
+                        Else
+                            ok = False
+                        End If
+
+                    Else
+                        Dim cphase As clsPhase = Me.getPhaseByID(itemName)
+                        If Not IsNothing(cphase) Then
+                            sortDate = cphase.getStartDate
+                        Else
+                            ok = False
+                        End If
+
+                    End If
+
+                    If ok And Not tmpSortList.ContainsValue(itemName) Then
+
+                        Do While tmpSortList.ContainsKey(sortDate)
+                            sortDate = sortDate.AddMilliseconds(1)
+                        Loop
+
+                        tmpSortList.Add(sortDate, itemName)
+
+                    End If
+
+
+                Else
+                    Dim type As Integer = -1
+                    Dim pvName As String = ""
+                    Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb, type, pvName)
+
+                    If type = -1 Or _
+                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                        (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
+
+                        If namesAreMilestones Then
+                            milestoneIndices = Me.hierarchy.getMilestoneIndices(itemName, itemBreadcrumb)
+
+                            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                                ' wenn der Wert Null ist , so existiert der Wert nicht 
+                                If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
+
+                                    Try
+                                        iDItem = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).nameID
+                                        sortDate = Me.getMilestoneByID(iDItem).getDate
+
+                                        If Not tmpSortList.ContainsValue(iDItem) Then
+
+                                            Do While tmpSortList.ContainsKey(sortDate)
+                                                sortDate = sortDate.AddMilliseconds(1)
+                                            Loop
+
+
+                                            tmpSortList.Add(sortDate, iDItem)
+
+
+                                        End If
+
+
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
+
+                            Next
+                        Else
+                            phaseIndices = Me.hierarchy.getPhaseIndices(itemName, itemBreadcrumb)
+                            For px As Integer = 0 To phaseIndices.Length - 1
+
+                                If phaseIndices(px) > 0 And phaseIndices(px) <= Me.CountPhases Then
+                                    iDItem = Me.getPhase(phaseIndices(px)).nameID
+
+                                    sortDate = Me.getPhaseByID(iDItem).getStartDate
+
+                                    If Not tmpSortList.ContainsValue(iDItem) Then
+
+                                        Do While tmpSortList.ContainsKey(sortDate)
+                                            sortDate = sortDate.AddMilliseconds(1)
+                                        Loop
+
+                                        tmpSortList.Add(sortDate, iDItem)
+
+                                    End If
+
+                                    'If Not iDCollection.Contains(iDItem) Then
+                                    '    iDCollection.Add(iDItem, iDItem)
+                                    'End If
+                                End If
+
+                            Next
+                        End If
+
+                    End If
+
+
+
+                End If
+
+            Next
+
+            ' jetzt muss umkopiert werden 
+            For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                iDCollection.Add(kvp.Value, kvp.Value)
+            Next
+
+            getElemIdsOf = iDCollection
+
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' findet für das aktuelle Projekt heraus, wieviele zusätzliche Zeilen für die selektierten Meilensteine
     '''  (gezeichnet zur nächst höheren aber auch selektierten Phase) beim Report benötigt werden
     ''' außerdem werden in drawMStoPhaseListe die selektierten Meilensteine zu der passenden selektierten Phase gemerkt
@@ -4109,72 +4577,93 @@ Public Class clsProjekt
                 found = False
 
                 ' Herausfinden der UniqueID der selektierten Meilensteine
-                Call splitHryFullnameTo2(CStr(selectedMilestones(mx)), selMSName, breadcrumb)
-                Dim msNameIndices() As Integer
-                msNameIndices = Me.hierarchy.getMilestoneHryIndices(selMSName, breadcrumb)
+                Dim type As Integer = -1
+                Dim pvname As String = ""
+                Call splitHryFullnameTo2(CStr(selectedMilestones(mx)), selMSName, breadcrumb, type, pvname)
 
-                If msNameIndices(0) = 0 Then
-                    ' Änderung tk: in diesem Fall gibt es den Meilenstein gar nicht 
-                    ' einfach in der Schleife weitermachen ...
-                Else
-                    For j = 0 To msNameIndices.Length - 1
+                If type = -1 Or _
+                    (type = PTProjektType.projekt And pvname = Me.name) Or _
+                    (type = PTProjektType.vorlage And pvname = Me.VorlagenName) Then
 
-                        msnameID = Me.hierarchy.getIDAtIndex(msNameIndices(j))
+                    Dim msNameIndices() As Integer
+                    msNameIndices = Me.hierarchy.getMilestoneHryIndices(selMSName, breadcrumb)
 
-                        x = Me.hierarchy.getParentIDOfID(msnameID)
-                        'While Not (x = rootPhaseName Or found)
-                        Dim zaehler As Integer = 0
+                    If msNameIndices(0) = 0 Then
+                        ' Änderung tk: in diesem Fall gibt es den Meilenstein gar nicht 
+                        ' einfach in der Schleife weitermachen ...
+                    Else
+                        For j = 0 To msNameIndices.Length - 1
 
-                        ' -------------------------------------------
-                        ' Änderung tk 9.4.16 wenn found hier nicht auf False gesetzt wird, dann kann der nächste msNAmeID nicht mehr aufgenommen werden ... 
-                        ' das found = false hat vorher gefehlt ... 
-                        found = False
-                        ' Ende Änderung tk 9.4.16 -------------------
+                            msnameID = Me.hierarchy.getIDAtIndex(msNameIndices(j))
 
-                        While Not found
-                            zaehler = zaehler + 1
-                            ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
-                            Dim phind As Integer = 1
-                            While Not found And phind <= selectedPhases.Count
+                            x = Me.hierarchy.getParentIDOfID(msnameID)
+                            'While Not (x = rootPhaseName Or found)
+                            Dim zaehler As Integer = 0
 
-                                Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb)
-                                Dim phNameIndices() As Integer
-                                phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
-                                If phNameIndices.Contains(Me.hierarchy.getIndexOfID(x)) Then
-                                    found = True
+                            ' -------------------------------------------
+                            ' Änderung tk 9.4.16 wenn found hier nicht auf False gesetzt wird, dann kann der nächste msNAmeID nicht mehr aufgenommen werden ... 
+                            ' das found = false hat vorher gefehlt ... 
+                            found = False
+                            ' Ende Änderung tk 9.4.16 -------------------
+
+                            While Not found
+                                zaehler = zaehler + 1
+                                ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
+                                Dim phind As Integer = 1
+                                While Not found And phind <= selectedPhases.Count
+
+                                    type = -1
+                                    pvname = ""
+                                    Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, type, pvname)
+
+                                    If type = -1 Or _
+                                        (type = PTProjektType.projekt And pvname = Me.name) Or _
+                                        (type = PTProjektType.vorlage And pvname = Me.VorlagenName) Then
+
+                                        Dim phNameIndices() As Integer
+                                        phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
+                                        If phNameIndices.Contains(Me.hierarchy.getIndexOfID(x)) Then
+                                            found = True
+                                        End If
+
+                                    End If
+
+                                    phind = phind + 1
+
+                                End While
+                                If Not found Then
+                                    x = Me.hierarchy.getParentIDOfID(x) 'Parent eine Stufe höher finden
+                                    If x = Nothing Or x = "" Then
+                                        x = rootPhaseName
+                                        found = True
+                                    End If
                                 End If
-                                phind = phind + 1
 
                             End While
-                            If Not found Then
-                                x = Me.hierarchy.getParentIDOfID(x) 'Parent eine Stufe höher finden
-                                If x = Nothing Or x = "" Then
-                                    x = rootPhaseName
-                                    found = True
+
+                            If zaehler > 1 Or x = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
+                                ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
+
+                                If drawMSinPhase.ContainsKey(x) Then
+                                    listMS = drawMSinPhase(x)
+                                Else
+                                    listMS = New SortedList
+                                    drawMSinPhase.Add(x, listMS)
                                 End If
-                            End If
 
-                        End While
+                                If Not listMS.Contains(msnameID) Then
+                                    listMS.Add(msnameID, msnameID)
 
-                        If zaehler > 1 Or x = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
-                            ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
-
-                            If drawMSinPhase.ContainsKey(x) Then
-                                listMS = drawMSinPhase(x)
-                            Else
-                                listMS = New SortedList
-                                drawMSinPhase.Add(x, listMS)
-                            End If
-
-                            If Not listMS.Contains(msnameID) Then
-                                listMS.Add(msnameID, msnameID)
+                                End If
 
                             End If
 
-                        End If
+                        Next j
+                    End If
 
-                    Next j
                 End If
+
+
 
 
             Next mx
@@ -4250,17 +4739,16 @@ Public Class clsProjekt
     Public Sub New()
 
         AllPhases = New List(Of clsPhase)
-        diffToPrev = False
-        extendedView = False
-        relStart = 1
+        _extendedView = False
+        _relStart = 1
         _leadPerson = ""
-        iDauer = 0
+        _iDauer = 0
         _StartOffset = 0
         _Start = 0
         _startDate = NullDatum
         _earliestStart = 0
         _latestStart = 0
-        _Status = ProjektStatus(0)
+        _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
 
@@ -4275,17 +4763,15 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-
     End Sub
 
     Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
 
         AllPhases = New List(Of clsPhase)
-        diffToPrev = False
-        extendedView = False
-        relStart = 1
+        _extendedView = False
+        _relStart = 1
         _leadPerson = ""
-        iDauer = 0
+        _iDauer = 0
         _StartOffset = 0
 
         _Start = projektStart
@@ -4296,7 +4782,7 @@ Public Class clsProjekt
         _earliestStartDate = _startDate.AddMonths(_earliestStart)
         _latestStartDate = _startDate.AddMonths(_latestStart)
 
-        _Status = ProjektStatus(0)
+        _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
 
@@ -4314,11 +4800,10 @@ Public Class clsProjekt
     Public Sub New(ByVal startDate As Date, ByVal earliestStartdate As Date, ByVal latestStartdate As Date)
 
         AllPhases = New List(Of clsPhase)
-        diffToPrev = False
         extendedView = False
-        relStart = 1
+        _relStart = 1
         _leadPerson = ""
-        iDauer = 0
+        _iDauer = 0
         _StartOffset = 0
 
         _startDate = startDate
@@ -4329,7 +4814,7 @@ Public Class clsProjekt
         _earliestStart = CInt(DateDiff(DateInterval.Month, startDate, earliestStartdate))
         _latestStart = CInt(DateDiff(DateInterval.Month, startDate, latestStartdate))
 
-        _Status = ProjektStatus(0)
+        _Status = ProjektStatus(PTProjektStati.geplant)
         _timeStamp = Date.Now
 
         _variantName = ""

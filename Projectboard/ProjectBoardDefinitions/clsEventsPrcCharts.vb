@@ -14,11 +14,32 @@ Public Class clsEventsPrcCharts
 
     Private Sub PrcChartEvents_Activate() Handles PrcChartEvents.Activate
 
+        Dim chtobj As xlNS.ChartObject
+        Dim atleastOne As Boolean = False
+        Try
+            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
 
-        If selectedProjekte.Count > 0 Then
-            selectedProjekte.Clear(False)
-            Call awinNeuZeichnenDiagramme(8)
-        End If
+
+            If Not My.Computer.Keyboard.ShiftKeyDown Then
+                ' alle bisher markierten Projekte und Charts zurücksetzen
+                Call unMarkAllProjects(atleastOne)
+                Call unmarkPfDiagrams()
+            End If
+
+            ' die Projekte und das Chart markieren 
+            Call markProjectsOFChart(chtobj)
+
+
+
+            If selectedProjekte.Count > 0 Then
+                selectedProjekte.Clear(False)
+                Call awinNeuZeichnenDiagramme(8)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
 
 
     End Sub
@@ -27,27 +48,30 @@ Public Class clsEventsPrcCharts
     Private Sub PrcChartEvents_BeforeDoubleClick(ByVal ElementID As Integer, ByVal Arg1 As Integer, ByVal Arg2 As Integer, ByRef Cancel As Boolean) Handles PrcChartEvents.BeforeDoubleClick
 
 
-        Dim chtobj As xlNS.ChartObject
-        Dim IDKennung As String
-        Dim foundDiagram As clsDiagramm
+        'Dim chtobj As xlNS.ChartObject
+        'Dim IDKennung As String
+        'Dim foundDiagram As clsDiagramm = Nothing
 
 
-        Cancel = True
+        'Cancel = True
 
-        Try
-            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+        'Try
+        '    chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
 
-            IDKennung = chtobj.Name
-            foundDiagram = DiagramList.getDiagramm(IDKennung)
-            With foundDiagram
-                .top = chtobj.Top
-                .left = chtobj.Left
-                .width = chtobj.Width
-                .height = chtobj.Height
-            End With
-        Catch ex As Exception
-            'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
-        End Try
+        '    IDKennung = chtobj.Name
+        '    If DiagramList.contains(IDKennung) Then
+        '        foundDiagram = DiagramList.getDiagramm(IDKennung)
+        '        With foundDiagram
+        '            .top = chtobj.Top
+        '            .left = chtobj.Left
+        '            .width = chtobj.Width
+        '            .height = chtobj.Height
+        '        End With
+        '    End If
+
+        'Catch ex As Exception
+        '    'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
+        'End Try
 
 
     End Sub
@@ -86,12 +110,15 @@ Public Class clsEventsPrcCharts
             chtobj = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             IDkennung = chtobj.Name
             foundDiagramm = DiagramList.getDiagramm(IDkennung)
-            found = True
-            With foundDiagramm
-                diagrammTyp = .diagrammTyp
-                myCollection = .gsCollection
-                isCC = .isCockpitChart
-            End With
+            If Not IsNothing(foundDiagramm) Then
+                found = True
+                With foundDiagramm
+                    diagrammTyp = .diagrammTyp
+                    myCollection = .gsCollection
+                    isCC = .isCockpitChart
+                End With
+            End If
+            
 
 
             If IsNothing(myCollection) Then
@@ -173,30 +200,7 @@ Public Class clsEventsPrcCharts
                                  "Visualisieren - Phasen")
 
                 ElseIf name <> "" Then
-                    Dim screenUpdateFormerState As Boolean = appInstance.ScreenUpdating
-                    appInstance.ScreenUpdating = False
-
-                    With roentgenBlick
-                        If .isOn And .name = name And .type = diagrammTyp Then
-                            .isOn = False
-                            .name = ""
-                            .myCollection = Nothing
-                            .type = ""
-                            Call awinNoshowProjectNeeds()
-                        Else
-                            If .isOn Then
-                                Call awinNoshowProjectNeeds()
-                            End If
-                            .isOn = True
-                            .name = name
-                            .myCollection = myCollection
-                            .type = diagrammTyp
-                            Call awinShowProjectNeeds1(myCollection, diagrammTyp)
-                        End If
-                    End With
-
-
-                    appInstance.ScreenUpdating = screenUpdateFormerState
+                    
                 Else
                     Call MsgBox("für dieses Diagramm ist der Röntgenblick nicht verfügbar")
                 End If
@@ -231,7 +235,7 @@ Public Class clsEventsPrcCharts
 
                                 With kvp.Value
 
-                                    If .StartOffset <> 0 And .Status = ProjektStatus(0) Then
+                                    If .StartOffset <> 0 And .Status = ProjektStatus(PTProjektStati.geplant) Then
                                         .startDate = .startDate.AddMonths(.StartOffset)
 
                                         If .StartOffset < 0 Then
@@ -247,7 +251,7 @@ Public Class clsEventsPrcCharts
                                             Call .syncXWertePhases()
                                         End If
 
-                                        
+
                                         Dim phaseList As Collection = projectboardShapes.getPhaseList(.name)
                                         Dim milestoneList As Collection = projectboardShapes.getMilestoneList(.name)
 
@@ -294,118 +298,116 @@ Public Class clsEventsPrcCharts
 
     End Sub
 
-
-    Private Sub PrcChartEvents_MouseUp(Button As Integer, Shift As Integer, x As Integer, y As Integer) Handles PrcChartEvents.MouseUp
-        
+    Private Sub PrcChartEvents_Deactivate() Handles PrcChartEvents.Deactivate
+        'Call MsgBox("De-Activate")
     End Sub
-
 
 
     Private Sub PrcChartEvents_Resize() Handles PrcChartEvents.Resize
 
 
-        Dim chtobj As xlNS.ChartObject, chtobj1 As xlNS.ChartObject
-        Dim IDKennung As String
-        Dim foundDiagram As clsDiagramm
-        Dim kFontsize As Double
-        Dim achsenFontsize As Double
-        Dim axisTitleFontsize As Double
-        Try
-            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
-            Try
-                chtobj1 = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
-            Catch ex As Exception
+        'Dim chtobj As xlNS.ChartObject, chtobj1 As xlNS.ChartObject
+        'Dim IDKennung As String
+        'Dim foundDiagram As clsDiagramm
+        'Dim kFontsize As Double
+        'Dim achsenFontsize As Double
+        'Dim axisTitleFontsize As Double
+        'Try
+        '    chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+        '    Try
+        '        chtobj1 = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+        '    Catch ex As Exception
 
-            End Try
+        '    End Try
 
-            IDKennung = chtobj.Name
-            foundDiagram = DiagramList.getDiagramm(IDKennung)
+        '    IDKennung = chtobj.Name
+        '    foundDiagram = DiagramList.getDiagramm(IDKennung)
 
-            kFontsize = (chtobj.Width / foundDiagram.width)
-            'kHeight = (chtobj.Height / foundDiagram.height)
+        '    kFontsize = (chtobj.Width / foundDiagram.width)
+        '    'kHeight = (chtobj.Height / foundDiagram.height)
 
-            With chtobj.Chart
+        '    With chtobj.Chart
 
-                ' Schriftgröße der Überschrift anpassen
-                If .HasTitle Then
-                    .ChartTitle.Format.TextFrame2.TextRange.Font.Size = CType(.ChartTitle.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
-                End If
+        '        ' Schriftgröße der Überschrift anpassen
+        '        If .HasTitle Then
+        '            .ChartTitle.Format.TextFrame2.TextRange.Font.Size = CType(.ChartTitle.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
+        '        End If
 
-                ' Schriftgröße der Legende anpassen
-                If .HasLegend Then
-                    With .Legend
-                        .Format.TextFrame2.TextRange.Font.Size = CType(.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
-                    End With
-                End If
+        '        ' Schriftgröße der Legende anpassen
+        '        If .HasLegend Then
+        '            With .Legend
+        '                .Format.TextFrame2.TextRange.Font.Size = CType(.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
+        '            End With
+        '        End If
 
-                ' Schriftgröße der x-Achse anpassen
-                Try
-                    With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlCategory, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
-                        achsenFontsize = CType(.Ticklabels.Font.Size * kFontsize, Double)
-                        .TickLabels.Font.Size = .TickLabels.Font.Size * kFontsize
-                        If .HasTitle Then
-                            With .AxisTitle
-                                axisTitleFontsize = CType(.Characters.Font.Size * kFontsize, Double)
-                                .Characters.Font.Size = .Characters.Font.Size * kFontsize
-                            End With
-                        End If
-                    End With
-                Catch ex As Exception
+        '        ' Schriftgröße der x-Achse anpassen
+        '        Try
+        '            With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlCategory, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
+        '                achsenFontsize = CType(.Ticklabels.Font.Size * kFontsize, Double)
+        '                .TickLabels.Font.Size = .TickLabels.Font.Size * kFontsize
+        '                If .HasTitle Then
+        '                    With .AxisTitle
+        '                        axisTitleFontsize = CType(.Characters.Font.Size * kFontsize, Double)
+        '                        .Characters.Font.Size = .Characters.Font.Size * kFontsize
+        '                    End With
+        '                End If
+        '            End With
+        '        Catch ex As Exception
 
-                End Try
-
-
-                ' Schriftgröße der y-Achse anpassen
-                Try
-                    With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlValue, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
-                        '.TickLabels.Font.Size = .Ticklabels.Font.Size * kFontsize
-                        .TickLabels.Font.Size = achsenFontsize
-                        If .HasTitle Then
-                            With .AxisTitle
-                                .Characters.Font.Size = axisTitleFontsize
-                            End With
-                        End If
-                     
-                    End With
-                Catch ex As Exception
-
-                End Try
-
-                ' Schriftgröße der eingezeichenten Daten bestimmen
-                If .SeriesCollection.Count > 0 Then
-
-                    For j = 1 To .SeriesCollection.Count
-
-                        With .SeriesCollection(j)
-                            If .HasDataLabels = True Then
-                                .ApplyDataLabels()
-                                For i = 1 To .Points.count
-                                    With .Points(i)
-                                        .DataLabel.Font.Size = .DataLabel.Font.Size * kFontsize
-                                    End With
-                                Next i
-                            End If
-
-                        End With
-
-                    Next j
-
-                End If
-
-            End With
+        '        End Try
 
 
-            With foundDiagram
-                .top = chtobj.Top
-                .left = chtobj.Left
-                .width = chtobj.Width
-                .height = chtobj.Height
-            End With
-        Catch ex As Exception
-            'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
-        End Try
+        '        ' Schriftgröße der y-Achse anpassen
+        '        Try
+        '            With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlValue, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
+        '                '.TickLabels.Font.Size = .Ticklabels.Font.Size * kFontsize
+        '                .TickLabels.Font.Size = achsenFontsize
+        '                If .HasTitle Then
+        '                    With .AxisTitle
+        '                        .Characters.Font.Size = axisTitleFontsize
+        '                    End With
+        '                End If
 
-        enableOnUpdate = True
+        '            End With
+        '        Catch ex As Exception
+
+        '        End Try
+
+        '        ' Schriftgröße der eingezeichenten Daten bestimmen
+        '        If .SeriesCollection.Count > 0 Then
+
+        '            For j = 1 To .SeriesCollection.Count
+
+        '                With .SeriesCollection(j)
+        '                    If .HasDataLabels = True Then
+        '                        .ApplyDataLabels()
+        '                        For i = 1 To .Points.count
+        '                            With .Points(i)
+        '                                .DataLabel.Font.Size = .DataLabel.Font.Size * kFontsize
+        '                            End With
+        '                        Next i
+        '                    End If
+
+        '                End With
+
+        '            Next j
+
+        '        End If
+
+        '    End With
+
+
+        '    With foundDiagram
+        '        .top = chtobj.Top
+        '        .left = chtobj.Left
+        '        .width = chtobj.Width
+        '        .height = chtobj.Height
+        '    End With
+        'Catch ex As Exception
+        '    'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
+        'End Try
+
+        'enableOnUpdate = True
 
     End Sub
 
@@ -476,20 +478,6 @@ Public Class clsEventsPrcCharts
                         ElseIf diagOBJ.gsCollection.Count > 1 Then
                             name = "Collection"
                         End If
-
-
-                        With roentgenBlick
-                            If .isOn Then
-                                Call awinNoshowProjectNeeds()
-                            End If
-                            .isOn = True
-                            .name = name
-                            .myCollection = diagOBJ.gsCollection
-                            .type = diagOBJ.diagrammTyp
-                            Call awinShowProjectNeeds1(diagOBJ.gsCollection, diagOBJ.diagrammTyp)
-                            'End If
-                        End With
-
 
 
 

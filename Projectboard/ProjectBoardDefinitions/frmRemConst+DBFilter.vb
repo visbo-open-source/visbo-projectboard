@@ -15,7 +15,7 @@
         End If
 
         If frmOption = "ProjConstellation" Then
-            Me.Text = "Szenario löschen"
+            Me.Text = "Portfolio löschen"
 
             For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 

@@ -23,13 +23,13 @@ Public Module PBBModules
     ''' <param name="controlID"></param>
     ''' <remarks></remarks>
 
-    Sub PBBBHTCHierarchySelAction(controlID As String, ByVal reportprofil As clsReport)
+    Sub PBBBHTCHierarchySelAction(controlID As String, ByVal reportprofil As clsReportAll)
 
         Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
         Dim formerSettings(3) As Boolean
 
-        If controlID = "PT1G1B3" Then
+        If controlID <> "BHTC" Then
             hryFormular.calledFrom = "Multiprojekt-Tafel"
 
             With awinSettings
@@ -49,10 +49,9 @@ Public Module PBBModules
         Else
             hryFormular.calledFrom = "MS-Project"
 
-            hryFormular.repProfil = New clsReport
+            hryFormular.repProfil = New clsReportAll
             reportprofil.CopyTo(hryFormular.repProfil)
         End If
-
 
         ' Dim formerSettings(3) As Boolean
         With awinSettings
@@ -72,30 +71,29 @@ Public Module PBBModules
         awinSettings.useHierarchy = True
         With hryFormular
 
-            
-            .menuOption = PTmenue.reportBHTC
-
-            ' hier müssen die für BHTC nicht wählbaren Optionen gesetzt werden 
-            With awinSettings
-                .mppShowProjectLine = False
-                .mppShowAmpel = False
-                .mppShowAllIfOne = False
-                .mppSortiertDauer = False
-                .mppExtendedMode = True
-                '.eppExtendedMode = True
-            End With
-
-            
-            If Not IsNothing(reportprofil) Then
-                .filterDropbox.Text = reportprofil.name
-            Else
-                .filterDropbox.Text = ""
-            End If
-
-
 
             Try
                 If .calledFrom = "MS-Project" Then
+
+
+                    .menuOption = PTmenue.reportBHTC
+
+                    ' hier müssen die für BHTC nicht wählbaren Optionen gesetzt werden 
+                    With awinSettings
+                        .mppShowProjectLine = False
+                        .mppShowAmpel = False
+                        .mppShowAllIfOne = False
+                        .mppSortiertDauer = False
+                        .mppExtendedMode = True
+                        '.eppExtendedMode = True
+                    End With
+
+                    If Not IsNothing(reportprofil) Then
+                        .filterDropbox.Text = reportprofil.name
+                    Else
+                        .filterDropbox.Text = ""
+                    End If
+
 
                     Dim lic As New clsLicences
                     Try
@@ -113,8 +111,21 @@ Public Module PBBModules
                         .auswSpeichern.Visible = False
                         .filterDropbox.Enabled = False
                     End If
-                Else
 
+                ElseIf .calledFrom = "Multiprojekt-Tafel" Then
+
+                    .menuOption = PTmenue.reportMultiprojektTafel
+
+                    If Not IsNothing(reportprofil) Then
+                        .filterDropbox.Text = reportprofil.name
+                    Else
+                        .filterDropbox.Text = ""
+                    End If
+
+                    .auswSpeichern.Visible = True
+                    .filterDropbox.Enabled = True
+
+                Else
                     .auswSpeichern.Visible = False
                     .filterDropbox.Enabled = False
                 End If
@@ -139,6 +150,7 @@ Public Module PBBModules
 
 
     End Sub
+   
 
     ''' <summary>
     ''' wird aus der Multiprojekt-Tafel aufgerufen 
@@ -152,6 +164,7 @@ Public Module PBBModules
         Dim hryFormular As New frmHierarchySelection
         Dim awinSelection As Excel.ShapeRange
         Dim returnValue As DialogResult
+        Dim timeZoneWasOff As Boolean = True
 
         Call projektTafelInit()
 
@@ -182,6 +195,145 @@ Public Module PBBModules
 
             End With
 
+        ElseIf controlID = "PT0G1B8" Then
+
+            Dim currentFilterConstellation As clsConstellation = currentSessionConstellation.copy("Filter Result")
+            beforeFilterConstellation = currentSessionConstellation.copy("beforeFilter")
+
+            Dim formerEoU As Boolean = enableOnUpdate
+            enableOnUpdate = False
+            Dim filter As clsFilter = Nothing
+
+            Try
+                With nameFormular
+
+                    Dim anzP As Integer = ShowProjekte.Count
+                    .menuOption = PTmenue.sessionFilterDefinieren
+                    .actionCode = PTTvActions.chgInSession
+
+
+                    returnValue = .ShowDialog
+                    filter = filterDefinitions.retrieveFilter("Last")
+
+
+                    ' Anzeigen ...
+                    Dim removeList As New Collection
+
+
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentFilterConstellation.Liste
+
+                        If ShowProjekte.contains(kvp.Value.projectName) Then
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.projectName)
+
+                            If filter.doesNotBlock(hproj) Then
+                                ' nichts tun 
+                            Else
+                                If Not removeList.Contains(kvp.Key) Then
+                                    removeList.Add(kvp.Key, kvp.Key)
+                                End If
+                            End If
+
+                        Else
+                            If Not removeList.Contains(kvp.Key) Then
+                                removeList.Add(kvp.Key, kvp.Key)
+                            End If
+                        End If
+
+                    Next
+
+                    ' jetzt die Liste bereinigen ...
+                    For Each tmpPvName As String In removeList
+                        currentFilterConstellation.remove(tmpPvName)
+                    Next
+
+                    If currentFilterConstellation.sortCriteria = ptSortCriteria.customTF Then
+                        ' jetzt wird das SortCriteria umgesetzt, weil andernfalls, bei customTF, die 
+                        ' Zeilen unverändert bleiben ... 
+                        currentFilterConstellation.sortCriteria = ptSortCriteria.customListe
+                    End If
+
+                    ' jetzt müssen die tfZeile neu besetzt werden;
+                    '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
+                    ' tk 21.3.17: ab jetzt nicht mehr .... jetzt wird ja in der _sortlist alles mitgeführt 
+                    ''currentBrowserConstellation.setTfZeilen(0)
+
+                    If removeList.Count > 0 Then
+
+
+                        ' erst am Ende alle Diagramme neu machen ...
+
+                        Dim tmpConstellation As New clsConstellations
+                        tmpConstellation.Add(currentFilterConstellation)
+
+                        ' es in der Session Liste verfügbar machen 
+                        ' es in der Session Liste verfügbar machen
+                        If projectConstellations.Contains(currentFilterConstellation.constellationName) Then
+                            projectConstellations.Remove(currentFilterConstellation.constellationName)
+                        End If
+
+                        projectConstellations.Add(currentFilterConstellation)
+
+                        Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                                clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                        ''Call awinNeuZeichnenDiagramme(2)
+
+                    End If
+
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            enableOnUpdate = formerEoU
+
+        ElseIf controlID = "PT0G1B9" Then
+
+            Dim formerEoU As Boolean = enableOnUpdate
+            enableOnUpdate = False
+            Dim filter As clsFilter = Nothing
+
+            Try
+                If IsNothing(beforeFilterConstellation) Then
+
+                    If awinSettings.visboDebug Then
+
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("There is no active filter!")
+                        Else
+                            Call MsgBox("Es ist kein Filter gesetzt!")
+                        End If
+
+                    End If
+                Else
+
+                    ' erst am Ende alle Diagramme neu machen ...
+                    Dim tmpConstellations As New clsConstellations
+                    tmpConstellations.Add(beforeFilterConstellation)
+
+                    '' es in der Session Liste verfügbar machen
+                    'If projectConstellations.Contains(beforeFilterConstellation.constellationName) Then
+                    '    projectConstellations.Remove(beforeFilterConstellation.constellationName)
+                    'End If
+
+                    'projectConstellations.Add(beforeFilterConstellation)
+
+                    Call showConstellations(constellationsToShow:=tmpConstellations, _
+                                            clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                End If
+
+            Catch ex As Exception
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("Fehler beim Zurücksetzen des Filters")
+                End If
+
+            End Try
+
+            enableOnUpdate = formerEoU
+
 
         ElseIf ShowProjekte.Count > 0 Then
 
@@ -196,12 +348,22 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        ok = False
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("please define timeframe first ...")
+                        timeZoneWasOff = True
+                        If selectedProjekte.Count > 0 Then
+                            showRangeLeft = selectedProjekte.getMinMonthColumn
+                            showRangeRight = selectedProjekte.getMaxMonthColumn
                         Else
-                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                            showRangeLeft = ShowProjekte.getMinMonthColumn
+                            showRangeRight = ShowProjekte.getMaxMonthColumn
                         End If
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        ' wurde jetzt ersetzt durch automatische Selektion
+                        'ok = False
+                        'If awinSettings.englishLanguage Then
+                        '    Call MsgBox("please define timeframe first ...")
+                        'Else
+                        '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        'End If
                     End If
                 End If
 
@@ -216,7 +378,7 @@ Public Module PBBModules
 
                     End With
                 End If
-                
+
 
             ElseIf controlID = "PTXG1B5" Or controlID = "PT0G1B9" Then
                 ' Hierarchie auswählen, visualisieren
@@ -226,12 +388,22 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        ok = False
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("please define timeframe first ...")
+                        timeZoneWasOff = True
+                        If selectedProjekte.Count > 0 Then
+                            showRangeLeft = selectedProjekte.getMinMonthColumn
+                            showRangeRight = selectedProjekte.getMaxMonthColumn
                         Else
-                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                            showRangeLeft = ShowProjekte.getMinMonthColumn
+                            showRangeRight = ShowProjekte.getMaxMonthColumn
                         End If
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        '
+                        'ok = False
+                        'If awinSettings.englishLanguage Then
+                        '    Call MsgBox("please define timeframe first ...")
+                        'Else
+                        '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        'End If
                     End If
                 End If
 
@@ -247,7 +419,7 @@ Public Module PBBModules
 
                     End With
                 End If
-                
+
             ElseIf controlID = "PTXG1B6" Or controlID = "PTMEC1" Then
                 ' Namen auswählen, Leistbarkeit
                 Dim ok As Boolean = True
@@ -256,12 +428,22 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        ok = False
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("please define timeframe first ...")
+                        timeZoneWasOff = True
+                        If selectedProjekte.Count > 0 Then
+                            showRangeLeft = selectedProjekte.getMinMonthColumn
+                            showRangeRight = selectedProjekte.getMaxMonthColumn
                         Else
-                            Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                            showRangeLeft = ShowProjekte.getMinMonthColumn
+                            showRangeRight = ShowProjekte.getMaxMonthColumn
                         End If
+                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        '
+                        'ok = False
+                        'If awinSettings.englishLanguage Then
+                        '    Call MsgBox("please define timeframe first ...")
+                        'Else
+                        '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        'End If
                     End If
                 End If
 
@@ -272,12 +454,12 @@ Public Module PBBModules
                         .ribbonButtonID = controlID
                         .menuOption = PTmenue.leistbarkeitsAnalyse
                         ' Nicht Modal anzeigen
-                        .Show()
-                        'returnValue = .ShowDialog
+                        '.Show()
+                        returnValue = .ShowDialog
 
                     End With
                 End If
-                
+
 
             ElseIf controlID = "PTXG1B7" Then
 
@@ -287,25 +469,30 @@ Public Module PBBModules
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' alles ok 
                     ' Hierarchie auswählen, Leistbarkeit
-                    awinSettings.useHierarchy = True
-                    With hryFormular
-
-                        .menuOption = PTmenue.leistbarkeitsAnalyse
-                        ' Nicht Modal anzeigen
-                        .Show()
-                        'returnValue = .ShowDialog
-
-                    End With
-
                 Else
 
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("please define timeframe first ...")
+                    timeZoneWasOff = True
+                    If selectedProjekte.Count > 0 Then
+                        showRangeLeft = selectedProjekte.getMinMonthColumn
+                        showRangeRight = selectedProjekte.getMaxMonthColumn
                     Else
-                        Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
                     End If
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+
                 End If
 
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .menuOption = PTmenue.leistbarkeitsAnalyse
+                    ' Nicht Modal anzeigen
+                    '.Show()
+                    returnValue = .ShowDialog
+
+                End With
 
             ElseIf controlID = "PT1G1M1B1" Then
                 ' Namen auswählen, Einzelprojekt Berichte 
@@ -382,25 +569,35 @@ Public Module PBBModules
                     ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
                     ' dalse, dann auf True gesetzt werden
                     ' bei .show darf das nicht gemacht werden ! 
-                    appInstance.ScreenUpdating = False
-                    appInstance.EnableEvents = False
 
-                    With nameFormular
-
-                        .menuOption = PTmenue.multiprojektReport
-                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                        returnValue = .ShowDialog
-
-                    End With
-
-                    appInstance.ScreenUpdating = True
-                    appInstance.EnableEvents = True
 
                 Else
 
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+                    timeZoneWasOff = True
+                    If selectedProjekte.Count > 0 Then
+                        showRangeLeft = selectedProjekte.getMinMonthColumn
+                        showRangeRight = selectedProjekte.getMaxMonthColumn
+                    Else
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
+                    End If
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
                 End If
+
+                appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
+
+                With nameFormular
+
+                    .menuOption = PTmenue.multiprojektReport
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    returnValue = .ShowDialog
+
+                End With
+
+                appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
 
             ElseIf controlID = "PT1G1M2B2" Then
 
@@ -410,27 +607,36 @@ Public Module PBBModules
                     ' wenn nachher .showdialog aufgerufen wird, müssen die beiden Settings erst auf 
                     ' dalse, dann auf True gesetzt werden
                     ' bei .show darf das nicht gemacht werden ! 
-                    appInstance.ScreenUpdating = False
-                    appInstance.EnableEvents = False
-
-                    awinSettings.useHierarchy = True
-                    With hryFormular
-
-                        .menuOption = PTmenue.multiprojektReport
-                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                        returnValue = .ShowDialog
-
-                    End With
-
-                    appInstance.ScreenUpdating = True
-                    appInstance.EnableEvents = True
 
                 Else
 
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+                    timeZoneWasOff = True
+                    If selectedProjekte.Count > 0 Then
+                        showRangeLeft = selectedProjekte.getMinMonthColumn
+                        showRangeRight = selectedProjekte.getMaxMonthColumn
+                    Else
+                        showRangeLeft = ShowProjekte.getMinMonthColumn
+                        showRangeRight = ShowProjekte.getMaxMonthColumn
+                    End If
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
 
                 End If
+
+                appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
+
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .menuOption = PTmenue.multiprojektReport
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    returnValue = .ShowDialog
+
+                End With
+
+                appInstance.ScreenUpdating = True
+                appInstance.EnableEvents = True
 
             ElseIf controlID = "PT4G1M0B1" Then
                 ' Auswahl über Namen, Typ II Export
@@ -553,7 +759,13 @@ Public Module PBBModules
             Call MsgBox("Es sind keine Projekte sichtbar!  ")
         End If
 
-
+        ' darf nicht zurückgenommen werden, weil manche Fenster nicht modal angezeigt werden, d.h bevor irgendeine Aktion passiert 
+        ' wird der TimeFrame wieder zurückgesetzt ...
+        'If timeZoneWasOff Then
+        '    Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+        '    showRangeLeft = 0
+        '    showRangeRight = 0
+        'End If
 
         ' oben ist es de-aktiviert 
         'appInstance.EnableEvents = True
@@ -716,8 +928,6 @@ Public Module PBBModules
                             .timeStamp = Date.Now
                             .shpUID = hproj.shpUID
                             .tfZeile = hproj.tfZeile
-                            ' war vorher immer ProjektStatus(0)
-                            .Status = ProjektStatus(1)
 
                         End With
 
@@ -1022,11 +1232,11 @@ Public Module PBBModules
     Sub PBBChangeCurrentPortfolio()
 
 
-        'Dim returnValue As DialogResult
+        Call activateProjectBoard()
 
-        'Dim deleteProjects As New frmDeleteProjects
         Dim changePortfolio As New frmProjPortfolioAdmin
 
+        Call awinDeSelect(True)
 
         If AlleProjekte.Count > 0 Then
             ' das letzte Portfolio speichern 
@@ -1066,8 +1276,12 @@ Public Module PBBModules
                 Call MsgBox(ex.Message)
             End Try
         Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no projects loaded ...")
+            Else
+                Call MsgBox("keine Projekte geladen ...")
+            End If
 
-            Call MsgBox("keine Projekte geladen ...")
         End If
         
 

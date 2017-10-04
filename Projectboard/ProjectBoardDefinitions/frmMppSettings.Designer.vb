@@ -22,6 +22,7 @@ Partial Class frmMppSettings
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMppSettings))
         Me.shwPhaseText = New System.Windows.Forms.CheckBox()
         Me.shwPhaseDate = New System.Windows.Forms.CheckBox()
         Me.shwProjectLine = New System.Windows.Forms.CheckBox()
@@ -246,6 +247,7 @@ Partial Class frmMppSettings
         Me.Controls.Add(Me.shwProjectLine)
         Me.Controls.Add(Me.shwPhaseDate)
         Me.Controls.Add(Me.shwPhaseText)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmMppSettings"
         Me.Text = "Einstellungen"
         Me.TopMost = True

@@ -22,6 +22,7 @@ Partial Class frmTestLicences
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmTestLicences))
         Me.LabelUser = New System.Windows.Forms.Label()
         Me.UserName = New System.Windows.Forms.TextBox()
         Me.LabelKomponente = New System.Windows.Forms.Label()
@@ -125,6 +126,7 @@ Partial Class frmTestLicences
         Me.Controls.Add(Me.LabelKomponente)
         Me.Controls.Add(Me.UserName)
         Me.Controls.Add(Me.LabelUser)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmTestLicences"
         Me.Text = "Test der Lizenzen"
         Me.ResumeLayout(False)
