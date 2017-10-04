@@ -517,7 +517,6 @@ Public Class clsRollen
     Public Sub buildTopNodes()
         ' TopKnoten aufbauen
         Dim i As Integer = 1
-        Dim hNode As New clsroleNode
         Dim currentRole As clsRollenDefinition
         Dim hparent As New clsRollenDefinition
 

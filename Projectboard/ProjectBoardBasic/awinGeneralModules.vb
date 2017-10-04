@@ -1437,7 +1437,7 @@ Public Module awinGeneralModules
                 windowNames(PTwindows.mptpf) = "Portfolio Charts: "
                 windowNames(PTwindows.mptpr) = "Projekt Charts"
             End If
-            
+
 
             projectboardViews(PTview.mpt) = Nothing
             projectboardViews(PTview.mptpr) = Nothing
@@ -19317,7 +19317,6 @@ Public Module awinGeneralModules
 
         createMassEditRcValidations = validationStrings
     End Function
-
     ''' <summary>
     ''' schreibt die Daten der in einer todoListe übergebenen Projekt-Namen in ein extra Tabellenblatt 
     ''' die Info-Daten werden in einer Range mit Name informationColumns zusammengefasst   
@@ -19357,7 +19356,8 @@ Public Module awinGeneralModules
             Dim ressCostColumn As Integer
             Dim tmpName As String
 
-            ' jetzt wird die maximale Länge eines Trings für Mass-Edit ermittelt 
+
+            ' jetzt wird die maximale Länge eines strings für Mass-Edit ermittelt 
             For i As Integer = 1 To RoleDefinitions.Count
                 Dim curItemLength As Integer = RoleDefinitions.getRoledef(i).name.Length
                 If curItemLength > maxRCLengthAbsolut Then
@@ -19725,10 +19725,13 @@ Public Module awinGeneralModules
                                                     .Validation.Delete()
                                                 End If
 
-                                                ' jetzt wird die ValidationList aufgebaut 
+                                                '' ur: 25.09.2017
 
-                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                           Formula1:=validationStrings.Item(rcValidation(roleUID)))
+                                                ' jetzt wird die ValidationList aufgebaut 
+                                               
+                                                ' ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                ' ''                           Formula1:=validationStrings.Item(rcValidation(roleUID)))
+
                                             Catch ex As Exception
 
                                             End Try
@@ -19737,6 +19740,7 @@ Public Module awinGeneralModules
                                     End With
 
                                     CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0  ")
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
 
@@ -19753,6 +19757,10 @@ Public Module awinGeneralModules
                                                                     AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                                                     Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
+
+                                                    ' jetzt wird der eventuell vorhandene Kommentar von Kostenart gelöscht
+                                                    .ClearComments()
+
                                                 Catch ex As Exception
 
                                                 End Try
@@ -19769,6 +19777,7 @@ Public Module awinGeneralModules
                                     End If
 
                                     editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+
                                 End With
 
                                 ' zusammenmischen von Schnittmenge und Prozentual-Werte 
@@ -19820,6 +19829,8 @@ Public Module awinGeneralModules
                                             Else
                                                 CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                          .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                                ''CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                ''         .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).NumberFormat = Format("######.0")
                                             End If
 
 
@@ -19899,10 +19910,13 @@ Public Module awinGeneralModules
                                                 If Not IsNothing(.Validation) Then
                                                     .Validation.Delete()
                                                 End If
+
+                                                '' ur: 26.09.2017
                                                 ' jetzt wird die ValidationList aufgebaut 
                                                 'Dim tmpVal As String = validationStrings.Item(rcValidation(0))
-                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                               Formula1:=validationStrings.Item(rcValidation(0)))
+                                                ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                ''                               Formula1:=validationStrings.Item(rcValidation(0)))
+
                                             Catch ex As Exception
 
                                             End Try
@@ -19912,6 +19926,7 @@ Public Module awinGeneralModules
                                     End With
 
                                     CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0  ")
                                     If awinSettings.allowSumEditing Then
 
                                         With CType(.Cells(zeile, 6), Excel.Range)
@@ -19928,6 +19943,19 @@ Public Module awinGeneralModules
                                                                     AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                                                     Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
+
+                                                    '' '' jetzt wird der Kommentar bei Kosten hinzugefügt
+                                                    .AddComment()
+                                                    With .Comment
+                                                        .Visible = False
+                                                        If awinSettings.englishLanguage Then
+                                                            .Text("Values are in kEUR")
+                                                        Else
+                                                            .Text(Text:="Angabe in T€")
+                                                        End If
+                                                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                                                    End With
+
                                                 Catch ex As Exception
 
                                                 End Try
@@ -19938,6 +19966,7 @@ Public Module awinGeneralModules
                                     End If
 
                                     editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                                    editRange.NumberFormat = Format("#####0.0")
                                 End With
 
                                 ' zusammenmischen von Schnittmenge und Prozentual-Werte 
@@ -19987,6 +20016,8 @@ Public Module awinGeneralModules
                                             Else
                                                 CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
                                                          .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                                                ''CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten), _
+                                                ''        .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).NumberFormat = Format("######.0")
                                             End If
 
                                         Else
@@ -20064,9 +20095,11 @@ Public Module awinGeneralModules
                                                 If Not IsNothing(.Validation) Then
                                                     .Validation.Delete()
                                                 End If
+
+                                                '' ur: 26.09.2017
                                                 ' jetzt wird die ValidationList aufgebaut 
-                                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                               Formula1:=defaultEmptyValidation)
+                                                ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                ''                               Formula1:=defaultEmptyValidation)
                                             Catch ex As Exception
                                                 Dim a As Integer = 0
                                             End Try
@@ -20077,6 +20110,7 @@ Public Module awinGeneralModules
 
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
+                                            .NumberFormat = Format("######0.0  ")
                                             .Value = ""
                                             If isProtectedbyOthers Then
                                             Else
@@ -20100,6 +20134,7 @@ Public Module awinGeneralModules
                                         End With
 
                                     Else
+
                                         CType(.Cells(zeile, 6), Excel.Range).Value = ""
                                     End If
 
@@ -20209,14 +20244,14 @@ Public Module awinGeneralModules
                         If awinSettings.mePrzAuslastung Then
                             tmpRange.NumberFormat = "0%"
                         Else
-                            tmpRange.NumberFormat = "0"
+                            tmpRange.NumberFormat = "######0.0"
                         End If
 
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     Else
                         tmpRange.Columns.ColumnWidth = 5
                         tmpRange.Font.Size = 10
-                        tmpRange.NumberFormat = "0"
+                        tmpRange.NumberFormat = "######0.0"
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     End If
                     isPrz = Not isPrz
@@ -20244,7 +20279,6 @@ Public Module awinGeneralModules
 
             End If
 
-            
 
             appInstance.EnableEvents = True
 
@@ -20252,7 +20286,7 @@ Public Module awinGeneralModules
             Dim a As Integer = 0
         End Try
 
-        
+
 
 
     End Sub
@@ -20539,7 +20573,8 @@ Public Module awinGeneralModules
 
                                     ' jetzt den Wert in die Zelle schreiben
                                     If tmpSum > 0 Then
-                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = tmpSum.ToString("#,##0")
+                                        CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = tmpSum
+                                        '.ToString("#,##0")
                                     Else
                                         CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = ""
                                     End If
@@ -20616,10 +20651,12 @@ Public Module awinGeneralModules
                                 If Not IsNothing(.Validation) Then
                                     .Validation.Delete()
                                 End If
-                                ' jetzt wird die ValidationList aufgebaut 
+                                '' ur: 28.09.2017
 
-                                .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                               Formula1:=validationString)
+                                ' '' jetzt wird die ValidationList aufgebaut 
+
+                                ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                ''                               Formula1:=validationString)
 
                             End With
                         Catch ex As Exception
@@ -20641,83 +20678,6 @@ Public Module awinGeneralModules
 
     End Sub
 
-    ''' <summary>
-    ''' prüft ob in dem aktiven Massen-Edit Sheet die übergebene Kombination nocheinmal vorkommt ... 
-    ''' wenn nein: Rückgabe true
-    ''' wenn ja: Rückgabe false
-    ''' </summary>
-    ''' <param name="pName"></param>
-    ''' <param name="phaseNameID"></param>
-    ''' <param name="rcName"></param>
-    ''' <param name="zeile"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String, _
-                                             ByVal zeile As Integer) As Boolean
-        Dim found As Boolean = False
-        Dim curZeile As Integer = 2
-
-        Dim chckName As String
-        Dim chckPhNameID As String
-        Dim chckRCName As String
-
-        Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
-
-        With meWS
-            chckName = CStr(meWS.Cells(curZeile, 2).value)
-
-            Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
-            chckPhNameID = calcHryElemKey(phaseName, False)
-            Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
-            If Not IsNothing(curComment) Then
-                chckPhNameID = curComment.Text
-            End If
-
-            chckRCName = CStr(meWS.Cells(curZeile, 5).value)
-
-        End With
-        ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
-        Do While Not found And curZeile <= visboZustaende.meMaxZeile
-
-
-            If chckName = pName And _
-                phaseNameID = chckPhNameID And _
-                zeile <> curZeile Then
-
-                If IsNothing(rcName) Then
-                    found = True
-                ElseIf rcName = chckRCName Then
-                    found = True
-                End If
-
-            End If
-
-            If Not found Then
-
-                curZeile = curZeile + 1
-
-                With meWS
-                    chckName = CStr(meWS.Cells(curZeile, 2).value)
-
-                    Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
-                    chckPhNameID = calcHryElemKey(phaseName, False)
-                    Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
-                    If Not IsNothing(curComment) Then
-                        chckPhNameID = curComment.Text
-                    End If
-
-                    chckRCName = CStr(meWS.Cells(curZeile, 5).value)
-
-                End With
-
-            End If
-
-        Loop
-
-        noDuplicatesInSheet = Not found
-
-    End Function
 
     ''' <summary>
     ''' gibt eine Zeile zurück, die zu dem angegebenen Projekt, der Phase und dem rcName eine Sammelrolle zurückgibt

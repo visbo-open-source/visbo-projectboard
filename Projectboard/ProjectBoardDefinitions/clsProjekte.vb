@@ -479,6 +479,7 @@ Public Class clsProjekte
         End Get
     End Property
 
+
     ''' <summary>
     ''' liefert die Namen der Rollen, die in der Menge von Projekten vorkommen 
     ''' </summary>
