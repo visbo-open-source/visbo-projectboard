@@ -32,12 +32,12 @@ Partial Class frmMEhryRoleCost
         '
         Me.hryRoleCost.Location = New System.Drawing.Point(0, 0)
         Me.hryRoleCost.Name = "hryRoleCost"
-        Me.hryRoleCost.Size = New System.Drawing.Size(567, 550)
+        Me.hryRoleCost.Size = New System.Drawing.Size(567, 337)
         Me.hryRoleCost.TabIndex = 0
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(12, 578)
+        Me.OKButton.Location = New System.Drawing.Point(12, 359)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(132, 23)
         Me.OKButton.TabIndex = 1
@@ -46,7 +46,7 @@ Partial Class frmMEhryRoleCost
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(430, 578)
+        Me.AbbrButton.Location = New System.Drawing.Point(430, 359)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(129, 23)
         Me.AbbrButton.TabIndex = 2
@@ -57,7 +57,7 @@ Partial Class frmMEhryRoleCost
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(571, 628)
+        Me.ClientSize = New System.Drawing.Size(571, 399)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.hryRoleCost)
