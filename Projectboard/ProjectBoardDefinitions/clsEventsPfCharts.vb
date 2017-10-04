@@ -65,41 +65,71 @@ Public Class clsEventsPfCharts
 
         If (ElementID = Excel.XlChartItem.xlSeries) And Arg1 = 1 And Arg2 > 0 Then
             'Dim i As Integer
-            Dim pt As Point
+            'Dim pt As Point
             Dim pname As String
-
-            Dim formerUpdate As Boolean = appInstance.ScreenUpdating
-            appInstance.ScreenUpdating = False
+            Dim hproj As clsProjekt
+            'Dim formerUpdate As Boolean = appInstance.ScreenUpdating
+            'appInstance.ScreenUpdating = False
 
             Try
-                pname = PfChartBubbleNames(Arg2 - 1)
+                pname = extractPnameFrom(PfChartBubbleNames(Arg2 - 1)).Trim
             Catch ex As ArgumentException
                 Call MsgBox(" Projekt nicht in Liste vorhanden ...")
                 Exit Sub
             End Try
 
+            If ShowProjekte.contains(pname) Then
+                hproj = ShowProjekte.getProject(pname)
+                If Not IsNothing(hproj) Then
+                    If hproj.marker = False Then
+                        ' dann muss es neu markiert und angezeigt werden 
+                        Try
 
-            With Me.PfChartEvents.SeriesCollection(1)
-                If .ApplyDataLabels = Excel.XlDataLabelsType.xlDataLabelsShowNone Then
-                    .ApplyDataLabels(Type:=Excel.XlDataLabelsType.xlDataLabelsShowNone)
-                    pt = CType(.points(Arg2), Excel.Point)
-                    pt.ApplyDataLabels(Type:=Excel.XlDataLabelsType.xlDataLabelsShowLabel)
-                    pt.DataLabel.Text = pname
+                            hproj.marker = True
+                            Dim tmpC As New Collection
+                            Call ZeichneProjektinPlanTafel(tmpC, hproj.name, hproj.tfZeile, tmpC, tmpC)
+
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+                    End If
                 End If
-            End With
+            End If
+            
+            
+            ' tk 30.9.17 alt, wurde ersetzt durch Selektierne und MArkieren ... 
+            ''With Me.PfChartEvents.SeriesCollection(1)
+            ''    If .ApplyDataLabels = Excel.XlDataLabelsType.xlDataLabelsShowNone Then
+            ''        .ApplyDataLabels(Type:=Excel.XlDataLabelsType.xlDataLabelsShowNone)
+            ''        pt = CType(.points(Arg2), Excel.Point)
+            ''        pt.ApplyDataLabels(Type:=Excel.XlDataLabelsType.xlDataLabelsShowLabel)
+            ''        pt.DataLabel.Text = pname
+            ''    End If
+            ''End With
 
-            'Dim abstand As Integer
-            'Call awinClkReset(abstand)
-            Dim calledFromPf As Boolean = True
-            Call awinSelectProjectiST(pname, calledFromPf)
+            ' ''Dim abstand As Integer
+            ' ''Call awinClkReset(abstand)
+            ''Dim calledFromPf As Boolean = True
+            ''Call awinSelectProjectiST(pname, calledFromPf)
 
-            appInstance.ScreenUpdating = formerUpdate
+            'appInstance.ScreenUpdating = formerUpdate
 
         Else
             ' nichts ...
 
         End If
     End Sub
+
+    Private Function extractPnameFrom(ByVal bubblePointName As String) As String
+        Dim tmpPname As String = ""
+        If bubblePointName.Contains("(") And bubblePointName.Trim.EndsWith(")") Then
+            Dim tmpStr() As String = bubblePointName.Split(New Char() {CChar("(")})
+            tmpPname = tmpStr(0)
+        End If
+
+        extractPnameFrom = tmpPname
+
+    End Function
     Private Sub PfChartEvents_Resize() Handles PfChartEvents.Resize
 
 

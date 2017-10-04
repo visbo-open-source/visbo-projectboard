@@ -68,7 +68,8 @@ Public Module awinGUI
             Exit Sub
         End If
 
-
+        ' holt die Liste der markierten Projekte
+        Dim markedProjects As Collection = ShowProjekte.getMarkedProjects
 
         'Dim allOK As Boolean = False
         ' wenn der Charttype nicht bekannt ist : sofortiger Exit 
@@ -445,9 +446,41 @@ Public Module awinGUI
                             .Interior.Color = colorValues(i - 1)
                         End If
 
+                        If markedProjects.Count > 0 Then
+                            If markedProjects.Contains(CStr(ProjektListe.Item(i))) Then
+                                ' jetzt muss das Bubble mit einem Glow versehen werden ... 
+                                With .Format.Glow
+                                    .Color.RGB = CInt(awinSettings.glowColor)
+                                    .Color.Brightness = 0
+                                    .Transparency = 0
+                                    .Radius = 10
+                                End With
+                            End If
+                        End If
 
-                        ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+                        ' bei negativen Werten wird ein roter Schatten gezeigt; die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
+
+                            Try
+                                With .Format.Shadow
+                                    .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                                    .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                                    .Blur = 0
+                                    .OffsetX = 5
+                                    .OffsetY = -1
+                                    .RotateWithShape = Microsoft.Office.Core.MsoTriState.msoFalse
+                                    .ForeColor.RGB = RGB(255, 0, 0)
+                                    .ForeColor.TintAndShade = 0
+                                    .ForeColor.Brightness = 0.400000006
+                                    .Transparency = 0
+                                    .Size = 50
+                                End With
+                            Catch ex As Exception
+
+                            End Try
+
+                            ' falls eine Beschriftung gezeigt wird .
                             Try
                                 .DataLabel.Font.Color = awinSettings.AmpelRot
                             Catch ex As Exception
@@ -809,6 +842,9 @@ Public Module awinGUI
         ' hier wird in der Objektkennung nachgesehen, von welchem Typ dieses Portfolio-Diagramm ist
         ' PTpfdk.FitRisiko oder PTpfdk.ZeitRisiko oder PTpfdk.ComplexRisiko
 
+        ' holt die Liste der markierten Projekte
+        Dim markedProjects As Collection = ShowProjekte.getMarkedProjects
+
         tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
         If tmpstr(0) = "pr" Then
             isSingleProject = True
@@ -1080,7 +1116,7 @@ Public Module awinGUI
 
         With chtobj.Chart
 
-            showLabels = True
+            showLabels = False
 
             If projektListe.Count >= 0 Then
 
@@ -1099,9 +1135,8 @@ Public Module awinGUI
                 Dim dlFontSubscript As Boolean
                 Dim dlFontUnderline As Double
 
-                For i = 1 To pts.Count
-
-                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
+                If pts.Count >= 1 Then
+                    With CType(.SeriesCollection(1).Points(1), Excel.Point)
 
                         Try
                             If .HasDataLabel = True Then
@@ -1126,12 +1161,13 @@ Public Module awinGUI
                                 End With
                             End If
 
+
+
                         Catch ex As Exception
 
                         End Try
                     End With
-
-                Next i
+                End If
 
                 ' remove old series
                 Try
@@ -1196,6 +1232,7 @@ Public Module awinGUI
                         With CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                             If showLabels Then
+
                                 Try
                                     .HasDataLabel = True
 
@@ -1236,30 +1273,65 @@ Public Module awinGUI
 
                                 End Try
 
-                                ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
-                                If bubbleValues(i - 1) < 0 Then
-                                    Try
-                                        .DataLabel.Font.Color = awinSettings.AmpelRot
-                                    Catch ex As Exception
-
-                                    End Try
-                                ElseIf bubbleValues(i - 1) > 0 Then
-                                    Try
-                                        .DataLabel.Font.Color = awinSettings.AmpelGruen
-                                    Catch ex As Exception
-
-                                    End Try
-                                Else
-                                    Try
-                                        .DataLabel.Font.Color = System.Drawing.Color.Black
-                                    Catch ex As Exception
-
-                                    End Try
-                                End If
-
                             Else
                                 .HasDataLabel = False
                             End If
+
+                            ' wenn es markierte Projekte gibt, so müssen die angezeigt werden 
+                            If markedProjects.Count > 0 Then
+                                If markedProjects.Contains(CStr(projektListe.Item(i))) Then
+                                    ' jetzt muss das Bubble mit einem Glow versehen werden ... 
+                                    With .Format.Glow
+                                        .Color.RGB = CInt(awinSettings.glowColor)
+                                        .Color.Brightness = 0
+                                        .Transparency = 0
+                                        .Radius = 10
+                                    End With
+                                End If
+                            End If
+
+
+                            ' ' bei negativen Werten wird ein roter Schatten gezeigt; die Beschriftung in roter Farbe  ..
+                            If bubbleValues(i - 1) < 0 Then
+
+                                Try
+                                    With .Format.Shadow
+                                        .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                                        .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                                        .Blur = 0
+                                        .OffsetX = 5
+                                        .OffsetY = -1
+                                        .RotateWithShape = Microsoft.Office.Core.MsoTriState.msoFalse
+                                        .ForeColor.RGB = RGB(255, 0, 0)
+                                        .ForeColor.TintAndShade = 0
+                                        .ForeColor.Brightness = 0.400000006
+                                        .Transparency = 0
+                                        .Size = 50
+                                    End With
+                                Catch ex As Exception
+
+                                End Try
+
+                                Try
+                                    .DataLabel.Font.Color = awinSettings.AmpelRot
+                                Catch ex As Exception
+
+                                End Try
+                            ElseIf bubbleValues(i - 1) > 0 Then
+                                Try
+                                    .DataLabel.Font.Color = awinSettings.AmpelGruen
+                                Catch ex As Exception
+
+                                End Try
+                            Else
+                                Try
+                                    .DataLabel.Font.Color = System.Drawing.Color.Black
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+
 
                             ' Änderung 30.12.15 
                             If awinSettings.mppShowAmpel Then
@@ -1316,6 +1388,156 @@ Public Module awinGUI
 
 
     End Sub
+
+
+    ''' <summary>
+    ''' aktualisiert nur die Marked-Kennzeichnung eines Punktes 
+    ''' ein Neu-Aufbau ist ncht notwendig 
+    ''' </summary>
+    ''' <param name="chtobj"></param>
+    ''' <remarks></remarks>
+    Sub awinUpdateMarkerInPortfolioDiagrams(ByVal chtobj As ChartObject)
+
+        Dim i As Integer
+        Dim pname As String
+        Dim hproj As New clsProjekt
+        Dim anzBubbles As Integer
+
+        Dim projektListe As New Collection
+        Dim charttype As Integer
+        Dim tmpstr(5) As String
+        Dim isSingleProject As Boolean = False
+
+
+        Dim markedProjects As Collection = ShowProjekte.getMarkedProjects
+
+        tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
+        charttype = CInt(tmpstr(1))
+        isSingleProject = False
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        projektListe = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+
+        'Dim allOK As Boolean = False
+        ' wenn der Charttype nicht bekannt ist : sofortiger Exit 
+        If charttype = PTpfdk.FitRisiko Or _
+            charttype = PTpfdk.FitRisikoDependency Or _
+            charttype = PTpfdk.ZeitRisiko Or _
+            charttype = PTpfdk.ComplexRisiko Or _
+            charttype = PTpfdk.FitRisikoVol Or _
+            charttype = PTpfdk.Dependencies Then
+
+            'allOK = True
+        Else
+            Exit Sub
+        End If
+
+
+
+
+
+        Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
+        Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
+
+        anzBubbles = 0
+
+        ' Änderung 8.3 : hier muss die Unterscheidung gemacht werden, welche Projekte im Zeitraum denn überhaupt Abhängigkeiten haben  
+
+        If charttype = PTpfdk.Dependencies Then
+            Dim deleteList As New Collection
+            For i = 1 To projektListe.Count
+                pname = CStr(projektListe.Item(i))
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+                    activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
+                    passiveNumber = allDependencies.passiveNumber(pname, PTdpndncyType.inhalt)
+                    If activeNumber = 0 And passiveNumber = 0 Then
+                        deleteList.Add(pname)
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
+            For i = 1 To deleteList.Count
+                pname = CStr(deleteList.Item(i))
+                Try
+                    projektListe.Remove(pname)
+                Catch ex As Exception
+
+                End Try
+            Next
+        End If
+
+
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        With chtobj.Chart
+
+
+            If projektListe.Count >= 0 Then
+
+                ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
+                anzBubbles = projektListe.Count
+
+                ' ur: 06.04.2017: nur wenn Werte für die SeriesCollection vorhanden sind
+                ' d.h. ProjekteListe ist nicht leer
+
+                Dim series1 As Excel.Series = _
+                        CType(.SeriesCollection(1),  _
+                                Excel.Series)
+                Dim point1 As Excel.Point = _
+                            CType(series1.Points(1), Excel.Point)
+
+                If anzBubbles <> CType(series1.Points, Points).Count Then
+                    ' das darf eigentlich nicht sein ... 
+                Else
+                    Dim bubblePoint As Excel.Point
+                    For i = 1 To anzBubbles
+
+                        bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                        With CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                            ' wenn es markierte Projekte gibt, so müssen die angezeigt werden 
+                            If markedProjects.Contains(CStr(projektListe.Item(i))) Then
+                                ' jetzt muss das Bubble mit einem Glow versehen werden ... 
+                                With .Format.Glow
+                                    .Color.RGB = CInt(awinSettings.glowColor)
+                                    .Color.Brightness = 0
+                                    .Transparency = 0
+                                    .Radius = 10
+                                End With
+                            Else
+                                With .Format.Glow
+                                    .Color.RGB = RGB(255, 255, 255)
+                                    .Color.Brightness = 0
+                                    .Transparency = 1.0
+                                    .Radius = 1
+                                End With
+                            End If
+
+                        End With
+                    Next i
+                End If
+
+
+            End If
+
+
+        End With
+
+        appInstance.EnableEvents = formerEE
+
+
+
+
+    End Sub
+
 
     Function pfchartIstFrei(index As Integer, ByRef sValues() As Double, ByRef rValues() As Double) As String
         Dim sfit As Double = sValues(index)

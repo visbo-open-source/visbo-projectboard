@@ -526,18 +526,18 @@ Public Module awinDiagrams
 
                         Else
                             Dim legendName As String = ""
-                            If Not calledfromReporting Then
+                            ' tk: repmsg muss nagepasst werden, wenn es nicht da ist 
+                            If repMessages.getmsg(275) <> "" Then
+                                legendName = repMessages.getmsg(275)
+                            Else
                                 If awinSettings.englishLanguage Then
                                     legendName = "Sum over all projects"
                                 Else
                                     legendName = "Summe über alle Projekte"
                                 End If
-
-                            Else
-                                'legendName = "Summe über alle Projekte"
-                                legendName = repMessages.getmsg(275)
                             End If
-                         
+
+
                             If prcTyp = DiagrammTypen(5) Then
 
                                 ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
@@ -567,16 +567,17 @@ Public Module awinDiagrams
 
                                     If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                                         ' repmsg!
-                                        If Not calledfromReporting Then
+                                        ' tk: repmsg muss nagepasst werden, wenn es nicht da ist 
+                                        If repMessages.getmsg(276) <> "" Then
+                                            .Name = legendName & ": " & repMessages.getmsg(276)
+                                        Else
                                             If awinSettings.englishLanguage Then
                                                 .Name = legendName & ": placeholder"
                                             Else
                                                 .Name = legendName & ": Platzhalter"
                                             End If
-                                        Else
-                                            '.Name = legendName & ": Platzhalter"
-                                            .Name = legendName & ": " & repMessages.getmsg(276)
                                         End If
+                                        
                                         
                                     Else
                                         .Name = legendName
@@ -601,8 +602,8 @@ Public Module awinDiagrams
                                     ' alle anderen zeigen 
                                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                                        If calledfromReporting Then
-                                            '.Name = legendName & ": zugeordnet"
+                                        ' tk: repmsg muss angepasst werden ... wenn es nicht da ist ... 
+                                        If repMessages.getmsg(277) <> "" Then
                                             .Name = legendName & ": " & repMessages.getmsg(277)
                                         Else
                                             If awinSettings.englishLanguage Then
@@ -5693,6 +5694,7 @@ Public Module awinDiagrams
     ''' zeichnet alle dargestellten Portfolio ("Pf") Diagramme neu
     ''' die optionale Parameter werden im Fall MassenEdit benötigt - es wird dann mitgegeben, welche Rolle/Kostenart/Milestone/Phase aktualisiert werden soll und
     ''' welches Projekt im Chart ausgewiesen werden soll 
+    ''' 99 - nur das Strategie-Risiko Chart neu zeichnen; hier sollen die Markierungen weggenommen werden 
     ''' </summary>
     ''' <param name="typus"></param>
     ''' <remarks></remarks>
@@ -5797,6 +5799,18 @@ Public Module awinDiagrams
                                                                     isRole:=isRole)
 
                             End If
+                        Case 99
+                            ' nur die Strategie - / Risiko Diagramme sollen neu gezeichnet, d.h die Markierungen zurückgesetzt werden 
+                            If istSummenDiagramm(chtobj, p) Then
+                                If p = PTpfdk.Dependencies Or _
+                                       p = PTpfdk.FitRisiko Or _
+                                       p = PTpfdk.FitRisikoVol Or _
+                                       p = PTpfdk.ZeitRisiko Or _
+                                       p = PTpfdk.ComplexRisiko Then
+                                    Call awinUpdateMarkerInPortfolioDiagrams(chtobj)
+                                    'Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.AmpelFarbe)
+                                End If
+                            End If
 
                         Case Else
                             ' 1: Projekt wurde verschoben
@@ -5825,7 +5839,7 @@ Public Module awinDiagrams
                                        p = PTpfdk.ZeitRisiko Or _
                                        p = PTpfdk.ComplexRisiko Then
 
-                                    Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                    Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.AmpelFarbe)
 
                                 ElseIf p = PTpfdk.Auslastung Then
                                     Try
@@ -5900,6 +5914,43 @@ Public Module awinDiagrams
         If formerShowValuesOfSelected <> awinSettings.showValuesOfSelected Then
             awinSettings.showValuesOfSelected = formerShowValuesOfSelected
         End If
+
+    End Sub
+
+    ''' <summary>
+    ''' setzt in den Pf Diagrammen eine evtl gesetzte Fill Farbe zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub unmarkPfDiagrams()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        Try
+            Dim currentSheetName As String = arrWsNames(ptTables.mptPfCharts)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+                Dim anz_diagrams As Integer = CType(.ChartObjects, Excel.ChartObjects).Count
+                For i As Integer = 1 To anz_diagrams
+
+                    Try
+                        Dim chtobj As Excel.ChartObject = CType(.ChartObjects(i), Excel.ChartObject)
+                        Dim curShape As Excel.Shape = .Shapes.Item(chtobj.Name)
+                        With curShape.Fill
+                            .Visible = MsoTriState.msoFalse
+                            .ForeColor.RGB = RGB(255, 255, 255)
+                        End With
+                    Catch ex As Exception
+
+                    End Try
+
+                Next i
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = formerEE
 
     End Sub
 

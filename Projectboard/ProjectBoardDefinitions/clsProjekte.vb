@@ -696,6 +696,29 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
+    ''' gibt die Namen der Projekte zurück, die "markiert" sind 
+    ''' leere Collection, wenn es keine gibt 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMarkedProjects() As Collection
+        Get
+            Dim tmpCollection As New Collection
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me.Liste
+                If kvp.Value.marker = True Then
+                    If Not tmpCollection.Contains(kvp.Key) Then
+                        tmpCollection.Add(kvp.Key, kvp.Key)
+                    End If
+                End If
+            Next
+
+            getMarkedProjects = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' bestimmt die kleinste auftretende Spalten-Column über alle Projekte  
     ''' wenn eine liste angegeben ist, werden nur die in der Liste vorhandenen PRoekte betrachtet 
     ''' </summary>

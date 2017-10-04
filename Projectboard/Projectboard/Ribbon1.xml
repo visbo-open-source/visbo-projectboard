@@ -197,6 +197,7 @@
               <button id="PTfreezeB2" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTDeFreezeProject" supertip ="ein nicht fixiertes Projekt kann durch Drag und Drop verschoben, verkürzt oder verlängert werden. Bei Basis-Varianten kann die Fixierung nicht aufgehoben werden. Hierzu muss zuvor eine Variante angelegt werden."/>
               <menuSeparator id="separator4" />
               <!--label="Unmark"-->
+              <button id="PTMarkBT" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTMarkProjects" supertip ="Projekt oder Projekte markieren."/>
               <button id="PTunmarkBT" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTUnMarkProject" supertip ="die Markierung eines Projektes aufheben."/>
               <menuSeparator id="separator5" />
               <!--label="Variante zum Standard machen"-->
@@ -324,11 +325,11 @@
               <button id="PTXG1B3" getLabel ="bestimmeLabel" onAction="PT0ShowAuslastung" supertip="Es wird eine Gesamtübersicht und eine Aufschlüsselung der Überlastung sowie Unterauslastung der einzelnen Rollen dargestellt"/>
               <menuSeparator id="PTXG1s2"/>
               <!--label="Strategie/Risiko/Marge"-->
-              <button id="PTXG1B8" enabled ="false" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
+              <button id="PTXG1B8" enabled ="true" getLabel ="bestimmeLabel" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
               <!--label="Budget/Kosten/Auslastung"--><!--
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Meilenstein-Ampeln"-->
-              <button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
+              <button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="true" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
               <!--label="Custom"-->
               <button id="PTcustom" label ="Custom" enabled="false"/>
               <menuSeparator id="PTXG1s4"/>

@@ -76,9 +76,6 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
 
-    ' wird benutzt, um zu bestimmen, welche Charts selektiert wurden ... 
-    Public selectedCharts As New Collection
-
     ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
     ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
     ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
@@ -988,7 +985,6 @@ Public Module Module1
         Dim msg As String = ""
 
         Dim chtobjName As String = ""
-        Dim userSelectedSomething As Boolean = False
 
 
         ' Exit, wenn nicht im PRojekt-Tafel-Modus 
@@ -1001,7 +997,6 @@ Public Module Module1
 
                     ' alle selektierten Projekte aufnehmen ... 
                     If selectedProjekte.Count > 0 Then
-                        userSelectedSomething = True
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
                             If Not tmpCollection.Contains(kvp.Key) Then
                                 ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
@@ -1013,107 +1008,22 @@ Public Module Module1
                         Next
                     End If
 
+                    ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                    ' jetzt für alle selektierten Charts bestimmen, welche Projekte dazu beitragen ... 
-
-
-                    Dim allChartsOnSheet As Excel.ChartObjects = _
-                       CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
-
-                    'testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
-
-                    If Not IsNothing(allChartsOnSheet) Then
-                        If allChartsOnSheet.Count > 0 And selectedCharts.Count > 0 Then
-                            userSelectedSomething = True
-                            For Each chtObj As Excel.ChartObject In allChartsOnSheet
-
-                                If selectedCharts.Contains(chtObj.Name) Then
-                                    chtobjName = chtObj.Name
-
-
-                                    Dim index As Integer = -1
-                                    ' bestimmen, um welchen Typ es sich handelt 
-                                    Dim weiterMachen As Boolean = istRollenDiagramm(chtObj) Or _
-                                                                istKostenartDiagramm(chtObj) Or _
-                                                                (istErgebnisDiagramm(chtObj, index) And index = PTpfdk.UeberAuslastung) Or _
-                                                                (istErgebnisDiagramm(chtObj, index) And index = PTpfdk.Unterauslastung)
-
-                                    If weiterMachen Then
-
-
-                                        Dim found As Boolean = False
-                                        Dim myCollection As Collection = New Collection
-
-                                        Dim foundDiagram As clsDiagramm = Nothing
-
-                                        Try
-
-                                            foundDiagram = DiagramList.getDiagramm(chtobjName)
-                                            If Not IsNothing(foundDiagram) Then
-                                                myCollection = foundDiagram.gsCollection
-                                                found = True
-                                            End If
-
-                                        Catch ex As Exception
-                                            myCollection = New Collection
-                                        End Try
-
-
-                                        ' es ist ein Rollen Diagramm mit der Menge von angegebenen Rollen in myCollection 
-                                        If found Then
-                                            If istRollenDiagramm(chtObj) Then
-                                                Dim currentFilter As clsFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
-                                                                                                myCollection, Nothing)
-
-                                                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                                                    If currentFilter.doesNotBlock(kvp.Value) Then
-                                                        If Not tmpCollection.Contains(kvp.Key) Then
-                                                            tmpCollection.Add(kvp.Key, kvp.Key)
-                                                        End If
-                                                    End If
-                                                Next
-
-                                            ElseIf istKostenartDiagramm(chtObj) Then
-                                                Dim currentFilter As clsFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
-                                                                                                Nothing, myCollection)
-
-                                                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                                                    If currentFilter.doesNotBlock(kvp.Value) Then
-                                                        If Not tmpCollection.Contains(kvp.Key) Then
-                                                            tmpCollection.Add(kvp.Key, kvp.Key)
-                                                        End If
-                                                    End If
-                                                Next
-
-
-                                            ElseIf istErgebnisDiagramm(chtObj, index) Then
-
-                                                If index = PTpfdk.UeberAuslastung Or _
-                                                    index = PTpfdk.Unterauslastung Then
-
-                                                    Dim currentFilter As clsFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
-                                                                                                    myCollection, Nothing)
-                                                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                                                        If currentFilter.doesNotBlock(kvp.Value) Then
-                                                            If Not tmpCollection.Contains(kvp.Key) Then
-                                                                tmpCollection.Add(kvp.Key, kvp.Key)
-                                                            End If
-                                                        End If
-                                                    Next
-
-                                                End If
-
-                                            End If
-                                        End If
-
-                                    End If
+                        If kvp.Value.marker = True Then
+                            If Not tmpCollection.Contains(kvp.Key) Then
+                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
                                 End If
-                            Next
+                            End If
                         End If
-                    End If
+
+                    Next
 
 
-                    If Not userSelectedSomething And takeAllIFNothingWasSelected Then
+                    If tmpCollection.Count = 0 And takeAllIFNothingWasSelected Then
                         ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
                         tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
                     End If
@@ -1140,9 +1050,177 @@ Public Module Module1
 
     End Function
 
-    '
-    ' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
-    '
+    ''' <summary>
+    ''' markiert alle Projekte, die zu dem Chart beitragen 
+    ''' wird aus einem Chart Event heraus aus aufgerufen, d.h das Chart existiert 
+    ''' </summary>
+    ''' <param name="chtObj"></param>
+    ''' <remarks></remarks>
+    Public Sub markProjectsOFChart(ByVal chtObj As Excel.ChartObject)
+
+        ' jetzt bestimmen, welches Projekt zu diesem Chart beitägt 
+        Dim found As Boolean = False
+        Dim myCollection As Collection = New Collection
+        Dim foundDiagram As clsDiagramm = Nothing
+        Dim index As Integer = -1
+        Dim tmpCollection As New Collection
+
+        Dim currentFilter As New clsFilter
+
+        ' EnableEvents ausschalten ...
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        ' jetzt muss das Chart selber noch markiert werden ...
+        Try
+            Dim currentSheetName As String = arrWsNames(ptTables.mptPfCharts)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+                Dim curShape As Excel.Shape = .Shapes.Item(chtObj.Name)
+                With curShape.Fill
+                    .Visible = MsoTriState.msoTrue
+                    .ForeColor.RGB = CInt(awinSettings.glowColor)
+                    .Transparency = 0.4
+                End With
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+        Try
+
+            foundDiagram = DiagramList.getDiagramm(chtObj.Name)
+            If Not IsNothing(foundDiagram) Then
+                myCollection = foundDiagram.gsCollection
+                found = True
+            End If
+
+        Catch ex As Exception
+            myCollection = New Collection
+        End Try
+
+
+        ' es ist ein Rollen Diagramm mit der Menge von angegebenen Rollen in myCollection 
+        If found Then
+            Dim weitermachen As Boolean = False
+            If istRollenDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                myCollection, Nothing)
+                weitermachen = True
+                
+
+            ElseIf istKostenartDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                Nothing, myCollection)
+                weitermachen = True
+
+            ElseIf istPhasenDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, myCollection, Nothing, _
+                                                               Nothing, Nothing)
+                weitermachen = True
+            ElseIf istMileStoneDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, myCollection, _
+                                                               Nothing, Nothing)
+                weitermachen = True
+
+            ElseIf istErgebnisDiagramm(chtObj, index) Then
+
+                If index = PTpfdk.UeberAuslastung Or _
+                    index = PTpfdk.Unterauslastung Then
+
+                    currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                    myCollection, Nothing)
+                    weitermachen = True
+                End If
+
+            End If
+            If weitermachen Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                    If currentFilter.doesNotBlock(kvp.Value) Then
+
+                        If kvp.Value.marker = False Then
+                            ' dann muss es neu markiert und angezeigt werden 
+                            Try
+
+                                kvp.Value.marker = True
+                                Dim tmpC As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpC, kvp.Value.name, kvp.Value.tfZeile, tmpC, tmpC)
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+                        End If
+
+                    End If
+                Next
+            End If
+        End If
+
+        ' jetzt muss ggf das BubbleChart Strategie/Risiko neu gezeichnet werden 
+        Call awinNeuZeichnenDiagramme(99)
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    
+    ''' <summary>
+    ''' markiert alle Projekte, wenn die bereits markiert waren, wird atleastOne = false zurückgegeben 
+    ''' </summary>
+    ''' <param name="atleastOne"></param>
+    ''' <remarks></remarks>
+    Public Sub markAllProjects(ByRef atleastOne As Boolean)
+        Try
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                If kvp.Value.marker = False Then
+                    kvp.Value.marker = True
+                    atleastOne = True
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
+                End If
+
+            Next
+
+        Catch ex As Exception
+            'Call MsgBox(ex.Message)
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' setzt die Markierungen alle Projekte zurück ...
+    ''' wenn die alle schon unmarkiert waren, wird false zurückgegeben, andernfalls true
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub unMarkAllProjects(ByRef atleastOne As Boolean)
+        Try
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                If kvp.Value.marker = True Then
+                    kvp.Value.marker = False
+                    atleastOne = True
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
+                End If
+
+            Next
+
+        Catch ex As Exception
+            'Call MsgBox(ex.Message)
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
+    ''' </summary>
+    ''' <param name="chtobj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Function istRollenDiagramm(ByRef chtobj As ChartObject) As Boolean
 
         Dim found As Boolean
