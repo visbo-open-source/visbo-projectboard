@@ -1022,12 +1022,26 @@ Public Class Tabelle2
                     Dim msgResult As MsgBoxResult = False
 
                     ' Test, ob es überhauüüt möglich ist den eingegebenen Wert bei der Sammelrolle abzuziehen
-                    For i As Integer = 0 To xWerte.Length - 1 - xWerteIndex - offset
-                        sumRoleSum = sumRoleSum + xWerte(xWerteIndex + offset + i)
-                    Next
+                    ' ''For i As Integer = 0 To xWerte.Length - 1 - xWerteIndex - offset
+                    ' ''    sumRoleSum = sumRoleSum + xWerte(xWerteIndex + offset + i)
+                    ' ''Next
+
+                    sumRoleSum = xWerte.Sum
 
                     If sumRoleSum >= difference Then
-                        verteilungMöglich = True
+                        ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+                        If phaseWithinTimeFrame(hproj.Start, cPhase.relStart, cPhase.relEnde, _
+                                                 showRangeLeft, showRangeRight, True) Then
+
+                            verteilungMöglich = True
+
+                            ''Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
+                            ''            " nicht gelöscht werden ...")
+                            ''ok = False
+                        Else
+                            verteilungMöglich = False
+                        End If
+
                     End If
 
                     If Not verteilungMöglich Then
@@ -1043,15 +1057,22 @@ Public Class Tabelle2
                             ' jetzt muss eine Meldung erfolgen ... 
 
                             Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
+                                        "oder die Phase wird nicht vollständig dargestellt" & vbLf & _
                                         "Der Wert wird deshalb von " & CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value & _
                                         " auf " & newValue & " korrigiert werden? ")
 
-                            ' jetzt muss der newDblValue in das Feld geschrieben werden 
-                            CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value = newValue
-                            ' die Monatszahl und dann die Summe updaten ... 
-                            CType(meWS.Cells(zeileOFSummaryRole, targetColumn), Excel.Range).Value = 0
-
                             difference = -xWerte(xWerteIndex + offset)
+
+                           
+                            ' jetzt muss der newValue in das Feld geschrieben werden 
+                            CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value = newValue
+
+                            ' die Monatszahl und dann die Summe updaten ... 
+                            xWerte(xWerteIndex + offset) = 0
+                            CType(meWS.Cells(zeileOFSummaryRole, targetColumn), Excel.Range).Value = xWerte(xWerteIndex + offset)
+
+                            CType(meWS.Cells(zeileOFSummaryRole, 6), Excel.Range).Value = xWerte.Sum
+
                         Else
 
                             difference = 0
@@ -1120,6 +1141,62 @@ Public Class Tabelle2
                             CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
 
                         Next i
+
+                        ' nun noch die Werte vor Beginn aktuellem Monat betrachten, sofern nicht schon alles umgeschifftet wurde
+                        If difference > 0 Then
+
+                            For i As Integer = -1 To -xWerteIndex - offset Step -1
+
+                                xWerte(xWerteIndex + offset + i) = xWerte(xWerteIndex + offset + i) - difference
+
+
+                                If xWerte(xWerteIndex + offset + i) < 0 Then
+
+
+                                    If msgResult = MsgBoxResult.Yes Then
+
+                                        ' jetzt muss der newValue entsprechend geändert werden 
+                                        ' plus, weil xWerte(..) < 0 
+                                        newValue = newValue + xWerte(xWerteIndex + offset + i)
+
+                                        ' jetzt muss der newDblValue in das Feld geschrieben werden 
+                                        CType(meWS.Cells(targetRow, targetColumn + 2 * i), Excel.Range).Value = newValue
+                                        ' die Monatszahl und dann die Summe updaten ... 
+                                        CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = 0
+
+                                        difference = -xWerte(xWerteIndex + offset + i)
+                                        Exit For
+                                    Else
+
+                                        ' zu wenig abgezogen, wird in nächstem Monat abgezogen
+                                        Dim zuwenig As Double = -xWerte(xWerteIndex + offset + i)
+
+
+                                        ' bestimmen der neuen Differenz 
+                                        'ur:4.10..2017: difference = newValue - CDbl(visboZustaende.oldValue)
+                                        difference = zuwenig
+
+                                        ' ur: 4.10.2017: hier muss die Verteilung von  "difference"  stattfinden
+
+                                        xWerte(xWerteIndex + offset + i) = 0
+                                    End If
+
+                                Else
+
+                                    difference = 0
+
+                                End If
+
+
+                                ' die Monatszahl und dann die Summe updaten ... 
+                                '' ''Dim testdbl As Double = xWerte(xWerteIndex + offset + i)
+                                '' ''Call MsgBox(" testdbl = " & testdbl.ToString)
+                                CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
+
+                            Next i
+
+                        End If
+
 
                     End If
 
