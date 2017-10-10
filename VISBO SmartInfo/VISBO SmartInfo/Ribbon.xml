@@ -9,6 +9,7 @@
                 <group id="SmartInfo" label="Smart-Info">
                     <button id="activateTab" onAction="activateTab_Click" label="Info Fenster" showImage="false" />
                     <button id="timeMachineTab" onAction="timeMachineTab_Click" label="Zeit-Maschine" showImage="false" />
+                    <button id="variantTab" onAction="variantTab_Click" label="Varianten" showImage="false" />
                     <button id="settingsTab" onAction="settingsTab_Click" label="Einstellungen" showImage="false" />
                     <button id="resetTab" onAction="resetTab_Click" label="Reset Termine" showImage="false" />
                 </group>

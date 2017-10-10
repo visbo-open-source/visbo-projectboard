@@ -22,6 +22,7 @@ Partial Class frmGetProjectbackFromNoshow
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmGetProjectbackFromNoshow))
         Me.ListBox1 = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
@@ -32,22 +33,20 @@ Partial Class frmGetProjectbackFromNoshow
         Me.ListBox1.Font = New System.Drawing.Font("Tahoma", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.HorizontalScrollbar = True
-        Me.ListBox1.ItemHeight = 19
-        Me.ListBox1.Location = New System.Drawing.Point(20, 25)
-        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4)
+        Me.ListBox1.ItemHeight = 16
+        Me.ListBox1.Location = New System.Drawing.Point(16, 20)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.ListBox1.Size = New System.Drawing.Size(600, 232)
+        Me.ListBox1.Size = New System.Drawing.Size(481, 180)
         Me.ListBox1.Sorted = True
         Me.ListBox1.TabIndex = 0
         '
         'OKButton
         '
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.OKButton.Location = New System.Drawing.Point(99, 273)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.OKButton.Location = New System.Drawing.Point(79, 218)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(100, 28)
+        Me.OKButton.Size = New System.Drawing.Size(80, 22)
         Me.OKButton.TabIndex = 1
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -55,23 +54,22 @@ Partial Class frmGetProjectbackFromNoshow
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(399, 273)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.AbbrButton.Location = New System.Drawing.Point(319, 218)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(80, 22)
         Me.AbbrButton.TabIndex = 2
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'frmGetProjectbackFromNoshow
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(633, 326)
+        Me.ClientSize = New System.Drawing.Size(506, 261)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
-        Me.Margin = New System.Windows.Forms.Padding(4)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmGetProjectbackFromNoshow"
         Me.Text = "Projekt wieder ins Show holen "
         Me.ResumeLayout(False)

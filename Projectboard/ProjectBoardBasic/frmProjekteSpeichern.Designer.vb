@@ -22,6 +22,7 @@ Partial Class frmProjekteSpeichern
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmProjekteSpeichern))
         Me.Label1 = New System.Windows.Forms.Label()
         Me.JAButton = New System.Windows.Forms.Button()
         Me.NEINButton = New System.Windows.Forms.Button()
@@ -69,6 +70,7 @@ Partial Class frmProjekteSpeichern
         Me.Controls.Add(Me.NEINButton)
         Me.Controls.Add(Me.JAButton)
         Me.Controls.Add(Me.Label1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmProjekteSpeichern"
         Me.RightToLeft = System.Windows.Forms.RightToLeft.No

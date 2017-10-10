@@ -22,6 +22,7 @@ Partial Class frmStoreConstellation
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmStoreConstellation))
         Me.ComboBox1 = New System.Windows.Forms.ComboBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
@@ -61,9 +62,9 @@ Partial Class frmStoreConstellation
         Me.Label1.AutoSize = True
         Me.Label1.Location = New System.Drawing.Point(19, 30)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(383, 13)
+        Me.Label1.Size = New System.Drawing.Size(380, 13)
         Me.Label1.TabIndex = 3
-        Me.Label1.Text = "Geben  Sie den Namen an, unter dem dieses Szenario gespeichert werden soll: "
+        Me.Label1.Text = "Geben  Sie den Namen an, unter dem dieses Portfolio gespeichert werden soll: "
         '
         'frmStoreConstellation
         '
@@ -74,8 +75,9 @@ Partial Class frmStoreConstellation
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ComboBox1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmStoreConstellation"
-        Me.Text = "Szenario speichern"
+        Me.Text = "Portfolio speichern"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

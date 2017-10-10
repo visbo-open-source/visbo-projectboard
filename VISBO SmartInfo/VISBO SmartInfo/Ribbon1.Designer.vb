@@ -46,7 +46,10 @@
         Me.Tab2 = Me.Factory.CreateRibbonTab
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.activateTab = Me.Factory.CreateRibbonButton
+        Me.Separator2 = Me.Factory.CreateRibbonSeparator
         Me.timeMachineTab = Me.Factory.CreateRibbonButton
+        Me.variantTab_Click = Me.Factory.CreateRibbonButton
+        Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.settingsTab = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
@@ -73,7 +76,10 @@
         'SmartInfo
         '
         Me.SmartInfo.Items.Add(Me.activateTab)
+        Me.SmartInfo.Items.Add(Me.Separator2)
         Me.SmartInfo.Items.Add(Me.timeMachineTab)
+        Me.SmartInfo.Items.Add(Me.variantTab_Click)
+        Me.SmartInfo.Items.Add(Me.Separator1)
         Me.SmartInfo.Items.Add(Me.settingsTab)
         Me.SmartInfo.Label = "Smart-Info"
         Me.SmartInfo.Name = "SmartInfo"
@@ -83,10 +89,23 @@
         Me.activateTab.Label = "Search"
         Me.activateTab.Name = "activateTab"
         '
+        'Separator2
+        '
+        Me.Separator2.Name = "Separator2"
+        '
         'timeMachineTab
         '
         Me.timeMachineTab.Label = "Time-Machine"
         Me.timeMachineTab.Name = "timeMachineTab"
+        '
+        'variantTab_Click
+        '
+        Me.variantTab_Click.Label = "Varianten"
+        Me.variantTab_Click.Name = "variantTab_Click"
+        '
+        'Separator1
+        '
+        Me.Separator1.Name = "Separator1"
         '
         'settingsTab
         '
@@ -115,6 +134,9 @@
     Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents settingsTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents timeMachineTab As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents variantTab_Click As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents Separator1 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
+    Friend WithEvents Separator2 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
 End Class
 
 Partial Class ThisRibbonCollection

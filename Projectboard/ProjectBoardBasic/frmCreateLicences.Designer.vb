@@ -22,6 +22,7 @@ Partial Class frmCreateLicences
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmCreateLicences))
         Me.untilDate = New System.Windows.Forms.DateTimePicker()
         Me.labelUntilDate = New System.Windows.Forms.Label()
         Me.LabelUser = New System.Windows.Forms.Label()
@@ -159,6 +160,7 @@ Partial Class frmCreateLicences
         Me.Controls.Add(Me.LabelUser)
         Me.Controls.Add(Me.labelUntilDate)
         Me.Controls.Add(Me.untilDate)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmCreateLicences"
         Me.Text = "Erzeugen der Lizenzen"
         Me.ResumeLayout(False)

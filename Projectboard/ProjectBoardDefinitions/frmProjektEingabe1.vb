@@ -21,14 +21,39 @@ Public Class frmProjektEingabe1
         frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
 
-        awinSettings.propAnpassRess = propRessourcenAnpassung.Checked
 
     End Sub
 
+    Private Sub defineButtonVisibility()
+        With Me
+            ' Sprach-Einstellungen ...
+            If awinSettings.englishLanguage Then
+                .Text = "create a new project"
+                .pName.Text = "Project-Name"
+                .lblVorlage.Text = "Template"
+                .lblStrategicFit.Text = "Strategic Fit"
+                .lblRisk.Text = "Risk"
+                .lblProfitField.Text = "Margin(%)"
+                .dauerUnverändert.Text = "duration like template"
+                .lbl_Laufzeit.Text = "Duration: "
+                .lbl_Referenz1.Text = "Milestone 1"
+                .lbl_Referenz2.Text = "Milestone 2"
+                .AbbrButton.Text = "Cancel"
+            Else
+                ' Texte sind bereits deutsch im Formular hinterlegt ... 
+            End If
 
+            ' Sichtbarkeit und Voreinstellungen 
+            .lbl_Referenz2.Visible = False
+            .endMilestoneDropbox.Visible = False
+        End With
+    End Sub
 
     Private Sub frmProjektEingabe1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim randomValue As Double
+
+        Call defineButtonVisibility()
+
 
 
         With Me
@@ -93,11 +118,6 @@ Public Class frmProjektEingabe1
             .risiko.Text = "5"
             .sFit.Text = "5"
 
-            .volume.Text = ""
-
-            ' Ressourcennapssung 
-            .propRessourcenAnpassung.Checked = awinSettings.propAnpassRess
-
             .dauerUnverändert.Checked = True
             .calcProjektStart = Date.Now.AddMonths(1)
             .calcProjektEnde = .calcProjektStart.AddDays(dauerVorlage - 1)
@@ -114,7 +134,6 @@ Public Class frmProjektEingabe1
             .lbl_Referenz2.Visible = False
             .endMilestoneDropbox.Visible = False
             .DateTimeEnde.Visible = False
-            .propRessourcenAnpassung.Visible = False
 
             ' das Formular an die letzte / Default-Position setzen 
             .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
@@ -156,14 +175,7 @@ Public Class frmProjektEingabe1
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-
-        Try
-            If Me.volume.Text = "" Then
-                Me.volume.Text = "0"
-            End If
-        Catch ex As Exception
-
-        End Try
+        Dim msgtxt As String = ""
 
         With projectName
 
@@ -178,21 +190,48 @@ Public Class frmProjektEingabe1
 
             If Len(.Text) < 2 Then
 
-
-                MsgBox("Projektname muss mindestens zwei Zeichen haben!")
+                If awinSettings.englishLanguage Then
+                    msgtxt = "Projektname has to be at least 2 characters!"
+                Else
+                    msgtxt = "Projektname muss mindestens zwei Zeichen haben!"
+                End If
+                Call MsgBox(msgtxt)
                 .Text = ""
                 .Undo()
                 DialogResult = System.Windows.Forms.DialogResult.None
 
             Else
                 If IsNumeric(.Text) Then
-                    MsgBox("Zahlen sind nicht zugelassen")
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "numbers are not permitted as projectnames"
+                    Else
+                        msgtxt = "Zahlen sind nicht zugelassen"
+                    End If
+                    Call MsgBox(msgtxt)
+
                     .Text = ""
                     .Undo()
                     DialogResult = System.Windows.Forms.DialogResult.None
 
                 ElseIf inProjektliste(.Text) Then
-                    MsgBox("Projekt-Name bereits vorhanden !")
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "projectname does already exist"
+                    Else
+                        msgtxt = "Projekt-Name bereits vorhanden !"
+                    End If
+                    Call MsgBox(msgtxt)
+
+                    .Text = ""
+                    .Undo()
+                    DialogResult = System.Windows.Forms.DialogResult.None
+                ElseIf Not isValidProjectName(.Text) Then
+                    If awinSettings.englishLanguage Then
+                        msgtxt = "projectname must not contain any #, (, ) characters"
+                    Else
+                        msgtxt = "Der Projekt-Name darf keine #, (, ) Zeichen enthalten"
+                    End If
+                    Call MsgBox(msgtxt)
+
                     .Text = ""
                     .Undo()
                     DialogResult = System.Windows.Forms.DialogResult.None
@@ -453,7 +492,6 @@ Public Class frmProjektEingabe1
                 lbl_Referenz2.Visible = False
                 endMilestoneDropbox.Visible = False
                 DateTimeEnde.Visible = False
-                propRessourcenAnpassung.Visible = False
 
                 calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
                 calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
@@ -467,7 +505,6 @@ Public Class frmProjektEingabe1
                 lbl_Referenz2.Visible = True
                 endMilestoneDropbox.Visible = True
                 DateTimeEnde.Visible = True
-                propRessourcenAnpassung.Visible = True
 
             End If
 
@@ -501,17 +538,6 @@ Public Class frmProjektEingabe1
 
     End Sub
 
-    Private Sub volume_TextChanged(sender As Object, e As EventArgs) Handles volume.TextChanged
-        If IsNumeric(volume.Text) Then
-            If CInt(volume.Text) < 0 Then
-                Call MsgBox("Volumen muss eine Zahl >= 0 sein ")
-                volume.Text = "0"
-            End If
-        Else
-            Call MsgBox("Volumen muss eine Zahl >= 0 sein ")
-            volume.Text = "0"
-        End If
-    End Sub
 
     Private Sub startMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles startMilestoneDropbox.SelectedIndexChanged
 
@@ -650,6 +676,17 @@ Public Class frmProjektEingabe1
         ' jetzt das Vorlagen Projekt bestimmen 
         vproj = Projektvorlagen.getProject(vorlagenDropbox.Text)
 
+
+        If vproj.getSummeKosten > 0 Then
+            Me.lblProfitField.Visible = True
+            Me.profitAskedFor.Visible = True
+            Me.profitAskedFor.Text = "0.0"
+        Else
+            Me.lblProfitField.Visible = False
+            Me.profitAskedFor.Visible = False
+            Me.profitAskedFor.Text = "0.0"
+        End If
+
         If IsNothing(vproj) Then
             Throw New ArgumentException("Vorlage" & vorlagenDropbox.Text & " existiert nicht ...")
         End If
@@ -684,6 +721,10 @@ Public Class frmProjektEingabe1
         startMsOffset = 0
         endMsOffset = dauerVorlage - 1
 
+
+    End Sub
+
+    Private Sub Label5_Click(sender As Object, e As EventArgs) Handles lblProfitField.Click
 
     End Sub
 End Class

@@ -22,6 +22,7 @@ Partial Class frmCompareConstellation
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmCompareConstellation))
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
         Me.CheckedListBox1 = New System.Windows.Forms.CheckedListBox()
@@ -29,20 +30,18 @@ Partial Class frmCompareConstellation
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(40, 361)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OKButton.Location = New System.Drawing.Point(32, 289)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(100, 28)
+        Me.OKButton.Size = New System.Drawing.Size(80, 22)
         Me.OKButton.TabIndex = 1
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(364, 361)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.AbbrButton.Location = New System.Drawing.Point(291, 289)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(80, 22)
         Me.AbbrButton.TabIndex = 2
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
@@ -50,26 +49,25 @@ Partial Class frmCompareConstellation
         'CheckedListBox1
         '
         Me.CheckedListBox1.FormattingEnabled = True
-        Me.CheckedListBox1.Location = New System.Drawing.Point(40, 47)
-        Me.CheckedListBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckedListBox1.Location = New System.Drawing.Point(32, 38)
         Me.CheckedListBox1.Name = "CheckedListBox1"
-        Me.CheckedListBox1.Size = New System.Drawing.Size(423, 276)
+        Me.CheckedListBox1.Size = New System.Drawing.Size(339, 214)
         Me.CheckedListBox1.TabIndex = 3
         '
         'frmCompareConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(507, 431)
+        Me.ClientSize = New System.Drawing.Size(406, 345)
         Me.Controls.Add(Me.CheckedListBox1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Location = New System.Drawing.Point(290, 0)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmCompareConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-        Me.Text = "Vergleich von zwei Projekt-Konstellationen"
+        Me.Text = "Vergleich von zwei Portfolios"
         Me.ResumeLayout(False)
 
     End Sub

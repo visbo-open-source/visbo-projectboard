@@ -13,12 +13,15 @@ Public Class frmProjPortfolioAdmin
 
     Private currentBrowserConstellation As New clsConstellation
     ' wenn Filter erstmalig aufgebaut wird , dann wird browserConstellationSav gemerkt ... 
-    Private browserConstellationSav As clsConstellation = Nothing
+    ' ur: 31.08.2017: Variable wird nun global defnieiert in Module.vb
+    ' Private beforeFilterConstellation As clsConstellation = Nothing
     ' PlusMinus Saving 
     Private browserConstellationSavPM As clsConstellation = Nothing
     ' wenn aus der Datenbank schnell gelesen werden soll ..
     Private pvNamesList As New SortedList(Of String, String)
     Private quickList As Boolean
+    Private lastIndexChecked As Integer = -1
+    Private lastLevelChecked As Integer = -1
 
     Private earliestDate As Date
     Private projektHistorien As New clsProjektDBInfos
@@ -61,7 +64,7 @@ Public Class frmProjPortfolioAdmin
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Friend aKtionskennung As Integer
 
-   
+
 
     Private Sub frmProjPortfolioAdmin_Disposed(sender As Object, e As EventArgs) Handles Me.Disposed
 
@@ -85,7 +88,7 @@ Public Class frmProjPortfolioAdmin
             'projectConstellations.update(currentBrowserConstellation)
 
         End If
-        
+
 
         ' Maus auf Normalmodus zurücksetzen
         'appInstance.Cursor = Microsoft.Office.Interop.Excel.XlMousePointer.xlDefault
@@ -95,7 +98,7 @@ Public Class frmProjPortfolioAdmin
     Private Sub defineButtonVisibility()
 
         Dim versionenOffset As Integer = 20
-        
+
 
         With Me
 
@@ -146,9 +149,9 @@ Public Class frmProjPortfolioAdmin
             ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    .Text = "Szenario "
+                    .Text = "Portfolio "
                 Else
-                    .Text = "Scenario "
+                    .Text = "Portfolio "
                 End If
 
                 .requiredDate.Visible = False
@@ -162,6 +165,18 @@ Public Class frmProjPortfolioAdmin
 
                 .filterIcon.Visible = True
                 .deleteFilterIcon.Visible = True
+                If Not IsNothing(beforeFilterConstellation) Then
+
+                    .deleteFilterIcon.Enabled = True
+
+                    ' Das DeleteFilterIcon mit Bild versehen 
+                    Me.deleteFilterIcon.Image = My.Resources.funnel_delete
+                    Me.deleteFilterIcon.Enabled = True
+                Else
+
+                End If
+
+
 
                 .dropboxScenarioNames.Visible = True
 
@@ -503,6 +518,7 @@ Public Class frmProjPortfolioAdmin
 
         ' erstmal den WaitCursor zeigen ... 
         Me.Cursor = Cursors.Default
+        lastIndexChecked = -1
 
         ' den hilfetext setzen ...
         If awinSettings.englishLanguage Then
@@ -575,11 +591,9 @@ Public Class frmProjPortfolioAdmin
             End If
         End If
 
-        
 
 
-        ' Ende neuer Ansatz 
-     
+
         ' jetzt die Korrektheitsprüfung ...
         If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
             currentBrowserConstellation.checkAndCorrectYourself()
@@ -705,6 +719,9 @@ Public Class frmProjPortfolioAdmin
         ' Fokus auf was unverdächtiges setzen 
         dropboxScenarioNames.Focus()
 
+
+        
+
     End Sub
 
 
@@ -715,9 +732,11 @@ Public Class frmProjPortfolioAdmin
         'Dim selCollection As SortedList(Of Date, String)
         'Dim timeStamp As Date
         Dim treeLevel As Integer
-        Dim i As Integer, j As Integer
-        Dim childNode As TreeNode
-        Dim parentNode As TreeNode
+        'Dim i As Integer, j As Integer
+        'Dim childNode As TreeNode
+        'Dim parentNode As TreeNode
+        Dim currentIndex As Integer
+        Dim shiftKeywasPressed As Boolean = False
 
         Dim considerDependencies As Boolean
         If allDependencies.projectCount > 0 Then
@@ -733,6 +752,8 @@ Public Class frmProjPortfolioAdmin
 
         node = e.Node
         treeLevel = node.Level
+        currentIndex = node.Index
+
 
         ' das Szenario wird im Falle activateV und chgInSession verändert ... 
         ' das muss hier vermerkt werden ...
@@ -744,19 +765,23 @@ Public Class frmProjPortfolioAdmin
 
             Dim preText As String
             If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                preText = "Szenario "
+                preText = "Portfolio "
             Else
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
 
             Me.Text = preText & currentConstellationName
         End If
 
-
+        If My.Computer.Keyboard.ShiftKeyDown Then
+            shiftKeywasPressed = True
+        End If
 
         ' hier wird jetzt sichergestellt, daß nur die nach der aktuellen Aktion gültigen Checks gesetzt werden können
         ' vor allem muss überall dort, wo das Szenario mit diesem Check verändert wird, das currentBrowserSzenario geupdated werden ...
         ' mit Click in TreeView wird verändert: Activate Variant, ChgInSession 
+
+        Dim checkMode As Boolean = node.Checked
 
         If aKtionskennung = PTTvActions.delFromDB Or _
             aKtionskennung = PTTvActions.delAllExceptFromDB Or _
@@ -768,11 +793,431 @@ Public Class frmProjPortfolioAdmin
 
                 Case 0 ' Projekt ist selektiert / nicht selektiert 
 
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+
+
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                    End If
+
+                Case 2 ' Snapshot ist selektiert / nicht selektiert 
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+            End Select
+
+            stopRecursion = False
+
+
+        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+              aKtionskennung = PTTvActions.deleteV Then
+
+            stopRecursion = True
+
+            Select Case treeLevel
+
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+
+            End Select
+
+            stopRecursion = False
+
+        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
+
+            stopRecursion = True
+
+            If Not noDB Then
+
+                Select Case treeLevel
+
+                    Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                        ' prüfen, ob Mauskey gedrückt war ...
+                        If shiftKeywasPressed Then
+                            If validMultiSelection(lastIndexChecked, currentIndex) Then
+                                If lastIndexChecked < 0 Then
+                                    lastIndexChecked = 0
+                                End If
+
+                                Dim lb As Integer = lastIndexChecked
+                                Dim ub As Integer = currentIndex
+                                If lastIndexChecked > currentIndex Then
+                                    lb = currentIndex
+                                    ub = lastIndexChecked
+                                End If
+
+                                For h = lb To ub
+                                    Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                    If tmpNode.Level = treeLevel Then
+                                        ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                        tmpNode.Checked = checkMode
+                                        Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                    End If
+
+                                Next
+                            Else
+                                Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                            End If
+
+                        Else
+
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                        End If
+
+
+                    Case 1 ' Variante ist selektiert / nicht selektiert
+
+                        ' prüfen, ob Mauskey gedrückt war ...
+                        If shiftKeywasPressed Then
+                            If validMultiSelection(lastIndexChecked, currentIndex) Then
+                                If lastIndexChecked < 0 Then
+                                    lastIndexChecked = 0
+                                End If
+
+                                Dim lb As Integer = lastIndexChecked
+                                Dim ub As Integer = currentIndex
+                                If lastIndexChecked > currentIndex Then
+                                    lb = currentIndex
+                                    ub = lastIndexChecked
+                                End If
+
+                                For h = lb To ub
+                                    Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                    If tmpNode.Level = treeLevel Then
+                                        ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                        tmpNode.Checked = checkMode
+                                        Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                    End If
+
+                                Next
+                            Else
+                                Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                            End If
+
+                        Else
+
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                        End If
+
+
+                End Select
+
+            Else
+                ' zurücknehmen
+                node.Checked = Not node.Checked
+            End If
+
+            stopRecursion = False
+
+        ElseIf aKtionskennung = PTTvActions.activateV Then
+
+            stopRecursion = True
+
+            Select Case treeLevel
+
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                    ' bei Aktivieren kann man Projekt nicht selektieren 
+                    node.Checked = False
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+                    ' ein Multiselect macht hier keinen Sinn ...
+                    Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    Dim projektNode As TreeNode = node.Parent
+                    Dim pName As String = getProjectNameOfTreeNode(projektNode.Text)
+
+                    ' jetzt die Charts , Einzel- wie Multiprojekt-Charts aktualisieren 
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    Call aktualisiereCharts(hproj, True)
+                    Call awinNeuZeichnenDiagramme(2)
+
+            End Select
+
+            stopRecursion = False
+
+        ElseIf aKtionskennung = PTTvActions.chgInSession Then
+
+            stopRecursion = True
+
+            Select Case treeLevel
+
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                    ' prüfen, ob Mauskey gedrückt war ...
+                    If shiftKeywasPressed Then
+                        If validMultiSelection(lastIndexChecked, currentIndex) Then
+                            If lastIndexChecked < 0 Then
+                                lastIndexChecked = 0
+                            End If
+
+                            Dim lb As Integer = lastIndexChecked
+                            Dim ub As Integer = currentIndex
+                            If lastIndexChecked > currentIndex Then
+                                lb = currentIndex
+                                ub = lastIndexChecked
+                            End If
+
+                            For h = lb To ub
+                                Dim tmpNode As TreeNode = TreeViewProjekte.Nodes.Item(h)
+
+                                If tmpNode.Level = treeLevel Then
+                                    ' Aktion nur durchführen, wenn auf der gleichen Ebene 
+                                    tmpNode.Checked = checkMode
+                                    Call doAfterCheckAction(aKtionskennung, treeLevel, tmpNode, considerDependencies)
+                                End If
+
+                            Next
+                        Else
+                            Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+                        End If
+
+                    Else
+
+                        Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+                    End If
+
+                    ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
+                    Call awinNeuZeichnenDiagramme(2)
+
+                Case 1 ' Variante ist selektiert / nicht selektiert
+
+                    ' eine Multiprojekt Selektion ist hier nicht erlaubt ...
+                    Dim projektNode As TreeNode = node.Parent
+                    Dim pName As String = getProjectNameOfTreeNode(projektNode.Text)
+
+                    Call doAfterCheckAction(aKtionskennung, treeLevel, node, considerDependencies)
+
+
+                    ' jetzt muss das bisherige aus ShowProjekte rausgenommen werden 
+                    If ShowProjekte.contains(pName) And projektNode.Checked Then
+
+                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                        Call aktualisiereCharts(hproj, True)
+                        Call awinNeuZeichnenDiagramme(2)
+
+                    End If
+
+            End Select
+
+            stopRecursion = False
+
+        End If
+
+        ' merken , wo zum letzten Mal geklickt wurde ....
+        lastLevelChecked = treeLevel
+        lastIndexChecked = currentIndex
+
+    End Sub
+
+    ''' <summary>
+    ''' führt die Aktion aus .. wird jetzt benötigt, um mit Shift mehrere Aktionen gleichzeitig durchführen zu können 
+    ''' </summary>
+    ''' <param name="actionCode"></param>
+    ''' <param name="TreeLevel"></param>
+    ''' <param name="node"></param>
+    ''' <param name="considerDependencies"></param>
+    ''' <remarks></remarks>
+    Private Sub doAfterCheckAction(ByVal actionCode As Integer, ByVal TreeLevel As Integer, ByVal node As TreeNode, _
+                                       ByVal considerDependencies As Boolean)
+
+        Dim childNode As TreeNode
+        Dim parentNode As TreeNode
+
+        If actionCode = PTTvActions.delFromDB Or _
+            actionCode = PTTvActions.delAllExceptFromDB Or _
+            actionCode = PTTvActions.loadPV Then
+
+
+            Select Case TreeLevel
+
+                Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                    Dim checkMode As Boolean = node.Checked
+
                     For i = 1 To node.Nodes.Count
+                        ' Schleife über alle Varianten
                         childNode = node.Nodes.Item(i - 1)
-                        childNode.Checked = node.Checked
+                        childNode.Checked = checkMode
                         For j = 1 To childNode.Nodes.Count
-                            childNode.Nodes.Item(j - 1).Checked = node.Checked
+                            ' Schleife über alle TimeStamps 
+                            childNode.Nodes.Item(j - 1).Checked = checkMode
                         Next
                     Next
 
@@ -789,7 +1234,7 @@ Public Class frmProjPortfolioAdmin
                         node.Parent.Checked = False
                     End If
 
-                    ' wenn mit diesem Knoten jetzt alle gesetzt sind, soll auch parent wieder gesetzt werden 
+                    ' wenn mit diesem Knoten jetzt alle geckecked/unchecked sind, soll auch parent wieder gesetzt werden 
                     If node.Checked = True Then
                         parentNode = node.Parent
                         Dim allchecked As Boolean = True
@@ -823,15 +1268,13 @@ Public Class frmProjPortfolioAdmin
 
             End Select
 
-            stopRecursion = False
 
 
-        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
-              aKtionskennung = PTTvActions.deleteV Then
+        ElseIf actionCode = PTTvActions.delFromSession Or _
+              actionCode = PTTvActions.deleteV Then
 
-            stopRecursion = True
 
-            Select Case treeLevel
+            Select Case TreeLevel
 
                 Case 0 ' Projekt ist selektiert / nicht selektiert 
 
@@ -871,18 +1314,15 @@ Public Class frmProjPortfolioAdmin
 
             End Select
 
-            stopRecursion = False
 
-        ElseIf aKtionskennung = PTTvActions.setWriteProtection Then
-
-            stopRecursion = True
+        ElseIf actionCode = PTTvActions.setWriteProtection Then
 
             If Not noDB Then
 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
 
-                Select Case treeLevel
+                Select Case TreeLevel
 
                     Case 0 ' Projekt ist selektiert / nicht selektiert 
 
@@ -1020,13 +1460,9 @@ Public Class frmProjPortfolioAdmin
                 node.Checked = Not node.Checked
             End If
 
-            stopRecursion = False
+        ElseIf actionCode = PTTvActions.activateV Then
 
-        ElseIf aKtionskennung = PTTvActions.activateV Then
-
-            stopRecursion = True
-
-            Select Case treeLevel
+            Select Case TreeLevel
 
                 Case 0 ' Projekt ist selektiert / nicht selektiert 
 
@@ -1070,8 +1506,6 @@ Public Class frmProjPortfolioAdmin
                             selectedVariantName = ""
                         End If
 
-
-
                     End If
 
                     ' jetzt das Browser Szenario aktualisieren 
@@ -1080,23 +1514,16 @@ Public Class frmProjPortfolioAdmin
                     ' jetzt die Variante aktivieren 
                     Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
 
-                    ' jetzt die Charts , Einzel- wie Multiprojekt-Charts aktualisieren 
-                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    Call aktualisiereCharts(hproj, True)
-                    Call awinNeuZeichnenDiagramme(2)
-
                     ' jetzt den Text des ParentNodes aktualisieren  
                     Call bestimmeNodeAppearance(projektNode, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)
 
             End Select
 
-            stopRecursion = False
 
-        ElseIf aKtionskennung = PTTvActions.chgInSession Then
+        ElseIf actionCode = PTTvActions.chgInSession Then
 
-            stopRecursion = True
 
-            Select Case treeLevel
+            Select Case TreeLevel
 
                 Case 0 ' Projekt ist selektiert / nicht selektiert 
 
@@ -1166,13 +1593,8 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-
-                    ' jetzt müssen die Portfolio Diagramme neu gezeichnet werden 
-                    Call awinNeuZeichnenDiagramme(2)
-
                     ' jetzt den Text des Projekt-Knotens aktualisieren  
                     Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, selectedVariantName)
-
 
                 Case 1 ' Variante ist selektiert / nicht selektiert
 
@@ -1214,16 +1636,6 @@ Public Class frmProjPortfolioAdmin
 
                         Call currentBrowserConstellation.updateShowAttributes(pName, selectedVariantName, False)
 
-                        ' '' die Standard Variante auf Checked setzen 
-                        ''For i = 0 To projektNode.Nodes.Count - 1
-                        ''    If projektNode.Nodes.Item(i).Text = "()" Then
-                        ''        projektNode.Nodes.Item(i).Checked = True
-                        ''    End If
-                        ''Next
-
-                        ' jetzt die selektierte Variante ins ShowProjekte stecken und aktualisieren ... 
-                        ' aber nur, wenn es nicht vorher schon die leere Variante war 
-
 
                     End If
 
@@ -1232,10 +1644,6 @@ Public Class frmProjPortfolioAdmin
 
                         Call replaceProjectVariant(pName, selectedVariantName, False, True, 0)
 
-                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                        Call aktualisiereCharts(hproj, True)
-                        Call awinNeuZeichnenDiagramme(2)
-
                     End If
 
                     ' jetzt den Text des ParentNodes aktualisieren  
@@ -1243,13 +1651,48 @@ Public Class frmProjPortfolioAdmin
 
             End Select
 
-            stopRecursion = False
-
         End If
-
-
     End Sub
 
+    ''' <summary>
+    ''' prüft, ob es sich um eine gültige Multi-Selection handelt: Beginn und Ende müssen auf der gleichen Stufe sein
+    ''' wenn von Stufe 2 oder 3 gestartet wird, es darf nur innerhalb der aktuellen Parent-Struktur sein; also von Variante 1/ Project 2
+    ''' bis Variante 7 / Project 8 darf nicht gewählt werden 
+    ''' </summary>
+    ''' <param name="lastIXChecked"></param>
+    ''' <param name="currentIX"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function validMultiSelection(ByVal lastIXChecked As Integer, ByVal currentIX As Integer) As Boolean
+        Dim tmpResult As Boolean = True
+
+
+        If lastIXChecked < 0 Then
+            lastIXChecked = 0
+        End If
+
+        Dim lb As Integer = lastIXChecked
+        Dim ub As Integer = currentIX
+        If lastIndexChecked > currentIX Then
+            lb = currentIX
+            ub = lastIXChecked
+        End If
+
+        Dim vglLevel As Integer = TreeViewProjekte.Nodes.Item(lb).Level
+
+        If TreeViewProjekte.Nodes.Item(ub).Level <> vglLevel Then
+            tmpResult = False
+        Else
+            For h = lb To ub
+                If TreeViewProjekte.Nodes.Item(h).Level > vglLevel Then
+                    tmpResult = False
+                    Exit For
+                End If
+            Next
+        End If
+
+        validMultiSelection = tmpResult
+    End Function
     ''' <summary>
     ''' aktiviert das Master-Projekt, wenn es nicht schon aktiviert ist ...
     ''' </summary>
@@ -1315,6 +1758,7 @@ Public Class frmProjPortfolioAdmin
         Dim variantName As String = ""
         Dim toolTippText As String = "-"
         Dim hproj As clsProjekt
+
 
 
         If treeLevel = 0 Then
@@ -1384,6 +1828,7 @@ Public Class frmProjPortfolioAdmin
                                      ByVal level As Integer, ByVal anzahlVariants As Integer) As String
 
         Dim tmpText As String = ""
+        Dim allowedLength As Integer = 70
 
         If Not IsNothing(hproj) Then
 
@@ -1409,6 +1854,9 @@ Public Class frmProjPortfolioAdmin
                 Else
                     If hproj.description.Length > 0 Then
                         tmpText = hproj.description
+                        If tmpText.Length > allowedLength Then
+                            tmpText = tmpText.Substring(0, allowedLength) & "..."
+                        End If
                     End If
                 End If
 
@@ -1446,6 +1894,9 @@ Public Class frmProjPortfolioAdmin
                 Else
                     If hproj.variantDescription.Length > 0 Then
                         tmpText = hproj.variantDescription
+                        If tmpText.Length > allowedLength Then
+                            tmpText = tmpText.Substring(0, allowedLength) & "..."
+                        End If
                     End If
                 End If
 
@@ -2109,13 +2560,14 @@ Public Class frmProjPortfolioAdmin
                 Dim toStoreConstellation As clsConstellation = _
                     currentBrowserConstellation.copy(currentConstellationName)
 
+
                 ' Korrektheitsprüfung
                 ' testen 
-              
+
                 If awinSettings.visboDebug Then
                     toStoreConstellation.checkAndCorrectYourself()
                 End If
-             
+
 
                 projectConstellations.update(toStoreConstellation)
 
@@ -2129,10 +2581,10 @@ Public Class frmProjPortfolioAdmin
                     If outPutCollection.Count > 0 Then
 
                         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                            txtMsg1 = "Speichern Szenario " & toStoreConstellation.constellationName
+                            txtMsg1 = "Speichern Portfolio " & toStoreConstellation.constellationName
                             txtMsg2 = "folgende Informationen:"
                         Else
-                            txtMsg1 = "Store Scenario " & toStoreConstellation.constellationName
+                            txtMsg1 = "Store Portfolio " & toStoreConstellation.constellationName
                             txtMsg2 = "following messages:"
                         End If
                         Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
@@ -2173,6 +2625,15 @@ Public Class frmProjPortfolioAdmin
 
             Call MsgBox(txtMsg)
 
+        End If
+
+        ' jetzt muss die Caption neu gesetzt werden ...
+        If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+            Try
+                projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt)
+            Catch ex As Exception
+
+            End Try
         End If
 
         ' Cursor auf Normal-Cursor setzen ... 
@@ -2257,7 +2718,7 @@ Public Class frmProjPortfolioAdmin
                         Dim hproj As clsProjekt = AlleProjekte.getProject(key)
 
                         ShowProjekte.Add(hproj)
-                        
+
                     Else
                         ' nichts tun , denn das Projekt wird bereits angezeigt und ist in Showprojekte drin 
                     End If
@@ -2367,7 +2828,7 @@ Public Class frmProjPortfolioAdmin
                                     writeProtections.upsert(request.getWriteProtection(pName, vName))
                                     Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
 
-                                    atleastOneFailed = True
+                                    atLeastOneFailed = True
                                 End If
 
                             Next
@@ -2426,9 +2887,9 @@ Public Class frmProjPortfolioAdmin
             If currentConstellationName <> calcLastSessionScenarioName() Then
                 currentConstellationName = calcLastSessionScenarioName()
 
-                Dim preText As String = "Szenario "
+                Dim preText As String = "Portfolio "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                    preText = "Scenario "
+                    preText = "Portfolio "
                 End If
 
                 Me.Text = preText & currentConstellationName
@@ -2624,7 +3085,7 @@ Public Class frmProjPortfolioAdmin
                     ' jetzt muss Showprojekte gelöscht werden 
                     ShowProjekte.Clear()
 
-                    
+
                     ' jetzt müssen die Diagramme neu gezeichnet werden 
                     Call awinNeuZeichnenDiagramme(2)
 
@@ -2754,9 +3215,9 @@ Public Class frmProjPortfolioAdmin
             If currentConstellationName <> calcLastSessionScenarioName() Then
                 currentConstellationName = calcLastSessionScenarioName()
 
-                Dim preText As String = "Szenario "
+                Dim preText As String = "Portfolio "
                 If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                    preText = "Scenario "
+                    preText = "Portfolio "
                 End If
                 Me.Text = preText & currentConstellationName
             End If
@@ -2795,16 +3256,16 @@ Public Class frmProjPortfolioAdmin
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
 
-            Dim preText As String = "Szenario "
+            Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
             Me.Text = preText & currentConstellationName
         End If
 
 
-        If IsNothing(browserConstellationSav) Then
-            browserConstellationSav = currentBrowserConstellation.copy
+        If IsNothing(beforeFilterConstellation) Then
+            beforeFilterConstellation = currentBrowserConstellation.copy()
         End If
 
         Dim storedAtOrBefore As Date
@@ -2846,7 +3307,8 @@ Public Class frmProjPortfolioAdmin
                 browserAlleProjekte.Clear(False)
             End If
             browserAlleProjekte.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
-            quickList = False
+            ' das darf hier nicht auf false gesetzt werden .... 
+            'quickList = False
 
         Else
             ' browserAlleProjekte bestimmen  
@@ -2876,8 +3338,62 @@ Public Class frmProjPortfolioAdmin
 
                 If aKtionskennung = PTTvActions.loadPV Or _
                     aKtionskennung = PTTvActions.delAllExceptFromDB Or _
-                    aKtionskennung = PTTvActions.delFromDB Or _
-                    aKtionskennung = PTTvActions.chgInSession Then
+                    aKtionskennung = PTTvActions.delFromDB Then
+
+                    Dim removeList As New Collection
+
+
+                    For Each kvp As KeyValuePair(Of String, String) In pvNamesList
+
+                        Dim tmpkey As String = kvp.Key
+                        If tmpkey.Contains("#") Then
+                            ' alles ok 
+                        Else
+                            tmpkey = calcProjektKey(kvp.Key, "")
+                        End If
+
+                        Dim hproj As clsProjekt = browserAlleProjekte.getProject(tmpkey)
+
+                        If Not filter.isEmpty Then
+                            If Not IsNothing(hproj) Then
+                                ok = filter.doesNotBlock(hproj)
+                            Else
+                                ok = False
+                            End If
+
+                        Else
+                            ok = True
+                        End If
+
+                        If Not ok Then
+                            ' in RemoveListe aufnehmen - diese Projekte werden nachher alle aus aktuelleGesamtliste rausgenommen 
+                            Try
+
+                                If Not removeList.Contains(kvp.Key) Then
+                                    removeList.Add(kvp.Key, kvp.Key)
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+                        Else
+
+                        End If
+
+                    Next
+
+                    ' jetzt die Liste bereinigen ...
+                    For Each tmpPvName As String In removeList
+                        pvNamesList.Remove(tmpPvName)
+                    Next
+
+                    If removeList.Count > 0 Then
+                        Call updateTreeview(currentBrowserConstellation, pvNamesList, _
+                                            aKtionskennung, quickList)
+
+                    End If
+
+                ElseIf aKtionskennung = PTTvActions.chgInSession Then
 
                     Dim removeList As New Collection
 
@@ -2919,6 +3435,12 @@ Public Class frmProjPortfolioAdmin
                         currentBrowserConstellation.remove(tmpPvName)
                     Next
 
+                    If currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF Then
+                        ' jetzt wird das SortCriteria umgesetzt, weil andernfalls, bei customTF, die 
+                        ' Zeilen unverändert bleiben ... 
+                        currentBrowserConstellation.sortCriteria = ptSortCriteria.customListe
+                    End If
+
                     ' jetzt müssen die tfZeile neu besetzt werden;
                     '  nach standard, d.h 0 bedeutet einfach sortiert nach Name 
                     ' tk 21.3.17: ab jetzt nicht mehr .... jetzt wird ja in der _sortlist alles mitgeführt 
@@ -2931,19 +3453,16 @@ Public Class frmProjPortfolioAdmin
                         If aKtionskennung = PTTvActions.chgInSession Then
                             ' erst am Ende alle Diagramme neu machen ...
 
+                            Dim tmpConstellation As New clsConstellations
+                            tmpConstellation.Add(currentBrowserConstellation)
 
-                            If removeList.Count > 0 Then
-                                Dim tmpConstellation As New clsConstellations
-                                tmpConstellation.Add(currentBrowserConstellation)
+                            Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
 
-                                Call showConstellations(constellationsToShow:=tmpConstellation, _
-                                                        clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
+                            ''If aKtionskennung = PTTvActions.chgInSession Then
+                            ''    Call awinNeuZeichnenDiagramme(2)
+                            ''End If
 
-                                If aKtionskennung = PTTvActions.chgInSession Then
-                                    Call awinNeuZeichnenDiagramme(2)
-                                End If
-
-                            End If
                         End If
 
                     End If
@@ -3019,43 +3538,56 @@ Public Class frmProjPortfolioAdmin
     Private Sub deleteFilterIcon_Click(sender As Object, e As EventArgs) Handles deleteFilterIcon.Click
 
         Me.Cursor = Cursors.WaitCursor
-
-        currentBrowserConstellation = browserConstellationSav.copy
-        'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
-        browserConstellationSav = Nothing
-
-        ' jetzt das entzsprechende Szenario wieder laden 
-        Dim tmpConstellation As New clsConstellations
-        tmpConstellation.Add(currentBrowserConstellation)
-
         Dim storedAtOrBefore As Date
         If IsNothing(requiredDate.Value) Then
             storedAtOrBefore = Date.Now
         Else
-            storedAtOrBefore = requiredDate.Value
+            storedAtOrBefore = CDate(requiredDate.Value)
         End If
 
+        If quickList Then
+            pvNamesList = buildPvNamesList(storedAtOrBefore)
 
-        Call showConstellations(constellationsToShow:=tmpConstellation, _
-                                clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
+            stopRecursion = True
+            Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
+            stopRecursion = False
+        Else
 
-        ' neu Zeichnen der Diagramme
-        Call awinNeuZeichnenDiagramme(2)
+            currentBrowserConstellation = beforeFilterConstellation.copy
+            'Dim browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
+
+            beforeFilterConstellation = Nothing
+
+            ' jetzt das entzsprechende Szenario wieder laden 
+            Dim tmpConstellation As New clsConstellations
+            tmpConstellation.Add(currentBrowserConstellation)
 
 
-        ' jetzt muss der Last-Filter zurückgesetzt werden 
-        Dim emptyCollection As New Collection
-        Dim fName As String = "Last"
 
-        Dim lastFilter As New clsFilter(fName, emptyCollection, emptyCollection, emptyCollection, _
-                                        emptyCollection, emptyCollection, emptyCollection)
-        filterDefinitions.storeFilter(fName, lastFilter)
 
-        stopRecursion = True
-        Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, False)
-        'Call buildTreeview(projektHistorien, TreeViewProjekte, browserAlleProjekte, pvNamesList, _
-        '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
-        stopRecursion = False
+            Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                    clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
+
+            '' neu Zeichnen der Diagramme
+            'Call awinNeuZeichnenDiagramme(2)
+
+
+            ' jetzt muss der Last-Filter zurückgesetzt werden 
+            Dim emptyCollection As New Collection
+            Dim fName As String = "Last"
+
+            Dim lastFilter As New clsFilter(fName, emptyCollection, emptyCollection, emptyCollection, _
+                                            emptyCollection, emptyCollection, emptyCollection)
+            filterDefinitions.storeFilter(fName, lastFilter)
+
+            stopRecursion = True
+            Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, False)
+            'Call buildTreeview(projektHistorien, TreeViewProjekte, browserAlleProjekte, pvNamesList, _
+            '                   aKtionskennung, quickList, Me.filterIsActive, storedAtOrBefore)
+            stopRecursion = False
+
+        End If
+
 
         ' Das DeleteFilterIcon mit Bild versehen 
         Me.deleteFilterIcon.Image = Nothing
@@ -3160,9 +3692,9 @@ Public Class frmProjPortfolioAdmin
     Private Sub dropboxScenarioNames_MouseHover(sender As Object, e As EventArgs) Handles dropboxScenarioNames.MouseHover
         Dim ttText As String = ""
         If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-            ttText = "Szenario-Name auswählen oder neuen Namen eingeben"
+            ttText = "Portfolio-Name auswählen oder neuen Namen eingeben"
         Else
-            ttText = "Select scenario Name and/or edit new name"
+            ttText = "Select portfolio name and/or edit new name"
         End If
         ToolTipStand.Show(ttText, deleteFilterIcon, 2000)
     End Sub
@@ -3213,9 +3745,9 @@ Public Class frmProjPortfolioAdmin
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
 
-            Dim preText As String = "Szenario "
+            Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
             Me.Text = preText & currentConstellationName
         End If
@@ -3234,9 +3766,9 @@ Public Class frmProjPortfolioAdmin
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
 
-            Dim preText As String = "Szenario "
+            Dim preText As String = "Portfolio "
             If menuCult.Name <> ReportLang(PTSprache.deutsch).Name Then
-                preText = "Scenario "
+                preText = "Portfolio "
             End If
             Me.Text = preText & currentConstellationName
         End If
@@ -3329,10 +3861,10 @@ Public Class frmProjPortfolioAdmin
                                             aKtionskennung, quickList)
             stopRecursion = False
 
-            ' die Diagramme aktualisieren 
-            If aKtionskennung = PTTvActions.chgInSession Then
-                Call awinNeuZeichnenDiagramme(2)
-            End If
+            ' '' die Diagramme aktualisieren 
+            ''If aKtionskennung = PTTvActions.chgInSession Then
+            ''    Call awinNeuZeichnenDiagramme(2)
+            ''End If
 
         End If
 
@@ -3415,7 +3947,7 @@ Public Class frmProjPortfolioAdmin
     End Sub
 
 
-    
+
     Private Sub OKButton_MouseHover(sender As Object, e As EventArgs) Handles OKButton.MouseHover
         Me.Cursor = Cursors.Default
     End Sub
@@ -3453,7 +3985,7 @@ Public Class frmProjPortfolioAdmin
         ' geht wesentlich schneller, wenn es sich um eine Datenbank mit sehr vielen Projekten handelt ... 
 
 
-        With TreeviewProjekte
+        With TreeViewProjekte
             .Nodes.Clear()
         End With
 
@@ -3466,7 +3998,7 @@ Public Class frmProjPortfolioAdmin
                 writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
-            With TreeviewProjekte
+            With TreeViewProjekte
 
                 .CheckBoxes = True
 
@@ -4035,6 +4567,14 @@ Public Class frmProjPortfolioAdmin
         Else
             currentNode.NodeFont = fontNormal
         End If
+
+    End Sub
+
+    Private Sub settingsBtn_Click(sender As Object, e As EventArgs)
+
+    End Sub
+
+    Private Sub frmProjPortfolioAdmin_Resize(sender As Object, e As EventArgs) Handles Me.Resize
 
     End Sub
 End Class

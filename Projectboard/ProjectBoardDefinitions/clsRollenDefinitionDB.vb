@@ -119,12 +119,12 @@
                     .kapazitaet(0) = 0
                     .externeKapazitaet(0) = 0
 
-                    For i As Integer = 1 To CInt(lenSession - anzMon)
+                    For i As Integer = 1 To CInt(lenSession - anzMon - 1)
                         .kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
                         .externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
                     Next
 
-                    For i As Integer = CInt(lenSession - anzMon + 1) To lenSession - 1
+                    For i As Integer = CInt(lenSession - anzMon) To lenSession - 1
                         .kapazitaet(i) = Me.defaultKapa
                         .externeKapazitaet(i) = 0
                     Next

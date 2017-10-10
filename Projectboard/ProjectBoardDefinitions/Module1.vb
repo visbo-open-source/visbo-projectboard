@@ -88,6 +88,8 @@ Public Module Module1
     Public projectConstellations As New clsConstellations
     ' die currentSessionConstellation ist das Abbild der aktuellen Session 
     Public currentSessionConstellation As New clsConstellation
+    ' die beforeFilterConstellation ist das Abbild der aktuellen Session vor einer Filteraktion
+    Public beforeFilterConstellation As New clsConstellation
     Public currentConstellationName As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
@@ -111,6 +113,7 @@ Public Module Module1
 
     Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
     Public RoleDefinitions As New clsRollen
+    Public RoleHierarchy As New clsroleHrchy
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
 
@@ -145,15 +148,13 @@ Public Module Module1
     Public formProjectInfo1 As frmProjectInfo1 = Nothing
 
 
-    ' variable gibt an, zu welchem Objekt-Rolle (Rolle, Kostenart, Ergebnis, ..)  der Röntgen Blick gezeigt wird 
-    Public roentgenBlick As New clsBestFitObject
 
     ' diese beiden folgenden Variablen steuern im Sheet "Ressourcen", welcher Bereich in den Diagrammen angezeigt werden soll
     Public showRangeLeft As Integer
     Public showRangeRight As Integer
 
     ' diese beiden Variablen nehmen die Farben auf für Showtimezone bzw. Noshowtimezone
-    Public showtimezone_color As Object, noshowtimezone_color As Object
+    Public showtimezone_color As Object, noshowtimezone_color As Object, calendarFontColor As Object
 
 
     ' maxScreenHeight, maxScreenWidth gibt die maximale Höhe/Breite des Bildschirms in Punkten an 
@@ -210,8 +211,52 @@ Public Module Module1
     Public summentitel10 As String
     Public summentitel11 As String
 
-   
+
     Public Const maxProjektdauer As Integer = 60
+
+
+    Public Enum ptReportBigTypes
+        charts = 0
+        tables = 1
+        components = 2
+    End Enum
+
+    Public Enum ptReportTables
+        prMilestones = 0
+        pfMilestones = 1
+    End Enum
+
+    Public Enum ptReportComponents
+        prAmpel = 0
+        prStand = 1
+        prName = 2
+        prCustomField = 3
+        prAmpelText = 4
+        prDescription = 5
+        prBusinessUnit = 6
+        prLaufzeit = 7
+        prVerantwortlich = 8
+        pfStand = 11
+    End Enum
+
+    Public Enum ptPRPFType
+        project = 0
+        portfolio = 1
+    End Enum
+
+    ''' <summary>
+    ''' kann verwendet werden, um die Typen zu kennzeichnen
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum ptElementTypen
+        phases = 0
+        roles = 1
+        costs = 2
+        portfolio = 3
+        ergebnis = 4
+        milestones = 5
+        mta = 6
+    End Enum
 
 
     ' gibt an, nach welchem Sortierkriterium die _sortList aufgebaut wurde 
@@ -228,9 +273,25 @@ Public Module Module1
         customFields12 = 4
         buStartName = 5
         formel = 6
+        strategyRiskProfitLoss = 7
     End Enum
 
-    
+    Public Enum ptTables
+        none = 0
+        repCharts = 1
+        MPT = 3
+        cstSettings = 4
+        meRC = 5
+        meTE = 6
+        cstPmappings = 8
+        meAT = 9
+        cstMmappings = 10
+        meCharts = 11
+        mptPfCharts = 12
+        mptPrCharts = 13
+        cstMissingDefs = 15
+    End Enum
+
     Public Enum ptWriteProtectionType
         project = 0
         scenario = 1
@@ -257,15 +318,16 @@ Public Module Module1
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
-    Public Enum ptRplanNamen
+    Public Enum ptPlanNamen
         Name = 0
         Anfang = 1
         Ende = 2
         Beschreibung = 3
         Vorgangsklasse = 4
-        Produktlinie = 5
+        BusinessUnit = 5
         Protocol = 6
         Dauer = 7
+        Abkuerzung = 8
     End Enum
 
 
@@ -320,6 +382,10 @@ Public Module Module1
         ZeitRisiko = 11
         FitRisikoVol = 15
         Dependencies = 16
+        MilestoneTrendanalysis = 17
+        SollIstPersonalkosten = 18
+        SollIstSonstKosten = 19
+        SollIstGesamtkosten = 20
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
@@ -417,6 +483,7 @@ Public Module Module1
         sessionFilterDefinieren = 11
         setWriteProtection = 12
         unsetWriteProtection = 13
+        reportMultiprojektTafel = 14
     End Enum
 
     Public Enum PTProtectedMode
@@ -438,12 +505,28 @@ Public Module Module1
     End Enum
     Public Enum PTlicense
         swimlanes = 0
-       
+
     End Enum
 
     Public Enum PTpptAnnotationType
         text = 0
         datum = 1
+        calloutAmpel = 2
+        calloutLU = 3
+        calloutRC = 4
+        calloutMV = 5
+    End Enum
+
+    Public Enum PTpptTableTypes
+        prZiele = 0
+    End Enum
+    Public Enum PTpptTableCellType
+        name = 0
+        lfdNr = 1
+        ampelColor = 2
+        ampelText = 3
+        lieferumfang = 4
+        datum = 5
     End Enum
 
     ''' <summary>
@@ -457,6 +540,35 @@ Public Module Module1
         pptAddIn = 2
     End Enum
 
+    Public Enum PTProjektType
+        vorlage = 0
+        projekt = 1
+        nameList = 2
+    End Enum
+
+    ''' <summary>
+    ''' Aufzaehlung der Windows, wird in projectboardwindows(x) verwendet 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTwindows
+        mpt = 0
+        mptpr = 1
+        mptpf = 2
+        meChart = 3
+        massEdit = 4
+    End Enum
+
+    ''' <summary>
+    ''' Aufzählung der Views, wird in projectboardViews(x) verwendet 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Enum PTview
+        mpt = 0
+        mptpr = 1
+        mptprpf = 2
+        meOnly = 3
+        meChart = 4
+    End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
@@ -467,7 +579,7 @@ Public Module Module1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(22, 3) As Double
+    Public frmCoord(23, 3) As Double
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
     Public Enum PTfrm
@@ -494,6 +606,7 @@ Public Module Module1
         createVariant = 20
         listInfo = 21
         projInfoPL = 22
+        rolecostME = 23
     End Enum
 
     Public Enum PTpinfo
@@ -549,6 +662,14 @@ Public Module Module1
         SWkomp3 = 3
         SWkomp4 = 4
         Premium = 5
+    End Enum
+
+    Public Enum PTProjektStati
+        geplant = 0
+        beauftragt = 1
+        ChangeRequest = 2
+        abgebrochen = 3
+        abgeschlossen = 4
     End Enum
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
@@ -608,13 +729,20 @@ Public Module Module1
     Public DiagrammTypen(6) As String
 
     ' Variable nimmt die Namen der Windows auf  
-    Public windowNames(5) As String
+    Public windowNames(4) As String
+
+    ' nimmt alle Excel.Window Definitionen auf 
+    Public projectboardWindows(4) As Excel.Window
+
+    ' Variable nimmt die View Namen auf ; eine View ist eine Zusammenstellung von Windows
+    Public projectboardViews(4) As Excel.CustomView
 
     ' Variable nimmt die Namen der Ergebnis Charts auf  
     Public ergebnisChartName(3) As String
 
+    ' tk 25.8.17 Nonsense, wird nicht gebraucht 
     ' diese Variabe nimmt die Farbe der Kapa-Linie an
-    Public rollenKapaFarbe As Object
+    'Public rollenKapaFarbe As Object
 
     ' diese Variable nimmt die Farbe der internen Ressourcen, ohne Projekte an auf
     Public farbeInternOP As Object
@@ -672,10 +800,16 @@ Public Module Module1
     Public fehlerBeimLoad As Boolean = False
 
 
+    Private Declare Function OpenClipboard& Lib "user32" (ByVal hwnd As Long)
+    Private Declare Function EmptyClipboard Lib "user32" () As Long
+    Private Declare Function CloseClipboard& Lib "user32" ()
 
 
-
-
+    Public Sub ClearClipboard()
+        OpenClipboard(0&)
+        EmptyClipboard()
+        CloseClipboard()
+    End Sub
 
 
 
@@ -684,19 +818,38 @@ Public Module Module1
     ''' setzt EnableEvents, ScreenUpdating auf true
     ''' </summary>
     ''' <remarks></remarks>
-    Sub projektTafelInit()
+    Public Sub projektTafelInit()
 
         With appInstance
             .EnableEvents = True
             If .ScreenUpdating = False Then
-                'Call MsgBox ("Screen Update !")
                 .ScreenUpdating = True
             End If
         End With
 
-
     End Sub
 
+
+    ''' <summary>
+    ''' aktiviert, wenn visible, das Multiprojekt Window ...
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub activateProjectBoard()
+        Try
+
+            If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+
+                If projectboardWindows(PTwindows.mpt).Visible = True Then
+                    projectboardWindows(PTwindows.mpt).Activate()
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 
     ''' <summary>
     ''' eingefügt, um eine Warteschleife relisieren zu können ... 
@@ -772,41 +925,303 @@ Public Module Module1
     ' prüft , ob übergebenes Diagramm ein Ergebnis Diagramm ist - in index steht ggf als Ergebnis die entsprechende Nummer; 0 wenn es kein Ergebnis Diagramm ist
     '
     Function istErgebnisDiagramm(ByRef chtobj As ChartObject, ByRef index As Integer) As Boolean
-        Dim e As Integer
+
         Dim found As Boolean
-        Dim anzErgebnisArten As Integer = 2
-        'Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
 
-        e = 1
-        index = 0
         found = False
 
-        'Try
-        '    chtTitle = chtobj.Chart.ChartTitle.Text
-        'Catch ex As Exception
-        '    chtTitle = " "
-        'End Try
 
-        'While Not found And e <= anzErgebnisArten
-        '    If chtTitle Like ergebnisChartName(e - 1) & "*" Then
-        '        found = True
-        '    Else
-        '        e = e + 1
-        '    End If
-        'End While
+        chtobjName = chtobj.Name
 
-        'If found Then
-        '    index = e
-        'End If
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.UeberAuslastung Then
+                    found = True
+                    index = PTpfdk.UeberAuslastung
+
+                ElseIf CInt(tmpStr(1)) = PTpfdk.Unterauslastung Then
+                    found = True
+                    index = PTpfdk.Unterauslastung
+
+                ElseIf CInt(tmpStr(1)) = PTpfdk.Auslastung Then
+                    found = True
+                    index = PTpfdk.Auslastung
+
+                ElseIf CInt(tmpStr(1)) = PTpfdk.ErgebnisWasserfall Then
+                    found = True
+                    index = PTpfdk.ErgebnisWasserfall
+
+                Else
+                    found = False
+                End If
+
+            End If
+
+
+        Catch ex As Exception
+        End Try
+
 
         istErgebnisDiagramm = found
 
     End Function
 
-    '
-    ' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
-    '
+    ''' <summary>
+    ''' liefert eine Liste an Namen der Projekte zurück, die als "selektiert" gelten 
+    ''' Projekte können selektiert werden durch explizites Selektieren des Project-Shapes, alle Projekte, die zu einem selektierten Chart beitragen und/oder 
+    ''' alle Projekte, die markiert sind ... 
+    ''' 
+    ''' </summary>
+    ''' <param name="takeAllIFNothingWasSelected"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getProjectSelectionList(ByVal takeAllIFNothingWasSelected As Boolean) As Collection
+        Dim tmpCollection As Collection = New Collection
+        Dim msg As String = ""
+
+        Dim chtobjName As String = ""
+
+
+        ' Exit, wenn nicht im PRojekt-Tafel-Modus 
+        If visboZustaende.projectBoardMode <> ptModus.graficboard Then
+            ' leere Menge zurückgegeben 
+        Else
+
+            Try
+                If ShowProjekte.Count > 0 Then
+
+                    ' alle selektierten Projekte aufnehmen ... 
+                    If selectedProjekte.Count > 0 Then
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                            If Not tmpCollection.Contains(kvp.Key) Then
+                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
+                                End If
+                            End If
+
+                        Next
+                    End If
+
+                    ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                        If kvp.Value.marker = True Then
+                            If Not tmpCollection.Contains(kvp.Key) Then
+                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                    tmpCollection.Add(kvp.Key, kvp.Key)
+                                End If
+                            End If
+                        End If
+
+                    Next
+
+
+                    If tmpCollection.Count = 0 And takeAllIFNothingWasSelected Then
+                        ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
+                        tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
+                    End If
+
+
+                Else
+                    If awinSettings.englishLanguage Then
+                        msg = "no active projects - please load or activate projects first"
+                    Else
+                        msg = "keine aktiven Projekte - bitte zuerst Projekte laden bzw. aktivieren"
+                    End If
+                    Call MsgBox(msg)
+                End If
+            Catch ex As Exception
+
+                Call MsgBox(ex.Message)
+            End Try
+
+        End If
+
+        'testActiveWindow = CStr(appInstance.ActiveWindow.Caption)
+
+        getProjectSelectionList = tmpCollection
+
+    End Function
+
+    ''' <summary>
+    ''' markiert alle Projekte, die zu dem Chart beitragen 
+    ''' wird aus einem Chart Event heraus aus aufgerufen, d.h das Chart existiert 
+    ''' </summary>
+    ''' <param name="chtObj"></param>
+    ''' <remarks></remarks>
+    Public Sub markProjectsOFChart(ByVal chtObj As Excel.ChartObject)
+
+        ' jetzt bestimmen, welches Projekt zu diesem Chart beitägt 
+        Dim found As Boolean = False
+        Dim myCollection As Collection = New Collection
+        Dim foundDiagram As clsDiagramm = Nothing
+        Dim index As Integer = -1
+        Dim tmpCollection As New Collection
+
+        Dim currentFilter As New clsFilter
+
+        ' EnableEvents ausschalten ...
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        ' jetzt muss das Chart selber noch markiert werden ...
+        Try
+            Dim currentSheetName As String = arrWsNames(ptTables.mptPfCharts)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
+
+                Dim curShape As Excel.Shape = .Shapes.Item(chtObj.Name)
+                With curShape.Fill
+                    .Visible = MsoTriState.msoTrue
+                    .ForeColor.RGB = CInt(awinSettings.glowColor)
+                    .Transparency = 0.4
+                End With
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+        Try
+
+            foundDiagram = DiagramList.getDiagramm(chtObj.Name)
+            If Not IsNothing(foundDiagram) Then
+                myCollection = foundDiagram.gsCollection
+                found = True
+            End If
+
+        Catch ex As Exception
+            myCollection = New Collection
+        End Try
+
+
+        ' es ist ein Rollen Diagramm mit der Menge von angegebenen Rollen in myCollection 
+        If found Then
+            Dim weitermachen As Boolean = False
+            If istRollenDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                myCollection, Nothing)
+                weitermachen = True
+                
+
+            ElseIf istKostenartDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                Nothing, myCollection)
+                weitermachen = True
+
+            ElseIf istPhasenDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, myCollection, Nothing, _
+                                                               Nothing, Nothing)
+                weitermachen = True
+            ElseIf istMileStoneDiagramm(chtObj) Then
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, myCollection, _
+                                                               Nothing, Nothing)
+                weitermachen = True
+
+            ElseIf istErgebnisDiagramm(chtObj, index) Then
+
+                If index = PTpfdk.UeberAuslastung Or _
+                    index = PTpfdk.Unterauslastung Then
+
+                    currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                                                                    myCollection, Nothing)
+                    weitermachen = True
+                End If
+
+            End If
+            If weitermachen Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                    If currentFilter.doesNotBlock(kvp.Value) Then
+
+                        If kvp.Value.marker = False Then
+                            ' dann muss es neu markiert und angezeigt werden 
+                            Try
+
+                                kvp.Value.marker = True
+                                Dim tmpC As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpC, kvp.Value.name, kvp.Value.tfZeile, tmpC, tmpC)
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+                        End If
+
+                    End If
+                Next
+            End If
+        End If
+
+        ' jetzt muss ggf das BubbleChart Strategie/Risiko neu gezeichnet werden 
+        Call awinNeuZeichnenDiagramme(99)
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    
+    ''' <summary>
+    ''' markiert alle Projekte, wenn die bereits markiert waren, wird atleastOne = false zurückgegeben 
+    ''' </summary>
+    ''' <param name="atleastOne"></param>
+    ''' <remarks></remarks>
+    Public Sub markAllProjects(ByRef atleastOne As Boolean)
+        Try
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                If kvp.Value.marker = False Then
+                    kvp.Value.marker = True
+                    atleastOne = True
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
+                End If
+
+            Next
+
+        Catch ex As Exception
+            'Call MsgBox(ex.Message)
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' setzt die Markierungen alle Projekte zurück ...
+    ''' wenn die alle schon unmarkiert waren, wird false zurückgegeben, andernfalls true
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub unMarkAllProjects(ByRef atleastOne As Boolean)
+        Try
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                If kvp.Value.marker = True Then
+                    kvp.Value.marker = False
+                    atleastOne = True
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
+                End If
+
+            Next
+
+        Catch ex As Exception
+            'Call MsgBox(ex.Message)
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
+    ''' </summary>
+    ''' <param name="chtobj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Function istRollenDiagramm(ByRef chtobj As ChartObject) As Boolean
 
         Dim found As Boolean
@@ -992,7 +1407,7 @@ Public Module Module1
         Dim chtobjName As String
         Dim tmpStr(20) As String
 
-        
+
         found = False
 
 
@@ -1036,15 +1451,15 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.FitRisiko Or _
-                    CInt(tmpStr(1)) = PTpfdk.FitRisikoVol Or _
-                    CInt(tmpStr(1)) = PTpfdk.ComplexRisiko Or _
-                    CInt(tmpStr(1)) = PTpfdk.Dependencies Or _
-                    CInt(tmpStr(1)) = PTpfdk.ZeitRisiko Then
+                ' ''If CInt(tmpStr(1)) = PTpfdk.FitRisiko Or _
+                ' ''    CInt(tmpStr(1)) = PTpfdk.FitRisikoVol Or _
+                ' ''    CInt(tmpStr(1)) = PTpfdk.ComplexRisiko Or _
+                ' ''    CInt(tmpStr(1)) = PTpfdk.Dependencies Or _
+                ' ''    CInt(tmpStr(1)) = PTpfdk.ZeitRisiko Then
 
-                    found = True
+                found = True
 
-                End If
+                ''End If
 
             End If
 
@@ -1555,7 +1970,7 @@ Public Module Module1
         Dim i As Integer
         Dim chtobj As Excel.ChartObject
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
@@ -1590,7 +2005,7 @@ Public Module Module1
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
-        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
             Dim found As Boolean
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
@@ -1632,7 +2047,7 @@ Public Module Module1
 
 
 
-        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3))
+        With appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT))
 
             For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
@@ -1743,7 +2158,7 @@ Public Module Module1
         ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
 
         If selectedProjekte.Count > 0 Then
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
             ReDim shpArray(selectedProjekte.Count - 1)
 
             For Each kvp In selectedProjekte.Liste
@@ -1751,7 +2166,7 @@ Public Module Module1
                 hproj = kvp.Value
                 i = i + 1
                 Try
-                    shpElement = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpElement = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Item(hproj.name)
                     shpArray(i - 1) = shpElement.Name
 
                 Catch ex As Exception
@@ -1773,7 +2188,7 @@ Public Module Module1
     ''' 
     ''' </summary>
     ''' <remarks></remarks>
-    Sub awinDeSelect()
+    Sub awinDeSelect(Optional ByVal selectDummyCell As Boolean = False)
         Dim srow As Integer = 1
         'Dim hziel As Integer
         'Dim vziel As Integer
@@ -1781,6 +2196,7 @@ Public Module Module1
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
+
 
         ' Selektierte Projekte auf Null setzen 
 
@@ -1916,7 +2332,7 @@ Public Module Module1
         Call MsgBox("del gedrückt ...")
     End Sub
 
-   
+
 
 
     ''' <summary>
@@ -1969,7 +2385,7 @@ Public Module Module1
         End Select
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
 
 
@@ -2014,7 +2430,7 @@ Public Module Module1
 
 
         Try
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
             If pName = "" Then
                 For Each shpElement In worksheetShapes
@@ -2091,11 +2507,11 @@ Public Module Module1
         End Select
 
         Try
-            
+
 
             shapeType = kindOfShape(pShape)
 
-                ' neu 
+            ' neu 
 
             If isProjectType(shapeType) And pShape.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
 
@@ -2105,7 +2521,7 @@ Public Module Module1
                 projectboardShapes.remove(pShape)
             End If
 
-                ' Ende neu 
+            ' Ende neu 
 
 
         Catch ex As Exception
@@ -2143,7 +2559,7 @@ Public Module Module1
         Dim typus As Integer
 
         Dim ix As Integer
-        
+
 
 
         Try
@@ -2443,18 +2859,29 @@ Public Module Module1
     ''' <param name="breadcrumb"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String) As String
+    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String, _
+                                    Optional ByVal pvKennung As String = "") As String
 
-        If breadcrumb = "" Then
-            calcHryFullname = elemName
+        If pvKennung = "" Then
+            If breadcrumb = "" Then
+                calcHryFullname = elemName
+            Else
+                calcHryFullname = breadcrumb & "#" & elemName
+            End If
+
         Else
-            calcHryFullname = breadcrumb & "#" & elemName
+            If breadcrumb = "" Then
+                calcHryFullname = "[" & pvKennung & "]" & elemName
+            Else
+                calcHryFullname = "[" & pvKennung & "]" & breadcrumb & "#" & elemName
+            End If
         End If
+
 
     End Function
 
     ''' <summary>
-    ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstin oder eine Phase 
+    ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstein oder eine Phase 
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <param name="elemID"></param>
@@ -2478,10 +2905,30 @@ Public Module Module1
     ''' <param name="elemName"></param>
     ''' <param name="breadcrumb"></param>
     ''' <remarks></remarks>
-    Public Sub splitHryFullnameTo2(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String)
+    Public Sub splitHryFullnameTo2(ByVal fullname As String, _
+                                   ByRef elemName As String, ByRef breadcrumb As String, _
+                                   ByRef type As Integer, ByRef pvName As String)
         Dim tmpstr() As String
         Dim tmpBC As String = ""
         Dim anzahl As Integer
+
+        ' enthält der pvName die Kennung für Vorlage oder Projekt ? 
+        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Then
+            If fullname.StartsWith("[P:") Then
+                type = PTProjektType.projekt
+            Else
+                type = PTProjektType.vorlage
+            End If
+
+            Dim startPos As Integer = 3
+            Dim endPos As Integer = fullname.IndexOf("]") + 1
+            pvName = fullname.Substring(startPos, endPos - startPos - 1)
+
+            fullname = fullname.Substring(endPos)
+        Else
+            type = -1
+            pvName = ""
+        End If
 
         tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
         anzahl = tmpstr.Length
@@ -2504,6 +2951,32 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' zerhackt den übergebenen String in seine Bestandteile [V:vorlagen-name] bzw. [P:projekt-name] und 
+    ''' Breadcrumb-Name
+    ''' 
+    ''' </summary>
+    ''' <param name="fullname"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function splitHryFullnameTo1(ByVal fullname As String) As String
+        Dim tmpResult As String = ""
+        Dim elemName As String = ""
+        Dim breadCrumb As String = ""
+        Dim type As Integer = -1
+        Dim pvName As String = ""
+        Call splitHryFullnameTo2(fullname, elemName, breadCrumb, type, pvName)
+
+        If breadCrumb = "" Then
+            tmpResult = elemName
+        Else
+            tmpResult = breadCrumb.Replace("#", "-") & "-" & elemName
+        End If
+
+        splitHryFullnameTo1 = tmpResult
+
+    End Function
+
+    ''' <summary>
     ''' zerteilt einen String, der folgendes Format hat: breadcrumb#elemName#lfdnr in seine Bestandteile 
     ''' </summary>
     ''' <param name="fullname"></param>
@@ -2511,7 +2984,8 @@ Public Module Module1
     ''' <param name="breadcrumb"></param>
     ''' <param name="lfdNr"></param>
     ''' <remarks></remarks>
-    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer)
+    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer, _
+                                          ByRef type As Integer, ByRef pvName As String)
         Dim tmpstr() As String
         Dim tmpBC As String = ""
         Dim anzahl As Integer
@@ -2522,6 +2996,8 @@ Public Module Module1
             elemName = tmpstr(0)
             breadcrumb = ""
             lfdNr = 1
+            type = -1
+            pvName = ""
         ElseIf tmpstr.Length > 1 Then
             lfdNr = CInt(tmpstr(anzahl - 1))
             For i As Integer = 0 To anzahl - 2
@@ -2531,11 +3007,14 @@ Public Module Module1
                     tmpBC = tmpBC & "#" & tmpstr(i)
                 End If
             Next
-            Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb)
+
+            Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb, type, pvName)
         Else
             elemName = "?"
             breadcrumb = ""
             lfdNr = 0
+            type = -1
+            pvName = ""
         End If
 
     End Sub
@@ -2567,6 +3046,34 @@ Public Module Module1
             elemNameOfElemID = elemID
         Else
             elemNameOfElemID = "?"
+        End If
+
+
+    End Function
+
+    ''' <summary>
+    ''' gibt zurück, ob ein Projekt-NAme gültig ist oder nicht 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isValidProjectName(ByVal pName As String) As Boolean
+
+        If IsNothing(pName) Then
+            isValidProjectName = False
+        Else
+            pName = pName.Trim
+            If pName.Length >= 1 Then
+                If pName.Contains("#") Or _
+                    pName.Contains("(") Or pName.Contains(")") Or _
+                    pName.Contains(vbLf) Or pName.Contains(vbCr) Then
+                    isValidProjectName = False
+                Else
+                    isValidProjectName = True
+                End If
+            Else
+                isValidProjectName = False
+            End If
         End If
 
 
@@ -2960,7 +3467,7 @@ Public Module Module1
 
     '' ''End Sub
 
-    
+
 
     ''' <summary>
     ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName
@@ -2996,7 +3503,6 @@ Public Module Module1
 
         If Not IsNothing(lastFilter) Then
 
-            'selectedBUs = lastFilter.BUs
             selectedBUs = copyCollection(lastFilter.BUs)
             selectedTyps = copyCollection(lastFilter.Typs)
             selectedPhases = copyCollection(lastFilter.Phases)
@@ -3005,15 +3511,163 @@ Public Module Module1
             selectedCosts = copyCollection(lastFilter.Costs)
 
         Else
+
             selectedBUs = New Collection
             selectedTyps = New Collection
             selectedPhases = New Collection
             selectedMilestones = New Collection
             selectedRoles = New Collection
             selectedCosts = New Collection
+
         End If
 
     End Sub
+
+
+   
+    ''' <summary>
+    ''' Gibt zurück Selectiontyp der aktuell selektierten Elemente
+    ''' 0 = Projekt-Struktur (Vorlage)
+    ''' 1 = Projekt-Struktur(Projekt)
+    ''' 2 = Namensliste
+    ''' </summary>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function selectionTyp(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                           ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                           ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Integer
+
+        Dim element As String = ""
+        Dim tmpresult As PTProjektType = PTProjektType.nameList
+        Dim i As Integer = 1
+
+        ' Check ob selectedPhases P: oder V: enthält
+        Do While tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
+            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
+                Do While tmpresult = PTProjektType.nameList And i <= selectedPhases.Count
+                    element = selectedPhases.Item(i).ToString
+                    Dim hstr1() As String = Split(element, "V:")
+                    If hstr1.Length > 1 Then
+                        tmpresult = PTProjektType.vorlage
+                    End If
+                    Dim hstr2() As String = Split(element, "P:")
+                    If hstr2.Length > 1 Then
+                        tmpresult = PTProjektType.projekt
+                    End If
+                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+                        tmpresult = PTProjektType.nameList
+                    End If
+                    i = i + 1
+                Loop
+                i = i + 1
+            Loop
+            i = i + 1
+        Loop
+
+        ' Check ob selectedMeilstones P: oder V: enthält
+        i = 1
+        Do While tmpresult <> PTProjektType.projekt And i <= selectedMilestones.Count
+            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= selectedMilestones.Count
+                Do While tmpresult = PTProjektType.nameList And i <= selectedMilestones.Count
+                    element = selectedMilestones.Item(i).ToString
+                    Dim hstr1() As String = Split(element, "V:")
+                    If hstr1.Length > 1 Then
+                        tmpresult = PTProjektType.vorlage
+                    End If
+                    Dim hstr2() As String = Split(element, "P:")
+                    If hstr2.Length > 1 Then
+                        tmpresult = PTProjektType.projekt
+                    End If
+                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+                        tmpresult = PTProjektType.nameList
+                    End If
+                    i = i + 1
+                Loop
+                i = i + 1
+            Loop
+            i = i + 1
+        Loop
+
+
+        ' gleiches noch todo für Milensteine, rollen, kosten, ...
+
+        selectionTyp = tmpresult
+
+    End Function
+
+   
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function checkFilter(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                               ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                               ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Collection
+
+        Dim element As String = ""
+        Dim outputCollection As New Collection
+        Dim tmpresult As PTProjektType = PTProjektType.nameList
+        Dim i As Integer = 1
+        Dim projName As String = ""
+
+
+        For i = 1 To selectedPhases.Count
+
+            element = selectedPhases.Item(i).ToString
+            Dim hstr() As String = Split(element, "P:")
+            If hstr.Length > 1 Then
+                Dim hstr1() As String = Split(hstr(1), "]", , )
+                If hstr1.Length > 0 Then
+                    projName = hstr1(0)
+                    If Not ShowProjekte.contains(projName) Then
+                        If Not outputCollection.Contains(projName) Then
+                            outputCollection.Add(projName, projName)
+                        End If
+                    End If
+                End If
+            End If
+        Next i
+
+        For i = 1 To selectedMilestones.Count
+
+            element = selectedMilestones.Item(i).ToString
+            Dim hstr() As String = Split(element, "P:")
+            If hstr.Length > 1 Then
+                Dim hstr1() As String = Split(hstr(1), "]", , )
+                If hstr1.Length > 0 Then
+                    projName = hstr1(0)
+                    If Not ShowProjekte.contains(projName) Then
+                        If Not outputCollection.Contains(projName) Then
+                            outputCollection.Add(projName, projName)
+                        End If
+                    End If
+                End If
+            End If
+        Next i
+
+        Dim explstr As String = "Folgende Projekte sind im Filter enthalten, doch nicht in der Multprojekt-Tafel geladen"
+        Dim headerstr As String = "nicht geladene Projekte"
+
+        Call showOutPut(outputCollection, headerstr, explstr)
+
+        checkFilter = outputCollection
+  
+    End Function
+
+
 
     ''' <summary>
     ''' kennzeichnet ein Powerpoint Slide als ein Slide, das Smart Elements enthält 
@@ -3021,31 +3675,36 @@ Public Module Module1
     ''' </summary>
     ''' <param name="pptSlide"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTSlideInfo(ByRef pptSlide As PowerPoint.Slide, _
-                                    ByVal type As String, _
-                                    ByVal calendarLeft As Date, _
-                                    ByVal calendarRight As Date)
+    Public Sub addSmartPPTSlideCalInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                       ByVal calendarLeft As Date, _
+                                       ByVal calendarRight As Date, _
+                                       Optional ByVal projectTimeStamp As Date = Nothing)
 
         If Not IsNothing(pptSlide) Then
             With pptSlide
 
-                If Not IsNothing(type) Then
-                    .Tags.Add("SMART", type)
-                    .Tags.Add("SOC", StartofCalendar.ToShortDateString)
-                    .Tags.Add("CRD", Date.Now.ToString)
-                    .Tags.Add("CALL", calendarLeft.ToShortDateString)
-                    .Tags.Add("CALR", calendarRight.ToShortDateString)
 
-                    If Not noDB Then
-                        If awinSettings.databaseURL.Length > 0 Then
-                            .Tags.Add("DBURL", awinSettings.databaseURL)
-                        End If
-                        If awinSettings.databaseName.Length > 0 Then
-                            .Tags.Add("DBNAME", awinSettings.databaseName)
-                        End If
-
-                    End If
+                If .Tags.Item("SMART").Length > 0 Then
+                    ' es muss nichts mehr gemacht werden, es ist bereoits gekennzeichnet 
+                    '.Tags.Delete("SMART")
+                Else
+                    .Tags.Add("SMART", "visbo")
                 End If
+
+                If .Tags.Item("SOC").Length > 0 Then
+                    .Tags.Delete("SOC")
+                End If
+                .Tags.Add("SOC", StartofCalendar.ToShortDateString)
+
+                If .Tags.Item("CALL").Length > 0 Then
+                    .Tags.Delete("CALL")
+                End If
+                .Tags.Add("CALL", calendarLeft.ToShortDateString)
+
+                If .Tags.Item("CALR").Length > 0 Then
+                    .Tags.Delete("CALR")
+                End If
+                .Tags.Add("CALR", calendarRight.ToShortDateString)
 
 
             End With
@@ -3054,6 +3713,64 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' kennzeichnet die Seite als Smart VISBO Seite 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <param name="projectTimeStamp"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTSlideBaseInfo(ByRef pptSlide As PowerPoint.Slide, _
+                                            ByVal projectTimeStamp As Date)
+
+        If Not IsNothing(pptSlide) Then
+            With pptSlide
+
+
+                If .Tags.Item("SMART").Length > 0 Then
+                    ' es muss nichts mehr gemacht werden, es ist bereits gekennzeichnet 
+                    '.Tags.Delete("SMART")
+                Else
+                    .Tags.Add("SMART", "visbo")
+                End If
+
+                If IsNothing(projectTimeStamp) Then
+
+                    projectTimeStamp = Date.Now
+                ElseIf projectTimeStamp = Date.MinValue Then
+                    projectTimeStamp = Date.Now
+                End If
+
+
+                If .Tags.Item("CRD").Length > 0 Then
+                    .Tags.Delete("CRD")
+                End If
+                .Tags.Add("CRD", projectTimeStamp.ToString)
+
+
+                If awinSettings.databaseURL.Length > 0 And awinSettings.databaseName.Length > 0 Then
+                    If awinSettings.databaseURL.Length > 0 Then
+                        If .Tags.Item("DBURL").Length > 0 Then
+                            .Tags.Delete("DBURL")
+                        End If
+                        .Tags.Add("DBURL", awinSettings.databaseURL)
+                    End If
+
+                    If awinSettings.databaseName.Length > 0 Then
+                        If .Tags.Item("DBNAME").Length > 0 Then
+                            .Tags.Delete("DBNAME")
+                        End If
+                        .Tags.Add("DBNAME", awinSettings.databaseName)
+                    End If
+
+                End If
+
+
+
+            End With
+        End If
+
+
+    End Sub
 
     ''' <summary>
     ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können
@@ -3070,6 +3787,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
                                           ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
+                                          ByVal bestShortName As String, ByVal bestLongName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
                                           ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
                                           ByVal lieferumfaenge As String)
@@ -3081,39 +3799,78 @@ Public Module Module1
 
 
                 If Not IsNothing(fullBreadCrumb) Then
+                    If .Tags.Item("BC").Length > 0 Then
+                        .Tags.Delete("BC")
+                    End If
                     .Tags.Add("BC", fullBreadCrumb)
                 End If
 
                 If Not IsNothing(classifiedName) Then
+                    If .Tags.Item("CN").Length > 0 Then
+                        .Tags.Delete("CN")
+                    End If
                     .Tags.Add("CN", classifiedName)
                 End If
 
                 If Not IsNothing(shortName) Then
                     If shortName <> classifiedName And shortName <> "" Then
+                        If .Tags.Item("SN").Length > 0 Then
+                            .Tags.Delete("SN")
+                        End If
                         .Tags.Add("SN", shortName)
                     End If
                 End If
 
                 If Not IsNothing(originalName) Then
                     If originalName <> classifiedName And originalName <> "" Then
+                        If .Tags.Item("ON").Length > 0 Then
+                            .Tags.Delete("ON")
+                        End If
                         .Tags.Add("ON", originalName)
+                    End If
+                End If
+
+                If Not IsNothing(bestShortName) Then
+                    If bestShortName <> shortName Then
+                        If .Tags.Item("BSN").Length > 0 Then
+                            .Tags.Delete("BSN")
+                        End If
+                        .Tags.Add("BSN", bestShortName)
+                    End If
+                End If
+
+                If Not IsNothing(bestLongName) Then
+                    If bestLongName <> classifiedName Then
+                        If .Tags.Item("BLN").Length > 0 Then
+                            .Tags.Delete("BLN")
+                        End If
+                        .Tags.Add("BLN", bestLongName)
                     End If
                 End If
 
                 If Not IsNothing(startDate) Then
                     If Not startDate = nullDate Then
+                        If .Tags.Item("SD").Length > 0 Then
+                            .Tags.Delete("SD")
+                        End If
                         .Tags.Add("SD", startDate.ToShortDateString)
                     End If
                 End If
 
                 If Not IsNothing(endDate) Then
                     If Not endDate = nullDate Then
+                        If .Tags.Item("ED").Length > 0 Then
+                            .Tags.Delete("ED")
+                        End If
                         .Tags.Add("ED", endDate.ToShortDateString)
                     End If
 
                 End If
 
                 If Not IsNothing(ampelColor) Then
+                    If .Tags.Item("AC").Length > 0 Then
+                        .Tags.Delete("AC")
+                    End If
                     If ampelColor >= 0 And ampelColor <= 3 Then
                         .Tags.Add("AC", ampelColor.ToString)
                     Else
@@ -3121,6 +3878,9 @@ Public Module Module1
                     End If
 
                     If Not IsNothing(ampelErlaeuterung) Then
+                        If .Tags.Item("AE").Length > 0 Then
+                            .Tags.Delete("AE")
+                        End If
                         If ampelErlaeuterung.Length > 0 Then
                             .Tags.Add("AE", ampelErlaeuterung)
                         End If
@@ -3131,6 +3891,9 @@ Public Module Module1
 
                 If Not IsNothing(lieferumfaenge) Then
                     If lieferumfaenge.Length > 0 Then
+                        If .Tags.Item("LU").Length > 0 Then
+                            .Tags.Delete("LU")
+                        End If
                         .Tags.Add("LU", lieferumfaenge)
                     End If
 
@@ -3143,8 +3906,337 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' fügt Projekt-Charts und Reporting Komponenten die entsprechenden Smart-Infos hinzu, so dass 
+    ''' der Powerpoint Add-In das Chart selbstständig aktualisieren kann 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="prpf"></param>
+    ''' <param name="qualifier"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, _
+                                     ByVal prpf As Integer, ByVal qualifier As String, ByVal qualifier2 As String, _
+                                     ByVal bigType As Integer, ByVal detailID As Integer)
 
+        If IsNothing(hproj) Then
+            Exit Sub
+        End If
+
+        Dim pName As String = hproj.name
+        Dim vName As String = hproj.variantName
+        Dim chtObjName As String = ""
+        Try
+
+            If Not IsNothing(pptShape) Then
+
+                ' das bekommen alle ...
+                With pptShape
+
+                    If Not IsNothing(prpf) Then
+                        If .Tags.Item("PRPF").Length > 0 Then
+                            .Tags.Delete("PRPF")
+                        End If
+                        .Tags.Add("PRPF", prpf.ToString)
+                    End If
+
+                    If Not IsNothing(pName) Then
+                        If .Tags.Item("PNM").Length > 0 Then
+                            .Tags.Delete("PNM")
+                        End If
+                        .Tags.Add("PNM", pName)
+                    End If
+
+                    If Not IsNothing(vName) Then
+                        If .Tags.Item("VNM").Length > 0 Then
+                            .Tags.Delete("VNM")
+                        End If
+                        .Tags.Add("VNM", vName)
+                    End If
+
+                    If Not IsNothing(qualifier) Then
+                        If .Tags.Item("Q1").Length > 0 Then
+                            .Tags.Delete("Q1")
+                        End If
+                        .Tags.Add("Q1", qualifier)
+                    End If
+
+                    If Not IsNothing(qualifier2) Then
+                        If .Tags.Item("Q2").Length > 0 Then
+                            .Tags.Delete("Q2")
+                        End If
+                        .Tags.Add("Q2", qualifier2)
+                    End If
+
+                    If Not IsNothing(bigType) Then
+                        If .Tags.Item("BID").Length > 0 Then
+                            .Tags.Delete("BID")
+                        End If
+                        .Tags.Add("BID", bigType.ToString)
+                    End If
+
+                    If Not IsNothing(detailID) Then
+                        If .Tags.Item("DID").Length > 0 Then
+                            .Tags.Delete("DID")
+                        End If
+                        .Tags.Add("DID", detailID.ToString)
+                    End If
+
+
+                End With
+
+                If bigType = ptReportBigTypes.charts Then
+
+                    If pptShape.HasChart = MsoTriState.msoTrue Then
+                        Dim pptChart As PowerPoint.Chart = pptShape.Chart
+                        chtObjName = pptChart.Name
+
+                        Dim auswahl As Integer = -1
+                        Dim prpfTyp As Integer = -1
+                        Dim chartTyp As Integer = -1
+                        Dim prcTyp As Integer = -1
+
+
+                        ' der Chart-ObjectName enthält sehr viel ..
+                        'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
+                        Dim pNameChk As String = "", vNameChk As String = ""
+                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pNameChk, vNameChk, chartTyp, auswahl)
+                        'If pName <> pNameChk Or vName <> vNameChk Then
+                        '    Call MsgBox("PName , vName in hproj bzw. chtobjname unterschiedlich ! ")
+                        'End If
+
+                        With pptShape
+
+
+                            If Not IsNothing(chtObjName) Then
+                                If .Tags.Item("CHON").Length > 0 Then
+                                    .Tags.Delete("CHON")
+                                End If
+                                .Tags.Add("CHON", chtObjName)
+                            End If
+
+                            ' ist schon gesetzt ...
+                            'If Not IsNothing(prpfTyp) Then
+                            '    If .Tags.Item("PRPF").Length > 0 Then
+                            '        .Tags.Delete("PRPF")
+                            '    End If
+                            '    .Tags.Add("PRPF", CStr(prpfTyp))
+                            'End If
+
+                            If Not IsNothing(chartTyp) Then
+                                If .Tags.Item("CHT").Length > 0 Then
+                                    .Tags.Delete("CHT")
+                                End If
+                                .Tags.Add("CHT", CStr(chartTyp))
+                            End If
+
+                            If Not IsNothing(auswahl) Then
+                                If .Tags.Item("ASW").Length > 0 Then
+                                    .Tags.Delete("ASW")
+                                End If
+                                .Tags.Add("ASW", CStr(auswahl))
+                            End If
+
+
+                            If .Tags.Item("COL").Length > 0 Then
+                                .Tags.Delete("COL")
+                            End If
+                            .Tags.Add("COL", CStr(auswahl))
+
+
+                        End With
+                    End If
+
+                ElseIf bigType = ptReportBigTypes.tables Then
+                    ' sonst keine weiteren Dinge ... das wird in der eigenen MEthode addSmartPPTTableInfo gemacht 
+
+                ElseIf bigType = ptReportBigTypes.components Then
+                    ' sonst keine weiteren Dinge 
+
+                Else
+                    ' noch nicht implementiert 
+                End If
+
+
+            End If
+
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' fügt der Tabelle die Smart Table Info hinzu 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="prpf"></param>
+    ''' <param name="pnm"></param>
+    ''' <param name="vnm"></param>
+    ''' <param name="q1"></param>
+    ''' <param name="q2"></param>
+    ''' <param name="bigtype"></param>
+    ''' <param name="detailID"></param>
+    ''' <param name="nameIDS"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTTableInfo(ByRef pptShape As PowerPoint.Shape, _
+                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String, _
+                                        ByVal q1 As String, ByVal q2 As String, _
+                                        ByVal bigtype As Integer, ByVal detailID As Integer, _
+                                        ByVal nameIDS As Collection)
+
+        If nameIDS.Count = 0 Then
+            Exit Sub
+        End If
+
+        Dim nameIDString As String = ""
+        For Each tmpID As String In nameIDS
+            If nameIDString = "" Then
+                nameIDString = tmpID
+            Else
+                nameIDString = nameIDString & "#" & tmpID
+            End If
+        Next
+
+        Try
+
+            If Not IsNothing(pptShape) Then
+
+                ' das bekommen alle ...
+                With pptShape
+                    If Not IsNothing(prpf) Then
+                        If .Tags.Item("PRPF").Length > 0 Then
+                            .Tags.Delete("PRPF")
+                        End If
+                        .Tags.Add("PRPF", prpf.ToString)
+                    End If
+
+                    If Not IsNothing(pnm) Then
+                        If .Tags.Item("PNM").Length > 0 Then
+                            .Tags.Delete("PNM")
+                        End If
+                        .Tags.Add("PNM", pnm)
+                    End If
+
+                    If Not IsNothing(vnm) Then
+                        If .Tags.Item("VNM").Length > 0 Then
+                            .Tags.Delete("VNM")
+                        End If
+                        .Tags.Add("VNM", vnm)
+                    End If
+
+                    If Not IsNothing(q1) Then
+                        If .Tags.Item("Q1").Length > 0 Then
+                            .Tags.Delete("Q1")
+                        End If
+                        .Tags.Add("Q1", q1)
+                    End If
+
+                    If Not IsNothing(q2) Then
+                        If .Tags.Item("Q2").Length > 0 Then
+                            .Tags.Delete("Q2")
+                        End If
+                        .Tags.Add("Q2", q2)
+                    End If
+
+                    If Not IsNothing(bigtype) Then
+                        If .Tags.Item("BID").Length > 0 Then
+                            .Tags.Delete("BID")
+                        End If
+                        .Tags.Add("BID", bigtype.ToString)
+                    End If
+
+                    If Not IsNothing(detailID) Then
+                        If .Tags.Item("DID").Length > 0 Then
+                            .Tags.Delete("DID")
+                        End If
+                        .Tags.Add("DID", detailID.ToString)
+                    End If
+
+                    If Not IsNothing(nameIDString) Then
+                        If .Tags.Item("NIDS").Length > 0 Then
+                            .Tags.Delete("NIDS")
+                        End If
+                        .Tags.Add("NIDS", nameIDString)
+                    End If
+
+                End With
+
+            End If
+
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt aus dem Namen eines Charts die Informationen, die benötigt werden, um ein PPTShape aus der Smart-PPT heraus zu aktualisieren ...
+    ''' </summary>
+    ''' <param name="chtObjName"></param>
+    ''' <param name="prpfTyp"></param>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="auswahl"></param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeChartInfosFromName(ByVal chtObjName As String, _
+                                              ByRef prpfTyp As Integer, _
+                                              ByRef prcTyp As Integer, _
+                                              ByRef pName As String, _
+                                              ByRef vName As String, _
+                                              ByRef chartTyp As Integer, _
+                                              ByRef auswahl As Integer)
+
+
+        Dim tmpStr() As String = chtObjName.Split(New Char() {CChar("#")})
+
+        ' bestimme, ob es sich um ein pf oder pr Diagramm handelt ...  
+
+        If tmpStr(0) = "pr" Then
+            ' bestimme den Charttyp ...
+            prpfTyp = ptPRPFType.project
+
+            chartTyp = CInt(tmpStr(1))
+
+            If chartTyp = PTprdk.KostenBalken Or _
+                chartTyp = PTprdk.KostenPie Then
+                prcTyp = ptElementTypen.costs
+            ElseIf chartTyp = PTprdk.PersonalBalken Or _
+                chartTyp = PTprdk.PersonalPie Then
+                prcTyp = ptElementTypen.roles
+            Else
+                prcTyp = ptElementTypen.ergebnis
+            End If
+
+
+            ' bestimme pName und vName 
+            Dim fullName As String = tmpStr(2)
+
+            If fullName.Contains("[") And fullName.Contains("]") Then
+                Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
+                pName = tmpstr1(0)
+                vName = tmpstr1(1)
+            Else
+                pName = fullName
+                vName = ""
+            End If
+
+            ' bestimme, um welche Auswahl es sich handelt ... 
+            auswahl = CInt(tmpStr(3))
+        ElseIf tmpStr(0) = "pf" Then
+
+            prpfTyp = ptPRPFType.portfolio
+            ' noch nicht implementiert ... 
+        Else
+
+        End If
+
+
+
+
+    End Sub
     Public Sub PPTstarten()
+
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
             pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
@@ -3285,4 +4377,969 @@ Public Module Module1
 
         End If
     End Sub
+
+
+    ''' <summary>
+    ''' liefert zurück, ob in dem angegebenen Sheet überhaupt Charts vorhanden sind ... 
+    ''' </summary>
+    ''' <param name="chType"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function thereAreAnyCharts(ByVal chType As Integer) As Boolean
+
+        Dim anzCharts As Integer = 0
+
+
+        Try
+            If chType = PTwindows.mptpf Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            ElseIf chType = PTwindows.mptpr Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            ElseIf chType = PTwindows.meChart Then
+                anzCharts = CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook) _
+                    .Worksheets.Item(arrWsNames(ptTables.meCharts)), Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        thereAreAnyCharts = (anzCharts > 0)
+
+    End Function
+
+    ''' <summary>
+    ''' gibt zurück ob das angegebene Window existiert
+    ''' wird unter anderem benötigt, um die Caption zu aktualisieren 
+    ''' </summary>
+    ''' <param name="windowTyp"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function visboWindowExists(ByVal windowTyp As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Dim sheetNameLookedFor As String = ""
+
+        Try
+            Select Case windowTyp
+                Case PTwindows.mpt
+                    sheetNameLookedFor = arrWsNames(ptTables.MPT)
+                Case PTwindows.mptpf
+                    sheetNameLookedFor = arrWsNames(ptTables.mptPfCharts)
+                Case PTwindows.mptpr
+                    sheetNameLookedFor = arrWsNames(ptTables.mptPrCharts)
+                Case PTwindows.meChart
+                    sheetNameLookedFor = arrWsNames(ptTables.meCharts)
+                Case PTwindows.massEdit
+                    sheetNameLookedFor = arrWsNames(ptTables.meRC)
+                Case Else
+                    sheetNameLookedFor = "XX?"
+            End Select
+
+            For i As Integer = 1 To CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count
+                If CType(CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Item(i), Excel.Window).ActiveSheet, Excel.Worksheet) _
+                    .Name = sheetNameLookedFor Then
+                    tmpResult = Not IsNothing(projectboardWindows(windowTyp))
+                End If
+            Next
+        Catch ex As Exception
+
+        End Try
+        visboWindowExists = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' liefert den Caption Namen des Windows in Abhängigkeit von Portfolio oder Projekt und in Abhängigkeit von der Sprache 
+    ''' </summary>
+    ''' <param name="visboWindowTyp"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeWindowCaption(ByVal visboWindowTyp As Integer, _
+                                          Optional ByVal addOnMsg As String = "") As String
+        Dim tmpResult As String = ""
+
+        Select Case visboWindowTyp
+
+            Case PTwindows.mptpf
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Charts for Portfolio '" & currentConstellationName & "'"
+                Else
+                    tmpResult = "Charts für Portfolio " & currentConstellationName & "'"
+                End If
+
+            Case PTwindows.mptpr
+
+                tmpResult = "Charts: " & addOnMsg
+
+
+            Case PTwindows.meChart
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Project-Chart and Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " projects"
+                Else
+                    tmpResult = "Projekt-Chart und Portfolio-Charts '" & currentConstellationName & "': " & ShowProjekte.Count & " Projekte"
+                End If
+
+            Case PTwindows.mpt
+                Dim outputmsg As String = ""
+
+                If currentConstellationName = "" Then
+                    outputmsg = " : " & ShowProjekte.Count & " "
+                Else
+                    outputmsg = " '" & currentConstellationName & "' : " & ShowProjekte.Count & " "
+                End If
+
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Visual Board" & outputmsg & "projects"
+                Else
+                    tmpResult = "Visual Board" & outputmsg & "Projekte"
+                End If
+
+            Case PTwindows.massEdit
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Modify Resource and Cost Needs"
+                Else
+                    tmpResult = "Personal- und Kostenbedarfe ändern"
+                End If
+
+        End Select
+
+        bestimmeWindowCaption = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' schliesst alle Windows ausser MPT Window; macht dann das MPT Window wieder groß 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub closeAllWindowsExceptMPT()
+
+
+        Dim vglName As String = CType(projectboardWindows(PTwindows.mpt).ActiveSheet, Excel.Worksheet).Name
+        If vglName <> arrWsNames(ptTables.MPT) Then
+            Call MsgBox("Window 0 zeigt auf das falsche Sheet: " & vglName)
+            Exit Sub
+        End If
+
+        '' '' alle Windows schliessen, bis auf das MPT Window 
+        ' ''For Each tmpWindow In CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows
+        ' ''    tmpWindow.Activate()
+
+        ' ''    If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = vglName Then
+        ' ''        ' nichts tun ...
+        ' ''    Else
+
+        ' ''        tmpWindow.Close(SaveChanges:=False)
+        ' ''    End If
+        ' ''Next
+
+        If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+            appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+        End If
+
+        Try
+            ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
+            If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
+                Try
+                    projectboardWindows(PTwindows.massEdit).Close()
+                Catch ex As Exception
+
+                End Try
+
+                projectboardWindows(PTwindows.massEdit) = Nothing
+            End If
+
+            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                Try
+                    projectboardWindows(PTwindows.meChart).Close()
+                Catch ex As Exception
+
+                End Try
+
+                projectboardWindows(PTwindows.meChart) = Nothing
+            End If
+            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+
+                'projectboardWindows(PTwindows.mptpf).Activate()
+                If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                    appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+                End If
+                Try
+                    projectboardWindows(PTwindows.mptpf).Close()
+                Catch ex As Exception
+
+                End Try
+                projectboardWindows(PTwindows.mptpf) = Nothing
+            End If
+            If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
+                Try
+                    projectboardWindows(PTwindows.mptpr).Close()
+                Catch ex As Exception
+
+                End Try
+
+                projectboardWindows(PTwindows.mptpr) = Nothing
+            End If
+        Catch ex As Exception
+
+            ' '' make MPT Window great again ...
+            ''With projectboardWindows(PTwindows.mpt)
+            ''    .Visible = True
+            ''    .WindowState = XlWindowState.xlMaximized
+            ''End With
+
+        End Try
+
+
+        ' tk / ute jetzt eigentlich überflüssig
+        ' jetzt die projectboardWindows = Nothing setzen 
+        'projectboardWindows(PTwindows.massEdit) = Nothing
+        'projectboardWindows(PTwindows.meChart) = Nothing
+        'projectboardWindows(PTwindows.mptpf) = Nothing
+        'projectboardWindows(PTwindows.mptpr) = Nothing
+
+        ' make MPT Window great again ...
+        With projectboardWindows(PTwindows.mpt)
+            .Visible = True
+            .WindowState = XlWindowState.xlMaximized
+        End With
+
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt in Abhängigkeit von TableTyp die Größe und Position des Fensters
+    ''' je nachdem, wieviele LegendenEinträge das Chart hat, wird die Höhe etws höher bestimmt ... 
+    ''' </summary>
+    ''' <param name="tableTyp"></param>
+    ''' <param name="chtop"></param>
+    ''' <param name="chleft"></param>
+    ''' <param name="chwidth"></param>
+    ''' <param name="chHeight"></param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer, _
+                                            ByVal anzLegendEintraege As Integer, _
+                                                ByRef chtop As Double, _
+                                                ByRef chleft As Double, _
+                                                ByRef chwidth As Double, _
+                                                ByRef chHeight As Double)
+
+        Dim currentWorksheet As Excel.Worksheet = _
+            CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(tableTyp)), Excel.Worksheet)
+
+        Dim tmpTop As Double = 2.0
+        Dim tmpLeft As Double = 2
+
+        Dim korrfaktorH1 As Double = 1.2
+        Dim korrfaktorH2 As Double = 1.0
+        Dim korrfaktorB As Double = 1.0
+
+        Try
+            If My.Computer.Screen.Bounds.Height < 1080 Then
+                korrfaktorH1 = 1.66
+            End If
+
+            If anzLegendEintraege > 2 Then
+                korrfaktorH2 = 1 + 0.15 * (CInt(anzLegendEintraege / 2) - 1)
+            End If
+            'korrfaktorH = 1080 / My.Computer.Screen.Bounds.Height
+            'korrfaktorB = 1920 / My.Computer.Screen.Bounds.Width
+        Catch ex As Exception
+
+        End Try
+        Dim tmpWidth As Double = maxScreenWidth / 5 - 29
+        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH1 * korrfaktorH2
+
+
+        ' wenn schon Charts existieren: ein neues Chart wird immer als letztes  angehängt ..
+        With currentWorksheet
+            For Each tmpChtObject As Excel.ChartObject In CType(.ChartObjects, Excel.ChartObjects)
+                If tmpChtObject.Top + tmpChtObject.Height + 2 > tmpTop Then
+                    tmpTop = tmpChtObject.Top + tmpChtObject.Height + 2
+                End If
+            Next
+        End With
+
+        ' jetzt die Werte setzen 
+        chtop = tmpTop
+        chleft = tmpLeft
+        chwidth = tmpWidth
+        chHeight = tmpHeight
+
+    End Sub
+
+    ''' <summary>
+    ''' definiert die Windows und Views, die benötigt werden 
+    ''' es ist die Tabelle1=mpt aktiviert 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub defineVisboWindowViews()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formereOU As Boolean = enableOnUpdate
+
+        If enableOnUpdate Then
+            enableOnUpdate = False
+        End If
+
+        If appInstance.EnableEvents Then
+            appInstance.EnableEvents = False
+        End If
+
+        If appInstance.ScreenUpdating Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        ' jetzt werden die Windows aufgebaut ...
+
+        ' dann werden alle auf invisible gesetzt , bis auf projectboardWindows(mpt)
+
+
+        Dim visboWorkbook As Excel.Workbook = appInstance.Workbooks.Item(myProjektTafel)
+
+
+        'projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow.NewWindow
+        projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
+
+
+        ' Aus dem aktuellen Window ein benanntes Window machen 
+
+        projectboardWindows(PTwindows.mptpr) = appInstance.ActiveWindow.NewWindow
+
+        ' jetzt auf das Worksheet positionieren ...
+        CType(visboWorkbook.Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).Activate()
+
+        With projectboardWindows(PTwindows.mptpr)
+            .WindowState = Excel.XlWindowState.xlNormal
+            .EnableResize = True
+            .DisplayHorizontalScrollBar = True
+            .DisplayVerticalScrollBar = True
+            .DisplayFormulas = False
+            .DisplayHeadings = False
+            .DisplayGridlines = False
+            .GridlineColor = RGB(255, 255, 255)
+            .DisplayWorkbookTabs = False
+            .Caption = bestimmeWindowCaption(PTwindows.mptpr)
+            .Visible = False
+        End With
+
+        ' Aufbau des Windows windowNames(4): Charts
+        projectboardWindows(PTwindows.mptpf) = appInstance.ActiveWindow.NewWindow
+
+        ' jetzt das Worksheet aktivieren ...
+        visboWorkbook.Worksheets.Item(arrWsNames(ptTables.mptPfCharts)).activate()
+
+        With projectboardWindows(PTwindows.mptpf)
+            .WindowState = Excel.XlWindowState.xlNormal
+            .EnableResize = True
+            .DisplayHorizontalScrollBar = True
+            .DisplayVerticalScrollBar = True
+            .DisplayGridlines = False
+            .DisplayHeadings = False
+            .DisplayRuler = False
+            .DisplayOutline = False
+            .DisplayWorkbookTabs = False
+            .Caption = bestimmeWindowCaption(PTwindows.mptpf)
+            .Visible = False
+        End With
+
+
+        ' jetzt das Sheet Multiprojekt-Tafel aktivieren
+        visboWorkbook.Worksheets.Item(arrWsNames(ptTables.MPT)).activate()
+
+        'jetzt das MPT Sheet wieder holen 
+        With projectboardWindows(PTwindows.mpt)
+            .WindowState = XlWindowState.xlMaximized
+            .Activate()
+        End With
+
+        ' wieder auf den Ausgangszustand setzen ... 
+        With appInstance
+            If .EnableEvents <> formerEE Then
+                .EnableEvents = formerEE
+            End If
+
+            If .ScreenUpdating <> formerSU Then
+                .ScreenUpdating = formerSU
+            End If
+
+            If enableOnUpdate <> formereOU Then
+                enableOnUpdate = formereOU
+            End If
+        End With
+
+
+    End Sub
+    ''' <summary>
+    ''' zeigt das angegebene VISBO Window, wenn es nicht ohnehin schon angezeigt wird ...
+    ''' tmpmsg ist der optional Ergänzungs-String für den Caption Text im mptpr Window 
+    ''' </summary>
+    ''' <param name="visboWindowType"></param>
+    ''' <remarks></remarks>
+    Public Sub showVisboWindow(ByVal visboWindowType As Integer, Optional tmpmsg As String = "")
+
+
+        ' Voraussetzungen schaffen: kein EnableEvents und kein Flackern und kein EnableOnUpdate ..
+        '
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formereOU As Boolean = enableOnUpdate
+
+        Dim stdPfPrWindowBreite As Double = maxScreenWidth / 5 - 10
+
+        If enableOnUpdate Then
+            enableOnUpdate = False
+        End If
+
+        If appInstance.EnableEvents Then
+            appInstance.EnableEvents = False
+        End If
+
+        If appInstance.ScreenUpdating Then
+            appInstance.ScreenUpdating = False
+        End If
+
+
+        ' Ende Voraussetzungen schaffen 
+        Dim pfWindowAlreadyExisting As Boolean = False
+        Dim prWindowAlreadyExisting As Boolean = False
+        Dim foundWindow As Excel.Window = Nothing
+        Dim visboWorkbook As Excel.Workbook = appInstance.Workbooks.Item(myProjektTafel)
+
+        ' 
+        For Each tmpWindow As Excel.Window In visboWorkbook.Windows
+
+            If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.mptPfCharts) Then
+
+                pfWindowAlreadyExisting = True
+                foundWindow = tmpWindow
+
+            End If
+
+            If CType(tmpWindow.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.mptPrCharts) Then
+
+                prWindowAlreadyExisting = True
+                foundWindow = tmpWindow
+
+            End If
+
+        Next
+
+
+
+        Select Case visboWindowType
+            Case PTwindows.mptpf
+                Try
+                    If Not pfWindowAlreadyExisting Then
+
+                        ' Aufbau des Windows PTwindows.mptpf Charts
+                        'projectboardWindows(PTwindows.mptpf) = appInstance.ActiveWindow.NewWindow
+                        projectboardWindows(PTwindows.mptpf) = projectboardWindows(PTwindows.mpt).NewWindow
+
+                        ' jetzt das Worksheet aktivieren ... dazu muss aber wahrscheinlich appinstance.EnableEvents = true sein ? 
+                        appInstance.EnableEvents = True
+                        CType(visboWorkbook.Worksheets.Item(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet).Activate()
+                        appInstance.EnableEvents = False
+
+                        ' nur wenn ein neues erzeugt wurde, ist das Arragieren notwendig , damit die Größe verändert werdne kann 
+                        If Not prWindowAlreadyExisting Then
+                            appInstance.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleVertical)
+                        End If
+
+
+                        ' jetzt soll die Größe entsprechend eingestellt werden ..
+
+                        With projectboardWindows(PTwindows.mptpf)
+                            .Visible = True
+                            .WindowState = Excel.XlWindowState.xlNormal
+                            .EnableResize = True
+                            .Left = 4 * maxScreenWidth / 5
+                            .Width = stdPfPrWindowBreite
+                            ' wenn prWindows schon existert hat ..
+                            If prWindowAlreadyExisting Then
+                                .Top = projectboardWindows(PTwindows.mpt).Top
+                                .Height = projectboardWindows(PTwindows.mpt).Height
+                            End If
+                        End With
+
+                    Else
+                        projectboardWindows(PTwindows.mptpf) = foundWindow
+                        With projectboardWindows(PTwindows.mptpf)
+                            .Visible = True
+                            .WindowState = Excel.XlWindowState.xlNormal
+                            .EnableResize = True
+                        End With
+                    End If
+
+                    ' soll in allen Fällen gemacht werden 
+                    With projectboardWindows(PTwindows.mptpf)
+                        .DisplayHorizontalScrollBar = True
+                        .DisplayVerticalScrollBar = True
+                        .DisplayGridlines = False
+                        .DisplayHeadings = False
+                        .DisplayRuler = False
+                        .DisplayOutline = False
+                        .DisplayWorkbookTabs = False
+                        .Caption = bestimmeWindowCaption(PTwindows.mptpf)
+                    End With
+
+                    ' jetzt muss das mpt Window in der Größe verändert werden, aber nur , wenn das nicht schon vorher existiert hat
+                    If Not pfWindowAlreadyExisting Then
+
+                        With projectboardWindows(PTwindows.mpt)
+                            If .WindowState = Excel.XlWindowState.xlMaximized Then
+                                .WindowState = Excel.XlWindowState.xlNormal
+                            End If
+
+                            If prWindowAlreadyExisting Then
+                                .Left = 1 + stdPfPrWindowBreite + 1
+                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1 - .Left
+                            Else
+                                .Left = 1
+                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1
+                            End If
+
+
+                        End With
+
+                        pfWindowAlreadyExisting = True
+
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+            Case PTwindows.mptpr
+                Try
+                    If Not prWindowAlreadyExisting Then
+
+                        ' Aufbau des Windows PTwindows.mptpr Charts
+                        projectboardWindows(PTwindows.mptpr) = projectboardWindows(PTwindows.mpt).NewWindow
+
+                        ' jetzt das Worksheet aktivieren ... dazu muss aber wahrscheinlich appinstance.EnableEvents = true sein ? 
+                        appInstance.EnableEvents = True
+                        CType(visboWorkbook.Worksheets.Item(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet).Activate()
+                        appInstance.EnableEvents = False
+
+                        ' nur wenn ein neues erzeugt wurde, ist das Arragieren notwendig , damit die Größe verändert werden kann 
+                        If Not pfWindowAlreadyExisting Then
+                            appInstance.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleVertical)
+                        End If
+
+
+                        ' jetzt soll die Größe entsprechend eingestellt werden ..
+
+                        With projectboardWindows(PTwindows.mptpr)
+                            .Visible = True
+                            .WindowState = Excel.XlWindowState.xlNormal
+                            .EnableResize = True
+                            .Left = 1
+                            .Width = stdPfPrWindowBreite
+                            ' wenn pfWindows schon existert hat ..
+                            If pfWindowAlreadyExisting Then
+                                .Top = projectboardWindows(PTwindows.mpt).Top
+                                .Height = projectboardWindows(PTwindows.mpt).Height
+                            End If
+                        End With
+
+                    Else
+                        projectboardWindows(PTwindows.mptpr) = foundWindow
+                        With projectboardWindows(PTwindows.mptpr)
+                            .Visible = True
+                            .WindowState = Excel.XlWindowState.xlNormal
+                            .EnableResize = True
+                        End With
+                    End If
+
+                    ' soll in allen Fällen gemacht werden 
+                    With projectboardWindows(PTwindows.mptpr)
+                        .DisplayHorizontalScrollBar = True
+                        .DisplayVerticalScrollBar = True
+                        .DisplayGridlines = False
+                        .DisplayHeadings = False
+                        .DisplayRuler = False
+                        .DisplayOutline = False
+                        .DisplayWorkbookTabs = False
+                        .Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
+                    End With
+
+                    If Not prWindowAlreadyExisting Then
+
+                        With projectboardWindows(PTwindows.mpt)
+                            If .WindowState = Excel.XlWindowState.xlMaximized Then
+                                .WindowState = Excel.XlWindowState.xlNormal
+                            End If
+
+                            .Left = projectboardWindows(PTwindows.mptpr).Left + _
+                                    projectboardWindows(PTwindows.mptpr).Width + 1
+
+                            If pfWindowAlreadyExisting Then
+                                .Width = projectboardWindows(PTwindows.mptpf).Left - 1 - .Left
+                            Else
+                                .Width = maxScreenWidth - (projectboardWindows(PTwindows.mptpr).Width + 1)
+                            End If
+
+
+                        End With
+
+                        prWindowAlreadyExisting = True
+
+                    End If
+
+
+                Catch ex As Exception
+
+                End Try
+
+
+            Case PTwindows.mpt
+                projectboardWindows(PTwindows.mpt) = foundWindow
+                With projectboardWindows(PTwindows.mpt)
+                    .Visible = True
+                    .WindowState = Excel.XlWindowState.xlNormal
+                    .EnableResize = True
+                End With
+            Case Else
+                ' nichts tun 
+        End Select
+
+
+        ' alten Zustand bezgl enableEvents etc wieder herstellen ...
+        ' wieder auf den Ausgangszustand setzen ... 
+        '
+
+        ' jetzt wieder auf das Haupt-Window positionieren 
+        projectboardWindows(PTwindows.mpt).Activate()
+
+
+        With appInstance
+            If .EnableEvents <> formerEE Then
+                .EnableEvents = formerEE
+            End If
+
+            If .ScreenUpdating <> formerSU Then
+                .ScreenUpdating = formerSU
+            End If
+
+            If enableOnUpdate <> formereOU Then
+                enableOnUpdate = formereOU
+            End If
+        End With
+
+    End Sub
+
+
+    Sub massEditZeileEinfügen(ByVal controlID As String)
+
+
+        Dim currentCell As Excel.Range
+        appInstance.EnableEvents = False
+
+        Try
+            ' hier nicht benötigt
+            '' '' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
+            ' ''Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
+
+            currentCell = CType(appInstance.ActiveCell, Excel.Range)
+
+            'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
+
+            Dim columnEndData As Integer = visboZustaende.meColED
+            Dim columnStartData As Integer = visboZustaende.meColSD
+
+            Dim columnRC As Integer = visboZustaende.meColRC
+
+            Dim hoehe As Double = CDbl(currentCell.Height)
+            currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+            Dim zeile As Integer = currentCell.Row
+
+            ' Blattschutz aufheben ... 
+            If Not awinSettings.meEnableSorting Then
+                ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                    .Unprotect(Password:="x")
+                End With
+            End If
+
+
+
+            With CType(appInstance.ActiveSheet, Excel.Worksheet)
+
+                If Not awinSettings.meExtendedColumnsView Then
+                    appInstance.ScreenUpdating = False
+                    ' einblenden ... 
+                    .Range("MahleInfo").EntireColumn.Hidden = False
+                End If
+
+
+                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
+                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
+                copySource.Copy(Destination:=copyDestination)
+
+                CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
+
+                For c As Integer = columnStartData - 3 To columnEndData + 1
+                    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
+                Next
+
+                ' jetzt wieder ausblenden ... 
+                If Not awinSettings.meExtendedColumnsView Then
+                    ' ausblenden ... 
+                    .Range("MahleInfo").EntireColumn.Hidden = True
+                    appInstance.ScreenUpdating = True
+                End If
+            End With
+
+            ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
+
+            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range)
+
+                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
+
+                Try
+                    If Not IsNothing(.Validation) Then
+                        .Validation.Delete()
+                    End If
+                    ' jetzt wird die ValidationList aufgebaut
+                    ' ist es eine Rolle ? 
+                    '' ''If controlID = "PT2G1M2B4" Then
+                    '' ''    ' Rollen
+                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                    '' ''                           Formula1:=validationStrings.Item("alleRollen"))
+                    '' ''ElseIf controlID = "PT2G1M2B7" Then
+                    '' ''    ' Kosten
+                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                    '' ''                                                   Formula1:=validationStrings.Item("alleKosten"))
+                    '' ''Else
+                    '' ''    ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
+                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                    '' ''                           Formula1:=validationStrings.Item("alles"))
+                    '' ''End If
+
+                Catch ex As Exception
+
+                End Try
+
+            End With
+
+            ' jetzt wird der Old-Value gesetzt 
+            With visboZustaende
+                If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
+                    Call MsgBox("Fehler 099 in PTzeileEinfügen")
+                End If
+                .oldValue = ""
+                .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
+            End With
+
+
+            ' jetzt den Blattschutz wiederherstellen ... 
+            If Not awinSettings.meEnableSorting Then
+                ' es muss der Blattschutz wieder aktiviert werden ... 
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                    .Protect(Password:="x", UserInterfaceOnly:=True, _
+                             AllowFormattingCells:=True, _
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True, _
+                             AllowDeletingColumns:=False, _
+                             AllowDeletingRows:=True, _
+                             AllowSorting:=True, _
+                             AllowFiltering:=True)
+                    .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+                    .EnableAutoFilter = True
+                End With
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Kopieren einer Zeile ...")
+        End Try
+
+        appInstance.EnableEvents = True
+    End Sub
+
+    Sub massEditZeileLoeschen(ByVal ID As String)
+        Dim currentCell As Excel.Range
+        Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        appInstance.EnableEvents = False
+
+        Dim ok As Boolean = True
+
+        Try
+
+            currentCell = CType(appInstance.ActiveCell, Excel.Range)
+            Dim zeile As Integer = currentCell.Row
+
+            If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
+                Dim columnEndData As Integer = visboZustaende.meColED
+                Dim columnStartData As Integer = visboZustaende.meColSD
+                Dim columnRC As Integer = visboZustaende.meColRC
+
+
+                Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
+                Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+                Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+                Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                If Not IsNothing(curComment) Then
+                    phaseNameID = curComment.Text
+                End If
+
+                Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+
+                ' hier wird die Rolle- bzw. Kostenart aus der Projekt-Phase gelöscht 
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+                If IsNothing(rcName) Then
+                    ' nichts tun
+                ElseIf rcName.Trim.Length = 0 Then
+                    ' nichts tun ... 
+                ElseIf RoleDefinitions.containsName(rcName) Then
+                    ' es handelt sich um eine Rolle
+                    ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                                             showRangeLeft, showRangeRight, True) Then
+                        cphase.removeRoleByName(rcName)
+                    Else
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
+                                    " nicht gelöscht werden ...")
+                        ok = False
+                    End If
+
+                ElseIf CostDefinitions.containsName(rcName) Then
+                    ' es handelt sih um eine Kostenart 
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                                             showRangeLeft, showRangeRight, True) Then
+                        cphase.removeCostByName(rcName)
+                    Else
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf & _
+                                    " nicht gelöscht werden ...")
+                        ok = False
+                    End If
+
+
+                End If
+
+
+                If ok Then
+                    ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
+                    ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
+                    If noDuplicatesInSheet(pName, phaseNameID, Nothing, zeile) Then
+                        ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
+                        ' aber die Werte müssen alle gelöscht werden 
+                        For ix As Integer = columnRC To columnEndData + 1
+                            CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
+                        Next
+                    Else
+                        CType(meWS.Rows(zeile), Excel.Range).Delete()
+                    End If
+
+                    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
+
+                    ' jetzt wird der Old-Value gesetzt 
+                    With visboZustaende
+                        .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
+                        .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
+                    End With
+
+                Else
+                    ' nichts tun 
+                End If
+
+
+            Else
+                Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen einer Zeile ..." & vbLf & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft ob in dem aktiven Massen-Edit Sheet die übergebene Kombination nocheinmal vorkommt ... 
+    ''' wenn nein: Rückgabe true
+    ''' wenn ja: Rückgabe false
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>
+    ''' <param name="zeile"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String, _
+                                             ByVal zeile As Integer) As Boolean
+        Dim found As Boolean = False
+        Dim curZeile As Integer = 2
+
+        Dim chckName As String
+        Dim chckPhNameID As String
+        Dim chckRCName As String
+
+        Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+
+        With meWS
+            chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+            Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+            chckPhNameID = calcHryElemKey(phaseName, False)
+            Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+            If Not IsNothing(curComment) Then
+                chckPhNameID = curComment.Text
+            End If
+
+            chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+        End With
+        ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
+        Do While Not found And curZeile <= visboZustaende.meMaxZeile
+
+
+            If chckName = pName And _
+                phaseNameID = chckPhNameID And _
+                zeile <> curZeile Then
+
+                If IsNothing(rcName) Then
+                    found = True
+                ElseIf rcName = chckRCName Then
+                    found = True
+                End If
+
+            End If
+
+            If Not found Then
+
+                curZeile = curZeile + 1
+
+                With meWS
+                    chckName = CStr(meWS.Cells(curZeile, 2).value)
+
+                    Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                    chckPhNameID = calcHryElemKey(phaseName, False)
+                    Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                    If Not IsNothing(curComment) Then
+                        chckPhNameID = curComment.Text
+                    End If
+
+                    chckRCName = CStr(meWS.Cells(curZeile, 5).value)
+
+                End With
+
+            End If
+
+        Loop
+
+        noDuplicatesInSheet = Not found
+
+    End Function
 End Module

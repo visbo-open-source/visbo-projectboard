@@ -479,13 +479,14 @@ Public Class clsProjekte
         End Get
     End Property
 
+
     ''' <summary>
     ''' liefert die Namen der Rollen, die in der Menge von Projekten vorkommen 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleNames() As Collection
+    Public ReadOnly Property getRoleNames(Optional ByVal includingParentRoles As Boolean = False) As Collection
         Get
             Dim tmpListe As New Collection
 
@@ -497,6 +498,25 @@ Public Class clsProjekte
                 For Each tmpName As String In tmpCollection
                     If Not tmpListe.Contains(tmpName) Then
                         tmpListe.Add(tmpName, tmpName)
+                        If includingParentRoles Then
+                            Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(tmpName)
+                            Dim parentRole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
+                            Dim grandparentRole As clsRollenDefinition = Nothing
+                            If Not IsNothing(parentRole) Then
+                                If Not tmpListe.Contains(parentRole.name) Then
+                                    tmpListe.Add(parentRole.name, parentRole.name)
+                                    grandparentRole = RoleDefinitions.getParentRoleOf(parentRole.UID)
+                                    Do While Not IsNothing(grandparentRole)
+                                        If Not tmpListe.Contains(grandparentRole.name) Then
+                                            tmpListe.Add(grandparentRole.name, grandparentRole.name)
+                                            grandparentRole = RoleDefinitions.getParentRoleOf(grandparentRole.UID)
+                                        Else
+                                            grandparentRole = Nothing
+                                        End If
+                                    Loop
+                                End If
+                            End If
+                        End If
                     End If
                 Next
 
@@ -661,8 +681,8 @@ Public Class clsProjekte
             Dim projectShape As xlNS.ShapeRange
 
 
-            'With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
-            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)), xlNS.Worksheet)
+            'With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), xlNS.Worksheet)
+            With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), xlNS.Worksheet)
                 shapes = .Shapes
                 Try
                     projectShape = shapes.Range(pName)
@@ -677,18 +697,51 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
-    ''' bestimmt die kleinste auftretende Spalten-Column über alle Projekte  
+    ''' gibt die Namen der Projekte zurück, die "markiert" sind 
+    ''' leere Collection, wenn es keine gibt 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMinMonthColumn() As Integer
+    Public ReadOnly Property getMarkedProjects() As Collection
+        Get
+            Dim tmpCollection As New Collection
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me.Liste
+                If kvp.Value.marker = True Then
+                    If Not tmpCollection.Contains(kvp.Key) Then
+                        tmpCollection.Add(kvp.Key, kvp.Key)
+                    End If
+                End If
+            Next
+
+            getMarkedProjects = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' bestimmt die kleinste auftretende Spalten-Column über alle Projekte  
+    ''' wenn eine liste angegeben ist, werden nur die in der Liste vorhandenen PRoekte betrachtet 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMinMonthColumn(Optional ByVal liste As Collection = Nothing) As Integer
         Get
             Dim tmpMin As Integer = 10000
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                If kvp.Value.Start < tmpMin Then
-                    tmpMin = kvp.Value.Start
+                If IsNothing(liste) Then
+                    If kvp.Value.Start < tmpMin Then
+                        tmpMin = kvp.Value.Start
+                    End If
+                Else
+                    If liste.Contains(kvp.Key) Then
+                        If kvp.Value.Start < tmpMin Then
+                            tmpMin = kvp.Value.Start
+                        End If
+                    End If
                 End If
+                
             Next
             getMinMonthColumn = tmpMin
         End Get
@@ -696,17 +749,28 @@ Public Class clsProjekte
 
     ''' <summary>
     ''' bestimmt die größte auftretende Spalten-Column über alle Projekte  
+    ''' wenn eine liste angegeben ist, werden nur die in der Liste vorhandenen PRoekte betrachtet 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMaxMonthColumn() As Integer
+    Public ReadOnly Property getMaxMonthColumn(Optional ByVal liste As Collection = Nothing) As Integer
         Get
             Dim tmpMax As Integer = 0
+            Dim endeCol As Integer
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                Dim endeCol As Integer = getColumnOfDate(kvp.Value.endeDate)
-                If endeCol > tmpMax Then
-                    tmpMax = endeCol
+                If IsNothing(liste) Then
+                    endeCol = getColumnOfDate(kvp.Value.endeDate)
+                    If endeCol > tmpMax Then
+                        tmpMax = endeCol
+                    End If
+                Else
+                    If liste.Contains(kvp.Key) Then
+                        endeCol = getColumnOfDate(kvp.Value.endeDate)
+                        If endeCol > tmpMax Then
+                            tmpMax = endeCol
+                        End If
+                    End If
                 End If
             Next
             getMaxMonthColumn = tmpMax
@@ -829,47 +893,37 @@ Public Class clsProjekte
 
                 With kvp.Value
 
-                    If (.Start + .StartOffset > bis) Or (.Start + .StartOffset + .anzahlRasterElemente - 1 < von) Then
-                        ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
-                    Else
+                    Select Case selectionType
 
-                        Select Case selectionType
-
-                            Case PTpsel.alle
+                        Case PTpsel.alle
+                            ' Aufteilung in if .. elseif gemacht, um Geschwindigkeit zu gewinnen 
+                            If bis - von < 1 Then
                                 tmpListe.Add(kvp.Key, kvp.Key)
+                            ElseIf Not ((getColumnOfDate(.startDate) > bis) Or (getColumnOfDate(.endeDate) < von)) Then
+                                ' kein TimeFrame oder liegt innerhalb des TimeFrame ... dann wird es übernommen 
+                                tmpListe.Add(kvp.Key, kvp.Key)
+                            End If
 
-                            Case PTpsel.laufend
+                        Case PTpsel.lfundab
 
-                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
-                                    .Status <> ProjektStatus(3) And _
-                                    .Status <> ProjektStatus(4) Then
-
-                                    tmpListe.Add(kvp.Key, kvp.Key)
-
-                                End If
-
-                            Case PTpsel.lfundab
-
+                            If bis - von < 1 Then
                                 If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 Then
-
                                     tmpListe.Add(kvp.Key, kvp.Key)
-
                                 End If
-
-                            Case PTpsel.abgeschlossen
-
-                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
-                                   (.Status = ProjektStatus(3) Or _
-                                   .Status = ProjektStatus(4)) Then
-
+                            ElseIf Not ((getColumnOfDate(.startDate) > bis) Or (getColumnOfDate(.endeDate) < von)) Then
+                                ' Projekt liegt innerhalb des TimeFrames 
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 Then
                                     tmpListe.Add(kvp.Key, kvp.Key)
-
                                 End If
+                            End If
 
-                        End Select
+                        Case Else
+
+                            Call MsgBox("Selektion in clsProjekte.withinTimeFrame noch nicht implementiert ")
+
+                    End Select
 
 
-                    End If
                 End With
 
             Next
@@ -919,42 +973,33 @@ Public Class clsProjekte
 
                             Dim breadcrumb As String = ""
                             Dim phaseName As String = ""
-                            Call splitHryFullnameTo2(fullphaseName, phaseName, breadcrumb)
-                            Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                            Dim type As Integer = -1
+                            Dim pvName As String = ""
+                            Call splitHryFullnameTo2(fullphaseName, phaseName, breadcrumb, type, pvName)
 
-                            For px As Integer = 0 To phaseIndices.Length - 1
-                                cphase = kvp.Value.getPhase(phaseIndices(px))
-                                If Not IsNothing(cphase) Then
-                                    If (projektstart + cphase.relStart - 1 > bis) Or (projektstart + cphase.relEnde - 1 < von) Then
-                                        ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
-                                    Else
-                                        found = True
-                                        Exit For
+                            If type = -1 Or
+                                (type = PTProjektType.projekt And pvName = kvp.Value.name) Or _
+                                (type = PTProjektType.vorlage And pvName = kvp.Value.VorlagenName) Then
+
+                                Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+
+                                For px As Integer = 0 To phaseIndices.Length - 1
+                                    cphase = kvp.Value.getPhase(phaseIndices(px))
+                                    If Not IsNothing(cphase) Then
+                                        If (projektstart + cphase.relStart - 1 > bis) Or (projektstart + cphase.relEnde - 1 < von) Then
+                                            ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
+                                        Else
+                                            found = True
+                                            Exit For
+                                        End If
                                     End If
-                                End If
-                            Next
+                                Next
+
+                            End If
 
                             If found Then
                                 Exit For
                             End If
-
-                            ' tk: braucht man jetzt nicht , das dauert alles viel zu lange 
-                            'For Each milestoneName As String In selItems2
-                            '    cmileStone = cphase.getMilestone(milestoneName)
-                            '    If Not IsNothing(cmileStone) Then
-                            '        Dim msColumn As Integer = getColumnOfDate(cmileStone.getDate)
-                            '        If msColumn > bis Or msColumn < von Then
-                            '        Else
-                            '            found = True
-                            '            Exit For
-                            '        End If
-                            '    End If
-
-                            'Next
-
-                            'If found Then
-                            '    Exit For
-                            'End If
 
                         Next
 
@@ -965,21 +1010,30 @@ Public Class clsProjekte
 
                                 Dim breadcrumb As String = ""
                                 Dim milestoneName As String = ""
-                                Call splitHryFullnameTo2(fullmilestoneName, milestoneName, breadcrumb)
-                                Dim milestoneIndices(,) As Integer = kvp.Value.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
-                                ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                                Dim type As Integer = -1
+                                Dim pvName As String = ""
+                                Call splitHryFullnameTo2(fullmilestoneName, milestoneName, breadcrumb, type, pvName)
 
-                                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
-                                    cMilestone = .getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
-                                    If Not IsNothing(cMilestone) Then
-                                        Dim msColumn As Integer = getColumnOfDate(cMilestone.getDate)
-                                        If msColumn > bis Or msColumn < von Then
-                                        Else
-                                            found = True
-                                            Exit For
+                                If type = -1 Or _
+                                    (type = PTProjektType.projekt And pvName = kvp.Value.name) Or _
+                                    (type = PTProjektType.vorlage And pvName = kvp.Value.VorlagenName) Then
+
+                                    Dim milestoneIndices(,) As Integer = kvp.Value.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
+                                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+
+                                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                                        cMilestone = .getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                                        If Not IsNothing(cMilestone) Then
+                                            Dim msColumn As Integer = getColumnOfDate(cMilestone.getDate)
+                                            If msColumn > bis Or msColumn < von Then
+                                            Else
+                                                found = True
+                                                Exit For
+                                            End If
                                         End If
-                                    End If
-                                Next
+                                    Next
+
+                                End If
 
                                 If found Then
                                     Exit For
@@ -1037,7 +1091,9 @@ Public Class clsProjekte
                 ' nichts tun 
             Else
                 For cix As Integer = 1 To myCollection.Count
-                    Call splitHryFullnameTo2(CStr(myCollection.Item(cix)), elemName, breadCrumb)
+                    Dim pvName As String = ""
+                    Dim type As Integer = -1
+                    Call splitHryFullnameTo2(CStr(myCollection.Item(cix)), elemName, breadCrumb, type, pvName)
 
                     If prcTyp = DiagrammTypen(0) Then
                         ' Phasen
@@ -1053,88 +1109,95 @@ Public Class clsProjekte
 
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-                            hproj = kvp.Value
-                            Dauer = hproj.anzahlRasterElemente
-                            Dim tempArray(Dauer - 1) As Double
+                            If type = -1 Or _
+                                (type = PTProjektType.projekt And pvName = kvp.Value.name) Or _
+                                (type = PTProjektType.vorlage And pvName = kvp.Value.VorlagenName) Then
 
-                            Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(elemName, breadCrumb)
+                                hproj = kvp.Value
+                                Dauer = hproj.anzahlRasterElemente
+                                Dim tempArray(Dauer - 1) As Double
 
-                            For px As Integer = 0 To phaseIndices.Length - 1
+                                Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(elemName, breadCrumb)
 
-                                If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
-                                    hphase = hproj.getPhase(phaseIndices(px))
-                                Else
-                                    hphase = Nothing
-                                End If
+                                For px As Integer = 0 To phaseIndices.Length - 1
 
-
-                                If Not hphase Is Nothing Then
-
-                                    abbrev = PhaseDefinitions.getAbbrev(hphase.name)
-
-                                    With hproj
-                                        prAnfang = .Start + .StartOffset
-                                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                                    End With
+                                    If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                                        hphase = hproj.getPhase(phaseIndices(px))
+                                    Else
+                                        hphase = Nothing
+                                    End If
 
 
-                                    If istBereichInTimezone(prAnfang, prEnde) Then
-                                        'projektstart = hproj.Start
+                                    If Not hphase Is Nothing Then
 
-                                        With hphase
-                                            phAnfang = prAnfang + .relStart - 1
-                                            phEnde = prAnfang + .relEnde - 1
+                                        abbrev = PhaseDefinitions.getAbbrev(hphase.name)
+
+                                        With hproj
+                                            prAnfang = .Start + .StartOffset
+                                            prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                                         End With
 
-                                        'Dim ixKorrektur As Integer = hphase.relStart - 1
-                                        Dim ix As Integer
-                                        Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
 
-                                        If anzLoops > 0 Then
-                                            ' dann ist die Phase enthalten 
+                                        If istBereichInTimezone(prAnfang, prEnde) Then
+                                            'projektstart = hproj.Start
 
-                                            Try
+                                            With hphase
+                                                phAnfang = prAnfang + .relStart - 1
+                                                phEnde = prAnfang + .relEnde - 1
+                                            End With
 
-                                                tempArray = hproj.getPhasenBedarf(elemName)
-                                                ' ix bezeichnet aktuell den start mit Nullpunkt Phasen-Start, das muss jetzt korrigiert werden 
-                                                ix = ix + hphase.relStart - 1
+                                            'Dim ixKorrektur As Integer = hphase.relStart - 1
+                                            Dim ix As Integer
+                                            Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
 
-                                            Catch ex As Exception
+                                            If anzLoops > 0 Then
+                                                ' dann ist die Phase enthalten 
 
-                                            End Try
+                                                Try
 
-                                            For al As Integer = 1 To anzLoops
-                                                If ixZeitraum + al - 1 > zeitraum Then
-                                                    ' Fehlerprotokoll schreiben ...  
-                                                Else
-                                                    ' wenn mehr als ein Element angezeigt werden soll, soll die Abkürzung dazugeschrieben werden 
-                                                    If myCollection.Count > 1 Then
-                                                        ' nach dem Doppelpunkt solte immer der Wert stehen, nicht der Bezeichner
-                                                        'ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & abbrev
-                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
-                                                                                                                                & ":X"
+                                                    tempArray = hproj.getPhasenBedarf(elemName)
+                                                    ' ix bezeichnet aktuell den start mit Nullpunkt Phasen-Start, das muss jetzt korrigiert werden 
+                                                    ix = ix + hphase.relStart - 1
+
+                                                Catch ex As Exception
+
+                                                End Try
+
+                                                For al As Integer = 1 To anzLoops
+                                                    If ixZeitraum + al - 1 > zeitraum Then
+                                                        ' Fehlerprotokoll schreiben ...  
                                                     Else
-                                                        If awinSettings.phasesProzentual Then
+                                                        ' wenn mehr als ein Element angezeigt werden soll, soll die Abkürzung dazugeschrieben werden 
+                                                        If myCollection.Count > 1 Then
+                                                            ' nach dem Doppelpunkt solte immer der Wert stehen, nicht der Bezeichner
+                                                            'ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & abbrev
                                                             ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
-                                                                                                                            & ":" & tempArray(ix + al - 1).ToString("0%")
+                                                                                                                                    & ":X"
                                                         Else
-                                                            ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
-                                                                                                                                & ":X"
+                                                            If awinSettings.phasesProzentual Then
+                                                                ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
+                                                                                                                                & ":" & tempArray(ix + al - 1).ToString("0%")
+                                                            Else
+                                                                ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText _
+                                                                                                                                    & ":X"
+                                                            End If
+
                                                         End If
 
+                                                        curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
                                                     End If
 
-                                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
-                                                End If
+                                                Next
 
-                                            Next
+                                            End If
+
 
                                         End If
-
-
                                     End If
-                                End If
-                            Next
+                                Next
+
+                            End If
+                            
 
                         Next kvp
 
@@ -1246,40 +1309,46 @@ Public Class clsProjekte
 
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-                            hproj = kvp.Value
+                            If type = -1 Or _
+                                (type = PTProjektType.projekt And pvName = kvp.Value.name) Or _
+                                (type = PTProjektType.vorlage And pvName = kvp.Value.VorlagenName) Then
 
-                            ' neuer Code
-                            Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(elemName, breadCrumb)
+                                hproj = kvp.Value
 
-                            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                                ' neuer Code
+                                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(elemName, breadCrumb)
 
-                                cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                                If Not IsNothing(cMilestone) Then
+                                    cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                                    abbrev = MilestoneDefinitions.getAbbrev(cMilestone.name)
+                                    If Not IsNothing(cMilestone) Then
 
-                                    Dim ix As Integer
-                                    ' bestimme den monatsbezogenen Index im Array 
-                                    ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
+                                        abbrev = MilestoneDefinitions.getAbbrev(cMilestone.name)
 
-                                    If ix >= 0 And ix <= zeitraum Then
+                                        Dim ix As Integer
+                                        ' bestimme den monatsbezogenen Index im Array 
+                                        ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
 
-                                        If myCollection.Count > 1 Then
-                                            'ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":" & abbrev
-                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & "-" & abbrev & ":X"
-                                        Else
-                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":X"
+                                        If ix >= 0 And ix <= zeitraum Then
+
+                                            If myCollection.Count > 1 Then
+                                                'ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":" & abbrev
+                                                ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & "-" & abbrev & ":X"
+                                            Else
+                                                ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":X"
+                                            End If
+
+                                            curElemIX(ix) = curElemIX(ix) + 1
+
                                         End If
 
-                                        curElemIX(ix) = curElemIX(ix) + 1
 
                                     End If
 
+                                Next
 
-                                End If
-
-                            Next
+                            End If
 
 
                         Next kvp
@@ -1308,7 +1377,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCountMilestonesInMonth(ByVal milestoneName As String, Optional ByVal breadcrumb As String = "") As Double(,)
+    Public ReadOnly Property getCountMilestonesInMonth(ByVal milestoneName As String, ByVal breadcrumb As String, ByVal type As Integer, ByVal pvName As String) As Double(,)
         Get
 
             Dim milestoneValues(,) As Double
@@ -1334,35 +1403,42 @@ Public Class clsProjekte
 
                 hproj = kvp.Value
 
-                ' neuer Code
-                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
+                If type = -1 Or _
+                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or _
+                    (type = PTProjektType.projekt And pvName = hproj.name) Then
+                    ' Aktion machen
 
-                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                    ' neuer Code
+                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
 
-                    cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                    If Not IsNothing(cMilestone) Then
+                        cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                        ' bestimme den monatsbezogenen Index im Array 
-                        ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
+                        If Not IsNothing(cMilestone) Then
 
-                        If ix >= 0 And ix <= zeitraum Then
+                            ' bestimme den monatsbezogenen Index im Array 
+                            ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
 
-                            If cMilestone.bewertungsCount > 0 Then
-                                idFarbe = cMilestone.getBewertung(1).colorIndex
-                            Else
-                                idFarbe = 0
+                            If ix >= 0 And ix <= zeitraum Then
+
+                                If cMilestone.bewertungsCount > 0 Then
+                                    idFarbe = cMilestone.getBewertung(1).colorIndex
+                                Else
+                                    idFarbe = 0
+                                End If
+
+                                milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
+
                             End If
 
-                            milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
 
                         End If
 
+                    Next
 
-                    End If
 
-                Next
-
+                End If
 
             Next kvp
 
@@ -1376,12 +1452,16 @@ Public Class clsProjekte
     ''' <summary>
     ''' gibt einen Array zurück, der angibt, wie oft die angegebene Phase vorkommt
     ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf 
+    ''' 
     ''' </summary>
     ''' <param name="phaseName">Name der Phase</param>
+    ''' <param name="type">wurde per Vorlage oder projekt eingeschränkt ?</param>
+    ''' <param name="pvName" >wie heisst die Vorlage oder das Projekt </param>
     ''' <value></value>
     ''' <returns>gibt einen Array der Länge (showrangeright-showrangeleft+1) zurück </returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCountPhasesInMonth(phaseName As String, Optional ByVal breadcrumb As String = "") As Double()
+    Public ReadOnly Property getCountPhasesInMonth(phaseName As String, ByVal breadcrumb As String, _
+                                                   ByVal type As Integer, pvName As String) As Double()
 
         Get
             Dim phasevalues() As Double
@@ -1414,56 +1494,62 @@ Public Class clsProjekte
 
                 hproj = kvp.Value
 
-                Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                If type = -1 Or _
+                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or _
+                    (type = PTProjektType.projekt And pvName = hproj.name) Then
+                    ' Aktion machen
 
-                For px As Integer = 0 To phaseIndices.Length - 1
+                    Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
-                    If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
-                        hphase = hproj.getPhase(phaseIndices(px))
-                    Else
-                        hphase = Nothing
-                    End If
+                    For px As Integer = 0 To phaseIndices.Length - 1
 
-
-                    If Not hphase Is Nothing Then
-
-                        With hproj
-                            prAnfang = .Start + .StartOffset
-                            prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                        End With
+                        If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                            hphase = hproj.getPhase(phaseIndices(px))
+                        Else
+                            hphase = Nothing
+                        End If
 
 
-                        If istBereichInTimezone(prAnfang, prEnde) Then
-                            'projektstart = hproj.Start
+                        If Not hphase Is Nothing Then
 
-                            With hphase
-                                phAnfang = prAnfang + .relStart - 1
-                                phEnde = prAnfang + .relEnde - 1
+                            With hproj
+                                prAnfang = .Start + .StartOffset
+                                prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                             End With
 
-                            Dim ixKorrektur As Integer = hphase.relStart - 1
 
-                            Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
+                            If istBereichInTimezone(prAnfang, prEnde) Then
+                                'projektstart = hproj.Start
 
-                            If anzLoops > 0 Then
+                                With hphase
+                                    phAnfang = prAnfang + .relStart - 1
+                                    phEnde = prAnfang + .relEnde - 1
+                                End With
 
-                                'ReDim tempArray(phEnde - phAnfang)
-                                tempArray = hproj.getPhasenBedarf(phaseName)
+                                Dim ixKorrektur As Integer = hphase.relStart - 1
 
-                                For i = 0 To anzLoops - 1
-                                    ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
-                                    ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
-                                    phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i + ixKorrektur)
-                                Next i
+                                Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
+
+                                If anzLoops > 0 Then
+
+                                    'ReDim tempArray(phEnde - phAnfang)
+                                    tempArray = hproj.getPhasenBedarf(phaseName)
+
+                                    For i = 0 To anzLoops - 1
+                                        ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
+                                        ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
+                                        phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i + ixKorrektur)
+                                    Next i
+
+                                End If
+
 
                             End If
-
-
                         End If
-                    End If
-                Next
+                    Next
 
 
+                End If
 
 
             Next kvp
@@ -1701,6 +1787,7 @@ Public Class clsProjekte
 
     ''' <summary>
     ''' gibt für den aktuellen Zeitraum und die übergebene Collection mit Phasen-Namen die Schwellwerte an  
+    ''' es muss berücksichtigt werden, dass in der myCollection jetzt ggf noch die Kennung steht, welche Vorlage bzw. welches PRojekt denn gemeint ist ...
     ''' </summary>
     ''' <param name="myCollection"></param>
     ''' <value></value>
@@ -1725,9 +1812,10 @@ Public Class clsProjekte
 
             For r = 1 To myCollection.Count
 
-                'rname = CStr(myCollection.Item(r))
-                ' rname wird jetzt durch das folgende bestimmt 
-                Call splitHryFullnameTo2(CStr(myCollection.Item(r)), rname, breadcrumb)
+                Dim pvName As String = ""
+                Dim type As Integer = -1
+                Call splitHryFullnameTo2(CStr(myCollection.Item(r)), rname, breadcrumb, type, pvName)
+
                 If PhaseDefinitions.Contains(rname) And breadcrumb = "" And ok Then
                     hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
                 Else
@@ -1735,8 +1823,8 @@ Public Class clsProjekte
                     ok = False
                 End If
 
-                ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
-                ' soll der Schwellwert angezeigt werden 
+                    ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
+                    ' soll der Schwellwert angezeigt werden 
                 If ok Then
                     For m = 0 To zeitraum
                         ' Änderung 31.5 Holen der Schwellwerte einer Phase 
@@ -1781,7 +1869,9 @@ Public Class clsProjekte
             For r = 1 To myCollection.Count
 
                 'msName = CStr(myCollection.Item(r))
-                Call splitHryFullnameTo2(CStr(myCollection.Item(r)), msName, breadcrumb)
+                Dim type As Integer = -1
+                Dim pvName As String = ""
+                Call splitHryFullnameTo2(CStr(myCollection.Item(r)), msName, breadcrumb, type, pvName)
                 ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
                 ' soll der Schwellwert angezeigt werden 
                 If MilestoneDefinitions.Contains(msName) And breadcrumb = "" And ok Then
@@ -3667,13 +3757,13 @@ Public Class clsProjekte
                 ReDim tmpValues(zeitraum)
 
                 If diagrammtyp = DiagrammTypen(0) Then
-                    tmpValues = Me.getCountPhasesInMonth(rcName)
+                    tmpValues = Me.getCountPhasesInMonth(rcName, "", -1, "")
                 ElseIf diagrammtyp = DiagrammTypen(1) Then
                     tmpValues = Me.getRoleValuesInMonth(rcName)
                 ElseIf diagrammtyp = DiagrammTypen(2) Then
                     tmpValues = Me.getCostValuesInMonth(rcName)
                 ElseIf diagrammtyp = DiagrammTypen(5) Then
-                    tmpValues2 = Me.getCountMilestonesInMonth(rcName)
+                    tmpValues2 = Me.getCountMilestonesInMonth(rcName, "", -1, "")
 
                     For ix = 0 To zeitraum
                         zwSum = 0
@@ -3725,7 +3815,7 @@ Public Class clsProjekte
                 ReDim tmpValues(zeitraum)
 
                 If diagrammTyp = DiagrammTypen(0) Then
-                    tmpValues = Me.getCountPhasesInMonth(rcName)
+                    tmpValues = Me.getCountPhasesInMonth(rcName, "", -1, "")
                 ElseIf diagrammTyp = DiagrammTypen(1) Then
                     tmpValues = Me.getRoleValuesInMonth(rcName)
                 ElseIf diagrammTyp = DiagrammTypen(2) Then

@@ -22,6 +22,7 @@ Partial Class frmLoadConstellation
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmLoadConstellation))
         Me.ListBox1 = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.Abbrechen = New System.Windows.Forms.Button()
@@ -103,9 +104,10 @@ Partial Class frmLoadConstellation
         Me.Controls.Add(Me.Abbrechen)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmLoadConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-        Me.Text = "Szenario laden "
+        Me.Text = "Portfolio laden"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

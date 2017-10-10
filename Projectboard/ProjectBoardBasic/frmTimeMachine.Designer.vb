@@ -23,6 +23,7 @@ Partial Class frmTimeMachine
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmTimeMachine))
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.TextBox1 = New System.Windows.Forms.TextBox()
         Me.btnChangedPosition = New System.Windows.Forms.Button()
@@ -128,6 +129,7 @@ Partial Class frmTimeMachine
         Me.Controls.Add(Me.btnFastForward)
         Me.Controls.Add(Me.btnForward)
         Me.Controls.Add(Me.TextBox1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmTimeMachine"
         Me.Text = "VISBO Time Machine"
         Me.ResumeLayout(False)

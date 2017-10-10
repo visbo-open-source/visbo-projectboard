@@ -52,7 +52,6 @@ Imports System.Windows
         Me.ribbon = ribbonUI
     End Sub
 
-
     Sub PTNeueKonstellation(control As IRibbonControl)
 
 
@@ -112,9 +111,9 @@ Imports System.Windows
 
         With storeConstellationFrm
             If awinSettings.englishLanguage Then
-                .Text = "store Scenario(s) in Datenbase"
+                .Text = "store Portfolio(s) in Datenbase"
             Else
-                .Text = "Szenario(s) in Datenbank speichern"
+                .Text = "Portfolio(s) in Datenbank speichern"
             End If
 
             .constellationsToShow = projectConstellations
@@ -557,15 +556,25 @@ Imports System.Windows
     Sub PT6DeleteCharts(control As IRibbonControl)
 
         Call projektTafelInit()
+        appInstance.ScreenUpdating = False
+        Try
+            If visboZustaende.projectBoardMode = ptModus.graficboard Then
+                Call deleteChartsInSheet(arrWsNames(ptTables.mptPfCharts))
+                Call deleteChartsInSheet(arrWsNames(ptTables.mptPrCharts))
+                Call deleteChartsInSheet(arrWsNames(ptTables.MPT))
+                ' jetzt müssen alle Windows bis auf Window(0) = Multiprojekt-Tafel geschlossen werden 
+                ' und mache ProjectboardWindows(mpt) great again ...
+                Call closeAllWindowsExceptMPT()
 
-        Dim currentWsName As String
-        If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            currentWsName = arrWsNames(3)
-        Else
-            currentWsName = arrWsNames(5)
-        End If
+            Else
+                Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
+            End If
+        Catch ex As Exception
+            Dim a As String = ex.Message
+        End Try
+        
 
-        Call deleteChartsInSheet(currentWsName)
+        appInstance.ScreenUpdating = True
 
 
     End Sub
@@ -577,7 +586,7 @@ Imports System.Windows
         Dim returnValue As DialogResult
         Dim cockpitName As String
         Try
-            
+
 
             Call projektTafelInit()
 
@@ -586,11 +595,11 @@ Imports System.Windows
 
             Call awinDeSelect()
 
-            Dim anzDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzPfDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPfCharts)).ChartObjects, Excel.ChartObjects).Count
+            Dim anzPrDiagrams As Integer = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.mptPrCharts)).ChartObjects, Excel.ChartObjects).Count
 
 
-            If anzDiagrams > 0 Then
-
+            If anzPfDiagrams + anzPrDiagrams > 0 Then
 
                 ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
@@ -599,6 +608,8 @@ Imports System.Windows
                 If returnValue = DialogResult.OK Then
 
                     cockpitName = storeCockpitFrm.ComboBox1.Text
+
+                    'ClearClipboard()
 
                     Call awinStoreCockpit(cockpitName)
 
@@ -609,7 +620,7 @@ Imports System.Windows
 
                 End If
 
-                
+
                 ' hier muss eventuell ein Neuzeichnen erfolgen
             Else
                 Call MsgBox("Es ist kein Chart angezeigt")
@@ -691,12 +702,19 @@ Imports System.Windows
                     ' erst alle anderen Charts löschen ... 
                     Dim currentWsName As String
                     If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                        currentWsName = arrWsNames(3)
+                        currentWsName = arrWsNames(ptTables.mptPrCharts)
+                        Call deleteChartsInSheet(currentWsName)
+                        currentWsName = arrWsNames(ptTables.mptPfCharts)
+                        Call deleteChartsInSheet(currentWsName)
+                        currentWsName = arrWsNames(ptTables.MPT)
+                        Call deleteChartsInSheet(currentWsName)
                     Else
-                        currentWsName = arrWsNames(5)
+                        currentWsName = arrWsNames(ptTables.meRC)
+                        Call deleteChartsInSheet(currentWsName)
                     End If
 
-                    Call deleteChartsInSheet(currentWsName)
+                    Call closeAllWindowsExceptMPT()
+
                 End If
 
                 Try
@@ -741,6 +759,18 @@ Imports System.Windows
 
                     Call awinNeuZeichnenDiagramme(9)
 
+                    '' ''Call defineVisboWindowViews()
+                    ' ''If thereAreAnyCharts(PTwindows.mpt) Then
+                    ' ''    Call showVisboWindow(PTwindows.mpt)
+                    ' ''End If
+
+                    '' ''If thereAreAnyCharts(PTwindows.mptpf) Then
+                    '' ''    Call showVisboWindow(PTwindows.mptpf)
+                    '' ''End If
+                    '' ''If thereAreAnyCharts(PTwindows.mptpr) Then
+                    '' ''    Call showVisboWindow(PTwindows.mptpr)
+                    '' ''End If
+               
                 Catch ex As Exception
                     appInstance.ScreenUpdating = True
                     Call MsgBox("Fehler beim Laden ..")
@@ -821,40 +851,7 @@ Imports System.Windows
 
         enableOnUpdate = True
 
-        ' für andere Zwecke ... 
-
-        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-        '    If Not kvp.Value.isConsistent Then
-        '        Call MsgBox("inkonsistenz: " & kvp.Key)
-        '        ok = False
-        '    End If
-
-        'Next
-
-        'If ok Then
-        '    Call MsgBox("keine Inkonsistenz gefunden ...")
-        'End If
-
-        'Dim anzProjekte As Integer = ShowProjekte.Liste.Count
-        'Dim anzShapes As Integer = ShowProjekte.shpListe.Count
-        'Call MsgBox("Test ---" & vbLf & _
-        '            "Projekte: " & anzProjekte & _
-        '            "Shapes  : " & anzShapes)
-
-        'Dim hws As Excel.Worksheet
-        'hws = appInstance.Worksheets(arrWsNames(11))
-        'appInstance.EnableEvents = False
-
-        'With hws
-        '    .Unprotect()
-        '    .Visible = True
-        '    .Protect()
-        'End With
-
-
-        'appInstance.EnableEvents = True
-        'hws.Activate()
+        
 
     End Sub
 
@@ -870,7 +867,7 @@ Imports System.Windows
             End If
 
         End With
-        
+
     End Sub
 
 
@@ -1067,7 +1064,7 @@ Imports System.Windows
         Catch ex As Exception
 
         End Try
-        
+
 
     End Sub
 
@@ -1089,6 +1086,12 @@ Imports System.Windows
             With ProjektEingabe
                 Dim buName As String = CStr(.businessUnitDropBox.SelectedItem)
 
+                Dim profitUserAskedFor As String = Nothing
+                If IsNumeric(.profitAskedFor.Text) Or .profitAskedFor.Text = "" Then
+                    profitUserAskedFor = .profitAskedFor.Text
+                End If
+
+
                 If Not noDB Then
 
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -1101,7 +1104,7 @@ Imports System.Windows
 
                             Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                                CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor, _
                                                CStr(""), buName)
                         Else
                             Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
@@ -1114,7 +1117,7 @@ Imports System.Windows
                         ' Projekt soll trotzdem angezeigt werden
                         Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                                CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor, _
                                                CStr(""), buName)
 
                     End If
@@ -1126,7 +1129,7 @@ Imports System.Windows
                     ' Projekt soll trotzdem angezeigt werden
                     Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                            CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor, _
                                            CStr(""), buName)
 
                 End If
@@ -1381,52 +1384,78 @@ Imports System.Windows
                 singleShp = awinSelection.Item(i)
                 hproj = ShowProjekte.getProject(singleShp.Name, True)
 
-                ' jetzt prüfen : die Variante kann nur dann zur Standard-Variante gemacht werden, 
-                ' wenn die Standard-Variante nicht geschützt ist ..
+                ' jetzt prüfen: macht nur Sinn, wenn es nicht bereits die Base-Variant ist ... 
+                If hproj.variantName = "" Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("The project " & hproj.name & " is already the base-variant")
 
-
-                If tryToprotectProjectforMe(hproj.name, "") Then
-                    ' ist erlaubt ...
-                    ' das Projekt zur Standard Variante machen 
-
-
-                    Dim oldvName As String = hproj.variantName
-                    Dim newvName As String = ""
-
-                    ' die aktuelle Variante aus der AlleProjekte rausnehmen 
-                    key = calcProjektKey(hproj)
-                    AlleProjekte.Remove(key)
-
-                    ' das bisherige Standard Projekt aus der AlleProjekte rausnehmen 
-                    key = calcProjektKey(hproj.name, "")
-                    AlleProjekte.Remove(key)
-
-                    'jetzt die aktuelle Variante zur Standard Variante machen 
-                    hproj.variantName = ""
-                    hproj.timeStamp = Date.Now
-                    If hproj.Status = ProjektStatus(0) Then
-                        hproj.Status = ProjektStatus(1)
+                    Else
+                        Call MsgBox("Projekt " & hproj.name & " ist bereits die Standard-Variante")
                     End If
-
-                    ' die "neue" Standard Variante in AlleProjekte aufnehmen 
-                    AlleProjekte.Add(hproj)
-
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
-
-                    ' jetzt müssen noch alle Projekt-Constellationen aktualisiert werden 
-                    Call projectConstellations.updateVariantName(hproj.name, oldvName, newvName)
-
                 Else
-                    If hproj.variantName = "" Then
-                        If awinSettings.englishLanguage Then
-                            Call MsgBox("The project " & hproj.name & " is already the base-variant")
+                    If tryToprotectProjectforMe(hproj.name, "") Then
+                        ' ist erlaubt ...
+                        ' das Projekt zur Standard Variante machen 
 
-                        Else
-                            Call MsgBox("Projekt " & hproj.name & " ist bereits die Standard-Variante")
-                        End If
+
+                        Dim oldvName As String = hproj.variantName
+                        Dim newvName As String = ""
+
+                        Try
+                            Dim oldStatus As String = getStatusOfBaseVariant(hproj.name, hproj.Status)
+                            ' Plausibilitätsprüfung, es dürfen keine abgebrochenen / abgeschlossenen Projekte überschrieben werden   
+
+                            If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And _
+                                oldStatus <> ProjektStatus(PTProjektStati.abgeschlossen) Then
+
+                                ' nur dann darf die Variante übernommen werden ... 
+                                If oldStatus = ProjektStatus(PTProjektStati.beauftragt) Then
+                                    hproj.Status = ProjektStatus(PTProjektStati.ChangeRequest)
+                                Else
+                                    hproj.Status = oldStatus
+                                End If
+
+                                ' die aktuelle Variante aus der AlleProjekte rausnehmen 
+                                key = calcProjektKey(hproj)
+                                AlleProjekte.Remove(key)
+
+                                ' das bisherige Standard Projekt aus der AlleProjekte rausnehmen 
+                                key = calcProjektKey(hproj.name, "")
+                                AlleProjekte.Remove(key)
+
+                                'jetzt die aktuelle Variante zur Standard Variante machen 
+                                ' dabei muss sichergestellt sein, dass der Status der bisherigen Basis-Variante übernommen wird 
+                                hproj.variantName = ""
+                                hproj.timeStamp = Date.Now
+
+                                ' die "neue" Standard Variante in AlleProjekte aufnehmen 
+                                AlleProjekte.Add(hproj)
+
+                                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                                Dim tmpCollection As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                                ' jetzt müssen noch alle Projekt-Constellationen aktualisiert werden 
+                                Call projectConstellations.updateVariantName(hproj.name, oldvName, newvName)
+
+
+                            Else
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("no changes allowed with finalized / stopped project!")
+
+                                Else
+                                    Call MsgBox("an einem abgeschlossenen / abgebrochenen Projekt sind keine Änderungen möglich!")
+                                End If
+                            End If
+
+
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+
                     Else
                         ' ist nicht erlaubt ... 
                         If awinSettings.englishLanguage Then
@@ -1438,8 +1467,10 @@ Imports System.Windows
                                         "und kann daher nicht von einer anderen Variante überschrieben werden")
                         End If
                     End If
-
                 End If
+
+                ' jetzt prüfen : die Variante kann nur dann zur Standard-Variante gemacht werden, 
+                ' wenn die Standard-Variante nicht geschützt ist ..
 
             Next i
 
@@ -1461,7 +1492,7 @@ Imports System.Windows
 
         Call PBBVarianteLoeschen(control)
 
-       
+
     End Sub
 
     ''' <summary>
@@ -1545,93 +1576,12 @@ Imports System.Windows
 
     End Sub
 
+    
     ''' <summary>
-    ''' Ressourcen und Kosten eines Projektes bearbeiten 
+    ''' aktiviert , je nach Modus die entsprechenden Ribbon Controls 
     ''' </summary>
-    ''' <param name="control"></param>
+    ''' <param name="modus"></param>
     ''' <remarks></remarks>
-    Sub Tom2G1Resources(control As IRibbonControl)
-
-        Dim singleShp As Excel.Shape
-        Dim pname As String
-        Dim awinSelection As Excel.ShapeRange
-        Dim hproj As clsProjekt
-
-        Call projektTafelInit()
-
-
-
-        ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
-        enableOnUpdate = False
-
-
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-
-        If Not awinSelection Is Nothing Then
-
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
-
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    pname = hproj.name
-                Catch ex As Exception
-                    Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Resources")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
-
-                If hproj.Status = ProjektStatus(0) Then
-                    ' jetzt werden die Daten aus hproj in Edit Ressourcen worksheet geschrieben ... 
-                    appInstance.ScreenUpdating = False
-                    Call awinStoreProjForEditRess(hproj)
-                    Dim oldShpID As Integer = CInt(hproj.shpUID)
-
-                    ' hier wird das non-modale Dialog Fenster aufgerufen 
-                    Dim confirmEdit As New frmConfirmEditRess
-
-                    confirmEdit.selectedProject = hproj.name
-                    confirmEdit.Show()
-
-                    With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
-                        .Activate()
-                    End With
-                    appInstance.ScreenUpdating = True
-                Else
-                    Call MsgBox("bitte erst eine Variante anlegen ...")
-                End If
-
-                
-
-
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-                'For Each singleShp In awinSelection
-                '    With singleShp
-                '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-                '            nrSelPshp = nrSelPshp + 1
-                '            SID = .ID.ToString
-                '        End If
-                '    End With
-                'Next
-            End If
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
-
-
-        ' das muss hier de-aktiviert werden, weil durch non-modalen Aufruf des Formulars enableonupdate wieder auf true gesetzt wird 
-        ' enableOnUpdate = True
-
-
-
-    End Sub
     Private Sub enableControls(ByVal modus As Integer)
 
         If modus = ptModus.graficboard Then
@@ -1657,16 +1607,22 @@ Imports System.Windows
     Function bestimmeLabel(control As IRibbonControl) As String
         Dim tmpLabel As String = "?"
         Select Case control.Id
+            Case "PTproj" ' Project
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt"
+                Else
+                    tmpLabel = "Project"
+                End If
             Case "PTMEC" ' Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Charts & Info"
+                    tmpLabel = "Charts u. Info"
                 Else
-                    tmpLabel = "Charts & Info"
+                    tmpLabel = "Charts and Info"
                 End If
 
             Case "PTMEC1" ' Rollen und Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rollen und Kosten"
+                    tmpLabel = "Rollen u. Kosten"
                 Else
                     tmpLabel = "Roles and Cost"
                 End If
@@ -1680,9 +1636,9 @@ Imports System.Windows
 
             Case "PTMEC3" ' Formular Forecast Gegenüberstellung 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt Gewinn/Verlust"
+                    tmpLabel = "Vergleich mit letzter Version"
                 Else
-                    tmpLabel = "Project Profit/Loss"
+                    tmpLabel = "Comparison with last version"
                 End If
             Case "PTX" ' Multiprojekt-Info
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -1698,11 +1654,11 @@ Imports System.Windows
                     tmpLabel = "Analyzes"
                 End If
 
-            Case "PTXG1B1" ' Projekt-Ampeln
+            Case "PT3G1B1" 'Ampeln
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt-Ampeln"
+                    tmpLabel = "Ampeln"
                 Else
-                    tmpLabel = "Project Trafficlights"
+                    tmpLabel = "Traffic Lights"
                 End If
 
             Case "PTXG1B2" ' Meilenstein-Ampeln
@@ -1712,25 +1668,38 @@ Imports System.Windows
                     tmpLabel = "Milestone Trafficlights"
                 End If
 
-            Case "PTXG1M1" ' Planelemente visualisieren
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Phasen/Meilensteine visualisieren"
-                Else
-                    tmpLabel = "Visualize Phases/Milestones"
-                End If
+                'Case "PT3G1M1" ' Planelemente visualisieren
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Phasen/Meilensteine..."
+                '    Else
+                '        tmpLabel = "Phases/Milestones..."
+                '    End If
 
             Case "PTXG1B4" ' Auswahl über Namen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
+                    tmpLabel = "Auswahl über Namen..."
                 Else
-                    tmpLabel = "Select by Names"
+                    tmpLabel = "Select by Names..."
                 End If
 
-            Case "PTXG1B5" ' Auswahl über Projekt-Struktur
+            Case "PTXG1B5" ' Planelemente visualisieren
+                'Case "PT3G1M1" ' Planelemente visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Phasen/Meilensteine..."
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Phases/Milestones..."
+                End If
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
+
+            Case "PTOPTB1" ' Optimieren 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Portfolio Optimieren"
+                Else
+                    tmpLabel = "Portfolio Optimization"
                 End If
 
             Case "PTPf" ' Charts
@@ -1740,26 +1709,31 @@ Imports System.Windows
                     tmpLabel = "Charts"
                 End If
 
-            Case "PTXG1M2" ' Engpass Analyse
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Engpass Analyse"
-                Else
-                    tmpLabel = "Bottleneck Analyzes"
-                End If
+                'Case "PTXG1M2" ' Engpass Analyse
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Rollen/Kosten/Meilensteine/Phasen"
+                '    Else
+                '        tmpLabel = "Ressources/Costs/Milestones/Phases"
+                '    End If
 
-            Case "PTXG1B6" ' Auswahl über Namen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
-                Else
-                    tmpLabel = "Select by Names"
-                End If
+                'Case "PTXG1B6" ' Auswahl über Namen
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Auswahl über Namen..."
+                '    Else
+                '        tmpLabel = "Select by Names..."
+                '    End If
 
-            Case "PTXG1B7" ' Auswahl über Hierarchie
+            Case "PTXG1B7" ' Leistbarkeitscharts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Rollen/Kosten/Meilensteine/Phasen"
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Ressources/Costs/Milestones/Phases"
                 End If
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
 
             Case "PTXG1B10" ' größter Engpass
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -1770,37 +1744,23 @@ Imports System.Windows
 
             Case "PTXG1B3" ' Auslastung
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auslastung"
+                    tmpLabel = "Top 3 Ressourcen Engpässe"
                 Else
-                    tmpLabel = "Capacity utilization"
-                End If
-
-            Case "PTOPT" ' Optimieren
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Optimieren"
-                Else
-                    tmpLabel = "Optimization"
-                End If
-
-            Case "PTOPTB1" ' optimale Varianten-Kombination
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "optimale Kombination finden"
-                Else
-                    tmpLabel = "Find best combination"
+                    tmpLabel = "Top 3 Resource Bottlenecks"
                 End If
 
             Case "PTXG1B8" ' Strategie/Risiko/Marge
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Strategie/Risiko/Marge"
+                    tmpLabel = "Strategie / Risiko"
                 Else
-                    tmpLabel = "Strategy/Risk/Margin"
+                    tmpLabel = "Strategy / Risk"
                 End If
 
             Case "PTFKB1" ' Budget/Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Budget/Kosten/Ergebnis"
+                    tmpLabel = "Gewinn / Verlust"
                 Else
-                    tmpLabel = "Budget/Cost/Profit"
+                    tmpLabel = "Profit / Loss"
                 End If
 
             Case "PTFKB2" ' Ergebnis/Auslastung
@@ -1840,23 +1800,34 @@ Imports System.Windows
 
             Case "PT0G1M0" ' Planelemente visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Phasen/Meilensteine visualisieren"
+                    tmpLabel = "Phasen/Meilensteine visualisieren..."
                 Else
-                    tmpLabel = "Visualize Phases/Milestones"
+                    tmpLabel = "Visualize Phases/Milestones..."
                 End If
 
-            Case "PT0G1B8" ' Auswahl über Namen
+            Case "PT0G1B8" ' 
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
+                    tmpLabel = "Projekt Filter..."
                 Else
-                    tmpLabel = "Select by Names"
+                    tmpLabel = "Project Filter..."
                 End If
-
-            Case "PT0G1B9" ' Auswahl über Projekt-Struktur
+            Case "PT0G1B9" ' Filter zurücksetzen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "Filter zurücksetzen..."
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "Delete Filter..."
+                End If
+            Case "PT0G1B10" ' Anzeige der Projekte mit roter ProjektAmpel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte mit Ampel -rot-"
+                Else
+                    tmpLabel = "Projects with -red- Light"
+                End If
+            Case "PT0G1B11" ' Anzeige der Projektemit ungedeckter Budget-Finanzierung
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekte unterfinanziert"
+                Else
+                    tmpLabel = "Projects not fully financed"
                 End If
 
             Case "PT3G1B5" ' Zeit-Maschine
@@ -1866,7 +1837,7 @@ Imports System.Windows
                     tmpLabel = "Time Machine"
                 End If
 
-            Case "PT0G2" ' Charts
+            Case "PT7G1" ' Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Charts"
                 Else
@@ -1891,21 +1862,27 @@ Imports System.Windows
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Personal Bedarfe"
                 Else
-                    tmpLabel = "Personnel Needs"
+                    tmpLabel = "Ressource Needs"
                 End If
 
             Case "PT0G1M1B2" ' Kosten Bedarfe
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Kosten Bedarfe"
                 Else
-                    tmpLabel = "Cost Needs"
+                    tmpLabel = "Cost-Type Needs"
                 End If
 
+            Case "PT0G1M1B3" ' Formular Forecast Gegenüberstellung 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Gewinn/Verlust"
+                Else
+                    tmpLabel = "Profit/Loss"
+                End If
             Case "PT0G1B3" ' Strategie/Risiko/Marge
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Strategie/Risiko/Marge"
+                    tmpLabel = "Strategie/Risiko"
                 Else
-                    tmpLabel = "Strategy/Risk/Margin"
+                    tmpLabel = "Strategy/Risk"
                 End If
 
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
@@ -1914,29 +1891,40 @@ Imports System.Windows
                 Else
                     tmpLabel = "Strategy/Risk/Dependencies"
                 End If
-
-            Case "PT3G1M1" ' Plan/Aktuell
+            Case "PT7G1M0" ' Add Portfolio Charts
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Plan/Aktuell"
+                    tmpLabel = "Portfolio-Charts"
                 Else
-                    tmpLabel = "Plan/Actual"
+                    tmpLabel = "Add Portfolio Charts"
+                End If
+            Case "PT7G1M1" ' Add Project Charts
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt-Charts"
+                Else
+                    tmpLabel = "Add Project Charts"
+                End If
+            Case "PT7G1M2" ' Plan/Aktuell
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Plan versus Aktuell"
+                Else
+                    tmpLabel = "Plan versus Actual"
                 End If
 
-            Case "PT3G1M1B1" ' Personalkosten
+            Case "PT7G1M2B1" ' Personalkosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Personalkosten"
                 Else
                     tmpLabel = "Personnel Cost"
                 End If
 
-            Case "PT3G1M1B2" ' Sonstige Kosten
+            Case "PT7G1M2B2" ' Sonstige Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Sonstige Kosten"
                 Else
                     tmpLabel = "Other Cost"
                 End If
 
-            Case "PT3G1M1B3" ' Gesamt Kosten
+            Case "PT7G1M2B3" ' Gesamt Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Gesamt Kosten"
                 Else
@@ -1950,7 +1938,7 @@ Imports System.Windows
                     tmpLabel = "Profit"
                 End If
 
-            Case "PT7" ' Cockpit
+            Case "PT0G1B" ' Cockpit
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Cockpit"
                 Else
@@ -1959,23 +1947,16 @@ Imports System.Windows
 
             Case "PT0G1M3B1" ' Cockpit visualisieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Laden"
+                    tmpLabel = "Cockpit laden..."
                 Else
-                    tmpLabel = "Load"
+                    tmpLabel = "Load Cockpit..."
                 End If
 
             Case "PT0G1M3B2" ' Cockpit speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Speichern"
+                    tmpLabel = "Chart-Set sichern als Cockpit..."
                 Else
-                    tmpLabel = "Store"
-                End If
-
-            Case "PT0G1M3B3" ' Cockpit-Charts löschen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Charts löschen"
-                Else
-                    tmpLabel = "Delete Charts"
+                    tmpLabel = "Save current Chart-Set as Cockpit..."
                 End If
 
             Case "PT0G1M3B3" ' Cockpit-Charts löschen
@@ -2001,93 +1982,111 @@ Imports System.Windows
 
             Case "PT1G1M0" ' Report-Profil definieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Report-Profil definieren"
+                    tmpLabel = "Report definieren..."
                 Else
-                    tmpLabel = "Define a Report-Profile"
+                    tmpLabel = "Define a Report..."
                 End If
 
             Case "PT1G1M01" ' Einzelprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Einzelprojekt-Berichte"
+                    tmpLabel = "Projekt Report definieren..."
                 Else
-                    tmpLabel = "Singleproject Reports"
+                    tmpLabel = "Define Project Report..."
                 End If
 
             Case "PT1G1M01B0" ' Typ I
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ I"
+                    tmpLabel = "ohne Element-Auswahl"
                 Else
-                    tmpLabel = "Type I"
+                    tmpLabel = "without element-selection"
                 End If
 
-            Case "PT1G1M1" ' Typ II
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ II"
-                Else
-                    tmpLabel = "Type II"
-                End If
+                'Case "PT1G1M1" ' Typ II
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "mit Element-Auswahl"
+                '    Else
+                '        tmpLabel = "with element-selection"
+                '    End If
 
-            Case "PT1G1M1B1" ' Auswahl über Namen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
-                Else
-                    tmpLabel = "Select by Names"
-                End If
+                'Case "PT1G1M1B1" ' Auswahl über Namen
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Auswahl über Namen..."
+                '    Else
+                '        tmpLabel = "Select by Names..."
+                '    End If
 
             Case "PT1G1M1B2" ' Auswahl über Hierarchie
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "mit Element-Auswahl"
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "with element-selection"
                 End If
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
 
             Case "PT1G1M02" ' Multiprojekt-Berichte
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Multiprojekt-Berichte"
+                    tmpLabel = "Portfolio Report definieren..."
                 Else
-                    tmpLabel = "Multiproject Reports"
+                    tmpLabel = "Define Portfolio Report..."
                 End If
 
             Case "PT1G1B2" ' Typ I
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ I"
+                    tmpLabel = "ohne Element-Auswahl"
                 Else
-                    tmpLabel = "Type I"
+                    tmpLabel = "without element-selection"
                 End If
 
-            Case "PT1G1M2" ' Typ II
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Typ II"
-                Else
-                    tmpLabel = "Type II"
-                End If
+                'Case "PT1G1M2" ' Typ II
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "mit Element-Auswahl"
+                'Else
+                '    tmpLabel = "with element-selection"
+                'End If
 
-            Case "PT1G1M2B1" ' Auswahl über Namen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Namen"
-                Else
-                    tmpLabel = "Select by Names"
-                End If
+                'Case "PT1G1M2B1" ' Auswahl über Namen
+                '    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '        tmpLabel = "Auswahl über Namen..."
+                '    Else
+                '        tmpLabel = "Select by Names..."
+                '    End If
 
             Case "PT1G1M2B2" ' Auswahl über Hierarchie
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Auswahl über Projekt-Struktur"
+                    tmpLabel = "mit Element-Auswahl"
                 Else
-                    tmpLabel = "Select by Structure"
+                    tmpLabel = "with element-selection"
                 End If
+
+                'If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                '    tmpLabel = "Auswahl über Projekt-Struktur..."
+                'Else
+                '    tmpLabel = "Select by Structure..."
+                'End If
 
             Case "PT1G1B4" ' letztes Report-Profil speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Letztes Report-Profil speichern"
+                    tmpLabel = "letzte Report Definition als Vorlage speichern"
                 Else
-                    tmpLabel = "Store last Report-Profile"
+                    tmpLabel = "Store last Report definition as pre-defined"
                 End If
 
             Case "PT1G1B5" ' Report-Profil ausführen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Bericht erstellen"
+                    tmpLabel = "Report erstellen..."
                 Else
-                    tmpLabel = "Create Report"
+                    tmpLabel = "Select Report..."
+                End If
+
+            Case "PT1G1M0B1" ' Report-Profil ausführen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Report erstellen..."
+                Else
+                    tmpLabel = "Select Report..."
                 End If
 
             Case "PT1G1B1" ' Report Sprache
@@ -2099,9 +2098,9 @@ Imports System.Windows
 
             Case "PT1G1B6" ' Report Generator Template erstellen Sprache
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rep.-Generator Vorlage erstellen"
+                    tmpLabel = "Batch-File für Report Erstellung erzeugen"
                 Else
-                    tmpLabel = "Create Rep.-Generator Template"
+                    tmpLabel = "Create Batch-File for mass Report Creation"
                 End If
 
             Case "PT2" ' Bearbeiten
@@ -2120,23 +2119,23 @@ Imports System.Windows
 
             Case "PT2G1M0" ' Neues Projekt anlegen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neues Projekt anlegen"
+                    tmpLabel = "Neues Projekt"
                 Else
-                    tmpLabel = "Create new project"
+                    tmpLabel = "New Project"
                 End If
 
             Case "PT2G1M0B0" ' Neu auf Basis Vorlage
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neu auf Basis Vorlage"
+                    tmpLabel = "Neu auf Basis Vorlage..."
                 Else
-                    tmpLabel = "Based on template"
+                    tmpLabel = "Based on template..."
                 End If
 
             Case "PT2G1M0B1" ' Neu auf Basis Projekt
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Neu auf Basis Projekt"
+                    tmpLabel = "Neu auf Basis Projekt..."
                 Else
-                    tmpLabel = "Based on project"
+                    tmpLabel = "Based on project..."
                 End If
 
             Case "PT2G1M1" ' Variante
@@ -2148,72 +2147,85 @@ Imports System.Windows
 
             Case "PT2G1M1B0" ' neue Variante anlegen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "neue Variante anlegen"
+                    tmpLabel = "Neue Variante..."
                 Else
-                    tmpLabel = "Create new variant"
+                    tmpLabel = "New Variant..."
                 End If
 
             Case "PT2G1M1B1" ' Variante aktivieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante aktivieren"
+                    tmpLabel = "Variante aktivieren..."
                 Else
-                    tmpLabel = "Activate Variant"
+                    tmpLabel = "Activate Variant..."
                 End If
 
             Case "PT2G1M1B2" ' Variante löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Variante löschen"
+                    tmpLabel = "Variante löschen..."
                 Else
-                    tmpLabel = "Delete Variant"
+                    tmpLabel = "Delete Variant..."
                 End If
 
             Case "PT2G1M1B3" ' Variante zum Standard machen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Variante zum Standard machen"
                 Else
-                    tmpLabel = "declare as base-Variant"
+                    tmpLabel = "Set Variant as base-variant"
                 End If
 
             Case "PT2G1M2B4" ' Ressource/Kostenart hinzufügen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ressource/Kostenart hinzufügen"
+                    tmpLabel = "Rolle hinzufügen"
                 Else
-                    tmpLabel = "Add resource / cost"
+                    tmpLabel = "Add Resource"
+                End If
+            Case "PT2G1M2B7" ' Ressource/Kostenart hinzufügen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Kostenart hinzufügen"
+                Else
+                    tmpLabel = "Add Cost"
                 End If
 
             Case "PT2G1M2B5" ' Ressource/Kostenart löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ressource/Kostenart löschen"
+                    tmpLabel = "Rolle/Kostenart löschen"
                 Else
                     tmpLabel = "Delete resource / cost"
                 End If
 
-            Case "PT2G1M2" ' Editieren
+            Case "PTmassEdit" 'Editieren im MassEdit
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Editieren"
+                    tmpLabel = "Edit"
                 Else
                     tmpLabel = "Edit"
                 End If
 
             Case "PT2G1M2B1" ' Ressourcen und Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ressourcen und Kosten"
+                    tmpLabel = "Ändern von Ressourcen und Kosten"
                 Else
-                    tmpLabel = "Resources and Cost"
+                    tmpLabel = "Modify monthly Resource and Cost Needs"
                 End If
 
-            Case "PT2G1M2B2" ' Strategie/Risiko/Budget
+            Case "PT2G1M2B2" ' Phasen Meilensteine ändern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Strategie/Risiko/Budget"
+                    tmpLabel = "Ändern von Terminen"
                 Else
-                    tmpLabel = "Strategy/Risk/Budget"
+                    tmpLabel = "Modify monthly Phases and Milestones"
                 End If
 
-            Case "PT2G1M2B3" ' Zeitspanne f. Projektstart
+            Case "PT2G1M2B3" ' Modify Attributes
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Zeitspanne f. Projektstart"
+                    tmpLabel = "Budget und Attribute"
                 Else
-                    tmpLabel = "Timespan for projectstart"
+                    tmpLabel = "Budget and attributes"
+                End If
+
+            Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einstellungen"
+                Else
+                    tmpLabel = "Settings"
                 End If
 
             Case "PT6G2B3" ' prozentuale Auslastungs-Werte anzeigen
@@ -2237,25 +2249,53 @@ Imports System.Windows
                     tmpLabel = "Enable sorting"
                 End If
 
-            Case "PT2G1B2" ' Fixieren
+            Case "PTfreezeB1" ' Fixieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Fixieren"
                 Else
                     tmpLabel = "Freeze"
                 End If
 
-            Case "PT2G1B3" ' Fixierung aufheben
+            Case "PTfreezeB2" ' Fixierung aufheben
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Fixierung aufheben"
                 Else
-                    tmpLabel = "De-freeze"
+                    tmpLabel = "De-Freeze"
                 End If
 
-            Case "PT2G1M2B7" ' zurück zur Multiprojekt-Tafel
+            Case "PTunmarkBT"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Zurück zur Multiprojekt-Tafel"
+                    tmpLabel = "Reset Markierung"
                 Else
-                    tmpLabel = "Back to Multiproject Board"
+                    tmpLabel = "Reset Marker"
+                End If
+
+            Case "PTMarkBT"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Markieren"
+                Else
+                    tmpLabel = "Set Mark"
+                End If
+
+            Case "PT2G1M1B4" ' Status ändern
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Projekt-Status ändern"
+                Else
+                    tmpLabel = "Change Project-Status"
+                End If
+
+            Case "PTzurück" ' zurück zur Multiprojekt-Tafel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zurück zu Projekt Tafel"
+                Else
+                    tmpLabel = "Back to Project Board"
+                End If
+
+            Case "PTback" ' OnAction zur Multiprojekt-Tafel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Zurück"
+                Else
+                    tmpLabel = "Back"
                 End If
 
             Case "PT2G1M2B6" ' Änderungen verwerfen
@@ -2265,68 +2305,75 @@ Imports System.Windows
                     tmpLabel = "Skip changes"
                 End If
 
-            Case "PT2G1B4" ' Beschriften
+            Case "PT3G1M2" ' Beschriften
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Phasen/Meilensteine beschriften"
+                    tmpLabel = "Beschriftungen..."
                 Else
-                    tmpLabel = "Annotate Phases/Milestones"
+                    tmpLabel = "Annotations..."
                 End If
 
-            Case "PT2G1B5" ' alle Beschriftungen löschen
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Alle Beschriftungen löschen"
-                Else
-                    tmpLabel = "Delete annotations"
-                End If
+                ''Case "PT2G1B4" ' Beschriften ON
+                ''    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                ''        tmpLabel = "Ein"
+                ''    Else
+                ''        tmpLabel = "ON"
+                ''    End If
+
+                ''Case "PT2G1B5" ' Beschriftungen löschen
+                ''    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                ''        tmpLabel = "Aus"
+                ''    Else
+                ''        tmpLabel = "OFF"
+                ''    End If
 
             Case "PT2G1B6" ' Extended View
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Extended Modus"
+                    tmpLabel = "Extended Ansicht"
                 Else
-                    tmpLabel = "Extended Mode"
+                    tmpLabel = "Expanded View"
                 End If
 
             Case "PT2G1B7" ' Rollup View
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "1-Zeile Modus"
+                    tmpLabel = "Linien Ansicht"
                 Else
-                    tmpLabel = "1-Line Mode"
+                    tmpLabel = "Collapsed View"
                 End If
 
-            Case "PT2G1B8" ' Umbenennen
+            Case "PT2G1B1" ' Umbenennen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Umbenennen"
+                    tmpLabel = "Projekt umbenennen..."
                 Else
-                    tmpLabel = "Rename"
+                    tmpLabel = "Rename Project..."
                 End If
 
-            Case "PT2G1B8" ' Umbenennen
+            Case "PT2G1B3" ' Umbenennen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Umbenennen"
+                    tmpLabel = "Variante umbenennen..."
                 Else
-                    tmpLabel = "Rename"
+                    tmpLabel = "Rename Variant..."
                 End If
 
-            Case "PT2G2" ' Multiprojekt-Szenario
+            Case "PT2G2" 'Projekte/Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Multiprojekt-Szenario"
+                    tmpLabel = "Projekte/Varianten"
                 Else
-                    tmpLabel = "Multiproject-Scenario"
+                    tmpLabel = "Projects/Variants"
                 End If
 
-            Case "PT2G2B2" ' Laden
+            Case "PT2G2B2" ' Portfolio/s anzeigen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Laden"
+                    tmpLabel = "Portfolio/s anzeigen..."
                 Else
-                    tmpLabel = "Load"
+                    tmpLabel = "Show Portfolio/s..."
                 End If
 
 
-            Case "PT2G2B4" ' Ändern/Speichern
+            Case "PT2G2B4" ' Editieren Portfolio
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Ändern/Speichern"
+                    tmpLabel = "Portfolio"
                 Else
-                    tmpLabel = "Modify/Store"
+                    tmpLabel = "Portfolio"
                 End If
 
 
@@ -2339,37 +2386,37 @@ Imports System.Windows
 
             Case "PT2G3M1" ' aus der Session löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Aus der Session löschen"
+                    tmpLabel = "Löschen aus Session"
                 Else
-                    tmpLabel = "Delete from Session"
+                    tmpLabel = "Delete in Session"
                 End If
 
             Case "PT2G3M1B1" ' alles
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Alles"
                 Else
-                    tmpLabel = "All"
+                    tmpLabel = "Whole Session"
                 End If
 
             Case "PT2G3M1B2" ' einzelne Projekte und Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Einzelne Projekte und Varianten"
+                    tmpLabel = "Projekt/e"
                 Else
-                    tmpLabel = "Selected projects and variants"
+                    tmpLabel = "Project/s"
                 End If
 
             Case "PT2G3M1B3" ' Szenario
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Szenario"
+                    tmpLabel = "Portfolio/s"
                 Else
-                    tmpLabel = "Scenario"
+                    tmpLabel = "Portfolio/s"
                 End If
 
             Case "PT2G3M2" ' Zeichen-Elemente löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Zeichen-Elemente löschen"
                 Else
-                    tmpLabel = "Delete drawing elements"
+                    tmpLabel = "Delete Shapes"
                 End If
 
             Case "PT2G3M4B1" ' Meilensteine, Phasen, Stati
@@ -2392,6 +2439,12 @@ Imports System.Windows
                 Else
                     tmpLabel = "Charts"
                 End If
+            Case "PT0G1BX" ' Charts
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts löschen"
+                Else
+                    tmpLabel = "Delete Charts"
+                End If
 
             Case "PT4" ' Datenmanagement
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2400,62 +2453,109 @@ Imports System.Windows
                     tmpLabel = "Data management"
                 End If
 
-            Case "PT4G1" ' IMPORT
+            Case "PTExit" 'Beenden
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "IMPORT"
+                    tmpLabel = "Beenden"
                 Else
-                    tmpLabel = "Data IMPORT"
+                    tmpLabel = "Exit"
                 End If
 
-            Case "PT4G1B1" ' Import Projekte (Batch)
+            Case "PT4G1" ' IMPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import Projekte (Batch)"
+                    tmpLabel = "Import"
                 Else
-                    tmpLabel = "Import Projects (Batch)"
+                    tmpLabel = "Import from Filesystem"
+                End If
+
+            Case "PT4G1B6" ' VISBO Open XML
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO Open XML"
+                Else
+                    tmpLabel = "VISBO Open XML"
+                End If
+
+            Case "PT4G1B1" ' Import VISBO-Steckbriefe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO-Steckbriefe..."
+                Else
+                    tmpLabel = "VISBO project briefs..."
                 End If
 
             Case "PT4G1B2" ' Import Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import Excel"
+                    tmpLabel = "Excel..."
                 Else
-                    tmpLabel = "Import Excel"
-                End If
-
-            Case "PT4G1B3" ' Import RPLAN RXF
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import RPLAN RXF"
-                Else
-                    tmpLabel = "Import RPLAN RXF"
+                    tmpLabel = "Excel..."
                 End If
 
             Case "PT4G1B4" ' Import MS Project
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import MS Project"
+                    tmpLabel = "MS Project..."
                 Else
-                    tmpLabel = "Import MS Project"
+                    tmpLabel = "MS Project..."
+                End If
+
+            Case "PT4G1B3" ' Import RPLAN RXF
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "RPLAN RXF..."
+                Else
+                    tmpLabel = "RPLAN RXF..."
+                End If
+
+            Case "PT4G1B7" ' Import Projekte (Batch)
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Batch Projekt-Erzeugung..."
+                Else
+                    tmpLabel = "Batch Project Creation..."
                 End If
 
             Case "PT4G1B5" ' Import Scenario Definition
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import Szenario Definition"
+                    tmpLabel = "Prioritäten Liste..."
                 Else
-                    tmpLabel = "Import Scenario Definition"
-                End If
-
-            Case "PT4G1M1B1" ' Import VISBO-Steckbriefe
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Import VISBO-Steckbriefe"
-                Else
-                    tmpLabel = "Import VISBO lean project briefs"
+                    tmpLabel = "Priority List..."
                 End If
 
             Case "PT4G2" ' EXPORT
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "EXPORT"
+                    tmpLabel = "Export"
                 Else
-                    tmpLabel = "EXPORT"
+                    tmpLabel = "Export to Filesystem"
                 End If
 
+            Case "PT4G1M1B3" ' Export VISBO-Steckbriefe
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO-Steckbriefe"
+                Else
+                    tmpLabel = "VISBO project briefs"
+                End If
+
+            Case "PT4G1M1B2" 'Export Visbo OPen Xml
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO Open XML"
+                Else
+                    tmpLabel = "VISBO Open XML"
+                End If
+            Case "PT4G1M1B1" 'Export Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Excel"
+                Else
+                    tmpLabel = "Excel"
+                End If
+
+            Case "PT4G1M0B2" ' exportieren von Meilensteine und Phasen nach Auswahl
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Auswahl von Meilensteine und Phasen..."
+                Else
+                    tmpLabel = "Selection of Milestones and Phases..."
+                End If
+
+            Case "PT4G2B3" ' Export Priorisierungsliste
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Prioritäten Liste..."
+                Else
+                    tmpLabel = "Priority List..."
+                End If
             Case "PT4G1B7" ' Export FC-52
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Export FC-52"
@@ -2463,67 +2563,55 @@ Imports System.Windows
                     tmpLabel = "Export FC-52"
                 End If
 
-            Case "PT4G1B8" ' Export RPLAN Excel
+            Case "PT4G1M3" ' Export Excel
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Export RPLAN Excel"
+                    tmpLabel = "Excel"
                 Else
-                    tmpLabel = "Export RPLAN Excel"
+                    tmpLabel = "Excel"
                 End If
 
-            Case "PT4G1M1B3" ' Export VISBO-Steckbriefe
+
+            Case "PT5G1" ' Load from Database
+
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Export VISBO-Steckbriefe"
+                    tmpLabel = "Laden von DB "
                 Else
-                    tmpLabel = "Export VISBO lean project briefs"
+                    tmpLabel = "Load from Database"
                 End If
 
-            Case "PT4G12" ' Datenbank
+            Case "PT5G1B1" ' Portfolio/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Datenbank"
+                    tmpLabel = "Portfolio/s..."
                 Else
-                    tmpLabel = "Database"
+                    tmpLabel = "Portfolio/s..."
                 End If
 
-            Case "PT5G1" ' Laden
+            Case "PT5G1B3" ' Project/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Laden"
+                    tmpLabel = "Projekt/e..."
                 Else
-                    tmpLabel = "Load"
-                End If
-
-            Case "PT5G1B1" ' Multiprojekt-Szenario
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Multiprojekt-Szenario"
-                Else
-                    tmpLabel = "Multiproject-Scenario"
-                End If
-
-            Case "PT5G1B3" ' Projekte/Varianten
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekte/Varianten"
-                Else
-                    tmpLabel = "Projects/Variants"
+                    tmpLabel = "Project/s..."
                 End If
 
             Case "PT5G2" ' Speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Speichern"
+                    tmpLabel = "Speichern in DB"
                 Else
-                    tmpLabel = "Store"
+                    tmpLabel = "Store to Database"
                 End If
 
-            Case "Pt5G2B1" ' Multiprojekt-Szenario
+            Case "Pt5G2B1" ' Portfolio/s
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Multiprojekt-Szenario"
+                    tmpLabel = "Portfolio/s..."
                 Else
-                    tmpLabel = "Multiproject-Scenario"
+                    tmpLabel = "Portfolio/s..."
                 End If
 
-            Case "Pt5G2B3" ' Projekte/Varianten
+            Case "Pt5G2B3" ' Projekt/e
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekte/Varianten"
+                    tmpLabel = "Projekt/e"
                 Else
-                    tmpLabel = "Projects/Variants"
+                    tmpLabel = "Project/s"
                 End If
 
             Case "Pt5G2B4" ' Alles Speichern
@@ -2535,48 +2623,137 @@ Imports System.Windows
 
             Case "PT5G3" ' Löschen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Löschen"
+                    tmpLabel = "Löschen aus DB"
                 Else
-                    tmpLabel = "Delete"
+                    tmpLabel = "Delete in Database"
                 End If
 
             Case "Pt5G3B1" ' Multiprojekt-Szenario
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Multiprojekt-Szenario"
+                    tmpLabel = "Portfolio/s..."
                 Else
-                    tmpLabel = "Multiproject-Scenario"
+                    tmpLabel = "Portfolio/s..."
                 End If
 
             Case "PT5G3M2" ' Projekte/Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekte/Varianten"
+                    tmpLabel = "Projekt/e"
                 Else
-                    tmpLabel = "Projects/Variants"
+                    tmpLabel = "Project/s"
                 End If
 
             Case "Pt5G3B3" ' Projekte/Varianten/TimeStamps auswählen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekte/Varianten/TimeStamps auswählen"
+                    tmpLabel = "Projekte/Varianten/TimeStamps auswählen..."
                 Else
-                    tmpLabel = "Select Projects/Variants/TimeStamps"
+                    tmpLabel = "Select Projects/Variants/TimeStamps..."
                 End If
 
             Case "Pt5G3B4" ' X Versionen behalten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "X Versionen behalten"
+                    tmpLabel = "X Versionen behalten..."
                 Else
-                    tmpLabel = "Keep X Versions"
+                    tmpLabel = "Keep X Versions..."
                 End If
 
 
             Case "PT2G2B5" ' Sperre setzen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Schreibschutz setzen/aufheben"
+                    tmpLabel = "Schreibschutz setzen/aufheben..."
                 Else
-                    tmpLabel = "Set/un-Set Write-Protection"
+                    tmpLabel = "Set/Unset Write-Protection..."
                 End If
 
+            Case "PTedit"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Bearbeiten"
+                Else
+                    tmpLabel = "Edit"
+                End If
+            Case "PTview"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ansicht"
+                Else
+                    tmpLabel = "View"
+                End If
+            Case "PTfilter"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Filter"
+                Else
+                    tmpLabel = "Filter"
+                End If
+            Case "PTsort"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Sortieren"
+                Else
+                    tmpLabel = "Sort"
+                End If
 
+            Case "PT6G1B1"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Alphabetisch"
+                Else
+                    tmpLabel = "Alphabetically"
+                End If
+
+            Case "PT6G1B2"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Business Unit-Startdatum-Name"
+                Else
+                    tmpLabel = "by Business Unit-Startdate-Name"
+                End If
+
+            Case "PT6G1B3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Strategie-Risiko-Profit"
+                Else
+                    tmpLabel = "by Strategy-Risk-Profit"
+                End If
+
+            Case "PT6G1B4"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "nach individuellen Kriterien sortieren ..."
+                Else
+                    tmpLabel = "sort by individual criterias"
+                End If
+
+            Case "PT6G1B5"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Sortieren"
+                Else
+                    tmpLabel = "Sort"
+                End If
+
+            Case "PTcharts"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Charts"
+                Else
+                    tmpLabel = "Charts"
+                End If
+            Case "PTreport"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Reports"
+                Else
+                    tmpLabel = "Reports"
+                End If
+            Case "PTeinst"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Einstellungen"
+                Else
+                    tmpLabel = "Settings"
+                End If
+            Case "PThelp"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Help"
+                Else
+                    tmpLabel = "Help"
+                End If
+            Case "PTlizenz"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Lizenzen"
+                Else
+                    tmpLabel = "Licenses"
+                End If
             Case "PT6" ' Einstellungen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Einstellungen"
@@ -2646,6 +2823,12 @@ Imports System.Windows
                 Else
                     tmpLabel = "Edit Synonyms"
                 End If
+            Case "PTeinstG1B1" ' Einstellungen für VISBO-Board; MassEdit, Ampel, PropAnpass,Report Sprache
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "VISBO Einstellungen"
+                Else
+                    tmpLabel = "VISBO Settings"
+                End If
 
             Case Else
                 tmpLabel = "undefined"
@@ -2654,18 +2837,31 @@ Imports System.Windows
         bestimmeLabel = tmpLabel
 
     End Function
+    ''' <summary>
+    ''' Setzt die Sichtbarkeit der Menu-Buttons je nach visboZustaende.projectBoardMode
+    ''' </summary>
+    ''' <param name="control">Control des Menubuttons, von dem diese Routine über "getVisible" im Ribbon aufgerufen wird</param>
+    ''' <returns>true: wenn der entsprechende Menubutton sichtbar sein soll
+    '''          false: wenn der entsprechende Menubutton unsichtbar sein soll </returns>
+    ''' <remarks></remarks>
     Function chckVisibility(control As IRibbonControl) As Boolean
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             Select Case control.Id
                 Case "PTMEC" ' Massen-Edit Charts
                     chckVisibility = False
-                Case "PT2G1M2B4" ' Bearbeiten - Zeile einfügen
+                Case "PTmassEdit" ' Mass-Edit bearbeiten
+                    chckVisibility = False
+                Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
                     chckVisibility = False
                 Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
                     chckVisibility = False
                 Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
                     chckVisibility = False
-                Case "PT2G1M2B7" ' zurück zur Multiprojekt-Tafel
+                Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
+                    chckVisibility = False
+                Case "PTzurück" ' Zurück
+                    chckVisibility = False
+                Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
                     chckVisibility = False
                 Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
                     chckVisibility = False
@@ -2674,74 +2870,109 @@ Imports System.Windows
                 Case "PT6G2B5" ' Sortierung ermöglichen
                     chckVisibility = False
                 Case Else
+                    ' alle anderen werden sichtbar gemacht
                     chckVisibility = True
             End Select
         Else
             Select Case control.Id
-                Case "PTX" ' Multiprojekt-Info
+
+                Case "PTproj"
                     chckVisibility = False
-                Case "PT0" ' Einzelprojekt-Info
+                Case "PTedit"
                     chckVisibility = False
-                Case "PT7" ' Cockpit
+                Case "PTview"
                     chckVisibility = False
-                Case "PT1" ' Reports
+                Case "PTfilter"
                     chckVisibility = False
-                Case "PT6" ' Einstellungen
+                Case "PTsort"
                     chckVisibility = False
-                Case "PT2G1M0" ' neues Projekt anlegen
+                Case "PToptimize"
                     chckVisibility = False
-                Case "PT2G1M1" ' Variante
+                Case "PTcharts"
                     chckVisibility = False
-                    'Case "PT2G1M1B0" ' neue Variante anlegen
-                    '    chckVisibility = False
-                    'Case "PT2G1M1B1" '  Variante aktivieren
-                    '    chckVisibility = False
-                    'Case "PT2G1M1B2" ' Variante löschen    
-                    '    chckVisibility = False
-                    'Case "PT2G1M1B3" ' Variante übernehmen    
-                    '    chckVisibility = False
-                Case "PT2G1M2" ' Editieren   
+                Case "PTreport"
                     chckVisibility = False
-                    'Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
-                    '    chckVisibility = False
-                    'Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
-                    '    chckVisibility = False
-                Case "PT2G1B2" ' Fixieren
+                Case "PTeinst"
                     chckVisibility = False
-                Case "PT2G1B3" ' Fixierung aufheben
+                Case "PThelp"
                     chckVisibility = False
-                Case "PT2G1M2B6" ' Änderungen verwerfen
+                Case "PTTestfunktionen"
                     chckVisibility = False
-                Case "PT2G1B4" ' Beschriften
+                Case "PTlizenz"
                     chckVisibility = False
-                Case "PT2G1B5" ' alle Beschriftungen löschen
+
+                Case "PT2G1M2B6" ' Mass-Edit Änderungen verwerfen
                     chckVisibility = False
-                Case "PT2G1B6" ' Extended View
-                    chckVisibility = False
-                Case "PT2G1B7" ' Extended View aufheben
-                    chckVisibility = False
-                Case "PT2G2" ' Bearbeiten - Multiprojekt-Szenario
-                    chckVisibility = False
-                Case "PT2G2B5" ' Schutz setzen / aufheben 
-                    chckVisibility = False
-                Case "PT2G2s3" ' Separator vor Schutz 
-                    chckVisibility = False
-                Case "PT2G1s4" ' Separator vor Extended View
-                    chckVisibility = False
-                Case "PT2G3" ' Bearbeiten - Session
-                    chckVisibility = False
-                Case "PT4" ' Datenmanagement
-                    chckVisibility = False
-                Case "PT6G1" ' Einstellungen - Visualisierung
-                    chckVisibility = False
-                Case "PT6G2B1" ' Einstellungen - Berechnung - Dehnen/Stauchen
-                    chckVisibility = False
-                Case "PT6G2B2" ' Phasenhäufigkeit anteilig berechnen
-                    chckVisibility = False
-                Case "PT6G3" ' Lade- und Import-Vorgänge
-                    chckVisibility = False
-                Case "PT2G1B8" ' umbenennen 
-                    chckVisibility = False
+
+
+                    '' ''Case "PTX" ' Multiprojekt-Info
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT0" ' Einzelprojekt-Info
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT7" ' Cockpit
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT1" ' Reports
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6" ' Einstellungen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1M0" ' neues Projekt anlegen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1M1" ' Variante
+                    '' ''    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B0" ' neue Variante anlegen
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B1" '  Variante aktivieren
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B2" ' Variante löschen    
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M1B3" ' Variante übernehmen    
+                    '' ''    '    chckVisibility = False
+                    '' ''Case "PT2G1M2" ' Editieren   
+                    '' ''    chckVisibility = False
+                    '' ''    'Case "PT2G1M2B2" ' Strategie/Risiko/Budget   
+                    '' ''    '    chckVisibility = False
+                    '' ''    'Case "PT2G1M2B3" ' Zeitspanne f. Projektstart   
+                    '' ''    '    chckVisibility = False
+                    '' ''Case "PT2G1B2" ' Fixieren
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B3" ' Fixierung aufheben
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1M2B6" ' Änderungen verwerfen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B4" ' Beschriften
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B5" ' alle Beschriftungen löschen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B6" ' Extended View
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B7" ' Extended View aufheben
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G2" ' Bearbeiten - Multiprojekt-Szenario
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G2B5" ' Schutz setzen / aufheben 
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G2s3" ' Separator vor Schutz 
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1s4" ' Separator vor Extended View
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G3" ' Bearbeiten - Session
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT4" ' Datenmanagement
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G1" ' Einstellungen - Visualisierung
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G2B1" ' Einstellungen - Berechnung - Dehnen/Stauchen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G2B2" ' Phasenhäufigkeit anteilig berechnen
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT6G3" ' Lade- und Import-Vorgänge
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT2G1B8" ' umbenennen 
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT7G1M1" ' Projekt-Charts
+                    '' ''    chckVisibility = False
+                    '' ''Case "PT7G1M0" ' Portfolio-Charts
+                    '' ''    chckVisibility = False
                 Case Else
                     chckVisibility = True
             End Select
@@ -2750,138 +2981,178 @@ Imports System.Windows
     End Function
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
-        Dim singleShp As Excel.Shape
-        Dim awinSelection As Excel.ShapeRange
+        ' für alte Methode notwendig ... 
+        'Dim singleShp As Excel.Shape
+        'Dim awinSelection As Excel.ShapeRange
         Dim todoListe As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        ' zurücksetzen der dbCache-Projekte
-        dbCacheProjekte.Clear(False)
+        ' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
+        ' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
 
         Call projektTafelInit()
 
         enableOnUpdate = False
+        ' jetzt auf alle Fälle wieder das MPT Window aktivieren ...
+        projectboardWindows(PTwindows.mpt).Activate()
 
         If ShowProjekte.Count > 0 Then
 
-            If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                ' alles ok , bereits gesetzt 
+            ' neue Methode 
+            todoListe = getProjectSelectionList(True)
 
-            Else
-                If selectedProjekte.Count > 0 Then
-                    showRangeLeft = selectedProjekte.getMinMonthColumn
-                    showRangeRight = selectedProjekte.getMaxMonthColumn
-                Else
-                    showRangeLeft = ShowProjekte.getMinMonthColumn
-                    showRangeRight = ShowProjekte.getMaxMonthColumn
+            ' check, ob wirklich alle Projekte editiert werden sollen ... 
+            If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
+                Dim yesNo As Integer
+                yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
+                If yesNo = MsgBoxResult.No Then
+                    enableOnUpdate = True
+                    Exit Sub
                 End If
-                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
             End If
 
-            Try
-                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-            Catch ex As Exception
-                awinSelection = Nothing
-            End Try
+            
 
-            If IsNothing(awinSelection) Then
-
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                    todoListe.Add(kvp.Key, kvp.Key)
-
-                    If Not noDB Then
-
-                        ' prüfen, ob es überhaupt schon in der Datenbank existiert ...
-                        If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, Date.Now) Then
-                            Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, Date.Now)
-                            dbCacheProjekte.upsert(dbProj)
-                        End If
-
-                    End If
-
-                Next
-
-            Else
-
-                For i As Integer = 1 To awinSelection.Count
-                    singleShp = awinSelection.Item(i)
-                    Dim hproj As clsProjekt
-                    Try
-                        hproj = ShowProjekte.getProject(singleShp.Name, True)
-                        todoListe.Add(hproj.name, hproj.name)
-
-                        If Not noDB Then
-                            ' wenn es in der DB existiert, dann im Cache aufbauen 
-                            If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-                                ' für den Datenbank Cache aufbauen 
-                                Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
-                                dbCacheProjekte.upsert(dbProj)
-                            End If
-                        End If
-
-                    Catch ex As Exception
-
-                    End Try
-                Next
-            End If
-
-            ' wenn es jetzt etwas zu tun gibt ... 
             If todoListe.Count > 0 Then
-                ' alles ok ...
-                'Call deleteChartsInSheet(arrWsNames(3))
+
+                ' jetzt aufbauen der dbCacheProjekte
+                Call buildCacheProjekte(todoListe)
+
+
+                ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                    ' alles ok , bereits gesetzt 
+
+                Else
+
+                    showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+                    showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                End If
+
+
                 Call enableControls(ptModus.massEditRessCost)
 
                 ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
                 ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
                 'Call saveProjectsToBackup(todoListe)
 
+                ' hier wird die aktuelle Zusammenstellung an Windows gespeichert ...
+                'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
+
+                ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
+                appInstance.ScreenUpdating = False
+
                 Try
+                    enableOnUpdate = False
                     Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
                     appInstance.EnableEvents = True
 
-                    With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+                    Try
+                        If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+                            projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
+                        Else
+                            projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
+                        End If
+
+                    Catch ex As Exception
+                        projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
+                    End Try
+
+                    ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
+                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
                         .Activate()
                     End With
+
+                    With projectboardWindows(PTwindows.massEdit)
+                        .WindowState = Excel.XlWindowState.xlMaximized
+                        .SplitRow = 1
+                        .FreezePanes = True
+                        .DisplayFormulas = False
+                        .DisplayHeadings = False
+                        .DisplayGridlines = True
+                        .GridlineColor = RGB(220, 220, 220)
+                        .DisplayWorkbookTabs = False
+                        .Caption = bestimmeWindowCaption(PTwindows.massEdit)
+                    End With
+
+
+                    ' jetzt das Multiprojekt Window ausblenden ...
+                    projectboardWindows(PTwindows.mpt).Visible = False
+
+                    ' jetzt auch alle anderen ggf offenen pr und pf Windows unsichtbar machen ... 
+                    Try
+                        If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                            projectboardWindows(PTwindows.mptpf).Visible = False
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
+                            projectboardWindows(PTwindows.mptpr).Visible = False
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+
 
                 Catch ex As Exception
                     Call MsgBox("Fehler: " & ex.Message)
                     If appInstance.EnableEvents = False Then
                         appInstance.EnableEvents = True
                     End If
+                    If appInstance.ScreenUpdating = False Then
+                        appInstance.ScreenUpdating = True
+                    End If
                 End Try
+
             Else
                 enableOnUpdate = True
                 If appInstance.EnableEvents = False Then
                     appInstance.EnableEvents = True
                 End If
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects apply to criterias ...")
+                Else
+                    Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
+                End If
             End If
 
 
-
-        Else
-            If awinSettings.englishLanguage Then
-                Call MsgBox("no projects in session!")
             Else
-                Call MsgBox("Es sind keine Projekte geladen!")
+                enableOnUpdate = True
+                If appInstance.EnableEvents = False Then
+                    appInstance.EnableEvents = True
+                End If
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no active projects ...")
+                Else
+                    Call MsgBox("Es gibt keine aktiven Projekte ...")
+                End If
+
             End If
 
-        End If
 
+            'Call MsgBox("ok, zurück ...")
 
-        'Call MsgBox("ok, zurück ...")
-
-        ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
-        'enableOnUpdate = True
-        'appInstance.EnableEvents = True
+            ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
+            'enableOnUpdate = True
+            'appInstance.EnableEvents = True
 
     End Sub
 
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
+        ' hier wieder auf false setzen , in der Multiprojekt-Tafel soll das nicht angezeigt werden ...
+        awinSettings.showValuesOfSelected = False
 
         ' jetzt muss gecheckt werden, welche dbCache Projekte immer noch identisch zum ShowProjekte Pendant sind
         ' deren temp Schutz muss dann wieder aufgehoben werden ... 
@@ -2934,20 +3205,116 @@ Imports System.Windows
         Call enableControls(ptModus.graficboard)
 
         appInstance.EnableEvents = False
-        enableOnUpdate = False
+        ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
+        'enableOnUpdate = False
 
-        Call deleteChartsInSheet(arrWsNames(5))
+        appInstance.ScreenUpdating = False
+        Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
+
+
+        ' die zuvor aktive View oder das eigentliche, ursprüngliche Windows wird wieder angezeigt ...
+        'If Not IsNothing(projectboardViews(PTview.mpt)) Then
+        '    projectboardViews(PTview.mpt).Show()
+        '    projectboardViews(PTview.mpt) = Nothing
+        'End If
+
+        ' tk 12.6.17
+        ' wenn nur ein Window gezeigt wird ; das ist hier notwendig, um zu verhindern, dass nachher die mpt, mptpf, mptpr Charts alle im 
+        ' xlMaximized Mode dargestellt werden; das scheint eine Unschönheit von Microsoft zu sein ... 
+
+
+        ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
+        appInstance.EnableEvents = True
+        If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+            appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
+        End If
+
+        Try
+
+            ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
+            If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
+                Try
+                    projectboardWindows(PTwindows.massEdit).Close()
+                Catch ex As Exception
+
+                End Try
+
+                projectboardWindows(PTwindows.massEdit) = Nothing
+            End If
+
+            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                Try
+                    projectboardWindows(PTwindows.meChart).Close()
+                Catch ex As Exception
+
+                End Try
+
+                projectboardWindows(PTwindows.meChart) = Nothing
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        ' jetzt müssen ggf drei Windows wieder angezeigt werden 
+        Try
+            With projectboardWindows(PTwindows.mpt)
+                .Visible = True
+                If CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count = 1 Then
+                    .WindowState = Excel.XlWindowState.xlMaximized
+                Else
+                    Try
+                        If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                            projectboardWindows(PTwindows.mptpf).Visible = True
+                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
+                                .Activate()
+                            End With
+                            'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
+                        End If
+                    Catch ex As Exception
+                        projectboardWindows(PTwindows.mptpf) = Nothing
+                    End Try
+                    Try
+                        If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
+                            projectboardWindows(PTwindows.mptpr).Visible = True
+                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
+                                .Activate()
+                            End With
+                            'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
+                        End If
+                    Catch ex As Exception
+                        projectboardWindows(PTwindows.mptpr) = Nothing
+                    End Try
+                End If
+
+            End With
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
-        appInstance.ScreenUpdating = False
-        ' der ScreenUpdating wird im Tabelle1.Activate gesetzt, falls auf False
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+        projectboardWindows(PTwindows.mpt).Activate()
+
+        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             .Activate()
         End With
 
+        appInstance.ScreenUpdating = True
 
+        ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                If projectboardWindows(PTwindows.mptpf).Visible = True Then
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
+            End If
+        Catch ex As Exception
+            projectboardWindows(PTwindows.mptpr) = Nothing
+        End Try
 
     End Sub
 
@@ -2959,100 +3326,131 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub PTzeileEinfuegen(control As IRibbonControl)
 
-        Dim currentCell As Excel.Range
-        appInstance.EnableEvents = False
+        Call massEditZeileEinfügen(control.Id)
 
-        Try
+        ' ''Dim currentCell As Excel.Range
+        ' ''appInstance.EnableEvents = False
 
-            ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
-            Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
+        ' ''Try
 
-            currentCell = CType(appInstance.ActiveCell, Excel.Range)
+        ' ''    ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
+        ' ''    Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
 
-            'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-            Dim columnEndData As Integer = visboZustaende.meColED
-            'Dim columnStartData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("StartData"), Excel.Range).Column
-            Dim columnStartData As Integer = visboZustaende.meColSD
-            Dim columnRC As Integer = visboZustaende.meColRC
+        ' ''    currentCell = CType(appInstance.ActiveCell, Excel.Range)
 
-            Dim hoehe As Double = CDbl(currentCell.Height)
-            currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
-            Dim zeile As Integer = currentCell.Row
+        ' ''    'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
 
-            ' Blattschutz aufheben ... 
-            If Not awinSettings.meEnableSorting Then
-                ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
-                With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                    .Unprotect(Password:="x")
-                End With
-            End If
+        ' ''    Dim columnEndData As Integer = visboZustaende.meColED
+        ' ''    Dim columnStartData As Integer = visboZustaende.meColSD
 
+        ' ''    Dim columnRC As Integer = visboZustaende.meColRC
 
+        ' ''    Dim hoehe As Double = CDbl(currentCell.Height)
+        ' ''    currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+        ' ''    Dim zeile As Integer = currentCell.Row
 
-            With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEnddata)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData)), Excel.Range)
-                copySource.Copy(Destination:=copyDestination)
-
-                CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
-
-                For c As Integer = columnStartData - 3 To columnEndData + 1
-                    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
-                Next
-            End With
-
-            ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
-
-            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range)
-
-                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
-
-                Try
-                    If Not IsNothing(.Validation) Then
-                        .Validation.Delete()
-                    End If
-                    ' jetzt wird die ValidationList aufgebaut 
-                    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-                                               Formula1:=validationStrings.Item("alles"))
-                Catch ex As Exception
-
-                End Try
-
-            End With
-
-            ' jetzt wird der Old-Value gesetzt 
-            With visboZustaende
-                If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
-                    Call MsgBox("Fehler 099 in PTzeileEinfügen")
-                End If
-                .oldValue = ""
-                .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
-            End With
+        ' ''    ' Blattschutz aufheben ... 
+        ' ''    If Not awinSettings.meEnableSorting Then
+        ' ''        ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
+        ' ''        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+        ' ''            .Unprotect(Password:="x")
+        ' ''        End With
+        ' ''    End If
 
 
-            ' jetzt den Blattschutz wiederherstellen ... 
-            If Not awinSettings.meEnableSorting Then
-                ' es muss der Blattschutz wieder aktiviert werden ... 
-                With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                    .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
-                             AllowFiltering:=True)
-                    .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
-                    .EnableAutoFilter = True
-                End With
-            End If
 
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Kopieren einer Zeile ...")
-        End Try
+        ' ''    With CType(appInstance.ActiveSheet, Excel.Worksheet)
 
-        appInstance.EnableEvents = True
+        ' ''        If Not awinSettings.meExtendedColumnsView Then
+        ' ''            appInstance.ScreenUpdating = False
+        ' ''            ' einblenden ... 
+        ' ''            .Range("MahleInfo").EntireColumn.Hidden = False
+        ' ''        End If
+
+
+        ' ''        Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
+        ' ''        Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
+        ' ''        copySource.Copy(Destination:=copyDestination)
+
+        ' ''        CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
+
+        ' ''        For c As Integer = columnStartData - 3 To columnEndData + 1
+        ' ''            CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
+        ' ''        Next
+
+        ' ''        ' jetzt wieder ausblenden ... 
+        ' ''        If Not awinSettings.meExtendedColumnsView Then
+        ' ''            ' ausblenden ... 
+        ' ''            .Range("MahleInfo").EntireColumn.Hidden = True
+        ' ''            appInstance.ScreenUpdating = True
+        ' ''        End If
+        ' ''    End With
+
+        ' ''    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+        ' ''    CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
+
+        ' ''    With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range)
+
+        ' ''        ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
+
+        ' ''        Try
+        ' ''            If Not IsNothing(.Validation) Then
+        ' ''                .Validation.Delete()
+        ' ''            End If
+        ' ''            ' jetzt wird die ValidationList aufgebaut
+        ' ''            ' ist es eine Rolle ? 
+        ' ''            If control.Id = "PT2G1M2B4" Then
+        ' ''                ' Rollen
+        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+        ' ''                                       Formula1:=validationStrings.Item("alleRollen"))
+        ' ''            ElseIf control.Id = "PT2G1M2B7" Then
+        ' ''                ' Kosten
+        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+        ' ''                                                               Formula1:=validationStrings.Item("alleKosten"))
+        ' ''            Else
+        ' ''                ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
+        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+        ' ''                                       Formula1:=validationStrings.Item("alles"))
+        ' ''            End If
+
+        ' ''        Catch ex As Exception
+
+        ' ''        End Try
+
+        ' ''    End With
+
+        ' ''    ' jetzt wird der Old-Value gesetzt 
+        ' ''    With visboZustaende
+        ' ''        If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
+        ' ''            Call MsgBox("Fehler 099 in PTzeileEinfügen")
+        ' ''        End If
+        ' ''        .oldValue = ""
+        ' ''        .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
+        ' ''    End With
+
+
+        ' ''    ' jetzt den Blattschutz wiederherstellen ... 
+        ' ''    If Not awinSettings.meEnableSorting Then
+        ' ''        ' es muss der Blattschutz wieder aktiviert werden ... 
+        ' ''        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+        ' ''            .Protect(Password:="x", UserInterfaceOnly:=True, _
+        ' ''                     AllowFormattingCells:=True, _
+        ' ''                     AllowInsertingColumns:=False,
+        ' ''                     AllowInsertingRows:=True, _
+        ' ''                     AllowDeletingColumns:=False, _
+        ' ''                     AllowDeletingRows:=True, _
+        ' ''                     AllowSorting:=True, _
+        ' ''                     AllowFiltering:=True)
+        ' ''            .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+        ' ''            .EnableAutoFilter = True
+        ' ''        End With
+        ' ''    End If
+
+        ' ''Catch ex As Exception
+        ' ''    Call MsgBox("Fehler beim Kopieren einer Zeile ...")
+        ' ''End Try
+
+        ' ''appInstance.EnableEvents = True
 
     End Sub
 
@@ -3064,105 +3462,107 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub PTzeileLoeschen(control As IRibbonControl)
 
-        Dim currentCell As Excel.Range
-        Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
-        appInstance.EnableEvents = False
+        Call massEditZeileLoeschen(control.Id)
 
-        Dim ok As Boolean = True
+        '' ''Dim currentCell As Excel.Range
+        '' ''Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        '' ''appInstance.EnableEvents = False
 
-        Try
+        '' ''Dim ok As Boolean = True
 
-            currentCell = CType(appInstance.ActiveCell, Excel.Range)
-            Dim zeile As Integer = currentCell.Row
+        '' ''Try
 
-            If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
-                Dim columnEndData As Integer = visboZustaende.meColED
-                Dim columnStartData As Integer = visboZustaende.meColSD
-                Dim columnRC As Integer = visboZustaende.meColRC
+        '' ''    currentCell = CType(appInstance.ActiveCell, Excel.Range)
+        '' ''    Dim zeile As Integer = currentCell.Row
 
-
-                Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
-                Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
-                Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
-                Dim phaseNameID As String = calcHryElemKey(phaseName, False)
-                Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
-                If Not IsNothing(curComment) Then
-                    phaseNameID = curComment.Text
-                End If
-
-                Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-
-                ' hier wird die Rolle- bzw. Kostenart aus der Projekt-Phase gelöscht 
-                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
-
-                If IsNothing(rcName) Then
-                    ' nichts tun
-                ElseIf rcName.Trim.Length = 0 Then
-                    ' nichts tun ... 
-                ElseIf RoleDefinitions.containsName(rcName) Then
-                    ' es handelt sich um eine Rolle
-                    ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
-                                             showRangeLeft, showRangeRight, True) Then
-                        cphase.removeRoleByName(rcName)
-                    Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
-                                    " nicht gelöscht werden ...")
-                        ok = False
-                    End If
-
-                ElseIf CostDefinitions.containsName(rcName) Then
-                    ' es handelt sih um eine Kostenart 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
-                                             showRangeLeft, showRangeRight, True) Then
-                        cphase.removeCostByName(rcName)
-                    Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf & _
-                                    " nicht gelöscht werden ...")
-                        ok = False
-                    End If
+        '' ''    If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
+        '' ''        Dim columnEndData As Integer = visboZustaende.meColED
+        '' ''        Dim columnStartData As Integer = visboZustaende.meColSD
+        '' ''        Dim columnRC As Integer = visboZustaende.meColRC
 
 
-                End If
+        '' ''        Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
+        '' ''        Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+        '' ''        Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+        '' ''        Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+        '' ''        Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+        '' ''        If Not IsNothing(curComment) Then
+        '' ''            phaseNameID = curComment.Text
+        '' ''        End If
+
+        '' ''        Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+
+        '' ''        ' hier wird die Rolle- bzw. Kostenart aus der Projekt-Phase gelöscht 
+        '' ''        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+        '' ''        Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+        '' ''        If IsNothing(rcName) Then
+        '' ''            ' nichts tun
+        '' ''        ElseIf rcName.Trim.Length = 0 Then
+        '' ''            ' nichts tun ... 
+        '' ''        ElseIf RoleDefinitions.containsName(rcName) Then
+        '' ''            ' es handelt sich um eine Rolle
+        '' ''            ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+        '' ''            If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+        '' ''                                     showRangeLeft, showRangeRight, True) Then
+        '' ''                cphase.removeRoleByName(rcName)
+        '' ''            Else
+        '' ''                Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
+        '' ''                            " nicht gelöscht werden ...")
+        '' ''                ok = False
+        '' ''            End If
+
+        '' ''        ElseIf CostDefinitions.containsName(rcName) Then
+        '' ''            ' es handelt sih um eine Kostenart 
+        '' ''            If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+        '' ''                                     showRangeLeft, showRangeRight, True) Then
+        '' ''                cphase.removeCostByName(rcName)
+        '' ''            Else
+        '' ''                Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf & _
+        '' ''                            " nicht gelöscht werden ...")
+        '' ''                ok = False
+        '' ''            End If
 
 
-                If ok Then
-                    ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
-                    ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
-                    If noDuplicatesInSheet(pName, phaseNameID, Nothing, zeile) Then
-                        ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
-                        ' aber die Werte müssen alle gelöscht werden 
-                        For ix As Integer = columnRC To columnEndData + 1
-                            CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
-                        Next
-                    Else
-                        CType(meWS.Rows(zeile), Excel.Range).Delete()
-                    End If
+        '' ''        End If
 
-                    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
 
-                    ' jetzt wird der Old-Value gesetzt 
-                    With visboZustaende
-                        .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
-                        .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
-                    End With
+        '' ''        If ok Then
+        '' ''            ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
+        '' ''            ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
+        '' ''If noDuplicatesInSheet(pName, phaseNameID, Nothing, zeile) Then
+        '' ''    ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
+        '' ''    ' aber die Werte müssen alle gelöscht werden 
+        '' ''    For ix As Integer = columnRC To columnEndData + 1
+        '' ''        CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
+        '' ''    Next
+        '' ''Else
+        '' ''    CType(meWS.Rows(zeile), Excel.Range).Delete()
+        '' ''End If
 
-                Else
-                    ' nichts tun 
-                End If
+        '' ''            ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+        '' ''            CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
 
-                
-            Else
-                Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
-            End If
+        '' ''            ' jetzt wird der Old-Value gesetzt 
+        '' ''            With visboZustaende
+        '' ''                .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
+        '' ''                .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
+        '' ''            End With
 
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Löschen einer Zeile ..." & vbLf & ex.Message)
-        End Try
+        '' ''        Else
+        '' ''            ' nichts tun 
+        '' ''        End If
 
-        appInstance.EnableEvents = True
+
+        '' ''    Else
+        '' ''        Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
+        '' ''    End If
+
+        '' ''Catch ex As Exception
+        '' ''    Call MsgBox("Fehler beim Löschen einer Zeile ..." & vbLf & ex.Message)
+        '' ''End Try
+
+        '' ''appInstance.EnableEvents = True
 
     End Sub
 
@@ -3271,7 +3671,7 @@ Imports System.Windows
                         End If
                     End If
 
-                    
+
                 Catch ex As Exception
                     Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Attribute")
                     Exit Sub
@@ -3297,172 +3697,34 @@ Imports System.Windows
 
 
     End Sub
+    ' tk 21.8.17 wird nicht mehr aufgerufen 
+    '' ''' <summary>
+    '' ''' earliest und latest Start eines Projektes ändern 
+    '' ''' </summary>
+    '' ''' <param name="control"></param>
+    '' ''' <remarks></remarks>
+    ''Sub Tom2G1EarliestLatestStart(control As IRibbonControl)
 
-    ''' <summary>
-    ''' earliest und latest Start eines Projektes ändern 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G1EarliestLatestStart(control As IRibbonControl)
+    ''    Dim setStartEnd As New frmEarliestLatestStart
 
-        Dim setStartEnd As New frmEarliestLatestStart
-
-        Dim returnValue As DialogResult
-        Dim awinSelection As Excel.ShapeRange
-        Dim i As Integer
-        Dim hproj As clsProjekt
-        Dim singleShp As Excel.Shape
-        Dim pname As String
-        Dim todoListe As New Collection
-        Dim errMessage As String = ""
-        Dim initMsg As String = "bitte erst eine Variante anlegen"
-
-        Call projektTafelInit()
-
-        ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
-        enableOnUpdate = False
-
-        ' Änderung 2.7.14 tk : Vorbedingung sicherstellen: nur Projekte, die noch nicht beauftragt sind, können noch verschoben und 
-        ' werden
-        '
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-
-        If Not awinSelection Is Nothing Then
-
-            ' Es muss mindestens 1 Projekt selektiert sein
-            For i = 1 To awinSelection.Count
-
-                singleShp = awinSelection.Item(i)
-
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                    pname = hproj.name
-                Catch ex As Exception
-                    Call MsgBox(" Fehler! Projekt " & singleShp.Name & " nicht im Hauptspeicher")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
-
-                If hproj.Status = ProjektStatus(0) Then
-                    ' nur dann macht das Setzen von earliest / latest Sinn ...
-
-                    todoListe.Add(hproj.name)
-
-                    If i = 1 Then
-
-                        ' jetzt die Aktion durchführen ...
-
-                        With setStartEnd
-
-                            .EarliestStart.Value = hproj.earliestStart
-                            .LatestStart.Value = hproj.latestStart
-
-                        End With
-
-
-                    Else
-
-                        With setStartEnd
-
-                            If .EarliestStart.Value <> hproj.earliestStart Or .LatestStart.Value <> hproj.latestStart Then
-
-                                .EarliestStart.Value = 0
-                                .LatestStart.Value = 0
-
-                            End If
-
-                        End With
-
-
-                    End If
-                Else
-                    errMessage = errMessage & vbLf & hproj.name
-                End If
-
-            Next i
-
-            If todoListe.Count > 0 Then
-
-                returnValue = setStartEnd.ShowDialog
-
-                If returnValue = DialogResult.OK Then
-
-                    For i = 1 To todoListe.Count
-
-                        pname = CStr(todoListe.Item(i))
-
-                        ' jetzt die Aktion durchführen ...
-                        Try
-                            hproj = ShowProjekte.getProject(pname)
-                            With setStartEnd
-
-                                hproj.earliestStart = .EarliestStart.Value
-                                hproj.latestStart = .LatestStart.Value
-                                hproj.earliestStartDate = hproj.startDate.AddMonths(.EarliestStart.Value)
-                                hproj.latestStartDate = hproj.startDate.AddMonths(.LatestStart.Value)
-
-                            End With
-                        Catch ex As Exception
-                            Call MsgBox(" Fehler! Projekt " & pname & " earliest/latest kann nicht gesetzt werden")
-                            enableOnUpdate = True
-                            Exit Sub
-                        End Try
-
-                    Next i
-
-                    Call MsgBox("ok, frühester und spätester Start gesetzt")
-
-                ElseIf returnValue = DialogResult.Cancel Then
-                    'Call MsgBox("Default soll gelten")
-
-                End If
-
-            End If
-
-            If errMessage.Length > 0 Then
-                Call MsgBox(initMsg & vbLf & errMessage)
-            End If
-
-        Else
-
-            Call MsgBox("Es muss mindestens ein Projekt selektiert sein")
-
-        End If
-
-        Call awinDeSelect()
-
-        'appInstance.ScreenUpdating = True
-        enableOnUpdate = True
-
-
-    End Sub
-
-    ' am 21.3.17 von tk rausgenommen 
-    ''' <summary>
-    ''' Projekt ins Noshow stellen  
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    ''' 
-    ''Sub Tom2G1NoShow(control As IRibbonControl)
-
-    ''    Dim singleShp As Excel.Shape
-    ''    'Dim SID As String
-
+    ''    Dim returnValue As DialogResult
     ''    Dim awinSelection As Excel.ShapeRange
+    ''    Dim i As Integer
+    ''    Dim hproj As clsProjekt
+    ''    Dim singleShp As Excel.Shape
+    ''    Dim pname As String
+    ''    Dim todoListe As New Collection
+    ''    Dim errMessage As String = ""
+    ''    Dim initMsg As String = "bitte erst eine Variante anlegen"
 
     ''    Call projektTafelInit()
 
-    ''    Dim formerEE As Boolean = appInstance.EnableEvents
-    ''    appInstance.EnableEvents = False
-
+    ''    ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
     ''    enableOnUpdate = False
 
+    ''    ' Änderung 2.7.14 tk : Vorbedingung sicherstellen: nur Projekte, die noch nicht beauftragt sind, können noch verschoben und 
+    ''    ' werden
+    ''    '
     ''    Try
     ''        'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
     ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -3472,29 +3734,187 @@ Imports System.Windows
 
     ''    If Not awinSelection Is Nothing Then
 
-    ''        ' jetzt die Aktion durchführen ...
+    ''        ' Es muss mindestens 1 Projekt selektiert sein
+    ''        For i = 1 To awinSelection.Count
 
-    ''        For Each singleShp In awinSelection
+    ''            singleShp = awinSelection.Item(i)
 
-    ''            Dim shapeArt As Integer
-    ''            shapeArt = kindOfShape(singleShp)
+    ''            Try
+    ''                hproj = ShowProjekte.getProject(singleShp.Name, True)
+    ''                pname = hproj.name
+    ''            Catch ex As Exception
+    ''                Call MsgBox(" Fehler! Projekt " & singleShp.Name & " nicht im Hauptspeicher")
+    ''                enableOnUpdate = True
+    ''                Exit Sub
+    ''            End Try
 
-    ''            With singleShp
-    ''                If isProjectType(shapeArt) Then
+    ''            If hproj.Status = ProjektStatus(PTProjektStati.geplant) Then
+    ''                ' nur dann macht das Setzen von earliest / latest Sinn ...
 
-    ''                    Call awinShowNoShowProject(pname:=.Name)
+    ''                todoListe.Add(hproj.name)
+
+    ''                If i = 1 Then
+
+    ''                    ' jetzt die Aktion durchführen ...
+
+    ''                    With setStartEnd
+
+    ''                        .EarliestStart.Value = hproj.earliestStart
+    ''                        .LatestStart.Value = hproj.latestStart
+
+    ''                    End With
+
+
+    ''                Else
+
+    ''                    With setStartEnd
+
+    ''                        If .EarliestStart.Value <> hproj.earliestStart Or .LatestStart.Value <> hproj.latestStart Then
+
+    ''                            .EarliestStart.Value = 0
+    ''                            .LatestStart.Value = 0
+
+    ''                        End If
+
+    ''                    End With
+
 
     ''                End If
-    ''            End With
-    ''        Next
+    ''            Else
+    ''                errMessage = errMessage & vbLf & hproj.name
+    ''            End If
+
+    ''        Next i
+
+    ''        If todoListe.Count > 0 Then
+
+    ''            returnValue = setStartEnd.ShowDialog
+
+    ''            If returnValue = DialogResult.OK Then
+
+    ''                For i = 1 To todoListe.Count
+
+    ''                    pname = CStr(todoListe.Item(i))
+
+    ''                    ' jetzt die Aktion durchführen ...
+    ''                    Try
+    ''                        hproj = ShowProjekte.getProject(pname)
+    ''                        With setStartEnd
+
+    ''                            hproj.earliestStart = .EarliestStart.Value
+    ''                            hproj.latestStart = .LatestStart.Value
+    ''                            hproj.earliestStartDate = hproj.startDate.AddMonths(.EarliestStart.Value)
+    ''                            hproj.latestStartDate = hproj.startDate.AddMonths(.LatestStart.Value)
+
+    ''                        End With
+    ''                    Catch ex As Exception
+    ''                        Call MsgBox(" Fehler! Projekt " & pname & " earliest/latest kann nicht gesetzt werden")
+    ''                        enableOnUpdate = True
+    ''                        Exit Sub
+    ''                    End Try
+
+    ''                Next i
+
+    ''                Call MsgBox("ok, frühester und spätester Start gesetzt")
+
+    ''            ElseIf returnValue = DialogResult.Cancel Then
+    ''                'Call MsgBox("Default soll gelten")
+
+    ''            End If
+
+    ''        End If
+
+    ''        If errMessage.Length > 0 Then
+    ''            Call MsgBox(initMsg & vbLf & errMessage)
+    ''        End If
 
     ''    Else
-    ''        Call MsgBox("vorher Projekt selektieren ...")
+
+    ''        Call MsgBox("Es muss mindestens ein Projekt selektiert sein")
+
     ''    End If
 
+    ''    Call awinDeSelect()
+
+    ''    'appInstance.ScreenUpdating = True
     ''    enableOnUpdate = True
-    ''    appInstance.EnableEvents = formerEE
+
+
     ''End Sub
+
+    Sub sortCurrentConstellation(control As IRibbonControl)
+
+        Dim sortType As Integer = ptSortCriteria.alphabet
+
+        Call projektTafelInit()
+
+        ' Vorbesetzungen 
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+
+        Try
+
+            If control.Id = "PT6G1B1" Then
+                ' alphabetisch sortieren 
+                sortType = ptSortCriteria.alphabet
+            ElseIf control.Id = "PT6G1B2" Then
+                ' Business Unit StartDate Name
+                sortType = ptSortCriteria.buStartName
+            ElseIf control.Id = "PT6G1B3" Then
+                ' Strategy-Risk-Profit
+                sortType = ptSortCriteria.strategyRiskProfitLoss
+            ElseIf control.Id = "PT6G1B4" Then
+                ' sort by individual criterias
+                sortType = ptSortCriteria.customListe
+            ElseIf control.Id = "PT6G1B5" Then
+                ' custom Formel , zu implementieren 
+                sortType = ptSortCriteria.alphabet
+            End If
+
+            Dim currentSortConstellation As clsConstellation = currentSessionConstellation.copy("Sort Result")
+
+            If currentSortConstellation.sortCriteria <> sortType Then
+                appInstance.ScreenUpdating = False
+                Try
+                    ' nur dann muss was gemacht werden ...  
+                    currentSortConstellation.sortCriteria = sortType
+
+                    Dim tmpConstellation As New clsConstellations
+                    tmpConstellation.Add(currentSortConstellation)
+
+                    ' es in der Session Liste verfügbar machen
+                    If projectConstellations.Contains(currentSortConstellation.constellationName) Then
+                        projectConstellations.Remove(currentSortConstellation.constellationName)
+                    End If
+
+                    projectConstellations.Add(currentSortConstellation)
+
+                    Call showConstellations(constellationsToShow:=tmpConstellation, _
+                                            clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
+
+                    ''If sortType = ptSortCriteria.customListe Then
+                    ''    Call awinNeuZeichnenDiagramme(2)
+                    ''Else
+                    ''    ' in allen anderen Fällen kann sich an der Zahl und Ressourcenbedrag nichts geändert haben 
+                    ''End If
+                Catch ex As Exception
+
+                End Try
+
+                appInstance.ScreenUpdating = True
+
+            End If
+        Catch ex As Exception
+            If appInstance.ScreenUpdating = False Then
+                appInstance.ScreenUpdating = True
+            End If
+        End Try
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+    End Sub
 
     ''' <summary>
     ''' neues Formular zur Auswahl Phasen/Meilensteine/Rollen/Kosten anzeigen
@@ -3507,11 +3927,24 @@ Imports System.Windows
 
         Call PBBNameHierarchySelAction(control.Id)
 
-
         If control.Id = "PTMEC1" And awinSettings.meEnableSorting <> formerES Then
             Me.ribbon.Invalidate()
         End If
-        
+
+
+
+        ' jetzt muss die Behandlung rein, dass ggf das Portfolio oder Project Window angezeigt werden ... 
+        If control.Id = "PTXG1B6" Or _
+            control.Id = "PTXG1B7" Then
+            ' Portfolio Charts Ressource/Cost/Phases/Milestones, Auswahl über Namen oder Hierarchie 
+
+            If thereAreAnyCharts(PTwindows.mptpf) Then
+                ' jetzt sollte das Window gezeigt werden, wenn es nicht schon sichtbar ist ... 
+                Call showVisboWindow(PTwindows.mptpf)
+            End If
+
+        End If
+
 
     End Sub
 
@@ -3525,49 +3958,14 @@ Imports System.Windows
 
     End Sub
 
-    ' am 21.3.17 rausgenommen 
     ''' <summary>
-    ''' Projekt ins Show zurückholen 
+    ''' Projekt fixieren, d.h. vor dem Verschieben schützen
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    ''Sub Tom2G1Show(control As IRibbonControl)
-
-    ''    Dim getBackToShow As New frmGetProjectbackFromNoshow
-
-    ''    Dim returnValue As DialogResult
-
-    ''    Call projektTafelInit()
-
-    ''    enableOnUpdate = False
-    ''    appInstance.ScreenUpdating = False
-
-    ''    If AlleProjekte.Count > 0 And ShowProjekte.Count <> AlleProjekte.Count Then
-
-    ''        returnValue = getBackToShow.ShowDialog
-    ''    Else
-    ''        If AlleProjekte.Count = 0 Then
-    ''            Call MsgBox("Es sind keine Projekte geladen!  ")
-    ''        Else
-    ''            Call MsgBox("Es gibt keine Projekte in der Warteschlange !")
-    ''        End If
-    ''    End If
-
-
-
-    ''    appInstance.ScreenUpdating = True
-    ''    enableOnUpdate = True
-    ''End Sub
-    ''' <summary>
-    ''' Änderungen akzeptieren 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G1Accept(control As IRibbonControl)
+    Sub PTFreezeProject(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-
-
         Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
@@ -3595,7 +3993,33 @@ Imports System.Windows
 
                 With singleShp
                     If isProjectType(shapeArt) Then
-                        Call awinBeauftragung(pname:=.Name, type:=0)
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+
+                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+
+                                    hproj.movable = False
+                                    Dim tmpCollection As New Collection
+                                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                                Else
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                                    "and cannot be modified. You could instead create a variant.")
+                                    Else
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                                    "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                    End If
+                                End If
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+                            
+                        End If
+
                     End If
                 End With
             Next
@@ -3609,14 +4033,270 @@ Imports System.Windows
 
     End Sub
 
-
-
     ''' <summary>
-    ''' Projekt beauftragen
+    ''' markiert die selektierten oder alle Projekte, die aktuell angezeigt werden 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub Tom2G1Beauftragen(control As IRibbonControl)
+    Sub PTMarkProjects(control As IRibbonControl)
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+        Dim atleastOne As Boolean = False
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+                                If hproj.marker = False Then
+                                    hproj.marker = True
+                                    atleastOne = True
+                                    Dim tmpCollection As New Collection
+                                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+                                End If
+                                
+
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+        Else
+
+            Call markAllProjects(atleastOne)
+            
+        End If
+
+        If atleastOne Then
+            ' jetzt müssen alle Charts de-selektiert werden ...
+            Call unmarkPfDiagrams()
+
+            ' und jetzt muss noch ggf das BubbleDiagramm neu, d.h ohne Markierungen gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(99)
+        End If
+        
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+    End Sub
+
+    ''' <summary>
+    ''' setzt die Markierungen der Projekte zurück ... 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTUnMarkProject(control As IRibbonControl)
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+        Dim atleastOne As Boolean = False
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+                                hproj.marker = False
+                                Dim tmpCollection As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+        Else
+
+            Call unMarkAllProjects(atleastOne)
+            'If awinSettings.englishLanguage Then
+            '    Call MsgBox("select project(s first ...")
+            'Else
+            '    Call MsgBox("vorher Projekt(e selektieren ...")
+            'End If
+
+        End If
+
+        If atleastOne Then
+            ' jetzt müssen alle Charts de-selektiert werden ...
+            Call unmarkPfDiagrams()
+
+            ' und jetzt muss noch ggf das BubbleDiagramm neu, d.h ohne Markierungen gezeichnet werden 
+            Call awinNeuZeichnenDiagramme(99)
+        End If
+        
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    ''' <summary>
+    ''' Projekt-Fixierung aufheben, d.h. es kann verschoben werden 
+    ''' darf aber nur für Status = geplant, beauftragt und noch nicht begonnen, alle Stati mit Variante ausser abgebrochen oder abgeschlossen
+    ''' gemacht werden 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTDeFreezeProject(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        If ShowProjekte.contains(.Name) Then
+
+                            Try
+                                Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
+
+                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or _
+                                    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And _
+                                     Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
+
+                                    If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
+
+                                        hproj.movable = True
+                                        Dim tmpCollection As New Collection
+                                        Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                                    Else
+                                        If awinSettings.englishLanguage Then
+                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                                        "and cannot be modified. You could instead create a variant.")
+                                        Else
+                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                                        "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
+                                        End If
+                                    End If
+
+                                Else
+                                    ' nicht erlaubt 
+                                    If awinSettings.englishLanguage Then
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " must not be moved protected.")
+                                    Else
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " darf nicht verschoben / verkürzt / verlängert werden.")
+                                    End If
+                                End If
+
+                                
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+
+                        End If
+
+                    End If
+                End With
+            Next
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("select project(s first ...")
+            Else
+                Call MsgBox("vorher Projekt(e selektieren ...")
+            End If
+
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+
+    ''' <summary>
+    ''' den Status eines Projekts ändern, aktuell nur auf Projekt-status = 1 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2ProjektStatusChange(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
@@ -3651,7 +4331,7 @@ Imports System.Windows
                             Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
                             If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
-                                Call awinBeauftragung(pname:=hproj.name, type:=1)
+                                Call changeProjectStatus(pname:=hproj.name, type:=PTProjektStati.beauftragt)
 
                             Else
                                 If awinSettings.englishLanguage Then
@@ -3678,84 +4358,6 @@ Imports System.Windows
     End Sub
 
     ''' <summary>
-    ''' Beauftragung zurücknehmen 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2GXBeauftragen(control As IRibbonControl)
-
-        Dim singleShp As Excel.Shape
-        Dim awinSelection As Excel.ShapeRange
-
-        Call projektTafelInit()
-
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
-
-        enableOnUpdate = False
-
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-
-        If Not awinSelection Is Nothing Then
-
-            ' jetzt die Aktion durchführen ...
-
-            For Each singleShp In awinSelection
-                Dim shapeArt As Integer
-                shapeArt = kindOfShape(singleShp)
-
-                With singleShp
-                    If isProjectType(shapeArt) Then
-
-                        If ShowProjekte.contains(.Name) Then
-                            Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
-
-                            ' darf nur gemacht werden, wenn Varianten-NAme <> ""
-                            If hproj.variantName <> "" Then
-                                If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
-                                    Call awinCancelBeauftragung(hproj.name)
-                                Else
-                                    If awinSettings.englishLanguage Then
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
-                                                    "and cannot be modified. You could instead create a variant.")
-                                    Else
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
-                                                    "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
-                                    End If
-                                End If
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    Call MsgBox("Base-Variant must not be de-freezed ..." & vbLf & _
-                                                "please create a variant first ...")
-                                Else
-                                    Call MsgBox("die Fixierung der Standard Variante kann nicht aufgehoben werden ..." & vbLf & _
-                                                "bitte erstellen Sie zu diesem Zweck eine Variante ...")
-                                End If
-                            End If
-                            
-                        End If
-
-                    End If
-                End With
-            Next
-
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-
-    End Sub
-
-
-
-    ''' <summary>
     ''' Projekt löschen
     ''' </summary>
     ''' <param name="control"></param>
@@ -3765,22 +4367,24 @@ Imports System.Windows
         Call PBBLoeschen(control)
 
     End Sub
+    ' ur: 31.03.2017 trägt nur zur Verwirrung bei
+    ' ReportProfil kann nun bei Report-Erstellung bearbeitet
 
-    ''' <summary>
-    ''' EinzelProjekt Report mit selektierter Vorlage erstellen
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub awinBHTCReport(control As IRibbonControl)
+    ' '' ''' <summary>
+    ' '' ''' EinzelProjekt Report mit selektierter Vorlage erstellen
+    ' '' ''' </summary>
+    ' '' ''' <param name="control"></param>
+    ' '' ''' <remarks></remarks>
+    ' ''Sub awinBHTCReport(control As IRibbonControl)
 
-        ' Hierarchie auswählen, Einzelprojekt Berichte 
-        appInstance.ScreenUpdating = False
+    ' ''    ' Hierarchie auswählen, Einzelprojekt Berichte 
+    ' ''    appInstance.ScreenUpdating = False
 
-        Call PBBBHTCHierarchySelAction(control.Id, Nothing)
+    ' ''    Call PBBBHTCHierarchySelAction(control.Id, Nothing)
 
-        appInstance.ScreenUpdating = True
+    ' ''    appInstance.ScreenUpdating = True
 
-    End Sub
+    ' ''End Sub
 
 
 
@@ -4079,9 +4683,9 @@ Imports System.Windows
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        
-            ' Aktion durchführen ...
+        ' Aktion durchführen ...
         getScenarioImport.menueAswhl = PTImpExp.scenariodefs
         returnValue = getScenarioImport.ShowDialog
 
@@ -4122,22 +4726,34 @@ Imports System.Windows
 
                     If newConstellation.count > 0 Then
 
-                        If projectConstellations.Contains(scenarioName) Then
-                            projectConstellations.Remove(scenarioName)
-                        End If
 
                         If projectConstellations.Contains(scenarioName) Then
                             projectConstellations.Remove(scenarioName)
                         End If
 
                         projectConstellations.Add(newConstellation)
-                        'Call loadSessionConstellation(scenarioName, False, False, True)
+
+
+                        ' Beginn
+
+                        Dim constellationsToDo As New clsConstellations
+                        constellationsToDo.Add(newConstellation)
+
+                        Dim clearBoard As Boolean = True
+                        Dim clearSession As Boolean = False
+                        If constellationsToDo.Count > 0 Then
+                            Call showConstellations(constellationsToDo, clearBoard, clearSession, Date.Now)
+                        End If
+
+                        ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
+                        If Not noDB Then
+                            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                        End If
+
                     Else
-                        Call MsgBox("keine Projekte für Szenario erkannt ...")
+                        Call MsgBox("keine Projekte für Portfolio erkannt ...")
                     End If
 
-                    'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                    'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                     If ImportProjekte.Count > 0 Then
                         ImportProjekte.Clear(False)
@@ -4198,7 +4814,7 @@ Imports System.Windows
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -4341,6 +4957,11 @@ Imports System.Windows
 
     End Sub
 
+    ''' <summary>
+    ''' importiert eine Excel Datei mit Phasen und Meilensteinen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
     Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
 
 
@@ -4381,7 +5002,7 @@ Imports System.Windows
                     ImportProjekte.Clear(False)
                     myCollection.Clear()
                     'Call bmwImportProjektInventur(myCollection)
-                    Call rplanExcelImport(myCollection, False, dateiName)
+                    Call planExcelImport(myCollection, False, dateiName)
                     'Call bmwImportProjekteITO15(myCollection, False)
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
@@ -4389,7 +5010,7 @@ Imports System.Windows
 
 
                     appInstance.ScreenUpdating = True
-                    Call importProjekteEintragen(importDate, ProjektStatus(1))
+                    Call importProjekteEintragen(importDate, True)
 
                     'Call awinWritePhaseDefinitions()
                     'Call awinWritePhaseMilestoneDefinitions()
@@ -4507,7 +5128,7 @@ Imports System.Windows
                 Call RXFImport(myCollection, dateiName, False, protokoll)
 
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
 
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
@@ -4658,7 +5279,7 @@ Imports System.Windows
 
 
             Try
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
             Catch ex As Exception
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -4777,7 +5398,7 @@ Imports System.Windows
 
             Try
                 'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                Call importProjekteEintragen(importDate, ProjektStatus(1))
+                Call importProjekteEintragen(importDate, True)
             Catch ex As Exception
 
                 Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
@@ -4802,7 +5423,7 @@ Imports System.Windows
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Public Sub bmwExcelExport(control As IRibbonControl)
+    Public Sub planExcelExport(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
@@ -4880,7 +5501,8 @@ Imports System.Windows
 
                     ' jetzt wird dieses Projekt exportiert ... 
                     Try
-                        Call bmwExportProject(hproj, zeile)
+                        'Call bmwExportProject(hproj, zeile)
+                        Call planExportProject(hproj, zeile)
                         outputString = outputString & hproj.name & " erfolgreich .." & vbLf
                     Catch ex As Exception
                         outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
@@ -4920,6 +5542,25 @@ Imports System.Windows
 
 
 
+    End Sub
+
+    Public Sub awinWritePrioList(control As IRibbonControl)
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Try
+            Call writeProjektsForSequencing()
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
     End Sub
 
     ''' <summary>
@@ -5088,184 +5729,186 @@ Imports System.Windows
 
     End Sub
 
+    ' tk 21.8.2017 wird nicht mehr verwendet 
     ''' <summary>
     ''' erstellt die Summary Zuordnungs-Datei 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub Tom2G4M2B1ZuordnungRP(control As IRibbonControl)
+    'Sub Tom2G4M2B1ZuordnungRP(control As IRibbonControl)
 
 
-        Dim fileName As String
-        Dim zeile As Integer = 2
-        Dim ok As Boolean
+    '    Dim fileName As String
+    '    Dim zeile As Integer = 2
+    '    Dim ok As Boolean
 
-        Call projektTafelInit()
+    '    Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-
-        fileName = "Vorlage Zuordnung.xlsx"
-
-        ' öffnen der Excel Datei 
-        Try
-            appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & fileName)
-        Catch ex As Exception
-            Call MsgBox("File " & fileName & " nicht gefunden ... Abbruch")
-            appInstance.EnableEvents = True
-            appInstance.ScreenUpdating = True
-            enableOnUpdate = True
-            Exit Sub
-        End Try
+    '    appInstance.EnableEvents = False
+    '    appInstance.ScreenUpdating = False
+    '    enableOnUpdate = False
 
 
+    '    fileName = "Vorlage Zuordnung.xlsx"
+
+    '    ' öffnen der Excel Datei 
+    '    Try
+    '        appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & fileName)
+    '    Catch ex As Exception
+    '        Call MsgBox("File " & fileName & " nicht gefunden ... Abbruch")
+    '        appInstance.EnableEvents = True
+    '        appInstance.ScreenUpdating = True
+    '        enableOnUpdate = True
+    '        Exit Sub
+    '    End Try
 
 
-        Call awinExportRessZuordnung(0, " ")
 
 
-        Try
-
-            appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\Summary.xlsx", _
-                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-            ok = True
-            appInstance.ActiveWorkbook.Close()
-
-        Catch ex As Exception
-            ok = False
-            appInstance.ActiveWorkbook.Close()
-        End Try
+    '    Call awinExportRessZuordnung(0, " ")
 
 
-        If ok Then
-            Call MsgBox("ok, Datei erstellt ...")
-        Else
-            Call MsgBox("Fehler bei Save as ..\summary.xlsx")
-        End If
+    '    Try
+
+    '        appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\Summary.xlsx", _
+    '                                  ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+    '        ok = True
+    '        appInstance.ActiveWorkbook.Close()
+
+    '    Catch ex As Exception
+    '        ok = False
+    '        appInstance.ActiveWorkbook.Close()
+    '    End Try
 
 
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
-        enableOnUpdate = True
+    '    If ok Then
+    '        Call MsgBox("ok, Datei erstellt ...")
+    '    Else
+    '        Call MsgBox("Fehler bei Save as ..\summary.xlsx")
+    '    End If
 
 
-    End Sub
+    '    appInstance.EnableEvents = True
+    '    appInstance.ScreenUpdating = True
+    '    enableOnUpdate = True
 
+
+    'End Sub
+
+    ' tk 21.8.17 wird nicht mehr verwendet 
     ''' <summary>
     ''' erstellt die Zuordnungs-Datei Ressourcen -> Projekt
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub Tom2G4M2B2ZuordnungRP(control As IRibbonControl)
+    'Sub Tom2G4M2B2ZuordnungRP(control As IRibbonControl)
 
-        Dim initialeVorlageName As String, kapaFileName As String
-        Dim zeile As Integer = 2
-        Dim anzRollen As Integer
-        Dim i As Integer
-        Dim initMessage As String = "bitte die Kapazitäten eintragen zu folgenden Rollen" & vbLf
-        Dim infoMessage As String = initMessage
-        Dim zuordnungsOrdner As String = projektRessOrdner & "\" & "Projekt Zuordnungen"
+    '    Dim initialeVorlageName As String, kapaFileName As String
+    '    Dim zeile As Integer = 2
+    '    Dim anzRollen As Integer
+    '    Dim i As Integer
+    '    Dim initMessage As String = "bitte die Kapazitäten eintragen zu folgenden Rollen" & vbLf
+    '    Dim infoMessage As String = initMessage
+    '    Dim zuordnungsOrdner As String = projektRessOrdner & "\" & "Projekt Zuordnungen"
 
-        Call projektTafelInit()
+    '    Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-
-
-        ' für jede Ressource eine eigene Datei machen
-        anzRollen = RoleDefinitions.Count
-
-        Dim ok As Boolean = True
-        Dim roleName As String
-
-        For i = 1 To anzRollen
-
-            roleName = RoleDefinitions.getRoledef(i).name.Trim
-            kapaFileName = roleName & " Kapazität.xlsx"
-
-            ' öffnen der Excel Datei 
-            Try
-
-                appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & kapaFileName)
-                ok = True
-
-            Catch ex As Exception
-
-                initialeVorlageName = "template Kapazität.xlsx"
-                ok = False
-
-                Try
-                    appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & initialeVorlageName)
-                    Try
-                        appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\" & kapaFileName, _
-                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-
-                        infoMessage = infoMessage & kapaFileName & vbLf
-                    Catch ex2 As Exception
-
-                    End Try
+    '    appInstance.EnableEvents = False
+    '    appInstance.ScreenUpdating = False
+    '    enableOnUpdate = False
 
 
 
-                Catch ex1 As Exception
-                    Call MsgBox("File " & initialeVorlageName & " nicht gefunden ... Abbruch" & vbLf & vbLf & _
-                                "dieses File muss im Ordner " & awinPath & projektRessOrdner & "abgelegt werden")
-                    appInstance.EnableEvents = True
-                    appInstance.ScreenUpdating = True
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
+    '    ' für jede Ressource eine eigene Datei machen
+    '    anzRollen = RoleDefinitions.Count
 
-            End Try
+    '    Dim ok As Boolean = True
+    '    Dim roleName As String
 
+    '    For i = 1 To anzRollen
 
-            If ok Then
+    '        roleName = RoleDefinitions.getRoledef(i).name.Trim
+    '        kapaFileName = roleName & " Kapazität.xlsx"
 
-                Dim curFilename As String = roleName & " Projekt-Zuordnung" & " " & Date.Now.ToString("MMM yy") & ".xlsx"
+    '        ' öffnen der Excel Datei 
+    '        Try
 
+    '            appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & kapaFileName)
+    '            ok = True
 
-                Try
-                    Call awinExportRessZuordnung(1, roleName)
-                    'appInstance.ActiveWorkbook.Save()
+    '        Catch ex As Exception
 
-                    appInstance.ActiveWorkbook.SaveAs(Filename:=awinPath & zuordnungsOrdner & "\" & curFilename, _
-                                                      ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+    '            initialeVorlageName = "template Kapazität.xlsx"
+    '            ok = False
 
+    '            Try
+    '                appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & initialeVorlageName)
+    '                Try
+    '                    appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\" & kapaFileName, _
+    '                                  ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
 
-                Catch ex As Exception
+    '                    infoMessage = infoMessage & kapaFileName & vbLf
+    '                Catch ex2 As Exception
 
-                    Call MsgBox("Fehler bei Zuordnung " & roleName)
-                End Try
-
-            End If
-
-
-            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+    '                End Try
 
 
 
-        Next
+    '            Catch ex1 As Exception
+    '                Call MsgBox("File " & initialeVorlageName & " nicht gefunden ... Abbruch" & vbLf & vbLf & _
+    '                            "dieses File muss im Ordner " & awinPath & projektRessOrdner & "abgelegt werden")
+    '                appInstance.EnableEvents = True
+    '                appInstance.ScreenUpdating = True
+    '                enableOnUpdate = True
+    '                Exit Sub
+    '            End Try
 
-        If infoMessage.Length > initMessage.Length Then
-            ' in diesem Fall wurden  nur die Kapazität-Zuordnungs-Files erstellt 
-            infoMessage = infoMessage & vbLf & vbLf & "es wurden noch keine Zuordnungs-Dateien erstellt!"
-            Call MsgBox(infoMessage)
-        Else
-            Call MsgBox("ok, Dateien erstellt ...")
-        End If
-
-
-
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
-        enableOnUpdate = True
+    '        End Try
 
 
-    End Sub
+    '        If ok Then
+
+    '            Dim curFilename As String = roleName & " Projekt-Zuordnung" & " " & Date.Now.ToString("MMM yy") & ".xlsx"
+
+
+    '            Try
+    '                Call awinExportRessZuordnung(1, roleName)
+    '                'appInstance.ActiveWorkbook.Save()
+
+    '                appInstance.ActiveWorkbook.SaveAs(Filename:=awinPath & zuordnungsOrdner & "\" & curFilename, _
+    '                                                  ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+
+    '            Catch ex As Exception
+
+    '                Call MsgBox("Fehler bei Zuordnung " & roleName)
+    '            End Try
+
+    '        End If
+
+
+    '        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+
+
+    '    Next
+
+    '    If infoMessage.Length > initMessage.Length Then
+    '        ' in diesem Fall wurden  nur die Kapazität-Zuordnungs-Files erstellt 
+    '        infoMessage = infoMessage & vbLf & vbLf & "es wurden noch keine Zuordnungs-Dateien erstellt!"
+    '        Call MsgBox(infoMessage)
+    '    Else
+    '        Call MsgBox("ok, Dateien erstellt ...")
+    '    End If
+
+
+
+    '    appInstance.EnableEvents = True
+    '    appInstance.ScreenUpdating = True
+    '    enableOnUpdate = True
+
+
+    'End Sub
 
     Sub PTDemoModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
@@ -5360,7 +6003,7 @@ Imports System.Windows
     Sub awinSetShowSelObj(control As IRibbonControl, ByRef pressed As Boolean)
 
         awinSettings.showValuesOfSelected = pressed
-        
+
     End Sub
 
 
@@ -5374,7 +6017,7 @@ Imports System.Windows
 
 
         awinSettings.propAnpassRess = pressed
-        
+
 
     End Sub
 
@@ -5395,7 +6038,10 @@ Imports System.Windows
 
         ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
         visboZustaende.clearAuslastungsArray()
-        Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+        If awinSettings.meExtendedColumnsView Then
+            Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+        End If
+
 
     End Sub
 
@@ -5530,7 +6176,7 @@ Imports System.Windows
 
 
         awinSettings.mppShowAmpel = pressed
-        
+
 
     End Sub
 
@@ -5730,6 +6376,134 @@ Imports System.Windows
     End Sub
 
     ''' <summary>
+    ''' zeigt eine Zusammenstellung der wichtigsten Projekt-Charts
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub TomMostImportantProjectCharts(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim ok As Boolean = True
+        'Dim SID As String
+        Dim hproj As clsProjekt = Nothing
+        Dim awinSelection As Excel.ShapeRange
+        Dim auswahl As Integer = 1
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim myCollection As New Collection
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            singleShp = awinSelection.Item(1)
+
+            Try
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
+                If IsNothing(hproj) Then
+                    ok = False
+                Else
+                    myCollection.Add(hproj.name)
+                End If
+
+            Catch ex As Exception
+                ok = False
+                hproj = Nothing
+            End Try
+
+
+        Else
+            If ShowProjekte.Count > 0 Then
+                hproj = ShowProjekte.getProject(1)
+                If IsNothing(hproj) Then
+                    ok = False
+                Else
+                    ok = True
+                    myCollection.Add(hproj.name)
+                End If
+            Else
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects loaded ...")
+                Else
+                    Call MsgBox("es sind keine Projekte geladen ...")
+                End If
+
+                ok = False
+            End If
+
+        End If
+
+        If ok And Not IsNothing(hproj) Then
+
+            Dim repObj As Excel.ChartObject
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+
+            repObj = Nothing
+
+            Dim tmpAnzRollen As Integer = 0
+            Dim tmpAnzCosts As Integer = 0
+
+            Try
+                tmpAnzRollen = hproj.getRoleNames.Count
+                tmpAnzCosts = hproj.getCostNames.Count
+            Catch ex As Exception
+
+            End Try
+            
+
+
+            Try
+                ' Projekt-Ergebnis
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
+
+                Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
+                                                         top, left, width, height, False)
+
+                ' Rollen-Balken
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+
+                auswahl = 1 ' zeige Personalbedarfe
+                Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                ' Kosten-Balken
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+
+                auswahl = 1 ' zeige Sonstige Kosten
+                Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                ' Strategie / Risiko / Marge
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
+
+                Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
+
+                If thereAreAnyCharts(PTwindows.mptpr) Then
+                    Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                    Call showVisboWindow(PTwindows.mptpr, tmpmsg)
+                End If
+
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
+        enableOnUpdate = True
+
+
+    End Sub
+
+    ''' <summary>
     ''' Charakteristik Personal Bedarfe
     ''' </summary>
     ''' <param name="control"></param>
@@ -5760,11 +6534,6 @@ Imports System.Windows
                 ' jetzt die Aktion durchführen ...
                 Dim ok As Boolean = True
                 singleShp = awinSelection.Item(1)
-                With singleShp
-                    top = .Top + boxHeight + 5
-                    left = .Left - 5
-                End With
-                height = 180
 
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
@@ -5781,17 +6550,33 @@ Imports System.Windows
 
                     repObj = Nothing
 
-                    width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 6 * boxWidth + 10)
+                    Dim tmpAnzRollen As Integer = 0
+                    Dim tmpAnzCosts As Integer = 0
 
                     Try
-                        Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
+                        tmpAnzRollen = hproj.getRoleNames.Count
+                        tmpAnzCosts = hproj.getCostNames.Count
+                    Catch ex As Exception
+
+                    End Try
+
+                    Try
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+
+                        Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
-                        left = left + width + 10
-                        width = boxWidth * 14
-                        height = boxHeight * 10
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+
                         repObj = Nothing
-                        Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width)
+                        Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+
+                        If thereAreAnyCharts(PTwindows.mptpr) Then
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
+                        End If
+
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
                     End Try
@@ -5815,168 +6600,7 @@ Imports System.Windows
 
     End Sub
 
-    ''' <summary>
-    ''' Charakteristik Personalkosten
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G2M1B3PKosten(control As IRibbonControl)
 
-        Dim singleShp As Excel.Shape
-        'Dim SID As String
-        Dim hproj As clsProjekt
-        Dim awinSelection As Excel.ShapeRange
-        Dim auswahl As Integer = 2 ' steuert die Auswahl als Personalkosten
-        Dim top As Double, left As Double, width As Double, height As Double
-
-        Call projektTafelInit()
-
-        enableOnUpdate = False
-
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-
-        If Not awinSelection Is Nothing Then
-
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
-                With singleShp
-                    top = .Top + boxHeight + 5
-                    left = .Left - 5
-                End With
-                height = 180
-
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
-
-
-
-                width = hproj.anzahlRasterElemente * boxWidth + 10
-
-                appInstance.EnableEvents = False
-                appInstance.ScreenUpdating = False
-                Dim repObj As Excel.ChartObject = Nothing
-
-                Try
-                    Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
-
-                    ' jetzt wird das Pie-Diagramm gezeichnet 
-                    left = left + width + 10
-                    width = boxWidth * 14
-                    height = boxHeight * 10
-                    repObj = Nothing
-                    Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width)
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
-
-
-                appInstance.EnableEvents = True
-                appInstance.ScreenUpdating = True
-
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-
-            End If
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
-
-        enableOnUpdate = True
-
-
-
-    End Sub
-
-    ''' <summary>
-    ''' Charakteristik Andere Kosten
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G2M1B4AKosten(control As IRibbonControl)
-
-        Dim singleShp As Excel.Shape
-        'Dim SID As String
-        Dim hproj As clsProjekt
-        Dim awinSelection As Excel.ShapeRange
-        Dim auswahl As Integer = 1
-        Dim top As Double, left As Double, width As Double, height As Double
-
-        Call projektTafelInit()
-
-        enableOnUpdate = False
-
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-
-        If Not awinSelection Is Nothing Then
-
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
-                With singleShp
-                    top = .Top + boxHeight + 5
-                    left = .Left - 5
-                End With
-                height = 180
-
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name, True)
-                Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
-
-                width = hproj.anzahlRasterElemente * boxWidth + 10
-                appInstance.EnableEvents = False
-                appInstance.ScreenUpdating = False
-                Dim repObj As Excel.ChartObject = Nothing
-
-                Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
-
-                ' jetzt wird das Pie-Diagramm gezeichnet 
-                left = left + width + 10
-                width = boxWidth * 14
-                height = boxHeight * 10
-                repObj = Nothing
-
-                Try
-                    Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width)
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
-
-
-                appInstance.EnableEvents = True
-                appInstance.ScreenUpdating = True
-
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-
-            End If
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
-
-        enableOnUpdate = True
-
-
-    End Sub
 
     ''' <summary>
     ''' Charakteristik Gesamtkosten
@@ -5988,7 +6612,7 @@ Imports System.Windows
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
-        Dim auswahl As Integer = 2 ' das steuert , dass die Gesamtkosten angezeigt werden 
+        Dim auswahl As Integer = 1 ' das steuert , dass die sonstigen Kosten angezeigt werden  
         Dim top As Double, left As Double, width As Double, height As Double
 
         Call projektTafelInit()
@@ -6007,11 +6631,6 @@ Imports System.Windows
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                With singleShp
-                    top = .Top + boxHeight + 5
-                    left = .Left - 5
-                End With
-                height = 180
 
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
@@ -6021,21 +6640,35 @@ Imports System.Windows
                     Exit Sub
                 End Try
 
-                width = hproj.anzahlRasterElemente * boxWidth + 10
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
                 Dim repObj As Excel.ChartObject = Nothing
 
+                Dim tmpAnzCosts As Integer = 0
 
                 Try
-                    Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
+                    tmpAnzCosts = hproj.getCostNames.Count
+                Catch ex As Exception
+
+                End Try
+
+                Try
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+
+                    Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
                     ' jetzt wird das Pie-Diagramm gezeichnet 
-                    left = left + width + 10
-                    width = boxWidth * 14
-                    height = boxHeight * 10
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+
                     repObj = Nothing
-                    Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width)
+                    Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+
+                    If thereAreAnyCharts(PTwindows.mptpr) Then
+                        Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                        Call showVisboWindow(PTwindows.mptpr, tmpmsg)
+                    End If
+
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try
@@ -6071,11 +6704,10 @@ Imports System.Windows
         Dim singleShp As Excel.Shape
         Dim myCollection As New Collection
         Dim awinSelection As Excel.ShapeRange
+        Dim hproj As clsProjekt
 
         Call projektTafelInit()
 
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
 
@@ -6090,33 +6722,50 @@ Imports System.Windows
 
         If Not awinSelection Is Nothing Then
 
-            ' jetzt die Aktion durchführen ...
+            If awinSelection.Count = 1 Then
+                ' jetzt die Aktion durchführen ...
+                Dim ok As Boolean = True
+                singleShp = awinSelection.Item(1)
 
-            For Each singleShp In awinSelection
-                Dim shapeArt As Integer
-                shapeArt = kindOfShape(singleShp)
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
+                    myCollection.Add(hproj.name)
+                Catch ex As Exception
+                    ok = False
+                    hproj = Nothing
+                End Try
 
-                With singleShp
-                    If isProjectType(shapeArt) Then
+                If ok Then
 
-                        myCollection.Add(.Name)
-                        top = .Top + boxHeight + 2
-                        left = .Left - 3
-                        width = 12 * boxWidth
-                        height = 8 * boxHeight
+                    Dim repObj As Excel.ChartObject
 
-                    End If
-                End With
-            Next
-            Dim obj As Excel.ChartObject = Nothing
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
+                    repObj = Nothing
+
+                    Try
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+
+                        Call awinCreatePortfolioDiagrams(myCollection, repObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
+
+                        If thereAreAnyCharts(PTwindows.mptpr) Then
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
+                        End If
+
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                End If
+
+            Else
+                Call MsgBox("vorher Projekt selektieren ...")
+            End If
         End If
 
+
         enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-        appInstance.ScreenUpdating = formerSU
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
 
     End Sub
@@ -6171,7 +6820,7 @@ Imports System.Windows
                 End With
             Next
             Dim obj As Excel.ChartObject = Nothing
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -6228,7 +6877,7 @@ Imports System.Windows
             Next
             Dim obj As Excel.ChartObject = Nothing
 
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -6317,7 +6966,7 @@ Imports System.Windows
 
             If myCollection.Count > 0 Then
                 Dim obj As Excel.ChartObject = Nothing
-                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Else
                 Call MsgBox("diese Projekte haben keine Abhängigkeiten")
             End If
@@ -6395,7 +7044,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -6425,16 +7074,22 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub Tom2G2M2M1B2SollIstPKosten(control As IRibbonControl)
 
+
+        ' alt ....
         Call projektTafelInit()
         ' auswahl steuert , dass die Personal-Kosten angezeigt werden 
         Dim auswahl As Integer = 1
-
         Dim vglBaseline As Boolean = True
-
         ' typ steuert, ob Summenbetrachtung oder Curve angezeigt wird
         Dim typ As String = " "
+        Try
+            Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+            Call showVisboWindow(PTwindows.mptpr)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
 
-        Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+
 
     End Sub
 
@@ -6454,6 +7109,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+        Call showVisboWindow(PTwindows.mptpr)
 
     End Sub
 
@@ -6470,6 +7126,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
+        Call showVisboWindow(PTwindows.mptpr)
 
     End Sub
 
@@ -6534,12 +7191,6 @@ Imports System.Windows
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                With singleShp
-                    top = .Top + boxHeight + 5
-                    left = .Left - 5
-                End With
-                height = 300
-                width = 400
 
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
@@ -6590,10 +7241,13 @@ Imports System.Windows
                 Dim qualifier As String = " "
 
                 Try
+
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+
                     If typ = "Curve" Then
                         Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
-                        Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width, False)
                     End If
                 Catch ex As Exception
 
@@ -6603,11 +7257,14 @@ Imports System.Windows
                 appInstance.ScreenUpdating = True
 
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-
+                enableOnUpdate = True
+                'Call MsgBox("bitte nur ein Projekt selektieren")
+                Throw New ArgumentException("bitte nur ein Projekt selektieren")
             End If
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            enableOnUpdate = True
+            'Call MsgBox("vorher Projekt selektieren ...")
+            Throw New ArgumentException("vorher Projekt selektieren ...")
         End If
 
         enableOnUpdate = True
@@ -7447,10 +8104,14 @@ Imports System.Windows
 
     ' '' ''End Sub
 
+    ''' <summary>
+    ''' zeigt die wichtigsten Portfolio Charts ...
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub TomMostImportantPortfolioCharts(control As IRibbonControl)
 
-    Sub PT0ShowAuslastung(control As IRibbonControl)
-
-        Dim selectionType As Integer = -1 ' Keine Einschränkung
+        Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
         Dim obj As Excel.ChartObject = Nothing
         Dim myCollection As New Collection
@@ -7467,23 +8128,44 @@ Imports System.Windows
 
             If myCollection.Count > 0 Then
 
-                top = 180
-                width = 340
-                left = showRangeRight * boxWidth + 4
-                If left < 0 Then
-                    left = 4
-                End If
-                height = awinSettings.ChartHoehe2
+                ' Portfolio Ergebnis
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+
+                Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
+
+                ' Top 3 Bottlenecks
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
 
                 Try
-                    Call awinCreateAuslastungsDiagramm(obj, top, left, width, height, False)
 
-                    top = top + height + 10
+                    'top = top + height + 10
                     Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
 
+                    ' jetzt sollen hier die bis zu drei Top Bottlenecks gezeigt werden 
+                    If Not IsNothing(obj) Then
+                        Dim top3Collection As New Collection
+                        If DiagramList.contains(obj.Name) Then
+                            ' in der gsCollection ist die Info drin, um welche Rollen es sich handelt ...
+                            top3Collection = DiagramList.getDiagramm(obj.Name).gsCollection
+                            For i As Integer = 1 To top3Collection.Count
+                                Dim roleName As String = CStr(top3Collection.Item(i))
+                                Dim tmpCollection As New Collection
+                                tmpCollection.Add(roleName)
+                                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+                                Call awinCreateprcCollectionDiagram(tmpCollection, obj, top, left, width, height, False, DiagrammTypen(1), False)
+                            Next
+                        End If
+
+                    End If
+
+
+                    If thereAreAnyCharts(PTwindows.mptpf) Then
+                        Call showVisboWindow(PTwindows.mptpf)
+                    End If
+
                     ' jetzt Unterauslastung
-                    top = top + height + 10
-                    Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
+                    ''top = top + height + 10
+                    ''Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
 
                 Catch ex As Exception
                     Call MsgBox("keine Information vorhanden")
@@ -7524,7 +8206,101 @@ Imports System.Windows
         End If
 
 
-        
+
+    End Sub
+
+    Sub PT0ShowAuslastung(control As IRibbonControl)
+
+        Dim selectionType As Integer = PTpsel.alle ' Keine Einschränkung
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim obj As Excel.ChartObject = Nothing
+        Dim myCollection As New Collection
+
+        Call projektTafelInit()
+
+        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
+
+
+            myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+            If myCollection.Count > 0 Then
+
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+
+                Try
+
+                    'top = top + height + 10
+                    Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
+
+                    ' jetzt sollen hier die bis zu drei Top Bottlenecks gezeigt werden 
+                    If Not IsNothing(obj) Then
+                        Dim top3Collection As New Collection
+                        If DiagramList.contains(obj.Name) Then
+                            ' in der gsCollection ist die Info drin, um welche Rollen es sich handelt ...
+                            top3Collection = DiagramList.getDiagramm(obj.Name).gsCollection
+                            For i As Integer = 1 To top3Collection.Count
+                                Dim roleName As String = CStr(top3Collection.Item(i))
+                                Dim tmpCollection As New Collection
+                                tmpCollection.Add(roleName)
+                                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+                                Call awinCreateprcCollectionDiagram(tmpCollection, obj, top, left, width, height, False, DiagrammTypen(1), False)
+                            Next
+                        End If
+
+                    End If
+
+
+                    If thereAreAnyCharts(PTwindows.mptpf) Then
+                        Call showVisboWindow(PTwindows.mptpf)
+                    End If
+
+                    ' jetzt Unterauslastung
+                    ''top = top + height + 10
+                    ''Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
+
+                Catch ex As Exception
+                    Call MsgBox("keine Information vorhanden")
+                End Try
+
+            Else
+
+                If ShowProjekte.Count = 0 Then
+                    Call MsgBox("es sind keine Projekte angezeigt")
+
+                Else
+                    If showRangeRight - showRangeLeft < minColumns - 1 Then
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("please define a timeframe first ...")
+                        Else
+                            Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                        End If
+                    Else
+                        Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                    "gibt es keine Projekte ")
+                    End If
+                End If
+
+            End If
+
+
+
+            appInstance.ScreenUpdating = True
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+
+        Else
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please define a timeframe first ...")
+            Else
+                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+            End If
+        End If
+
+
+
     End Sub
 
     Sub PTXShowEngpass(control As IRibbonControl)
@@ -7567,18 +8343,21 @@ Imports System.Windows
                     von = showRangeLeft
                     bis = showRangeRight
 
-                    height = awinSettings.ChartHoehe1
-                    top = 180
+                    'height = awinSettings.ChartHoehe1
+                    height = maxScreenHeight / 4 - 3
+                    'top = 180
+                    top = 3
+                    left = 3
+                    width = maxScreenWidth / 5 - 3
+                    'If von > 1 Then
+                    '    left = showRangeRight * boxWidth + 4
+                    'Else
+                    '    left = 0
+                    'End If
 
-                    If von > 1 Then
-                        left = showRangeRight * boxWidth + 4
-                    Else
-                        left = 0
-                    End If
+                    'Dim breite As Integer = System.Math.Max(bis - von, 6)
 
-                    Dim breite As Integer = System.Math.Max(bis - von, 6)
-                    
-                    width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                    'width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
 
                     Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, DiagrammTypen(1), False)
 
@@ -7723,7 +8502,7 @@ Imports System.Windows
         'Dim top As Double, left As Double, width As Double, height As Double
         Dim future As Integer = 0
         Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
-        awinSettings.mppShowAmpel = True
+        'awinSettings.mppShowAmpel = True
 
 
         Dim myCollection As New Collection
@@ -7784,7 +8563,6 @@ Imports System.Windows
                 End With
                 wpfInput.Add(valueItem.name, valueItem)
 
-
                 Dim pieChartZieleV As New PieChartWindow(wpfInput)
 
                 With pieChartZieleV
@@ -7821,7 +8599,7 @@ Imports System.Windows
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim myCollection As New Collection
         Dim top As Double, left As Double, width As Double, height As Double
-        Dim sichtbarerBereich As Excel.Range
+        'Dim sichtbarerBereich As Excel.Range
 
         Call projektTafelInit()
 
@@ -7831,34 +8609,44 @@ Imports System.Windows
             appInstance.EnableEvents = False
             enableOnUpdate = False
 
+
             myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
             If myCollection.Count > 0 Then
 
-                With appInstance.ActiveWindow
-                    sichtbarerBereich = .VisibleRange
-                    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
-                    If left < CDbl(sichtbarerBereich.Left) Then
-                        left = CDbl(sichtbarerBereich.Left) + 2
-                    End If
+                ' tk 30.9 wird jetzt durch bestimmeChartPositionandSize geregelt  
+                ''With appInstance.ActiveWindow
+                ''    sichtbarerBereich = .VisibleRange
+                ''    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                ''    If left < CDbl(sichtbarerBereich.Left) Then
+                ''        left = CDbl(sichtbarerBereich.Left) + 2
+                ''    End If
 
-                    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
-                    If top < CDbl(sichtbarerBereich.Top) Then
-                        top = CDbl(sichtbarerBereich.Top) + 2
-                    End If
+                ''    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                ''    If top < CDbl(sichtbarerBereich.Top) Then
+                ''        top = CDbl(sichtbarerBereich.Top) + 2
+                ''    End If
 
-                End With
+                ''End With
 
-                width = 600
-                height = 450
+                ''width = 600
+                ''height = 450
 
                 Dim obj As Excel.ChartObject = Nothing
 
+
+                ' bestimme Position ... 
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
+
                 Try
-                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.AmpelFarbe, False, False, True, top, left, width, height, False)
                 Catch ex As Exception
 
                 End Try
+
+                If thereAreAnyCharts(PTwindows.mptpf) Then
+                    Call showVisboWindow(PTwindows.mptpf)
+                End If
 
             Else
 
@@ -7885,9 +8673,9 @@ Imports System.Windows
                 Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
             End If
         End If
-        
 
-        
+
+
 
     End Sub
 
@@ -7933,7 +8721,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -7996,7 +8784,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
                 'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
             Catch ex As Exception
 
@@ -8018,6 +8806,208 @@ Imports System.Windows
         appInstance.EnableEvents = True
         enableOnUpdate = True
         appInstance.ScreenUpdating = True
+
+    End Sub
+
+    ''' <summary>
+    ''' zeigt zwei Windows an, bestehend aus der Massen-Edit Ressourcen Tabelle und der meCharts Tabelle   
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTMEShowCharts(control As IRibbonControl)
+
+
+        ' das Ganze nur machen, wenn das Chart nicht ohnehin schon gezeigt wird ... 
+        Try
+            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                Exit Sub
+            End If
+        Catch ex As Exception
+        End Try
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Dim currentRow As Integer
+        Dim currentColumn As Integer
+        Dim prcTyp As String
+        Dim pName As String = ""
+        Dim hproj As clsProjekt = Nothing
+
+
+        ' das Markieren der selektierten Projekte einschalten ..
+        awinSettings.showValuesOfSelected = True
+
+
+        Try
+            currentRow = appInstance.ActiveCell.Row
+            currentColumn = appInstance.ActiveCell.Column
+        Catch ex As Exception
+            currentRow = 2
+            currentColumn = visboZustaende.meColRC
+        End Try
+
+        Dim rcName As String = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
+        If IsNothing(rcName) Then
+            rcName = ""
+        End If
+
+        Do While rcName = "" And currentRow <= visboZustaende.meMaxZeile
+            currentRow = currentRow + 1
+            rcName = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColRC).value)
+            If IsNothing(rcName) Then
+                rcName = ""
+            End If
+        Loop
+
+        ' jetzt ist entweder was gefunden oder es ist komplett ohne Werte 
+        If rcName = "" Then
+            currentRow = 2
+            Try
+                prcTyp = DiagrammTypen(1)
+                rcName = RoleDefinitions.getDefaultTopNodeName
+            Catch ex As Exception
+                prcTyp = DiagrammTypen(1)
+                rcName = ""
+            End Try
+
+        Else
+            If RoleDefinitions.containsName(rcName) Then
+                prcTyp = DiagrammTypen(1)
+            ElseIf CostDefinitions.containsName(rcName) Then
+                prcTyp = DiagrammTypen(2)
+            Else
+                prcTyp = DiagrammTypen(1)
+                rcName = RoleDefinitions.getDefaultTopNodeName
+            End If
+
+        End If
+
+        pName = CStr(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(currentRow, visboZustaende.meColpName).value)
+
+        Dim visboWorkbook As Excel.Workbook = appInstance.Workbooks.Item(myProjektTafel)
+
+        With projectboardWindows(PTwindows.massEdit)
+            .WindowState = Excel.XlWindowState.xlNormal
+            .EnableResize = True
+            ' wird ja bereits in der Vorbereitung zu MassEdit gemacht 
+            '.SplitRow = 1
+            '.FreezePanes = True
+            '.DisplayFormulas = False
+            '.DisplayHeadings = False
+            '.DisplayGridlines = True
+            '.GridlineColor = RGB(220, 220, 220)
+            '.DisplayWorkbookTabs = False
+            '.Caption = bestimmeWindowCaption(PTwindows.massEdit)
+            ''.Caption = windowNames(PTwindows.massEdit)
+        End With
+
+
+        projectboardWindows(PTwindows.meChart) = appInstance.ActiveWindow.NewWindow
+
+        visboWorkbook.Worksheets.Item(arrWsNames(ptTables.meCharts)).activate()
+        With projectboardWindows(PTwindows.meChart)
+            .WindowState = Excel.XlWindowState.xlNormal
+            .EnableResize = True
+            .DisplayHorizontalScrollBar = False
+            .DisplayVerticalScrollBar = False
+            .DisplayGridlines = False
+            .DisplayHeadings = False
+            .DisplayRuler = False
+            .DisplayOutline = False
+            .DisplayWorkbookTabs = False
+            .Caption = bestimmeWindowCaption(PTwindows.meChart)
+            '.Caption = windowNames(PTwindows.meChart)
+        End With
+
+
+        ''jetzt das Ursprungs-Window ausblenden ...
+        'For Each tmpWindow As Excel.Window In visboWorkbook.Windows
+        '    If (CStr(tmpWindow.Caption) <> windowNames(4)) And (CStr(tmpWindow.Caption) <> windowNames(1)) Then
+        '        tmpWindow.Visible = False
+        '    End If
+        'Next
+
+
+        visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
+
+        ' jetzt die Größen anpassen 
+        With projectboardWindows(PTwindows.massEdit)
+            .Top = 0
+            .Left = 1.0
+            .Height = 3 / 4 * maxScreenHeight
+            .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
+        End With
+
+        ' jetzt die Größen anpassen 
+        With projectboardWindows(PTwindows.meChart)
+            .Top = 3 / 4 * maxScreenHeight + 3
+            .Left = 1.0
+            .Height = 1 / 4 * maxScreenHeight - 3
+            .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
+        End With
+
+
+        ' Check: was ist das aktuelle Sheet 
+        'Dim checkSheet As Object = projectboardWindows(1).ActiveSheet
+
+        ' jetzt das Mass-Edit Window aktivieren 
+
+        projectboardWindows(PTwindows.massEdit).Activate()
+        'With CType(projectboardWindows(1).ActiveSheet, Excel.Worksheet)
+        '    CType(.Cells(currentRow, currentColumn), Excel.Range).Activate()
+        'End With
+
+        Dim anz As Integer = appInstance.ActiveWorkbook.Windows.Count
+
+        ' jetzt werden die Charts ggf erzeugt ...  
+        If CType(CType(projectboardWindows(PTwindows.meChart).ActiveSheet, Excel.Worksheet).ChartObjects, Excel.ChartObjects).Count = 0 Then
+            ' sie müssen erzeugt werden
+
+            ' jetzt das Projekt Ergebnis Chart anzeigen
+            Dim dummyObj As Excel.ChartObject = Nothing
+            Dim chLeft As Double = 2
+            Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
+            Dim chWidth As Double = stdBreite
+            Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 6
+            Dim chTop As Double = 5
+
+            If ShowProjekte.contains(pName) Then
+                hproj = ShowProjekte.getProject(pName)
+                Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, _
+                                                                     chTop, chLeft, chWidth, chHeight, False)
+            End If
+
+            ' dann das PRCCollectionChart ...
+            Dim repObj As Excel.ChartObject = Nothing
+            chLeft = chLeft + chWidth + 2
+            chWidth = 2 * stdBreite
+
+            Dim myCollection As New Collection
+            myCollection.Add(rcName)
+            Call awinCreateprcCollectionDiagram(myCollection, repObj, chTop, chLeft,
+                                                                   chWidth, chHeight, False, prcTyp, True)
+
+            ' jetzt das Portfolio Chart Budget anzeigen ... 
+            Dim obj As Excel.ChartObject = Nothing
+            chLeft = chLeft + chWidth + 2
+            chWidth = stdBreite
+            Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
+
+
+        Else
+            ' sie sind schon da 
+
+        End If
+
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+        enableOnUpdate = True
+
+        ' jetzt das Chart-Window aktivieren (sonst bleibt Ribbon stehen)
+        projectboardWindows(PTwindows.meChart).Activate()
+
 
     End Sub
 
@@ -8092,7 +9082,7 @@ Imports System.Windows
 
             Try
                 If myCollection.Count > 0 Then
-                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
                 Else
                     Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
                 End If
@@ -8334,7 +9324,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -8398,7 +9388,7 @@ Imports System.Windows
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height, False)
             Catch ex As Exception
 
             End Try
@@ -8476,6 +9466,8 @@ Imports System.Windows
 
         Call projektTafelInit()
 
+
+
         If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
 
             appInstance.EnableEvents = False
@@ -8487,34 +9479,15 @@ Imports System.Windows
 
             If myCollection.Count > 0 Then
 
-                Dim sichtbarerBereich As Excel.Range
-
-                height = awinSettings.ChartHoehe2
-                width = 450
-
-                With appInstance.ActiveWindow
-
-                    sichtbarerBereich = .VisibleRange
-                    If visboZustaende.projectBoardMode = ptModus.graficboard Then
-                        left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
-                        If left < CDbl(sichtbarerBereich.Left) Then
-                            left = CDbl(sichtbarerBereich.Left) + 2
-                        End If
-                    Else
-                        left = 5
-                    End If
-
-
-
-                    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
-                    If top < CDbl(sichtbarerBereich.Top) Then
-                        top = CDbl(sichtbarerBereich.Top) + 2
-                    End If
-
-                End With
+                Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 2, top, left, width, height)
 
                 Dim obj As Excel.ChartObject = Nothing
                 Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
+
+                If thereAreAnyCharts(PTwindows.mptpf) Then
+                    ' jetzt sollte das Window gezeigt werden, wenn es nicht schon sichtbar ist ... 
+                    Call showVisboWindow(PTwindows.mptpf)
+                End If
 
             Else
 
@@ -8561,7 +9534,7 @@ Imports System.Windows
             End If
         End If
 
-        
+
     End Sub
 
 
@@ -8630,7 +9603,7 @@ Imports System.Windows
             End If
         End If
 
-        
+
     End Sub
 
 
@@ -8709,8 +9682,21 @@ Imports System.Windows
                     hproj = ShowProjekte.getProject(singleShp.Name, True)
 
                     Try
+                        Dim top As Double = 0
+                        Dim left As Double = 0
+                        Dim height As Double = 0
+                        Dim width As Double = 0
 
-                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+
+                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, _
+                                                                 top, left, width, height, False)
+
+                        If thereAreAnyCharts(PTwindows.mptpr) Then
+                            Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
+                            Call showVisboWindow(PTwindows.mptpr, tmpmsg)
+                        End If
+
                     Catch ex1 As Exception
                         Call MsgBox("Fehler bei Diagramm erzeugen: " & ex1.Message)
                     End Try
@@ -9763,7 +10749,7 @@ Imports System.Windows
 
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
-
+        Dim timeZoneWasOff As Boolean = False
         getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
@@ -9782,29 +10768,28 @@ Imports System.Windows
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
         Else
-            Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+
+        End If
+
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
         End If
 
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
 
-
-        ' das ist die alte Variante
-        '
-        'enableOnUpdate = False
-        'appInstance.EnableEvents = False
-        'appInstance.ScreenUpdating = False
-
-        'Try
-        '    Call createPPTSlidesFromConstellation()
-        'Catch ex As Exception
-        '    Call MsgBox(ex.Message)
-        'End Try
-
-
-        'appInstance.EnableEvents = True
-        'appInstance.ScreenUpdating = True
-        'enableOnUpdate = True
 
     End Sub
     Sub PTShowVersions(control As IRibbonControl)
@@ -9829,6 +10814,8 @@ Imports System.Windows
         End If
 
     End Sub
+
+  
     Sub PTTestFunktion1(control As IRibbonControl)
 
         Call MsgBox("Enable Events ist " & appInstance.EnableEvents.ToString)
@@ -10199,7 +11186,7 @@ Imports System.Windows
                         Dim name2 As String = CStr(usedRollen2.Item(ix))
                         atleastOne = True
                     End If
-                    
+
                 Next
             End If
 
@@ -10459,6 +11446,11 @@ Imports System.Windows
     End Sub
 
 
+    ''' <summary>
+    ''' Spracheinstellungen für die Reports
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
     Public Sub PTSpracheinstellung(control As IRibbonControl)
 
         Call projektTafelInit()
@@ -10470,6 +11462,28 @@ Imports System.Windows
         Dim returnValue As DialogResult
         returnValue = frmReportSprache.ShowDialog
 
+
+        enableOnUpdate = True
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' Einstellungen zum Visual Board von VISBO
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub PTVisboSettings(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        Dim frmVisboEinst As New frmEinstellungen
+        Dim returnValue As DialogResult
+        returnValue = frmVisboEinst.ShowDialog
 
         enableOnUpdate = True
 
@@ -10499,15 +11513,34 @@ Imports System.Windows
         Call projektTafelInit()
 
         enableOnUpdate = False
-
+        Dim timeZoneWasOff As Boolean = False
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
+
+        ' ist ein Timespan selektiert ? 
+        ' wenn nein, selektieren ... 
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' alles in Ordnung 
+        Else
+            ' automatisch bestimmen 
+            timeZoneWasOff = True
+            If selectedProjekte.Count > 0 Then
+                showRangeLeft = selectedProjekte.getMinMonthColumn
+                showRangeRight = selectedProjekte.getMaxMonthColumn
+            Else
+                showRangeLeft = ShowProjekte.getMinMonthColumn
+                showRangeRight = ShowProjekte.getMaxMonthColumn
+            End If
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+        End If
 
         If ShowProjekte.Count > 0 Then
 
             reportAuswahl.calledFrom = "Multiprojekt-Tafel"
             returnvalue = reportAuswahl.ShowDialog
+
             Call awinDeSelect()
+
         Else
             If awinSettings.englishLanguage Then
                 Call MsgBox("please load some projects first ...")
@@ -10517,6 +11550,11 @@ Imports System.Windows
 
         End If
 
+        If timeZoneWasOff Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+            showRangeLeft = 0
+            showRangeRight = 0
+        End If
 
         enableOnUpdate = True
 
@@ -10536,6 +11574,15 @@ Imports System.Windows
             Call MsgBox("Aktuell sind keine Projekte geladen. Bitte laden Sie Projekte!")
         End If
 
+
+        enableOnUpdate = True
+
+    End Sub
+    Public Sub PTExit(control As IRibbonControl)
+
+        enableOnUpdate = False
+
+        appInstance.ActiveWorkbook.Close()
 
         enableOnUpdate = True
 

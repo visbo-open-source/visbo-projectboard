@@ -31,6 +31,42 @@
     Private _constellationName As String = "Last"
 
     ''' <summary>
+    ''' gibt den Projekt-Namen zurück, der an der entsprechenden Position in der Sort-Liste steht, allerdings zählen nur die PRojekte in ShowProjekte
+    ''' Position kann Werte zwischen 1 und count annehmen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProjectAtSortPosition(ByVal position As Integer) As String
+        Get
+
+            Dim tmpPosition As Integer = 0
+            Dim laufIndex As Integer = 0
+            Dim pName As String = ""
+            Dim searchName As String = ""
+            If position <= _sortList.Count And position > 0 Then
+                Do While tmpPosition < position And laufIndex < _sortList.Count
+                    pName = _sortList.ElementAt(laufIndex).Value
+
+                    If ShowProjekte.contains(pName) Then
+                        'If _allItems.Item(searchName).show = showAttribute Then
+                        tmpPosition = tmpPosition + 1
+                        'End If
+                    End If
+
+                    laufIndex = laufIndex + 1
+                Loop
+            End If
+
+            If tmpPosition <> position Then
+                ' es wurde nicht gefunden 
+                pName = ""
+            End If
+
+            getProjectAtSortPosition = pName
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Zeile zurück, auf der dieses Projekt gezeichnet werden soll 
     ''' im Fall customTF gibt die Tahl im Key die Zeile wieder ...
     ''' </summary>
@@ -240,8 +276,14 @@
         Dim key As String = ""
 
         ' die customTF Liste merken, wenn es sich darum gehandelt hat ... 
-        If _sortType = ptSortCriteria.customTF Then
-            _lastCustomList = _sortList
+        If _sortType = ptSortCriteria.customTF And _sortType <> sCriteria Then
+            ' Kopieren der Liste 
+            _lastCustomList = New SortedList(Of String, String)
+
+            For Each kvp As KeyValuePair(Of String, String) In _sortList
+                _lastCustomList.Add(kvp.Key, kvp.Value)
+            Next
+
         End If
 
         ' jetzt müssen die Sort-Keys gesetzt werden 
@@ -454,7 +496,7 @@
 
             ' Check 1: 
             ' sind alle ShowProjekte auch in der Constellation aufgeführt ? 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
             Try
 
                 Dim key As String = calcProjektKey(kvp.Value)
@@ -477,7 +519,7 @@
 
             ' Check 2: 
             ' sind alle Items aus der Constellation mit Attribut Show=true auch in ShowProjekte? 
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
             If kvp.Value.show = True Then
                 Dim hproj As clsProjekt = Nothing
 
@@ -498,7 +540,7 @@
                 End If
             End If
 
-            Next
+        Next
 
     End Sub
     ''' <summary>
@@ -904,8 +946,10 @@
 
         If _allItems.ContainsKey(key) Then
             Dim cItem As clsConstellationItem = _allItems.Item(key)
-            Dim pName As String = cItem.projectName
 
+            ' hat schon den neuen Namen drin, deswegen muss der Name aus dem key bestimmt werden ...
+            'Dim pName As String = cItem.projectName
+            Dim pName As String = extractName(key, PTshty.projektN)
             _allItems.Remove(key)
 
             ' jetzt in der Sortliste entsprechend löschen und neu bestimmen , falls es in der Constellation 
@@ -938,7 +982,7 @@
                         _lastCustomList.RemoveAt(_lastCustomList.IndexOfValue(pName))
                     End If
                 End If
-                
+
             End If
 
         End If

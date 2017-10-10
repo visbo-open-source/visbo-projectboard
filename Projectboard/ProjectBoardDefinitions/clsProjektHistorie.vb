@@ -107,7 +107,7 @@
             ' jetzt wird der Planungs-Stand der letzten Freigabe gesucht 
             Do While index >= 0 And Not found
 
-                If _liste.ElementAt(index).Value.Status = ProjektStatus(1) Then
+                If _liste.ElementAt(index).Value.Status = ProjektStatus(PTProjektStati.beauftragt) Then
                     found = True
                 Else
                     index = index - 1
@@ -141,8 +141,8 @@
 
 
             ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
-            Do While _liste.ElementAt(index).Value.Status <> ProjektStatus(1) And _
-                     _liste.ElementAt(index).Value.Status <> ProjektStatus(2) And Not abbruch
+            Do While _liste.ElementAt(index).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And _
+                     _liste.ElementAt(index).Value.Status <> ProjektStatus(PTProjektStati.ChangeRequest) And Not abbruch
                 If index + 1 < anzSnapshots Then
                     index = index + 1
                 Else

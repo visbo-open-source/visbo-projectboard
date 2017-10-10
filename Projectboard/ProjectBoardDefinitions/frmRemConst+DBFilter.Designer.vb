@@ -22,6 +22,7 @@ Partial Class frmRemoveConstellation
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmRemoveConstellation))
         Me.ListBox1 = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.Abbrechen = New System.Windows.Forms.Button()
@@ -67,9 +68,10 @@ Partial Class frmRemoveConstellation
         Me.Controls.Add(Me.Abbrechen)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
-        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmRemoveConstellation"
-        Me.Text = "Szenario löschen"
+        Me.Text = "Portfolio löschen"
         Me.ResumeLayout(False)
 
     End Sub

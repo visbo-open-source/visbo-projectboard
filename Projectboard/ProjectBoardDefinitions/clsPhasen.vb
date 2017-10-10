@@ -1,7 +1,7 @@
 ﻿Imports xlNS = Microsoft.Office.Interop.Excel
 Public Class clsPhasen
 
-    Private AllPhasen As SortedList(Of String, clsPhasenDefinition)
+    Private _allPhasen As SortedList(Of String, clsPhasenDefinition)
 
 
     ''' <summary>
@@ -14,15 +14,15 @@ Public Class clsPhasen
     Public Sub Add(phaseDef As clsPhasenDefinition)
 
         If Not IsNothing(phaseDef) Then
-            If Not AllPhasen.ContainsKey(phaseDef.name) Then
-                AllPhasen.Add(phaseDef.name, phaseDef)
+            If Not _allPhasen.ContainsKey(phaseDef.name) Then
+                _allPhasen.Add(phaseDef.name, phaseDef)
             Else
                 ' nichts tun , ist ja schon da 
             End If
         Else
             ' nichts tun , es ist ja nichts aufzunehmen  
         End If
-        
+
 
 
     End Sub
@@ -30,7 +30,7 @@ Public Class clsPhasen
     Public ReadOnly Property Count() As Integer
 
         Get
-            Count = AllPhasen.Count
+            Count = _allPhasen.Count
         End Get
 
     End Property
@@ -38,15 +38,15 @@ Public Class clsPhasen
 
     Public ReadOnly Property Contains(name As String) As Boolean
         Get
-            Contains = AllPhasen.ContainsKey(name)
+            Contains = _allPhasen.ContainsKey(name)
         End Get
     End Property
 
     Public ReadOnly Property getPhaseDef(ByVal myitem As String) As clsPhasenDefinition
 
         Get
-            If AllPhasen.ContainsKey(myitem) Then
-                getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
+            If _allPhasen.ContainsKey(myitem) Then
+                getPhaseDef = CType(_allPhasen.Item(myitem), clsPhasenDefinition)
             Else
                 'getPhaseDef = AllPhasen.First.Value
                 getPhaseDef = Nothing
@@ -68,10 +68,10 @@ Public Class clsPhasen
         Get
             If index < 1 Then
                 index = 1
-            ElseIf index > AllPhasen.Count Then
-                index = AllPhasen.Count
+            ElseIf index > _allPhasen.Count Then
+                index = _allPhasen.Count
             End If
-            getPhaseDef = CType(AllPhasen.ElementAt(index - 1).Value, clsPhasenDefinition)
+            getPhaseDef = CType(_allPhasen.ElementAt(index - 1).Value, clsPhasenDefinition)
         End Get
 
     End Property
@@ -90,12 +90,29 @@ Public Class clsPhasen
 
             'Dim key As String = calcKey(name, belongsTo)
 
-            If AllPhasen.ContainsKey(name) Then
-                msAbbrev = CType(AllPhasen.Item(name), clsPhasenDefinition).shortName
+            If _allPhasen.ContainsKey(name) Then
+                msAbbrev = CType(_allPhasen.Item(name), clsPhasenDefinition).shortName
             End If
 
             getAbbrev = msAbbrev
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Darstellungsklasse des Elements zurück 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAppearance(ByVal name As String) As String
+        Get
+            Dim tmpErg As String = ""
+            If _allPhasen.ContainsKey(name) Then
+                tmpErg = _allPhasen.Item(name).darstellungsKlasse
+            End If
+            getAppearance = tmpErg
         End Get
     End Property
 
@@ -113,9 +130,9 @@ Public Class clsPhasen
             Dim defaultPhaseAppearance As String = "Phasen Default"
 
 
-            If AllPhasen.ContainsKey(name) Then
+            If _allPhasen.ContainsKey(name) Then
 
-                appearanceID = CType(AllPhasen.Item(name), clsPhasenDefinition).darstellungsKlasse
+                appearanceID = CType(_allPhasen.Item(name), clsPhasenDefinition).darstellungsKlasse
                 If appearanceID = "" Then
                     appearanceID = defaultPhaseAppearance
                 End If
@@ -157,26 +174,26 @@ Public Class clsPhasen
     ''' <remarks></remarks>
     Public Sub remove(ByVal name As String)
 
-        If AllPhasen.ContainsKey(name) Then
-            AllPhasen.Remove(name)
+        If _allPhasen.ContainsKey(name) Then
+            _allPhasen.Remove(name)
         End If
 
     End Sub
-    
+
     ''' <summary>
     ''' leert die komplette Liste 
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub Clear()
 
-        AllPhasen.Clear()
+        _allPhasen.Clear()
 
     End Sub
 
 
     Public Sub New()
 
-        AllPhasen = New SortedList(Of String, clsPhasenDefinition)
+        _allPhasen = New SortedList(Of String, clsPhasenDefinition)
 
 
     End Sub

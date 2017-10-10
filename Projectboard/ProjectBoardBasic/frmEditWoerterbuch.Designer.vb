@@ -22,6 +22,7 @@ Partial Class frmEditWoerterbuch
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmEditWoerterbuch))
         Me.rdbListShowsPhases = New System.Windows.Forms.RadioButton()
         Me.rdbListShowsMilestones = New System.Windows.Forms.RadioButton()
         Me.filterUnknown = New System.Windows.Forms.TextBox()
@@ -196,7 +197,7 @@ Partial Class frmEditWoerterbuch
         'ToolStripStatusLabel1
         '
         Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(134, 17)
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(121, 17)
         Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
         '
         'clearUnknownList
@@ -205,6 +206,7 @@ Partial Class frmEditWoerterbuch
         Me.clearUnknownList.Location = New System.Drawing.Point(344, 104)
         Me.clearUnknownList.Name = "clearUnknownList"
         Me.clearUnknownList.Size = New System.Drawing.Size(18, 16)
+        Me.clearUnknownList.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.clearUnknownList.TabIndex = 19
         Me.clearUnknownList.TabStop = False
         '
@@ -215,6 +217,7 @@ Partial Class frmEditWoerterbuch
         Me.setItemToBeUnknown.Location = New System.Drawing.Point(370, 268)
         Me.setItemToBeUnknown.Name = "setItemToBeUnknown"
         Me.setItemToBeUnknown.Size = New System.Drawing.Size(34, 34)
+        Me.setItemToBeUnknown.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.setItemToBeUnknown.TabIndex = 17
         Me.setItemToBeUnknown.TabStop = False
         '
@@ -225,6 +228,7 @@ Partial Class frmEditWoerterbuch
         Me.setItemToBeKnown.Location = New System.Drawing.Point(370, 176)
         Me.setItemToBeKnown.Name = "setItemToBeKnown"
         Me.setItemToBeKnown.Size = New System.Drawing.Size(34, 34)
+        Me.setItemToBeKnown.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.setItemToBeKnown.TabIndex = 16
         Me.setItemToBeKnown.TabStop = False
         '
@@ -234,6 +238,7 @@ Partial Class frmEditWoerterbuch
         Me.clearStandardList.Location = New System.Drawing.Point(733, 104)
         Me.clearStandardList.Name = "clearStandardList"
         Me.clearStandardList.Size = New System.Drawing.Size(18, 16)
+        Me.clearStandardList.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.clearStandardList.TabIndex = 20
         Me.clearStandardList.TabStop = False
         '
@@ -297,6 +302,7 @@ Partial Class frmEditWoerterbuch
         Me.Controls.Add(Me.rdbListShowsMilestones)
         Me.Controls.Add(Me.rdbListShowsPhases)
         Me.HelpButton = True
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MaximizeBox = False
         Me.Name = "frmEditWoerterbuch"
         Me.Text = "Editieren des Wörterbuchs"

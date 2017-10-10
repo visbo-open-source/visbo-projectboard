@@ -22,6 +22,7 @@ Partial Class frmStoreCockpit
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmStoreCockpit))
         Me.ComboBox1 = New System.Windows.Forms.ComboBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.OKButton = New System.Windows.Forms.Button()
@@ -34,7 +35,7 @@ Partial Class frmStoreCockpit
         Me.ComboBox1.Location = New System.Drawing.Point(22, 63)
         Me.ComboBox1.MaxLength = 30
         Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(226, 21)
+        Me.ComboBox1.Size = New System.Drawing.Size(269, 21)
         Me.ComboBox1.Sorted = True
         Me.ComboBox1.TabIndex = 1
         '
@@ -60,7 +61,7 @@ Partial Class frmStoreCockpit
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(158, 102)
+        Me.AbbrButton.Location = New System.Drawing.Point(201, 102)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(90, 23)
         Me.AbbrButton.TabIndex = 6
@@ -71,12 +72,13 @@ Partial Class frmStoreCockpit
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(290, 145)
+        Me.ClientSize = New System.Drawing.Size(334, 145)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.ComboBox1)
-        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmStoreCockpit"
         Me.Text = "Speichern eines Chart-Cockpits"
         Me.ResumeLayout(False)

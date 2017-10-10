@@ -30,6 +30,64 @@
         End Get
     End Property
 
+
+    ' '' ''' <summary>
+    ' '' ''' gibt zurück, welchen SelectionTyp der Filter ist
+    ' '' ''' 0 = Projekt-Struktur (Vorlage)
+    ' '' ''' 1 = Projekt-Struktur(Projekt)
+    ' '' ''' 2 = Namensliste
+    ' '' ''' </summary>
+    ' '' ''' <value></value>
+    ' '' ''' <returns></returns>
+    ' '' ''' <remarks></remarks>
+    ' ''Public ReadOnly Property selectionTyp As Integer
+    ' ''    Get
+    ' ''        Dim element As String = ""
+    ' ''        Dim tmpresult As PTProjektType = PTProjektType.nameList
+    ' ''        Dim i As Integer = 1
+
+    ' ''        Do While tmpresult <> PTProjektType.projekt And i <= filterPhase.Count
+    ' ''            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= filterPhase.Count
+    ' ''                Do While tmpresult = PTProjektType.nameList And i <= filterPhase.Count
+    ' ''                    element = filterPhase.Item(i).ToString
+    ' ''                    Dim hstr1() As String = Split(element, "V:")
+    ' ''                    If hstr1.Length > 1 Then
+    ' ''                        tmpresult = PTProjektType.vorlage
+    ' ''                    End If
+    ' ''                    Dim hstr2() As String = Split(element, "P:")
+    ' ''                    If hstr2.Length > 1 Then
+    ' ''                        tmpresult = PTProjektType.projekt
+    ' ''                    End If
+    ' ''                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+    ' ''                        tmpresult = PTProjektType.nameList
+    ' ''                    End If
+    ' ''                    i = i + 1
+    ' ''                Loop
+    ' ''            Loop
+    ' ''        Loop
+
+    ' ''        ''For i As Integer = 1 To filterPhase.Count
+    ' ''        ''    element = filterPhase.Item(i).ToString
+    ' ''        ''    Dim hstr1() As String = Split(element, "V:")
+    ' ''        ''    If hstr1.Length > 0 Then
+    ' ''        ''        tmpresult = PTProjektType.projekt
+    ' ''        ''    End If
+    ' ''        ''    Dim hstr2() As String = Split(element, "P:")
+    ' ''        ''    If hstr2.Length > 0 Then
+    ' ''        ''        tmpresult = PTProjektType.vorlage
+    ' ''        ''    End If
+    ' ''        ''    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
+    ' ''        ''        tmpresult = PTProjektType.nameList
+    ' ''        ''    End If
+    ' ''        ''    If tmpresult = PTProjektType.projekt Or tmpresult = PTProjektType.vorlage Then
+    ' ''        ''        Exit For
+    ' ''        ''    End If
+    ' ''        ''Next
+
+    ' ''        selectionTyp = tmpresult
+    ' ''    End Get
+    ' ''End Property
+
     ''' <summary>
     ''' schreibt/liest die Filter Collection der BUs
     ''' </summary>
@@ -362,38 +420,46 @@
                             fullName = CStr(filterMilestone.Item(ix))
                             Dim curMsName As String = ""
                             Dim breadcrumb As String = ""
+                            Dim pvName As String = ""
+                            Dim type As Integer = -1
 
                             ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
-                            Call splitHryFullnameTo2(fullName, curMsName, breadcrumb)
+                            Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
 
-                            Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
-                            ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                            If type = -1 Or _
+                                (type = PTProjektType.projekt And pvName = hproj.name) Or _
+                                (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
 
-                            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
+                                ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
-                                tmpMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
-                                If IsNothing(tmpMilestone) Then
+                                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                                    tmpMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                                    If IsNothing(tmpMilestone) Then
 
 
 
-                                Else
+                                    Else
 
-                                    If showRangeLeft > 0 And showRangeRight > 0 And showRangeRight >= showRangeLeft Then
-                                        ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
-                                        Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
-                                        If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
+                                        If showRangeLeft > 0 And showRangeRight > 0 And showRangeRight >= showRangeLeft Then
+                                            ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+                                            Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
+                                            If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
+                                                containsMS = True
+                                                Exit For
+                                            End If
+                                        Else
                                             containsMS = True
                                             Exit For
                                         End If
-                                    Else
-                                        containsMS = True
-                                        Exit For
+
                                     End If
 
-                                End If
 
+                                Next
 
-                            Next
+                            End If
 
                             ix = ix + 1
 
@@ -417,48 +483,56 @@
                                 fullName = CStr(filterPhase.Item(ix))
                                 Dim pName As String = ""
                                 Dim breadcrumb As String = ""
+                                Dim pvName As String = ""
+                                Dim type As Integer = -1
 
                                 ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
-                                Call splitHryFullnameTo2(fullName, pName, breadcrumb)
+                                Call splitHryFullnameTo2(fullName, pName, breadcrumb, type, pvName)
 
-                                Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(pName, breadcrumb)
+                                If type = -1 Or _
+                                (type = PTProjektType.projekt And pvName = hproj.name) Or _
+                                (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
 
-                                For px As Integer = 0 To phaseIndices.Length - 1
+                                    Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(pName, breadcrumb)
 
-                                    tmpPhase = hproj.getPhase(phaseIndices(px))
+                                    For px As Integer = 0 To phaseIndices.Length - 1
 
-                                    If IsNothing(tmpPhase) Then
+                                        tmpPhase = hproj.getPhase(phaseIndices(px))
+
+                                        If IsNothing(tmpPhase) Then
 
 
 
-                                    Else
+                                        Else
 
-                                        If showRangeLeft > 0 And showRangeRight > 0 Then
+                                            If showRangeLeft > 0 And showRangeRight > 0 Then
 
-                                            Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
-                                            Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
-                                            Dim tmpPhStart As Date = tmpPhase.getStartDate
-                                            Dim tmpPhEnde As Date = tmpPhase.getEndDate
+                                                Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                                Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
+                                                Dim tmpPhStart As Date = tmpPhase.getStartDate
+                                                Dim tmpPhEnde As Date = tmpPhase.getEndDate
 
-                                            If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
-                                                DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
+                                                If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
+                                                    DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
+
+                                                Else
+                                                    containsPH = True
+                                                End If
+                                                ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
 
                                             Else
                                                 containsPH = True
                                             End If
-                                            ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
 
-                                        Else
-                                            containsPH = True
                                         End If
 
-                                    End If
+                                        If containsPH Then
+                                            Exit For
+                                        End If
 
-                                    If containsPH Then
-                                        Exit For
-                                    End If
+                                    Next
 
-                                Next
+                                End If
 
                                 ix = ix + 1
 
