@@ -576,7 +576,51 @@ Public Class frmHierarchySelection
                     .filterLabel.Text = "Name Report-Profil"
                 End If
 
+                ' temporäre Ausblendung von Rollen und Kosten im Modus BHTC 
+                If .menuOption = PTmenue.reportBHTC Then
 
+                    .rdbNameList.Enabled = False
+                    .rdbNameList.Visible = False
+                    .rdbNameList.Checked = False
+
+
+                    .rdbProjStruktProj.Enabled = False
+                    .rdbProjStruktProj.Visible = False
+                    .rdbProjStruktProj.Checked = True
+
+                    .rdbProjStruktTyp.Enabled = False
+                    .rdbProjStruktTyp.Visible = False
+                    .rdbProjStruktTyp.Checked = False
+
+                   
+                    .rdbPhases.Visible = False
+                    .rdbPhases.Checked = False
+                    .picturePhasen.Visible = False
+                    
+                    .rdbPhaseMilest.Visible = False
+                    .rdbPhaseMilest.Checked = True
+                    .picturePhaseMilest.Visible = False
+
+                    .rdbMilestones.Visible = False
+                    .rdbMilestones.Checked = False
+                    .pictureMilestones.Visible = False
+
+                    .rdbBU.Visible = False
+                    .pictureBU.Visible = False
+
+                    .rdbTyp.Visible = False
+                    .pictureTyp.Visible = False
+
+                    .rdbRoles.Visible = False
+                    .rdbRoles.Checked = False
+                    .pictureRoles.Visible = False
+
+                    .rdbCosts.Visible = False
+                    .rdbCosts.Checked = False
+                    .pictureCosts.Visible = False
+
+                End If
+                ' Ende temporäre Anpassung 
 
                 .statusLabel.Text = ""
                 .statusLabel.Visible = True
@@ -3759,16 +3803,19 @@ Public Class frmHierarchySelection
 
         If rdbProjStruktProj.Checked Then
 
-            Me.rdbMilestones.Visible = False
-            Me.rdbPhases.Visible = False
-            Me.pictureMilestones.Visible = False
-            Me.picturePhasen.Visible = False
+            If Me.menuOption <> PTmenue.reportBHTC Then
+                Me.rdbMilestones.Visible = False
+                Me.rdbPhases.Visible = False
+                Me.pictureMilestones.Visible = False
+                Me.picturePhasen.Visible = False
 
-            Me.rdbPhaseMilest.Visible = True
-            Me.picturePhaseMilest.Visible = True
-            If Not Me.rdbPhaseMilest.Checked Then
-                Me.rdbPhaseMilest.Checked = True
+                Me.rdbPhaseMilest.Visible = True
+                Me.picturePhaseMilest.Visible = True
+                If Not Me.rdbPhaseMilest.Checked Then
+                    Me.rdbPhaseMilest.Checked = True
+                End If
             End If
+            
 
 
             ' clear Listbox1 
@@ -4437,63 +4484,67 @@ Public Class frmHierarchySelection
     End Sub
 
     Private Sub rdbPhaseMilest_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPhaseMilest.CheckedChanged
-        If rdbPhaseMilest.Checked Then
 
-            ' Visibility der Buttons anpassen an die Auswahl
-            With Me
-                .rdbNameList.Enabled = True
-                .rdbNameList.Visible = True
-                .rdbNameList.Checked = False
+        If Me.menuOption <> PTmenue.reportBHTC Then
+            If rdbPhaseMilest.Checked Then
 
-                .rdbProjStruktProj.Enabled = True
-                .rdbProjStruktProj.Visible = True
-                '.rdbProjStruktProj.Checked = True
+                ' Visibility der Buttons anpassen an die Auswahl
+                With Me
+                    .rdbNameList.Enabled = True
+                    .rdbNameList.Visible = True
+                    .rdbNameList.Checked = False
 
-                .rdbProjStruktTyp.Enabled = True
-                .rdbProjStruktTyp.Visible = True
-                ' .rdbProjStruktTyp.Checked = False
+                    .rdbProjStruktProj.Enabled = True
+                    .rdbProjStruktProj.Visible = True
+                    '.rdbProjStruktProj.Checked = True
 
-                .rdbPhases.Visible = False
-                .rdbPhases.Checked = False
-                .picturePhasen.Visible = False
+                    .rdbProjStruktTyp.Enabled = True
+                    .rdbProjStruktTyp.Visible = True
+                    ' .rdbProjStruktTyp.Checked = False
 
-                .rdbMilestones.Visible = False
-                .rdbMilestones.Checked = False
-                .pictureMilestones.Visible = False
+                    .rdbPhases.Visible = False
+                    .rdbPhases.Checked = False
+                    .picturePhasen.Visible = False
 
-                '.rdbBU.Visible = False
-                '.pictureBU.Visible = False
+                    .rdbMilestones.Visible = False
+                    .rdbMilestones.Checked = False
+                    .pictureMilestones.Visible = False
 
-                '.rdbTyp.Visible = False
-                '.pictureTyp.Visible = False
+                    '.rdbBU.Visible = False
+                    '.pictureBU.Visible = False
 
-                '.rdbRoles.Visible = True
-                '.pictureRoles.Visible = True
+                    '.rdbTyp.Visible = False
+                    '.pictureTyp.Visible = False
 
-                '.rdbCosts.Visible = True
-                '.pictureCosts.Visible = True
+                    '.rdbRoles.Visible = True
+                    '.pictureRoles.Visible = True
 
-                .rdbPhaseMilest.Visible = True
-                .picturePhaseMilest.Visible = True
+                    '.rdbCosts.Visible = True
+                    '.pictureCosts.Visible = True
 
-            End With
+                    .rdbPhaseMilest.Visible = True
+                    .picturePhaseMilest.Visible = True
+
+                End With
 
 
-            ''ur: 20170905: nicht erforderlich
-            ''auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
-            If Me.rdbProjStruktProj.Checked Then
-                Call buildHryTreeViewNew(PTProjektType.projekt)
-            ElseIf Me.rdbProjStruktTyp.Checked Then
-                Call buildHryTreeViewNew(PTProjektType.vorlage)
+                ''ur: 20170905: nicht erforderlich
+                ''auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                If Me.rdbProjStruktProj.Checked Then
+                    Call buildHryTreeViewNew(PTProjektType.projekt)
+                ElseIf Me.rdbProjStruktTyp.Checked Then
+                    Call buildHryTreeViewNew(PTProjektType.vorlage)
+                Else
+                    Me.rdbProjStruktProj.Checked = True
+                    'Call buildHryTreeViewNew(PTProjektType.projekt)
+                End If
+
+
             Else
-                Me.rdbProjStruktProj.Checked = True
-                'Call buildHryTreeViewNew(PTProjektType.projekt)
+
             End If
-
-
-        Else
-
         End If
+        
     End Sub
 
     Public Sub buildTreeViewRolle()
