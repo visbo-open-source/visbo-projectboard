@@ -3194,7 +3194,9 @@ Imports System.Windows
         ' zurücksetzen 
         dbCacheProjekte.Clear(False)
 
+
         ' zurücksetzen der Selektierten Projekte
+
         selectedProjekte.Clear()
 
         Call projektTafelInit()

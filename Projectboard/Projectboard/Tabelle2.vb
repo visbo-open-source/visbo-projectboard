@@ -1019,41 +1019,204 @@ Public Class Tabelle2
                 xWerte = parentRole.Xwerte
                 If xWerteIndex + offset >= 0 And xWerteIndex + offset <= xWerte.Length - 1 Then
                     Dim alterWert As Double = xWerte(xWerteIndex + offset)
-                    xWerte(xWerteIndex + offset) = xWerte(xWerteIndex + offset) - difference
-                    If xWerte(xWerteIndex + offset) < 0 Then
-                        ' jetzt muss der newDblValue entsprechend geändert werden 
-                        ' plus, weil xWerte(..) < 0 
-                        newValue = newValue + xWerte(xWerteIndex + offset)
+                    Dim savDifferenz As Double = difference
+                    Dim sumRoleSum As Double = 0
+                    Dim verteilungMöglich As Boolean = False
+                    Dim msgResult As MsgBoxResult = False
 
-                        ' jetzt muss eine Meldung erfolgen ... 
-                        Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
-                                    "Wert wird deshalb von " & CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value & _
-                                    " auf " & newValue & " korrigiert ")
+                    ' Test, ob es überhauüüt möglich ist den eingegebenen Wert bei der Sammelrolle abzuziehen
+                    ' ''For i As Integer = 0 To xWerte.Length - 1 - xWerteIndex - offset
+                    ' ''    sumRoleSum = sumRoleSum + xWerte(xWerteIndex + offset + i)
+                    ' ''Next
 
-                        ' jetzt muss der newDblValue in das Feld geschrieben werden 
-                        CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value = newValue
+                    sumRoleSum = xWerte.Sum
 
-                        ' bestimmen der neuen Differenz 
-                        difference = newValue - CDbl(visboZustaende.oldValue)
+                    If sumRoleSum >= difference Then
+                        ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+                        If phaseWithinTimeFrame(hproj.Start, cPhase.relStart, cPhase.relEnde, _
+                                                 showRangeLeft, showRangeRight, True) Then
 
-                        xWerte(xWerteIndex + offset) = 0
+                            verteilungMöglich = True
+
+                            ''Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
+                            ''            " nicht gelöscht werden ...")
+                            ''ok = False
+                        Else
+                            verteilungMöglich = False
+                        End If
+
                     End If
-                    ' die Monatszahl und dann die Summe updaten ... 
-                    CType(meWS.Cells(zeileOFSummaryRole, targetColumn), Excel.Range).Value = xWerte(xWerteIndex + offset)
 
-                    ' das wird nachher über updateSummen gemacht 
-                    'tmpSum = CDbl(CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value)
-                    'tmpSum = tmpSum - System.Math.Min(alterWert, difference)
-                    'CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value = tmpSum
+                    If Not verteilungMöglich Then
+                        xWerte(xWerteIndex + offset) = xWerte(xWerteIndex + offset) - difference
 
-                    ' nur wenn die Differenz auch ungleich Null ist, muss geändert werden 
-                    If difference <> 0 Then
-                        summenChanged = True
+
+                        If xWerte(xWerteIndex + offset) < 0 Then
+
+                            ' jetzt muss der newValue entsprechend geändert werden 
+                            ' plus, weil xWerte(..) < 0 
+                            newValue = newValue + xWerte(xWerteIndex + offset)
+
+                            ' jetzt muss eine Meldung erfolgen ... 
+
+                            Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
+                                        "oder die Phase wird nicht vollständig dargestellt" & vbLf & _
+                                        "Der Wert wird deshalb von " & CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value & _
+                                        " auf " & newValue & " korrigiert werden? ")
+
+                            difference = -xWerte(xWerteIndex + offset)
+
+                           
+                            ' jetzt muss der newValue in das Feld geschrieben werden 
+                            CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value = newValue
+
+                            ' die Monatszahl und dann die Summe updaten ... 
+                            xWerte(xWerteIndex + offset) = 0
+                            CType(meWS.Cells(zeileOFSummaryRole, targetColumn), Excel.Range).Value = xWerte(xWerteIndex + offset)
+
+                            CType(meWS.Cells(zeileOFSummaryRole, 6), Excel.Range).Value = xWerte.Sum
+
+                        Else
+
+                            difference = 0
+                        End If
+
+
+                    Else
+
+
+                        For i As Integer = 0 To xWerte.Length - 1 - xWerteIndex - offset
+
+                            xWerte(xWerteIndex + offset + i) = xWerte(xWerteIndex + offset + i) - difference
+
+
+                            If xWerte(xWerteIndex + offset + i) < 0 Then
+
+                                If i < 1 Then
+
+                                    ' jetzt muss eine Meldung erfolgen ... 
+
+                                    msgResult = MsgBox("AutoReduce kann die zugehörige Sammelrolle in diesem Monat nicht auf negative Werte reduzieren" & vbLf & _
+                                                "Soll der Wert deshalb von " & CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value & _
+                                                " auf " & newValue + xWerte(xWerteIndex + offset + i) & " korrigiert werden? (Ja)" & vbLf & _
+                                                "oder in den nächsten Monaten reduziert werden? (Nein)", MsgBoxStyle.YesNo)
+
+                                End If
+                              
+                                If msgResult = MsgBoxResult.Yes Then
+
+                                    ' jetzt muss der newValue entsprechend geändert werden 
+                                    ' plus, weil xWerte(..) < 0 
+                                    newValue = newValue + xWerte(xWerteIndex + offset + i)
+
+                                    ' jetzt muss der newDblValue in das Feld geschrieben werden 
+                                    CType(meWS.Cells(targetRow, targetColumn + 2 * i), Excel.Range).Value = newValue
+                                    ' die Monatszahl und dann die Summe updaten ... 
+                                    CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = 0
+
+                                    difference = -xWerte(xWerteIndex + offset + i)
+                                    Exit For
+                                Else
+
+                                    ' zu wenig abgezogen, wird in nächstem Monat abgezogen
+                                    Dim zuwenig As Double = -xWerte(xWerteIndex + offset + i)
+
+
+                                    ' bestimmen der neuen Differenz 
+                                    'ur:4.10..2017: difference = newValue - CDbl(visboZustaende.oldValue)
+                                    difference = zuwenig
+
+                                    ' ur: 4.10.2017: hier muss die Verteilung von  "difference"  stattfinden
+
+                                    xWerte(xWerteIndex + offset + i) = 0
+                                End If
+
+                            Else
+
+                                difference = 0
+
+                            End If
+
+
+                            ' die Monatszahl und dann die Summe updaten ... 
+                            '' ''Dim testdbl As Double = xWerte(xWerteIndex + offset + i)
+                            '' ''Call MsgBox(" testdbl = " & testdbl.ToString)
+                            CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
+
+                        Next i
+
+                        ' nun noch die Werte vor Beginn aktuellem Monat betrachten, sofern nicht schon alles umgeschifftet wurde
+                        If difference > 0 Then
+
+                            For i As Integer = -1 To -xWerteIndex - offset Step -1
+
+                                xWerte(xWerteIndex + offset + i) = xWerte(xWerteIndex + offset + i) - difference
+
+
+                                If xWerte(xWerteIndex + offset + i) < 0 Then
+
+
+                                    If msgResult = MsgBoxResult.Yes Then
+
+                                        ' jetzt muss der newValue entsprechend geändert werden 
+                                        ' plus, weil xWerte(..) < 0 
+                                        newValue = newValue + xWerte(xWerteIndex + offset + i)
+
+                                        ' jetzt muss der newDblValue in das Feld geschrieben werden 
+                                        CType(meWS.Cells(targetRow, targetColumn + 2 * i), Excel.Range).Value = newValue
+                                        ' die Monatszahl und dann die Summe updaten ... 
+                                        CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = 0
+
+                                        difference = -xWerte(xWerteIndex + offset + i)
+                                        Exit For
+                                    Else
+
+                                        ' zu wenig abgezogen, wird in nächstem Monat abgezogen
+                                        Dim zuwenig As Double = -xWerte(xWerteIndex + offset + i)
+
+
+                                        ' bestimmen der neuen Differenz 
+                                        'ur:4.10..2017: difference = newValue - CDbl(visboZustaende.oldValue)
+                                        difference = zuwenig
+
+                                        ' ur: 4.10.2017: hier muss die Verteilung von  "difference"  stattfinden
+
+                                        xWerte(xWerteIndex + offset + i) = 0
+                                    End If
+
+                                Else
+
+                                    difference = 0
+
+                                End If
+
+
+                                ' die Monatszahl und dann die Summe updaten ... 
+                                '' ''Dim testdbl As Double = xWerte(xWerteIndex + offset + i)
+                                '' ''Call MsgBox(" testdbl = " & testdbl.ToString)
+                                CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
+
+                            Next i
+
+                        End If
+
+
+                    End If
+
+                        ' das wird nachher über updateSummen gemacht 
+                        'tmpSum = CDbl(CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value)
+                        'tmpSum = tmpSum - System.Math.Min(alterWert, difference)
+                        'CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value = tmpSum
+
+                        ' nur wenn die Differenz auch ungleich Null ist, muss geändert werden 
+                        If difference <> 0 Then
+                            summenChanged = True
                     End If
 
                 Else
                     Call MsgBox("Fehler in Übernahme Daten-Wert ...")
                 End If
+
             End If
         End If
     End Sub
