@@ -186,8 +186,9 @@ Public Class Tabelle2
 
     Private Sub Tabelle2_BeforeDoubleClick(Target As Microsoft.Office.Interop.Excel.Range, ByRef Cancel As Boolean) Handles Me.BeforeDoubleClick
 
-        ' damit nicht eine immerwährende Event Orgie durch Änderung in den Zellen abgeht ...
-        appInstance.EnableEvents = False
+        Dim former_EE As Boolean = appInstance.EnableEvents
+
+        appInstance.EnableEvents = True
         Dim currentCell As Excel.Range = Target
        
         Try
@@ -233,6 +234,7 @@ Public Class Tabelle2
                     frmMERoleCost.phaseName = phaseName
                     frmMERoleCost.rcName = rcName
                     frmMERoleCost.phaseNameID = phaseNameID
+                    frmMERoleCost.hproj = hproj
 
                     returnValue = frmMERoleCost.ShowDialog()
 
@@ -243,8 +245,10 @@ Public Class Tabelle2
                             Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(1))
                           
                             If rcName <> hRCname Then
-
+                                ' ausgewählte Rolle eintragn
                                 meWS.Cells(zeile, columnRC) = hRCname
+                                ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
+                                meWS.Cells(zeile, columnRC + 1) = 0.0
 
                                 ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
                                 If CostDefinitions.containsName(hRCname) Then
@@ -282,6 +286,8 @@ Public Class Tabelle2
                                     Call massEditZeileEinfügen("")
                                     Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(i))
                                     meWS.Cells(zeile, columnRC) = hRCname
+                                    ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
+                                    meWS.Cells(zeile, columnRC + 1) = 0.0
 
                                     ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
                                     If CostDefinitions.containsName(hRCname) Then
@@ -355,7 +361,7 @@ Public Class Tabelle2
 
         End Try
 
-        appInstance.EnableEvents = True
+        appInstance.EnableEvents = former_EE
 
     End Sub
 
@@ -660,6 +666,12 @@ Public Class Tabelle2
                                         If awinSettings.meAutoReduce Then
                                             Call autoReduceRowOfParentRole(Target.Row, Target.Column, newDblValue, difference, _
                                                                            hproj, cPhase, rcName)
+
+                                            ' durch autoReduce kann der newDblValue verändert sein
+                                            vSum(0) = newDblValue
+                                            xValues = cPhase.berechneBedarfeNew(xStartDate, _
+                                                                                       xEndDate, vSum, 1)
+
                                         End If
 
                                         ' jetzt muss die Rolle aktualisiert werden ...
