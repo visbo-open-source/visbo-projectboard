@@ -46,6 +46,7 @@ Imports System.Windows
         Return GetResourceText("ExcelWorkbook1.Ribbon1.xml")
     End Function
 
+
 #Region "Menübandrückrufe"
     'Erstellen Sie hier Rückrufmethoden. Weitere Informationen über das Hinzufügen von Rückrufmethoden erhalten Sie, indem Sie das Menüband-XML-Element im Projektmappen-Explorer markieren und dann F1 drücken.
     Public Sub Ribbon_Load(ByVal ribbonUI As Microsoft.Office.Core.IRibbonUI)

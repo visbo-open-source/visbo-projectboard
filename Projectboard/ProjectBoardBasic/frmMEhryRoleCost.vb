@@ -13,8 +13,8 @@ Public Class frmMEhryRoleCost
     Public phaseName As String
     Public rcName As String
     Public phaseNameID As String
+    Public hproj As clsProjekt
 
-    Friend hproj As clsProjekt
     Friend existingRoleFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
     Friend normalRoleFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
     Friend normalRoleColor As System.Drawing.Color = System.Drawing.Color.Black
@@ -30,9 +30,9 @@ Public Class frmMEhryRoleCost
             Me.Left = 100
         End If
 
-        If Not IsNothing(pName) And pName <> "" Then
-            hproj = ShowProjekte.getProject(pName)
-        End If
+        'If Not IsNothing(pName) And pName <> "" Then
+        '    hproj = ShowProjekte.getProject(pName)
+        'End If
 
         Call buildMERoleTree()
     End Sub
