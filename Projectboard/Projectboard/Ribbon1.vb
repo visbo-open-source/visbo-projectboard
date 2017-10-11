@@ -2175,9 +2175,9 @@ Imports System.Windows
 
             Case "PT2G1M2B4" ' Ressource/Kostenart hinzufügen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rolle hinzufügen"
+                    tmpLabel = "Rolle/Kostenart hinzufügen"
                 Else
-                    tmpLabel = "Add Resource"
+                    tmpLabel = "Add Resource/Cost"
                 End If
             Case "PT2G1M2B7" ' Ressource/Kostenart hinzufügen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
