@@ -361,6 +361,8 @@ Public Class clsCommandBarEvents
                             ' Änderung tk , Charts ollen jetzt nicht mehr mit Selektion geupdated werden , sondern 
                             ' nur mit Selektion aus Portfolio Browser
                             Call aktualisierePMSForms(hproj)
+                            'Call aktualisiereMinSetOFCharts(hproj, True)
+                            ' aktualisiereCharts kann nicht mehr aufgerufen werden, weil nach ProjectBoardBasic verschoben ; benötigt MongoDB Access 
                             'Call aktualisiereCharts(hproj, True)
                         End If
 
