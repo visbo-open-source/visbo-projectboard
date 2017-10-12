@@ -11039,12 +11039,22 @@ Public Module Projekte
 
         ' jetzt muss ggf das benötigte Budget errechnet werden 
         If erloes = -999 Then
-            Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
-            Call newprojekt.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
-            If tmpERG < 0 Then
-                neededBudget = -1 * tmpERG
-            End If
-            newprojekt.Erloes = neededBudget
+            Try
+                Dim a As Integer = newprojekt.dauerInDays
+                Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
+                Call newprojekt.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
+                If tmpERG < 0 Then
+                    neededBudget = -1 * tmpERG
+                End If
+                newprojekt.Erloes = neededBudget
+            Catch ex As Exception
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("Fehler in Projekt anlegen, Name: " & newprojekt.name)
+                End If
+
+            End Try
+            
         End If
 
         ' Workaround: 

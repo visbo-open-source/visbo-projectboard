@@ -59,7 +59,7 @@
             <menu id ="PT5G3M"  >
               <!--label="Portfolio"-->
               <button id="Pt5G3B1" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Portfolio wird in der Datenbank gelöscht; damit wird lediglich die Definition des Portfolios in der Datenbank gelöscht; die im Portfolio ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
-              <!--<button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>-->
+              <!--<button id="Pt5G3B2" image ="chart" label="Programm" onAction="PT5DeleteProgramme" enabled="false"/>-->
               <!--label="Projekte/Varianten"-->
               <menu id ="PT5G3M2" getLabel ="bestimmeLabel">
                 <!--label="Projekte/Varianten/TimeStamps auswählen"-->
@@ -416,7 +416,8 @@
           <!--label="Report Sprache"-->
           <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
-          <!--<button id="PTDemoHistory" label="demo-funktion historie"  onAction ="pttestfunktion5" />-->
+          <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
+          <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
         </group>
       </tab>
       <!--label="Help"-->

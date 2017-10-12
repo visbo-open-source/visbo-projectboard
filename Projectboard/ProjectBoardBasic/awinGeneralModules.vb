@@ -5654,6 +5654,7 @@ Public Module awinGeneralModules
         Catch ex As Exception
 
             Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
+
         End Try
 
 

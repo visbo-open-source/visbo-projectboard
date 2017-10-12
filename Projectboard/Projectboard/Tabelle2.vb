@@ -1041,7 +1041,7 @@ Public Class Tabelle2
                     Dim verteilungMöglich As Boolean = False
                     Dim msgResult As MsgBoxResult = MsgBoxResult.No
 
-                    ' Test, ob es überhauüüt möglich ist den eingegebenen Wert bei der Sammelrolle abzuziehen
+                    ' Test, ob es überhaupt möglich ist den eingegebenen Wert bei der Sammelrolle abzuziehen
                     ' ''For i As Integer = 0 To xWerte.Length - 1 - xWerteIndex - offset
                     ' ''    sumRoleSum = sumRoleSum + xWerte(xWerteIndex + offset + i)
                     ' ''Next
