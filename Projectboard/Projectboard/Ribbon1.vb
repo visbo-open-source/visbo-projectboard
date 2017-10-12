@@ -46,6 +46,7 @@ Imports System.Windows
         Return GetResourceText("ExcelWorkbook1.Ribbon1.xml")
     End Function
 
+
 #Region "Menübandrückrufe"
     'Erstellen Sie hier Rückrufmethoden. Weitere Informationen über das Hinzufügen von Rückrufmethoden erhalten Sie, indem Sie das Menüband-XML-Element im Projektmappen-Explorer markieren und dann F1 drücken.
     Public Sub Ribbon_Load(ByVal ribbonUI As Microsoft.Office.Core.IRibbonUI)
@@ -2175,9 +2176,9 @@ Imports System.Windows
 
             Case "PT2G1M2B4" ' Ressource/Kostenart hinzufügen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Rolle hinzufügen"
+                    tmpLabel = "Rolle/Kostenart hinzufügen"
                 Else
-                    tmpLabel = "Add Resource"
+                    tmpLabel = "Add Resource/Cost"
                 End If
             Case "PT2G1M2B7" ' Ressource/Kostenart hinzufügen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3193,6 +3194,11 @@ Imports System.Windows
 
         ' zurücksetzen 
         dbCacheProjekte.Clear(False)
+
+
+        ' zurücksetzen der Selektierten Projekte
+
+        selectedProjekte.Clear()
 
         Call projektTafelInit()
 
