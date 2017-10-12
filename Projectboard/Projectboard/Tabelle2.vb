@@ -243,19 +243,24 @@ Public Class Tabelle2
 
                         If frmMERoleCost.ergItems.Count = 1 Then
                             Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(1))
-                          
+
+                            ' jetzt den Schutz aufheben , falls einer definiert ist 
+                            If meWS.ProtectContents Then
+                                meWS.Unprotect(Password:="x")
+                            End If
+
                             If rcName <> hRCname Then
                                 ' ausgewählte Rolle eintragn
-                                meWS.Cells(zeile, columnRC) = hRCname
+                                'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
+                                CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
                                 ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
-                                meWS.Cells(zeile, columnRC + 1) = 0.0
+
+                                'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
+                                CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
 
                                 ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
                                 If CostDefinitions.containsName(hRCname) Then
-                                    ' jetzt den Schutz aufheben , falls einer definiert ist 
-                                    If meWS.ProtectContents Then
-                                        meWS.Unprotect(Password:="x")
-                                    End If
+                               
                                     CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
                                     With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
                                         .Visible = False
@@ -267,10 +272,7 @@ Public Class Tabelle2
                                         .Shape.ScaleHeight(0.6, Microsoft.Office.Core.MsoTriState.msoFalse)
                                     End With
                                 Else
-                                    ' jetzt den Schutz aufheben , falls einer definiert ist, und den Kommentar löschen, falls noch einer vorhanden
-                                    If meWS.ProtectContents Then
-                                        meWS.Unprotect(Password:="x")
-                                    End If
+                                   
                                     CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
                                 End If
 
@@ -285,16 +287,24 @@ Public Class Tabelle2
                                     ' Zeile im MassenEdit-Tabelle einfügen und Namen einfügen
                                     Call massEditZeileEinfügen("")
                                     Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(i))
-                                    meWS.Cells(zeile, columnRC) = hRCname
+
+                                    If meWS.ProtectContents Then
+                                        meWS.Unprotect(Password:="x")
+                                    End If
+
+                                    ' ausgewählte Rolle eintragn
+                                    'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
+                                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
                                     ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
-                                    meWS.Cells(zeile, columnRC + 1) = 0.0
+
+                                    'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
+                                    CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
+
 
                                     ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
                                     If CostDefinitions.containsName(hRCname) Then
                                         ' jetzt den Schutz aufheben , falls einer definiert ist 
-                                        If meWS.ProtectContents Then
-                                            meWS.Unprotect(Password:="x")
-                                        End If
+                                    
                                         CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
                                         With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
                                             .Visible = False
@@ -306,10 +316,7 @@ Public Class Tabelle2
                                             .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                                         End With
                                     Else
-                                        ' jetzt den Schutz aufheben , falls einer definiert ist, und den Kommentar löschen, falls noch einer vorhanden
-                                        If meWS.ProtectContents Then
-                                            meWS.Unprotect(Password:="x")
-                                        End If
+                                       
                                         '' ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment.Delete()
                                         CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
                                     End If
@@ -434,15 +441,13 @@ Public Class Tabelle2
                                 If tmprole.isCombinedRole Then
                                     rcValidation(i) = tmprole.name
                                 Else
-
-                                    Dim parentName As String = RoleDefinitions.getParentRoleOf(tmprole.UID).name
-
-                                    If parentName = "" Then
+                                    Dim parentrole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
+                                    If IsNothing(parentrole) Then
                                         rcValidation(i) = "alleRollen"
                                     Else
-                                        rcValidation(i) = parentName
+                                        rcValidation(i) = parentrole.name
                                     End If
-                                    
+
                                 End If
                             Next
                             ' Ende Preparation für Validierungs-Strings
@@ -1034,7 +1039,7 @@ Public Class Tabelle2
                     Dim savDifferenz As Double = difference
                     Dim sumRoleSum As Double = 0
                     Dim verteilungMöglich As Boolean = False
-                    Dim msgResult As MsgBoxResult = False
+                    Dim msgResult As MsgBoxResult = MsgBoxResult.No
 
                     ' Test, ob es überhauüüt möglich ist den eingegebenen Wert bei der Sammelrolle abzuziehen
                     ' ''For i As Integer = 0 To xWerte.Length - 1 - xWerteIndex - offset
