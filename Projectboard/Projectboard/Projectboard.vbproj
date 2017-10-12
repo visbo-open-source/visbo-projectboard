@@ -20,7 +20,7 @@
     <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.3.0.3</ApplicationVersion>
+    <ApplicationVersion>3.4.0.7</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -171,6 +171,36 @@
     <Compile Include="Tabelle3.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <Compile Include="Tabelle4.Designer.vb">
+      <DependentUpon>Tabelle4.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle4.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle5.Designer.vb">
+      <DependentUpon>Tabelle5.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle5.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle6.Designer.vb">
+      <DependentUpon>Tabelle6.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle6.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle7.Designer.vb">
+      <DependentUpon>Tabelle7.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle7.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle8.Designer.vb">
+      <DependentUpon>Tabelle8.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle8.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
     <Compile Include="ThisWorkbook.Designer.vb">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>
@@ -288,6 +318,21 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\milestones_icon1.png" />
+    <None Include="Tabelle8.Designer.xml">
+      <DependentUpon>Tabelle8.vb</DependentUpon>
+    </None>
+    <None Include="Tabelle7.Designer.xml">
+      <DependentUpon>Tabelle7.vb</DependentUpon>
+    </None>
+    <None Include="Tabelle6.Designer.xml">
+      <DependentUpon>Tabelle6.vb</DependentUpon>
+    </None>
+    <None Include="Tabelle4.Designer.xml">
+      <DependentUpon>Tabelle4.vb</DependentUpon>
+    </None>
+    <None Include="Tabelle5.Designer.xml">
+      <DependentUpon>Tabelle5.vb</DependentUpon>
+    </None>
     <None Include="Resources\navigate_check1.png" />
     <None Include="Resources\navigate_check.png" />
     <None Include="Resources\selection_delete.png" />
@@ -336,16 +381,27 @@
   <PropertyGroup>
     <ManifestCertificateThumbprint>57D079AC4608E7A5EEAB9503591B51D9E4ADB64F</ManifestCertificateThumbprint>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
         <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
-        <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="453AD57C08540C0F42079FCA83BE658033F2D2F9">
-          <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
-          <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
-          <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="Tabelle3" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
+        <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="4CE1966EBBC6E22F558E7D1CF5A18A8064579582">
+          <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="MPT" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
+          <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="3F21DE79A5F01F3B2AE9D8C321DB396C046E22B4" DisplayName="meRC" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
+          <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="meTE" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
+          <HostItem Name="Tabelle4" Code="Tabelle4.vb" CanonicalName="Tabelle4" PublishedHash="4EE7F2D35207B924053EE001939AA45C186FF267" DisplayName="meAT" Blueprint="Tabelle4.Designer.xml" GeneratedCode="Tabelle4.Designer.vb" />
+          <HostItem Name="Tabelle5" Code="Tabelle5.vb" CanonicalName="Tabelle5" PublishedHash="E7B509583378FAE6D919392398062EB2C72A36F5" DisplayName="meCharts" Blueprint="Tabelle5.Designer.xml" GeneratedCode="Tabelle5.Designer.vb" />
+          <HostItem Name="Tabelle6" Code="Tabelle6.vb" CanonicalName="Tabelle6" PublishedHash="EAC24842994DF07EE1A990405A38250F4C14D032" DisplayName="mptPrCharts" Blueprint="Tabelle6.Designer.xml" GeneratedCode="Tabelle6.Designer.vb" />
+          <HostItem Name="Tabelle7" Code="Tabelle7.vb" CanonicalName="Tabelle7" PublishedHash="94B59114CF2041640665EF198FEE8E6175A95631" DisplayName="mptPfCharts" Blueprint="Tabelle7.Designer.xml" GeneratedCode="Tabelle7.Designer.vb" />
+          <HostItem Name="Tabelle8" Code="Tabelle8.vb" CanonicalName="Tabelle8" PublishedHash="07EB2DB07CD7671DA48D4E05ADE599CCA93046D7" DisplayName="repCharts" Blueprint="Tabelle8.Designer.xml" GeneratedCode="Tabelle8.Designer.vb" />
           <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
         </Host>
       </FlavorProperties>
