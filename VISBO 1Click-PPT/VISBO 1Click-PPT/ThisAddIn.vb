@@ -75,6 +75,8 @@ Public Class ThisAddIn
                 End If
 
                 appInstance.ScreenUpdating = True
+                Application.Quit()
+
             End If
         Catch ex As Exception
             Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
