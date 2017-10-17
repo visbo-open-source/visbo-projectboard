@@ -5165,7 +5165,8 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks>Kennung Phasen, Personalbedarf, Personalkosten, Sonstige Kosten, Gesamtkosten, Strategie, Ergebnis</remarks>
-    Public Sub createRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
+    Public Sub createRessBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglproj As clsProjekt, _
+                                         ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                             ByVal top As Double, left As Double, height As Double, width As Double, _
                                             ByVal calledFromReporting As Boolean)
 
@@ -5178,13 +5179,15 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
+        Dim vdatenreihe() As Double
+        Dim vSum As Double = 0.0
         Dim hsum() As Double, gesamt_summe As Double
         Dim anzRollen As Integer
         'Dim chtTitle As String
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim ErgebnisListeR As New Collection
-        Dim roleName As String
+        'Dim roleName As String
         Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
@@ -5197,7 +5200,7 @@ Public Module Projekte
 
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            If calledfromReporting Then
+            If calledFromReporting Then
                 currentSheetName = arrWsNames(ptTables.repCharts)
             Else
                 currentSheetName = arrWsNames(ptTables.mptPrCharts)
@@ -5227,6 +5230,12 @@ Public Module Projekte
             plen = .anzahlRasterElemente
             pstart = .Start
         End With
+
+        If Not IsNothing(vglproj) Then
+            If plen < vglproj.anzahlRasterElemente Then
+                plen = vglproj.anzahlRasterElemente
+            End If
+        End If
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
@@ -5244,7 +5253,7 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
-
+        ReDim vdatenreihe(plen - 1)
 
         ReDim hsum(anzRollen - 1)
 
@@ -5334,38 +5343,85 @@ Public Module Projekte
 
             With newChtObj.Chart
 
-                For r = 1 To anzRollen
-                    roleName = CStr(ErgebnisListeR.Item(r))
+                ' tk 17.10.17, es werden nur noch die Gesamt-Summen angezeigt, nicht mehr aufgeteit nach einzelnen Rollen, 
+                ' das passiert dann immer noch im Pie-Chart ...
+                'For r = 1 To anzRollen
+                '    roleName = CStr(ErgebnisListeR.Item(r))
+                '    If auswahl = 1 Then
+                '        tdatenreihe = hproj.getRessourcenBedarf(roleName)
+                '    Else
+                '        tdatenreihe = hproj.getPersonalKosten(roleName)
+                '    End If
+                '    hsum(r - 1) = 0
+                '    For i = 0 To plen - 1
+                '        hsum(r - 1) = hsum(r - 1) + tdatenreihe(i)
+                '    Next i
+                '    gesamt_summe = gesamt_summe + hsum(r - 1)
+
+                '    'series
+                '    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                '        .Name = roleName
+                '        .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
+                '        .Values = tdatenreihe
+                '        .XValues = Xdatenreihe
+                '        .ChartType = Excel.XlChartType.xlColumnStacked
+                '    End With
+
+                'Next r
+
+                If auswahl = 1 Then
+                    tdatenreihe = hproj.getAlleRessourcen
+                Else
+                    tdatenreihe = hproj.getAllPersonalKosten
+                End If
+                gesamt_summe = tdatenreihe.Sum
+
+                'series
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                    .Interior.Color = RoleDefinitions.getRoledef(1).farbe
+                    .Values = tdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+                End With
+
+
+                If Not IsNothing(vglproj) Then
                     If auswahl = 1 Then
-                        tdatenreihe = hproj.getRessourcenBedarf(roleName)
+                        vdatenreihe = vglproj.getAlleRessourcen
                     Else
-                        tdatenreihe = hproj.getPersonalKosten(roleName)
+                        vdatenreihe = vglproj.getAllPersonalKosten
                     End If
-                    hsum(r - 1) = 0
-                    For i = 0 To plen - 1
-                        hsum(r - 1) = hsum(r - 1) + tdatenreihe(i)
-                    Next i
-                    gesamt_summe = gesamt_summe + hsum(r - 1)
+                    vSum = vdatenreihe.Sum
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = roleName
-                        .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
-                        .Values = tdatenreihe
+                        .Name = repMessages.getmsg(43) & vglproj.timeStamp.ToShortDateString
+                        '.Interior.Color = 0
+                        .Values = vdatenreihe
                         .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlColumnStacked
+                        .ChartType = Excel.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                            .ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                            .Weight = 1.5
+                        End With
                     End With
-
-                Next r
-
+                End If
 
             End With
 
             If auswahl = 1 Then
                 ' tk 12.6.17 
                 'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
+                If Not IsNothing(vglproj) Then
+                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
+                Else
+                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
+                End If
+
                 titelTeilLaengen(0) = titelTeile(0).Length
+
                 If calledFromReporting Then
                     titelTeile(1) = vbLf & hproj.getShapeText
 
@@ -5377,7 +5433,7 @@ Public Module Projekte
                 Else
                     titelTeile(1) = ""
                 End If
-                
+
                 titelTeilLaengen(1) = titelTeile(1).Length
                 diagramTitle = titelTeile(0) & titelTeile(1)
                 'kennung = "Personalbedarf"
@@ -5385,7 +5441,13 @@ Public Module Projekte
             ElseIf auswahl = 2 Then
                 ' tk 12.6.17
                 'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+
+                If Not IsNothing(vglproj) Then
+                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                Else
+                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                End If
+
                 titelTeilLaengen(0) = titelTeile(0).Length
 
                 If calledFromReporting Then
@@ -5638,7 +5700,8 @@ Public Module Projekte
     ''' 2: Diagramm zeigt Personal-Kosten</param>
     ''' <param name="changeScale">gibt an, ob der Scale ggf an neue Werte angepasst werden muss</param>
     ''' <remarks>wenn es aus der Time Machine aus aufgerufen wird, darf der Scale gerade nicht angepasst werden </remarks>
-    Public Sub updateRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+    Public Sub updateRessBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, _
+                                         ByRef chtobj As Excel.ChartObject, _
                                          ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
@@ -5648,7 +5711,10 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
-        Dim sumdatenreihe() As Double
+        Dim vdatenreihe() As Double
+        Dim vSum As Double = 0.0
+        Dim gesamt_Summe As Double
+        'Dim sumdatenreihe() As Double
         'Dim hsum() As Double, gesamt_summe As Double
         Dim anzRollen As Integer
         Dim pkIndex As Integer = CostDefinitions.Count
@@ -5679,6 +5745,13 @@ Public Module Projekte
             plen = .anzahlRasterElemente
             pstart = .Start
         End With
+
+        If Not IsNothing(vglProj) Then
+            If plen < vglProj.anzahlRasterElemente Then
+                plen = vglProj.anzahlRasterElemente
+            End If
+        End If
+
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
@@ -5693,14 +5766,14 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
-        ReDim sumdatenreihe(plen - 1)
+        ReDim vdatenreihe(plen - 1)
 
 
         For i = 1 To plen
             Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
         Next i
 
-        
+
         With CType(chtobj.Chart, Excel.Chart)
 
             ' bestimmen der Fontsize Größen 
@@ -5725,30 +5798,38 @@ Public Module Projekte
 
             End Try
 
-            For r = 1 To anzRollen
-                roleName = CStr(ErgebnisListeR.Item(r))
-                If auswahl = 1 Then
-                    tdatenreihe = hproj.getRessourcenBedarf(roleName)
-                Else
-                    tdatenreihe = hproj.getPersonalKosten(roleName)
-                End If
+            ' tk 17.10.17, es werden nur noch die Gesamt-Summen angezeigt, nicht mehr aufgeteit nach einzelnen Rollen, 
+            ' das passiert dann immer noch im Pie-Chart ...
+            ''For r = 1 To anzRollen
+            ''    roleName = CStr(ErgebnisListeR.Item(r))
+            ''    If auswahl = 1 Then
+            ''        tdatenreihe = hproj.getRessourcenBedarf(roleName)
+            ''    Else
+            ''        tdatenreihe = hproj.getPersonalKosten(roleName)
+            ''    End If
 
-                For i = 0 To plen - 1
-                    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-                Next
-                
+            ''    For i = 0 To plen - 1
+            ''        sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
+            ''    Next
 
-                'series
-                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .Name = roleName
-                    .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
-                    .Values = tdatenreihe
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlColumnStacked
-                End With
+            ''    'series
+            ''    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-            Next r
+            ''        .Name = roleName
+            ''        .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
+            ''        .Values = tdatenreihe
+            ''        .XValues = Xdatenreihe
+            ''        .ChartType = Excel.XlChartType.xlColumnStacked
+            ''    End With
+
+            ''Next r
+
+            If auswahl = 1 Then
+                tdatenreihe = hproj.getAlleRessourcen
+            Else
+                tdatenreihe = hproj.getAllPersonalKosten
+            End If
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
@@ -5765,8 +5846,8 @@ Public Module Projekte
 
                         Dim tstValue As Double = .MaximumScale
 
-                        If sumdatenreihe.Max > .MaximumScale - 3 Then
-                            .MaximumScale = sumdatenreihe.Max + 3
+                        If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+                            .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
                         End If
                         '.MaximumScaleIsAuto = true
 
@@ -5777,49 +5858,95 @@ Public Module Projekte
 
             End If
 
-            Dim gesamt_Summe As Double = sumdatenreihe.Sum
+            gesamt_Summe = tdatenreihe.Sum
 
-            If auswahl = 1 Then
-                ' tk 12.6.17 
-                'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
-                titelTeilLaengen(0) = titelTeile(0).Length
-                titelTeile(1) = ""
-                'titelTeile(1) = hproj.getShapeText
+            'series
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                .Interior.Color = RoleDefinitions.getRoledef(1).farbe
+                .Values = tdatenreihe
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlColumnStacked
+            End With
 
-                'If titelTeile(1).Length > maxlenTitle1 + 3 Then
-                '    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-                'Else
-                '    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-                'End If
-                'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
-                titelTeilLaengen(1) = titelTeile(1).Length
-                diagramTitle = titelTeile(0) & titelTeile(1)
-                'kennung = "Personalbedarf"
-            ElseIf auswahl = 2 Then
-                ' tk 12.6.17
-                'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
-                titelTeilLaengen(0) = titelTeile(0).Length
 
-                titelTeile(1) = ""
-                titelTeilLaengen(1) = titelTeile(1).Length
+            If Not IsNothing(vglProj) Then
+                If auswahl = 1 Then
+                    vdatenreihe = vglProj.getAlleRessourcen
+                Else
+                    vdatenreihe = vglProj.getAllPersonalKosten
+                End If
+                vSum = vdatenreihe.Sum
 
-                diagramTitle = titelTeile(0) & titelTeile(1)
+                'series
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    .Name = repMessages.getmsg(43) & vglProj.timeStamp.ToShortDateString
+                    '.Interior.Color = 0
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlLine
+                    With .Format.Line
+                        .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                        .ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                        .Weight = 1.5
+                    End With
+                End With
+            End If
 
+        End With
+
+        If auswahl = 1 Then
+            ' tk 12.6.17 
+            'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            If Not IsNothing(vglProj) Then
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
             Else
-                diagramTitle = "--- (T€)"
-                'kennung = "Gesamtkosten"
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
             End If
 
 
+            titelTeilLaengen(0) = titelTeile(0).Length
+            titelTeile(1) = ""
+            'titelTeile(1) = hproj.getShapeText
+
+            'If titelTeile(1).Length > maxlenTitle1 + 3 Then
+            '    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
+            'Else
+            '    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
+            'End If
+            'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+            titelTeilLaengen(1) = titelTeile(1).Length
+            diagramTitle = titelTeile(0) & titelTeile(1)
+            'kennung = "Personalbedarf"
+        ElseIf auswahl = 2 Then
+            ' tk 12.6.17
+            'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+            If Not IsNothing(vglProj) Then
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+            Else
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
+            End If
+
+            titelTeilLaengen(0) = titelTeile(0).Length
+
+            titelTeile(1) = ""
+            titelTeilLaengen(1) = titelTeile(1).Length
+
+            diagramTitle = titelTeile(0) & titelTeile(1)
+
+        Else
+            diagramTitle = "--- (T€)"
+            'kennung = "Gesamtkosten"
+        End If
+
+        With chtobj.Chart
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
                 .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
-                
+
             End If
 
 

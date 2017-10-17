@@ -1827,13 +1827,13 @@ Public Module testModule
 
                                 Try
                                     auswahl = 1
-
+                                    Dim vglProj As clsProjekt = projekthistorie.beauftragung
                                     If qualifier.Length > 0 Then
                                         If qualifier.Trim <> "Balken" Then
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            Call createRessBalkenOfProject(hproj, vglProj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -1866,14 +1866,14 @@ Public Module testModule
 
                                 Try
                                     auswahl = 2
-
+                                    Dim vglProj As clsProjekt = projekthistorie.beauftragung
                                     If qualifier.Length > 0 Then
 
                                         If qualifier.Trim <> "Balken" Then
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            Call createRessBalkenOfProject(hproj, vglProj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalBalken
                                         End If
 

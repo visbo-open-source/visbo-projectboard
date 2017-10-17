@@ -21370,8 +21370,9 @@ Public Module awinGeneralModules
     ''' <param name="hproj">das selektierte Projekt</param>
     ''' <remarks></remarks>
     Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean)
-        Dim chtobj As Excel.ChartObject
 
+        Dim chtobj As Excel.ChartObject
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim vglName As String = hproj.name.Trim
         Dim founddiagram As New clsDiagramm
         ' ''Dim IDkennung As String
@@ -21433,8 +21434,14 @@ Public Module awinGeneralModules
 
 
                                         Case PTprdk.PersonalBalken
+                                            Dim vglProj As clsProjekt = Nothing
+                                            Try
+                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                                            Catch ex As Exception
+                                                vglProj = Nothing
+                                            End Try
 
-                                            Call updateRessBalkenOfProject(hproj, chtobj, auswahl, replaceProj)
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
 
 
                                         Case PTprdk.PersonalPie
@@ -21446,6 +21453,12 @@ Public Module awinGeneralModules
 
                                         Case PTprdk.KostenBalken
 
+                                            Dim vglProj As clsProjekt = Nothing
+                                            Try
+                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                                            Catch ex As Exception
+                                                vglProj = Nothing
+                                            End Try
 
                                             Call updateCostBalkenOfProject(hproj, chtobj, auswahl, replaceProj)
 

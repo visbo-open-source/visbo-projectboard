@@ -6398,6 +6398,9 @@ Imports System.Windows
         Dim myCollection As New Collection
         Call projektTafelInit()
 
+        ' wird für das LEsen des Vergleichs-Projekts gebraucht ... 
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim vglProjekt As clsProjekt = Nothing
         enableOnUpdate = False
 
         Try
@@ -6473,11 +6476,16 @@ Imports System.Windows
                 Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
                                                          top, left, width, height, False)
 
+                Try
+                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                Catch ex As Exception
+                    vglProjekt = Nothing
+                End Try
                 ' Rollen-Balken
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                 auswahl = 1 ' zeige Personalbedarfe
-                Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+                Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
                 ' Kosten-Balken
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
@@ -6523,6 +6531,10 @@ Imports System.Windows
         Dim auswahl As Integer = 1
         Dim top As Double, left As Double, width As Double, height As Double
 
+        ' wird für das LEsen des Vergleichs-Projekts gebraucht ... 
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim vglProjekt As clsProjekt = Nothing
+
         Call projektTafelInit()
 
         enableOnUpdate = False
@@ -6567,9 +6579,15 @@ Imports System.Windows
                     End Try
 
                     Try
+
+                        Try
+                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                        Catch ex As Exception
+                            vglProjekt = Nothing
+                        End Try
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
-                        Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+                        Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
