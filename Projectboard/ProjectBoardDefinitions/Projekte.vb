@@ -5195,6 +5195,7 @@ Public Module Projekte
 
         Dim found As Boolean = False
 
+
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
             If calledfromReporting Then
                 currentSheetName = arrWsNames(ptTables.repCharts)
