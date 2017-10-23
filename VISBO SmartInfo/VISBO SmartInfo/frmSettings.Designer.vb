@@ -47,6 +47,7 @@ Partial Class frmSettings
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnLanguageExp = New System.Windows.Forms.Button()
         Me.btnLanguageImp = New System.Windows.Forms.Button()
+        Me.chkbxUniqueNames = New System.Windows.Forms.CheckBox()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
@@ -56,7 +57,7 @@ Partial Class frmSettings
         'frmExtendedSearch
         '
         Me.frmExtendedSearch.AutoSize = True
-        Me.frmExtendedSearch.Location = New System.Drawing.Point(8, 108)
+        Me.frmExtendedSearch.Location = New System.Drawing.Point(8, 127)
         Me.frmExtendedSearch.Name = "frmExtendedSearch"
         Me.frmExtendedSearch.Size = New System.Drawing.Size(106, 17)
         Me.frmExtendedSearch.TabIndex = 30
@@ -66,7 +67,7 @@ Partial Class frmSettings
         'frmShowInfoBC
         '
         Me.frmShowInfoBC.AutoSize = True
-        Me.frmShowInfoBC.Location = New System.Drawing.Point(8, 85)
+        Me.frmShowInfoBC.Location = New System.Drawing.Point(8, 104)
         Me.frmShowInfoBC.Name = "frmShowInfoBC"
         Me.frmShowInfoBC.Size = New System.Drawing.Size(129, 17)
         Me.frmShowInfoBC.TabIndex = 29
@@ -112,11 +113,12 @@ Partial Class frmSettings
         Me.TabControl1.Location = New System.Drawing.Point(12, 12)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(290, 167)
+        Me.TabControl1.Size = New System.Drawing.Size(290, 182)
         Me.TabControl1.TabIndex = 35
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.chkbxUniqueNames)
         Me.TabPage1.Controls.Add(Me.btnChangeLanguage)
         Me.TabPage1.Controls.Add(Me.txtboxLanguage)
         Me.TabPage1.Controls.Add(Me.lblLanguage)
@@ -129,14 +131,14 @@ Partial Class frmSettings
         Me.TabPage1.Location = New System.Drawing.Point(4, 22)
         Me.TabPage1.Name = "TabPage1"
         Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage1.Size = New System.Drawing.Size(282, 156)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Allgemein"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
         'btnChangeLanguage
         '
-        Me.btnChangeLanguage.Location = New System.Drawing.Point(183, 85)
+        Me.btnChangeLanguage.Location = New System.Drawing.Point(183, 104)
         Me.btnChangeLanguage.Name = "btnChangeLanguage"
         Me.btnChangeLanguage.Size = New System.Drawing.Size(83, 40)
         Me.btnChangeLanguage.TabIndex = 39
@@ -298,11 +300,21 @@ Partial Class frmSettings
         Me.btnLanguageImp.Text = "Importieren"
         Me.btnLanguageImp.UseVisualStyleBackColor = True
         '
+        'chkbxUniqueNames
+        '
+        Me.chkbxUniqueNames.AutoSize = True
+        Me.chkbxUniqueNames.Location = New System.Drawing.Point(8, 81)
+        Me.chkbxUniqueNames.Name = "chkbxUniqueNames"
+        Me.chkbxUniqueNames.Size = New System.Drawing.Size(189, 17)
+        Me.chkbxUniqueNames.TabIndex = 40
+        Me.chkbxUniqueNames.Text = "mit eindeutigen Namen beschriften"
+        Me.chkbxUniqueNames.UseVisualStyleBackColor = True
+        '
         'frmSettings
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(323, 202)
+        Me.ClientSize = New System.Drawing.Size(323, 206)
         Me.Controls.Add(Me.TabControl1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSettings"
@@ -341,4 +353,5 @@ Partial Class frmSettings
     Friend WithEvents btnChangeLanguage As System.Windows.Forms.Button
     Friend WithEvents rdbDBLogin As System.Windows.Forms.RadioButton
     Public WithEvents txtboxLanguage As System.Windows.Forms.ComboBox
+    Friend WithEvents chkbxUniqueNames As System.Windows.Forms.CheckBox
 End Class

@@ -21460,7 +21460,7 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
-                                            Call updateCostBalkenOfProject(hproj, chtobj, auswahl, replaceProj)
+                                            Call updateCostBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
 
 
                                         Case PTprdk.KostenPie

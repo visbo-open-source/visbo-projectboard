@@ -2280,9 +2280,9 @@ Imports System.Windows
 
             Case "PT2G1M1B4" ' Status ändern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt-Status ändern"
+                    tmpLabel = "Projekt beauftragen"
                 Else
-                    tmpLabel = "Change Project-Status"
+                    tmpLabel = "make Project official"
                 End If
 
             Case "PTzurück" ' zurück zur Multiprojekt-Tafel
@@ -6491,7 +6491,7 @@ Imports System.Windows
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                 auswahl = 1 ' zeige Sonstige Kosten
-                Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+                Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
                 ' Strategie / Risiko / Marge
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
@@ -6634,10 +6634,12 @@ Imports System.Windows
     Sub Tom2G2M1B5GKosten(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-        Dim hproj As clsProjekt
+        Dim hproj As clsProjekt, vglProj As clsProjekt = Nothing
         Dim awinSelection As Excel.ShapeRange
         Dim auswahl As Integer = 1 ' das steuert , dass die sonstigen Kosten angezeigt werden  
         Dim top As Double, left As Double, width As Double, height As Double
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -6678,9 +6680,15 @@ Imports System.Windows
                 End Try
 
                 Try
+                    Try
+                        vglProj = Request.retrieveFirstContractedPFromDB(hproj.name)
+                    Catch ex As Exception
+                        vglProj = Nothing
+                    End Try
+
                     Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
-                    Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width, False)
+                    Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False)
 
                     ' jetzt wird das Pie-Diagramm gezeichnet 
                     Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
@@ -7241,7 +7249,7 @@ Imports System.Windows
                 If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="", _
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
