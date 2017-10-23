@@ -186,11 +186,200 @@ Public Class Tabelle2
 
     Private Sub Tabelle2_BeforeDoubleClick(Target As Microsoft.Office.Interop.Excel.Range, ByRef Cancel As Boolean) Handles Me.BeforeDoubleClick
 
+        ' ''Dim former_EE As Boolean = appInstance.EnableEvents
+
+        ' ''appInstance.EnableEvents = True
+        ' ''Dim currentCell As Excel.Range = Target
+
+        ' ''Try
+        ' ''    Dim frmMERoleCost As New frmMEhryRoleCost
+        ' ''    Dim auslastungChanged As Boolean = False
+        ' ''    Dim summenChanged As Boolean = False
+        ' ''    ' muss extra überwacht werden, um das ProjectInfo1 Fenster auch immer zu aktualisieren
+        ' ''    Dim kostenChanged As Boolean = False
+        ' ''    Dim newStrValue As String = ""
+
+        ' ''    Dim meWB As Excel.Workbook = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+        ' ''    Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        ' ''    Dim returnValue As DialogResult
+
+        ' ''    If Target.Cells.Count = 1 Then
+
+        ' ''        Dim zeile As Integer = Target.Row
+        ' ''        Dim pName As String = CStr(meWS.Cells(zeile, visboZustaende.meColpName).value)
+        ' ''        Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+        ' ''        Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+        ' ''        Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+        ' ''        Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+
+        ' ''        Dim hproj As clsProjekt = Nothing
+        ' ''        If Not IsNothing(pName) And pName <> "" Then
+        ' ''            hproj = ShowProjekte.getProject(pName)
+        ' ''        End If
+
+        ' ''        Dim hPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+        ' ''        Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+        ' ''        If Not IsNothing(curComment) Then
+        ' ''            phaseNameID = curComment.Text
+        ' ''        End If
+
+
+
+        ' ''        If Target.Column = columnRC Then
+        ' ''            ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
+        ' ''            ' Jetzt muss ein Formular mit den Rollen und Kosten im TreeView angezeigt werden
+        ' ''            frmMERoleCost.pName = pName
+        ' ''            frmMERoleCost.vName = vName
+        ' ''            frmMERoleCost.phaseName = phaseName
+        ' ''            frmMERoleCost.rcName = rcName
+        ' ''            frmMERoleCost.phaseNameID = phaseNameID
+        ' ''            frmMERoleCost.hproj = hproj
+
+        ' ''            returnValue = frmMERoleCost.ShowDialog()
+
+        ' ''            If returnValue = DialogResult.OK Then
+        ' ''                ' eintragen der selektierten Rollen
+
+        ' ''                If frmMERoleCost.ergItems.Count = 1 Then
+        ' ''                    Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(1))
+
+        ' ''                    ' jetzt den Schutz aufheben , falls einer definiert ist 
+        ' ''                    If meWS.ProtectContents Then
+        ' ''                        meWS.Unprotect(Password:="x")
+        ' ''                    End If
+
+        ' ''                    If rcName <> hRCname Then
+        ' ''                        ' ausgewählte Rolle eintragn
+        ' ''                        'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
+        ' ''                        CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
+        ' ''                        ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
+
+        ' ''                        'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
+        ' ''                        CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
+
+        ' ''                        ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
+        ' ''                        If CostDefinitions.containsName(hRCname) Then
+
+        ' ''                            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
+        ' ''                            With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
+        ' ''                                .Visible = False
+        ' ''                                If awinSettings.englishLanguage Then
+        ' ''                                    .Text("Value in thousand €")
+        ' ''                                Else
+        ' ''                                    .Text(Text:="Angabe in T€")
+        ' ''                                End If
+        ' ''                                .Shape.ScaleHeight(0.6, Microsoft.Office.Core.MsoTriState.msoFalse)
+        ' ''                            End With
+        ' ''                        Else
+
+        ' ''                            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
+        ' ''                        End If
+
+        ' ''                    End If
+        ' ''                Else
+        ' ''                    Dim i As Integer
+        ' ''                    For i = 1 To frmMERoleCost.ergItems.Count
+
+        ' ''                        If rcName = CStr(frmMERoleCost.ergItems(i)) Then
+        ' ''                            ' aktuelle Rolle immer noch ausgewählt, muss aber nicht eingefügt werden, sondern nur alle anderen
+        ' ''                        Else
+        ' ''                            ' Zeile im MassenEdit-Tabelle einfügen und Namen einfügen
+        ' ''                            Call massEditZeileEinfügen("")
+        ' ''                            Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(i))
+
+        ' ''                            If meWS.ProtectContents Then
+        ' ''                                meWS.Unprotect(Password:="x")
+        ' ''                            End If
+
+        ' ''                            ' ausgewählte Rolle eintragn
+        ' ''                            'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
+        ' ''                            CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
+        ' ''                            ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
+
+        ' ''                            'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
+        ' ''                            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
+
+
+        ' ''                            ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
+        ' ''                            If CostDefinitions.containsName(hRCname) Then
+        ' ''                                ' jetzt den Schutz aufheben , falls einer definiert ist 
+
+        ' ''                                CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
+        ' ''                                With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
+        ' ''                                    .Visible = False
+        ' ''                                    If awinSettings.englishLanguage Then
+        ' ''                                        .Text("Value in thousand €")
+        ' ''                                    Else
+        ' ''                                        .Text(Text:="Angabe in T€")
+        ' ''                                    End If
+        ' ''                                    .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+        ' ''                                End With
+        ' ''                            Else
+
+        ' ''                                '' ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment.Delete()
+        ' ''                                CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
+        ' ''                            End If
+        ' ''                        End If
+
+        ' ''                    Next
+
+        ' ''                End If
+        ' ''                ' Blattschutz wieder setzen wie zuvor
+        ' ''                With meWS
+        ' ''                    .Protect(Password:="x", UserInterfaceOnly:=True, _
+        ' ''                             AllowFormattingCells:=True, _
+        ' ''                             AllowInsertingColumns:=False,
+        ' ''                             AllowInsertingRows:=True, _
+        ' ''                             AllowDeletingColumns:=False, _
+        ' ''                             AllowDeletingRows:=True, _
+        ' ''                             AllowSorting:=True, _
+        ' ''                             AllowFiltering:=True)
+        ' ''                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+        ' ''                    .EnableAutoFilter = True
+        ' ''                End With
+        ' ''            End If
+
+        ' ''        End If
+
+        ' ''    Else
+        ' ''        Call MsgBox("bitte nur eine Zelle selektieren ...")
+        ' ''        Target.Cells(1, 1).value = visboZustaende.oldValue
+        ' ''    End If
+
+
+        ' ''Catch ex As Exception
+
+        ' ''    Call MsgBox("Fehler bei Massen-Edit, Ändern : " & vbLf & ex.Message)
+
+        ' ''    ' Blattschutz wieder setzen wie zuvor
+        ' ''    With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        ' ''        .Protect(Password:="x", UserInterfaceOnly:=True, _
+        ' ''                 AllowFormattingCells:=True, _
+        ' ''                 AllowInsertingColumns:=False,
+        ' ''                 AllowInsertingRows:=True, _
+        ' ''                 AllowDeletingColumns:=False, _
+        ' ''                 AllowDeletingRows:=True, _
+        ' ''                 AllowSorting:=True, _
+        ' ''                 AllowFiltering:=True)
+        ' ''        .EnableSelection = XlEnableSelection.xlUnlockedCells
+        ' ''        .EnableAutoFilter = True
+        ' ''    End With
+
+        ' ''End Try
+
+        ' ''appInstance.EnableEvents = former_EE
+
+    End Sub
+
+    Private Sub Tabelle2_BeforeRightClick(Target As Microsoft.Office.Interop.Excel.Range, ByRef Cancel As Boolean) Handles Me.BeforeRightClick
+
+        Cancel = True
         Dim former_EE As Boolean = appInstance.EnableEvents
 
         appInstance.EnableEvents = True
         Dim currentCell As Excel.Range = Target
-       
+
         Try
             Dim frmMERoleCost As New frmMEhryRoleCost
             Dim auslastungChanged As Boolean = False
@@ -224,7 +413,7 @@ Public Class Tabelle2
                     phaseNameID = curComment.Text
                 End If
 
-               
+
 
                 If Target.Column = columnRC Then
                     ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
@@ -248,6 +437,9 @@ Public Class Tabelle2
                             If meWS.ProtectContents Then
                                 meWS.Unprotect(Password:="x")
                             End If
+                            Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                            rng.ClearComments()
+
 
                             If rcName <> hRCname Then
                                 ' ausgewählte Rolle eintragn
@@ -256,11 +448,15 @@ Public Class Tabelle2
                                 ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
 
                                 'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
-                                CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
+                                If Not IsNumeric(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value) Then
+                                    If CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = "" Then
+                                        CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
+                                    End If
+                                End If
 
                                 ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
                                 If CostDefinitions.containsName(hRCname) Then
-                               
+
                                     CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
                                     With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
                                         .Visible = False
@@ -272,8 +468,14 @@ Public Class Tabelle2
                                         .Shape.ScaleHeight(0.6, Microsoft.Office.Core.MsoTriState.msoFalse)
                                     End With
                                 Else
-                                   
-                                    CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
+
+                                    '' jetzt den Schutz aufheben , falls einer definiert ist 
+                                    'If meWS.ProtectContents Then
+                                    '    meWS.Unprotect(Password:="x")
+                                    'End If
+                                    'Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                                    'rng.ClearComments()
+
                                 End If
 
                             End If
@@ -291,6 +493,9 @@ Public Class Tabelle2
                                     If meWS.ProtectContents Then
                                         meWS.Unprotect(Password:="x")
                                     End If
+                                    Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                                    rng.ClearComments()
+
 
                                     ' ausgewählte Rolle eintragn
                                     'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
@@ -304,7 +509,7 @@ Public Class Tabelle2
                                     ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
                                     If CostDefinitions.containsName(hRCname) Then
                                         ' jetzt den Schutz aufheben , falls einer definiert ist 
-                                    
+
                                         CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
                                         With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
                                             .Visible = False
@@ -316,9 +521,16 @@ Public Class Tabelle2
                                             .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                                         End With
                                     Else
-                                       
-                                        '' ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment.Delete()
-                                        CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
+
+                                        ' '' ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment.Delete()
+                                        ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
+                                        ' jetzt den Schutz aufheben , falls einer definiert ist 
+                                        'If meWS.ProtectContents Then
+                                        '    meWS.Unprotect(Password:="x")
+                                        'End If
+                                        'rng = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                                        'rng.ClearComments()
+
                                     End If
                                 End If
 
@@ -326,18 +538,23 @@ Public Class Tabelle2
 
                         End If
                         ' Blattschutz wieder setzen wie zuvor
+                        'With meWS
+                        '    .Protect(Password:="x", UserInterfaceOnly:=True, _
+                        '             AllowFormattingCells:=True, _
+                        '             AllowInsertingColumns:=False,
+                        '             AllowInsertingRows:=True, _
+                        '             AllowDeletingColumns:=False, _
+                        '             AllowDeletingRows:=True, _
+                        '             AllowSorting:=True, _
+                        '             AllowFiltering:=True)
+                        '    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                        '    .EnableAutoFilter = True
+                        'End With
+
                         With meWS
-                            .Protect(Password:="x", UserInterfaceOnly:=True, _
-                                     AllowFormattingCells:=True, _
-                                     AllowInsertingColumns:=False,
-                                     AllowInsertingRows:=True, _
-                                     AllowDeletingColumns:=False, _
-                                     AllowDeletingRows:=True, _
-                                     AllowSorting:=True, _
-                                     AllowFiltering:=True)
-                            .EnableSelection = XlEnableSelection.xlUnlockedCells
-                            .EnableAutoFilter = True
+                            .Protect(Password:="x")
                         End With
+                        Cancel = True
                     End If
 
                 End If
@@ -350,7 +567,7 @@ Public Class Tabelle2
 
         Catch ex As Exception
 
-            Call MsgBox("Fehler bei Massen-Edit, Ändern : " & vbLf & ex.Message)
+            Call MsgBox("Fehler bei Massen-Edit, rightClick : " & vbLf & ex.Message)
 
             ' Blattschutz wieder setzen wie zuvor
             With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
