@@ -163,6 +163,8 @@ Public Class clsawinSettings
     Public Property mePrzAuslastung As Boolean
     ' sollen Zuweisungen zu Rollen automatisch ggf vorhandene Sammelrollen Zuweisungen ersetzen  
     Public Property meAutoReduce As Boolean
+    ' soll im Massen-Edit bei nicht nachgefragt werden wenn AutoReduce = true
+    Public Property meDontAskWhenAutoReduce As Boolean
     ' soll in der Massen-Edit Funktion die Sortierung enabled sein ? 
     Public Property meEnableSorting As Boolean
     ' soll beim Berechnen der auslastungs-Values im Mass-Edit die bereits beauftragte externe Kapazität mit berücksichtigt werden 
@@ -325,6 +327,7 @@ Public Class clsawinSettings
         ' Settings für online MassenEdit 
         _mePrzAuslastung = True
         _meAutoReduce = True
+        _meDontAskWhenAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
         _meExtendedColumnsView = False
