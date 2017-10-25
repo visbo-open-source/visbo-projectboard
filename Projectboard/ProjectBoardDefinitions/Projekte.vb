@@ -5344,32 +5344,6 @@ Public Module Projekte
 
             With newChtObj.Chart
 
-                ' tk 17.10.17, es werden nur noch die Gesamt-Summen angezeigt, nicht mehr aufgeteit nach einzelnen Rollen, 
-                ' das passiert dann immer noch im Pie-Chart ...
-                'For r = 1 To anzRollen
-                '    roleName = CStr(ErgebnisListeR.Item(r))
-                '    If auswahl = 1 Then
-                '        tdatenreihe = hproj.getRessourcenBedarf(roleName)
-                '    Else
-                '        tdatenreihe = hproj.getPersonalKosten(roleName)
-                '    End If
-                '    hsum(r - 1) = 0
-                '    For i = 0 To plen - 1
-                '        hsum(r - 1) = hsum(r - 1) + tdatenreihe(i)
-                '    Next i
-                '    gesamt_summe = gesamt_summe + hsum(r - 1)
-
-                '    'series
-                '    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                '        .Name = roleName
-                '        .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
-                '        .Values = tdatenreihe
-                '        .XValues = Xdatenreihe
-                '        .ChartType = Excel.XlChartType.xlColumnStacked
-                '    End With
-
-                'Next r
-
                 If auswahl = 1 Then
                     tdatenreihe = hproj.getAlleRessourcen
                 Else
@@ -5879,8 +5853,7 @@ Public Module Projekte
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim gesamt_Summe As Double
-        'Dim sumdatenreihe() As Double
-        'Dim hsum() As Double, gesamt_summe As Double
+       
         Dim anzRollen As Integer
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
@@ -5963,65 +5936,12 @@ Public Module Projekte
 
             End Try
 
-            ' tk 17.10.17, es werden nur noch die Gesamt-Summen angezeigt, nicht mehr aufgeteit nach einzelnen Rollen, 
-            ' das passiert dann immer noch im Pie-Chart ...
-            ''For r = 1 To anzRollen
-            ''    roleName = CStr(ErgebnisListeR.Item(r))
-            ''    If auswahl = 1 Then
-            ''        tdatenreihe = hproj.getRessourcenBedarf(roleName)
-            ''    Else
-            ''        tdatenreihe = hproj.getPersonalKosten(roleName)
-            ''    End If
-
-            ''    For i = 0 To plen - 1
-            ''        sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-            ''    Next
-
-
-            ''    'series
-            ''    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-
-            ''        .Name = roleName
-            ''        .Interior.Color = RoleDefinitions.getRoledef(roleName).farbe
-            ''        .Values = tdatenreihe
-            ''        .XValues = Xdatenreihe
-            ''        .ChartType = Excel.XlChartType.xlColumnStacked
-            ''    End With
-
-            ''Next r
-
             If auswahl = 1 Then
                 tdatenreihe = hproj.getAlleRessourcen
             Else
                 tdatenreihe = hproj.getAllPersonalKosten
             End If
 
-            If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
-
-                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
-                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                    ' hinausgehende Werte hat 
-
-                    If changeScale Then
-                        .MinimumScale = 0
-                        .MaximumScaleIsAuto = True
-                        ' Skalierung soll sich nur ändern, wenn sie größer werden muss
-                        ' ansonsten ist es besser, man erkennt die Verhältnismäßigkeit 
-                        'If Not (.MaximumScaleIsAuto) Then
-
-                        Dim tstValue As Double = .MaximumScale
-
-                        If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
-                            .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
-                        End If
-                        '.MaximumScaleIsAuto = true
-
-                        'End If
-                    End If
-
-                End With
-
-            End If
 
             gesamt_Summe = tdatenreihe.Sum
 
@@ -6058,7 +5978,36 @@ Public Module Projekte
                 End With
             End If
 
+            If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+
+                    If changeScale Then
+                        .MinimumScale = 0
+                        .MaximumScaleIsAuto = True
+                        ' Skalierung soll sich nur ändern, wenn sie größer werden muss
+                        ' ansonsten ist es besser, man erkennt die Verhältnismäßigkeit 
+                        'If Not (.MaximumScaleIsAuto) Then
+
+                        Dim tstValue As Double = .MaximumScale
+
+                        If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+                            .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+                        End If
+                        '.MaximumScaleIsAuto = true
+
+                        'End If
+                    End If
+
+                End With
+
+            End If
+
         End With
+
+
 
         If auswahl = 1 Then
             ' tk 12.6.17 
@@ -6069,20 +6018,12 @@ Public Module Projekte
                 titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
             End If
 
-
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = ""
-            'titelTeile(1) = hproj.getShapeText
-
-            'If titelTeile(1).Length > maxlenTitle1 + 3 Then
-            '    titelTeile(1) = titelTeile(1).Substring(0, maxlenTitle1) & "... (" & hproj.timeStamp.ToString & ") "
-            'Else
-            '    titelTeile(1) = titelTeile(1) & " (" & hproj.timeStamp.ToString & ") "
-            'End If
-            'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+            
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
-            'kennung = "Personalbedarf"
+
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
@@ -6314,7 +6255,7 @@ Public Module Projekte
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         ' Personalkosten
                         .Name = repMessages.getmsg(164) & " " & hproj.timeStamp.ToShortDateString
-                        .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
+                        .Interior.Color = visboFarbeBlau
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -6323,12 +6264,6 @@ Public Module Projekte
 
                 tdatenreihe = hproj.getGesamtAndereKosten
                 hsum(1) = tdatenreihe.Sum
-
-
-                'For i = 0 To plen - 1
-                '    hsum(ik) = hsum(ik) + tdatenreihe(i)
-                '    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-                'Next
 
                 gesamt_summe = hsum(0) + hsum(1)
 
@@ -6364,27 +6299,6 @@ Public Module Projekte
                         End With
                     End With
                 End If
-
-                ' tk 18.10 wird jetzt nicht mehr aufgeschlüsselt, sondern als eine Summe dargestellt, 
-                ''For k = 1 To anzKostenarten
-                ''    costname = CStr(ErgebnisListeK.Item(k))
-                ''    tdatenreihe = hproj.getKostenBedarf(costname)
-                ''    hsum(k - ik) = 0
-                ''    For i = 0 To plen - 1
-                ''        hsum(k - ik) = hsum(k - ik) + tdatenreihe(i)
-                ''    Next i
-
-                ''    gesamt_summe = gesamt_summe + hsum(k - ik)
-
-                ''    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                ''        .Name = costname
-                ''        .Interior.Color = CostDefinitions.getCostdef(costname).farbe
-                ''        .Values = tdatenreihe
-                ''        .XValues = Xdatenreihe
-                ''        .ChartType = Excel.XlChartType.xlColumnStacked
-                ''    End With
-
-                ''Next k
 
 
             End With
@@ -6744,10 +6658,9 @@ Public Module Projekte
         Dim tdatenreihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
-        Dim sumdatenreihe() As Double
         Dim hsum(1) As Double, gesamt_summe As Double = 0.0
         Dim anzKostenarten As Integer
-        'Dim costname As String
+
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
         Dim diagramTitle As String
@@ -6793,16 +6706,10 @@ Public Module Projekte
         ErgebnisListeK = hproj.getCostNames
         anzKostenarten = ErgebnisListeK.Count
 
-        'If anzKostenarten = 0 Then
-        '    MsgBox("keine Kosten-Bedarfe definiert")
-        '    Exit Sub
-        'End If
-
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
-        ReDim sumdatenreihe(plen - 1)
 
 
         For i = 1 To plen
@@ -6843,10 +6750,6 @@ Public Module Projekte
                 tdatenreihe = hproj.getAllPersonalKosten
                 hsum(0) = tdatenreihe.Sum
 
-                For i = 0 To plen - 1
-                    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-                Next
-
 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     ' Personalkosten
@@ -6866,14 +6769,6 @@ Public Module Projekte
             tdatenreihe = hproj.getGesamtAndereKosten
             hsum(1) = tdatenreihe.Sum
 
-            For i = 0 To plen - 1
-                sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-            Next
-
-            'For i = 0 To plen - 1
-            '    hsum(ik) = hsum(ik) + tdatenreihe(i)
-            '    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-            'Next
 
             gesamt_summe = hsum(0) + hsum(1)
 
@@ -6910,30 +6805,6 @@ Public Module Projekte
                 End With
             End If
 
-            ' tk 18.10 wird jetzt nicht mehr aufgeschlüsselt, sondern als eine Summe dargestellt, 
-            ''For k = 1 To anzKostenarten
-            ''    costname = CStr(ErgebnisListeK.Item(k))
-            ''    tdatenreihe = hproj.getKostenBedarf(costname)
-
-            ''    For i = 0 To plen - 1
-            ''        hsum(k - ik) = hsum(k - ik) + tdatenreihe(i)
-            ''        sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-            ''    Next
-
-            ''    gesamt_summe = gesamt_summe + hsum(k - ik)
-
-
-            ''    Dim iSerColl As Integer = CType(.SeriesCollection, Excel.SeriesCollection).Count
-
-            ''    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-            ''        .Name = costname
-            ''        .Interior.Color = CostDefinitions.getCostdef(costname).farbe
-            ''        .Values = tdatenreihe
-            ''        .XValues = Xdatenreihe
-            ''        '.ChartType = Excel.XlChartType.xlColumnStacked
-            ''    End With
-
-            ''Next k
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
@@ -6951,8 +6822,8 @@ Public Module Projekte
 
                         Dim tstValue As Double = .MaximumScale
 
-                        If System.Math.Max(sumdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
-                            .MaximumScale = System.Math.Max(sumdatenreihe.Max, vdatenreihe.Max) + 3
+                        If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+                            .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
                         End If
                     End If
 

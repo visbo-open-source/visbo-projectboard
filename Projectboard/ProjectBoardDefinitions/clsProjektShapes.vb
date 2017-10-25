@@ -836,52 +836,410 @@ Public Class clsProjektShapes
             ' die Height muss immer gleich bleiben 
             shpElement.Height = CSng(oldCoord(2))
 
+            Try
 
-            If moveAllowed Then
+                If moveAllowed Then
 
-                ' top darf nur bei ProjektE oder ProjektN verändert werden 
-                If curCoord(0) <> oldCoord(0) Then
+                    ' top darf nur bei ProjektE oder ProjektN verändert werden 
+                    If curCoord(0) <> oldCoord(0) Then
 
-                    If isProjectType(shapeType) Then
-                        Dim tmpZeile As Integer = calcYCoordToZeile(curCoord(0))
-                        shpElement.Top = CSng(calcZeileToYCoord(tmpZeile))
-                        curCoord(0) = shpElement.Top
-                    Else
-                        ' korrigiere die Position 
-                        shpElement.Top = CSng(oldCoord(0))
-                        curCoord(0) = shpElement.Top
+                        If isProjectType(shapeType) Then
+                            Dim tmpZeile As Integer = calcYCoordToZeile(curCoord(0))
+                            shpElement.Top = CSng(calcZeileToYCoord(tmpZeile))
+                            curCoord(0) = shpElement.Top
+                        Else
+                            ' korrigiere die Position 
+                            shpElement.Top = CSng(oldCoord(0))
+                            curCoord(0) = shpElement.Top
+                        End If
+
+
                     End If
 
 
-                End If
+                    If isProjectType(shapeType) Then
+                        ' für Projekte: berechne das neue Start-Datum und ggf die neue Dauer
+                        Dim newStartdate As Date
+                        Dim newEndDate As Date
+                        Dim tmpDauerIndays = hproj.dauerInDays
+                        newProjekt = New clsProjekt
 
 
-                If isProjectType(shapeType) Then
-                    ' für Projekte: berechne das neue Start-Datum und ggf die neue Dauer
-                    Dim newStartdate As Date
-                    Dim newEndDate As Date
-                    Dim tmpDauerIndays = hproj.dauerInDays
-                    newProjekt = New clsProjekt
+                        ' wenn gedehnt bzw. gestaucht wird ...
+                        If curCoord(3) <> oldCoord(3) Then
+                            ' es wird gestaucht bzw. gedehnt
+                            newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
+                            newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1 + calcXCoordToTage(curCoord(3) - oldCoord(3)))
+                        Else
+
+                            ' es wurde nur verschoben 
+                            newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
+                            newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1)
+
+                            Dim newZeile As Integer = calcYCoordToZeile(shpElement.Top)
+                            Dim anzahlZeilen As Integer = getNeededSpace(shpElement)
+
+                            ' Platz schaffen auf der Projekt-Tafel
+                            If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
+                                                startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
+                                                anzahlZeilen:=anzahlZeilen) Then
+
+                                ' das verändert die Constellation ..
+                                currentConstellationName = calcLastSessionScenarioName()
+                                If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                                End If
 
 
-                    ' wenn gedehnt bzw. gestaucht wird ...
-                    If curCoord(3) <> oldCoord(3) Then
-                        ' es wird gestaucht bzw. gedehnt
-                        newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
-                        newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1 + calcXCoordToTage(curCoord(3) - oldCoord(3)))
-                    Else
+                                If curCoord(0) < oldCoord(0) Then
+                                    ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
+                                    ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
+                                    Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
+                                    Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
+                                Else
+                                    Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
+                                End If
 
-                        ' es wurde nur verschoben 
-                        newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
-                        newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1)
+                            End If
 
-                        Dim newZeile As Integer = calcYCoordToZeile(shpElement.Top)
-                        Dim anzahlZeilen As Integer = getNeededSpace(shpElement)
+                            ' tfzeile setzen
+                            hproj.tfZeile = newZeile
 
-                        ' Platz schaffen auf der Projekt-Tafel
-                        If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                            startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
-                                            anzahlZeilen:=anzahlZeilen) Then
+
+                        End If
+
+                        'hproj.copyAttrTo(newProjekt)
+                        hproj.korrCopyTo(newProjekt, newStartdate, newEndDate)
+                        With hproj
+                            newProjekt.name = .name
+                            newProjekt.variantName = .variantName
+                            newProjekt.description = .description
+                            newProjekt.ampelStatus = .ampelStatus
+                            newProjekt.ampelErlaeuterung = .ampelErlaeuterung
+                            newProjekt.Status = .Status
+                            newProjekt.shpUID = .shpUID
+                            newProjekt.tfZeile = .tfZeile
+                            newProjekt.movable = .movable
+
+                        End With
+
+                        newProjekt.timeStamp = Date.Now
+                        ' Workaround: 
+                        Dim tmpValue As Integer = newProjekt.dauerInDays
+                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                        'Call awinCreateBudgetWerte(newProjekt)
+
+                        ' jetzt muss das Projekt aus der Showprojekte und der AlleProjekte herausgenommen werden 
+                        ' und in der kopierten Form wieder aufgenommen werden 
+                        Dim key As String = pName
+                        ShowProjekte.Remove(pName)
+                        key = calcProjektKey(hproj)
+                        AlleProjekte.Remove(key)
+
+                        AlleProjekte.Add(newProjekt)
+                        ShowProjekte.Add(newProjekt)
+
+                        Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)
+
+
+                        pShape = shpElement
+                        Dim phaseList As Collection
+                        Dim milestoneList As Collection
+                        'Dim typCollection As New Collection
+                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                        phaseList = Me.getPhaseList(pName)
+                        milestoneList = Me.getMilestoneList(pName)
+                        'typCollection.Clear()
+                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+                        Call clearProjektinPlantafel(pName)
+                        ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
+                        ' sie noch in der Select Collection sind und danach noch behandelt werden 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=newProjekt.name, tryzeile:=hproj.tfZeile, _
+                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
+
+                        ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
+                        ' damit die aufrufende Routine das shpelement wieder hat 
+                        tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Range(pName)
+                        shpElement = tmpRange.Item(1)
+
+                        ' workaround: 
+                        tmpDauerIndays = hproj.dauerInDays
+                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                        'Call awinCreateBudgetWerte(hproj)
+
+
+                        ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
+                        currentConstellationName = calcLastSessionScenarioName()
+                        If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                        End If
+
+
+                    ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
+                        ' für Phasen: berechne das neue Start-Datum und ggf. die neue Dauer (muss innerhalb Projekt bleiben !
+                        Dim cphase As clsPhase
+                        Dim projectBorderLinks As Double = calcDateToXCoord(hproj.startDate)
+                        Dim projectBorderRechts As Double = calcDateToXCoord(hproj.startDate.AddDays(hproj.dauerInDays - 1))
+                        Dim offsetinTagen As Integer, dauerinTagen As Integer
+                        Dim reDraw As Boolean = False
+                        Dim tmpDauerIndays = hproj.dauerInDays
+                        Dim diffDays As Integer = 0
+
+                        phaseNameID = extractName(shpElement.Name, PTshty.phaseN)
+                        cphase = hproj.getPhaseByID(phaseNameID)
+
+
+
+                        If cphase.nameID = rootPhaseName Then
+                            ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
+                            ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
+                            ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
+                            Dim phBorderLinks As Double = phasesBorderLinks(hproj)
+                            Dim phBorderRechts As Double = phasesBorderRechts(hproj)
+
+                            ' ist der linke Rand ok? 
+                            If curCoord(1) < phBorderLinks Then
+                                If curCoord(1) + curCoord(3) >= phBorderRechts Then
+                                    ' alles ok
+                                Else
+                                    curCoord(1) = phBorderRechts - curCoord(3)
+                                    reDraw = True
+                                End If
+                            Else
+                                curCoord(1) = phBorderLinks
+                                reDraw = True
+                            End If
+
+
+                            ' ist der Rechte Rand ok? 
+                            If curCoord(1) + curCoord(3) >= phBorderRechts Then
+                                ' alles ok 
+                            Else
+                                curCoord(3) = phBorderRechts - curCoord(1)
+                                reDraw = True
+                            End If
+
+                            ' jetzt enthalten die CurCoord die exakten Daten
+                            ' bei Phase 1 ist der Offset immer Null aber die diffdays zur Anpassung der 
+                            ' Offsets der anderen Phasen müssen gesetzt werden 
+                            diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+                            dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
+                            offsetinTagen = 0
+                            If diffDays <> 0 Then
+                                hproj.startDate = hproj.startDate.AddDays(diffDays)
+                                Call hproj.syncXWertePhases()
+                            End If
+
+
+
+                        Else
+                            ' befindet sich die Shape noch innerhalb der Projekt-Grenzen 
+                            If curCoord(1) < projectBorderLinks Then
+                                If curCoord(3) <> oldCoord(3) Then
+                                    ' es wurde gedehnt
+                                    curCoord(3) = curCoord(3) - (projectBorderLinks - curCoord(1))
+                                End If
+                                curCoord(1) = projectBorderLinks
+                                reDraw = True
+                            End If
+
+                            If curCoord(1) > projectBorderRechts Then
+                                ' gar nicht zugelassen
+                                curCoord(1) = oldCoord(1)
+                                reDraw = True
+                            End If
+
+                            If curCoord(1) + curCoord(3) > projectBorderRechts Then
+                                ' dann muss die Breite angepasst werden 
+                                curCoord(3) = projectBorderRechts - curCoord(1)
+                                reDraw = True
+                            End If
+
+                            ' jetzt enthalten die CurCoord die exakten Daten  
+                            offsetinTagen = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+                            dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
+
+                        End If
+
+
+                        If offsetinTagen <> cphase.startOffsetinDays Or dauerinTagen <> cphase.dauerInDays Or _
+                            diffDays <> 0 Then
+                            Dim faktor As Double = dauerinTagen / cphase.dauerInDays
+
+                            reDraw = True
+
+                            Call cphase.changeStartandDauer(offsetinTagen, dauerinTagen)
+                            If faktor <> 1.0 Then
+                                ' es wurde gedehnt oder gestaucht, d.h die Meilensteine müssen entsprechend angepasst werden 
+                                Call cphase.adjustMilestones(faktor)
+                            End If
+
+                            If cphase.nameID = rootPhaseName Then
+                                ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
+                                ' Phase 1 verändert hat, müssen die Pahsen 2 bis N ihren Startoffsets neu berechnet werden 
+                                If curCoord(1) <> oldCoord(1) Then
+                                    reDraw = True
+                                    Call reCalcOffsetInPhases(hproj, diffDays)
+                                End If
+                            End If
+
+
+                        End If
+
+                        If reDraw Then
+                            ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
+                            Call reGroupShape(shapeSammlung, pName)
+
+                            ' pshape ist das übergeordnete Shpelement 
+                            pShape = ShowProjekte.getShape(hproj.name)
+
+                            Dim phaseList As Collection
+                            Dim milestoneList As Collection
+                            'Dim typCollection As New Collection
+                            'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                            'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                            'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+                            phaseList = Me.getPhaseList(pName)
+                            milestoneList = Me.getMilestoneList(pName)
+
+                            'typCollection.Clear()
+                            'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                            'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                            'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+
+                            Call clearProjektinPlantafel(pName)
+                            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                            Dim tmpCollection As New Collection
+                            Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
+                                                           drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
+                            notRegroupedAgain = False
+
+                            ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
+                            ' Projekt-Shape zugewiesen werden 
+                            tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Range(pName)
+                            shpElement = tmpRange.Item(1)
+
+                            ' jetzt noch die Budget Werte neu berechnen 
+                            ' Workaround: 
+                            Dim tmpValue As Integer = hproj.dauerInDays
+                            ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                            'Call awinCreateBudgetWerte(hproj)
+
+                        End If
+
+
+                    ElseIf shapeType = PTshty.milestoneN Or shapeType = PTshty.milestoneE Then
+                        ' für Meilensteine: berechne das neue Datum ; muss innerhalb der Phase bleiben 
+
+                        Dim cphase As clsPhase
+                        Dim cMilestone As clsMeilenstein
+                        Dim milestoneID As String
+
+                        Dim reDraw As Boolean = False
+                        Dim tmpDauerIndays = hproj.dauerInDays
+                        Dim diffDays As Integer = 0
+
+                        reDraw = False
+                        milestoneID = extractName(shpElement.Name, PTshty.milestoneN)
+
+                        cphase = hproj.getParentPhaseByID(milestoneID)
+                        cMilestone = hproj.getMilestoneByID(milestoneID)
+
+                        Dim phBorderLinks As Double = calcDateToXCoord(cphase.getStartDate)
+                        Dim phBorderRechts As Double = calcDateToXCoord(cphase.getEndDate)
+
+                        diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
+
+                        ' ist der linke Rand ok ? 
+                        If curCoord(1) + curCoord(3) / 2 < phBorderLinks Then
+                            ' out of bound
+                            curCoord(1) = phBorderLinks - curCoord(3) / 2
+                            reDraw = True
+                        End If
+
+                        ' ist der rechte Rand ok ? 
+                        If curCoord(1) + curCoord(3) / 2 > phBorderRechts Then
+                            ' out of bound
+                            curCoord(1) = phBorderRechts - curCoord(3) / 2
+                            reDraw = True
+                        End If
+
+                        ' jetzt ist sichergestellt, daß eine gültige Position gefunden ist 
+                        Dim newDate As Date = calcXCoordToDate(curCoord(1) + curCoord(3) / 2)
+                        If DateDiff(DateInterval.Day, newDate, cMilestone.getDate) <> 0 Then
+                            cMilestone.setDate = newDate
+                            reDraw = True
+                        End If
+
+                        If reDraw Then
+                            ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
+                            Call reGroupShape(shapeSammlung, pName)
+
+                            ' pshape ist das übergeordnete Shpelement 
+                            pShape = ShowProjekte.getShape(hproj.name)
+
+                            Dim phaseList As Collection
+                            Dim milestoneList As Collection
+                            'Dim typCollection As New Collection
+                            'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                            'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                            'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+                            phaseList = Me.getPhaseList(pName)
+                            milestoneList = Me.getMilestoneList(pName)
+
+                            'typCollection.Clear()
+                            'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                            'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                            'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+                            Call clearProjektinPlantafel(pName)
+
+                            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                            Dim tmpCollection As New Collection
+                            Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
+                                                           drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
+                            notRegroupedAgain = False
+
+                            ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
+                            ' Projekt-Shape zugewiesen werden 
+                            tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Range(pName)
+                            shpElement = tmpRange.Item(1)
+
+                        End If
+
+
+                    End If
+
+
+                Else
+                    ' auf die alten Koordinaten zurücksetzen 
+
+                    ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
+                    Dim newZeile As Integer = hproj.tfZeile
+
+                    ' den Befel braucht man, damit später alle Shapes auf einen Schlag gelöscht 
+                    ' und neu gezeichnet werden können 
+                    If notRegroupedAgain And Not isProjectType(shapeType) Then
+                        Call reGroupShape(shapeSammlung, pName)
+                    End If
+
+
+                    ' top darf nur bei ProjektE, ProjektC oder ProjektN verändert werden 
+                    If curCoord(0) <> oldCoord(0) Then
+
+                        If isProjectType(shapeType) Then
+                            newZeile = calcYCoordToZeile(curCoord(0))
 
                             ' das verändert die Constellation ..
                             currentConstellationName = calcLastSessionScenarioName()
@@ -890,88 +1248,67 @@ Public Class clsProjektShapes
                             End If
 
 
-                            If curCoord(0) < oldCoord(0) Then
-                                ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
-                                ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
-                                Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
-                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
-                            Else
-                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
+                            ' Platz schaffen auf der Projekt-Tafel
+                            Dim tmpCollection As New Collection
+                            Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
+                            If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
+                                                startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
+                                                anzahlZeilen:=anzahlZeilen) Then
+
+                                If curCoord(0) < oldCoord(0) Then
+                                    ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
+                                    ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
+                                    Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
+                                    Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
+                                Else
+                                    Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
+                                End If
+
+
                             End If
 
-                        End If
 
-                        ' tfzeile setzen
-                        hproj.tfZeile = newZeile
+                        Else
+                            ' korrigiere die Höhe 
+                            newZeile = hproj.tfZeile
+                        End If
 
 
                     End If
 
-                    'hproj.copyAttrTo(newProjekt)
-                    hproj.korrCopyTo(newProjekt, newStartdate, newEndDate)
-                    With hproj
-                        newProjekt.name = .name
-                        newProjekt.variantName = .variantName
-                        newProjekt.description = .description
-                        newProjekt.ampelStatus = .ampelStatus
-                        newProjekt.ampelErlaeuterung = .ampelErlaeuterung
-                        newProjekt.Status = .Status
-                        newProjekt.shpUID = .shpUID
-                        newProjekt.tfZeile = .tfZeile
-                        newProjekt.movable = .movable
+                    ' jetzt muss ggf das übergeordnete Projektshape geholt werden 
+                    If isProjectType(shapeType) Then
+                        pShape = shpElement
+                    Else
+                        pShape = ShowProjekte.getShape(hproj.name)
+                    End If
 
-                    End With
-
-                    newProjekt.timeStamp = Date.Now
-                    ' Workaround: 
-                    Dim tmpValue As Integer = newProjekt.dauerInDays
-                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                    'Call awinCreateBudgetWerte(newProjekt)
-
-                    ' jetzt muss das Projekt aus der Showprojekte und der AlleProjekte herausgenommen werden 
-                    ' und in der kopierten Form wieder aufgenommen werden 
-                    Dim key As String = pName
-                    ShowProjekte.Remove(pName)
-                    key = calcProjektKey(hproj)
-                    AlleProjekte.Remove(key)
-
-                    AlleProjekte.Add(newProjekt)
-                    ShowProjekte.Add(newProjekt)
-
-                    Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)
-
-
-                    pShape = shpElement
-                    Dim phaseList As Collection
-                    Dim milestoneList As Collection
                     'Dim typCollection As New Collection
                     'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
                     'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                    'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
-                    phaseList = Me.getPhaseList(pName)
-                    milestoneList = Me.getMilestoneList(pName)
+                    'Dim phaseList As Collection = Me.getAllChildswithType(pShape, typCollection)
+
+                    Dim phaseList As Collection = Me.getPhaseList(pName)
+                    Dim milestoneList As Collection = Me.getMilestoneList(pName)
+
                     'typCollection.Clear()
                     'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
                     'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                    'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                    'Dim milestoneList As Collection = Me.getAllChildswithType(pShape, typCollection)
+
 
                     Call clearProjektinPlantafel(pName)
                     ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
-                    ' sie noch in der Select Collection sind und danach noch behandelt werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=newProjekt.name, tryzeile:=hproj.tfZeile, _
-                                                   drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
+                    ' sie noch in der Select Collection sind und danach noch behandelt werden  
+                    Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=pName, tryzeile:=newZeile, _
+                                                    drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
 
-                    ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
-                    ' damit die aufrufende Routine das shpelement wieder hat 
+                    notRegroupedAgain = False
+
+                    ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
+                    ' Projekt-Shape zugewiesen werden 
                     tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Range(pName)
                     shpElement = tmpRange.Item(1)
-
-                    ' workaround: 
-                    tmpDauerIndays = hproj.dauerInDays
-                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                    'Call awinCreateBudgetWerte(hproj)
-
 
                     ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
                     currentConstellationName = calcLastSessionScenarioName()
@@ -980,343 +1317,12 @@ Public Class clsProjektShapes
                     End If
 
 
-                ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
-                    ' für Phasen: berechne das neue Start-Datum und ggf. die neue Dauer (muss innerhalb Projekt bleiben !
-                    Dim cphase As clsPhase
-                    Dim projectBorderLinks As Double = calcDateToXCoord(hproj.startDate)
-                    Dim projectBorderRechts As Double = calcDateToXCoord(hproj.startDate.AddDays(hproj.dauerInDays - 1))
-                    Dim offsetinTagen As Integer, dauerinTagen As Integer
-                    Dim reDraw As Boolean = False
-                    Dim tmpDauerIndays = hproj.dauerInDays
-                    Dim diffDays As Integer = 0
-
-                    phaseNameID = extractName(shpElement.Name, PTshty.phaseN)
-                    cphase = hproj.getPhaseByID(phaseNameID)
-
-
-
-                    If cphase.nameID = rootPhaseName Then
-                        ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
-                        ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
-                        ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
-                        Dim phBorderLinks As Double = phasesBorderLinks(hproj)
-                        Dim phBorderRechts As Double = phasesBorderRechts(hproj)
-
-                        ' ist der linke Rand ok? 
-                        If curCoord(1) < phBorderLinks Then
-                            If curCoord(1) + curCoord(3) >= phBorderRechts Then
-                                ' alles ok
-                            Else
-                                curCoord(1) = phBorderRechts - curCoord(3)
-                                reDraw = True
-                            End If
-                        Else
-                            curCoord(1) = phBorderLinks
-                            reDraw = True
-                        End If
-
-
-                        ' ist der Rechte Rand ok? 
-                        If curCoord(1) + curCoord(3) >= phBorderRechts Then
-                            ' alles ok 
-                        Else
-                            curCoord(3) = phBorderRechts - curCoord(1)
-                            reDraw = True
-                        End If
-
-                        ' jetzt enthalten die CurCoord die exakten Daten
-                        ' bei Phase 1 ist der Offset immer Null aber die diffdays zur Anpassung der 
-                        ' Offsets der anderen Phasen müssen gesetzt werden 
-                        diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-                        dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
-                        offsetinTagen = 0
-                        If diffDays <> 0 Then
-                            hproj.startDate = hproj.startDate.AddDays(diffDays)
-                            Call hproj.syncXWertePhases()
-                        End If
-
-
-
-                    Else
-                        ' befindet sich die Shape noch innerhalb der Projekt-Grenzen 
-                        If curCoord(1) < projectBorderLinks Then
-                            If curCoord(3) <> oldCoord(3) Then
-                                ' es wurde gedehnt
-                                curCoord(3) = curCoord(3) - (projectBorderLinks - curCoord(1))
-                            End If
-                            curCoord(1) = projectBorderLinks
-                            reDraw = True
-                        End If
-
-                        If curCoord(1) > projectBorderRechts Then
-                            ' gar nicht zugelassen
-                            curCoord(1) = oldCoord(1)
-                            reDraw = True
-                        End If
-
-                        If curCoord(1) + curCoord(3) > projectBorderRechts Then
-                            ' dann muss die Breite angepasst werden 
-                            curCoord(3) = projectBorderRechts - curCoord(1)
-                            reDraw = True
-                        End If
-
-                        ' jetzt enthalten die CurCoord die exakten Daten  
-                        offsetinTagen = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-                        dauerinTagen = cphase.dauerInDays + calcXCoordToTage(curCoord(3) - oldCoord(3))
-
-                    End If
-
-
-                    If offsetinTagen <> cphase.startOffsetinDays Or dauerinTagen <> cphase.dauerInDays Or _
-                        diffDays <> 0 Then
-                        Dim faktor As Double = dauerinTagen / cphase.dauerInDays
-
-                        reDraw = True
-
-                        Call cphase.changeStartandDauer(offsetinTagen, dauerinTagen)
-                        If faktor <> 1.0 Then
-                            ' es wurde gedehnt oder gestaucht, d.h die Meilensteine müssen entsprechend angepasst werden 
-                            Call cphase.adjustMilestones(faktor)
-                        End If
-
-                        If cphase.nameID = rootPhaseName Then
-                            ' in diesem Fall wurde die Phase 1 verändert - wenn sich der linke Rand der 
-                            ' Phase 1 verändert hat, müssen die Pahsen 2 bis N ihren Startoffsets neu berechnet werden 
-                            If curCoord(1) <> oldCoord(1) Then
-                                reDraw = True
-                                Call reCalcOffsetInPhases(hproj, diffDays)
-                            End If
-                        End If
-
-
-                    End If
-
-                    If reDraw Then
-                        ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
-                        Call reGroupShape(shapeSammlung, pName)
-
-                        ' pshape ist das übergeordnete Shpelement 
-                        pShape = ShowProjekte.getShape(hproj.name)
-
-                        Dim phaseList As Collection
-                        Dim milestoneList As Collection
-                        'Dim typCollection As New Collection
-                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
-
-                        phaseList = Me.getPhaseList(pName)
-                        milestoneList = Me.getMilestoneList(pName)
-
-                        'typCollection.Clear()
-                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
-
-
-                        Call clearProjektinPlantafel(pName)
-                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
-                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
-                        notRegroupedAgain = False
-
-                        ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
-                        ' Projekt-Shape zugewiesen werden 
-                        tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Range(pName)
-                        shpElement = tmpRange.Item(1)
-
-                        ' jetzt noch die Budget Werte neu berechnen 
-                        ' Workaround: 
-                        Dim tmpValue As Integer = hproj.dauerInDays
-                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                        'Call awinCreateBudgetWerte(hproj)
-
-                    End If
-
-
-                ElseIf shapeType = PTshty.milestoneN Or shapeType = PTshty.milestoneE Then
-                    ' für Meilensteine: berechne das neue Datum ; muss innerhalb der Phase bleiben 
-
-                    Dim cphase As clsPhase
-                    Dim cMilestone As clsMeilenstein
-                    Dim milestoneID As String
-
-                    Dim reDraw As Boolean = False
-                    Dim tmpDauerIndays = hproj.dauerInDays
-                    Dim diffDays As Integer = 0
-
-                    reDraw = False
-                    milestoneID = extractName(shpElement.Name, PTshty.milestoneN)
-
-                    cphase = hproj.getParentPhaseByID(milestoneID)
-                    cMilestone = hproj.getMilestoneByID(milestoneID)
-
-                    Dim phBorderLinks As Double = calcDateToXCoord(cphase.getStartDate)
-                    Dim phBorderRechts As Double = calcDateToXCoord(cphase.getEndDate)
-
-                    diffDays = cphase.startOffsetinDays + calcXCoordToTage(curCoord(1) - oldCoord(1))
-
-                    ' ist der linke Rand ok ? 
-                    If curCoord(1) + curCoord(3) / 2 < phBorderLinks Then
-                        ' out of bound
-                        curCoord(1) = phBorderLinks - curCoord(3) / 2
-                        reDraw = True
-                    End If
-
-                    ' ist der rechte Rand ok ? 
-                    If curCoord(1) + curCoord(3) / 2 > phBorderRechts Then
-                        ' out of bound
-                        curCoord(1) = phBorderRechts - curCoord(3) / 2
-                        reDraw = True
-                    End If
-
-                    ' jetzt ist sichergestellt, daß eine gültige Position gefunden ist 
-                    Dim newDate As Date = calcXCoordToDate(curCoord(1) + curCoord(3) / 2)
-                    If DateDiff(DateInterval.Day, newDate, cMilestone.getDate) <> 0 Then
-                        cMilestone.setDate = newDate
-                        reDraw = True
-                    End If
-
-                    If reDraw Then
-                        ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
-                        Call reGroupShape(shapeSammlung, pName)
-
-                        ' pshape ist das übergeordnete Shpelement 
-                        pShape = ShowProjekte.getShape(hproj.name)
-
-                        Dim phaseList As Collection
-                        Dim milestoneList As Collection
-                        'Dim typCollection As New Collection
-                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
-
-                        phaseList = Me.getPhaseList(pName)
-                        milestoneList = Me.getMilestoneList(pName)
-
-                        'typCollection.Clear()
-                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
-
-                        Call clearProjektinPlantafel(pName)
-
-                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
-                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
-                        notRegroupedAgain = False
-
-                        ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
-                        ' Projekt-Shape zugewiesen werden 
-                        tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Range(pName)
-                        shpElement = tmpRange.Item(1)
-
-                    End If
-
-
                 End If
 
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
 
-            Else
-                ' auf die alten Koordinaten zurücksetzen 
-
-                ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
-                Dim newZeile As Integer = hproj.tfZeile
-
-                ' den Befel braucht man, damit später alle Shapes auf einen Schlag gelöscht 
-                ' und neu gezeichnet werden können 
-                If notRegroupedAgain And Not isProjectType(shapeType) Then
-                    Call reGroupShape(shapeSammlung, pName)
-                End If
-
-
-                ' top darf nur bei ProjektE, ProjektC oder ProjektN verändert werden 
-                If curCoord(0) <> oldCoord(0) Then
-
-                    If isProjectType(shapeType) Then
-                        newZeile = calcYCoordToZeile(curCoord(0))
-
-                        ' das verändert die Constellation ..
-                        currentConstellationName = calcLastSessionScenarioName()
-                        If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
-                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-                        End If
-
-
-                        ' Platz schaffen auf der Projekt-Tafel
-                        Dim tmpCollection As New Collection
-                        Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
-                        If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                            startDate:=hproj.startDate, laenge:=hproj.dauerInDays, _
-                                            anzahlZeilen:=anzahlZeilen) Then
-
-                            If curCoord(0) < oldCoord(0) Then
-                                ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
-                                ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
-                                Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
-                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
-                            Else
-                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
-                            End If
-
-
-                        End If
-
-
-                    Else
-                        ' korrigiere die Höhe 
-                        newZeile = hproj.tfZeile
-                    End If
-
-
-                End If
-
-                ' jetzt muss ggf das übergeordnete Projektshape geholt werden 
-                If isProjectType(shapeType) Then
-                    pShape = shpElement
-                Else
-                    pShape = ShowProjekte.getShape(hproj.name)
-                End If
-
-                'Dim typCollection As New Collection
-                'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                'Dim phaseList As Collection = Me.getAllChildswithType(pShape, typCollection)
-
-                Dim phaseList As Collection = Me.getPhaseList(pName)
-                Dim milestoneList As Collection = Me.getMilestoneList(pName)
-
-                'typCollection.Clear()
-                'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                'Dim milestoneList As Collection = Me.getAllChildswithType(pShape, typCollection)
-
-
-                Call clearProjektinPlantafel(pName)
-                ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
-                ' sie noch in der Select Collection sind und danach noch behandelt werden  
-                Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=pName, tryzeile:=newZeile, _
-                                                drawPhaseList:=phaseList, drawMilestoneList:=milestoneList, useTryZeileAnyway:=False)
-
-                notRegroupedAgain = False
-
-                ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
-                ' Projekt-Shape zugewiesen werden 
-                tmpRange = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes.Range(pName)
-                shpElement = tmpRange.Item(1)
-
-                ' jetzt muss ggf in der currentSessionConstellation bzw. in der currentConstellationNAme Session die Reihenfolge geändert werden 
-                currentConstellationName = calcLastSessionScenarioName()
-                If Not currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
-                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-                End If
-
-
-            End If
 
         End If
 
