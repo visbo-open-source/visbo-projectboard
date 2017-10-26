@@ -74,7 +74,6 @@ Imports System.Windows
             If returnValue = DialogResult.OK Then
                 constellationName = storeConstellationFrm.ComboBox1.Text
 
-
                 Call storeSessionConstellation(constellationName)
 
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist

@@ -7638,6 +7638,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' liest einen ProjektSteckbrief mit Hierarchie ein 
     ''' Außerdem gibt es die Spalte Summe, in der die Summe der Kosten enthalten sein kann.
+    ''' 
     ''' </summary>
     ''' <param name="hprojekt"></param>
     ''' <param name="hprojTemp"></param>
@@ -7883,10 +7884,11 @@ Public Module awinGeneralModules
                             Dim phaseNameID As String
                             Dim milestoneName As String
                             Dim milestoneDate As Date
-                            Dim resultVerantwortlich As String = ""
                             Dim bewertungsAmpel As Integer
                             Dim explanation As String
                             Dim deliverables As String
+                            Dim responsible As String = ""
+                            Dim percentDone As Double = 0.0
                             Dim bewertungsdatum As Date = importDatum
                             Dim tbl As Excel.Range
                             Dim rowOffset As Integer
@@ -8206,7 +8208,6 @@ Public Module awinGeneralModules
 
                                             End If
 
-                                            ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
                                             Try
                                                 bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
                                                 If IsNothing(bewertungsAmpel) Then
@@ -8225,6 +8226,19 @@ Public Module awinGeneralModules
                                                 explanation = ""
                                             End Try
 
+                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                                ' es gibt keine Bewertung
+                                                bewertungsAmpel = 0
+                                            End If
+                                            ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                            With cBewertung
+                                                '.bewerterName = resultVerantwortlich
+                                                .colorIndex = bewertungsAmpel
+                                                .datum = importDatum
+                                                .description = explanation
+                                            End With
+
+
                                             Try
                                                 ' Ergänzung tk 2.11 deliverables ergänzt 
                                                 deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
@@ -8236,6 +8250,26 @@ Public Module awinGeneralModules
                                             End Try
 
 
+                                            Try
+                                                ' Ergänzung tk 26.10.17 responsible ergänzt 
+                                                responsible = CType(CType(.Cells(zeile, columnOffset + 7), Excel.Range).Value, String)
+                                                If IsNothing(responsible) Then
+                                                    responsible = ""
+                                                End If
+                                            Catch ex As Exception
+                                                responsible = ""
+                                            End Try
+
+                                            ' das Feld %Done wird hier nicht ausgelesen ...
+
+                                            With cMilestone
+                                                .setDate = milestoneDate
+                                                .verantwortlich = responsible
+                                                .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
+                                                If Not cBewertung Is Nothing Then
+                                                    .addBewertung(cBewertung)
+                                                End If
+                                            End With
 
                                             ' tk 29.5.16
                                             ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
@@ -8251,29 +8285,6 @@ Public Module awinGeneralModules
                                             Catch ex As Exception
 
                                             End Try
-
-                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                                ' es gibt keine Bewertung
-                                                bewertungsAmpel = 0
-                                            End If
-                                            ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                                            With cBewertung
-                                                '.bewerterName = resultVerantwortlich
-                                                .colorIndex = bewertungsAmpel
-                                                .datum = importDatum
-                                                .description = explanation
-                                            End With
-
-
-
-                                            With cMilestone
-                                                .setDate = milestoneDate
-                                                '.verantwortlich = resultVerantwortlich
-                                                .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
-                                                If Not cBewertung Is Nothing Then
-                                                    .addBewertung(cBewertung)
-                                                End If
-                                            End With
 
 
                                             Try

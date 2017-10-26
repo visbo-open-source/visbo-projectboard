@@ -812,6 +812,7 @@ Module Module1
                         End If
                     End If
 
+                    ' jetzt ggf die angezeigten Marker löschen 
                     If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
                         Call deleteMarkerShapes()
                     ElseIf markerShpNames.Count > 1 Then
@@ -909,6 +910,7 @@ Module Module1
 
                     Next
 
+                    ' hier wird die Information zu dem selektierten Shape angezeigt 
                     If formIsShown Then
                         Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
                     End If

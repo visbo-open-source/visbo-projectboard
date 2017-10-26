@@ -69,29 +69,29 @@
 
                 End Try
 
-                If Me.deliverables.Count > 0 Then
-                    For i = 1 To Me.deliverables.Count
-                        Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
-                        .addDeliverable(tmpDeliverable)
-                    Next
-                Else
-                    ' evtl sind die noch in der Bewertung vergraben ... 
-                    If Me.bewertungsCount > 0 Then
-                        If Not IsNothing(Me.getBewertung(1).deliverables) Then
-                            Dim allDeliverables As String = Me.getBewertung(1).deliverables
+                If Not IsNothing(Me.deliverables) Then
+                    If Me.deliverables.Count > 0 Then
+                        For i = 1 To Me.deliverables.Count
+                            Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
+                            .addDeliverable(tmpDeliverable)
+                        Next
+                    Else
+                        ' evtl sind die noch in der Bewertung vergraben ... 
+                        If Me.bewertungsCount > 0 Then
+                            If Not IsNothing(Me.getBewertung(1).deliverables) Then
+                                Dim allDeliverables As String = Me.getBewertung(1).deliverables
 
-                            If allDeliverables.Trim.Length > 0 Then
-                                Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-                                For i = 1 To tmpstr.Length
-                                    .addDeliverable(tmpstr(i - 1))
-                                Next
+                                If allDeliverables.Trim.Length > 0 Then
+                                    Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                                    For i = 1 To tmpstr.Length
+                                        .addDeliverable(tmpstr(i - 1))
+                                    Next
+                                End If
+
                             End If
-
                         End If
                     End If
                 End If
-
-
 
                 For i = 1 To Me.bewertungsCount
 
