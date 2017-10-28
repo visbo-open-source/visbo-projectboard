@@ -268,6 +268,45 @@ namespace MongoDbAccess
         }
 
     
+        public clsProjekt retrieveFirstContractedPFromDB(string projectname)
+        {
+            var result = new clsProjektDB();
+            string searchstr = Projekte.calcProjektKeyDB(projectname, "");
+
+            
+            var builder = Builders<clsProjektDB>.Filter;
+
+            var filter = builder.Eq("name", searchstr) & builder.Eq("status", "beauftragt");
+            // das folgende könnte auch gemacht werden 
+            // var filter = builder.Eq(c => c.name, searchstr) & builder.Lte(c => c.timestamp, storedAtOrBefore);
+
+            var sort = Builders<clsProjektDB>.Sort.Descending("timestamp");
+
+            try
+            {
+                result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch
+            {
+                result = null;
+            }
+
+            //TODO: rückumwandeln
+            if (result == null)
+            {
+
+                return null;
+            }
+            else
+            {
+                var projekt = new clsProjekt();
+                result.copyto(ref projekt);
+                int a = projekt.dauerInDays;
+                return projekt;
+            }
+            
+        }
+
         /// <summary>
         /// liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
         /// falls Variantname null ist oder leerer String wird nur der Projektname überprüft.

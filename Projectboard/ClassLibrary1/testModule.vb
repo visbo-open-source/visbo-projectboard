@@ -317,9 +317,9 @@ Public Module testModule
         Dim boxName As String
         Dim listofShapes As New Collection
 
-        Dim lproj As clsProjekt
-        Dim bproj As clsProjekt
-        Dim lastproj As clsProjekt
+        Dim lproj As clsProjekt = Nothing
+        Dim bproj As clsProjekt = Nothing
+        Dim lastproj As clsProjekt = Nothing
         Dim lastElem As Integer
         ' das sind Formen , die zur in der Tabelle Vergleich Anzeige der Tendenz verwendet werden 
         Dim gleichShape As pptNS.Shape = Nothing
@@ -338,38 +338,44 @@ Public Module testModule
         'Dim swimlaneMode As Boolean = False
 
         Try   ' Projekthistorie aufbauen, sofern sie für das aktuelle hproj nicht schon aufgebaut ist
+            ' die Projekthistorie wird immer (zumindest erstmal hier ...) nur von der Basis-Variante betrachtet ...
+
 
             Dim aktprojekthist As Boolean = False
 
             If projekthistorie.Count > 0 Then
-
-                aktprojekthist = (hproj.getShapeText = projekthistorie.First.getShapeText)
+                'aktprojekthist = (hproj.name = projekthistorie.First.name)
+                aktprojekthist = (hproj.name = projekthistorie.First.name)
             End If
 
-            If Not aktprojekthist Then
 
-                If Not noDB Then
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    If request.pingMongoDb() Then
-                        Try
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+            If Not noDB Then
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                        Catch ex As Exception
-                            projekthistorie.clear()
-                        End Try
-                    Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-                    End If
+                If request.pingMongoDb() Then
+                    Try
+
+                        If Not aktprojekthist Then
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                        End If
+
+                        bproj = request.retrieveFirstContractedPFromDB(hproj.name)
+
+                        ' tk , 17.10.17 , das holen der Beauftragung, unabhängig von der Variante ... 
+
+                    Catch ex As Exception
+                        projekthistorie.clear()
+                    End Try
                 Else
-                    Call logfileSchreiben("Datenbank-Anbindung ist nicht akiviert. Historie enthält nur das aktuelle Projekt " & hproj.name, "createPPTSlidesFromProject", anzFehler)
-                    projekthistorie.Add(Date.Now, hproj)
+                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
                 End If
-
-            ElseIf hproj.getShapeText <> projekthistorie.First.getShapeText Then
-
+            Else
+                Call logfileSchreiben("Datenbank-Anbindung ist nicht akiviert. Historie enthält nur das aktuelle Projekt " & hproj.name, "createPPTSlidesFromProject", anzFehler)
+                projekthistorie.Add(Date.Now, hproj)
             End If
+
         Catch ex As Exception
 
         End Try
@@ -383,15 +389,6 @@ Public Module testModule
         End Try
 
 
-        ' die Projekt Historie ist bereits gesetzt ... siehe Aufruf
-        Try
-
-            bproj = projekthistorie.beauftragung
-
-        Catch ex As Exception
-            ' es gibt keine Beauftragung
-            bproj = Nothing
-        End Try
         '
         '
         Try
@@ -1833,7 +1830,7 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -1841,10 +1838,14 @@ Public Module testModule
                                         compID = PTprdk.PersonalPie
                                     End If
 
-
-                                    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
-                                    boxName = boxName & " (" & gesamtSumme.ToString & _
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & _
                                         " " & awinSettings.kapaEinheit & ")"
+                                    End If
+                                    
 
                                     reportObj = obj
                                     notYetDone = True
@@ -1873,7 +1874,7 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalBalken
                                         End If
 
@@ -1883,8 +1884,13 @@ Public Module testModule
                                     End If
 
 
-                                    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
-                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    End If
+
 
                                     reportObj = obj
                                     notYetDone = True
@@ -1911,7 +1917,7 @@ Public Module testModule
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
                                         Else
-                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken
                                         End If
 
@@ -1920,8 +1926,12 @@ Public Module testModule
                                         compID = PTprdk.KostenPie
                                     End If
 
-                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
-                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    End If
 
                                     reportObj = obj
                                     notYetDone = True
@@ -1957,7 +1967,7 @@ Public Module testModule
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
                                         Else
-                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken
                                         End If
 
@@ -1965,9 +1975,12 @@ Public Module testModule
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                     End If
 
-                                    Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
-                                    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    End If
 
                                     reportObj = obj
                                     notYetDone = True

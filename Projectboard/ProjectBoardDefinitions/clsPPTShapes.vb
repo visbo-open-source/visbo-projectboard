@@ -289,10 +289,12 @@ Public Class clsPPTShapes
             x2Pos = Me.drawingAreaRight
         Else
             x2Pos = Me.drawingAreaLeft + offset2 * Me.tagesbreite
+            ' Änderung tk 27.10 , eine Phase geht von Anfang des Tages bis Ende des Tages... 
+            'x2Pos = Me.drawingAreaLeft + (offset2 + 0.75) * Me.tagesbreite
         End If
 
         ' '' Test Funktionen , eingeführt um die Rückwärtsrechnung Koordinaten->Datum zu überprüfen ... 
-        ''Dim tstStart As Date = calcStartDate(x1Pos)
+        ''Dim tstStart As Date = calcXtoDate(x1Pos)
         ''If DateDiff(DateInterval.Day, startdate, tstStart) = 0 Then
         ''    ' alles in Ordnung 
         ''Else
@@ -300,7 +302,14 @@ Public Class clsPPTShapes
         ''End If
 
         ''Dim tstEnde As Date = calcEndDate(x1Pos, x2Pos - x1Pos)
-        ''If DateDiff(DateInterval.Day, startdate, tstStart) = 0 Then
+        ''If DateDiff(DateInterval.Day, enddate, tstEnde) = 0 Then
+        ''    ' alles in Ordnung 
+        ''Else
+        ''    Call MsgBox("Unterschied: " & enddate.ToString & " versus " & tstEnde.ToString)
+        ''End If
+
+        ''tstEnde = calcXtoDate(x2Pos)
+        ''If DateDiff(DateInterval.Day, enddate, tstEnde) = 0 Then
         ''    ' alles in Ordnung 
         ''Else
         ''    Call MsgBox("Unterschied: " & enddate.ToString & " versus " & tstEnde.ToString)
@@ -320,6 +329,8 @@ Public Class clsPPTShapes
 
         If Me._tagesbreite > 0 Then
             tmpDate = Me.PPTStartOFCalendar.AddDays(CInt((xPos - Me._drawingAreaLeft) / Me._tagesbreite))
+            ' Änderung tk 27.10.17, ein Phase die nur einen Tag dauert, soll auch so angezeigt werden ... 
+            'tmpDate = Me.PPTStartOFCalendar.AddDays(CInt(System.Math.Truncate((xPos - Me._drawingAreaLeft) / Me._tagesbreite)))
         End If
         calcXtoDate = tmpDate
 
@@ -334,6 +345,7 @@ Public Class clsPPTShapes
     ''' <remarks></remarks>
     Public Function calcEndDate(ByVal xPos As Double, ByVal width As Double) As Date
         Dim tmpDate As Date = Me.PPTStartOFCalendar.AddDays(CInt((xPos + width - Me._drawingAreaLeft) / Me._tagesbreite))
+        'Dim tmpDate As Date = Me.PPTStartOFCalendar.AddDays(CInt(System.Math.Truncate((xPos + width - Me._drawingAreaLeft) / Me._tagesbreite)))
         calcEndDate = tmpDate
     End Function
 

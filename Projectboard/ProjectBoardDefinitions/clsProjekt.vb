@@ -1796,6 +1796,16 @@ Public Class clsProjekt
     End Property
 
 
+    ''' <summary>
+    ''' das Startdatum darf nur verschoben werden, wenn gilt: 
+    ''' es handelt sich um eine Variante und das Flag movable = true 
+    ''' 
+    ''' oder 
+    ''' das Projekt ist noch im Planungs-Stadium und das Flag movable = true 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property startDate As Date
         Get
             startDate = _startDate
@@ -1809,7 +1819,8 @@ Public Class clsProjekt
 
             ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
             ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
-            If _Status = ProjektStatus(0) And differenzInTagen <> 0 Then
+            If (differenzInTagen <> 0 And Me.movable) And _
+                (_Status = ProjektStatus(0) Or _variantName <> "") Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
@@ -1817,18 +1828,14 @@ Public Class clsProjekt
                 '    currentConstellationName = currentConstellationName & "(*)"
                 'End If
 
-
             ElseIf _startDate = NullDatum Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
-                If differenzInTagen <> 0 Then
-                    ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    'If Not currentConstellationName.EndsWith("(*)") And currentConstellationName <> "Last" Then
-                    '    currentConstellationName = currentConstellationName & "(*)"
-                    'End If
-                End If
-            ElseIf _Status <> ProjektStatus(0) Then
+
+
+            ElseIf _Status <> ProjektStatus(0) And _variantName = "" And Not Me.movable Then
                 Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
+
 
             ElseIf DateDiff(DateInterval.Day, StartofCalendar, newValue) < 0 Then
                 Throw New ArgumentException("der Startzeitpunkt liegt vor dem Kalenderstart  ... ")
@@ -2137,6 +2144,7 @@ Public Class clsProjekt
             .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes
             .description = Me.description
+            .variantName = Me.variantName
             .variantDescription = Me.variantDescription
             .volume = Me.volume
             .complexity = Me.complexity
@@ -2150,6 +2158,7 @@ Public Class clsProjekt
             .leadPerson = _leadPerson
             .Status = _Status
             .extendedView = Me.extendedView
+            .movable = Me.movable
 
         End With
 
@@ -2839,30 +2848,38 @@ Public Class clsProjekt
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
         Dim newPhaseNameID As String = ""
+
         Call copyAttrTo(newproject)
 
-        With newproject
-            .startDate = startdate
-            .earliestStart = _earliestStart
-            .latestStart = _latestStart
+        Try
+            With newproject
+                .startDate = startdate
+                .earliestStart = _earliestStart
+                .latestStart = _latestStart
 
-            ProjectDauerInDays = calcDauerIndays(startdate, endedate)
-            CorrectFactor = ProjectDauerInDays / Me.dauerInDays
-
-
-            For p = 1 To Me.CountPhases
-
-                oldphase = Me.getPhase(p)
-                newphase = New clsPhase(newproject)
-
-                oldphase.korrCopyTo(newphase, CorrectFactor, newPhaseNameID, zielRenditenVorgabe)
-
-                .AddPhase(newphase)
-
-            Next p
+                ProjectDauerInDays = calcDauerIndays(startdate, endedate)
+                CorrectFactor = ProjectDauerInDays / Me.dauerInDays
 
 
-        End With
+                For p = 1 To Me.CountPhases
+
+                    oldphase = Me.getPhase(p)
+                    newphase = New clsPhase(newproject)
+
+                    oldphase.korrCopyTo(newphase, CorrectFactor, newPhaseNameID, zielRenditenVorgabe)
+
+                    .AddPhase(newphase)
+
+                Next p
+
+
+            End With
+        Catch ex As Exception
+
+        End Try
+
+        
+
 
     End Sub
 

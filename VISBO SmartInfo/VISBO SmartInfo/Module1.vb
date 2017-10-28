@@ -49,6 +49,7 @@ Module Module1
     ' gibt an, ob das Breadcrumb Feld gezeigt werden soll 
     Friend showBreadCrumbField As Boolean = False
     ' gibt die MArker-Höhe und Breite an 
+    Friend useUniqueNames As Boolean = False
     Friend markerHeight As Double = 19
     Friend markerWidth As Double = 13
 
@@ -1589,6 +1590,10 @@ Module Module1
         Dim chtObjName As String = ""
         Dim bigType As Integer = -1
         Dim detailID As Integer = -1
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim bProj As clsProjekt = Nothing ' nimmt das erste beauftragte Projekt auf ..
+
+
         Try
 
             If Not IsNothing(pptShape) Then
@@ -1644,6 +1649,13 @@ Module Module1
                                     ' das neue Chart ..
                                     Dim newchtobj As xlNS.ChartObject = Nothing
 
+                                    ' jetzt das bProj (Beauftragung) holen
+                                    Try
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
+                                    Catch ex As Exception
+                                        bProj = Nothing
+                                    End Try
+
 
                                     Try
                                         Call createNewHiddenExcel()
@@ -1670,7 +1682,7 @@ Module Module1
 
                                                             If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
                                                                 Dim a As Integer = tsProj.dauerInDays
-                                                                Call updatePPTBalkenOfProject(tsProj, newchtobj, prcTyp, auswahl)
+                                                                Call updatePPTBalkenOfProject(tsProj, bProj, newchtobj, prcTyp, auswahl)
 
                                                             ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
                                                                 ' Aktualisieren der Personal- bzw. Kosten-Pies ...
@@ -3252,7 +3264,7 @@ Module Module1
                     End If
                 Else
                     tmpText = curShape.Tags.Item("SN")
-                    If bestShortName.Length > 0 And tmpText <> bestShortName Then
+                    If bestShortName.Length > 0 And tmpText <> bestShortName And useUniqueNames Then
                         tmpText = bestShortName
                     End If
 
@@ -3261,7 +3273,7 @@ Module Module1
             ElseIf curShape.Tags.Item("CN").Length > 0 Then
                 tmpText = curShape.Tags.Item("CN")
 
-                If bestLongName.Length > 0 And bestLongName <> tmpText Then
+                If bestLongName.Length > 0 And bestLongName <> tmpText And useUniqueNames Then
                     elemName = tmpText
                     tmpText = bestLongName
                     isCombinedName = True

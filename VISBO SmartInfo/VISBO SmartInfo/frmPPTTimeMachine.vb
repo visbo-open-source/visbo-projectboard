@@ -2,7 +2,6 @@
     'Private currentTSIndex As Integer = -1
     Private timeStamps As SortedList(Of Date, Boolean) = Nothing
     Private timeStampsIndex As Integer = -1
-    Private noDateValueCheck As Boolean = True
     Private anzahlShapesOnSlide As Integer = currentSlide.Shapes.Count
 
 
@@ -20,6 +19,7 @@
 
         btnFastForward.Enabled = False
         btnEnd.Enabled = False
+        btnEnd2.Enabled = False
 
         btnFastBack.Enabled = False
         btnStart.Enabled = False
@@ -32,6 +32,7 @@
 
                     ' Änderung tk 13.8.17 , btnEnd und btnFastforward immer enablen ... 
                     btnEnd.Enabled = True
+                    btnEnd2.Enabled = True
                     btnFastForward.Enabled = True
 
                     ''If smartSlideLists.countProjects = 1 Then
@@ -52,6 +53,7 @@
 
                 Else
                     btnEnd.Enabled = False
+                    btnEnd2.Enabled = False
                     btnFastForward.Enabled = False
                 End If
 
@@ -110,6 +112,9 @@
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub frmPPTTimeMachine_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        ' zu Beginn die Checkbox Changelist nicht anzeigen ...
+        showChangeList.Visible = False
 
         ' die MArker, falls welche sichtbar sind , wegmachen ... 
         Call deleteMarkerShapes()
@@ -183,7 +188,11 @@
     ''' <remarks></remarks>
     Private Sub performBtnAction(ByVal newdate As Date)
 
+
         If newdate <> currentTimestamp Then
+
+            ' jetzt die Checkbox anzeigen ... 
+            Me.showChangeList.Visible = True
 
             Me.UseWaitCursor = True
             ' clear changelist 
@@ -336,12 +345,95 @@
 
     End Sub
 
-    Private Sub currentDate_GotFocus(sender As Object, e As EventArgs) Handles currentDate.GotFocus
-        noDateValueCheck = False
-    End Sub
 
-    Private Sub currentDate_LostFocus(sender As Object, e As EventArgs) Handles currentDate.LostFocus
-        noDateValueCheck = True
+
+    Private Sub updateWithNewDate()
+        If Not IsNothing(timeStamps) Then
+            If timeStamps.Count > 0 Then
+
+                Dim eingabe As Date = CDate(currentDate.Text).Date.AddHours(23).AddMinutes(59)
+                Try
+                    ' ist es ein gültiges Datum ? 
+                    If DateDiff(DateInterval.Day, eingabe, Date.Now) >= 0 And _
+                        DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) <= 0 Then
+                        ' es ist ein gültiges Datum ...
+
+                        If smartSlideLists.countProjects = 1 Then
+                            ' nimm das Datum, das in der sortierten Liste unmittelbar davor liegt 
+                            Dim ix As Integer = timeStamps.Count - 1
+                            Dim found As Boolean = False
+                            Do While ix >= 0 And Not found
+                                If eingabe >= timeStamps.ElementAt(ix).Key Then
+                                    found = True
+                                Else
+                                    ix = ix - 1
+                                End If
+                            Loop
+
+                            If found Then
+                                timeStampsIndex = ix
+                            End If
+                        Else
+                            ' ist ja schon gesetzt 
+                        End If
+
+                    ElseIf DateDiff(DateInterval.Day, eingabe, Date.Now) < 0 Then
+                        ' das Datum liegt in der Zukunft 
+
+                        eingabe = timeStamps.Last.Key.AddMinutes(1)
+                        timeStampsIndex = timeStamps.Count - 1
+
+                    ElseIf DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) > 0 Then
+                        eingabe = timeStamps.First.Key.AddMinutes(1)
+                        timeStampsIndex = 0
+
+                    End If
+
+
+
+                Catch ex As Exception
+                    Dim a As Integer = 0
+                End Try
+
+                If eingabe <> currentTimestamp Then
+
+                    '' jetzt die Checkbox anzeigen ... 
+                    Me.showChangeList.Visible = True
+
+                    ' clear changelist 
+                    Call changeListe.clearChangeList()
+
+                    previousVariantName = currentVariantname
+                    previousTimeStamp = currentTimestamp
+                    currentTimestamp = eingabe
+
+                    currentDate.Text = currentTimestamp.ToString
+
+                    Call moveAllShapes()
+                    Call setBtnEnablements()
+
+                    Call setCurrentTimestampInSlide(currentTimestamp)
+
+                    If thereIsNoVersionFieldOnSlide Then
+                        Call showTSMessage(currentTimestamp)
+                    End If
+
+                    ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
+                    If showChangeList.Checked = True Then
+                        ' das Formular aufschalten 
+                        If IsNothing(changeFrm) Then
+                            changeFrm = New frmChanges
+                            changeFrm.Show()
+                        Else
+                            changeFrm.neuAufbau()
+                        End If
+                    End If
+
+                End If
+
+
+            End If
+        End If
     End Sub
 
     ''' <summary>
@@ -423,108 +515,50 @@
         getNextNavigationDate = tmpDate
     End Function
 
-    Private Sub currentDate_ValueChanged(sender As Object, e As EventArgs) Handles currentDate.ValueChanged
+    Private Sub showChangeList_CheckedChanged(sender As Object, e As EventArgs) Handles showChangeList.CheckedChanged
 
-        If noDateValueCheck Then
-            Exit Sub
+        If showChangeList.Checked Then
+            ' das Formular aufschalten 
+            If IsNothing(changeFrm) Then
+                changeFrm = New frmChanges
+                changeFrm.Show()
+            Else
+                changeFrm.neuAufbau()
+            End If
+
         Else
+            Try
+                If Not IsNothing(changeFrm) Then
+                    changeFrm.Close()
+                    changeFrm = Nothing
+                End If
+            Catch ex As Exception
+                changeFrm = Nothing
+            End Try
 
-            If Not IsNothing(timeStamps) Then
-                If timeStamps.Count > 0 Then
+        End If
 
-                    Dim eingabe As Date = CDate(currentDate.Text).Date.AddHours(23).AddMinutes(59)
-                    Try
-                        ' ist es ein gültiges Datum ? 
-                        If DateDiff(DateInterval.Day, eingabe, Date.Now) >= 0 And _
-                            DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) <= 0 Then
-                            ' es ist ein gültiges Datum ...
+    End Sub
 
-                            If smartSlideLists.countProjects = 1 Then
-                                ' nimm das Datum, das in der sortierten Liste unmittelbar davor liegt 
-                                Dim ix As Integer = timeStamps.Count - 1
-                                Dim found As Boolean = False
-                                Do While ix >= 0 And Not found
-                                    If eingabe >= timeStamps.ElementAt(ix).Key Then
-                                        found = True
-                                    Else
-                                        ix = ix - 1
-                                    End If
-                                Loop
+    Private Sub btnEnd2_Click(sender As Object, e As EventArgs) Handles btnEnd2.Click
+        If Not IsNothing(timeStamps) Then
 
-                                If found Then
-                                    timeStampsIndex = ix
-                                End If
-                            Else
-                                ' ist ja schon gesetzt 
-                            End If
+            If timeStamps.Count > 0 Then
 
-                        ElseIf DateDiff(DateInterval.Day, eingabe, Date.Now) < 0 Then
-                            ' das Datum liegt in der Zukunft 
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
 
-                            eingabe = timeStamps.Last.Key.AddMinutes(1)
-                            timeStampsIndex = timeStamps.Count - 1
+                If newDate <> currentTimestamp Then
 
-                        ElseIf DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) > 0 Then
-                            eingabe = timeStamps.First.Key.AddMinutes(1)
-                            timeStampsIndex = 0
-
-                        End If
-
-
-
-                    Catch ex As Exception
-                        Dim a As Integer = 0
-                    End Try
-
-                    If eingabe <> currentTimestamp Then
-
-                        ' clear changelist 
-                        Call changeListe.clearChangeList()
-
-                        previousVariantName = currentVariantname
-                        previousTimeStamp = currentTimestamp
-                        currentTimestamp = eingabe
-                        noDateValueCheck = True
-                        currentDate.Text = currentTimestamp.ToString
-                        noDateValueCheck = False
-
-                        Call moveAllShapes()
-                        Call setBtnEnablements()
-
-                        Call setCurrentTimestampInSlide(currentTimestamp)
-
-                        If thereIsNoVersionFieldOnSlide Then
-                            Call showTSMessage(currentTimestamp)
-                        End If
-
-                        ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
-                        If showChangeList.Checked = True Then
-                            ' das Formular aufschalten 
-                            If IsNothing(changeFrm) Then
-                                changeFrm = New frmChanges
-                                changeFrm.Show()
-                            Else
-                                changeFrm.neuAufbau()
-                            End If
-                        End If
-
-                    End If
-
+                    Call performBtnAction(newDate)
 
                 End If
             End If
         End If
 
-
-
     End Sub
 
-    Private Sub showChangeList_CheckedChanged(sender As Object, e As EventArgs) Handles showChangeList.CheckedChanged
-
-        If Not IsNothing(changeFrm) Then
-            changeFrm.Close()
-            changeFrm = Nothing
-        End If
-
+    Private Sub btnEnd2_MouseHover(sender As Object, e As EventArgs) Handles btnEnd2.MouseHover
+        Dim tmpDate As Date = getNextNavigationDate(ptNavigationButtons.letzter, True)
+        ToolTipTS.Show(tmpDate.ToString, btnEnd, 2000)
     End Sub
 End Class

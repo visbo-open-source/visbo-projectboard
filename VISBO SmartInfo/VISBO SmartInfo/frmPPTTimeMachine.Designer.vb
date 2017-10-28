@@ -27,11 +27,12 @@ Partial Class frmPPTTimeMachine
         Me.lblMessage = New System.Windows.Forms.Label()
         Me.ToolTipTS = New System.Windows.Forms.ToolTip(Me.components)
         Me.currentDate = New System.Windows.Forms.DateTimePicker()
+        Me.showChangeList = New System.Windows.Forms.CheckBox()
+        Me.btnEnd2 = New System.Windows.Forms.Button()
         Me.btnFastBack = New System.Windows.Forms.Button()
         Me.btnStart = New System.Windows.Forms.Button()
         Me.btnEnd = New System.Windows.Forms.Button()
         Me.btnFastForward = New System.Windows.Forms.Button()
-        Me.showChangeList = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'lblMessage
@@ -52,10 +53,29 @@ Partial Class frmPPTTimeMachine
         Me.currentDate.Size = New System.Drawing.Size(192, 20)
         Me.currentDate.TabIndex = 26
         '
+        'showChangeList
+        '
+        Me.showChangeList.AutoSize = True
+        Me.showChangeList.Location = New System.Drawing.Point(31, 3)
+        Me.showChangeList.Name = "showChangeList"
+        Me.showChangeList.Size = New System.Drawing.Size(188, 17)
+        Me.showChangeList.TabIndex = 27
+        Me.showChangeList.Text = "Liste der Veränderungen anzeigen"
+        Me.showChangeList.UseVisualStyleBackColor = True
+        '
+        'btnEnd2
+        '
+        Me.btnEnd2.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_end
+        Me.btnEnd2.Location = New System.Drawing.Point(190, 211)
+        Me.btnEnd2.Name = "btnEnd2"
+        Me.btnEnd2.Size = New System.Drawing.Size(32, 32)
+        Me.btnEnd2.TabIndex = 28
+        Me.btnEnd2.UseVisualStyleBackColor = True
+        '
         'btnFastBack
         '
         Me.btnFastBack.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_left
-        Me.btnFastBack.Location = New System.Drawing.Point(110, 211)
+        Me.btnFastBack.Location = New System.Drawing.Point(83, 211)
         Me.btnFastBack.Name = "btnFastBack"
         Me.btnFastBack.Size = New System.Drawing.Size(32, 32)
         Me.btnFastBack.TabIndex = 20
@@ -72,7 +92,7 @@ Partial Class frmPPTTimeMachine
         '
         'btnEnd
         '
-        Me.btnEnd.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Calendar_icon_128x128_Last
+        Me.btnEnd.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Visbo_update_Button
         Me.btnEnd.Location = New System.Drawing.Point(30, 26)
         Me.btnEnd.Name = "btnEnd"
         Me.btnEnd.Size = New System.Drawing.Size(192, 152)
@@ -82,29 +102,18 @@ Partial Class frmPPTTimeMachine
         'btnFastForward
         '
         Me.btnFastForward.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_right
-        Me.btnFastForward.Location = New System.Drawing.Point(190, 211)
+        Me.btnFastForward.Location = New System.Drawing.Point(136, 211)
         Me.btnFastForward.Name = "btnFastForward"
         Me.btnFastForward.Size = New System.Drawing.Size(32, 32)
         Me.btnFastForward.TabIndex = 17
         Me.btnFastForward.UseVisualStyleBackColor = True
-        '
-        'showChangeList
-        '
-        Me.showChangeList.AutoSize = True
-        Me.showChangeList.Checked = True
-        Me.showChangeList.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.showChangeList.Location = New System.Drawing.Point(31, 3)
-        Me.showChangeList.Name = "showChangeList"
-        Me.showChangeList.Size = New System.Drawing.Size(188, 17)
-        Me.showChangeList.TabIndex = 27
-        Me.showChangeList.Text = "Liste der Veränderungen anzeigen"
-        Me.showChangeList.UseVisualStyleBackColor = True
         '
         'frmPPTTimeMachine
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(260, 273)
+        Me.Controls.Add(Me.btnEnd2)
         Me.Controls.Add(Me.showChangeList)
         Me.Controls.Add(Me.currentDate)
         Me.Controls.Add(Me.lblMessage)
@@ -128,4 +137,5 @@ Partial Class frmPPTTimeMachine
     Friend WithEvents ToolTipTS As System.Windows.Forms.ToolTip
     Friend WithEvents currentDate As System.Windows.Forms.DateTimePicker
     Friend WithEvents showChangeList As System.Windows.Forms.CheckBox
+    Friend WithEvents btnEnd2 As System.Windows.Forms.Button
 End Class
