@@ -124,7 +124,7 @@ namespace MongoDbAccess
 
                 var keys2 = Builders<clsWriteProtectionItemDB>.IndexKeys.Ascending("pName").Ascending("vName").Ascending("type");
                 var options = new CreateIndexOptions() { Unique = true };
-                ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2,options);
+                ergebnis = CollectionWriteProtections.Indexes.CreateOne(keys2, options);
              
                 return true;
             }
@@ -1720,18 +1720,23 @@ namespace MongoDbAccess
                                 var c = new clsConstellation();
                                 cDB.copyto(ref c);
                                 int a = c.renameProject(oldName, newName);
-
+                               
                                 if (a > 0)
                                 {
-                                    clsConstellationDB chgcDB = new clsConstellationDB();
-                                    chgcDB.copyfrom(c);
-                                    // mit Id=null kann kein Replace gemacht werden  
-                                    chgcDB.Id = cDB.Id;
+                                    // ur: 28.10.2017: hier wird nun die Routine zum SPeichern der Constellation in der DB verwendet, da Wartungsaufwand geringer
+                                    var ergebnis = storeConstellationToDB(c);
+                                    ok = ok & ergebnis;
+                                 
 
-                                    var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", chgcDB.constellationName);
-                                    var rResult = CollectionConstellations.ReplaceOne(filter, chgcDB);
-                                    //ok = ok & (rResult.ModifiedCount > 0);
-                                    ok = ok & rResult.IsAcknowledged;
+                                    //////clsConstellationDB chgcDB = new clsConstellationDB();
+                                    //////chgcDB.copyfrom(c);
+                                    //////// mit Id=null kann kein Replace gemacht werden  
+                                    //////chgcDB.Id = cDB.constellationName;
+
+                                    //////var filter = Builders<clsConstellationDB>.Filter.Eq("constellationName", chgcDB.constellationName);
+                                    //////var rResult = CollectionConstellations.ReplaceOne(filter, chgcDB);
+                                    ////////ok = ok & (rResult.ModifiedCount > 0);
+                                    //////ok = ok & rResult.IsAcknowledged;
 
                                     zaehler = zaehler + 1;
                                     gesamt = gesamt + a;
@@ -1739,7 +1744,7 @@ namespace MongoDbAccess
 
 
                             }
-                            // Énde Aktualisierung Constellations ...
+                            // Ende Aktualisierung Constellations ...
 
 
                             // dann müssen noch die Dependencies aktualisiert werden ...
@@ -1756,16 +1761,17 @@ namespace MongoDbAccess
 
                                     if (alreadyExisting)
                                     {
-
+                                        // zuerst dieses Projekt mit Varianten aus CollectionWriteProtections löschen
                                         // neu 3.0 
                                         var wpfilter = Builders<clsWriteProtectionItemDB>.Filter.Eq("pName", oldName) &
                                                                     Builders<clsWriteProtectionItemDB>.Filter.Eq("vName", "") &
                                                                     Builders<clsWriteProtectionItemDB>.Filter.Eq("type", 0);
                                         var wpUpdate = Builders<clsWriteProtectionItemDB>.Update.Set("pName", newName);
 
-
                                         var result = CollectionWriteProtections.UpdateOne(wpfilter, wpUpdate);
                                         ok = ok & (result.ModifiedCount > 0);
+                                        ////var result = CollectionWriteProtections.DeleteOne(wpfilter);
+                                        ////ok = ok & result.IsAcknowledged;
 
                                         foreach (string vName in listOfVariants)
                                         {
@@ -1780,6 +1786,8 @@ namespace MongoDbAccess
 
                                             var vresult = CollectionWriteProtections.UpdateOne(filter, update);
                                             ok = ok & (vresult.ModifiedCount > 0);
+                                            //////var vresult = CollectionWriteProtections.DeleteOne(filter);
+                                            //////ok = ok & vresult.IsAcknowledged;
 
                                         }
                                     }
@@ -1792,19 +1800,20 @@ namespace MongoDbAccess
 
                                         foreach (string vName in listOfVariants)
                                         {
-                                              // neu 3.0 
+                                            // neu 3.0 
 
                                             wpItem = new clsWriteProtectionItem(Projekte.calcProjektKey(newName, vName), 0, userName, false, false);
                                             wpItemDB = new clsWriteProtectionItemDB();
                                             wpItemDB.copyFrom(wpItem);
                                             CollectionWriteProtections.InsertOne(wpItemDB);
-                                           
+
                                         }
                                     }
-                                }               
-                        
+                                }
+                                
                             }
-
+                                     
+                        
                             catch (Exception)
                             {
                                 ok = false;

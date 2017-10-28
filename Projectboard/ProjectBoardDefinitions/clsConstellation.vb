@@ -813,7 +813,8 @@
     ''' <remarks></remarks>
     Public Sub add(ByVal cItem As clsConstellationItem, _
                    Optional ByVal sKey As Integer = -1, _
-                   Optional ByVal noUpdateSortlist As Boolean = False)
+                   Optional ByVal noUpdateSortlist As Boolean = False, _
+                   Optional ByVal oldProjkey As String = "")
 
         Dim key As String
         Dim sortKey As String = ""
@@ -867,8 +868,15 @@
                     sortKey = calcSortKeyCustomTF(position)
 
                 Else
+                    Dim hproj As clsProjekt
                     ' jetzt das hproj bestimmen 
-                    Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+                    ' oldProjkey wird nur für renameProjekte benötigt
+                    If oldProjkey <> "" Then
+                        hproj = AlleProjekte.getProject(oldProjkey)
+                    Else
+                        hproj = AlleProjekte.getProject(key)
+                    End If
+
                     If Not IsNothing(hproj) Then
                         sortKey = hproj.getSortKeyForConstellation(_sortType)
                     End If
@@ -1194,39 +1202,47 @@
         Dim toAddItems As New SortedList(Of String, clsConstellationItem)
         Dim toDelete As New Collection
 
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-            If kvp.Value.projectName = oldPName Then
+        Try
 
-                Dim tmpConstellationItem As clsConstellationItem = kvp.Value
-                Dim key As String = kvp.Key
-                ' Vermerk machen zum löschen
-                toDelete.Add(key, key)
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                If kvp.Value.projectName = oldPName Then
 
-                ' jetzt das Item neu aufbauen ...
-                With tmpConstellationItem
-                    .projectName = newPname
-                    key = calcProjektKey(.projectName, .variantName)
-                End With
+                    Dim tmpConstellationItem As clsConstellationItem = kvp.Value
+                    Dim key As String = kvp.Key
+                    ' Vermerk machen zum löschen
+                    toDelete.Add(key, key)
 
-                ' Vermerk machen zum Ergänzen 
-                toAddItems.Add(key, tmpConstellationItem)
+                    ' jetzt das Item neu aufbauen ...
+                    With tmpConstellationItem
+                        .projectName = newPname
 
+                        ' ur: 27.10.2017: Fehlerkorrektur rename: damit in toAddItems der alte key enthalten ist
+                        ' ''key = calcProjektKey(.projectName, .variantName)
+                    End With
+
+                    ' Vermerk machen zum Ergänzen 
+                    toAddItems.Add(key, tmpConstellationItem)
+
+                End If
+            Next
+
+            If toDelete.Count <> toAddItems.Count Then
+                Call MsgBox("fehler: " & toDelete.Count & ", " & toAddItems.Count)
             End If
-        Next
 
-        If toDelete.Count <> toAddItems.Count Then
-            Call MsgBox("fehler: " & toDelete.Count & ", " & toAddItems.Count)
-        End If
+            For Each tmpName As String In toDelete
+                '_allItems.Remove(tmpName)
+                Me.remove(tmpName)
+            Next
 
-        For Each tmpName As String In toDelete
-            '_allItems.Remove(tmpName)
-            Me.remove(tmpName)
-        Next
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In toAddItems
+                '_allItems.Add(kvp.Key, kvp.Value)
+                Me.add(kvp.Value, oldProjkey:=kvp.Key)
+            Next
 
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In toAddItems
-            '_allItems.Add(kvp.Key, kvp.Value)
-            Me.add(kvp.Value)
-        Next
+        Catch ex As Exception
+            Call MsgBox("bin in renameProject")
+        End Try
 
         renameProject = toAddItems.Count
 
