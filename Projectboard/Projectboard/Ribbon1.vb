@@ -2245,6 +2245,12 @@ Imports System.Windows
                 Else
                     tmpLabel = "Automatically reduce placeholder values"
                 End If
+            Case "PT6G2B6" ' Platzhalter Rollen automatisch reduzieren, ohne erneutes Nachfragen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "automatisches Reduzieren ohne Zwischenfrage"
+                Else
+                    tmpLabel = "Automatically reduce without Asking"
+                End If
 
             Case "PT6G2B5" ' Sortierung ermöglichen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -6096,6 +6102,13 @@ Imports System.Windows
 
     Sub awinPTautomaticReduce(control As IRibbonControl, ByRef pressed As Boolean)
         awinSettings.meAutoReduce = pressed
+    End Sub
+    Public Function PTdontAskWhenAutoReduce(control As IRibbonControl) As Boolean
+        PTdontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+    End Function
+
+    Sub awinPTdontAskWhenAutoReduce(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.meDontAskWhenAutoReduce = pressed
     End Sub
     'Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
 

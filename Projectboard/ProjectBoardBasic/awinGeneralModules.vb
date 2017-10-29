@@ -2392,11 +2392,17 @@ Public Module awinGeneralModules
                 awinSettings.readWriteMissingDefinitions = False
             End Try
 
-            ' Einstellung, um das Lesen / Schreiben von MissingDefinitions zu steuern 
+            ' Einstellung, um für MassEdit zu steuern, ob %-tuale Spalte auch angezeigt werden soll
             Try
                 awinSettings.meExtendedColumnsView = CBool(.Range("meExtendedView").Value)
             Catch ex As Exception
                 awinSettings.meExtendedColumnsView = False
+            End Try
+            ' Einstellung, um im MassEdit für AutoReduce zu steuern, ob nachgefragt wird, bevor von Folge- oder VorgängerMonaten die Ressource zu holen
+            Try
+                awinSettings.meDontAskWhenAutoReduce = CBool(.Range("meDontAskWhenAutoReduce").Value)
+            Catch ex As Exception
+                awinSettings.meDontAskWhenAutoReduce = False
             End Try
 
 

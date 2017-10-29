@@ -68,7 +68,7 @@ Public Class clsProjekteAlle
                 .projectName = project.name
                 .variantName = project.variantName
             End With
-            currentSessionConstellation.add(cItem, sortkey)
+            currentSessionConstellation.add(cItem, sKey:=sortkey)
         End If
 
     End Sub
