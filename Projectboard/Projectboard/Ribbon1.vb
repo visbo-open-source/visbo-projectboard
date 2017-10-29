@@ -1142,6 +1142,9 @@ Imports System.Windows
         ''    currentConstellationName = currentConstellationName & " (*)"
         ''End If
 
+        ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
+        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
         End If
