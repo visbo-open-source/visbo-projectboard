@@ -528,12 +528,12 @@ Public Module awinDiagrams
                             Dim legendName As String = ""
                             ' tk: repmsg muss nagepasst werden, wenn es nicht da ist 
                             If repMessages.getmsg(275) <> "" Then
-                                legendName = repMessages.getmsg(275)
+                                legendName = prcName & " " & repMessages.getmsg(275)
                             Else
                                 If awinSettings.englishLanguage Then
-                                    legendName = "Sum over all projects"
+                                    legendName = prcName & " " & "Sum over all projects"
                                 Else
-                                    legendName = "Summe über alle Projekte"
+                                    legendName = prcName & " " & "Summe über alle Projekte"
                                 End If
                             End If
 

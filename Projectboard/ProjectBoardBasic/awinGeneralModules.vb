@@ -2402,7 +2402,7 @@ Public Module awinGeneralModules
             Try
                 awinSettings.meDontAskWhenAutoReduce = CBool(.Range("meDontAskWhenAutoReduce").Value)
             Catch ex As Exception
-                awinSettings.meDontAskWhenAutoReduce = False
+                awinSettings.meDontAskWhenAutoReduce = True
             End Try
 
 
