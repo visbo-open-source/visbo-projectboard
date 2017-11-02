@@ -2392,11 +2392,17 @@ Public Module awinGeneralModules
                 awinSettings.readWriteMissingDefinitions = False
             End Try
 
-            ' Einstellung, um das Lesen / Schreiben von MissingDefinitions zu steuern 
+            ' Einstellung, um für MassEdit zu steuern, ob %-tuale Spalte auch angezeigt werden soll
             Try
                 awinSettings.meExtendedColumnsView = CBool(.Range("meExtendedView").Value)
             Catch ex As Exception
                 awinSettings.meExtendedColumnsView = False
+            End Try
+            ' Einstellung, um im MassEdit für AutoReduce zu steuern, ob nachgefragt wird, bevor von Folge- oder VorgängerMonaten die Ressource zu holen
+            Try
+                awinSettings.meDontAskWhenAutoReduce = CBool(.Range("meDontAskWhenAutoReduce").Value)
+            Catch ex As Exception
+                awinSettings.meDontAskWhenAutoReduce = True
             End Try
 
 
@@ -4420,6 +4426,10 @@ Public Module awinGeneralModules
             End If
 
 
+            If anzNeuProjekte > 0 Or anzAktualisierungen > 0 Then
+                ' jetzt muss wieder entsprechend der 
+                currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+            End If
 
             ' Änderung tk: jetzt wird das neu gezeichnet 
             ' wenn anzNeuProjekte > 0, dann hat sich die Konstellataion verändert 
@@ -10413,34 +10423,31 @@ Public Module awinGeneralModules
             End If
 
             Dim i As Integer = 0
+            ' tk 28.10.17, wenn die Anzahl der Constellations < 1 ist, dann muss es immer auf CustomTF gesetzt werden ... 
+            Dim anzConstellations As Integer = constellationsToShow.Liste.Count
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
                 Dim activeConstellation As clsConstellation = kvp.Value
 
-                ' jetzt den Sortier-Modus anpassen 
-                If activeConstellation.sortCriteria <> currentSessionConstellation.sortCriteria Then
+                ' tk , jetzt anpassen, wenn es mehr als 1 Constellation sind 
+                If anzConstellations > 1 Then
+                    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                    activeConstellation.sortCriteria = ptSortCriteria.customTF
+                Else
+                    If activeConstellation.sortCriteria <> currentSessionConstellation.sortCriteria Then
 
-                    If activeConstellation.sortCriteria >= 0 Then
-                        currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
-                        '' ''Else
-                        '' ''    currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-                        '' ''    activeConstellation.sortCriteria = ptSortCriteria.customTF
+                        If activeConstellation.sortCriteria >= 0 Then
+                            currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
+                        Else
+                            currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+                        End If
+                        
                     End If
-                    '' ''Else
-                    '' ''    If activeConstellation.sortCriteria < 0 Then
-                    '' ''        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-                    '' ''        activeConstellation.sortCriteria = ptSortCriteria.customTF
-                    '' ''    End If
 
                 End If
-
+                ' jetzt den Sortier-Modus anpassen 
+                
                 Call addConstellation(activeConstellation, storedAtOrBefore)
-                ' das Folgende ist unnötig, ggf wuden ja bereits die nötigen Resets gemacht ... 
-                ''If i = 0 And (boardWasEmpty Or Not addToSession) Then
-                ''    Call loadConstellation(activeConstellation, storedAtOrBefore)
-                ''Else
-                ''    Call addConstellation(activeConstellation, storedAtOrBefore)
-                ''End If
 
                 i = i + 1
 

@@ -1141,6 +1141,9 @@ Imports System.Windows
         ''    currentConstellationName = currentConstellationName & " (*)"
         ''End If
 
+        ' es kam jetzt ein neues Projekt hinzu, also muss das Sort-Kriterium umgesetzt werden auf customtF, massgabe ist jetzt einfach die Zeile, in der die PRojekte stehen 
+        currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
+
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
         End If
@@ -2241,6 +2244,12 @@ Imports System.Windows
                 Else
                     tmpLabel = "Automatically reduce placeholder values"
                 End If
+            Case "PT6G2B6" ' Platzhalter Rollen automatisch reduzieren, ohne erneutes Nachfragen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "automatisches Reduzieren ohne Zwischenfrage"
+                Else
+                    tmpLabel = "Automatically reduce without Asking"
+                End If
 
             Case "PT6G2B5" ' Sortierung ermöglichen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -3071,6 +3080,7 @@ Imports System.Windows
                     With projectboardWindows(PTwindows.massEdit)
                         .WindowState = Excel.XlWindowState.xlMaximized
                         .SplitRow = 1
+                        .SplitColumn = 6
                         .FreezePanes = True
                         .DisplayFormulas = False
                         .DisplayHeadings = False
@@ -6092,6 +6102,13 @@ Imports System.Windows
 
     Sub awinPTautomaticReduce(control As IRibbonControl, ByRef pressed As Boolean)
         awinSettings.meAutoReduce = pressed
+    End Sub
+    Public Function PTdontAskWhenAutoReduce(control As IRibbonControl) As Boolean
+        PTdontAskWhenAutoReduce = awinSettings.meDontAskWhenAutoReduce
+    End Function
+
+    Sub awinPTdontAskWhenAutoReduce(control As IRibbonControl, ByRef pressed As Boolean)
+        awinSettings.meDontAskWhenAutoReduce = pressed
     End Sub
     'Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
 

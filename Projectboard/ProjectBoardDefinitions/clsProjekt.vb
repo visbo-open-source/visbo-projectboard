@@ -54,7 +54,8 @@ Public Class clsProjekt
         Set(value As Boolean)
             If _Status = ProjektStatus(PTProjektStati.geplant) Or _
                 _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or _
-                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Then
+                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or _
+                value = False Then
                 _movable = value
 
             Else
@@ -2158,7 +2159,12 @@ Public Class clsProjekt
             .leadPerson = _leadPerson
             .Status = _Status
             .extendedView = Me.extendedView
-            .movable = Me.movable
+            Try
+                .movable = Me.movable
+            Catch ex As Exception
+                .movable = False
+            End Try
+
 
         End With
 

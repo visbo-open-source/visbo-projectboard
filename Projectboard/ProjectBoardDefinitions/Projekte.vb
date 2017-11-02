@@ -5371,7 +5371,7 @@ Public Module Projekte
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(43) & vglproj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(43) & " " & vglproj.timeStamp.ToShortDateString
                         '.Interior.Color = 0
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
@@ -5486,7 +5486,7 @@ Public Module Projekte
         Dim tdatenreihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
-        Dim sumdatenreihe() As Double
+        'Dim sumdatenreihe() As Double
         Dim hsum(1) As Double, gesamt_summe As Double
         Dim anzElemente As Integer
         Dim pkIndex As Integer = CostDefinitions.Count
@@ -5585,7 +5585,7 @@ Public Module Projekte
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
-        ReDim sumdatenreihe(plen - 1)
+        'ReDim sumdatenreihe(plen - 1)
 
 
         For i = 1 To plen
@@ -5607,129 +5607,74 @@ Public Module Projekte
 
             End Try
 
-            ' tk es werden nur noh die Gesamt-Summen ausgegeben 
-            ''For r = 1 To anzElemente
-            ''    roleCostName = CStr(ErgebnisListeRC.Item(r))
-            ''    If prcTyp = ptElementTypen.roles Then
-            ''        If auswahl = 1 Then
-            ''            tdatenreihe = hproj.getRessourcenBedarf(roleCostName)
-            ''        Else
-            ''            tdatenreihe = hproj.getPersonalKosten(roleCostName)
-            ''        End If
-            ''    Else
-            ''        tdatenreihe = hproj.getKostenBedarf(roleCostName)
-            ''    End If
-
-
-            ''    For i = 0 To plen - 1
-            ''        sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-            ''    Next
-
-
-            ''    'series
-            ''    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-            ''        .Name = roleCostName
-            ''        If prcTyp = ptElementTypen.roles Then
-            ''            .Interior.Color = RoleDefinitions.getRoledef(roleCostName).farbe
-            ''        Else
-            ''            .Interior.Color = CostDefinitions.getCostdef(roleCostName).farbe
-            ''        End If
-            ''        .Values = tdatenreihe
-            ''        .XValues = Xdatenreihe
-            ''        '.ChartType = core.XlChartType.xlColumnStacked
-            ''        .ChartType = chartType
-            ''    End With
-
-            ''Next r
-
-            ' wenn es sich jetzt um die Kosten handelt und Andere und Personalkosten ausgegeben werden soll 
-            If auswahl = 2 And prcTyp = ptElementTypen.roles Then
-                tdatenreihe = hproj.getAllPersonalKosten
-                hsum(0) = tdatenreihe.Sum
-
-                For i = 0 To plen - 1
-                    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-                Next
-
-
-                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    ' Personalkosten
-                    ' im smartInfo kennt er keine repMessages, die müssen noch in die Datenbank 
-                    '.Name = repMessages.getmsg(164) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = repmsg(0) & " " & hproj.timeStamp.ToShortDateString
-                    Try
-                        .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                    Catch ex As Exception
-
-                    End Try
-                    .Values = tdatenreihe
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlColumnStacked
-                End With
+            Dim series1Name As String = repmsg(1) & " " & hproj.timeStamp.ToShortDateString ' Stand vom 
+            Dim series2Name As String = "-"
+            If Not IsNothing(vglProj) Then
+                series2Name = repmsg(3) & " " & vglProj.timeStamp.ToShortDateString ' erste Beauftragung vom 
             End If
+
+            ' roles, auswahl=1: Personalbedarf
+            ' roles: auswahl=2: Personalkosten
+            ' costs: auswahl=1: andere Kosten
+            ' costs: auswahl=2: Gesamtkosten
 
             If prcTyp = ptElementTypen.roles Then
-                tdatenreihe = hproj.getAlleRessourcen
+                If auswahl = 2 Then
+                    tdatenreihe = hproj.getAllPersonalKosten
+                    If Not IsNothing(vglProj) Then
+                        vdatenreihe = vglProj.getAllPersonalKosten
+                    End If
+                Else
+                    tdatenreihe = hproj.getAlleRessourcen
+                    If Not IsNothing(vglProj) Then
+                        vdatenreihe = vglProj.getAlleRessourcen
+                    End If
+                End If
+            ElseIf prcTyp = ptElementTypen.costs Then
+                If auswahl = 2 Then
+                    tdatenreihe = hproj.getGesamtKostenBedarf
+                    If Not IsNothing(vglProj) Then
+                        vdatenreihe = vglProj.getGesamtKostenBedarf
+                    End If
+                Else
+                    tdatenreihe = hproj.getGesamtAndereKosten
+                    If Not IsNothing(vglProj) Then
+                        vdatenreihe = vglProj.getGesamtAndereKosten
+                    End If
+                End If
             Else
-                tdatenreihe = hproj.getGesamtAndereKosten
+                ' darf eigentlich gar nicht sein ... 
+
             End If
-
-            hsum(1) = tdatenreihe.Sum
-
-            For i = 0 To plen - 1
-                sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
-            Next
-
-            gesamt_Summe = hsum(0) + hsum(1)
+            
+            gesamt_summe = tdatenreihe.Sum
+            vSum = 0
 
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                 .ChartType = Excel.XlChartType.xlColumnStacked
+                .Name = series1Name
+
                 If prcTyp = ptElementTypen.roles Then
-                    '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = repmsg(1) & " " & hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
                 Else
-                    ' sonstige Kosten
-                    '.Name = repMessages.getmsg(165) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = repmsg(2) & " " & hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeOrange
                 End If
 
-                '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                .Interior.Color = visboFarbeOrange
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
 
             End With
 
             If Not IsNothing(vglProj) Then
-                If auswahl = 1 Then
-                    If prcTyp = ptElementTypen.roles Then
-                        vdatenreihe = vglProj.getAlleRessourcen
-                    Else
-                        vdatenreihe = vglProj.getGesamtAndereKosten
-                    End If
 
-                Else
-                    If prcTyp = ptElementTypen.roles Then
-                        vdatenreihe = vglProj.getAllPersonalKosten
-                    Else
-                        vdatenreihe = vglProj.getGesamtKostenBedarf
-                    End If
-
-                End If
                 vSum = vdatenreihe.Sum
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .ChartType = Excel.XlChartType.xlLine
-                    If prcTyp = ptElementTypen.roles Then
-                        '.Name = repMessages.getmsg(43) & vglProj.timeStamp.ToShortDateString
-                        .Name = repmsg(3) & vglProj.timeStamp.ToShortDateString
-                    Else
-                        .Name = repmsg(3) & vglProj.timeStamp.ToShortDateString
-                    End If
+                    .Name = series2Name
 
-                    '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
 
@@ -5747,8 +5692,8 @@ Public Module Projekte
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
 
-                    If System.Math.Max(sumdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
-                        .MaximumScale = System.Math.Max(sumdatenreihe.Max, vdatenreihe.Max) + 3
+                    If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+                        .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
                     End If
 
                     
@@ -5965,7 +5910,7 @@ Public Module Projekte
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(43) & vglProj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
                     '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
@@ -6096,7 +6041,7 @@ Public Module Projekte
         Dim tdatenreihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
-        Dim hsum(1) As Double, gesamt_summe As Double
+        Dim gesamt_summe As Double
         Dim anzKostenarten As Integer
         'Dim costname As String
         'Dim chtTitle As String
@@ -6248,28 +6193,18 @@ Public Module Projekte
             With newChtObj.Chart
 
 
-                If auswahl = 2 Then
-                    tdatenreihe = hproj.getAllPersonalKosten
-                    hsum(0) = tdatenreihe.Sum
 
-                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        ' Personalkosten
-                        .Name = repMessages.getmsg(164) & " " & hproj.timeStamp.ToShortDateString
-                        .Interior.Color = visboFarbeBlau
-                        .Values = tdatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlColumnStacked
-                    End With
+                If auswahl = 1 Then
+                    tdatenreihe = hproj.getGesamtAndereKosten
+                Else
+                    tdatenreihe = hproj.getGesamtKostenBedarf
                 End If
 
-                tdatenreihe = hproj.getGesamtAndereKosten
-                hsum(1) = tdatenreihe.Sum
-
-                gesamt_summe = hsum(0) + hsum(1)
+                gesamt_summe = tdatenreihe.Sum
 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     ' sonstige Kosten
-                    .Name = repMessages.getmsg(165) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                     '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                     .Interior.Color = visboFarbeOrange
                     .Values = tdatenreihe
@@ -6287,7 +6222,7 @@ Public Module Projekte
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(43) & vglProj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
                         '.Interior.Color = 0
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
@@ -6658,7 +6593,7 @@ Public Module Projekte
         Dim tdatenreihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
-        Dim hsum(1) As Double, gesamt_summe As Double = 0.0
+        Dim gesamt_summe As Double = 0.0
         Dim anzKostenarten As Integer
 
         Dim pkIndex As Integer = CostDefinitions.Count
@@ -6746,35 +6681,18 @@ Public Module Projekte
             End Try
 
 
-            If auswahl = 2 Then
-                tdatenreihe = hproj.getAllPersonalKosten
-                hsum(0) = tdatenreihe.Sum
-
-
-                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    ' Personalkosten
-                    .Name = repMessages.getmsg(164) & " " & hproj.timeStamp.ToShortDateString
-                    Try
-                        .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                    Catch ex As Exception
-
-                    End Try
-                    .Values = tdatenreihe
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlColumnStacked
-                End With
+            If auswahl = 1 Then
+                tdatenreihe = hproj.getGesamtAndereKosten
+            Else
+                tdatenreihe = hproj.getGesamtKostenBedarf
             End If
 
 
-            tdatenreihe = hproj.getGesamtAndereKosten
-            hsum(1) = tdatenreihe.Sum
-
-
-            gesamt_summe = hsum(0) + hsum(1)
+            gesamt_summe = tdatenreihe.Sum
 
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                ' sonstige Kosten
-                .Name = repMessages.getmsg(165) & " " & hproj.timeStamp.ToShortDateString
+                ' Stand vom sonstige Kosten
+                .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                 '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                 .Interior.Color = visboFarbeOrange
                 .Values = tdatenreihe
@@ -6792,7 +6710,7 @@ Public Module Projekte
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(43) & vglProj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
                     '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe

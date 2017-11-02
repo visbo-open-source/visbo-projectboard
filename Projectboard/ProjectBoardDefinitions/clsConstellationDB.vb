@@ -63,6 +63,7 @@
         Dim sortElem As String
 
         c.constellationName = Me.constellationName
+        c.sortCriteria = Me.sortType
 
         For Each item In Me.allItems
             Dim newItem As New clsConstellationItem
