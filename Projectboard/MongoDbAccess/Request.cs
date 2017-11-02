@@ -2128,5 +2128,40 @@ namespace MongoDbAccess
 
             return result;
         }
+
+        public String insertDocument(string filePath, int fileType, DateAndTime timeStamp, string userName, string entitled, string description )
+        {
+            string result = "";
+            //  bekommt einen Filepath zu einem Dokument plus angabe um was für ein Dokument es sich handelt 
+            // liefert die eindeutige DB ID dieses Elements zurück 
+
+            // hier kommt jetzt der Code, der das Dokument als "binary Object" as-is hochlädt, versehen mit timeStamp , Angabe FileTyp, 
+            // wer es hochgeladen hat, wer berechtigt es, es herunterzuladen und wieder hochzuladen 
+            // Frage: wie gibt man in C# einen String-Array als Input Parameter an?  
+            
+            return result;
+        }
+
+        public String replaceDocument(string filePath, int fileType, DateAndTime timeStamp, string userName, string entitled)
+        {
+            string result = "";
+            //  bekommt einen Filepath zu einem Dokument plus angabe um was für ein Dokument es sich handelt 
+            // liefert die eindeutige ID dieses Elements zurück 
+
+            // hier kommt jetzt der Code, der das Dokument als "binary Object" as-is hochlädt, versehen mit timeStamp , Angabe FileTyp, 
+            // wer es hochgeladen hat, wer berechtigt es, es herunterzuladen und wieder hochzuladen 
+            // Frage: wie gibt am in C# einen String-Array als Input Parameter an?  
+            
+            return result;
+        }
+
+        public String readDocumentpath(string docID, DateAndTime timeStamp, string userName)
+        {
+            string result = "";
+            //  lädt die über die docID bezeichnete Datei und speichert sie in temp, mit dem Namen der docID, gibt dann den Pfad zurück wo dieses Dokument liegt  
+
+            
+            return result;
+        }
     }
 }
