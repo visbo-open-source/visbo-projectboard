@@ -15,7 +15,8 @@ using MongoDB.Driver.Linq;
 
 using ProjectBoardDefinitions;
 using MongoDbAccess.Properties;
-
+using MongoDB.Driver.GridFS;
+using System.IO;
 
 namespace MongoDbAccess
 {
@@ -2129,39 +2130,148 @@ namespace MongoDbAccess
             return result;
         }
 
-        public String insertDocument(string filePath, int fileType, DateAndTime timeStamp, string userName, string entitled, string description )
+
+        public void clearDocuments ()
         {
-            string result = "";
+            var docsBucket = new GridFSBucket(Database, new GridFSBucketOptions
+            {
+                BucketName = "documents"
+            });
+            docsBucket.Drop();
+        }
+
+        // Synchronous: Upload from a stream (there is also an async way to upload from stream)
+        public String StoreDocumentToDB(string filePath, int fileType, /*DateAndTime timeStamp,*/ string userName, string[] entitled, string description )
+        {
             //  bekommt einen Filepath zu einem Dokument plus angabe um was für ein Dokument es sich handelt 
             // liefert die eindeutige DB ID dieses Elements zurück 
 
             // hier kommt jetzt der Code, der das Dokument als "binary Object" as-is hochlädt, versehen mit timeStamp , Angabe FileTyp, 
             // wer es hochgeladen hat, wer berechtigt es, es herunterzuladen und wieder hochzuladen 
-            // Frage: wie gibt man in C# einen String-Array als Input Parameter an?  
+        //--> Berechtigung sollte eher in DB umgesetzt werden oder?
+            // Frage: wie gibt man in C# einen String-Array als Input Parameter an? 
+        //--> string[] str
+
+            var docsBucket = new GridFSBucket(Database, new GridFSBucketOptions {
+                BucketName = "documents"
+            });
+            var fileName = Path.GetFileName(filePath);
             
-            return result;
+            var stream = new FileStream(filePath, FileMode.Open);
+            var uploadOptions = new GridFSUploadOptions {
+            //    ChunkSizeBytes = 64512, // 63KB
+                Metadata = new BsonDocument {
+                    { "filetype", fileType },
+                    { "entitled", new BsonArray().AddRange(entitled) },
+                    { "description", description }
+                }
+            };
+            ObjectId objectId = docsBucket.UploadFromStream(fileName, stream, uploadOptions);
+                        
+            return objectId.ToString();
         }
 
-        public String replaceDocument(string filePath, int fileType, DateAndTime timeStamp, string userName, string entitled)
+        //  lädt die über die docID bezeichnete Datei und speichert sie in temp, mit dem Namen der docID, gibt dann den Pfad zurück wo dieses Dokument liegt 
+        public String retrieveDocumentFromDB(String docID, /*DateAndTime timeStamp,*/ String userName, String path)
         {
-            string result = "";
-            //  bekommt einen Filepath zu einem Dokument plus angabe um was für ein Dokument es sich handelt 
-            // liefert die eindeutige ID dieses Elements zurück 
-
-            // hier kommt jetzt der Code, der das Dokument als "binary Object" as-is hochlädt, versehen mit timeStamp , Angabe FileTyp, 
-            // wer es hochgeladen hat, wer berechtigt es, es herunterzuladen und wieder hochzuladen 
-            // Frage: wie gibt am in C# einen String-Array als Input Parameter an?  
+            var docsBucket = new GridFSBucket(Database, new GridFSBucketOptions {
+                BucketName = "documents"
+            });
             
-            return result;
+            Stream destination = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
+
+            docsBucket.DownloadToStream(new ObjectId(docID), destination);
+
+            destination.Close();
+
+            return path;
         }
 
-        public String readDocumentpath(string docID, DateAndTime timeStamp, string userName)
+        //  lädt die Datei über ihren fileName und die Revision und speichert sie in temp, mit dem Namen der docID, gibt dann den Pfad zurück wo dieses Dokument liegt 
+        public String retrieveDocumentByNameFromDB(String fileName, int fileRevision, /*DateAndTime timeStamp,*/ String userName, String path)
         {
-            string result = "";
-            //  lädt die über die docID bezeichnete Datei und speichert sie in temp, mit dem Namen der docID, gibt dann den Pfad zurück wo dieses Dokument liegt  
+            var docsBucket = new GridFSBucket(Database, new GridFSBucketOptions
+            {
+                BucketName = "documents"
+            });
 
-            
-            return result;
+            Stream destination = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
+
+            docsBucket.DownloadToStreamByName(fileName, destination, new GridFSDownloadByNameOptions { Revision = fileRevision });
+
+            destination.Close();
+
+            return path;
+        }
+
+
+        public String replaceDocument(string filePath, int fileType, DateAndTime timeStamp, string userName, string[] entitled)
+        {
+            deleteDocumentFromDB(Path.GetFileName(filePath));
+            return StoreDocumentToDB(filePath, fileType, userName, entitled, "desc");
+        }
+
+        public String deleteDocumentFromDB(string fileName)
+        {
+            //delete all documents with given filename
+            return "";
+        }
+
+        public List<String> FindAllDocumentRevisionsInDB(String fileName)
+        {
+            var docsBucket = new GridFSBucket(Database, new GridFSBucketOptions
+            {
+                BucketName = "documents"
+            });
+            List<String> fileNames = new List<String>();
+            var filter = Builders<GridFSFileInfo>.Filter.Eq(x => x.Filename, fileName);
+            using (var cursor = docsBucket.Find(filter/*, new GridFSFindOptions*/))
+            {
+                var ff = cursor.ToList().DefaultIfEmpty();
+                // fileInfo either has the matching file information or is null
+                foreach (GridFSFileInfo info in ff)
+                {
+                    fileNames.Add(info.Filename);
+                    Console.WriteLine(info.Filename + ": " + info.UploadDateTime);
+                }
+            }
+            return fileNames;
+        }
+
+        public List<String> FindByNameDocumentsInDB()
+        {
+            return null;
+        }
+
+
+
+
+
+        // Asynchronous: Upload to a stream
+        // That is, you need to "await" the result of this method to deal with it.
+        public async Task<String> StoreDocumentToDBAsync(string filePath, int fileType, /*DateAndTime timeStamp,*/ string userName, string[] entitled, string description)
+        {
+            var docsBucket = new GridFSBucket(Database, new GridFSBucketOptions
+            {
+                BucketName = "documents"
+            });
+            var fileName = Path.GetFileName(filePath);
+            var uploadOptions = new GridFSUploadOptions
+            {
+                //    ChunkSizeBytes = 64512, // 63KB
+                Metadata = new BsonDocument {
+                    { "filetype", fileType },
+                    { "entitled", new BsonArray().AddRange(entitled) },
+                    { "description", description }
+                }
+            };
+
+            using (var stream = await docsBucket.OpenUploadStreamAsync(fileName, uploadOptions))
+            {
+                var Id = stream.Id;
+                await stream.CloseAsync();
+                return Id.ToString();
+            }
         }
     }
 }
