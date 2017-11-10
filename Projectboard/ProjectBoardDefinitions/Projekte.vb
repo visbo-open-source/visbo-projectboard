@@ -20412,7 +20412,7 @@ Public Module Projekte
             Dim phaseEnde As Date
             Dim tbl As Excel.Range
             Dim itemNameID As String
-
+            Dim tmpDeliverables As String
 
             tbl = .Range("ErgebnTabelle")
             rowOffset = tbl.Row
@@ -20466,13 +20466,49 @@ Public Module Projekte
                 .Cells(rowOffset + zeile, columnOffset + 2).value = phaseStart
                 .Cells(rowOffset + zeile, columnOffset + 3).value = phaseEnde
                 .Cells(rowOffset + zeile, columnOffset + 4).value = "0"
-                .Cells(rowOffset + zeile, columnOffset + 4).interior.color = awinSettings.AmpelNichtBewertet
-                .Cells(rowOffset + zeile, columnOffset + 5).value = " "
-                .Cells(rowOffset + zeile, columnOffset + 6).value = " "
+                If cphase.bewertungsListe.Count > 0 Then
+                    For Each kvp As KeyValuePair(Of String, clsBewertung) In cphase.bewertungsListe
+                        cBewertung = kvp.Value
+                        .Cells(rowOffset + zeile, columnOffset + 4).value = cBewertung.colorIndex
+                        .Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
+                        ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
+                        .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
+                        .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+                    Next
+                End If
 
-                ' Änderung tk 1.11.15: 
+               
+                ' Änderung tk 2.11 Ergänzung um Deliverables 
+                tmpDeliverables = cphase.getAllDeliverables
+                .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
+                .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+
+                '
+                ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
                 Try
-                    For offs As Integer = 2 To 6
+
+                    If Not IsNothing(cBewertung.description) Or Not IsNothing(tmpDeliverables) Then
+                        If cBewertung.description.Length > 0 Or tmpDeliverables.Length > 0 Then
+                            If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Or _
+                                tmpDeliverables.Contains(vbLf) Or tmpDeliverables.Contains(vbCr) Then
+                                CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
+                            End If
+                        End If
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+
+                .Cells(rowOffset + zeile, columnOffset + 7).value = cphase.verantwortlich
+                .Cells(rowOffset + zeile, columnOffset + 8).value = cphase.percentDone / 100
+                .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0.00%"
+                .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                ' Änderung tk 1.11.15:
+
+                Try
+                    For offs As Integer = 2 To 8
                         .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                     Next
                 Catch ex As Exception
@@ -20518,7 +20554,7 @@ Public Module Projekte
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
                     ' Änderung tk 2.11 Ergänzung um Deliverables 
-                    Dim tmpDeliverables As String = cResult.getAllDeliverables
+                    tmpDeliverables = cResult.getAllDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
 
@@ -20535,7 +20571,7 @@ Public Module Projekte
                         End If
 
 
-                        For offs As Integer = 2 To 6
+                        For offs As Integer = 2 To 8
                             .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                         Next
                     Catch ex As Exception

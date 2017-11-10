@@ -3368,6 +3368,10 @@ Public Module awinGeneralModules
         Dim visbo_taskclass As MSProject.PjField = Nothing
         Dim visbo_abbrev As MSProject.PjField = Nothing
         Dim visbo_ampel As MSProject.PjField = Nothing
+        Dim visbo_ampeltext As MSProject.PjField = Nothing
+        Dim visbo_deliverables As MSProject.PjField = Nothing
+        Dim visbo_responsible As MSProject.PjField = Nothing
+        Dim visbo_percentDone As MSProject.PjField = Nothing
 
         ' Liste, die aufgebaut wird beim Einlesen der Tasks. Hier wird vermerkt, welche Task das Visbo-Flag mit YES und welche mit NO
         ' gesetzt hat d.h. berücksichtigt werden soll
@@ -3433,6 +3437,26 @@ Public Module awinGeneralModules
                     visbo_ampel = CType(prj.FieldNameToFieldConstant(awinSettings.visboAmpel, MSProject.PjFieldType.pjTask), MSProject.PjField)
                 Catch ex As Exception
                     visbo_ampel = 0
+                End Try
+                Try
+                    visbo_ampeltext = CType(prj.FieldNameToFieldConstant(awinSettings.visboAmpelText, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_ampeltext = 0
+                End Try
+                Try
+                    visbo_deliverables = CType(prj.FieldNameToFieldConstant(awinSettings.visbodeliverables, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_deliverables = 0
+                End Try
+                Try
+                    visbo_responsible = CType(prj.FieldNameToFieldConstant(awinSettings.visboresponsible, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_responsible = 0
+                End Try
+                Try
+                    visbo_percentDone = CType(prj.FieldNameToFieldConstant(awinSettings.visbopercentDone, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_percentDone = 0
                 End Try
 
                 If modus = "BHTC" Then
@@ -3598,6 +3622,7 @@ Public Module awinGeneralModules
 
                         With cphase
 
+                            Dim phBewertung As New clsBewertung
                             If Not istElemID(msTask.Name) Then
                                 .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
                             End If
@@ -3611,6 +3636,89 @@ Public Module awinGeneralModules
                                 visboFlagListe.Add(.nameID, hflag)
 
                             End If
+
+                            'percentDone, falls Customfiels visbo_percentDone definiert ist
+                            If visbo_percentDone <> 0 Then
+                                Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
+                                Dim hpercent() As String = Split(strPercentDone, "%", , )
+                                Dim vPercentDone As Double
+                                Try
+                                    vPercentDone = Convert.ToDouble(hpercent(0))
+
+                                Catch e As FormatException
+                                    vPercentDone = 0.0
+                                Catch e As OverflowException
+                                    Call MsgBox(hpercent(1) & " is outside the range of a Double.")
+                                End Try
+
+                                cphase.percentDone = vPercentDone
+
+                            End If
+
+
+                            ' Deliverables, falls Customfield visbo_delivaerables definiert ist
+                            Dim count As Integer = 0
+                            Dim hvDel() As String
+                            If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
+                                Dim vDeliverable As String = ""
+                                If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
+                                    vDeliverable = msTask.Notes
+                                    hvDel = Split(vDeliverable, vbCr, , )
+                                    count = hvDel.Length
+                                Else
+                                    vDeliverable = msTask.GetField(visbo_deliverables)
+                                    hvDel = Split(vDeliverable, ";", , )
+                                    count = hvDel.Length
+                                End If
+                                For iDel As Integer = 0 To count - 1
+                                    If Not cphase.containsDeliverable(hvDel(iDel)) Then
+                                        cphase.addDeliverable(hvDel(iDel))
+                                    End If
+                                Next iDel
+                               
+                            End If
+
+                            ' Responsible, falls Customfield visbo_responsible definiert ist
+                            If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
+                                Dim vResponsible As String = msTask.GetField(visbo_responsible)
+                                cphase.verantwortlich = vResponsible
+                            End If
+
+
+                            ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
+                            If visbo_ampeltext <> 0 Then
+                                Dim vAmpelText As String = ""
+                                If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
+                                    vAmpelText = msTask.Notes
+                                Else
+                                    vAmpelText = msTask.GetField(visbo_ampeltext)
+                                End If
+                                phBewertung.description = vAmpelText
+                            End If
+
+                            If visbo_ampel <> 0 Then
+
+                                Dim visboAmpel As String = msTask.GetField(visbo_ampel)
+
+                                Select Case visboAmpel
+
+                                    Case "none"
+                                        phBewertung.colorIndex = PTfarbe.none
+                                    Case "red"
+                                        phBewertung.colorIndex = PTfarbe.red
+                                    Case "green"
+                                        phBewertung.colorIndex = PTfarbe.green
+                                    Case "yellow"
+                                        phBewertung.colorIndex = PTfarbe.yellow
+                                    Case Else
+                                        phBewertung.colorIndex = PTfarbe.none
+
+                                End Select
+
+                            Else
+                                phBewertung.colorIndex = PTfarbe.none
+                            End If
+                            cphase.addBewertung(phBewertung)
 
                             ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                             Dim cphaseStartOffset As Long
@@ -3948,6 +4056,7 @@ Public Module awinGeneralModules
                             Else
                                 msDef.darstellungsKlasse = ""
                             End If
+                        
 
                             msDef.schwellWert = 0
                             msDef.UID = MilestoneDefinitions.Count + 1
@@ -3967,7 +4076,47 @@ Public Module awinGeneralModules
                             Dim msBewertung As New clsBewertung
                             cmilestone.setDate = CType(msTask.Start, Date)
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
-                            msBewertung.description = msTask.Notes
+
+                            ' Deliverables, falls Customfield visbo_delivaerables definiert ist
+                            Dim count As Integer = 0
+                            Dim hvDel() As String
+                            If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
+                                Dim vDeliverable As String = ""
+                                If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
+                                    vDeliverable = msTask.Notes
+                                    hvDel = Split(vDeliverable, vbCr, , )
+                                    count = hvDel.Length
+                                Else
+                                    vDeliverable = msTask.GetField(visbo_deliverables)
+                                    hvDel = Split(vDeliverable, ";", , )
+                                    count = hvDel.Length
+                                End If
+                                For iDel As Integer = 0 To count - 1
+                                    If Not cmilestone.containsDeliverable(hvDel(iDel)) Then
+                                        cmilestone.addDeliverable(hvDel(iDel))
+                                    End If
+                                Next iDel
+
+                            End If
+
+                            ' Responsible, falls Customfield visbo_responsible definiert ist
+                            If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
+                                Dim vResponsible As String = msTask.GetField(visbo_responsible)
+                                cmilestone.verantwortlich = vResponsible
+                            End If
+
+
+                            ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
+                            If visbo_ampeltext <> 0 Then
+                                Dim vAmpelText As String = ""
+                                If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
+                                    vAmpelText = msTask.Notes
+                                Else
+                                    vAmpelText = msTask.GetField(visbo_ampeltext)
+                                End If
+                                msBewertung.description = vAmpelText
+                            End If
+
                             If visbo_ampel <> 0 Then
 
                                 Dim visboAmpel As String = msTask.GetField(visbo_ampel)
@@ -7938,7 +8087,7 @@ Public Module awinGeneralModules
 
 
                                 Dim cMilestone As clsMeilenstein
-                                Dim cBewertung As clsBewertung
+                                Dim cBewertung As New clsBewertung
 
                                 Dim objectName As String
                                 Dim startDate As Date, endeDate As Date
@@ -8106,6 +8255,97 @@ Public Module awinGeneralModules
                                                 .changeStartandDauer(offset, duration)
                                                 Dim phaseStartdate As Date = .getStartDate
                                                 Dim phaseEnddate As Date = .getEndDate
+
+                                            End With
+
+
+                                            Try
+                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                                If IsNothing(bewertungsAmpel) Then
+                                                    bewertungsAmpel = 0
+                                                End If
+                                            Catch ex As Exception
+                                                bewertungsAmpel = 0
+                                            End Try
+
+                                            Try
+                                                explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                                If IsNothing(explanation) Then
+                                                    explanation = ""
+                                                End If
+                                            Catch ex As Exception
+                                                explanation = ""
+                                            End Try
+
+                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                                ' es gibt keine Bewertung
+                                                bewertungsAmpel = 0
+                                            End If
+
+                                            ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                            With cBewertung
+                                                '.bewerterName = resultVerantwortlich
+                                                .colorIndex = bewertungsAmpel
+                                                .datum = importDatum
+                                                .description = explanation
+                                            End With
+
+                                           
+                                            Try
+                                                ' Ergänzung tk 2.11 deliverables ergänzt 
+                                                deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                                If IsNothing(deliverables) Then
+                                                    deliverables = ""
+                                                End If
+                                            Catch ex As Exception
+                                                deliverables = ""
+                                            End Try
+
+
+                                            Try
+                                                ' Ergänzung tk 26.10.17 responsible ergänzt 
+                                                responsible = CType(CType(.Cells(zeile, columnOffset + 7), Excel.Range).Value, String)
+                                                If IsNothing(responsible) Then
+                                                    responsible = ""
+                                                End If
+                                            Catch ex As Exception
+                                                responsible = ""
+                                            End Try
+
+                                            Try
+                                                ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
+                                                percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double) * 100
+                                                If IsNothing(percentDone) Then
+                                                    percentDone = 0.0
+                                                End If
+                                            Catch ex As Exception
+                                                percentDone = 0.0
+                                            End Try
+
+
+
+
+                                            With cphase
+                                                .percentDone = percentDone
+                                                .verantwortlich = responsible
+                                                If Not IsNothing(cBewertung) Then
+                                                    .addBewertung(cBewertung)
+                                                End If
+
+                                                ' ur: 09.11.2017
+                                                ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
+                                                Try
+                                                    If deliverables.Trim.Length > 0 Then
+                                                        Dim splitStr() As String = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+
+                                                        ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
+                                                        For ix As Integer = 1 To splitStr.Length
+                                                            .addDeliverable(splitStr(ix - 1))
+                                                        Next
+                                                    End If
+                                                Catch ex As Exception
+
+                                                End Try
                                             End With
 
 
@@ -8240,6 +8480,7 @@ Public Module awinGeneralModules
                                                 ' es gibt keine Bewertung
                                                 bewertungsAmpel = 0
                                             End If
+
                                             ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
                                             With cBewertung
                                                 '.bewerterName = resultVerantwortlich
@@ -20878,6 +21119,14 @@ Public Module awinGeneralModules
                             awinSettings.visboAbbreviation = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "VISBOAmpel"
                             awinSettings.visboAmpel = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpelText"
+                            awinSettings.visboAmpelText = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOdeliverables"
+                            awinSettings.visbodeliverables = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOresponsible"
+                            awinSettings.visboresponsible = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOpercentDone"
+                            awinSettings.visbopercentDone = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "VISBODebug"
                             awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
 

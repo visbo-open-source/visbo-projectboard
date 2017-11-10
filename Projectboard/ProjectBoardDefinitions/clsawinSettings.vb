@@ -208,6 +208,11 @@ Public Class clsawinSettings
     Public Property visboTaskClass As String
     Public Property visboAbbreviation As String
     Public Property visboAmpel As String
+    Public Property visboAmpelText As String
+    Public Property visbodeliverables As String
+    Public Property visbopercentDone As String
+    Public Property visboresponsible As String
+
 
     ' Settings für Einzelprojekt-Reports
     ' tk 7.2.16 ist überflüssig
