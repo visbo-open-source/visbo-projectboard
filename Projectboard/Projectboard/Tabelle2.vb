@@ -1297,7 +1297,7 @@ Public Class Tabelle2
                             Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
                                         "oder die Phase wird nicht vollständig dargestellt" & vbLf & _
                                         "Der Wert wird deshalb von " & CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value & _
-                                        " auf " & newValue & " korrigiert werden? ")
+                                        " auf " & newValue & " korrigiert.")
 
                             difference = -xWerte(xWerteIndex + offset)
 

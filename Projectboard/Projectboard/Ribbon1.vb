@@ -3081,6 +3081,7 @@ Imports System.Windows
                     With projectboardWindows(PTwindows.massEdit)
                         .WindowState = Excel.XlWindowState.xlMaximized
                         .SplitRow = 1
+                        .SplitColumn = 6
                         .FreezePanes = True
                         .DisplayFormulas = False
                         .DisplayHeadings = False
