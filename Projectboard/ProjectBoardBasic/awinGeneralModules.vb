@@ -8290,7 +8290,7 @@ Public Module awinGeneralModules
                                                 .description = explanation
                                             End With
 
-                                           
+                                            ' das Feld Deliverables wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung tk 2.11 deliverables ergänzt 
                                                 deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
@@ -8301,7 +8301,7 @@ Public Module awinGeneralModules
                                                 deliverables = ""
                                             End Try
 
-
+                                            ' das Feld Responsible wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung tk 26.10.17 responsible ergänzt 
                                                 responsible = CType(CType(.Cells(zeile, columnOffset + 7), Excel.Range).Value, String)
@@ -8312,6 +8312,7 @@ Public Module awinGeneralModules
                                                 responsible = ""
                                             End Try
 
+                                            ' das Feld %Done wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
                                                 percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double) * 100
@@ -8467,6 +8468,11 @@ Public Module awinGeneralModules
                                                 bewertungsAmpel = 0
                                             End Try
 
+                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                                ' es gibt keine Bewertung
+                                                bewertungsAmpel = 0
+                                            End If
+
                                             Try
                                                 explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
                                                 If IsNothing(explanation) Then
@@ -8476,10 +8482,6 @@ Public Module awinGeneralModules
                                                 explanation = ""
                                             End Try
 
-                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                                ' es gibt keine Bewertung
-                                                bewertungsAmpel = 0
-                                            End If
 
                                             ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
                                             With cBewertung

@@ -19809,13 +19809,13 @@ Public Module Projekte
                 .range("BewertgErläuterung").value = hproj.ampelErlaeuterung
 
 
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                ' Blattschutz setzen
+                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
         Catch ex As Exception
             '' Blattschutz setzen
-            'appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            appInstance.ActiveWorkbook.Worksheets("Stammdaten").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Stammdaten")
@@ -20044,13 +20044,20 @@ Public Module Projekte
                     rowOffset = rowOffset + 1
                 Next p
 
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                ' Blattschutz setzen
+                appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True, _
+                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
+                '. Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
 
             End With
         Catch ex As Exception
             ' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True, _
+                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
+            '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Ressourcen")
@@ -20367,9 +20374,15 @@ Public Module Projekte
 
                 .Visible = Excel.XlSheetVisibility.xlSheetHidden
 
+                ' Blattschutz setzen
+                appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
             End With
 
         Catch ex As Exception
+
+            ' Blattschutz setzen
+            appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Settings")
         End Try
@@ -20585,8 +20598,13 @@ Public Module Projekte
 
             Next
 
-            '' Blattschutz setzen
+
+            ' Blattschutz setzen
+            appInstance.ActiveWorkbook.Worksheets("Termine").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True, _
+                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
             '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
 
         End With
 
@@ -20819,9 +20837,8 @@ Public Module Projekte
 
 
 
-                    '' Blattschutz setzen
-                    '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
-
+                    ' Blattschutz setzen
+                    .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
                 Catch ex As Exception
 
@@ -20831,7 +20848,10 @@ Public Module Projekte
             End With
         Catch ex As Exception
             '' Blattschutz setzen
-            'appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True)
+
+          
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
         End Try
