@@ -9066,7 +9066,7 @@ Public Module testModule
                     ' hier werden die Symbole gezeichnet, die anzeigen wie sich der jeweilige Wert im Vergleich zum letzten / ersten Stand verändert hat 
                     ' angezeigt werden nur positive oder negative Abweichungen 
 
-                    If hErloes - vErloes <> 0 Then
+                    If System.Math.Abs(hErloes - vErloes) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString(formatierung) & "/" & _
@@ -9099,7 +9099,7 @@ Public Module testModule
                         vValue = vPersKosten
                     End If
 
-                    If hValue - vValue <> 0 Then
+                    If System.Math.Abs(hValue - vValue) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString(formatierung) & "/" & _
@@ -9123,7 +9123,7 @@ Public Module testModule
 
                     End If
 
-                    If hSonstKosten - vSonstKosten <> 0 Then
+                    If System.Math.Abs(hSonstKosten - vSonstKosten) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString(formatierung) & "/" & _
@@ -9145,7 +9145,7 @@ Public Module testModule
                         End With
                     End If
 
-                    If hErgebnis - vErgebnis <> 0 Then
+                    If System.Math.Abs(hErgebnis - vErgebnis) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString(formatierung) & "/" & _

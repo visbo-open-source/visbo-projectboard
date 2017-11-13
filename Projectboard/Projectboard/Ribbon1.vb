@@ -2997,6 +2997,7 @@ Imports System.Windows
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
+
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
@@ -3058,7 +3059,9 @@ Imports System.Windows
 
                 Try
                     enableOnUpdate = False
+
                     Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+
                     appInstance.EnableEvents = True
 
                     Try
@@ -3201,13 +3204,12 @@ Imports System.Windows
             End If
         Next
 
-        ' zurücksetzen 
+        ' zurücksetzen, aber kein Update der currentSessionConstellation ! 
         dbCacheProjekte.Clear(False)
 
 
-        ' zurücksetzen der Selektierten Projekte
-
-        selectedProjekte.Clear()
+        ' zurücksetzen der Selektierten Projekte, aber kein Update der currentSessionConstellation !
+        selectedProjekte.Clear(False)
 
         Call projektTafelInit()
 
@@ -3305,7 +3307,7 @@ Imports System.Windows
 
             End With
         Catch ex As Exception
-            Dim a As Integer = 1
+
         End Try
 
 
