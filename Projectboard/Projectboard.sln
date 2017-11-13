@@ -23,6 +23,11 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ProjectBoardBasic", "Projec
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "FileCopyPDA", "FileCopyPDA\FileCopyPDA.vbproj", "{7B0DA877-D7C3-47A6-993B-9BB2E0C652D5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDbTest", "MongoDbTest\MongoDbTest.csproj", "{3BFF9CAD-81F9-44C8-ABE3-5D29AB24847C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{352A645D-D9C8-4902-9B8C-20F832AC8CDB} = {352A645D-D9C8-4902-9B8C-20F832AC8CDB}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		CD_ROM|Any CPU = CD_ROM|Any CPU
