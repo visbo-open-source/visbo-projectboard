@@ -3208,7 +3208,7 @@ Imports System.Windows
 
         ' zurücksetzen der Selektierten Projekte
 
-        selectedProjekte.Clear()
+        selectedProjekte.Clear(False)
 
         Call projektTafelInit()
 
