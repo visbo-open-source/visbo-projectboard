@@ -77,11 +77,14 @@ Public Class frmProjPortfolioAdmin
         frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
         projektHistorien.clear()
 
-        ' jetzt das aktuelle Szenario als Last speichern ... 
-        If aKtionskennung = PTTvActions.chgInSession Or _
-            aKtionskennung = PTTvActions.delFromSession Or _
-            aKtionskennung = PTTvActions.activateV Or _
-            aKtionskennung = PTTvActions.loadPV Then
+
+        If aKtionskennung = PTTvActions.chgInSession Then
+            awinSettings.isChangePortfolioFrmActive = False
+        End If
+
+        If aKtionskennung = PTTvActions.delFromSession Or _
+        aKtionskennung = PTTvActions.activateV Or _
+        aKtionskennung = PTTvActions.loadPV Then
 
             ' 27.3.17 die letzte Editor Zusammenstellung nicht speichern; damit aucn im load nicht abfragen ... 
             'currentBrowserConstellation.constellationName = calcLastEditorScenarioName() ' wird damit jetzt auf Last & dbusername gesetzt 
