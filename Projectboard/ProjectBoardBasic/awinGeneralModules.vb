@@ -4539,6 +4539,14 @@ Public Module awinGeneralModules
                 Else
                     AlleProjekte.Add(hproj)
                     ShowProjekte.Add(hproj)
+                    Try
+                        Dim constItem As clsConstellationItem = currentSessionConstellation.getItem(vglName)
+                        If Not IsNothing(constItem) Then
+                            constItem.zeile = hproj.tfZeile
+                        End If
+                    Catch ex As Exception
+
+                    End Try
                 End If
 
 
