@@ -143,6 +143,7 @@ Module Module1
         mvElement = 8
         resources = 9
         costs = 10
+        responsible = 11
     End Enum
 
     Friend Enum pptPositionType
@@ -1017,6 +1018,8 @@ Module Module1
                     tmpResult = pptInfoType.resources
                 ElseIf .rdbCosts.Checked Then
                     tmpResult = pptInfoType.costs
+                ElseIf .rdbVerantwortlichkeiten.Checked Then
+                    tmpResult = pptInfoType.responsible
                 Else
                     tmpResult = pptInfoType.cName
                 End If
@@ -1166,6 +1169,16 @@ Module Module1
             If tmpName.Trim.Length > 0 Then
                 Try
                     Call smartSlideLists.addLU(tmpName, shapeName, isMilestone)
+                Catch ex As Exception
+
+                End Try
+            End If
+
+            ' Verantwortlichkeiten behandeln ...
+            tmpName = tmpShape.Tags.Item("VE")
+            If tmpName.Trim.Length > 0 Then
+                Try
+                    Call smartSlideLists.addVE(tmpName, shapeName, isMilestone)
                 Catch ex As Exception
 
                 End Try
@@ -2270,7 +2283,7 @@ Module Module1
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                             Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
                                                       ph.getStartDate, ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
-                                                      Nothing)
+                                                      ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
                         End If
 
 
@@ -2302,7 +2315,7 @@ Module Module1
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                                 Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing, _
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
-                                                          ms.getAllDeliverables("#"))
+                                                          ms.getAllDeliverables("#"), ms.verantwortlich, Nothing)
                             End If
 
 
@@ -2330,7 +2343,7 @@ Module Module1
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                                 Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate, _
                                                              ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
-                                                             Nothing)
+                                                             ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
                             End If
 
                         End If
@@ -3118,6 +3131,17 @@ Module Module1
                     Next
                 End If
 
+            ElseIf type = pptInfoType.responsible Then
+                If englishLanguage Then
+                    tmpText = tmpText & "Responsible: "
+                Else
+                    tmpText = tmpText & "Verantwortlich: "
+                End If
+
+                If curShape.Tags.Item("VE").Length > 0 Then
+                    tmpText = tmpText & curShape.Tags.Item("VE")
+                End If
+
             ElseIf type = pptInfoType.mvElement Then
                 If englishLanguage Then
                     tmpText = tmpText & "moved:" & vbLf
@@ -3213,9 +3237,9 @@ Module Module1
                 ' in allen anderen Fällen den Ampel-Text wählen 
                 If curShape.Tags.Item("AE").Length > 0 Then
                     If englishLanguage Then
-                        tmpText = tmpText & "traffic light text:" & vbLf
+                        tmpText = tmpText & "Explanation:" & vbLf
                     Else
-                        tmpText = tmpText & "Ampel-Text:" & vbLf
+                        tmpText = tmpText & "Erläuterung:" & vbLf
                     End If
 
                     tmpText = tmpText & curShape.Tags.Item("AE")

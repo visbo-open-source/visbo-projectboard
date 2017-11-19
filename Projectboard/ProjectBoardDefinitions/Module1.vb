@@ -3790,7 +3790,9 @@ Public Module Module1
                                           ByVal bestShortName As String, ByVal bestLongName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
                                           ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
-                                          ByVal lieferumfaenge As String)
+                                          ByVal lieferumfaenge As String, _
+                                          ByVal verantwortlich As String, _
+                                          ByVal percentDone As Double)
 
         Dim nullDate As Date = Nothing
 
@@ -3895,6 +3897,26 @@ Public Module Module1
                             .Tags.Delete("LU")
                         End If
                         .Tags.Add("LU", lieferumfaenge)
+                    End If
+
+                End If
+
+                If Not IsNothing(verantwortlich) Then
+                    If verantwortlich.Trim.Length > 0 Then
+                        If .Tags.Item("VE").Length > 0 Then
+                            .Tags.Delete("VE")
+                        End If
+                        .Tags.Add("VE", verantwortlich.Trim)
+                    End If
+
+                End If
+
+                If Not IsNothing(percentDone) Then
+                    If percentDone > 0 Then
+                        If .Tags.Item("PD").Length > 0 Then
+                            .Tags.Delete("PD")
+                        End If
+                        .Tags.Add("PD", percentDone.ToString("0#."))
                     End If
 
                 End If

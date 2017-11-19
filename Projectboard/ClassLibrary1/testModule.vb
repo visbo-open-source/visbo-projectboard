@@ -12970,7 +12970,8 @@ Public Module testModule
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
                                             bestShortName, bestLongName, _
                                             cphase.getStartDate, cphase.getEndDate, _
-                                            Nothing, Nothing, Nothing)
+                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                            cphase.verantwortlich, cphase.percentDone)
 
             End If
 
@@ -13040,7 +13041,8 @@ Public Module testModule
                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
                                                 bestShortName, bestLongName, _
                                                 cphase.getStartDate, cphase.getEndDate, _
-                                                Nothing, Nothing, Nothing)
+                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                                cphase.verantwortlich, cphase.percentDone)
 
                 End If
 
@@ -14827,7 +14829,8 @@ Public Module testModule
                                                         Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                         Nothing, Nothing, _
                                                         hproj.startDate, hproj.endeDate, _
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
+                                                        hproj.leadPerson, Nothing)
 
                         End If
 
@@ -14852,7 +14855,8 @@ Public Module testModule
                                                         Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                         Nothing, Nothing, _
                                                         hproj.startDate, hproj.endeDate, _
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
+                                                        hproj.leadPerson, Nothing)
 
                         End If
 
@@ -14941,7 +14945,8 @@ Public Module testModule
                                                    Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                    Nothing, Nothing, _
                                                    hproj.startDate, hproj.endeDate, _
-                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
+                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
+                                                   hproj.leadPerson, Nothing)
 
                         End If
 
@@ -15301,7 +15306,8 @@ Public Module testModule
                                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
                                                                 bestShortName, bestLongName, _
                                                                 phaseStart, phaseEnd, _
-                                                                Nothing, Nothing, Nothing)
+                                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                                                cphase.verantwortlich, cphase.percentDone)
                                 End If
 
                                 phShapeNames.Add(copiedShape(1).Name)
@@ -15982,7 +15988,7 @@ Public Module testModule
                                         bestShortName, bestLongName, _
                                         Nothing, msdate, _
                                         MS.getBewertung(1).colorIndex, MS.getBewertung(1).description, _
-                                        lieferumfaenge)
+                                        lieferumfaenge, MS.verantwortlich, Nothing)
         End If
 
         msShapeNames.Add(copiedShape.Item(1).Name)
@@ -16222,7 +16228,8 @@ Public Module testModule
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
                                             bestShortName, bestLongName, _
                                             phStartDate, phEndDate, _
-                                            Nothing, Nothing, Nothing)
+                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                            cphase.verantwortlich, cphase.percentDone)
             End If
 
         End If
@@ -16409,7 +16416,7 @@ Public Module testModule
                                                 bestShortName, bestLongName, _
                                                 Nothing, msDate, _
                                                 cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
-                                                lieferumfaenge)
+                                                lieferumfaenge, cMilestone.verantwortlich, Nothing)
                 End If
 
                 shapeNames.Add(.Name)

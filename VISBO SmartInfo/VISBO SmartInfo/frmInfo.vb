@@ -164,6 +164,7 @@ Public Class frmInfo
                 .rdbCosts.Text = "Cost"
                 .rdbAbbrev.Text = "Abbreviation"
                 .rdbBreadcrumb.Text = "full breadcrumb"
+                .rdbVerantwortlichkeiten.Text = "Responsibilities"
             End With
         End If
 
@@ -295,6 +296,8 @@ Public Class frmInfo
                 rdbCode = pptInfoType.resources
             ElseIf rdbCosts.Checked Then
                 rdbCode = pptInfoType.costs
+            ElseIf rdbVerantwortlichkeiten.Checked Then
+                rdbCode = pptInfoType.responsible
             Else
                 rdbCode = pptInfoType.cName
             End If
@@ -410,6 +413,20 @@ Public Class frmInfo
 
     End Sub
 
+    Private Sub rdbVerantwortlichkeiten_CheckedChanged(sender As Object, e As EventArgs) Handles rdbVerantwortlichkeiten.CheckedChanged
+        ' prüfen , ob der AmpelBlock sichtbar ist ...
+        If Me.aLuTvText.Visible Then
+            ' alles ok 
+        Else
+            Call aLuTvBlockVisible(True)
+        End If
+
+        Dim tmpStr() As String
+        tmpStr = setALuTvText().Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+        Me.aLuTvText.Lines = tmpStr
+
+        Call erstelleListbox()
+    End Sub
 
     Private Sub rdbResources_CheckedChanged(sender As Object, e As EventArgs) Handles rdbResources.CheckedChanged
         If rdbResources.Checked = True Then
@@ -1154,6 +1171,8 @@ Public Class frmInfo
         End If
     End Sub
 
+    
+
     Private Sub rdbLU_CheckedChanged(sender As Object, e As EventArgs) Handles rdbLU.CheckedChanged
 
         If rdbLU.Checked = True Then
@@ -1572,4 +1591,5 @@ Public Class frmInfo
     End Sub
 
    
+    
 End Class

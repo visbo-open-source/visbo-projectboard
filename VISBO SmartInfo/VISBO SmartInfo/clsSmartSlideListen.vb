@@ -38,6 +38,8 @@ Public Class clsSmartSlideListen
     Private _resourceList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Kosten -> ShapeID, Summe; erfordert Datenbank Access
     Private _costList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' tk, 18.11.17 vEList enthält die Liste der Verantwortlichen, und wofür sie alles verantwortlich sind 
+    Private _vEList As SortedList(Of String, SortedList(Of Integer, Boolean))
 
     Private _creationDate As Date
 
@@ -708,6 +710,42 @@ Public Class clsSmartSlideListen
     End Sub
 
     ''' <summary>
+    ''' fügt der Liste an Verantwortlchkeiten eine weitere (0,1,2,3) hinzu
+    ''' </summary>
+    ''' <param name="verantwortlich"></param>
+    ''' <param name="shapeName"></param>
+    ''' <param name="isMilestone"></param>
+    ''' <remarks></remarks>
+    Public Sub addVE(ByVal verantwortlich As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
+
+        Dim uid As Integer = Me.getUID(shapeName)
+
+        Dim listOfShapeNames As SortedList(Of Integer, Boolean)
+
+        ' konsistent machen ... wenn die Farbe nicht erkannt werden kann, wird sie wie <nicht gesetzt> behandelt 
+        If verantwortlich.Trim.Length > 0 Then
+            
+            If _vEList.ContainsKey(verantwortlich) Then
+                listOfShapeNames = _vEList.Item(verantwortlich)
+                If listOfShapeNames.ContainsKey(uid) Then
+                    ' nichts tun , ist schon drin ...
+                Else
+                    ' aufnehmen ; der bool'sche Value ist die Angabe, ob Milestone doer nicht  
+                    listOfShapeNames.Add(uid, isMilestone)
+                End If
+            Else
+                ' dann muss das erste aufgenommen werden 
+                listOfShapeNames = New SortedList(Of Integer, Boolean)
+                listOfShapeNames.Add(uid, isMilestone)
+                _vEList.Add(verantwortlich, listOfShapeNames)
+            End If
+        End If
+
+
+
+    End Sub
+
+    ''' <summary>
     ''' gibt für die angegebene Ampelfarbe die Namen alle Shapes zurück, die diese Ampelfarbe haben 
     ''' leere Collection, wenn es keine Shapes dieser Farbe gibt
     ''' </summary>
@@ -942,6 +980,8 @@ Public Class clsSmartSlideListen
                     NList = _resourceList
                 Case pptInfoType.costs
                     NList = _costList
+                Case pptInfoType.responsible
+                    NList = _vEList
                 Case Else
                     NList = _cNList
             End Select
@@ -1262,6 +1302,8 @@ Public Class clsSmartSlideListen
         _aCList = New SortedList(Of Integer, SortedList(Of Integer, Boolean))
         _LUList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _mVList = New SortedList(Of Integer, Boolean)
+        _vEList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+
         _projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
         _listOfTimeStamps = New SortedList(Of Date, Boolean)
         _resourceList = New SortedList(Of String, SortedList(Of Integer, Boolean))

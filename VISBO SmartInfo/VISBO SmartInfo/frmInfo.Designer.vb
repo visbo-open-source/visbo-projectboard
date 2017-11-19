@@ -62,6 +62,7 @@ Partial Class frmInfo
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.rdbResources = New System.Windows.Forms.RadioButton()
         Me.rdbCosts = New System.Windows.Forms.RadioButton()
+        Me.rdbVerantwortlichkeiten = New System.Windows.Forms.RadioButton()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -374,7 +375,7 @@ Partial Class frmInfo
         'rdbLU
         '
         Me.rdbLU.AutoSize = True
-        Me.rdbLU.Location = New System.Drawing.Point(99, 408)
+        Me.rdbLU.Location = New System.Drawing.Point(183, 408)
         Me.rdbLU.Name = "rdbLU"
         Me.rdbLU.Size = New System.Drawing.Size(92, 17)
         Me.rdbLU.TabIndex = 44
@@ -384,7 +385,7 @@ Partial Class frmInfo
         'rdbMV
         '
         Me.rdbMV.AutoSize = True
-        Me.rdbMV.Location = New System.Drawing.Point(430, 408)
+        Me.rdbMV.Location = New System.Drawing.Point(444, 408)
         Me.rdbMV.Name = "rdbMV"
         Me.rdbMV.Size = New System.Drawing.Size(118, 17)
         Me.rdbMV.TabIndex = 45
@@ -430,7 +431,7 @@ Partial Class frmInfo
         'rdbResources
         '
         Me.rdbResources.AutoSize = True
-        Me.rdbResources.Location = New System.Drawing.Point(224, 408)
+        Me.rdbResources.Location = New System.Drawing.Point(284, 408)
         Me.rdbResources.Name = "rdbResources"
         Me.rdbResources.Size = New System.Drawing.Size(82, 17)
         Me.rdbResources.TabIndex = 46
@@ -440,12 +441,22 @@ Partial Class frmInfo
         'rdbCosts
         '
         Me.rdbCosts.AutoSize = True
-        Me.rdbCosts.Location = New System.Drawing.Point(339, 408)
+        Me.rdbCosts.Location = New System.Drawing.Point(376, 408)
         Me.rdbCosts.Name = "rdbCosts"
         Me.rdbCosts.Size = New System.Drawing.Size(58, 17)
         Me.rdbCosts.TabIndex = 47
         Me.rdbCosts.Text = "Kosten"
         Me.rdbCosts.UseVisualStyleBackColor = True
+        '
+        'rdbVerantwortlichkeiten
+        '
+        Me.rdbVerantwortlichkeiten.AutoSize = True
+        Me.rdbVerantwortlichkeiten.Location = New System.Drawing.Point(75, 408)
+        Me.rdbVerantwortlichkeiten.Name = "rdbVerantwortlichkeiten"
+        Me.rdbVerantwortlichkeiten.Size = New System.Drawing.Size(92, 17)
+        Me.rdbVerantwortlichkeiten.TabIndex = 48
+        Me.rdbVerantwortlichkeiten.Text = "Verantwortlich"
+        Me.rdbVerantwortlichkeiten.UseVisualStyleBackColor = True
         '
         'frmInfo
         '
@@ -453,6 +464,7 @@ Partial Class frmInfo
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(566, 446)
+        Me.Controls.Add(Me.rdbVerantwortlichkeiten)
         Me.Controls.Add(Me.rdbCosts)
         Me.Controls.Add(Me.rdbResources)
         Me.Controls.Add(Me.CheckBxMarker)
@@ -524,4 +536,5 @@ Partial Class frmInfo
     Friend WithEvents ToolTip1 As System.Windows.Forms.ToolTip
     Friend WithEvents rdbResources As System.Windows.Forms.RadioButton
     Friend WithEvents rdbCosts As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbVerantwortlichkeiten As System.Windows.Forms.RadioButton
 End Class
