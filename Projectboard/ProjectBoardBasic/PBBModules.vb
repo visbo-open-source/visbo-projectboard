@@ -32,6 +32,11 @@ Public Module PBBModules
         If controlID <> "BHTC" Then
             hryFormular.calledFrom = "Multiprojekt-Tafel"
 
+            If Not IsNothing(reportprofil) Then
+                hryFormular.repProfil = New clsReportAll
+                reportprofil.CopyTo(hryFormular.repProfil)
+            End If
+
             With awinSettings
                 formerSettings(0) = .mppExtendedMode
                 formerSettings(1) = .mppShowAllIfOne
