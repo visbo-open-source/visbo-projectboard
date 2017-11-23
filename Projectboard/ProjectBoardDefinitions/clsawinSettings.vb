@@ -208,6 +208,11 @@ Public Class clsawinSettings
     Public Property visboTaskClass As String
     Public Property visboAbbreviation As String
     Public Property visboAmpel As String
+    Public Property visboAmpelText As String
+    Public Property visbodeliverables As String
+    Public Property visbopercentDone As String
+    Public Property visboresponsible As String
+
 
     ' Settings für Einzelprojekt-Reports
     ' tk 7.2.16 ist überflüssig
@@ -215,6 +220,9 @@ Public Class clsawinSettings
 
     ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
     Public Property isHryNameFrmActive As Boolean
+
+    Public Property isChangePortfolioFrmActive As Boolean
+
     
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
@@ -358,6 +366,7 @@ Public Class clsawinSettings
 
         _useHierarchy = True
         _isHryNameFrmActive = False
+        _isChangePortfolioFrmActive = False
    
         _visboDebug = False
 

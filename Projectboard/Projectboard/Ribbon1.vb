@@ -3204,11 +3204,10 @@ Imports System.Windows
             End If
         Next
 
-        ' zurücksetzen, aber kein Update der currentSessionConstellation ! 
+        ' zurücksetzen , aber nicht zurücksetzen der currentSessionConstellation
         dbCacheProjekte.Clear(False)
 
-
-        ' zurücksetzen der Selektierten Projekte, aber kein Update der currentSessionConstellation !
+        ' zurücksetzen der Selektierten Projekte, aber nicht zurücksetzen der currentSessionConstellation
         selectedProjekte.Clear(False)
 
         Call projektTafelInit()

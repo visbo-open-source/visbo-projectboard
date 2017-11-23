@@ -937,6 +937,7 @@ Public Class frmHierarchySelection
 
             selectedPhases.Clear()
             selectedMilestones.Clear()
+            selectedTyps.Clear()
 
             With hryTreeView
 
@@ -951,6 +952,9 @@ Public Class frmHierarchySelection
                         hry = getHryFromNode(tmpNode)
                         type = getTypeFromNode(tmpNode)
                         pvName = getPVnameFromNode(tmpNode)
+                        If type = 0 Then
+                            selectedTyps.Add(pvName, pvName)
+                        End If
                     End If
 
 
@@ -1017,20 +1021,6 @@ Public Class frmHierarchySelection
 
             End With
 
-
-            'selectedRoles.Clear()
-            'With hryTreeView
-            '    For px As Integer = 1 To anzahlKnoten
-            '        tmpNode = .Nodes.Item(px - 1)
-            '        If tmpNode.Checked Then
-            '            ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
-            '            If Not selectedRoles.Contains(tmpNode.Text) Then
-            '                ' im Rollen-Treeview sind in tmpNode.Name die RollenUIDs enthalten
-            '                selectedRoles.Add(tmpNode.Text, tmpNode.Text)
-            '            End If
-            '        End If
-            '    Next
-            'End With
 
 
         ElseIf rdbCosts.Checked = True Then
@@ -1147,7 +1137,7 @@ Public Class frmHierarchySelection
             Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
             If ((selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
-                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
+                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0 Or selectedTyps.Count > 0) _
                     And validOption) Or _
                     (Me.menuOption = PTmenue.reportBHTC And validOption) Then
 
@@ -4707,6 +4697,10 @@ Public Class frmHierarchySelection
     'End Sub
 
     Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
+
+    End Sub
+
+    Private Sub pictureTyp_Click(sender As Object, e As EventArgs) Handles pictureTyp.Click
 
     End Sub
 End Class
