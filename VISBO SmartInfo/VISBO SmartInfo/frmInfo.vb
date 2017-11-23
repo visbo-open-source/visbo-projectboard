@@ -72,6 +72,7 @@ Public Class frmInfo
                 .rdbMV.Top = .rdbMV.Top - deltaAmpel
                 .rdbResources.Top = .rdbResources.Top - deltaAmpel
                 .rdbCosts.Top = .rdbCosts.Top - deltaAmpel
+                .rdbVerantwortlichkeiten.Top = rdbVerantwortlichkeiten.Top - deltaAmpel
                 .rdbOriginalName.Top = rdbOriginalName.Top - deltaAmpel
                 .rdbAbbrev.Top = rdbAbbrev.Top - deltaAmpel
                 .rdbBreadcrumb.Top = .rdbBreadcrumb.Top - deltaAmpel
@@ -92,6 +93,7 @@ Public Class frmInfo
                 .rdbMV.Top = .rdbMV.Top + deltaAmpel
                 .rdbResources.Top = .rdbResources.Top + deltaAmpel
                 .rdbCosts.Top = .rdbCosts.Top + deltaAmpel
+                .rdbVerantwortlichkeiten.Top = .rdbVerantwortlichkeiten.Top + deltaAmpel
                 .rdbOriginalName.Top = rdbOriginalName.Top + deltaAmpel
                 .rdbAbbrev.Top = rdbAbbrev.Top + deltaAmpel
                 .rdbBreadcrumb.Top = .rdbBreadcrumb.Top + deltaAmpel
@@ -126,6 +128,7 @@ Public Class frmInfo
             rdbBreadcrumb.Visible = False
             rdbResources.Visible = False
             rdbCosts.Visible = False
+            rdbVerantwortlichkeiten.Visible = False
 
         Else
             Me.Height = Me.Height + deltaSearchBox
@@ -136,6 +139,7 @@ Public Class frmInfo
             rdbMV.Visible = True
             rdbResources.Visible = True
             rdbCosts.Visible = True
+            rdbVerantwortlichkeiten.Visible = True
             If extSearch Then
                 rdbOriginalName.Visible = True
                 rdbAbbrev.Visible = True
@@ -553,6 +557,8 @@ Public Class frmInfo
             rdbCode = pptInfoType.resources
         ElseIf rdbCosts.Checked Then
             rdbCode = pptInfoType.costs
+        ElseIf rdbVerantwortlichkeiten.Checked Then
+            rdbCode = pptInfoType.responsible
         Else
             rdbCode = pptInfoType.cName
         End If
@@ -1113,6 +1119,8 @@ Public Class frmInfo
                 type = pptAnnotationType.lieferumfang
             ElseIf rdbResources.Checked Or rdbCosts.Checked Then
                 type = pptAnnotationType.resourceCost
+            ElseIf rdbVerantwortlichkeiten.Checked Then
+                type = pptAnnotationType.ampelText
             Else
                 type = pptAnnotationType.ampelText
             End If

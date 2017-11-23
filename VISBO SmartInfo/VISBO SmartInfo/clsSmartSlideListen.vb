@@ -889,6 +889,8 @@ Public Class clsSmartSlideListen
                     NList = _resourceList
                 Case pptInfoType.costs
                     NList = _costList
+                Case pptInfoType.responsible
+                    NList = _vEList
                 Case Else
                     NList = _cNList
             End Select

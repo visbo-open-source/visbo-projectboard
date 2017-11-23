@@ -514,7 +514,7 @@ Public Class clsPhase
     Public Property ampelStatus As Integer
         Get
             If Me.bewertungsCount >= 1 Then
-                ampelStatus = Me.getBewertung(1).colorIndex
+                ampelStatus = Me.getBewertung(Me.bewertungsCount).colorIndex
             Else
                 ampelStatus = 0
             End If
@@ -553,7 +553,7 @@ Public Class clsPhase
     Public Property ampelErlaeuterung As String
         Get
             If Me.bewertungsCount >= 1 Then
-                ampelErlaeuterung = Me.getBewertung(1).description
+                ampelErlaeuterung = Me.getBewertung(Me.bewertungsCount).description
             Else
                 ampelErlaeuterung = ""
             End If

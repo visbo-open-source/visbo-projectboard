@@ -123,11 +123,11 @@ Partial Class frmInfo
         'aLuTvText
         '
         Me.aLuTvText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.aLuTvText.Enabled = False
         Me.aLuTvText.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.aLuTvText.Location = New System.Drawing.Point(14, 102)
         Me.aLuTvText.Multiline = True
         Me.aLuTvText.Name = "aLuTvText"
+        Me.aLuTvText.ReadOnly = True
         Me.aLuTvText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.aLuTvText.Size = New System.Drawing.Size(407, 51)
         Me.aLuTvText.TabIndex = 29
