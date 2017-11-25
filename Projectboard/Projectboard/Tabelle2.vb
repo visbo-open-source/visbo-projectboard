@@ -1078,9 +1078,13 @@ Public Class Tabelle2
                                         roleCostNames.Add(rcName, rcName)
                                     End If
 
-                                    If difference <> 0 Then
-                                        auslastungChanged = True
-                                    End If
+                                    ' ur: 24.11.2017: Neuberechnung der Auslastung soll hier angestoßen werden, da Veränderung an Rolle in einem Monat mit entsprechenden Reduktion in Sammelrolle
+                                    '
+                                    'If difference <> 0 Then
+                                    '    auslastungChanged = True
+                                    'End If
+
+                                    auslastungChanged = True
 
 
                                 Else
