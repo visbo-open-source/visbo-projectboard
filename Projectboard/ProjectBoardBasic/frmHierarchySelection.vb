@@ -582,11 +582,12 @@ Public Class frmHierarchySelection
                     .rdbNameList.Enabled = False
                     .rdbNameList.Visible = False
                     .rdbNameList.Checked = False
+                    
 
 
                     .rdbProjStruktProj.Enabled = False
                     .rdbProjStruktProj.Visible = False
-                    .rdbProjStruktProj.Checked = True
+                    .rdbProjStruktProj.Checked = False
 
                     .rdbProjStruktTyp.Enabled = False
                     .rdbProjStruktTyp.Visible = False
@@ -621,31 +622,33 @@ Public Class frmHierarchySelection
                 Else
                     If .menuOption = PTmenue.reportMultiprojektTafel Then
 
-                        .rdbNameList.Enabled = False
-                        .rdbNameList.Visible = False
-                        .rdbNameList.Checked = False
-
+                        '.rdbNameList.Enabled = False
+                        '.rdbNameList.Visible = False
+                        '.rdbNameList.Checked = False
+                        .rdbNameList.Enabled = True
+                        .rdbNameList.Visible = True
+                        .rdbNameList.Checked = True
 
                         .rdbProjStruktProj.Enabled = True
                         .rdbProjStruktProj.Visible = True
-                        .rdbProjStruktProj.Checked = True
+                        .rdbProjStruktProj.Checked = False
 
                         .rdbProjStruktTyp.Enabled = True
                         .rdbProjStruktTyp.Visible = True
                         .rdbProjStruktTyp.Checked = False
 
 
-                        .rdbPhases.Visible = False
-                        .rdbPhases.Checked = False
-                        .picturePhasen.Visible = False
+                        .rdbPhases.Visible = True
+                        .rdbPhases.Checked = True
+                        .picturePhasen.Visible = True
 
-                        .rdbPhaseMilest.Visible = True
-                        .rdbPhaseMilest.Checked = True
-                        .picturePhaseMilest.Visible = True
+                        .rdbPhaseMilest.Visible = False
+                        .rdbPhaseMilest.Checked = False
+                        .picturePhaseMilest.Visible = False
 
-                        .rdbMilestones.Visible = False
+                        .rdbMilestones.Visible = True
                         .rdbMilestones.Checked = False
-                        .pictureMilestones.Visible = False
+                        .pictureMilestones.Visible = True
 
                         .rdbBU.Visible = False
                         .pictureBU.Visible = False
@@ -826,7 +829,7 @@ Public Class frmHierarchySelection
 
             Case PTmenue.reportMultiprojektTafel
                 ' ur: 11.09.2017: beginnt mit ProjektStruktur
-                'auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+
 
                 Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportMultiprojektTafel, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
                 If IsNothing(repProfil) Then
@@ -834,19 +837,18 @@ Public Class frmHierarchySelection
                 End If
 
                 auswahl = PTProjektType.projekt
+                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
                 Select Case auswahl
                     Case PTProjektType.nameList
 
+                       
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
+
                         Me.rdbNameList.Checked = True
                         Me.rdbPhases.Checked = True
 
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
-
-
                     Case PTProjektType.vorlage
-
-                        Me.rdbProjStruktTyp.Checked = True
 
                         Call buildHryTreeViewNew(PTProjektType.vorlage)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
@@ -854,15 +856,17 @@ Public Class frmHierarchySelection
                         '    hryTreeView.ExpandAll()
                         'End If
 
-                    Case PTProjektType.projekt
+                        Me.rdbProjStruktTyp.Checked = True
 
-                        'Me.rdbProjStruktProj.Checked = True
+                    Case PTProjektType.projekt
 
                         Call buildHryTreeViewNew(PTProjektType.projekt)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                         '    hryTreeView.ExpandAll()
                         'End If
+
+                        Me.rdbProjStruktProj.Checked = True
 
                     Case Else
                         selectedPhases.Clear()
