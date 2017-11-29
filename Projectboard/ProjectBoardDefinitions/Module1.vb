@@ -328,6 +328,7 @@ Public Module Module1
         Protocol = 6
         Dauer = 7
         Abkuerzung = 8
+        Verantwortlich = 9
     End Enum
 
 

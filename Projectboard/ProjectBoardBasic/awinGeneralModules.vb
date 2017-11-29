@@ -15304,13 +15304,14 @@ Public Module awinGeneralModules
         Dim colAbbrev As Integer = -1
         Dim colVorgangsKlasse As Integer = -1
         Dim colDescription As Integer = -1
+        Dim colVerantwortlich As Integer = -1
 
         Dim pDescription As String = ""
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(8) As String
+        Dim suchstr(9) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -15320,6 +15321,7 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.Protocol) = "Übernommen als"
         suchstr(ptPlanNamen.Dauer) = "Duration"
         suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
+        suchstr(ptPlanNamen.Verantwortlich) = "Responsible"
 
 
         zeile = 2
@@ -15399,6 +15401,12 @@ Public Module awinGeneralModules
 
         End Try
 
+        Try
+            colVerantwortlich = firstZeile.Find(What:=suchstr(ptPlanNamen.Verantwortlich), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
 
         With aktivesSheet
 
@@ -15462,6 +15470,7 @@ Public Module awinGeneralModules
                 CType(.Cells(1, colProtocol + 5), Excel.Range).Value = "Quelle"
                 CType(.Cells(1, colProtocol + 8), Excel.Range).Value = "PT Hierarchie"
                 CType(.Cells(1, colProtocol + 9), Excel.Range).Value = "PT Klasse"
+                CType(.Cells(1, colProtocol + 10), Excel.Range).Value = "Verantwortlich"
             End If
 
             ' wird immer geschrieben 
@@ -15687,6 +15696,7 @@ Public Module awinGeneralModules
                         Dim txtVorgangsKlasse As String
                         Dim origVorgangsKlasse As String
                         Dim txtAbbrev As String
+                        Dim verantwortlich As String = ""
                         ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
                         Dim origItem As String = ""
 
@@ -15699,6 +15709,7 @@ Public Module awinGeneralModules
                             txtVorgangsKlasse = ""
                             txtAbbrev = ""
                             logMessage = ""
+                            verantwortlich = ""
 
                             Dim indentLevel As Integer
 
@@ -15758,6 +15769,8 @@ Public Module awinGeneralModules
 
                                         itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
                                         itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+                                       
+
 
                                         If IsNothing(CType(.Cells(curZeile, colAnfang), Excel.Range).Value) Then
                                             isMilestone = True
@@ -15860,6 +15873,14 @@ Public Module awinGeneralModules
 
                                     Catch ex As Exception
                                         txtAbbrev = ""
+                                    End Try
+                                End If
+
+                                If colVerantwortlich > 0 Then
+                                    Try
+                                        verantwortlich = CStr(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        verantwortlich = ""
                                     End Try
                                 End If
 
@@ -16031,6 +16052,9 @@ Public Module awinGeneralModules
                                         cphase.nameID = elemID
                                         cphase.changeStartandDauer(startoffset, duration)
 
+                                        ' tk 26.11.17, den Wert für verantwortlich mitaufnehmen ...
+                                        cphase.verantwortlich = verantwortlich
+
                                         ' der Aufbau der Hierarchie erfolgt in addphase
                                         hproj.AddPhase(cphase, origName:=origItem.Trim, _
                                                        parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
@@ -16045,6 +16069,8 @@ Public Module awinGeneralModules
 
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 10), Excel.Range).Value = verantwortlich
+
                                         End If
                                         ' neuer Breadcrumb 
                                         'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
@@ -16192,6 +16218,9 @@ Public Module awinGeneralModules
                                             With cmilestone
                                                 .nameID = elemID
                                                 .setDate = itemEndDate
+                                                ' tk 26.11.17 
+                                                .verantwortlich = verantwortlich
+
                                                 If Not cbewertung Is Nothing Then
                                                     .addBewertung(cbewertung)
                                                 End If
@@ -16215,6 +16244,7 @@ Public Module awinGeneralModules
 
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 10), Excel.Range).Value = verantwortlich
                                                 End If
 
                                                 If stdName.Trim <> origItem.Trim Then
@@ -16249,7 +16279,7 @@ Public Module awinGeneralModules
 
                                     Catch ex As Exception
                                         CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
-                                                            "Fehler in Zeile " & zeile & ", Item-Name: " & itemName
+                                                            ex.Message & ": " & vbLf & "Fehler in Zeile " & curZeile & ", Item-Name: " & itemName
                                         CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
                                     End Try
 
