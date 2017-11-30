@@ -582,21 +582,22 @@ Public Class frmHierarchySelection
                     .rdbNameList.Enabled = False
                     .rdbNameList.Visible = False
                     .rdbNameList.Checked = False
+                    
 
 
                     .rdbProjStruktProj.Enabled = False
                     .rdbProjStruktProj.Visible = False
-                    .rdbProjStruktProj.Checked = True
+                    .rdbProjStruktProj.Checked = False
 
                     .rdbProjStruktTyp.Enabled = False
                     .rdbProjStruktTyp.Visible = False
                     .rdbProjStruktTyp.Checked = False
 
-                   
+
                     .rdbPhases.Visible = False
                     .rdbPhases.Checked = False
                     .picturePhasen.Visible = False
-                    
+
                     .rdbPhaseMilest.Visible = False
                     .rdbPhaseMilest.Checked = True
                     .picturePhaseMilest.Visible = False
@@ -618,6 +619,51 @@ Public Class frmHierarchySelection
                     .rdbCosts.Visible = False
                     .rdbCosts.Checked = False
                     .pictureCosts.Visible = False
+                Else
+                    If .menuOption = PTmenue.reportMultiprojektTafel Then
+
+                        '.rdbNameList.Enabled = False
+                        '.rdbNameList.Visible = False
+                        '.rdbNameList.Checked = False
+                        .rdbNameList.Enabled = True
+                        .rdbNameList.Visible = True
+                        .rdbNameList.Checked = True
+
+                        .rdbProjStruktProj.Enabled = True
+                        .rdbProjStruktProj.Visible = True
+                        .rdbProjStruktProj.Checked = False
+
+                        .rdbProjStruktTyp.Enabled = True
+                        .rdbProjStruktTyp.Visible = True
+                        .rdbProjStruktTyp.Checked = False
+
+
+                        .rdbPhases.Visible = True
+                        .rdbPhases.Checked = True
+                        .picturePhasen.Visible = True
+
+                        .rdbPhaseMilest.Visible = False
+                        .rdbPhaseMilest.Checked = False
+                        .picturePhaseMilest.Visible = False
+
+                        .rdbMilestones.Visible = True
+                        .rdbMilestones.Checked = False
+                        .pictureMilestones.Visible = True
+
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
+
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
+
+                        .rdbRoles.Visible = False
+                        .rdbRoles.Checked = False
+                        .pictureRoles.Visible = False
+
+                        .rdbCosts.Visible = False
+                        .rdbCosts.Checked = False
+                        .pictureCosts.Visible = False
+                    End If
 
                 End If
                 ' Ende temporäre Anpassung 
@@ -700,27 +746,18 @@ Public Class frmHierarchySelection
             End If
         Else   ' calledFrom = "Multiprojekt-Tafel"
 
-            If menuOption = PTmenue.reportMultiprojektTafel Then
-
-                Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportMultiprojektTafel, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
-                If IsNothing(repProfil) Then
-                    Throw New ArgumentException("Fehler beim Lesen des áusgewählten ReportProfils")
-                End If
-            Else
-                ' ur: 23.06.2017
-                ' hier soll immer mit leeren Selektionen begonnen werden
-                selectedMilestones.Clear()
-                selectedPhases.Clear()
-                'Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, _
-                '                        selectedMilestones, selectedRoles, selectedCosts)
-                ' tk 8.4.17
-                ' hier werden nur Phasen und Meilensteine selektiert: deswegen dürfen hier die anderen Collections nicht zählen
-                selectedBUs.Clear()
-                selectedTyps.Clear()
-                selectedRoles.Clear()
-                selectedCosts.Clear()
-
-            End If
+            ' ur: 23.06.2017
+            ' hier soll immer mit leeren Selektionen begonnen werden
+            selectedMilestones.Clear()
+            selectedPhases.Clear()
+            'Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, _
+            '                        selectedMilestones, selectedRoles, selectedCosts)
+            ' tk 8.4.17
+            ' hier werden nur Phasen und Meilensteine selektiert: deswegen dürfen hier die anderen Collections nicht zählen
+            selectedBUs.Clear()
+            selectedTyps.Clear()
+            selectedRoles.Clear()
+            selectedCosts.Clear()
 
         End If
 
@@ -789,9 +826,71 @@ Public Class frmHierarchySelection
                     hryTreeView.ExpandAll()
                 End If
 
+
+            Case PTmenue.reportMultiprojektTafel
+                ' ur: 11.09.2017: beginnt mit ProjektStruktur
+
+
+                Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportMultiprojektTafel, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
+                If IsNothing(repProfil) Then
+                    Throw New ArgumentException("Fehler beim Lesen des ausgewählten ReportProfils")
+                End If
+
+                auswahl = PTProjektType.projekt
+                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+
+                Select Case auswahl
+                    Case PTProjektType.nameList
+
+                       
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
+
+                        Me.rdbNameList.Checked = True
+                        Me.rdbPhases.Checked = True
+
+                    Case PTProjektType.vorlage
+
+                        Call buildHryTreeViewNew(PTProjektType.vorlage)
+                        '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                        'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                        '    hryTreeView.ExpandAll()
+                        'End If
+
+                        Me.rdbProjStruktTyp.Checked = True
+
+                    Case PTProjektType.projekt
+
+                        Call buildHryTreeViewNew(PTProjektType.projekt)
+                        '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                        'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                        '    hryTreeView.ExpandAll()
+                        'End If
+
+                        Me.rdbProjStruktProj.Checked = True
+
+                    Case Else
+                        selectedPhases.Clear()
+                        selectedMilestones.Clear()
+                        selectedBUs.Clear()
+                        selectedTyps.Clear()
+                        selectedRoles.Clear()
+                        selectedCosts.Clear()
+
+                        Me.rdbNameList.Checked = True
+                        Me.rdbPhases.Checked = True
+
+                        Call buildHryTreeViewNew(PTProjektType.nameList)
+
+                End Select
+
+                    ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                    If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                        hryTreeView.ExpandAll()
+                    End If
+
         End Select
 
-   
+
         Cursor = Cursors.Default
 
         ' die Vorlagen  einlesen
@@ -938,6 +1037,7 @@ Public Class frmHierarchySelection
             selectedPhases.Clear()
             selectedMilestones.Clear()
 
+
             With hryTreeView
 
                 Dim hry As clsHierarchy = Nothing
@@ -951,6 +1051,16 @@ Public Class frmHierarchySelection
                         hry = getHryFromNode(tmpNode)
                         type = getTypeFromNode(tmpNode)
                         pvName = getPVnameFromNode(tmpNode)
+                        If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
+
+                            Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufen.Value))
+                            Dim elemName As String = elemNameOfElemID(rootPhaseName)
+                            Dim selElem As String = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
+                            If Not selectedPhases.Contains(selElem) Then
+                                selectedPhases.Add(selElem, selElem)
+                            End If
+
+                        End If
                     End If
 
 
@@ -1017,20 +1127,6 @@ Public Class frmHierarchySelection
 
             End With
 
-
-            'selectedRoles.Clear()
-            'With hryTreeView
-            '    For px As Integer = 1 To anzahlKnoten
-            '        tmpNode = .Nodes.Item(px - 1)
-            '        If tmpNode.Checked Then
-            '            ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
-            '            If Not selectedRoles.Contains(tmpNode.Text) Then
-            '                ' im Rollen-Treeview sind in tmpNode.Name die RollenUIDs enthalten
-            '                selectedRoles.Add(tmpNode.Text, tmpNode.Text)
-            '            End If
-            '        End If
-            '    Next
-            'End With
 
 
         ElseIf rdbCosts.Checked = True Then
@@ -1147,7 +1243,7 @@ Public Class frmHierarchySelection
             Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
             If ((selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
-                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
+                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0 Or selectedTyps.Count > 0) _
                     And validOption) Or _
                     (Me.menuOption = PTmenue.reportBHTC And validOption) Then
 
@@ -1896,7 +1992,7 @@ Public Class frmHierarchySelection
         Dim kennung As String ' V: für Vorlagen, P: für Projekte
         Dim hry As clsHierarchy
         Dim checkProj As Boolean = False
-        Dim projekteToLook As clsProjekte = Nothing
+        Dim projekteToLook As clsProjekte
 
         With hryTreeView
             .Nodes.Clear()
@@ -1915,6 +2011,12 @@ Public Class frmHierarchySelection
                         projekteToLook = selectedProjekte
                     ElseIf menuOption = PTmenue.leistbarkeitsAnalyse Then
                         projekteToLook = ShowProjekte
+                    ElseIf menuOption = PTmenue.reportMultiprojektTafel Then
+                        If repProfil.isMpp Then
+                            projekteToLook = ShowProjekte
+                        Else
+                            projekteToLook = selectedProjekte
+                        End If
                     Else
                         projekteToLook = ShowProjekte
                     End If
@@ -1923,7 +2025,8 @@ Public Class frmHierarchySelection
                         projekteToLook = selectedProjekte
                     ElseIf ShowProjekte.Count > 0 Then
                         projekteToLook = ShowProjekte
-
+                    Else
+                        projekteToLook = ShowProjekte
                     End If
                 End If
 
@@ -1975,6 +2078,12 @@ Public Class frmHierarchySelection
                         projekteToLook = selectedProjekte
                     ElseIf menuOption = PTmenue.leistbarkeitsAnalyse Then
                         projekteToLook = ShowProjekte
+                    ElseIf menuOption = PTmenue.reportMultiprojektTafel Then
+                        If repProfil.isMpp Then
+                            projekteToLook = ShowProjekte
+                        Else
+                            projekteToLook = selectedProjekte
+                        End If
                     Else
                         projekteToLook = ShowProjekte
                     End If
@@ -1983,7 +2092,8 @@ Public Class frmHierarchySelection
                         projekteToLook = selectedProjekte
                     ElseIf ShowProjekte.Count > 0 Then
                         projekteToLook = ShowProjekte
-
+                    Else
+                        projekteToLook = ShowProjekte
                     End If
                 End If
 
@@ -2006,7 +2116,6 @@ Public Class frmHierarchySelection
                                 topLevel.Checked = True
                             End If
                         End If
-
 
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
@@ -2190,11 +2299,12 @@ Public Class frmHierarchySelection
                     nodeLevel0 = .Nodes.Add(elemNameOfElemID(childNameID))
                     nodeLevel0.Name = childNameID
 
+                    Dim pvName As String = getPVnameFromNode(topNode)
                     Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
                     Dim elemName As String = elemNameOfElemID(childNameID)
                     Dim element As String = calcHryFullname(elemName, tmpBreadcrumb)
                     Dim projElem As String = "[" & topNode.Name & "]" & element
-                    Dim pvName As String = getPVnameFromNode(topNode)
+
 
 
                     If Projektvorlagen.Contains(topNode.Text) Then
@@ -2277,6 +2387,18 @@ Public Class frmHierarchySelection
                     hry = getHryFromNode(tmpNode)
                     type = getTypeFromNode(tmpNode)
                     pvName = getPVnameFromNode(tmpNode)
+
+                    '' RootPhasename in selectedPhases aufnehmen
+                    If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
+
+                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufen.Value))
+                        Dim elemName As String = elemNameOfElemID(rootPhaseName)
+                        Dim selElem As String = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
+                        If Not selphases.Contains(selElem) Then
+                            selphases.Add(selElem, selElem)
+                        End If
+
+                    End If
                 End If
 
 
@@ -2340,6 +2462,8 @@ Public Class frmHierarchySelection
                     tmpNode = .Nodes.Item(px - 1)
 
                     If tmpNode.Checked Then
+
+
                         ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
 
                         Dim filterByLevel0 As Boolean = topNodeIsSelected(tmpNode)
@@ -2377,6 +2501,7 @@ Public Class frmHierarchySelection
         End If
 
     End Sub
+
 
     ''' <summary>
     ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der selectedRoles-Liste zurück  
@@ -2899,6 +3024,16 @@ Public Class frmHierarchySelection
                         hry = getHryFromNode(tmpNode)
                         type = getTypeFromNode(tmpNode)
                         pvName = getPVnameFromNode(tmpNode)
+                        If tmpNode.Checked And Not subNodesSelected(tmpNode) Then
+
+                            Dim tmpBreadcrumb As String = hry.getBreadCrumb(rootPhaseName, CInt(hryStufen.Value))
+                            Dim elemName As String = elemNameOfElemID(rootPhaseName)
+                            Dim selElem As String = calcHryFullname(elemName, tmpBreadcrumb, getPVkennungFromNode(tmpNode))
+                            If Not selectedPhases.Contains(selElem) Then
+                                selectedPhases.Add(selElem, selElem)
+                            End If
+
+                        End If
                     End If
 
 
@@ -4707,6 +4842,10 @@ Public Class frmHierarchySelection
     'End Sub
 
     Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
+
+    End Sub
+
+    Private Sub pictureTyp_Click(sender As Object, e As EventArgs) Handles pictureTyp.Click
 
     End Sub
 End Class

@@ -3539,9 +3539,9 @@ Public Module Module1
     ''' <param name="selectedCosts"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function selectionTyp(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
-                                           ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
-                                           ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Integer
+    Public Function selectionTyp(ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection) As Integer
 
         Dim element As String = ""
         Dim tmpresult As PTProjektType = PTProjektType.nameList

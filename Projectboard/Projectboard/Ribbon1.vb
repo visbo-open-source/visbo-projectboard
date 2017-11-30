@@ -3205,7 +3205,6 @@ Imports System.Windows
         ' zurücksetzen , aber nicht zurücksetzen der currentSessionConstellation
         dbCacheProjekte.Clear(False)
 
-
         ' zurücksetzen der Selektierten Projekte, aber nicht zurücksetzen der currentSessionConstellation
         selectedProjekte.Clear(False)
 

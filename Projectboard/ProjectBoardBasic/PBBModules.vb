@@ -32,6 +32,11 @@ Public Module PBBModules
         If controlID <> "BHTC" Then
             hryFormular.calledFrom = "Multiprojekt-Tafel"
 
+            If Not IsNothing(reportprofil) Then
+                hryFormular.repProfil = New clsReportAll
+                reportprofil.CopyTo(hryFormular.repProfil)
+            End If
+
             With awinSettings
                 formerSettings(0) = .mppExtendedMode
                 formerSettings(1) = .mppShowAllIfOne
@@ -1231,59 +1236,69 @@ Public Module PBBModules
     ''' <remarks></remarks>
     Sub PBBChangeCurrentPortfolio()
 
+        If Not awinSettings.isChangePortfolioFrmActive Then
 
-        Call activateProjectBoard()
+            Call activateProjectBoard()
 
-        Dim changePortfolio As New frmProjPortfolioAdmin
+            Dim changePortfolio As New frmProjPortfolioAdmin
 
-        Call awinDeSelect(True)
+            Call awinDeSelect(True)
 
-        If AlleProjekte.Count > 0 Then
-            ' das letzte Portfolio speichern 
-            'Call storeSessionConstellation("Last")
+            If AlleProjekte.Count > 0 Then
+                ' das letzte Portfolio speichern 
+                'Call storeSessionConstellation("Last")
 
-            Try
+                Try
 
-                With changePortfolio
+                    With changePortfolio
 
-                    .aKtionskennung = PTTvActions.chgInSession
+                        .aKtionskennung = PTTvActions.chgInSession
 
-                End With
+                    End With
 
-                'Call awinClearPlanTafel()
+                    'Call awinClearPlanTafel()
 
-                changePortfolio.Show()
+                    changePortfolio.Show()
 
-                'returnValue = changePortfolio.ShowDialog
+                    ' diese Variable zeigt an, dass das Formular zu Bearbeiten des Portfolios bereits aktiv ist
+                    awinSettings.isChangePortfolioFrmActive = True
 
-                '' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
 
-                'If returnValue = DialogResult.OK Then
-                '    ' das aktuelle Portfolio speichern 
+                    'returnValue = changePortfolio.ShowDialog
 
-                '    ' dann die Projekt-Tafel neu zeichnen 
+                    '' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
 
-                'Else
-                '    ' das last-Portfolio wiederherstellen 
-                '    Call loadSessionConstellation("Last", False, False, False)
+                    'If returnValue = DialogResult.OK Then
+                    '    ' das aktuelle Portfolio speichern 
 
-                '    ' gezeichnet werden muss nix ... 
+                    '    ' dann die Projekt-Tafel neu zeichnen 
 
-                'End If
+                    'Else
+                    '    ' das last-Portfolio wiederherstellen 
+                    '    Call loadSessionConstellation("Last", False, False, False)
 
-            Catch ex As Exception
+                    '    ' gezeichnet werden muss nix ... 
 
-                Call MsgBox(ex.Message)
-            End Try
-        Else
-            If awinSettings.englishLanguage Then
-                Call MsgBox("no projects loaded ...")
+                    'End If
+
+                Catch ex As Exception
+
+                    Call MsgBox(ex.Message)
+                End Try
             Else
-                Call MsgBox("keine Projekte geladen ...")
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("no projects loaded ...")
+                Else
+                    Call MsgBox("keine Projekte geladen ...")
+                End If
+
             End If
+        Else
+
+            ' das Formular zum Bearbeiten des Portfolios nicht erneut anzeigen
 
         End If
-        
+
 
 
     End Sub
