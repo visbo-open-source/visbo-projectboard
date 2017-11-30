@@ -460,6 +460,10 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
+            ' tk 28.11.17
+            If PhaseDefinitions.Contains(Me.name) Then
+                _appearance = PhaseDefinitions.getAppearance(Me.name)
+            End If
             appearance = _appearance
         End Get
         Set(value As String)

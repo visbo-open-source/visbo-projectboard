@@ -407,7 +407,13 @@ Public Class clsProjekte
             ' neu 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-                Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
+                'Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
+                Dim tmpCollection As Collection
+                If awinSettings.considerCategories Then
+                    tmpCollection = kvp.Value.getMilestoneCategoryNames
+                Else
+                    tmpCollection = kvp.Value.getMilestoneNames
+                End If
 
                 For Each tmpName As String In tmpCollection
                     If Not tmpListe.Contains(tmpName) Then
@@ -1367,6 +1373,77 @@ Public Class clsProjekte
         End Get
     End Property
 
+
+    Public ReadOnly Property getCountMilestoneCategoriesInMonth(ByVal categoryName As String) As Double()
+        Get
+            Dim milestoneValues() As Double
+            Dim zeitraum As Integer
+            Dim anzProjekte As Integer
+
+            'Dim cphase As clsPhase
+            'Dim cresult As clsMeilenstein
+            Dim cMilestone As clsMeilenstein
+            Dim hproj As clsProjekt
+            Dim ix As Integer
+            Dim idFarbe As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim milestoneValues(zeitraum)
+
+            anzProjekte = _allProjects.Count
+
+            ' Schleife über alle Projekte 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                'If Type = -1 Or _
+                '    (Type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or _
+                '    (Type = PTProjektType.projekt And pvName = hproj.name) Then
+                '    ' Aktion machen
+
+                '    ' neuer Code
+                '    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
+
+                '    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                '        cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+
+                '        If Not IsNothing(cMilestone) Then
+
+                '            ' bestimme den monatsbezogenen Index im Array 
+                '            ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
+
+                '            If ix >= 0 And ix <= zeitraum Then
+
+                '                If cMilestone.bewertungsCount > 0 Then
+                '                    idFarbe = cMilestone.getBewertung(1).colorIndex
+                '                Else
+                '                    idFarbe = 0
+                '                End If
+
+                '                milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
+
+                '            End If
+
+
+                '        End If
+
+                '    Next
+
+
+                'End If
+
+            Next kvp
+
+            getCountMilestoneCategoriesInMonth = milestoneValues
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 
     ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf
@@ -1823,8 +1900,8 @@ Public Class clsProjekte
                     ok = False
                 End If
 
-                    ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
-                    ' soll der Schwellwert angezeigt werden 
+                ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
+                ' soll der Schwellwert angezeigt werden 
                 If ok Then
                     For m = 0 To zeitraum
                         ' Änderung 31.5 Holen der Schwellwerte einer Phase 
@@ -2462,7 +2539,7 @@ Public Class clsProjekte
                             riskValues(ixZeitraum + i) = riskValues(ixZeitraum + i) + tempArray(ix + i) * riskweightedMarge
                         Next i
                     End If
-                    
+
 
 
                 End If

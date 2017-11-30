@@ -545,6 +545,7 @@ Public Module Module1
         vorlage = 0
         projekt = 1
         nameList = 2
+        categoryList = 3
     End Enum
 
     ''' <summary>
@@ -2901,6 +2902,8 @@ Public Module Module1
 
     ''' <summary>
     ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
+    ''' es kann unterschieden werden zwischen [P:Projekt-Name], 
+    ''' [V:Vorlagen-Name] und [C:Category-Name]
     ''' </summary>
     ''' <param name="fullname"></param>
     ''' <param name="elemName"></param>
@@ -2914,11 +2917,14 @@ Public Module Module1
         Dim anzahl As Integer
 
         ' enthält der pvName die Kennung für Vorlage oder Projekt ? 
-        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Then
+        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Or _
+            fullname.StartsWith("[C:") Then
             If fullname.StartsWith("[P:") Then
                 type = PTProjektType.projekt
-            Else
+            ElseIf fullname.StartsWith("[V:") Then
                 type = PTProjektType.vorlage
+            Else
+                type = PTProjektType.categoryList
             End If
 
             Dim startPos As Integer = 3

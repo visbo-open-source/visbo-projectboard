@@ -16055,6 +16055,9 @@ Public Module awinGeneralModules
                                         ' tk 26.11.17, den Wert für verantwortlich mitaufnehmen ...
                                         cphase.verantwortlich = verantwortlich
 
+                                        ' Vorgangslasse eintragen 
+                                        cphase.appearance = txtVorgangsKlasse
+
                                         ' der Aufbau der Hierarchie erfolgt in addphase
                                         hproj.AddPhase(cphase, origName:=origItem.Trim, _
                                                        parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
@@ -16220,6 +16223,7 @@ Public Module awinGeneralModules
                                                 .setDate = itemEndDate
                                                 ' tk 26.11.17 
                                                 .verantwortlich = verantwortlich
+                                                .appearance = txtVorgangsKlasse
 
                                                 If Not cbewertung Is Nothing Then
                                                     .addBewertung(cbewertung)

@@ -174,6 +174,9 @@ Public Class clsawinSettings
     ' steuert, ob im Massen-Edit zu jedem Monat auch die Monats-Auslastung / freien Tage angezeigt werden sollen 
     Public Property meExtendedColumnsView As Boolean
 
+    ' tk, 28.11.17 steuert, ob bei Namen die Phasen-/Meilenstein Namen angegeben werden oder aber die Kategorien ..
+    Public Property considerCategories As Boolean
+
     ' die Farben und Fonts des Schutzes 
     Public Property protectedPermanentFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
     Public Property normalFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
@@ -339,6 +342,8 @@ Public Class clsawinSettings
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
         _meExtendedColumnsView = False
+
+        _considerCategories = False
 
 
         ' Settings für den Schutz von Projekten 
