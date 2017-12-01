@@ -343,7 +343,7 @@ Public Class clsawinSettings
         _meAuslastungIsInclExt = True
         _meExtendedColumnsView = False
 
-        _considerCategories = False
+        _considerCategories = True
 
 
         ' Settings für den Schutz von Projekten 

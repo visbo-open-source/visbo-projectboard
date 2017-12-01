@@ -20499,16 +20499,7 @@ Public Module Projekte
                 '
                 ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
                 Try
-
-                    If Not IsNothing(cBewertung.description) Or Not IsNothing(tmpDeliverables) Then
-                        If cBewertung.description.Length > 0 Or tmpDeliverables.Length > 0 Then
-                            If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Or _
-                                tmpDeliverables.Contains(vbLf) Or tmpDeliverables.Contains(vbCr) Then
-                                CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
-                            End If
-                        End If
-                    End If
-
+                    CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
                 Catch ex As Exception
 
                 End Try

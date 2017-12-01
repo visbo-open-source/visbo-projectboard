@@ -746,7 +746,12 @@ Public Class frmHierarchySelection
                         Me.rdbNameList.Checked = True
                         Me.rdbPhases.Checked = True
 
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
+                        If awinSettings.considerCategories Then
+                            Call buildHryTreeViewNew(PTProjektType.categoryList)
+                        Else
+                            Call buildHryTreeViewNew(PTProjektType.nameList)
+                        End If
+
 
 
                     Case PTProjektType.vorlage
@@ -780,7 +785,11 @@ Public Class frmHierarchySelection
                         Me.rdbNameList.Checked = True
                         Me.rdbPhases.Checked = True
 
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
+                        If awinSettings.considerCategories Then
+                            Call buildHryTreeViewNew(PTProjektType.categoryList)
+                        Else
+                            Call buildHryTreeViewNew(PTProjektType.nameList)
+                        End If
 
                 End Select
 
@@ -1617,9 +1626,7 @@ Public Class frmHierarchySelection
 
     End Sub
 
-    Private Sub hryTreeView_BeforeCheck(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeCheck
-      
-    End Sub
+   
 
 
     Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
@@ -1710,7 +1717,7 @@ Public Class frmHierarchySelection
 
 
         Else
-            ' Projekte expandieren
+            ' es kann sich hier um die PRojekt- und die Vorlagen Struktur handeln, diese Struktur soll hier exoandiert werden 
             If type = PTProjektType.vorlage Then
                 curHry = Projektvorlagen.getProject(PVname).hierarchy
             Else
@@ -1883,7 +1890,7 @@ Public Class frmHierarchySelection
     Private Sub buildHryTreeViewNew(ByVal auswahl As Integer)
 
         Dim topLevel As TreeNode
-        Dim kennung As String ' V: für Vorlagen, P: für Projekte
+        Dim kennung As String ' V: für Vorlagen, P: für Projekte, C: für Kategorien/Darstellungsklassen
         Dim hry As clsHierarchy
         Dim checkProj As Boolean = False
         Dim projekteToLook As clsProjekte = Nothing
@@ -2002,7 +2009,6 @@ Public Class frmHierarchySelection
                     End If
 
                 Next
-
 
             ElseIf auswahl = PTProjektType.nameList Then
 
@@ -2127,8 +2133,128 @@ Public Class frmHierarchySelection
                     ' hier müssen noch Rollen, Kosten, Bu, Typ bearbeitet werden
                 End If
 
+            ElseIf auswahl = PTProjektType.categoryList Then
+                'alle Phasen der selektierten Projekte zeigen, je nach menuOption
+                kennung = "C:"
+
+                If Me.rdbPhases.Checked Then
+                    ' clear Listbox1 
+                    If awinSettings.englishLanguage Then
+                        headerLine.Text = "Phase Classes"
+                    Else
+                        headerLine.Text = "Phasen-Klassen"
+                    End If
+
+                    filterBox.Text = ""
 
 
+                    If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                        ' immer die AlleProjekte hernehmen 
+                        If selectedProjekte.Count > 0 Then
+                            allPhases = selectedProjekte.getPhaseCategoryNames
+                        ElseIf AlleProjekte.Count > 0 Then
+                            allPhases = AlleProjekte.getPhaseCategoryNames
+                        Else
+                            ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                            allPhases.Clear()
+                        End If
+
+                    ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                        ' 
+                        If selectedProjekte.Count > 0 Then
+                            allPhases = selectedProjekte.getPhaseCategoryNames
+                        Else
+                            ' eigentlich sollten hier alle Phasen der Datenbank stehen ... 
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allPhases.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
+
+                    Else
+                        ' alle anderen Optionen
+                        If selectedProjekte.Count > 0 Then
+                            allPhases = selectedProjekte.getPhaseCategoryNames
+                        ElseIf ShowProjekte.Count > 0 Then
+                            allPhases = ShowProjekte.getPhaseCategoryNames
+                        Else
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allPhases.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
+
+                    End If
+
+                    Call rebuildFormerState(PTauswahlTyp.phase)
+
+                ElseIf Me.rdbMilestones.Checked Then
+
+                    'alle Meilensteine der selektierten Projekte zeigen, je nach menuOption
+
+                    statusLabel.Text = ""
+                    filterBox.Enabled = True
+
+                    ' clear Listbox1 
+                    If awinSettings.englishLanguage Then
+                        headerLine.Text = "Milestone Classes"
+                    Else
+                        headerLine.Text = "Meilenstein-Klassen"
+                    End If
+
+                    filterBox.Text = ""
+
+                    If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                        ' immer die AlleProjekte hernehmen 
+                        If selectedProjekte.Count > 0 Then
+                            allMilestones = selectedProjekte.getMilestoneCategoryNames
+                        ElseIf AlleProjekte.Count > 0 Then
+                            allMilestones = AlleProjekte.getMilestoneCategoryNames
+                        Else
+                            ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                            allMilestones.Clear()
+                        End If
+
+                    ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                        ' 
+                        If selectedProjekte.Count > 0 Then
+                            allMilestones = selectedProjekte.getMilestoneCategoryNames
+                        Else
+                            ' eigentlich sollten hier alle Meilensteine der Datenbank stehen ... 
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allMilestones.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
+
+                    Else
+                        ' alle anderen Optionen
+                        If selectedProjekte.Count > 0 Then
+                            allMilestones = selectedProjekte.getMilestoneCategoryNames
+                        ElseIf ShowProjekte.Count > 0 Then
+                            allMilestones = ShowProjekte.getMilestoneCategoryNames
+                        Else
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allMilestones.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
+
+                    End If
+
+                    Call rebuildFormerState(PTauswahlTyp.meilenstein)
+
+                Else
+                    ' hier müssen noch Rollen, Kosten, Bu, Typ bearbeitet werden
+                End If
             Else
                 ' alle Projekte zeigen 
                 kennung = "P:"
@@ -3175,7 +3301,7 @@ Public Class frmHierarchySelection
     ''' <remarks></remarks>
     Private Sub auswLaden_Click(sender As Object, e As EventArgs) Handles auswLaden.Click
 
-        Dim missingProjCollection As Collection
+        'Dim missingProjCollection As Collection
 
         If Me.menuOption = PTmenue.filterdefinieren Then
 
@@ -3193,9 +3319,9 @@ Public Class frmHierarchySelection
 
                 auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
-                missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                'missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
-                If auswahl = PTProjektType.nameList Then
+                If auswahl = PTProjektType.nameList Or auswahl = PTProjektType.categoryList Then
                     Me.rdbNameList.Checked = True
 
                 ElseIf auswahl = PTProjektType.projekt Then
@@ -3259,10 +3385,10 @@ Public Class frmHierarchySelection
                     auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
                                            selectedRoles, selectedCosts)
 
-                    missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
-                                                        selectedRoles, selectedCosts)
+                    'missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
+                    '                                    selectedRoles, selectedCosts)
 
-                    If auswahl = PTProjektType.nameList Then
+                    If auswahl = PTProjektType.nameList Or auswahl = PTProjektType.categoryList Then
                         Me.rdbNameList.Checked = True
 
                     ElseIf auswahl = PTProjektType.projekt Then
@@ -3524,8 +3650,12 @@ Public Class frmHierarchySelection
 
             If selectedPhases.Count = 0 And _
                selectedMilestones.Count = 0 Then
+                If awinSettings.considerCategories Then
+                    auswahl = PTProjektType.categoryList
+                Else
+                    auswahl = PTProjektType.nameList
+                End If
 
-                auswahl = PTProjektType.nameList
             Else
                 auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
             End If
@@ -3533,6 +3663,20 @@ Public Class frmHierarchySelection
             Select Case auswahl
 
                 Case PTProjektType.nameList
+
+                    Me.rdbMilestones.Visible = True
+                    Me.rdbPhases.Visible = True
+                    Me.pictureMilestones.Visible = True
+                    Me.picturePhasen.Visible = True
+                    If Not (Me.rdbMilestones.Checked Or Me.rdbPhases.Checked) Then
+                        Me.rdbPhases.Checked = True
+                    End If
+                    Me.rdbPhaseMilest.Visible = False
+                    Me.picturePhaseMilest.Visible = False
+
+                    Call buildHryTreeViewNew(auswahl)
+
+                Case PTProjektType.categoryList
 
                     Me.rdbMilestones.Visible = True
                     Me.rdbPhases.Visible = True
@@ -3674,7 +3818,8 @@ Public Class frmHierarchySelection
 
             auswahl = selectionTyp(selectedBUs, selectedTyps, _
                                    selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
-            If auswahl = PTProjektType.nameList Then
+
+            If auswahl = PTProjektType.nameList Or auswahl = PTProjektType.categoryList Then
 
                 If rdbPhases.Checked Then
 
@@ -3741,7 +3886,7 @@ Public Class frmHierarchySelection
 
         With hryTreeView
             .Nodes.Clear()
-            'Dim kennung As String = "PH:"
+
             For Each ele As String In listOfNames
                 If listOfNames.Count > 0 Then
                     toplevel = .Nodes.Add(ele)
@@ -3769,18 +3914,31 @@ Public Class frmHierarchySelection
                 Dim hstr2() As String = Split(element, "V:", )
                 passt = passt And (hstr1.Length = 1) And (hstr2.Length = 1)
             Next
+
             If passt Then
                 For Each element As String In tmpCollection
                     For n As Integer = 1 To anzNodes
                         tmpNode = .Nodes.Item(n - 1)
-                        Call splitHryFullnameTo2(element, eleName, bc, PTProjektType.nameList, "")
-                        If tmpNode.Name = eleName Then
-                            tmpNode.Checked = True
+
+                        ' tk , splitHryFullnameto2 : das sind Ref-Parameter , die als Ausgabe-Parameter zurückgegeben werden, deshalb muss das als Variablke übergeben werden 
+                        Dim type As Integer = -1
+                        Dim pvName As String = ""
+                        Call splitHryFullnameTo2(element, eleName, bc, type, pvName)
+                        If type = PTProjektType.categoryList Then
+                            ' die Kategorie steht in pvname, wie der Projektname bei P: , wie der Vorlagen-NAme bei V: 
+                            If tmpNode.Name = pvName Then
+                                tmpNode.Checked = True
+                            End If
+                        Else
+                            If tmpNode.Name = eleName Then
+                                tmpNode.Checked = True
+                            End If
                         End If
+                        
                     Next
                 Next
             Else
-                Me.statusLabel.Text = "nur für Projekt-Sturktur (Projekt) geeignet"
+                Me.statusLabel.Text = "nur für Projekt-Struktur (Projekt) geeignet"
             End If
 
         End With
@@ -3831,13 +3989,17 @@ Public Class frmHierarchySelection
 
                     Call buildHryTreeViewNew(PTProjektType.projekt)
 
+                Case PTProjektType.categoryList
+
+                    Call buildHryTreeViewNew(PTProjektType.projekt)
+
                 Case PTProjektType.vorlage
 
                     Call buildHryTreeViewNew(PTProjektType.projekt)
 
                 Case PTProjektType.projekt
 
-                    Call buildHryTreeViewNew(auswahl)
+                    Call buildHryTreeViewNew(PTProjektType.projekt)
 
                 Case Else
                     selectedPhases.Clear()
@@ -3901,6 +4063,9 @@ Public Class frmHierarchySelection
 
                     Call buildHryTreeViewNew(PTProjektType.vorlage)
 
+                Case PTProjektType.categoryList
+
+                    Call buildHryTreeViewNew(PTProjektType.vorlage)
 
                 Case PTProjektType.vorlage
 
@@ -3915,7 +4080,7 @@ Public Class frmHierarchySelection
                     Dim result As MsgBoxResult
 
                     If awinSettings.englishLanguage Then
-                        result = MsgBox("You really want to deselct the elements?", MsgBoxStyle.YesNo, "Deselect the elements?")
+                        result = MsgBox("You really want to deselect the elements?", MsgBoxStyle.YesNo, "Deselect the elements?")
                     Else
                         result = MsgBox("Sollen die ausgewählten Elemente wirklich de-selektiert werden?", MsgBoxStyle.YesNo, "Elemente wirklich deselektieren?")
                     End If
@@ -3941,7 +4106,7 @@ Public Class frmHierarchySelection
 
                 Case Else
 
-                    Call MsgBox("eigentlich Fehler !!!")
+                    Call MsgBox("Fehler !!! -> Auswahl unbekannt ...")
                     selectedPhases.Clear()
                     selectedMilestones.Clear()
                     selectedBUs.Clear()
@@ -4063,20 +4228,40 @@ Public Class frmHierarchySelection
             If Me.rdbPhases.Checked Then
                 ' clear Listbox1 
                 If awinSettings.englishLanguage Then
-                    headerLine.Text = "Phases"
+                    If awinSettings.considerCategories Then
+                        headerLine.Text = "Phase Classes"
+                    Else
+                        headerLine.Text = "Phases"
+                    End If
+
                 Else
-                    headerLine.Text = "Phasen"
+                    If awinSettings.considerCategories Then
+                        headerLine.Text = "Phase Classes"
+                    Else
+                        headerLine.Text = "Phasen"
+                    End If
+
                 End If
 
                 filterBox.Text = ""
 
 
                 If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                    ' immer die AlleProjekte hernehmen 
+                    ' immer die ShowProjekte hernehmen 
                     If selectedProjekte.Count > 0 Then
-                        allPhases = selectedProjekte.getPhaseNames
-                    ElseIf AlleProjekte.Count > 0 Then
-                        allPhases = AlleProjekte.getPhaseNames
+                        If awinSettings.considerCategories Then
+                            allPhases = selectedProjekte.getPhaseCategoryNames
+                        Else
+                            allPhases = selectedProjekte.getPhaseNames
+                        End If
+
+                    ElseIf ShowProjekte.Count > 0 Then
+                        If awinSettings.considerCategories Then
+                            allPhases = ShowProjekte.getPhaseCategoryNames
+                        Else
+                            allPhases = ShowProjekte.getPhaseNames
+                        End If
+
                     Else
                         ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
                         allPhases.Clear()
@@ -4085,34 +4270,66 @@ Public Class frmHierarchySelection
                 ElseIf Me.menuOption = PTmenue.filterdefinieren Then
                     ' 
                     If selectedProjekte.Count > 0 Then
-                        allPhases = selectedProjekte.getPhaseNames
+                        If awinSettings.considerCategories Then
+                            allPhases = selectedProjekte.getPhaseCategoryNames
+                        Else
+                            allPhases = selectedProjekte.getPhaseNames
+                        End If
                     Else
+                        If awinSettings.considerCategories Then
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allPhases.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        Else
+                            For i As Integer = 1 To PhaseDefinitions.Count
+                                Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                                If Not allPhases.Contains(tmpName) Then
+                                    allPhases.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
                         ' eigentlich sollten hier alle Phasen der Datenbank stehen ... 
-                        For i As Integer = 1 To PhaseDefinitions.Count
-                            Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                            If Not allPhases.Contains(tmpName) Then
-                                allPhases.Add(tmpName, tmpName)
-                            End If
-                        Next
+                       
                     End If
 
                 Else
                     ' alle anderen Optionen
                     If selectedProjekte.Count > 0 Then
-                        allPhases = selectedProjekte.getPhaseNames
+                        If awinSettings.considerCategories Then
+                            allPhases = selectedProjekte.getPhaseCategoryNames
+                        Else
+                            allPhases = selectedProjekte.getPhaseNames
+                        End If
+
                     ElseIf ShowProjekte.Count > 0 Then
-                        allPhases = ShowProjekte.getPhaseNames
+                        If awinSettings.considerCategories Then
+                            allPhases = ShowProjekte.getPhaseCategoryNames
+                        Else
+                            allPhases = ShowProjekte.getPhaseNames
+                        End If
                     Else
-                        For i As Integer = 1 To PhaseDefinitions.Count
-                            Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
-                            If Not allPhases.Contains(tmpName) Then
-                                allPhases.Add(tmpName, tmpName)
-                            End If
-                        Next
+                        If awinSettings.considerCategories Then
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allPhases.Contains(tmpName) And Not appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allPhases.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        Else
+                            For i As Integer = 1 To PhaseDefinitions.Count
+                                Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                                If Not allPhases.Contains(tmpName) Then
+                                    allPhases.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
+                        
                     End If
 
                 End If
-
 
                 Call rebuildFormerState(PTauswahlTyp.phase)
 
@@ -4145,9 +4362,18 @@ Public Class frmHierarchySelection
             If Me.rdbMilestones.Checked Then
                 ' clear Listbox1 
                 If awinSettings.englishLanguage Then
-                    headerLine.Text = "Milestones"
+                    If awinSettings.considerCategories Then
+                        headerLine.Text = "Milestone Classes"
+                    Else
+                        headerLine.Text = "Milestones"
+                    End If
+
                 Else
-                    headerLine.Text = "Meilensteine"
+                    If awinSettings.considerCategories Then
+                        headerLine.Text = "Meilenstein Klassen"
+                    Else
+                        headerLine.Text = "Meilensteine"
+                    End If
                 End If
 
                 filterBox.Text = ""
@@ -4155,9 +4381,18 @@ Public Class frmHierarchySelection
                 If Me.menuOption = PTmenue.sessionFilterDefinieren Then
                     ' immer die AlleProjekte hernehmen 
                     If selectedProjekte.Count > 0 Then
-                        allMilestones = selectedProjekte.getMilestoneNames
-                    ElseIf AlleProjekte.Count > 0 Then
-                        allMilestones = AlleProjekte.getMilestoneNames
+                        If awinSettings.considerCategories Then
+                            allMilestones = selectedProjekte.getMilestoneCategoryNames
+                        Else
+                            allMilestones = selectedProjekte.getMilestoneNames
+                        End If
+                    ElseIf ShowProjekte.Count > 0 Then
+                        If awinSettings.considerCategories Then
+                            allMilestones = ShowProjekte.getMilestoneCategoryNames
+                        Else
+                            allMilestones = ShowProjekte.getMilestoneNames
+                        End If
+
                     Else
                         ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
                         allMilestones.Clear()
@@ -4166,30 +4401,65 @@ Public Class frmHierarchySelection
                 ElseIf Me.menuOption = PTmenue.filterdefinieren Then
                     ' 
                     If selectedProjekte.Count > 0 Then
-                        allMilestones = selectedProjekte.getMilestoneNames
+                        If awinSettings.considerCategories Then
+                            allMilestones = selectedProjekte.getMilestoneCategoryNames
+                        Else
+                            allMilestones = selectedProjekte.getMilestoneNames
+                        End If
+
                     Else
-                        ' eigentlich sollten hier alle Meilensteine der Datenbank stehen ... 
-                        For i As Integer = 1 To MilestoneDefinitions.Count
-                            Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
-                            If Not allMilestones.Contains(tmpName) Then
-                                allMilestones.Add(tmpName, tmpName)
-                            End If
-                        Next
+                        ' eigentlich sollten hier alle Meilensteine bzw. Kategorien der Datenbank stehen ... 
+                        If awinSettings.considerCategories Then
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allMilestones.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        Else
+                            For i As Integer = 1 To MilestoneDefinitions.Count
+                                Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
+                                If Not allMilestones.Contains(tmpName) Then
+                                    allMilestones.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
+                        
                     End If
 
                 Else
                     ' alle anderen Optionen
                     If selectedProjekte.Count > 0 Then
-                        allMilestones = selectedProjekte.getMilestoneNames
+                        If awinSettings.considerCategories Then
+                            allMilestones = selectedProjekte.getMilestoneCategoryNames
+                        Else
+                            allMilestones = selectedProjekte.getMilestoneNames
+                        End If
+
                     ElseIf ShowProjekte.Count > 0 Then
-                        allMilestones = ShowProjekte.getMilestoneNames
+                        If awinSettings.considerCategories Then
+                            allMilestones = ShowProjekte.getMilestoneCategoryNames
+                        Else
+                            allMilestones = ShowProjekte.getMilestoneNames
+                        End If
+
                     Else
-                        For i As Integer = 1 To MilestoneDefinitions.Count
-                            Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
-                            If Not allMilestones.Contains(tmpName) Then
-                                allMilestones.Add(tmpName, tmpName)
-                            End If
-                        Next
+                        If awinSettings.considerCategories Then
+                            For i As Integer = 1 To appearanceDefinitions.Count
+                                Dim tmpName As String = appearanceDefinitions.ElementAt(i - 1).Value.name
+                                If Not allMilestones.Contains(tmpName) And appearanceDefinitions.ElementAt(i - 1).Value.isMilestone Then
+                                    allMilestones.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        Else
+                            For i As Integer = 1 To MilestoneDefinitions.Count
+                                Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
+                                If Not allMilestones.Contains(tmpName) Then
+                                    allMilestones.Add(tmpName, tmpName)
+                                End If
+                            Next
+                        End If
+                        
                     End If
 
                 End If
@@ -4273,11 +4543,11 @@ Public Class frmHierarchySelection
 
                 ' jetzt nur die Rollen anbieten, die auch vorkommen 
                 If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                    ' immer die AlleProjekte hernehmen 
+                    ' immer die ShowProjekte hernehmen 
                     If selectedProjekte.Count > 0 Then
                         allRoles = selectedProjekte.getRoleNames
-                    ElseIf AlleProjekte.Count > 0 Then
-                        allRoles = AlleProjekte.getRoleNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allRoles = ShowProjekte.getRoleNames
                     Else
                         ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
                         allRoles.Clear()
@@ -4412,11 +4682,11 @@ Public Class frmHierarchySelection
 
                 ' jetzt nur die Kosten anbieten, die auch vorkommen 
                 If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                    ' immer die AlleProjekte hernehmen 
+                    ' immer die ShowProjekte hernehmen 
                     If selectedProjekte.Count > 0 Then
                         allCosts = selectedProjekte.getCostNames
-                    ElseIf AlleProjekte.Count > 0 Then
-                        allCosts = AlleProjekte.getCostNames()
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allCosts = ShowProjekte.getCostNames()
                     Else
                         ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
                         allCosts.Clear()
@@ -4696,11 +4966,6 @@ Public Class frmHierarchySelection
 
     'End Sub
 
-    Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
 
-    End Sub
-
-    Private Sub pictureTyp_Click(sender As Object, e As EventArgs) Handles pictureTyp.Click
-
-    End Sub
+   
 End Class

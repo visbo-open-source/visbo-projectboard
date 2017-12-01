@@ -4350,7 +4350,8 @@ Public Class clsProjekt
                             End If
 
                         Next
-
+                    ElseIf type = PTProjektType.categoryList Then
+                        containsMS = Me.containsMilestoneCategory(pvName)
                     End If
 
                     ix = ix + 1
@@ -4412,6 +4413,8 @@ Public Class clsProjekt
 
                         Next
 
+                    ElseIf type = PTProjektType.categoryList Then
+                        containsPH = Me.containsPhaseCategory(pvName)
                     End If
 
                     ix = ix + 1
