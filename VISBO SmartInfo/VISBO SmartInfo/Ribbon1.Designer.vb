@@ -46,6 +46,7 @@
         Me.Tab2 = Me.Factory.CreateRibbonTab
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.activateTab = Me.Factory.CreateRibbonButton
+        Me.activateInfo = Me.Factory.CreateRibbonButton
         Me.Separator2 = Me.Factory.CreateRibbonSeparator
         Me.timeMachineTab = Me.Factory.CreateRibbonButton
         Me.variantTab_Click = Me.Factory.CreateRibbonButton
@@ -76,6 +77,7 @@
         'SmartInfo
         '
         Me.SmartInfo.Items.Add(Me.activateTab)
+        Me.SmartInfo.Items.Add(Me.activateInfo)
         Me.SmartInfo.Items.Add(Me.Separator2)
         Me.SmartInfo.Items.Add(Me.timeMachineTab)
         Me.SmartInfo.Items.Add(Me.variantTab_Click)
@@ -86,8 +88,17 @@
         '
         'activateTab
         '
+        Me.activateTab.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view
         Me.activateTab.Label = "Search"
         Me.activateTab.Name = "activateTab"
+        Me.activateTab.ShowImage = True
+        '
+        'activateInfo
+        '
+        Me.activateInfo.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Visbo_update_Button
+        Me.activateInfo.Label = "Info"
+        Me.activateInfo.Name = "activateInfo"
+        Me.activateInfo.ShowImage = True
         '
         'Separator2
         '
@@ -137,6 +148,7 @@
     Friend WithEvents variantTab_Click As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Separator1 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
     Friend WithEvents Separator2 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
+    Friend WithEvents activateInfo As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

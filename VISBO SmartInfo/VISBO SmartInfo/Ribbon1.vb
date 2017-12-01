@@ -164,5 +164,15 @@ Public Class Ribbon1
         End If
     End Sub
     
+    Private Sub activateInfo_Click(sender As Object, e As RibbonControlEventArgs) Handles activateInfo.Click
+
+        'ucPropertiesView = New ucProperties
+        'propertiesPane = VISBO_SmartInfo.ThisAddIn.CustomTaskPanes.Add(ucPropertiesView, "Eigenschaften")
+        propertiesPane.Visible = True
+
+    End Sub
+
+
+
 End Class
 

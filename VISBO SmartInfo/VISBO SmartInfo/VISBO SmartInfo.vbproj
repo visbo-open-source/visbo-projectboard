@@ -283,6 +283,18 @@
     <Compile Include="ThisAddIn.vb">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ucProperties.Designer.vb">
+      <DependentUpon>ucProperties.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ucProperties.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ucSearch.Designer.vb">
+      <DependentUpon>ucSearch.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ucSearch.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
     <EmbeddedResource Include="frmChanges.resx">
       <DependentUpon>frmChanges.vb</DependentUpon>
     </EmbeddedResource>
@@ -303,6 +315,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Ribbon1.resx">
       <DependentUpon>Ribbon1.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucProperties.resx">
+      <DependentUpon>ucProperties.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucSearch.resx">
+      <DependentUpon>ucSearch.vb</DependentUpon>
     </EmbeddedResource>
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.vb</DependentUpon>
@@ -409,7 +427,9 @@
     <None Include="Resources\navigate_end.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Ribbon.xml" />
+    <EmbeddedResource Include="Ribbon.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="Microsoft.Office.Interop.Excel">
@@ -432,10 +452,15 @@
     <None Include="Resources\Calendar-icon 128x128 Last.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Ribbon1.xml" />
+    <EmbeddedResource Include="Ribbon1.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Visbo_update_Button1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{94E38DFF-614B-4CBD-B67C-F211BB35CE8B}" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

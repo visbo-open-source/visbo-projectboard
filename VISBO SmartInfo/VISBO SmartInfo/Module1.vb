@@ -8,6 +8,11 @@ Module Module1
 
     Friend WithEvents pptAPP As PowerPoint.Application
 
+    Friend ucPropertiesView As ucProperties
+    Friend ucSearchView As ucSearch
+    Friend WithEvents propertiesPane As Microsoft.Office.Tools.CustomTaskPane
+    Friend WithEvents searchPane As Microsoft.Office.Tools.CustomTaskPane
+
     'Friend visboInfoActivated As Boolean = False
     Friend formIsShown As Boolean = False
     Friend Const markerName As String = "VisboMarker"
@@ -866,13 +871,17 @@ Module Module1
                 '' Anfang ... das war vorher innerhalb der next Schleife .. 
                 ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
                 If relevantShapeNames.Count >= 1 Then
-
+                    ''''???
                     ' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
-                    If IsNothing(infoFrm) And Not formIsShown Then
-                        infoFrm = New frmInfo
-                        formIsShown = True
-                        infoFrm.Show()
+                    If Not IsNothing(propertiesPane) And Not propertiesPane.Visible Then
+                        propertiesPane.Visible = True
                     End If
+                    ' ur: wegen Pane
+                    ' ''If IsNothing(infoFrm) And Not formIsShown Then
+                    ' ''    infoFrm = New frmInfo
+                    ' ''    formIsShown = True
+                    ' ''    infoFrm.Show()
+                    ' ''End If
 
                     ReDim arrayOfNames(relevantShapeNames.Count - 1)
 
@@ -884,9 +893,13 @@ Module Module1
                 Else
                     ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
                     Call checkHomeChangeBtnEnablement()
-                    If formIsShown Then
-                        Call aktualisiereInfoFrm(Nothing)
+                    If propertiesPane.Visible Then
+                        Call aktualisiereInfoPane(Nothing)
                     End If
+                    ' ur: wegen Pane
+                    ' ''If formIsShown Then
+                    ' ''    Call aktualisiereInfoFrm(Nothing)
+                    ' ''End If
                 End If
                 '' Ende ...
 
@@ -911,9 +924,13 @@ Module Module1
                     Next
 
                     ' hier wird die Information zu dem selektierten Shape angezeigt 
-                    If formIsShown Then
-                        Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                    If propertiesPane.Visible Then
+                        Call aktualisiereInfoPane(tmpShape, elemWasMoved)
                     End If
+                    ' ur: wegen Pane
+                    ' ''If formIsShown Then
+                    ' ''    Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                    ' ''End If
 
 
                     ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
@@ -922,9 +939,13 @@ Module Module1
                 Else
 
                     Call checkHomeChangeBtnEnablement()
-                    If formIsShown Then
-                        Call aktualisiereInfoFrm(Nothing)
+                    If propertiesPane.Visible Then
+                        Call aktualisiereInfoPane(Nothing)
                     End If
+                    ' ur: wegen Pane
+                    ' ''If formIsShown Then
+                    ' ''    Call aktualisiereInfoFrm(Nothing)
+                    ' ''End If
 
                 End If
 
@@ -3356,16 +3377,10 @@ Module Module1
 
             Dim msDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + 0.5 * curShape.Width)
             If Not showShort Then
-                'tmpText = msDate.ToString("d")
                 tmpText = msDate.ToShortDateString
             Else
                 tmpText = msDate.Day.ToString & "." & msDate.Month.ToString
             End If
-
-            'Dim tstDate As Date = CDate(curShape.Tags.Item("ED"))
-            'If DateDiff(DateInterval.Day, msDate, tstDate) <> 0 Then
-            '    tmpText = tmpText & " (M)"
-            'End If
 
         ElseIf pptShapeIsPhase(curShape) Then
 
@@ -3373,7 +3388,6 @@ Module Module1
             Dim endDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + curShape.Width)
 
             If Not showShort Then
-                'tmpText = startDate.ToString("d") & "-" & endDate.ToString("d")
                 tmpText = startDate.ToShortDateString & "-" & endDate.ToShortDateString
             Else
                 Try
@@ -3386,17 +3400,7 @@ Module Module1
 
             End If
 
-            'Dim tstDate1 As Date = CDate(curShape.Tags.Item("SD"))
-            'Dim tstDate2 As Date = CDate(curShape.Tags.Item("ED"))
-
-            'If DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Or _
-            '    DateDiff(DateInterval.Day, startDate, tstDate1) <> 0 Then
-            '    tmpText = tmpText & " (M)"
-            'End If
-
-
         End If
-
 
         bestimmeElemDateText = tmpText
     End Function
@@ -4432,5 +4436,274 @@ Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' aktualisiert das Info-Pane mit den Feldern ElemName, ElemDate, BreadCrumb und aLuTv-Text 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="isMovedShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub aktualisiereInfoPane(ByVal tmpShape As PowerPoint.Shape, Optional ByVal isMovedShape As Boolean = False)
+
+        If Not IsNothing(ucPropertiesView) Then
+
+            ' ''With infoFrm
+            ' ''    .btnSendToHome.Enabled = homeButtonRelevance
+            ' ''    .btnSentToChange.Enabled = changedButtonRelevance
+            ' ''End With
+
+            If Not IsNothing(tmpShape) Then
+
+                If Not IsNothing(selectedPlanShapes) Then
+
+                    If selectedPlanShapes.Count = 1 Then
+
+                        With ucPropertiesView
+
+                            ' ''Call .setDTPicture(pptShapeIsMilestone(tmpShape))
+                            ' ''If showBreadCrumbField Then
+                            ' ''    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
+                            ' ''End If
+
+                            .eleName.Text = bestimmeElemText(tmpShape, False, True)
+                            .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
+
+                            ' ''Dim rdbCode As Integer = calcRDB()
+
+                            ' ''Dim tmpStr() As String
+                            ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+
+                            Dim farbe As Integer = CInt(tmpShape.Tags.Item("AC"))
+
+                            .eleAmpel.BackColor = Drawing.Color.FromArgb(255, Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer)))
+
+                            If englishLanguage Then
+                                .labelAmpel.Text = "traffic light:"
+                            Else
+                                .labelAmpel.Text = "Ampel:"
+                            End If
+                            .eleAmpelText.Text = bestimmeElemAE(tmpShape)
+
+                            If englishLanguage Then
+                                .labelDeliver.Text = "Deliverables:"
+                            Else
+                                .labelDeliver.Text = "Lieferumfänge:"
+                            End If
+                            .eleDeliverables.Text = bestimmeElemLU(tmpShape)
+
+
+                            If englishLanguage Then
+                                .labelRespons.Text = "Responsible:"
+                            Else
+                                .labelRespons.Text = "Verantwortlich:"
+                            End If
+                            .eleRespons.Text = bestimmeElemVE(tmpShape)
+
+                        End With
+
+                    ElseIf selectedPlanShapes.Count > 1 Then
+
+                        'Dim rdbCode As Integer = calcRDB()
+
+                        With ucPropertiesView
+                            
+                            If .eleName.Text <> bestimmeElemText(tmpShape, False, True) Then
+                                .eleName.Text = " ... "
+                            End If
+                            If .eleDatum.Text <> bestimmeElemDateText(tmpShape, False) Then
+                                .eleDatum.Text = " ... "
+                            End If
+
+                            .eleDatum.Enabled = False
+
+
+                        End With
+
+                    End If
+                Else
+                    ' Info Pane Inhalte zurücksetzen ... 
+                    With ucPropertiesView
+                        .eleName.Text = ""
+                        .eleDatum.Text = ""
+                        .eleDeliverables.Text = ""
+                        .eleAmpelText.Text = ""
+                        .eleRespons.Text = ""
+                        .eleAmpel.BackColor = System.Drawing.Color.Gray
+                    End With
+
+                End If
+
+            Else
+                ' es wurde eine Selektion aufgehoben ..
+                ' erstmal nichts tun .. 
+                ' Info Pane Inhalte zurücksetzen ... 
+                With ucPropertiesView
+                    .eleName.Text = ""
+                    .eleDatum.Text = ""
+                    .eleDeliverables.Text = ""
+                    .eleAmpelText.Text = ""
+                    .eleRespons.Text = ""
+                    .eleAmpel.BackColor = System.Drawing.Color.Gray
+                End With
+
+            End If
+
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' ''' gibt den  Lieferumfang zurück (Tag= LU)
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeElemLU(ByVal curShape As PowerPoint.Shape) As String
+
+        Dim tmpText As String = ""
+
+        Dim tmpStr() As String
+        If curShape.Tags.Item("LU").Length > 0 Then
+            tmpStr = curShape.Tags.Item("LU").Split(New Char() {CType("#", Char)})
+            For i As Integer = 0 To tmpStr.Length - 1
+                tmpText = tmpText & tmpStr(i) & vbLf
+            Next
+        End If
+
+        bestimmeElemLU = tmpText
+
+    End Function
+  
+    ''' <summary>
+    ''' bestimme die Ampel-Erläuterung ( Tag= AE)
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeElemAE(ByVal curShape As PowerPoint.Shape) As String
+
+        Dim tmpText As String = ""
+
+        If curShape.Tags.Item("AE").Length > 0 Then
+            tmpText = tmpText & curShape.Tags.Item("AE")
+        End If
+
+        bestimmeElemAE = tmpText
+
+    End Function
+
+    ''' <summary>
+    ''' bestimme den Verantwortlichen (Tag= VE)
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeElemVE(ByVal curShape As PowerPoint.Shape) As String
+
+        Dim tmpText As String = ""
+
+        If curShape.Tags.Item("VE").Length > 0 Then
+            tmpText = tmpText & curShape.Tags.Item("VE")
+        End If
+
+        bestimmeElemVE = tmpText
+
+    End Function
+
+    Public Function bestimmeElemMVE(ByVal curShape As PowerPoint.Shape) As String
+
+        Dim tmpText As String = ""
+
+        If curShape.Tags.Item("MVE").Length > 0 Then
+            tmpText = tmpText & curShape.Tags.Item("MVE")
+        End If
+        bestimmeElemMVE = tmpText
+
+    End Function
+
+
+    Public Function bestimmeElemResCosts(ByVal curshape As PowerPoint.Shape) As String
+
+        Dim tmpText As String = ""
+
+        If Not noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+            Try
+                Dim pvName As String = getPVnameFromShpName(curShape.Name)
+                Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                Dim phNameID As String = getElemIDFromShpName(curShape.Name)
+                Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
+                Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
+                Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
+
+                ' ''If Not shortForm Then
+
+                ' ''    If englishLanguage Then
+                ' ''        'tmpText = getElemNameFromShpName(curShape.Name) & " Resource/Costs :" & vbLf
+                ' ''        tmpText = tmpText & "Resource/Costs :" & vbLf
+                ' ''    Else
+                ' ''        'tmpText = getElemNameFromShpName(curShape.Name) & " Ressourcen/Kosten:" & vbLf
+                ' ''        tmpText = tmpText & "Ressourcen/Kosten:" & vbLf
+                ' ''    End If
+
+                ' ''Else
+                ' ''    If englishLanguage Then
+                ' ''        tmpText = "Resource/Costs :" & vbLf
+                ' ''    Else
+                ' ''        tmpText = "Ressourcen/Kosten:" & vbLf
+                ' ''    End If
+                ' ''End If
+
+
+                Dim unit As String
+                If englishLanguage Then
+                    unit = " PD"
+                Else
+                    unit = " PT"
+                End If
+
+                For i As Integer = 1 To roleInformations.Count
+                    tmpText = tmpText & _
+                        roleInformations.ElementAt(i - 1).Key & ": " & CInt(roleInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
+                Next
+
+                If costInformations.Count > 0 And roleInformations.Count > 0 Then
+                    tmpText = tmpText & vbLf
+                End If
+
+                unit = " TE"
+                For i As Integer = 1 To costInformations.Count
+                    tmpText = tmpText & _
+                        costInformations.ElementAt(i - 1).Key & ": " & CInt(costInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
+                Next
+
+            Catch ex As Exception
+                tmpText = "Phase " & getElemNameFromShpName(curShape.Name)
+            End Try
+
+
+
+        ElseIf noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+            ' ''If Not shortForm Then
+            ' ''    If englishLanguage Then
+            ' ''        tmpText = "Resource/Costs " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
+            ' ''        "no DB access ..."
+            ' ''    Else
+            ' ''        tmpText = "Ressourcen / Kosten " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
+            ' ''            "kein DB Zugriff ..."
+            ' ''    End If
+
+            ' ''Else
+            ' ''    If englishLanguage Then
+            ' ''        tmpText = "no DB access"
+            ' ''    Else
+            ' ''        tmpText = "kein DB Zugriff"
+            ' ''    End If
+
+            ' ''End If
+        Else
+            tmpText = ""
+        End If
+
+        bestimmeElemResCosts = tmpText
+
+    End Function
 
 End Module
