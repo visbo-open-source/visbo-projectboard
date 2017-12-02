@@ -4436,6 +4436,7 @@ Module Module1
 
     End Sub
 
+    ''TODO: wenn man außerhalb der Folie klickt zum deselektieren, wird das Info-Pane nicht zurückgesetzt
     ''' <summary>
     ''' aktualisiert das Info-Pane mit den Feldern ElemName, ElemDate, BreadCrumb und aLuTv-Text 
     ''' </summary>
@@ -4472,9 +4473,9 @@ Module Module1
                             ' ''Dim tmpStr() As String
                             ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
 
-                            Dim farbe As Integer = CInt(tmpShape.Tags.Item("AC"))
+                            Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
 
-                            .eleAmpel.BackColor = Drawing.Color.FromArgb(255, Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer)))
+                            .eleAmpel.BackColor = Drawing.Color.FromArgb(255, rgbFarbe)
 
                             If englishLanguage Then
                                 .labelAmpel.Text = "traffic light:"
@@ -4505,7 +4506,7 @@ Module Module1
                         'Dim rdbCode As Integer = calcRDB()
 
                         With ucPropertiesView
-                            
+
                             If .eleName.Text <> bestimmeElemText(tmpShape, False, True) Then
                                 .eleName.Text = " ... "
                             End If
@@ -4520,6 +4521,7 @@ Module Module1
 
                     End If
                 Else
+                    '' TODO: CODE-DUPLIKAT!
                     ' Info Pane Inhalte zurücksetzen ... 
                     With ucPropertiesView
                         .eleName.Text = ""
@@ -4527,12 +4529,13 @@ Module Module1
                         .eleDeliverables.Text = ""
                         .eleAmpelText.Text = ""
                         .eleRespons.Text = ""
-                        .eleAmpel.BackColor = System.Drawing.Color.Gray
+                        .eleAmpel.BackColor = System.Drawing.Color.White
                     End With
 
                 End If
 
             Else
+                '' TODO: CODE-DUPLIKAT
                 ' es wurde eine Selektion aufgehoben ..
                 ' erstmal nichts tun .. 
                 ' Info Pane Inhalte zurücksetzen ... 
@@ -4542,7 +4545,7 @@ Module Module1
                     .eleDeliverables.Text = ""
                     .eleAmpelText.Text = ""
                     .eleRespons.Text = ""
-                    .eleAmpel.BackColor = System.Drawing.Color.Gray
+                    .eleAmpel.BackColor = System.Drawing.Color.White
                 End With
 
             End If
