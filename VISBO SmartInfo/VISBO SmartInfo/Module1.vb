@@ -4436,6 +4436,7 @@ Module Module1
 
     End Sub
 
+    ''TODO: wenn man außerhalb der Folie klickt zum deselektieren, wird das Info-Pane nicht zurückgesetzt
     ''' <summary>
     ''' aktualisiert das Info-Pane mit den Feldern ElemName, ElemDate, BreadCrumb und aLuTv-Text 
     ''' </summary>
@@ -4451,90 +4452,73 @@ Module Module1
             ' ''    .btnSentToChange.Enabled = changedButtonRelevance
             ' ''End With
 
-            If Not IsNothing(tmpShape) Then
+            If Not IsNothing(tmpShape) And Not IsNothing(selectedPlanShapes) Then
 
-                If Not IsNothing(selectedPlanShapes) Then
+                If selectedPlanShapes.Count = 1 Then
 
-                    If selectedPlanShapes.Count = 1 Then
-
-                        With ucPropertiesView
-
-                            ' ''Call .setDTPicture(pptShapeIsMilestone(tmpShape))
-                            ' ''If showBreadCrumbField Then
-                            ' ''    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
-                            ' ''End If
-
-                            .eleName.Text = bestimmeElemText(tmpShape, False, True)
-                            .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
-
-                            ' ''Dim rdbCode As Integer = calcRDB()
-
-                            ' ''Dim tmpStr() As String
-                            ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
-
-                            Dim farbe As Integer = CInt(tmpShape.Tags.Item("AC"))
-
-                            .eleAmpel.BackColor = Drawing.Color.FromArgb(255, Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer)))
-
-                            If englishLanguage Then
-                                .labelAmpel.Text = "traffic light:"
-                            Else
-                                .labelAmpel.Text = "Ampel:"
-                            End If
-                            .eleAmpelText.Text = bestimmeElemAE(tmpShape)
-
-                            If englishLanguage Then
-                                .labelDeliver.Text = "Deliverables:"
-                            Else
-                                .labelDeliver.Text = "Lieferumfänge:"
-                            End If
-                            .eleDeliverables.Text = bestimmeElemLU(tmpShape)
-
-
-                            If englishLanguage Then
-                                .labelRespons.Text = "Responsible:"
-                            Else
-                                .labelRespons.Text = "Verantwortlich:"
-                            End If
-                            .eleRespons.Text = bestimmeElemVE(tmpShape)
-
-                        End With
-
-                    ElseIf selectedPlanShapes.Count > 1 Then
-
-                        'Dim rdbCode As Integer = calcRDB()
-
-                        With ucPropertiesView
-                            
-                            If .eleName.Text <> bestimmeElemText(tmpShape, False, True) Then
-                                .eleName.Text = " ... "
-                            End If
-                            If .eleDatum.Text <> bestimmeElemDateText(tmpShape, False) Then
-                                .eleDatum.Text = " ... "
-                            End If
-
-                            .eleDatum.Enabled = False
-
-
-                        End With
-
-                    End If
-                Else
-                    ' Info Pane Inhalte zurücksetzen ... 
                     With ucPropertiesView
-                        .eleName.Text = ""
-                        .eleDatum.Text = ""
-                        .eleDeliverables.Text = ""
-                        .eleAmpelText.Text = ""
-                        .eleRespons.Text = ""
-                        .eleAmpel.BackColor = System.Drawing.Color.Gray
+
+                        ' ''Call .setDTPicture(pptShapeIsMilestone(tmpShape))
+                        ' ''If showBreadCrumbField Then
+                        ' ''    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
+                        ' ''End If
+
+                        .eleName.Text = bestimmeElemText(tmpShape, False, True)
+                        .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
+
+                        ' ''Dim rdbCode As Integer = calcRDB()
+
+                        ' ''Dim tmpStr() As String
+                        ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+
+                        Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
+
+                        .eleAmpel.BackColor = Drawing.Color.FromArgb(255, rgbFarbe)
+
+                        If englishLanguage Then
+                            .labelAmpel.Text = "traffic light:"
+                        Else
+                            .labelAmpel.Text = "Ampel:"
+                        End If
+                        .eleAmpelText.Text = bestimmeElemAE(tmpShape)
+
+                        If englishLanguage Then
+                            .labelDeliver.Text = "Deliverables:"
+                        Else
+                            .labelDeliver.Text = "Lieferumfänge:"
+                        End If
+                        .eleDeliverables.Text = bestimmeElemLU(tmpShape)
+
+
+                        If englishLanguage Then
+                            .labelRespons.Text = "Responsible:"
+                        Else
+                            .labelRespons.Text = "Verantwortlich:"
+                        End If
+                        .eleRespons.Text = bestimmeElemVE(tmpShape)
+
+                    End With
+
+                ElseIf selectedPlanShapes.Count > 1 Then
+
+                    'Dim rdbCode As Integer = calcRDB()
+
+                    With ucPropertiesView
+
+                        If .eleName.Text <> bestimmeElemText(tmpShape, False, True) Then
+                            .eleName.Text = " ... "
+                        End If
+                        If .eleDatum.Text <> bestimmeElemDateText(tmpShape, False) Then
+                            .eleDatum.Text = " ... "
+                        End If
+
+                        .eleDatum.Enabled = False
+
+
                     End With
 
                 End If
-
             Else
-                ' es wurde eine Selektion aufgehoben ..
-                ' erstmal nichts tun .. 
                 ' Info Pane Inhalte zurücksetzen ... 
                 With ucPropertiesView
                     .eleName.Text = ""
@@ -4542,7 +4526,7 @@ Module Module1
                     .eleDeliverables.Text = ""
                     .eleAmpelText.Text = ""
                     .eleRespons.Text = ""
-                    .eleAmpel.BackColor = System.Drawing.Color.Gray
+                    .eleAmpel.BackColor = System.Drawing.Color.White
                 End With
 
             End If
