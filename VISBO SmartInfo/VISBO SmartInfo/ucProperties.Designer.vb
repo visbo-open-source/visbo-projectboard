@@ -60,9 +60,10 @@ Partial Class ucProperties
         'eleDatum
         '
         Me.eleDatum.AutoSize = True
-        Me.eleDatum.Location = New System.Drawing.Point(94, 58)
+        Me.eleDatum.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!)
+        Me.eleDatum.Location = New System.Drawing.Point(94, 53)
         Me.eleDatum.Name = "eleDatum"
-        Me.eleDatum.Size = New System.Drawing.Size(154, 13)
+        Me.eleDatum.Size = New System.Drawing.Size(205, 19)
         Me.eleDatum.TabIndex = 3
         Me.eleDatum.Text = "                                                 "
         '
@@ -148,7 +149,7 @@ Partial Class ucProperties
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.BackColor = System.Drawing.SystemColors.ButtonHighlight
+        Me.BackColor = System.Drawing.SystemColors.Control
         Me.Controls.Add(Me.Panel1)
         Me.Controls.Add(Me.eleAmpelText)
         Me.Controls.Add(Me.eleAmpel)
