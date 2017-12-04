@@ -44,28 +44,27 @@
         Me.Tab1 = Me.Factory.CreateRibbonTab
         Me.Group1 = Me.Factory.CreateRibbonGroup
         Me.Tab2 = Me.Factory.CreateRibbonTab
-        Me.SmartInfo = Me.Factory.CreateRibbonGroup
+        Me.Group2 = Me.Factory.CreateRibbonGroup
+        Me.btnUpdate = Me.Factory.CreateRibbonButton
+        Me.Group3 = Me.Factory.CreateRibbonGroup
+        Me.btnStart = Me.Factory.CreateRibbonButton
+        Me.btnFastBack = Me.Factory.CreateRibbonButton
+        Me.Button4 = Me.Factory.CreateRibbonButton
+        Me.btnFastForward = Me.Factory.CreateRibbonButton
+        Me.btnEnd2 = Me.Factory.CreateRibbonButton
+        Me.Group4 = Me.Factory.CreateRibbonGroup
         Me.activateTab = Me.Factory.CreateRibbonButton
         Me.activateInfo = Me.Factory.CreateRibbonButton
+        Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.timeMachineTab = Me.Factory.CreateRibbonButton
         Me.variantTab_Click = Me.Factory.CreateRibbonButton
         Me.settingsTab = Me.Factory.CreateRibbonButton
-        Me.Group2 = Me.Factory.CreateRibbonGroup
-        Me.Button1 = Me.Factory.CreateRibbonButton
-        Me.Group3 = Me.Factory.CreateRibbonGroup
-        Me.Button2 = Me.Factory.CreateRibbonButton
-        Me.Button3 = Me.Factory.CreateRibbonButton
-        Me.Button4 = Me.Factory.CreateRibbonButton
-        Me.Button5 = Me.Factory.CreateRibbonButton
-        Me.Button6 = Me.Factory.CreateRibbonButton
-        Me.Group4 = Me.Factory.CreateRibbonGroup
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
-        Me.SmartInfo.SuspendLayout()
         Me.Group2.SuspendLayout()
         Me.Group3.SuspendLayout()
         Me.Group4.SuspendLayout()
-        Me.SuspendLayout()
+        Me.SmartInfo.SuspendLayout()
         '
         'Tab1
         '
@@ -88,13 +87,77 @@
         Me.Tab2.Label = "VISBO"
         Me.Tab2.Name = "Tab2"
         '
-        'SmartInfo
+        'Group2
         '
-        Me.SmartInfo.Items.Add(Me.timeMachineTab)
-        Me.SmartInfo.Items.Add(Me.variantTab_Click)
-        Me.SmartInfo.Items.Add(Me.settingsTab)
-        Me.SmartInfo.Label = "Smart-Info (alt)"
-        Me.SmartInfo.Name = "SmartInfo"
+        Me.Group2.Items.Add(Me.btnUpdate)
+        Me.Group2.Label = "Aktualisieren"
+        Me.Group2.Name = "Group2"
+        '
+        'btnUpdate
+        '
+        Me.btnUpdate.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnUpdate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Visbo_update_Button
+        Me.btnUpdate.Label = "Aktuellste Version"
+        Me.btnUpdate.Name = "btnUpdate"
+        Me.btnUpdate.ShowImage = True
+        '
+        'Group3
+        '
+        Me.Group3.Items.Add(Me.btnStart)
+        Me.Group3.Items.Add(Me.btnFastBack)
+        Me.Group3.Items.Add(Me.Button4)
+        Me.Group3.Items.Add(Me.btnFastForward)
+        Me.Group3.Items.Add(Me.btnEnd2)
+        Me.Group3.Label = "Time Machine"
+        Me.Group3.Name = "Group3"
+        '
+        'btnStart
+        '
+        Me.btnStart.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnStart.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_beginning1
+        Me.btnStart.Label = "Ursprüngl. Version"
+        Me.btnStart.Name = "btnStart"
+        Me.btnStart.ShowImage = True
+        '
+        'btnFastBack
+        '
+        Me.btnFastBack.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnFastBack.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_left
+        Me.btnFastBack.Label = "Vorherige Version"
+        Me.btnFastBack.Name = "btnFastBack"
+        Me.btnFastBack.ShowImage = True
+        '
+        'Button4
+        '
+        Me.Button4.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.Button4.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
+        Me.Button4.Label = "Differenz zu vorheriger Version"
+        Me.Button4.Name = "Button4"
+        Me.Button4.ShowImage = True
+        '
+        'btnFastForward
+        '
+        Me.btnFastForward.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnFastForward.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_right
+        Me.btnFastForward.Label = "Folgende Version"
+        Me.btnFastForward.Name = "btnFastForward"
+        Me.btnFastForward.ShowImage = True
+        '
+        'btnEnd2
+        '
+        Me.btnEnd2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnEnd2.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_end
+        Me.btnEnd2.Label = "Aktuellste Version"
+        Me.btnEnd2.Name = "btnEnd2"
+        Me.btnEnd2.ScreenTip = " fösadlkfsödlkf"
+        Me.btnEnd2.ShowImage = True
+        '
+        'Group4
+        '
+        Me.Group4.Items.Add(Me.activateTab)
+        Me.Group4.Items.Add(Me.activateInfo)
+        Me.Group4.Label = "Aktionsbereiche"
+        Me.Group4.Name = "Group4"
         '
         'activateTab
         '
@@ -107,9 +170,18 @@
         'activateInfo
         '
         Me.activateInfo.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.activateInfo.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_center
         Me.activateInfo.Label = "Eigenschaften"
         Me.activateInfo.Name = "activateInfo"
         Me.activateInfo.ShowImage = True
+        '
+        'SmartInfo
+        '
+        Me.SmartInfo.Items.Add(Me.timeMachineTab)
+        Me.SmartInfo.Items.Add(Me.variantTab_Click)
+        Me.SmartInfo.Items.Add(Me.settingsTab)
+        Me.SmartInfo.Label = "Smart-Info (alt)"
+        Me.SmartInfo.Name = "SmartInfo"
         '
         'timeMachineTab
         '
@@ -126,71 +198,6 @@
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
-        'Group2
-        '
-        Me.Group2.Items.Add(Me.Button1)
-        Me.Group2.Label = "Aktualisieren"
-        Me.Group2.Name = "Group2"
-        '
-        'Button1
-        '
-        Me.Button1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Button1.Label = "Aktuellste Version"
-        Me.Button1.Name = "Button1"
-        Me.Button1.ShowImage = True
-        '
-        'Group3
-        '
-        Me.Group3.Items.Add(Me.Button2)
-        Me.Group3.Items.Add(Me.Button3)
-        Me.Group3.Items.Add(Me.Button4)
-        Me.Group3.Items.Add(Me.Button5)
-        Me.Group3.Items.Add(Me.Button6)
-        Me.Group3.Label = "Time Machine"
-        Me.Group3.Name = "Group3"
-        '
-        'Button2
-        '
-        Me.Button2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Button2.Label = "Ursprüngl. Version"
-        Me.Button2.Name = "Button2"
-        Me.Button2.ShowImage = True
-        '
-        'Button3
-        '
-        Me.Button3.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Button3.Label = "Vorherige Version"
-        Me.Button3.Name = "Button3"
-        Me.Button3.ShowImage = True
-        '
-        'Button4
-        '
-        Me.Button4.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Button4.Label = "Differenz zu vorheriger Version"
-        Me.Button4.Name = "Button4"
-        Me.Button4.ShowImage = True
-        '
-        'Button5
-        '
-        Me.Button5.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Button5.Label = "Folgende Version"
-        Me.Button5.Name = "Button5"
-        Me.Button5.ShowImage = True
-        '
-        'Button6
-        '
-        Me.Button6.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Button6.Label = "Aktuellste Version"
-        Me.Button6.Name = "Button6"
-        Me.Button6.ShowImage = True
-        '
-        'Group4
-        '
-        Me.Group4.Items.Add(Me.activateTab)
-        Me.Group4.Items.Add(Me.activateInfo)
-        Me.Group4.Label = "Aktionsbereiche"
-        Me.Group4.Name = "Group4"
-        '
         'Ribbon1
         '
         Me.Name = "Ribbon1"
@@ -201,15 +208,14 @@
         Me.Tab1.PerformLayout()
         Me.Tab2.ResumeLayout(False)
         Me.Tab2.PerformLayout()
-        Me.SmartInfo.ResumeLayout(False)
-        Me.SmartInfo.PerformLayout()
         Me.Group2.ResumeLayout(False)
         Me.Group2.PerformLayout()
         Me.Group3.ResumeLayout(False)
         Me.Group3.PerformLayout()
         Me.Group4.ResumeLayout(False)
         Me.Group4.PerformLayout()
-        Me.ResumeLayout(False)
+        Me.SmartInfo.ResumeLayout(False)
+        Me.SmartInfo.PerformLayout()
 
     End Sub
 
@@ -223,13 +229,13 @@
     Friend WithEvents variantTab_Click As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents activateInfo As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Group2 As Microsoft.Office.Tools.Ribbon.RibbonGroup
-    Friend WithEvents Button1 As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnUpdate As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Group3 As Microsoft.Office.Tools.Ribbon.RibbonGroup
-    Friend WithEvents Button2 As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents Button3 As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnStart As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnFastBack As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Button4 As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents Button5 As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents Button6 As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnFastForward As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnEnd2 As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Group4 As Microsoft.Office.Tools.Ribbon.RibbonGroup
 End Class
 

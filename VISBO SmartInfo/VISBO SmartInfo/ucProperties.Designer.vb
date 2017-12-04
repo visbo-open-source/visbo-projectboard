@@ -98,7 +98,7 @@ Partial Class ucProperties
         '
         'eleAmpel
         '
-        Me.eleAmpel.BackColor = System.Drawing.Color.Yellow
+        Me.eleAmpel.BackColor = System.Drawing.Color.Gray
         Me.eleAmpel.Location = New System.Drawing.Point(267, 121)
         Me.eleAmpel.Name = "eleAmpel"
         Me.eleAmpel.Size = New System.Drawing.Size(23, 20)

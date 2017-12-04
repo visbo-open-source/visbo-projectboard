@@ -16,4 +16,8 @@
     Private Sub eleAmpel_TextChanged(sender As Object, e As EventArgs) Handles eleAmpel.TextChanged
 
     End Sub
+
+    Private Sub eleName_Click(sender As Object, e As EventArgs) Handles eleName.Click
+
+    End Sub
 End Class

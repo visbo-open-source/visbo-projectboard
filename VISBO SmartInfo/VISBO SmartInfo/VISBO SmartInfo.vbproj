@@ -233,6 +233,7 @@
     <Compile Include="clsChangeItem.vb" />
     <Compile Include="clsChangeListe.vb" />
     <Compile Include="clsLanguages.vb" />
+    <Compile Include="clsPPTTimeMachine.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
     <Compile Include="frmChanges.Designer.vb">
       <DependentUpon>frmChanges.vb</DependentUpon>
