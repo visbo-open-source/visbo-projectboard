@@ -1,13 +1,22 @@
 ﻿Public Class frmChanges
 
-    
-    
 
     Private Sub frmChanges_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
         changeFrm = Nothing
+        ' Koordinaten merken
+        frmCoord(PTfrm.changes, PTpinfo.top) = Me.Top
+        frmCoord(PTfrm.changes, PTpinfo.left) = Me.Left
     End Sub
 
     Private Sub frmChanges_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        If frmCoord(PTfrm.changes, PTpinfo.top) > 0 Then
+            Me.Top = frmCoord(PTfrm.changes, PTpinfo.top)
+            Me.Left = frmCoord(PTfrm.changes, PTpinfo.left)
+        Else
+            Me.Top = 922
+            Me.Left = 24
+        End If
 
         Call listeAufbauen()
 

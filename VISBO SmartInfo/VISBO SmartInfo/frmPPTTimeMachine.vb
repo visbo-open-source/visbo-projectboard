@@ -191,12 +191,10 @@
 
         If newdate <> currentTimestamp Then
 
-            ' jetzt die Checkbox anzeigen ... 
-            Me.showChangeList.Visible = True
 
             Me.UseWaitCursor = True
             ' clear changelist 
-            Call changeListe.clearChangeList()
+            'Call changeListe.clearChangeList()
 
             previousVariantName = currentVariantname
             previousTimeStamp = currentTimestamp
