@@ -54,7 +54,12 @@ Public Class clsPhase
         End Get
         Set(value As Double)
             If value >= 0 Then
-                _percentDone = value
+                If value <= 1.0 Then
+                    _percentDone = value
+                Else
+                    _percentDone = 1.0 ' kann keine größeren Werte als 1 annehmen 
+                End If
+
             Else
                 Throw New ArgumentException("percent Done Value must not be negativ ...")
             End If

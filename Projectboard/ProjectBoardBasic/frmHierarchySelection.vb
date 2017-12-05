@@ -913,9 +913,15 @@ Public Class frmHierarchySelection
                     For px As Integer = 1 To anzahlKnoten
                         tmpNode = .Nodes.Item(px - 1)
                         If tmpNode.Checked Then
+                            Dim tmpName As String = ""
+                            If awinSettings.considerCategories Then
+                                tmpName = calcHryCategoryName(tmpNode.Name, False)
+                            Else
+                                tmpName = tmpNode.Name
+                            End If
                             ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
-                            If Not selectedPhases.Contains(tmpNode.Name) Then
-                                selectedPhases.Add(tmpNode.Name, tmpNode.Name)
+                            If Not selectedPhases.Contains(tmpName) Then
+                                selectedPhases.Add(tmpName, tmpName)
                             End If
                         End If
                     Next
@@ -930,9 +936,15 @@ Public Class frmHierarchySelection
                     For px As Integer = 1 To anzahlKnoten
                         tmpNode = .Nodes.Item(px - 1)
                         If tmpNode.Checked Then
+                            Dim tmpName As String = ""
+                            If awinSettings.considerCategories Then
+                                tmpName = calcHryCategoryName(tmpNode.Name, True)
+                            Else
+                                tmpName = tmpNode.Name
+                            End If
                             ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
-                            If Not selectedMilestones.Contains(tmpNode.Name) Then
-                                selectedMilestones.Add(tmpNode.Name, tmpNode.Name)
+                            If Not selectedMilestones.Contains(tmpName) Then
+                                selectedMilestones.Add(tmpName, tmpName)
                             End If
                         End If
                     Next
@@ -2302,9 +2314,17 @@ Public Class frmHierarchySelection
 
                 For i As Integer = 1 To anzChilds
 
+                    Dim categoryElem As String = ""
+
                     childNameID = hryNode.getChild(i)
                     nodeLevel0 = .Nodes.Add(elemNameOfElemID(childNameID))
                     nodeLevel0.Name = childNameID
+
+                    Dim isMilestone As Boolean = elemIDIstMeilenstein(childNameID)
+                    Dim cMilestone As clsMeilenstein = Nothing
+                    Dim cPhase As clsPhase = Nothing
+
+                    
 
                     Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
                     Dim elemName As String = elemNameOfElemID(childNameID)
@@ -2312,27 +2332,39 @@ Public Class frmHierarchySelection
                     Dim projElem As String = "[" & topNode.Name & "]" & element
                     Dim pvName As String = getPVnameFromNode(topNode)
 
-
-                    If Projektvorlagen.Contains(topNode.Text) Then
-                        Dim vproj As clsProjektvorlage = Projektvorlagen.getProject(topNode.Text)
-                    End If
+                    ' tk, 3.12.17 wird doch gar nicht verwendet ..?
+                    'If Projektvorlagen.Contains(topNode.Text) Then
+                    '    Dim vproj As clsProjektvorlage = Projektvorlagen.getProject(topNode.Text)
+                    'End If
 
                     If ShowProjekte.contains(topNode.Text) Then
 
                         Dim hproj As clsProjekt = ShowProjekte.getProject(topNode.Text)
                         vorlElem = "[V:" & hproj.VorlagenName & "]" & element
+
+                        If isMilestone Then
+                            cMilestone = hproj.getMilestoneByID(childNameID)
+                            ' bool'sche Wert gibtz an, ob es sich um einen Meilenstein handelt 
+                            categoryElem = calcHryCategoryName(cMilestone.appearance, True)
+                        Else
+                            cPhase = hproj.getPhaseByID(childNameID)
+                            ' bool'sche Wert gibt an, ob es sich um einen Meilenstein handelt
+                            categoryElem = calcHryCategoryName(cPhase.appearance, False)
+                        End If
                     End If
 
                     If elemIDIstMeilenstein(childNameID) Then
                         nodeLevel0.BackColor = System.Drawing.Color.Azure
                         If selectedMilestones.Contains(element) Or selectedMilestones.Contains(projElem) _
-                            Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Then
+                            Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Or _
+                            selectedMilestones.Contains(categoryElem) Then
                             nodeLevel0.Checked = True
                         End If
                     Else
 
                         If selectedPhases.Contains(element) Or selectedPhases.Contains(projElem) _
-                            Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Then
+                            Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Or _
+                            selectedPhases.Contains(categoryElem) Then
                             nodeLevel0.Checked = True
                         End If
                     End If
@@ -2544,14 +2576,31 @@ Public Class frmHierarchySelection
     ''' <param name="tree"></param>
     ''' <param name="selectedElems"></param>
     ''' <remarks></remarks>
-    Private Sub pickupCheckedListItems(ByVal tree As TreeView, ByRef selectedElems As Collection)
+    Private Sub pickupCheckedListItems(ByVal tree As TreeView, ByRef selectedElems As Collection, _
+                                       ByVal isCostType As Boolean, ByVal isMilestone As Boolean)
 
         ' Merken welches die selektierten Phasen waren 
         selectedElems.Clear()
         For Each tN As TreeNode In tree.Nodes
             If tN.Checked Then
-                If Not selectedElems.Contains(tN.Name) Then
-                    selectedElems.Add(tN.Name, tN.Name)
+
+                Dim tmpName As String = ""
+
+                If isCostType Then
+                    tmpName = tN.Name
+                Else
+                    If awinSettings.considerCategories Then
+                        tmpName = calcHryCategoryName(tN.Name, isMilestone)
+                    Else
+                        tmpName = tN.Name
+                    End If
+                End If
+
+                
+                ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
+
+                If Not selectedElems.Contains(tmpName) Then
+                    selectedElems.Add(tmpName, tmpName)
                 End If
             End If
         Next
@@ -3824,12 +3873,12 @@ Public Class frmHierarchySelection
                 If rdbPhases.Checked Then
 
                     ' Merken welches die selektierten Phasen waren 
-                    Call pickupCheckedListItems(hryTreeView, selectedPhases)
+                    Call pickupCheckedListItems(hryTreeView, selectedPhases, False, False)
 
                 ElseIf rdbMilestones.Checked Then
 
                     ' Merken welches die selektierten Meilensteine waren 
-                    Call pickupCheckedListItems(hryTreeView, selectedMilestones)
+                    Call pickupCheckedListItems(hryTreeView, selectedMilestones, False, True)
 
                 End If
 
@@ -4336,7 +4385,7 @@ Public Class frmHierarchySelection
             Else
 
                 ' Merken welches die selektierten Phasen waren 
-                Call pickupCheckedListItems(hryTreeView, selectedPhases)
+                Call pickupCheckedListItems(hryTreeView, selectedPhases, False, False)
 
                 ' ''selectedPhases.Clear()
                 ' ''For Each tN As TreeNode In hryTreeView.Nodes
@@ -4469,7 +4518,7 @@ Public Class frmHierarchySelection
             Else
 
                 ' Merken welches die selektierten Meilensteine waren 
-                Call pickupCheckedListItems(hryTreeView, selectedMilestones)
+                Call pickupCheckedListItems(hryTreeView, selectedMilestones, False, True)
 
                 ' ''selectedMilestones.Clear()
                 ' ''For Each tN As TreeNode In hryTreeView.Nodes
@@ -4729,7 +4778,7 @@ Public Class frmHierarchySelection
             Else
 
                 ' Merken welches die selektierten Kosten waren 
-                Call pickupCheckedListItems(hryTreeView, selectedCosts)
+                Call pickupCheckedListItems(hryTreeView, selectedCosts, True, False)
 
             End If
         End If

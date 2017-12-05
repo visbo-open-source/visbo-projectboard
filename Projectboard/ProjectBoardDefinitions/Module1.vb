@@ -329,6 +329,7 @@ Public Module Module1
         Dauer = 7
         Abkuerzung = 8
         Verantwortlich = 9
+        percentDone = 10
     End Enum
 
 
@@ -368,6 +369,8 @@ Public Module Module1
         betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
         Budget = 19
         FitRisikoDependency = 20
+        PhaseCategories = 21
+        MilestoneCategories = 22
     End Enum
 
     ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 
@@ -728,7 +731,7 @@ Public Module Module1
     ' portfolio
 
     ' Variable nimmt die Namen der Diagramm-Typen auf 
-    Public DiagrammTypen(6) As String
+    Public DiagrammTypen(8) As String
 
     ' Variable nimmt die Namen der Windows auf  
     Public windowNames(4) As String
@@ -1139,6 +1142,7 @@ Public Module Module1
 
             End If
             If weitermachen Then
+
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
                     If currentFilter.doesNotBlock(kvp.Value) Then
 
@@ -1384,7 +1388,8 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Phasen Then
+                If CInt(tmpStr(1)) = PTpfdk.Phasen Or _
+                    CInt(tmpStr(1)) = PTpfdk.PhaseCategories Then
 
                     found = True
 
@@ -1420,7 +1425,9 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Then
+                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Or _
+                    CInt(tmpStr(1)) = PTpfdk.MilestoneCategories Then
+
                     found = True
 
                 End If
@@ -2883,6 +2890,24 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' berechnet den Namen, der in selectedphases bzw. selectedMilestones reinkommt, wenn awinsettings.considercategory true ist  
+    ''' Breadcrumb und elemName; Breadcrumb und die einzelnen Stufen des Breadcrumbs sind getrennt durch #
+    ''' </summary>
+    ''' <param name="category">bezeichnet die Darstellungsklasse des Meilensteins , der Phase</param>
+    ''' <param name="isMilestone">gibt an ob es sich um einen Meilenstein oder eine Phase handelt</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcHryCategoryName(ByVal category As String, ByVal isMilestone As boolean) As String
+
+        If isMilestone Then
+            calcHryCategoryName = "[C:" & category & "]M"
+        Else
+            calcHryCategoryName = "[C:" & category & "]P"
+        End If
+
+    End Function
+
+    ''' <summary>
     ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstein oder eine Phase 
     ''' </summary>
     ''' <param name="hproj"></param>
@@ -2958,7 +2983,7 @@ Public Module Module1
     End Sub
 
     ''' <summary>
-    ''' zerhackt den übergebenen String in seine Bestandteile [V:vorlagen-name] bzw. [P:projekt-name] und 
+    ''' zerhackt den übergebenen String in seine Bestandteile [C:KAtegorie], [V:vorlagen-name] bzw. [P:projekt-name] und 
     ''' Breadcrumb-Name
     ''' 
     ''' </summary>
@@ -2971,13 +2996,20 @@ Public Module Module1
         Dim breadCrumb As String = ""
         Dim type As Integer = -1
         Dim pvName As String = ""
+
         Call splitHryFullnameTo2(fullname, elemName, breadCrumb, type, pvName)
 
-        If breadCrumb = "" Then
-            tmpResult = elemName
+        If type = PTProjektType.categoryList Then
+            ' hier steht im pvName der Name der Kategorie ...
+            tmpResult = pvName
         Else
-            tmpResult = breadCrumb.Replace("#", "-") & "-" & elemName
+            If breadCrumb = "" Then
+                tmpResult = elemName
+            Else
+                tmpResult = breadCrumb.Replace("#", "-") & "-" & elemName
+            End If
         End If
+        
 
         splitHryFullnameTo1 = tmpResult
 

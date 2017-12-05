@@ -3205,9 +3205,11 @@ Public Module testModule
                         kennzeichnung = "Bisherige Zielerreichung" Or _
                         kennzeichnung = "Prognose Zielerreichung" Or _
                         kennzeichnung = "Phase" Or _
+                        kennzeichnung = "P-Category" Or _
                         kennzeichnung = "Rolle" Or _
                         kennzeichnung = "Kostenart" Or _
                         kennzeichnung = "Meilenstein" Or _
+                        kennzeichnung = "M-Category" Or _
                         kennzeichnung = "Stand:" Or _
                         kennzeichnung = "Zeitraum:" Then
 
@@ -4807,6 +4809,129 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
+                        Case "M-Category"
+
+
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.MilestoneCategories, qualifier, selectedMilestones)
+
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                ' Diagramm-Typen 8 ist Milestone Categories
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(8), True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    If myCollection.Count > 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(120)
+                                        .Chart.ChartTitle.Text = "Milestone Categories"
+                                    ElseIf myCollection.Count = 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                        '                            splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                        .Chart.ChartTitle.Text = "Milestone Category " & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                    Else
+                                        .Chart.ChartTitle.Text = boxName
+                                    End If
+
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                                With newShapeRange.Item(1)
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
+                                End With
+
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                            End If
+
+                        Case "P-Category"
+
+
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.PhaseCategories, qualifier, selectedPhases)
+
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                ' Diagramm-Typen 7 ist Phase Categories
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(7), True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    If myCollection.Count > 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(120)
+                                        .Chart.ChartTitle.Text = "Phase Categories"
+                                    ElseIf myCollection.Count = 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                        '                            splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                        .Chart.ChartTitle.Text = "Phase Category " & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                    Else
+                                        .Chart.ChartTitle.Text = boxName
+                                    End If
+
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                                With newShapeRange.Item(1)
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
+                                End With
+
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                            End If
 
 
                         Case "Rolle"
@@ -6429,23 +6554,32 @@ Public Module testModule
         Dim fullName As String = ""
         Dim elemName As String = ""
         Dim breadcrumb As String = ""
-
+        Dim namesAreCategories As Boolean = False
 
         ' die eindeutigen Klassen-Namen bestimmen
         ' nur für die muss eine Legende geschrieben werden 
         If selectedPhases.Count > 0 Then
             For i As Integer = 1 To selectedPhases.Count
                 fullName = CStr(selectedPhases.Item(i))
-
+                Dim tmpName As String = ""
                 Dim type As Integer = -1
                 Dim pvName As String = ""
                 Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
-                If uniquePhases.Contains(elemName) Then
+                If type = PTProjektType.categoryList Then
+                    namesAreCategories = True
+                    tmpName = pvName
+                Else
+                    namesAreCategories = False
+                    tmpName = elemName
+                End If
+
+                If uniquePhases.Contains(tmpName) Then
                     ' nichts tun
                 Else
-                    uniquePhases.Add(elemName, elemName)
+                    uniquePhases.Add(tmpName, tmpName)
                 End If
+                
             Next
         End If
 
@@ -6453,16 +6587,25 @@ Public Module testModule
         If selectedMilestones.Count > 0 Then
             For i As Integer = 1 To selectedMilestones.Count
                 fullName = CStr(selectedMilestones.Item(i))
-
+                Dim tmpName As String = ""
                 Dim type As Integer = -1
                 Dim pvName As String = ""
                 Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
-                If uniqueMilestones.Contains(elemName) Then
+                If type = PTProjektType.categoryList Then
+                    namesAreCategories = True
+                    tmpName = pvName
+                Else
+                    namesAreCategories = False
+                    tmpName = elemName
+                End If
+
+                If uniqueMilestones.Contains(tmpName) Then
                     ' nichts tun
                 Else
-                    uniqueMilestones.Add(elemName, elemName)
+                    uniqueMilestones.Add(tmpName, tmpName)
                 End If
+
             Next
         End If
 
@@ -6508,8 +6651,8 @@ Public Module testModule
         Dim curZeile As Integer = 2
         Dim curSpalte As Integer = 1
 
-        Dim phaseShape As xlNS.Shape
-        Dim milestoneShape As xlNS.Shape
+        Dim phaseShape As xlNS.Shape = Nothing
+        Dim milestoneShape As xlNS.Shape = Nothing
         Dim phaseName As String = ""
 
         Dim milestoneName As String = ""
@@ -6596,15 +6739,23 @@ Public Module testModule
             phaseName = CStr(uniquePhases(j))
             Dim isMissingDefinition As Boolean
 
-            If PhaseDefinitions.Contains(phaseName) Then
-                phaseShape = PhaseDefinitions.getShape(phaseName)
-                shortName = PhaseDefinitions.getAbbrev(phaseName)
-                isMissingDefinition = False
+            If namesAreCategories Then
+                If appearanceDefinitions.ContainsKey(phaseName) Then
+                    phaseShape = appearanceDefinitions.Item(phaseName).form
+                    shortName = ""
+                End If
             Else
-                phaseShape = missingPhaseDefinitions.getShape(phaseName)
-                shortName = missingPhaseDefinitions.getAbbrev(phaseName)
-                isMissingDefinition = True
+                If PhaseDefinitions.Contains(phaseName) Then
+                    phaseShape = PhaseDefinitions.getShape(phaseName)
+                    shortName = PhaseDefinitions.getAbbrev(phaseName)
+                    isMissingDefinition = False
+                Else
+                    phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                    shortName = missingPhaseDefinitions.getAbbrev(phaseName)
+                    isMissingDefinition = True
+                End If
             End If
+            
 
 
             ' Phasen-Shape 
@@ -6651,16 +6802,28 @@ Public Module testModule
 
             milestoneName = CStr(uniqueMilestones(j))
 
-            ' Änderung tk 26.11.15
-            If MilestoneDefinitions.Contains(milestoneName) Then
-                milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+            ' Änderung tk 3.12.17 
+            If namesAreCategories Then
+                If appearanceDefinitions.ContainsKey(milestoneName) Then
+                    milestoneShape = appearanceDefinitions.Item(milestoneName).form
+                    shortName = ""
+                End If
             Else
-                milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+                If MilestoneDefinitions.Contains(milestoneName) Then
+                    milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+                    shortName = MilestoneDefinitions.getAbbrev(milestoneName)
+                Else
+                    milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+                    shortName = missingMilestoneDefinitions.getAbbrev(milestoneName)
+                End If
+
             End If
+
+            
 
 
             factor = milestoneShape.Width / milestoneShape.Height
-            shortName = MilestoneDefinitions.getAbbrev(milestoneName)
+
             ' Meilenstein-Shape 
             ''milestoneShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
@@ -11311,9 +11474,10 @@ Public Module testModule
                         kvp.Value.getMinMaxDatesAndDuration(selectedPhases, selectedMilestones, _
                                                             tmpMinDate, tmpMaxDate, tmpDuration)
 
-                        ' das erfordert am Schluss die Behandlung, dass Elementat(0) den Schlüssel 3, Elementat(1) den Schlüssel 4, etc bekommt 
+                        ' der Schlüssel soll ja die Dauer sein  
                         key = tmpDuration
                     Else
+                        ' der Schlüssel soll die Zeile sein, Projekte sollen ja in der Reihenfolge wie auf Projekt-Tafel dargestellt werden
                         ' der ganzzahlige Teil des Keys ist also immer die Zeile, in der gezeichnet werden muss ... 
                         key = kvp.Value.tfZeile + DateDiff(DateInterval.Day, StartofCalendar, kvp.Value.startDate) / 100000
                     End If
@@ -11449,8 +11613,49 @@ Public Module testModule
                                 End If
                             Next ' ix
 
+                        ElseIf type = PTProjektType.categoryList Then
+
+                            Dim idCollection As Collection = hproj.getPhaseIDsWithCat(pvName)
+                            For Each tmpID As String In idCollection
+
+                                cphase = hproj.getPhaseByID(tmpID)
+                                If Not IsNothing(cphase) Then
+                                    If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
+                                        ' das umschliesst jetzt bereits fullyContained 
+
+                                        If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                            tmpMinimum = cphase.getStartDate
+                                        End If
+
+                                        If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                            tmpMaximum = cphase.getEndDate
+                                        End If
+
+
+                                    Else
+                                        ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
+                                        ' andernfalls muss nichts gemacht werden 
+
+                                        If awinSettings.mppFullyContained Then
+                                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+
+                                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                                    tmpMinimum = cphase.getStartDate
+                                                End If
+
+                                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                                    tmpMaximum = cphase.getEndDate
+                                                End If
+
+                                            End If
+                                        End If
+                                    End If
+                                End If
+
+                            Next
+
                         End If
-                        
+
                     Catch ex As Exception
 
                         Call MsgBox(" in catch von for each phase")
@@ -11506,6 +11711,30 @@ Public Module testModule
 
                                 End Try
 
+                            End If
+
+                        Next
+                    ElseIf type = PTProjektType.categoryList Then
+
+                        Dim idCollection As Collection = hproj.getMilestoneIDsWithCat(pvName)
+
+                        For Each tmpID As String In idCollection
+
+                            Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(tmpID)
+
+                            If Not IsNothing(cMilestone) Then
+                                tmpDate = cMilestone.getDate
+                                If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+
+                                    If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                                        tmpMinimum = tmpDate
+                                    End If
+
+                                    If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                                        tmpMaximum = tmpDate
+                                    End If
+
+                                End If
                             End If
 
                         Next
@@ -14983,6 +15212,8 @@ Public Module testModule
                         Dim breadcrumb As String = ""
                         ' gibt den vollen Breadcrumb zurück 
                         Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                        ' falls in selPhases Categories stehen 
+                        Dim vglCategoryName As String = calcHryCategoryName(cphase.appearance, False)
                         Dim selPhaseName As String = ""
 
                         While j <= selectedPhases.Count And Not found
@@ -15001,6 +15232,14 @@ Public Module testModule
                                     Else
                                         j = j + 1
                                     End If
+                                Else
+                                    j = j + 1
+                                End If
+
+                            ElseIf type = PTProjektType.categoryList Then
+
+                                If selectedPhases.Contains(vglCategoryName) Then
+                                    found = True
                                 Else
                                     j = j + 1
                                 End If
@@ -15988,7 +16227,7 @@ Public Module testModule
                                         bestShortName, bestLongName, _
                                         Nothing, msdate, _
                                         MS.getBewertung(1).colorIndex, MS.getBewertung(1).description, _
-                                        lieferumfaenge, MS.verantwortlich, Nothing)
+                                        lieferumfaenge, MS.verantwortlich, MS.percentDone)
         End If
 
         msShapeNames.Add(copiedShape.Item(1).Name)
@@ -16416,7 +16655,7 @@ Public Module testModule
                                                 bestShortName, bestLongName, _
                                                 Nothing, msDate, _
                                                 cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
-                                                lieferumfaenge, cMilestone.verantwortlich, Nothing)
+                                                lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone)
                 End If
 
                 shapeNames.Add(.Name)
@@ -16723,10 +16962,11 @@ Public Module testModule
         yCursor = legendAreaTop
 
         ' jetzt ggf die Phasen-Legende zeichnen 
-        Dim phaseShape As xlNS.Shape
-        Dim phaseName As String = ""
+        Dim phaseShape As xlNS.Shape = Nothing
+        Dim phaseOrCategoryName As String = ""
         Dim maxBreite As Double = 0.0
 
+        Dim namesAreCategories As Boolean = False
         Dim breadcrumb As String = ""
         Dim selPhaseName As String = ""
 
@@ -16739,96 +16979,125 @@ Public Module testModule
         For i = 1 To selectedPhases.Count
             Dim type As Integer = -1
             Dim pvName As String = ""
-            Call splitHryFullnameTo2(CStr(selectedPhases(i)), phaseName, breadcrumb, type, pvName)
+            Call splitHryFullnameTo2(CStr(selectedPhases(i)), phaseOrCategoryName, breadcrumb, type, pvName)
 
-            If uniqueElemClasses.Contains(phaseName) Then
+            If type = PTProjektType.categoryList Then
+                ' es geht um die Kategorie-Bezeichnung 
+                phaseOrCategoryName = pvName
+                namesAreCategories = True
+            Else
+                ' andernfalls steht der richtige Wert schon in phaseOrCategoryName
+            End If
+
+            If uniqueElemClasses.Contains(phaseOrCategoryName) Then
                 ' nichts tun, ist schon enthalten 
             Else
-                uniqueElemClasses.Add(phaseName, phaseName)
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(phaseOrCategoryName) Then
+                        uniqueElemClasses.Add(phaseOrCategoryName, phaseOrCategoryName)
+                    End If
+                Else
+                    uniqueElemClasses.Add(phaseOrCategoryName, phaseOrCategoryName)
+                End If
+
             End If
         Next
 
         For i = 1 To uniqueElemClasses.Count
 
-            phaseName = CStr(uniqueElemClasses(i))
-            Dim phShortname As String
+            Try
+                phaseOrCategoryName = CStr(uniqueElemClasses(i))
+                Dim phShortname As String = ""
 
-            ' Änderung tk 26.11.15
-            If PhaseDefinitions.Contains(phaseName) Then
-                phaseShape = PhaseDefinitions.getShape(phaseName)
-                phShortname = PhaseDefinitions.getAbbrev(phaseName)
-            Else
-                phaseShape = missingPhaseDefinitions.getShape(phaseName)
-                phShortname = missingPhaseDefinitions.getAbbrev(phaseName)
-            End If
-
-            ' Phasen-Shape 
-            ''phaseShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
-
-            With copiedShape(1)
-
-                .Height = legendPhaseVorlagenShape.Height
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor
-                .Width = legendPhaseVorlagenShape.Width
-
-            End With
-
-            ' Phasen-Text
-            ''legendTextVorlagenShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
-
-            With copiedShape(1)
-
-                .TextFrame2.TextRange.Text = phShortname & " (=" & phaseName & ")"
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + legendPhaseVorlagenShape.Width + 3
-
-                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
-                If .Left + .Width > legendAreaRight Then
-                    Dim tmpWidth As Double = legendAreaRight - .Left
-                    If tmpWidth > 0.3 * .Width Then
-                        .TextFrame.WordWrap = MsoTriState.msoTrue
-                        .Width = tmpWidth
-                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
-                        yCursor = yCursor + .Height - zeilenHoehe + 2
-
+                ' Änderung tk 3.12.17
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(phaseOrCategoryName) Then
+                        phaseShape = appearanceDefinitions.Item(phaseOrCategoryName).form
+                        phShortname = ""
+                    End If
+                Else
+                    ' Änderung tk 26.11.15
+                    If PhaseDefinitions.Contains(phaseOrCategoryName) Then
+                        phaseShape = PhaseDefinitions.getShape(phaseOrCategoryName)
+                        phShortname = PhaseDefinitions.getAbbrev(phaseOrCategoryName)
+                    Else
+                        phaseShape = missingPhaseDefinitions.getShape(phaseOrCategoryName)
+                        phShortname = missingPhaseDefinitions.getAbbrev(phaseOrCategoryName)
                     End If
                 End If
 
-                If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
-                    maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
-                End If
-            End With
 
-            If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
+                ' Phasen-Shape 
+                ''phaseShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
 
-                xCursor = xCursor + maxBreite
-                If xCursor > legendAreaRight Then
-                    'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
-                    Throw New ArgumentException(repMessages.getmsg(16))
-                End If
-                maxBreite = 0.0
-                yCursor = legendAreaTop
-            Else
-                yCursor = yCursor + zeilenHoehe
-                If yCursor > legendAreaBottom + 5 Then
-                    yCursor = legendAreaTop
+                With copiedShape(1)
+
+                    .Height = legendPhaseVorlagenShape.Height
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Left = xCursor
+                    .Width = legendPhaseVorlagenShape.Width
+
+                End With
+
+                ' Phasen-Text
+                ''legendTextVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = phShortname & " (=" & phaseOrCategoryName & ")"
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Left = xCursor + legendPhaseVorlagenShape.Width + 3
+
+                    ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                    If .Left + .Width > legendAreaRight Then
+                        Dim tmpWidth As Double = legendAreaRight - .Left
+                        If tmpWidth > 0.3 * .Width Then
+                            .TextFrame.WordWrap = MsoTriState.msoTrue
+                            .Width = tmpWidth
+                            .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                            yCursor = yCursor + .Height - zeilenHoehe + 2
+
+                        End If
+                    End If
+
+                    If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
+                        maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
+                    End If
+                End With
+
+                If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
+
                     xCursor = xCursor + maxBreite
-                    maxBreite = 0.0
                     If xCursor > legendAreaRight Then
-                        ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                         Throw New ArgumentException(repMessages.getmsg(16))
                     End If
+                    maxBreite = 0.0
+                    yCursor = legendAreaTop
+                Else
+                    yCursor = yCursor + zeilenHoehe
+                    If yCursor > legendAreaBottom + 5 Then
+                        yCursor = legendAreaTop
+                        xCursor = xCursor + maxBreite
+                        maxBreite = 0.0
+                        If xCursor > legendAreaRight Then
+                            ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                            Throw New ArgumentException(repMessages.getmsg(16))
+                        End If
+
+                    End If
 
                 End If
 
-            End If
 
+            Catch ex As Exception
 
+            End Try
+            
 
         Next
 
@@ -16838,107 +17107,132 @@ Public Module testModule
         yCursor = legendAreaTop
 
         ' jetzt ggf die Meilenstein-Legende zeichnen 
-        Dim meilensteinShape As xlNS.Shape
-        Dim msShortname As String
+        Dim meilensteinShape As xlNS.Shape = Nothing
+        Dim msShortname As String = ""
         maxBreite = 0.0
 
-        Dim msName As String = ""
+        Dim msOrCategoryName As String = ""
         Dim breadcrumbMS As String = ""
 
         uniqueElemClasses.Clear()
+
         For i = 1 To selectedMilestones.Count
             Dim type As Integer = -1
             Dim pvName As String = ""
-            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(i)), msName, breadcrumbMS, type, pvName)
+            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(i)), msOrCategoryName, breadcrumbMS, type, pvName)
 
-            If uniqueElemClasses.Contains(msName) Then
+            If type = PTProjektType.categoryList Then
+                ' es geht um die Kategorie-Bezeichnung 
+                msOrCategoryName = pvName
+                namesAreCategories = True
+            Else
+                ' andernfalls steht der richtige Wert schon in phaseOrCategoryName
+            End If
+
+            If uniqueElemClasses.Contains(msOrCategoryName) Then
                 ' nichts tun, ist schon enthalten 
             Else
-                uniqueElemClasses.Add(msName, msName)
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(msOrCategoryName) Then
+                        uniqueElemClasses.Add(msOrCategoryName, msOrCategoryName)
+                    End If
+                Else
+                    uniqueElemClasses.Add(msOrCategoryName, msOrCategoryName)
+                End If
+
             End If
         Next
 
 
         For i = 1 To uniqueElemClasses.Count
+            Try
 
-            msName = CStr(uniqueElemClasses.Item(i))
+                msOrCategoryName = CStr(uniqueElemClasses.Item(i))
 
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(msOrCategoryName) Then
+                        meilensteinShape = appearanceDefinitions.Item(msOrCategoryName).form
+                        msShortname = ""
+                    End If
 
-
-            ' Änderung tk 26.11.15
-            If MilestoneDefinitions.Contains(msName) Then
-                meilensteinShape = MilestoneDefinitions.getShape(msName)
-                msShortname = MilestoneDefinitions.getAbbrev(msName)
-            Else
-                meilensteinShape = missingMilestoneDefinitions.getShape(msName)
-                msShortname = missingMilestoneDefinitions.getAbbrev(msName)
-            End If
-
-
-            ' Meilenstein-Shape 
-            ''meilensteinShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
-
-            With copiedShape(1)
-                .Left = xCursor
-                .Height = legendMilestoneVorlagenShape.Height
-                .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-            End With
-
-            ' Meilenstein-Text
-            ''legendTextVorlagenShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
-
-
-            With copiedShape(1)
-
-                .TextFrame2.TextRange.Text = msShortname & " (=" & msName & ")"
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
-
-                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
-                If .Left + .Width > legendAreaRight Then
-                    Dim tmpWidth As Double = legendAreaRight - .Left
-                    If tmpWidth > 0.3 * .Width Then
-                        .TextFrame2.WordWrap = MsoTriState.msoTrue
-                        .Width = tmpWidth
-                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
-                        yCursor = yCursor + .Height - zeilenHoehe + 2
+                Else
+                    ' Änderung tk 26.11.15
+                    If MilestoneDefinitions.Contains(msOrCategoryName) Then
+                        meilensteinShape = MilestoneDefinitions.getShape(msOrCategoryName)
+                        msShortname = MilestoneDefinitions.getAbbrev(msOrCategoryName)
+                    Else
+                        meilensteinShape = missingMilestoneDefinitions.getShape(msOrCategoryName)
+                        msShortname = missingMilestoneDefinitions.getAbbrev(msOrCategoryName)
                     End If
                 End If
 
-                If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
-                    maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
-                End If
-            End With
+                ' Meilenstein-Shape 
+                ''meilensteinShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
 
-            If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
+                With copiedShape(1)
+                    .Left = xCursor
+                    .Height = legendMilestoneVorlagenShape.Height
+                    .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                End With
 
-                xCursor = xCursor + maxBreite
-                If xCursor > legendAreaRight Then
-                    ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
-                    Throw New ArgumentException(repMessages.getmsg(16))
-                End If
-                yCursor = legendAreaTop
-                maxBreite = 0.0
-            Else
-                yCursor = yCursor + zeilenHoehe
-                If yCursor > legendAreaBottom + 5 Then
-                    yCursor = legendAreaTop
+                ' Meilenstein-Text
+                ''legendTextVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
+
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = msShortname & " (=" & msOrCategoryName & ")"
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
+
+                    ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                    If .Left + .Width > legendAreaRight Then
+                        Dim tmpWidth As Double = legendAreaRight - .Left
+                        If tmpWidth > 0.3 * .Width Then
+                            .TextFrame2.WordWrap = MsoTriState.msoTrue
+                            .Width = tmpWidth
+                            .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                            yCursor = yCursor + .Height - zeilenHoehe + 2
+                        End If
+                    End If
+
+                    If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
+                        maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
+                    End If
+                End With
+
+                If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
+
                     xCursor = xCursor + maxBreite
-                    maxBreite = 0.0
                     If xCursor > legendAreaRight Then
                         ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                         Throw New ArgumentException(repMessages.getmsg(16))
                     End If
+                    yCursor = legendAreaTop
+                    maxBreite = 0.0
+                Else
+                    yCursor = yCursor + zeilenHoehe
+                    If yCursor > legendAreaBottom + 5 Then
+                        yCursor = legendAreaTop
+                        xCursor = xCursor + maxBreite
+                        maxBreite = 0.0
+                        If xCursor > legendAreaRight Then
+                            ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                            Throw New ArgumentException(repMessages.getmsg(16))
+                        End If
 
+                    End If
                 End If
-            End If
 
 
+            Catch ex As Exception
+
+            End Try
 
         Next
 
@@ -17375,6 +17669,49 @@ Public Module testModule
                             Call splitHryFullnameTo2(tmpName, phName, tmpBC, typePv, pvName)
                             If PhaseDefinitions.Contains(phName) Then
                                 tmpCollection.Add(tmpName, tmpName)
+                            End If
+
+                        Case PTpfdk.PhaseCategories
+
+                            Dim catName As String = ""
+                            Dim tmpBC As String = ""
+                            Dim typePv As Integer = -1
+                            Dim pvName As String = ""
+
+                            
+                            Call splitHryFullnameTo2(tmpName, catName, tmpBC, typePv, pvName)
+
+                            If typePv = PTProjektType.categoryList Then
+                                catName = pvName
+                            End If
+                            If appearanceDefinitions.ContainsKey(catName) Then
+                                tmpName = calcHryCategoryName(catName, False)
+
+                                If Not tmpCollection.Contains(tmpName) Then
+                                    tmpCollection.Add(tmpName, tmpName)
+                                End If
+
+                            End If
+
+                        Case PTpfdk.MilestoneCategories
+
+                            Dim catName As String = ""
+                            Dim tmpBC As String = ""
+                            Dim typePv As Integer = -1
+                            Dim pvName As String = ""
+
+                            Call splitHryFullnameTo2(tmpName, catName, tmpBC, typePv, pvName)
+
+                            If typePv = PTProjektType.categoryList Then
+                                catName = pvName
+                            End If
+                            If appearanceDefinitions.ContainsKey(catName) Then
+                                tmpName = calcHryCategoryName(catName, True)
+
+                                If Not tmpCollection.Contains(tmpName) Then
+                                    tmpCollection.Add(tmpName, tmpName)
+                                End If
+
                             End If
 
                         Case PTpfdk.Meilenstein
