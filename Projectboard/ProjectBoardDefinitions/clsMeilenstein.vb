@@ -13,7 +13,9 @@ Public Class clsMeilenstein
 
     Private _verantwortlich As String
 
+    ' das Datum eines Meilensteines errechnet sich aus dem Phasen-Start und dem Offset ..
     Private _offset As Long
+
 
     Private _deliverables As List(Of String)
     Private _bewertungen As SortedList(Of String, clsBewertung)
