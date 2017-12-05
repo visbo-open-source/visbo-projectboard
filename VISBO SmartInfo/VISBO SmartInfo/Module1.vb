@@ -129,6 +129,7 @@ Module Module1
         lieferumfang = 3
         movedExplanation = 4
         resourceCost = 5
+        responsible = 6
     End Enum
 
     Friend Enum pptInfoType
@@ -143,6 +144,7 @@ Module Module1
         mvElement = 8
         resources = 9
         costs = 10
+        responsible = 11
     End Enum
 
     Friend Enum pptPositionType
@@ -188,8 +190,76 @@ Module Module1
 
     End Function
 
+    '' ''' <summary>
+    '' ''' zeigt bei den Shapes, die die angegebene Ampelfarbe haben, diese Farbe als Hintergrund Schatten an bzw. löscht den Hintergrund Schatten wieder
+    '' ''' alte Version: nur tauglich, solange nur Meilensteine Ampelfarben haben 
+    '' ''' </summary>
+    '' ''' <param name="ampelColor"></param>
+    '' ''' <param name="show"></param>
+    '' ''' <remarks></remarks>
+    ''Friend Sub faerbeShapes(ByVal ampelColor As Integer, ByVal show As Boolean)
+
+    ''    Dim tmpCollection As Collection = smartSlideLists.getShapeNamesWithColor(ampelColor)
+    ''    Dim anzSelected As Integer = tmpCollection.Count
+    ''    Dim nameArray() As String
+
+    ''    If ampelColor >= 0 And ampelColor <= 3 Then
+    ''        'alles ok 
+    ''    Else
+    ''        ' sicherstellen, es kommt zu keinem Absturz .... 
+    ''        ampelColor = 0
+    ''    End If
+
+
+    ''    Dim shapesToBeColored As PowerPoint.ShapeRange
+
+    ''    If anzSelected >= 1 Then
+    ''        ReDim nameArray(anzSelected - 1)
+
+    ''        For i As Integer = 0 To anzSelected - 1
+    ''            nameArray(i) = CStr(tmpCollection.Item(i + 1))
+    ''        Next
+
+    ''        Try
+    ''            shapesToBeColored = currentSlide.Shapes.Range(nameArray)
+
+    ''            If show Then
+    ''                ' mit Schatten einfärben 
+    ''                With shapesToBeColored.Shadow
+    ''                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+    ''                    .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+    ''                    .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+    ''                    .Blur = 0
+    ''                    '.Size = 160
+    ''                    .Size = 100
+    ''                    .OffsetX = 3
+    ''                    .OffsetY = -3
+    ''                    .Transparency = 0
+    ''                    .ForeColor.RGB = trafficLightColors(ampelColor)
+    ''                End With
+    ''            Else
+    ''                ' Schatten wieder wegnehmen 
+    ''                With shapesToBeColored.Shadow
+    ''                    .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+    ''                End With
+    ''            End If
+
+
+    ''        Catch ex As Exception
+
+    ''        End Try
+
+    ''    Else
+    ''        ' nichts tun ...
+
+    ''    End If
+
+
+    ''End Sub
+
     ''' <summary>
-    ''' zeigt bei den Shapes, die die angegebene Ampelfarbe haben, diese Farbe als Hintergrund Schatten an bzw. löscht den Hintergrund Schatten wieder
+    ''' hier wird unterscheiden zwischen Meilensteinen und Phasen: der Schatten wird für die beiden Typen anders dargestellt
+    ''' in der alten Verison (siehe oben) wurde immer 160% drauf gepackt , das hat bei Phasen extrem komisch ausgesehen 
     ''' </summary>
     ''' <param name="ampelColor"></param>
     ''' <param name="show"></param>
@@ -210,6 +280,7 @@ Module Module1
 
         Dim shapesToBeColored As PowerPoint.ShapeRange
 
+
         If anzSelected >= 1 Then
             ReDim nameArray(anzSelected - 1)
 
@@ -220,24 +291,48 @@ Module Module1
             Try
                 shapesToBeColored = currentSlide.Shapes.Range(nameArray)
 
-                If show Then
-                    ' mit Schatten einfärben 
-                    With shapesToBeColored.Shadow
-                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                        .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
-                        .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
-                        .Blur = 0
-                        .Size = 160
-                        .OffsetX = 0
-                        .OffsetY = 0
-                        .Transparency = 0
-                        .ForeColor.RGB = trafficLightColors(ampelColor)
-                    End With
-                Else
+                If Not show Then
                     ' Schatten wieder wegnehmen 
                     With shapesToBeColored.Shadow
                         .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                     End With
+
+
+                Else
+                    For i As Integer = 0 To anzSelected - 1
+                        shapesToBeColored = currentSlide.Shapes.Range(nameArray(i))
+                        If pptShapeIsMilestone(shapesToBeColored(1)) Then
+                            With shapesToBeColored.Shadow
+                                .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                                .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                                .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                                .Blur = 0
+                                '.Size = 160
+                                .Size = 140
+                                .OffsetX = 0
+                                .OffsetY = 0
+                                .Transparency = 0
+                                .ForeColor.RGB = trafficLightColors(ampelColor)
+                            End With
+                        Else
+                            With shapesToBeColored.Shadow
+                                .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                                .Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                                .Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                                .Blur = 0
+                                '.Size = 160
+                                .Size = 100
+                                .OffsetX = 3
+                                .OffsetY = -3
+                                .Transparency = 0
+                                .ForeColor.RGB = trafficLightColors(ampelColor)
+                            End With
+                        End If
+                    Next
+
+                    ' mit Schatten einfärben 
+
+
                 End If
 
 
@@ -1017,6 +1112,8 @@ Module Module1
                     tmpResult = pptInfoType.resources
                 ElseIf .rdbCosts.Checked Then
                     tmpResult = pptInfoType.costs
+                ElseIf .rdbVerantwortlichkeiten.Checked Then
+                    tmpResult = pptInfoType.responsible
                 Else
                     tmpResult = pptInfoType.cName
                 End If
@@ -1148,7 +1245,9 @@ Module Module1
             ' AmpelColor behandeln
             Dim ampelColor As Integer = 0
             tmpName = tmpShape.Tags.Item("AC")
-            If tmpName.Trim.Length > 0 And pptShapeIsMilestone(tmpShape) Then
+            'If tmpName.Trim.Length > 0 And pptShapeIsMilestone(tmpShape) Then
+            ' tk, ab 17.11 werden jetzt auch die Phasen mit Ampel dargestellt ... 
+            If tmpName.Trim.Length > 0 Then
                 Try
                     If IsNumeric(tmpName) Then
                         ampelColor = CInt(tmpName)
@@ -1166,6 +1265,16 @@ Module Module1
             If tmpName.Trim.Length > 0 Then
                 Try
                     Call smartSlideLists.addLU(tmpName, shapeName, isMilestone)
+                Catch ex As Exception
+
+                End Try
+            End If
+
+            ' Verantwortlichkeiten behandeln ...
+            tmpName = tmpShape.Tags.Item("VE")
+            If tmpName.Trim.Length > 0 Then
+                Try
+                    Call smartSlideLists.addVE(tmpName, shapeName, isMilestone)
                 Catch ex As Exception
 
                 End Try
@@ -2269,8 +2378,8 @@ Module Module1
                             Dim bln As String = tmpShape.Tags.Item("BLN")
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                             Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
-                                                      ph.getStartDate, ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
-                                                      Nothing)
+                                                      ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
+                                                      ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
                         End If
 
 
@@ -2302,7 +2411,7 @@ Module Module1
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                                 Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing, _
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
-                                                          ms.getAllDeliverables("#"))
+                                                          ms.getAllDeliverables("#"), ms.verantwortlich, Nothing)
                             End If
 
 
@@ -2329,8 +2438,8 @@ Module Module1
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                                 Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate, _
-                                                             ph.getEndDate, ph.getBewertung(1).colorIndex, ph.getBewertung(1).description, _
-                                                             Nothing)
+                                                             ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
+                                                             ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
                             End If
 
                         End If
@@ -2649,13 +2758,13 @@ Module Module1
                             If isMovedShape Then
                                 .elemDate.Enabled = True
                                 If .rdbMV.Checked Then
-                                    .aLuTvText.Enabled = True
+                                    .aLuTvText.ReadOnly = False
                                 Else
-                                    .aLuTvText.Enabled = False
+                                    .aLuTvText.ReadOnly = True
                                 End If
                             Else
                                 .elemDate.Enabled = False
-                                .aLuTvText.Enabled = False
+                                .aLuTvText.ReadOnly = True
                             End If
 
 
@@ -2677,7 +2786,7 @@ Module Module1
 
                             .aLuTvText.Text = " ... "
 
-                            .aLuTvText.Enabled = False
+                            .aLuTvText.ReadOnly = True
                             .elemDate.Enabled = False
 
 
@@ -3094,133 +3203,197 @@ Module Module1
                                           Optional ByVal shortForm As Boolean = True) As String
 
         Dim tmpText As String = ""
+        ' tk, 22.11.17 wird später durch globale Variable ersetzt, die in den Settings interaktiv gesetzt werden kann 
+        ' jetzt ist Voreinstellung einfach mal true ...
+        Dim combined As Boolean = True
 
         If Not shortForm Then
-            tmpText = curShape.Tags.Item("CN") & " "
+            If pptShapeIsMilestone(curShape) Then
+                tmpText = "(M): "
+            ElseIf pptShapeIsPhase(curShape) Then
+                tmpText = "(P): "
+            End If
+            tmpText = tmpText & curShape.Tags.Item("CN") & vbLf
         End If
 
         Try
 
-            If type = pptInfoType.lUmfang Then
-                ' bestimmen der ersten Zeile:
-                If englishLanguage Then
-                    tmpText = tmpText & "Deliverables:" & vbLf
-                Else
-                    tmpText = tmpText & "Lieferumfänge:" & vbLf
+            ' unterscheiden: einzeln ausweisen, oder in einem Text ? 
+            If combined And Not (type = pptInfoType.resources Or type = pptInfoType.costs Or type = pptInfoType.mvElement) Then
+                ' verantwortlich 
+                If curShape.Tags.Item("VE").Length > 0 Then
+                    If englishLanguage Then
+                        tmpText = tmpText & "(Responsible): " & curShape.Tags.Item("VE") & vbLf
+                    Else
+                        tmpText = tmpText & "(Verantwortl.): " & curShape.Tags.Item("VE") & vbLf
+                    End If
                 End If
 
+                ' Ampel-Text 
+                If curShape.Tags.Item("AE").Length > 0 Then
+                    If englishLanguage Then
+                        tmpText = tmpText & "(Explanation):" & vbLf
+                    Else
+                        tmpText = tmpText & "(Erläuterung):" & vbLf
+                    End If
 
-                Dim tmpStr() As String
+                    tmpText = tmpText & curShape.Tags.Item("AE") & vbLf
+                End If
+
+                ' Deliverables 
                 If curShape.Tags.Item("LU").Length > 0 Then
+                    If englishLanguage Then
+                        tmpText = tmpText & "(Deliverables):" & vbLf
+                    Else
+                        tmpText = tmpText & "(Lieferumfänge):" & vbLf
+                    End If
+
+                    Dim tmpStr() As String
                     tmpStr = curShape.Tags.Item("LU").Split(New Char() {CType("#", Char)})
                     For i As Integer = 0 To tmpStr.Length - 1
                         tmpText = tmpText & tmpStr(i) & vbLf
                     Next
                 End If
 
-            ElseIf type = pptInfoType.mvElement Then
-                If englishLanguage Then
-                    tmpText = tmpText & "moved:" & vbLf
-                Else
-                    tmpText = tmpText & "verschoben:" & vbLf
-                End If
-
-                If curShape.Tags.Item("MVE").Length > 0 Then
-                    tmpText = tmpText & curShape.Tags.Item("MVE")
-                End If
-
-            ElseIf type = pptInfoType.resources Or type = pptInfoType.costs Then
-                If Not noDBAccessInPPT And pptShapeIsPhase(curShape) Then
-                    Try
-                        Dim pvName As String = getPVnameFromShpName(curShape.Name)
-                        Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
-                        Dim phNameID As String = getElemIDFromShpName(curShape.Name)
-                        Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
-                        Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
-                        Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
-
-                        If Not shortForm Then
-
-                            If englishLanguage Then
-                                'tmpText = getElemNameFromShpName(curShape.Name) & " Resource/Costs :" & vbLf
-                                tmpText = tmpText & "Resource/Costs :" & vbLf
-                            Else
-                                'tmpText = getElemNameFromShpName(curShape.Name) & " Ressourcen/Kosten:" & vbLf
-                                tmpText = tmpText & "Ressourcen/Kosten:" & vbLf
-                            End If
-
-                        Else
-                            If englishLanguage Then
-                                tmpText = "Resource/Costs :" & vbLf
-                            Else
-                                tmpText = "Ressourcen/Kosten:" & vbLf
-                            End If
-                        End If
-
-
-                        Dim unit As String
-                        If englishLanguage Then
-                            unit = " PD"
-                        Else
-                            unit = " PT"
-                        End If
-
-                        For i As Integer = 1 To roleInformations.Count
-                            tmpText = tmpText & _
-                                roleInformations.ElementAt(i - 1).Key & ": " & CInt(roleInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
-                        Next
-
-                        If costInformations.Count > 0 And roleInformations.Count > 0 Then
-                            tmpText = tmpText & vbLf
-                        End If
-
-                        unit = " TE"
-                        For i As Integer = 1 To costInformations.Count
-                            tmpText = tmpText & _
-                                costInformations.ElementAt(i - 1).Key & ": " & CInt(costInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
-                        Next
-
-                    Catch ex As Exception
-                        tmpText = "Phase " & getElemNameFromShpName(curShape.Name)
-                    End Try
-
-
-
-                ElseIf noDBAccessInPPT And pptShapeIsPhase(curShape) Then
-                    If Not shortForm Then
-                        If englishLanguage Then
-                            tmpText = "Resource/Costs " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
-                            "no DB access ..."
-                        Else
-                            tmpText = "Ressourcen / Kosten " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
-                                "kein DB Zugriff ..."
-                        End If
-
-                    Else
-                        If englishLanguage Then
-                            tmpText = "no DB access"
-                        Else
-                            tmpText = "kein DB Zugriff"
-                        End If
-
-                    End If
-                Else
-                    tmpText = ""
-                End If
-
 
             Else
-                ' in allen anderen Fällen den Ampel-Text wählen 
-                If curShape.Tags.Item("AE").Length > 0 Then
+
+                If type = pptInfoType.lUmfang Then
+                    ' bestimmen der ersten Zeile:
                     If englishLanguage Then
-                        tmpText = tmpText & "traffic light text:" & vbLf
+                        tmpText = tmpText & "(Deliverables):" & vbLf
                     Else
-                        tmpText = tmpText & "Ampel-Text:" & vbLf
+                        tmpText = tmpText & "(Lieferumfänge):" & vbLf
                     End If
 
-                    tmpText = tmpText & curShape.Tags.Item("AE")
+
+                    Dim tmpStr() As String
+                    If curShape.Tags.Item("LU").Length > 0 Then
+                        tmpStr = curShape.Tags.Item("LU").Split(New Char() {CType("#", Char)})
+                        For i As Integer = 0 To tmpStr.Length - 1
+                            tmpText = tmpText & tmpStr(i) & vbLf
+                        Next
+                    End If
+
+                ElseIf type = pptInfoType.responsible Then
+                    If englishLanguage Then
+                        tmpText = tmpText & "(Responsible): "
+                    Else
+                        tmpText = tmpText & "(Verantwortlich): "
+                    End If
+
+                    If curShape.Tags.Item("VE").Length > 0 Then
+                        tmpText = tmpText & curShape.Tags.Item("VE")
+                    End If
+
+                ElseIf type = pptInfoType.mvElement Then
+                    If englishLanguage Then
+                        tmpText = tmpText & "(moved):" & vbLf
+                    Else
+                        tmpText = tmpText & "(verschoben):" & vbLf
+                    End If
+
+                    If curShape.Tags.Item("MVE").Length > 0 Then
+                        tmpText = tmpText & curShape.Tags.Item("MVE")
+                    End If
+
+                ElseIf type = pptInfoType.resources Or type = pptInfoType.costs Then
+                    If Not noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+                        Try
+                            Dim pvName As String = getPVnameFromShpName(curShape.Name)
+                            Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                            Dim phNameID As String = getElemIDFromShpName(curShape.Name)
+                            Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
+                            Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
+                            Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
+
+                            If Not shortForm Then
+
+                                If englishLanguage Then
+                                    'tmpText = getElemNameFromShpName(curShape.Name) & " Resource/Costs :" & vbLf
+                                    tmpText = tmpText & "(Resource/Costs):" & vbLf
+                                Else
+                                    'tmpText = getElemNameFromShpName(curShape.Name) & " Ressourcen/Kosten:" & vbLf
+                                    tmpText = tmpText & "(Ressourcen/Kosten):" & vbLf
+                                End If
+
+                            Else
+                                If englishLanguage Then
+                                    tmpText = "(Resource/Costs):" & vbLf
+                                Else
+                                    tmpText = "(Ressourcen/Kosten):" & vbLf
+                                End If
+                            End If
+
+
+                            Dim unit As String
+                            If englishLanguage Then
+                                unit = " PD"
+                            Else
+                                unit = " PT"
+                            End If
+
+                            For i As Integer = 1 To roleInformations.Count
+                                tmpText = tmpText & _
+                                    roleInformations.ElementAt(i - 1).Key & ": " & CInt(roleInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
+                            Next
+
+                            If costInformations.Count > 0 And roleInformations.Count > 0 Then
+                                tmpText = tmpText & vbLf
+                            End If
+
+                            unit = " TE"
+                            For i As Integer = 1 To costInformations.Count
+                                tmpText = tmpText & _
+                                    costInformations.ElementAt(i - 1).Key & ": " & CInt(costInformations.ElementAt(i - 1).Value).ToString & unit & vbLf
+                            Next
+
+                        Catch ex As Exception
+                            tmpText = "Phase " & getElemNameFromShpName(curShape.Name)
+                        End Try
+
+
+
+                    ElseIf noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+                        If Not shortForm Then
+                            If englishLanguage Then
+                                tmpText = "Resource/Costs " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
+                                "no DB access ..."
+                            Else
+                                tmpText = "Ressourcen / Kosten " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
+                                    "kein DB Zugriff ..."
+                            End If
+
+                        Else
+                            If englishLanguage Then
+                                tmpText = "no DB access"
+                            Else
+                                tmpText = "kein DB Zugriff"
+                            End If
+
+                        End If
+                    Else
+                        tmpText = ""
+                    End If
+
+
+                Else
+                    ' in allen anderen Fällen den Ampel-Text wählen 
+                    If curShape.Tags.Item("AE").Length > 0 Then
+                        If englishLanguage Then
+                            tmpText = tmpText & "(Explanation):" & vbLf
+                        Else
+                            tmpText = tmpText & "(Erläuterung):" & vbLf
+                        End If
+
+                        tmpText = tmpText & curShape.Tags.Item("AE")
+                    End If
                 End If
+
             End If
+
+
+
 
         Catch ex As Exception
 
@@ -3811,6 +3984,7 @@ Module Module1
 
         ElseIf descriptionType = pptAnnotationType.ampelText Or _
                 descriptionType = pptAnnotationType.lieferumfang Or _
+                descriptionType = pptAnnotationType.responsible Or _
                 descriptionType = pptAnnotationType.movedExplanation Then
 
             If IsNumeric(selectedPlanShape.Tags.Item("AC")) Then
@@ -3823,8 +3997,11 @@ Module Module1
 
             ElseIf descriptionType = pptAnnotationType.lieferumfang Then
                 descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.lUmfang, False)
-            Else
 
+            ElseIf descriptionType = pptAnnotationType.responsible Then
+                descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.responsible, False)
+
+            Else
                 descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.aExpl, False)
             End If
 
