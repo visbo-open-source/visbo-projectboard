@@ -24,23 +24,6 @@ Partial Class frmInfo
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmInfo))
-        Me.TabControl1 = New System.Windows.Forms.TabControl()
-        Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.deleteAmpel = New System.Windows.Forms.Button()
-        Me.writeAmpel = New System.Windows.Forms.Button()
-        Me.aLuTvText = New System.Windows.Forms.TextBox()
-        Me.fullBreadCrumb = New System.Windows.Forms.TextBox()
-        Me.positionDateButton = New System.Windows.Forms.Button()
-        Me.deleteDate = New System.Windows.Forms.Button()
-        Me.writeDate = New System.Windows.Forms.Button()
-        Me.elemDate = New System.Windows.Forms.TextBox()
-        Me.positionTextButton = New System.Windows.Forms.Button()
-        Me.deleteText = New System.Windows.Forms.Button()
-        Me.showOrginalName = New System.Windows.Forms.CheckBox()
-        Me.elemName = New System.Windows.Forms.TextBox()
-        Me.showAbbrev = New System.Windows.Forms.CheckBox()
-        Me.writeText = New System.Windows.Forms.Button()
-        Me.TabPage2 = New System.Windows.Forms.TabPage()
         Me.lblAmpeln = New System.Windows.Forms.Label()
         Me.shwRedLight = New System.Windows.Forms.CheckBox()
         Me.shwYellowLight = New System.Windows.Forms.CheckBox()
@@ -62,194 +45,27 @@ Partial Class frmInfo
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.rdbResources = New System.Windows.Forms.RadioButton()
         Me.rdbCosts = New System.Windows.Forms.RadioButton()
-        Me.TabControl1.SuspendLayout()
-        Me.TabPage1.SuspendLayout()
+        Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.writeText = New System.Windows.Forms.Button()
+        Me.showAbbrev = New System.Windows.Forms.CheckBox()
+        Me.elemName = New System.Windows.Forms.TextBox()
+        Me.showOrginalName = New System.Windows.Forms.CheckBox()
+        Me.deleteText = New System.Windows.Forms.Button()
+        Me.positionTextButton = New System.Windows.Forms.Button()
+        Me.elemDate = New System.Windows.Forms.TextBox()
+        Me.writeDate = New System.Windows.Forms.Button()
+        Me.deleteDate = New System.Windows.Forms.Button()
+        Me.positionDateButton = New System.Windows.Forms.Button()
+        Me.fullBreadCrumb = New System.Windows.Forms.TextBox()
+        Me.aLuTvText = New System.Windows.Forms.TextBox()
+        Me.writeAmpel = New System.Windows.Forms.Button()
+        Me.deleteAmpel = New System.Windows.Forms.Button()
+        Me.TabControl1 = New System.Windows.Forms.TabControl()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.TabPage1.SuspendLayout()
+        Me.TabControl1.SuspendLayout()
         Me.SuspendLayout()
-        '
-        'TabControl1
-        '
-        Me.TabControl1.Controls.Add(Me.TabPage1)
-        Me.TabControl1.Controls.Add(Me.TabPage2)
-        Me.TabControl1.Location = New System.Drawing.Point(12, 13)
-        Me.TabControl1.Name = "TabControl1"
-        Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(542, 186)
-        Me.TabControl1.TabIndex = 0
-        '
-        'TabPage1
-        '
-        Me.TabPage1.BackColor = System.Drawing.SystemColors.Control
-        Me.TabPage1.Controls.Add(Me.deleteAmpel)
-        Me.TabPage1.Controls.Add(Me.writeAmpel)
-        Me.TabPage1.Controls.Add(Me.aLuTvText)
-        Me.TabPage1.Controls.Add(Me.fullBreadCrumb)
-        Me.TabPage1.Controls.Add(Me.positionDateButton)
-        Me.TabPage1.Controls.Add(Me.deleteDate)
-        Me.TabPage1.Controls.Add(Me.writeDate)
-        Me.TabPage1.Controls.Add(Me.elemDate)
-        Me.TabPage1.Controls.Add(Me.positionTextButton)
-        Me.TabPage1.Controls.Add(Me.deleteText)
-        Me.TabPage1.Controls.Add(Me.showOrginalName)
-        Me.TabPage1.Controls.Add(Me.elemName)
-        Me.TabPage1.Controls.Add(Me.showAbbrev)
-        Me.TabPage1.Controls.Add(Me.writeText)
-        Me.TabPage1.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage1.Name = "TabPage1"
-        Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(534, 160)
-        Me.TabPage1.TabIndex = 0
-        Me.TabPage1.Text = "Information"
-        '
-        'deleteAmpel
-        '
-        Me.deleteAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteAmpel.Location = New System.Drawing.Point(427, 114)
-        Me.deleteAmpel.Name = "deleteAmpel"
-        Me.deleteAmpel.Size = New System.Drawing.Size(30, 26)
-        Me.deleteAmpel.TabIndex = 31
-        Me.deleteAmpel.UseVisualStyleBackColor = True
-        '
-        'writeAmpel
-        '
-        Me.writeAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeAmpel.Location = New System.Drawing.Point(487, 114)
-        Me.writeAmpel.Name = "writeAmpel"
-        Me.writeAmpel.Size = New System.Drawing.Size(30, 26)
-        Me.writeAmpel.TabIndex = 30
-        Me.writeAmpel.UseVisualStyleBackColor = True
-        '
-        'aLuTvText
-        '
-        Me.aLuTvText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.aLuTvText.Enabled = False
-        Me.aLuTvText.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.aLuTvText.Location = New System.Drawing.Point(14, 102)
-        Me.aLuTvText.Multiline = True
-        Me.aLuTvText.Name = "aLuTvText"
-        Me.aLuTvText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.aLuTvText.Size = New System.Drawing.Size(407, 51)
-        Me.aLuTvText.TabIndex = 29
-        '
-        'fullBreadCrumb
-        '
-        Me.fullBreadCrumb.BackColor = System.Drawing.SystemColors.Window
-        Me.fullBreadCrumb.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.fullBreadCrumb.Enabled = False
-        Me.fullBreadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.fullBreadCrumb.Location = New System.Drawing.Point(14, 55)
-        Me.fullBreadCrumb.Name = "fullBreadCrumb"
-        Me.fullBreadCrumb.ReadOnly = True
-        Me.fullBreadCrumb.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.fullBreadCrumb.Size = New System.Drawing.Size(407, 20)
-        Me.fullBreadCrumb.TabIndex = 28
-        Me.fullBreadCrumb.Visible = False
-        '
-        'positionDateButton
-        '
-        Me.positionDateButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_south
-        Me.positionDateButton.Location = New System.Drawing.Point(457, 76)
-        Me.positionDateButton.Name = "positionDateButton"
-        Me.positionDateButton.Size = New System.Drawing.Size(30, 26)
-        Me.positionDateButton.TabIndex = 27
-        Me.positionDateButton.UseVisualStyleBackColor = True
-        '
-        'deleteDate
-        '
-        Me.deleteDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteDate.Location = New System.Drawing.Point(427, 76)
-        Me.deleteDate.Name = "deleteDate"
-        Me.deleteDate.Size = New System.Drawing.Size(30, 26)
-        Me.deleteDate.TabIndex = 26
-        Me.deleteDate.UseVisualStyleBackColor = True
-        '
-        'writeDate
-        '
-        Me.writeDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeDate.Location = New System.Drawing.Point(487, 76)
-        Me.writeDate.Name = "writeDate"
-        Me.writeDate.Size = New System.Drawing.Size(30, 26)
-        Me.writeDate.TabIndex = 25
-        Me.writeDate.UseVisualStyleBackColor = True
-        '
-        'elemDate
-        '
-        Me.elemDate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.elemDate.Enabled = False
-        Me.elemDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.elemDate.Location = New System.Drawing.Point(14, 77)
-        Me.elemDate.Name = "elemDate"
-        Me.elemDate.Size = New System.Drawing.Size(407, 22)
-        Me.elemDate.TabIndex = 24
-        '
-        'positionTextButton
-        '
-        Me.positionTextButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_north
-        Me.positionTextButton.Location = New System.Drawing.Point(457, 30)
-        Me.positionTextButton.Name = "positionTextButton"
-        Me.positionTextButton.Size = New System.Drawing.Size(30, 26)
-        Me.positionTextButton.TabIndex = 23
-        Me.positionTextButton.UseVisualStyleBackColor = True
-        '
-        'deleteText
-        '
-        Me.deleteText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteText.Location = New System.Drawing.Point(427, 30)
-        Me.deleteText.Name = "deleteText"
-        Me.deleteText.Size = New System.Drawing.Size(30, 26)
-        Me.deleteText.TabIndex = 22
-        Me.deleteText.UseVisualStyleBackColor = True
-        '
-        'showOrginalName
-        '
-        Me.showOrginalName.AutoSize = True
-        Me.showOrginalName.Location = New System.Drawing.Point(110, 8)
-        Me.showOrginalName.Name = "showOrginalName"
-        Me.showOrginalName.Size = New System.Drawing.Size(92, 17)
-        Me.showOrginalName.TabIndex = 21
-        Me.showOrginalName.Text = "Original-Name"
-        Me.showOrginalName.UseVisualStyleBackColor = True
-        Me.showOrginalName.Visible = False
-        '
-        'elemName
-        '
-        Me.elemName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.elemName.Enabled = False
-        Me.elemName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.elemName.Location = New System.Drawing.Point(14, 31)
-        Me.elemName.Name = "elemName"
-        Me.elemName.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.elemName.Size = New System.Drawing.Size(407, 22)
-        Me.elemName.TabIndex = 18
-        '
-        'showAbbrev
-        '
-        Me.showAbbrev.AutoSize = True
-        Me.showAbbrev.Location = New System.Drawing.Point(14, 8)
-        Me.showAbbrev.Name = "showAbbrev"
-        Me.showAbbrev.Size = New System.Drawing.Size(77, 17)
-        Me.showAbbrev.TabIndex = 20
-        Me.showAbbrev.Text = "Abkürzung"
-        Me.showAbbrev.UseVisualStyleBackColor = True
-        '
-        'writeText
-        '
-        Me.writeText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeText.Location = New System.Drawing.Point(487, 30)
-        Me.writeText.Name = "writeText"
-        Me.writeText.Size = New System.Drawing.Size(30, 26)
-        Me.writeText.TabIndex = 19
-        Me.writeText.UseVisualStyleBackColor = True
-        '
-        'TabPage2
-        '
-        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage2.Name = "TabPage2"
-        Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(534, 160)
-        Me.TabPage2.TabIndex = 1
-        Me.TabPage2.Text = "Messen"
-        Me.TabPage2.UseVisualStyleBackColor = True
         '
         'lblAmpeln
         '
@@ -447,6 +263,190 @@ Partial Class frmInfo
         Me.rdbCosts.Text = "Kosten"
         Me.rdbCosts.UseVisualStyleBackColor = True
         '
+        'TabPage2
+        '
+        Me.TabPage2.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage2.Name = "TabPage2"
+        Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage2.Size = New System.Drawing.Size(534, 160)
+        Me.TabPage2.TabIndex = 1
+        Me.TabPage2.Text = "Messen"
+        Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'TabPage1
+        '
+        Me.TabPage1.BackColor = System.Drawing.SystemColors.Control
+        Me.TabPage1.Controls.Add(Me.deleteAmpel)
+        Me.TabPage1.Controls.Add(Me.writeAmpel)
+        Me.TabPage1.Controls.Add(Me.aLuTvText)
+        Me.TabPage1.Controls.Add(Me.fullBreadCrumb)
+        Me.TabPage1.Controls.Add(Me.elemDate)
+        Me.TabPage1.Controls.Add(Me.elemName)
+        Me.TabPage1.Controls.Add(Me.positionDateButton)
+        Me.TabPage1.Controls.Add(Me.deleteDate)
+        Me.TabPage1.Controls.Add(Me.writeDate)
+        Me.TabPage1.Controls.Add(Me.positionTextButton)
+        Me.TabPage1.Controls.Add(Me.deleteText)
+        Me.TabPage1.Controls.Add(Me.showOrginalName)
+        Me.TabPage1.Controls.Add(Me.showAbbrev)
+        Me.TabPage1.Controls.Add(Me.writeText)
+        Me.TabPage1.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage1.Name = "TabPage1"
+        Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage1.Size = New System.Drawing.Size(534, 160)
+        Me.TabPage1.TabIndex = 0
+        Me.TabPage1.Text = "Information"
+        '
+        'writeText
+        '
+        Me.writeText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
+        Me.writeText.Location = New System.Drawing.Point(487, 30)
+        Me.writeText.Name = "writeText"
+        Me.writeText.Size = New System.Drawing.Size(30, 26)
+        Me.writeText.TabIndex = 19
+        Me.writeText.UseVisualStyleBackColor = True
+        '
+        'showAbbrev
+        '
+        Me.showAbbrev.AutoSize = True
+        Me.showAbbrev.Location = New System.Drawing.Point(14, 8)
+        Me.showAbbrev.Name = "showAbbrev"
+        Me.showAbbrev.Size = New System.Drawing.Size(77, 17)
+        Me.showAbbrev.TabIndex = 20
+        Me.showAbbrev.Text = "Abkürzung"
+        Me.showAbbrev.UseVisualStyleBackColor = True
+        '
+        'elemName
+        '
+        Me.elemName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.elemName.Enabled = False
+        Me.elemName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.elemName.Location = New System.Drawing.Point(14, 31)
+        Me.elemName.Name = "elemName"
+        Me.elemName.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
+        Me.elemName.Size = New System.Drawing.Size(407, 22)
+        Me.elemName.TabIndex = 18
+        '
+        'showOrginalName
+        '
+        Me.showOrginalName.AutoSize = True
+        Me.showOrginalName.Location = New System.Drawing.Point(110, 8)
+        Me.showOrginalName.Name = "showOrginalName"
+        Me.showOrginalName.Size = New System.Drawing.Size(92, 17)
+        Me.showOrginalName.TabIndex = 21
+        Me.showOrginalName.Text = "Original-Name"
+        Me.showOrginalName.UseVisualStyleBackColor = True
+        Me.showOrginalName.Visible = False
+        '
+        'deleteText
+        '
+        Me.deleteText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
+        Me.deleteText.Location = New System.Drawing.Point(427, 30)
+        Me.deleteText.Name = "deleteText"
+        Me.deleteText.Size = New System.Drawing.Size(30, 26)
+        Me.deleteText.TabIndex = 22
+        Me.deleteText.UseVisualStyleBackColor = True
+        '
+        'positionTextButton
+        '
+        Me.positionTextButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_north
+        Me.positionTextButton.Location = New System.Drawing.Point(457, 30)
+        Me.positionTextButton.Name = "positionTextButton"
+        Me.positionTextButton.Size = New System.Drawing.Size(30, 26)
+        Me.positionTextButton.TabIndex = 23
+        Me.positionTextButton.UseVisualStyleBackColor = True
+        '
+        'elemDate
+        '
+        Me.elemDate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.elemDate.Enabled = False
+        Me.elemDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.elemDate.Location = New System.Drawing.Point(14, 77)
+        Me.elemDate.Name = "elemDate"
+        Me.elemDate.Size = New System.Drawing.Size(407, 22)
+        Me.elemDate.TabIndex = 24
+        '
+        'writeDate
+        '
+        Me.writeDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
+        Me.writeDate.Location = New System.Drawing.Point(487, 76)
+        Me.writeDate.Name = "writeDate"
+        Me.writeDate.Size = New System.Drawing.Size(30, 26)
+        Me.writeDate.TabIndex = 25
+        Me.writeDate.UseVisualStyleBackColor = True
+        '
+        'deleteDate
+        '
+        Me.deleteDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
+        Me.deleteDate.Location = New System.Drawing.Point(427, 76)
+        Me.deleteDate.Name = "deleteDate"
+        Me.deleteDate.Size = New System.Drawing.Size(30, 26)
+        Me.deleteDate.TabIndex = 26
+        Me.deleteDate.UseVisualStyleBackColor = True
+        '
+        'positionDateButton
+        '
+        Me.positionDateButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_south
+        Me.positionDateButton.Location = New System.Drawing.Point(457, 76)
+        Me.positionDateButton.Name = "positionDateButton"
+        Me.positionDateButton.Size = New System.Drawing.Size(30, 26)
+        Me.positionDateButton.TabIndex = 27
+        Me.positionDateButton.UseVisualStyleBackColor = True
+        '
+        'fullBreadCrumb
+        '
+        Me.fullBreadCrumb.BackColor = System.Drawing.SystemColors.Window
+        Me.fullBreadCrumb.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.fullBreadCrumb.Enabled = False
+        Me.fullBreadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.fullBreadCrumb.Location = New System.Drawing.Point(14, 55)
+        Me.fullBreadCrumb.Name = "fullBreadCrumb"
+        Me.fullBreadCrumb.ReadOnly = True
+        Me.fullBreadCrumb.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
+        Me.fullBreadCrumb.Size = New System.Drawing.Size(407, 20)
+        Me.fullBreadCrumb.TabIndex = 28
+        Me.fullBreadCrumb.Visible = False
+        '
+        'aLuTvText
+        '
+        Me.aLuTvText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.aLuTvText.Enabled = False
+        Me.aLuTvText.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.aLuTvText.Location = New System.Drawing.Point(14, 102)
+        Me.aLuTvText.Multiline = True
+        Me.aLuTvText.Name = "aLuTvText"
+        Me.aLuTvText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.aLuTvText.Size = New System.Drawing.Size(407, 51)
+        Me.aLuTvText.TabIndex = 29
+        '
+        'writeAmpel
+        '
+        Me.writeAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
+        Me.writeAmpel.Location = New System.Drawing.Point(487, 114)
+        Me.writeAmpel.Name = "writeAmpel"
+        Me.writeAmpel.Size = New System.Drawing.Size(30, 26)
+        Me.writeAmpel.TabIndex = 30
+        Me.writeAmpel.UseVisualStyleBackColor = True
+        '
+        'deleteAmpel
+        '
+        Me.deleteAmpel.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
+        Me.deleteAmpel.Location = New System.Drawing.Point(427, 114)
+        Me.deleteAmpel.Name = "deleteAmpel"
+        Me.deleteAmpel.Size = New System.Drawing.Size(30, 26)
+        Me.deleteAmpel.TabIndex = 31
+        Me.deleteAmpel.UseVisualStyleBackColor = True
+        '
+        'TabControl1
+        '
+        Me.TabControl1.Controls.Add(Me.TabPage1)
+        Me.TabControl1.Controls.Add(Me.TabPage2)
+        Me.TabControl1.Location = New System.Drawing.Point(12, 13)
+        Me.TabControl1.Name = "TabControl1"
+        Me.TabControl1.SelectedIndex = 0
+        Me.TabControl1.Size = New System.Drawing.Size(542, 186)
+        Me.TabControl1.TabIndex = 0
+        '
         'frmInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
@@ -478,28 +478,14 @@ Partial Class frmInfo
         Me.Name = "frmInfo"
         Me.Text = "VISBO Smart-Info"
         Me.TopMost = True
-        Me.TabControl1.ResumeLayout(False)
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         Me.TabPage1.ResumeLayout(False)
         Me.TabPage1.PerformLayout()
-        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.TabControl1.ResumeLayout(False)
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
-    Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
-    Friend WithEvents TabPage1 As System.Windows.Forms.TabPage
-    Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
-    Friend WithEvents positionTextButton As System.Windows.Forms.Button
-    Friend WithEvents deleteText As System.Windows.Forms.Button
-    Friend WithEvents showOrginalName As System.Windows.Forms.CheckBox
-    Friend WithEvents elemName As System.Windows.Forms.TextBox
-    Friend WithEvents showAbbrev As System.Windows.Forms.CheckBox
-    Friend WithEvents writeText As System.Windows.Forms.Button
-    Friend WithEvents positionDateButton As System.Windows.Forms.Button
-    Friend WithEvents deleteDate As System.Windows.Forms.Button
-    Friend WithEvents writeDate As System.Windows.Forms.Button
-    Friend WithEvents elemDate As System.Windows.Forms.TextBox
-    Friend WithEvents fullBreadCrumb As System.Windows.Forms.TextBox
     Friend WithEvents lblAmpeln As System.Windows.Forms.Label
     Friend WithEvents shwRedLight As System.Windows.Forms.CheckBox
     Friend WithEvents shwYellowLight As System.Windows.Forms.CheckBox
@@ -512,9 +498,6 @@ Partial Class frmInfo
     Friend WithEvents rdbAbbrev As System.Windows.Forms.RadioButton
     Friend WithEvents rdbOriginalName As System.Windows.Forms.RadioButton
     Friend WithEvents rdbName As System.Windows.Forms.RadioButton
-    Friend WithEvents deleteAmpel As System.Windows.Forms.Button
-    Friend WithEvents writeAmpel As System.Windows.Forms.Button
-    Friend WithEvents aLuTvText As System.Windows.Forms.TextBox
     Friend WithEvents CheckBxMarker As System.Windows.Forms.CheckBox
     Friend WithEvents PictureMarker As System.Windows.Forms.PictureBox
     Friend WithEvents rdbLU As System.Windows.Forms.RadioButton
@@ -524,4 +507,21 @@ Partial Class frmInfo
     Friend WithEvents ToolTip1 As System.Windows.Forms.ToolTip
     Friend WithEvents rdbResources As System.Windows.Forms.RadioButton
     Friend WithEvents rdbCosts As System.Windows.Forms.RadioButton
+    Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
+    Friend WithEvents TabPage1 As System.Windows.Forms.TabPage
+    Friend WithEvents deleteAmpel As System.Windows.Forms.Button
+    Friend WithEvents writeAmpel As System.Windows.Forms.Button
+    Friend WithEvents aLuTvText As System.Windows.Forms.TextBox
+    Friend WithEvents fullBreadCrumb As System.Windows.Forms.TextBox
+    Friend WithEvents elemDate As System.Windows.Forms.TextBox
+    Friend WithEvents elemName As System.Windows.Forms.TextBox
+    Friend WithEvents positionDateButton As System.Windows.Forms.Button
+    Friend WithEvents deleteDate As System.Windows.Forms.Button
+    Friend WithEvents writeDate As System.Windows.Forms.Button
+    Friend WithEvents positionTextButton As System.Windows.Forms.Button
+    Friend WithEvents deleteText As System.Windows.Forms.Button
+    Friend WithEvents showOrginalName As System.Windows.Forms.CheckBox
+    Friend WithEvents showAbbrev As System.Windows.Forms.CheckBox
+    Friend WithEvents writeText As System.Windows.Forms.Button
+    Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
 End Class

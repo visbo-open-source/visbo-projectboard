@@ -105,6 +105,22 @@ Module Module1
     ' dieses Formular gibt die Changes, die sich bei den Elementen ergeben haben 
     Friend changeFrm As frmChanges = Nothing
 
+    ' dieser array nimmt die Koordinaten der Formulare auf 
+    ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
+    Public frmCoord(1, 3) As Integer
+
+    ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
+    Public Enum PTfrm
+        changes = 0
+    End Enum
+
+    Public Enum PTpinfo
+        top = 0
+        left = 1
+        width = 2
+        height = 3
+    End Enum
+
     Friend languages As New clsLanguages
 
     ' diese Variablen geben an, ob es irgendwo Shapes gibt, die verschoben wurden 
