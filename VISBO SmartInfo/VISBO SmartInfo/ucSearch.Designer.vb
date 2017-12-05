@@ -33,9 +33,12 @@ Partial Class ucSearch
         Me.shwRedLight = New System.Windows.Forms.CheckBox()
         Me.shwGreenLight = New System.Windows.Forms.CheckBox()
         Me.shwYellowLight = New System.Windows.Forms.CheckBox()
+        Me.PictureMarker = New System.Windows.Forms.PictureBox()
+        Me.CheckBxMarker = New System.Windows.Forms.CheckBox()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
         Me.Panel2.SuspendLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'cathegoryList
@@ -59,6 +62,8 @@ Partial Class ucSearch
         '
         'Panel1
         '
+        Me.Panel1.Controls.Add(Me.CheckBxMarker)
+        Me.Panel1.Controls.Add(Me.PictureMarker)
         Me.Panel1.Controls.Add(Me.listboxNames)
         Me.Panel1.Controls.Add(Me.TextBox2)
         Me.Panel1.Controls.Add(Me.filterText)
@@ -149,6 +154,24 @@ Partial Class ucSearch
         Me.shwYellowLight.TabIndex = 36
         Me.shwYellowLight.UseVisualStyleBackColor = False
         '
+        'PictureMarker
+        '
+        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
+        Me.PictureMarker.Location = New System.Drawing.Point(3, 1)
+        Me.PictureMarker.Name = "PictureMarker"
+        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
+        Me.PictureMarker.TabIndex = 43
+        Me.PictureMarker.TabStop = False
+        '
+        'CheckBxMarker
+        '
+        Me.CheckBxMarker.AutoSize = True
+        Me.CheckBxMarker.Location = New System.Drawing.Point(20, 3)
+        Me.CheckBxMarker.Name = "CheckBxMarker"
+        Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
+        Me.CheckBxMarker.TabIndex = 44
+        Me.CheckBxMarker.UseVisualStyleBackColor = True
+        '
         'ucSearch
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -162,6 +185,7 @@ Partial Class ucSearch
         Me.Panel1.PerformLayout()
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
@@ -176,5 +200,7 @@ Partial Class ucSearch
     Friend WithEvents filterText As System.Windows.Forms.TextBox
     Friend WithEvents TextBox2 As System.Windows.Forms.TextBox
     Friend WithEvents listboxNames As System.Windows.Forms.ListBox
+    Friend WithEvents PictureMarker As System.Windows.Forms.PictureBox
+    Friend WithEvents CheckBxMarker As System.Windows.Forms.CheckBox
 
 End Class

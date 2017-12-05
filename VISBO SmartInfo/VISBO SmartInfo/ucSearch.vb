@@ -33,6 +33,25 @@ Public Class ucSearch
     ' ''Friend positionIndexPD As Integer = 8
     ' ''Friend positionIndexPT As Integer = 6
 
+
+
+    ''' <summary>
+    ''' ist gecheckt, wenn ein Pfeil für das/die ausgewählten Elemente angezeigt werden soll
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub CheckBxMarker_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBxMarker.CheckedChanged
+        If CheckBxMarker.Checked Then
+            ' alle selektierten Elemente jetzt mit Marker versehen
+            showMarker = True
+            Call createMarkerShapes(pptShapes:=selectedPlanShapes)
+        Else
+            showMarker = False
+            Call deleteMarkerShapes()
+        End If
+    End Sub
+
     ''' <summary>
     ''' füllt die ListboxNames mit den Elementen, deren Ampel keine Bewertung hat
     ''' </summary>
@@ -134,6 +153,8 @@ Public Class ucSearch
                     catCode = pptInfoType.cName
                 Case "Original Name"
                     catCode = pptInfoType.oName
+                Case "Verantwortlich"
+                    catCode = pptInfoType.responsible
                 Case "Abkürzung"
                     catCode = pptInfoType.sName
                 Case "voller Name"
@@ -244,17 +265,22 @@ Public Class ucSearch
 
     Private Sub ucSearch_Load(sender As Object, e As EventArgs) Handles Me.Load
 
-        cathegoryList.MaxDropDownItems = 8
+        cathegoryList.MaxDropDownItems = 9
         cathegoryList.Items.Add("Name")
+        cathegoryList.Items.Add("Verantwortlich")
         cathegoryList.Items.Add("Lieferumfänge")
         cathegoryList.Items.Add("Original Name")
         cathegoryList.Items.Add("Ressourcen")
         cathegoryList.Items.Add("Abkürzung")
         cathegoryList.Items.Add("Kosten")
         cathegoryList.Items.Add("Termin-Änderungen")
-        cathegoryList.SelectedItem = "Name"
 
-        Call fülltListbox()
+        If slideHasSmartElements Then
+            cathegoryList.SelectedItem = "Name"
+        End If
+
+
+        'Call fülltListbox()
 
     End Sub
 

@@ -698,6 +698,13 @@ Module Module1
                             ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
                             initialHomeButtonRelevance = homeButtonRelevance
                             initialChangedButtonRelevance = changedButtonRelevance
+                            If searchPane.Visible Then
+                                If slideHasSmartElements Then
+
+                                    ucSearchView.cathegoryList.SelectedItem = "Name"
+
+                                End If
+                            End If
 
                         Else
                             Call MsgBox(msg)
@@ -709,6 +716,14 @@ Module Module1
                 End Try
             Else
                 slideHasSmartElements = False
+                ' Listen löschen
+                smartSlideLists = New clsSmartSlideListen
+
+                If searchPane.Visible Then
+                    Call clearSearchPane(Nothing)
+                End If
+
+
             End If
 
 
@@ -4643,7 +4658,33 @@ Module Module1
 
     End Sub
 
-    ''TODO: wenn man außerhalb der Folie klickt zum deselektieren, wird das Info-Pane nicht zurückgesetzt
+    ''
+    ''' <summary>
+    ''' aktualisiert das Search-Pane mit den Feldern  
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="isMovedShape"></param>
+    ''' <remarks></remarks>
+    Friend Sub clearSearchPane(ByVal tmpShape As PowerPoint.Shape, Optional ByVal isMovedShape As Boolean = False)
+
+        If IsNothing(tmpShape) And Not slideHasSmartElements Then
+            With ucSearchView
+
+                .cathegoryList.SelectedItem = ""
+                .shwOhneLight.Checked = False
+                .shwGreenLight.Checked = False
+                .shwYellowLight.Checked = False
+                .shwRedLight.Checked = False
+                .filterText.Text = ""
+                .listboxNames.Items.Clear()
+                .fülltListbox()
+            End With
+        End If
+
+    End Sub
+
+
+    ''
     ''' <summary>
     ''' aktualisiert das Info-Pane mit den Feldern ElemName, ElemDate, BreadCrumb und aLuTv-Text 
     ''' </summary>
@@ -4762,7 +4803,7 @@ Module Module1
         bestimmeElemLU = tmpText
 
     End Function
-  
+
     ''' <summary>
     ''' bestimme die Ampel-Erläuterung ( Tag= AE)
     ''' </summary>
@@ -4815,11 +4856,11 @@ Module Module1
 
         Dim tmpText As String = ""
 
-        If Not noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+        If Not noDBAccessInPPT And pptShapeIsPhase(curshape) Then
             Try
-                Dim pvName As String = getPVnameFromShpName(curShape.Name)
+                Dim pvName As String = getPVnameFromShpName(curshape.Name)
                 Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
-                Dim phNameID As String = getElemIDFromShpName(curShape.Name)
+                Dim phNameID As String = getElemIDFromShpName(curshape.Name)
                 Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
                 Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
                 Dim costInformations As SortedList(Of String, Double) = cPhase.getCostNamesAndValues
@@ -4866,12 +4907,12 @@ Module Module1
                 Next
 
             Catch ex As Exception
-                tmpText = "Phase " & getElemNameFromShpName(curShape.Name)
+                tmpText = "Phase " & getElemNameFromShpName(curshape.Name)
             End Try
 
 
 
-        ElseIf noDBAccessInPPT And pptShapeIsPhase(curShape) Then
+        ElseIf noDBAccessInPPT And pptShapeIsPhase(curshape) Then
             ' ''If Not shortForm Then
             ' ''    If englishLanguage Then
             ' ''        tmpText = "Resource/Costs " & getElemNameFromShpName(curShape.Name) & ":" & vbLf & _
@@ -5052,7 +5093,7 @@ Module Module1
                     ' '' ''tmFormular.Show()
 
                     varPPTTM = New clsPPTTimeMachine
-                   
+
                     Dim currentDate As Date = Date.Now
 
                     ' die MArker, falls welche sichtbar sind , wegmachen ... 
@@ -5126,7 +5167,7 @@ Module Module1
             Call MsgBox(msg)
         End If
 
-      
+
 
     End Sub
 
