@@ -172,6 +172,7 @@ Public Class Ribbon1
         If searchPane.Visible Then
             searchPane.Visible = False
         Else
+
             searchPane.Visible = True
         End If
 

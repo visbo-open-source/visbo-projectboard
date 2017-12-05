@@ -25,14 +25,14 @@ Partial Class ucSearch
         Me.cathegoryList = New System.Windows.Forms.ComboBox()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.listboxNames = New System.Windows.Forms.ListBox()
+        Me.TextBox2 = New System.Windows.Forms.TextBox()
+        Me.filterText = New System.Windows.Forms.TextBox()
+        Me.Panel2 = New System.Windows.Forms.Panel()
         Me.shwOhneLight = New System.Windows.Forms.CheckBox()
+        Me.shwRedLight = New System.Windows.Forms.CheckBox()
         Me.shwGreenLight = New System.Windows.Forms.CheckBox()
         Me.shwYellowLight = New System.Windows.Forms.CheckBox()
-        Me.shwRedLight = New System.Windows.Forms.CheckBox()
-        Me.Panel2 = New System.Windows.Forms.Panel()
-        Me.filterText = New System.Windows.Forms.TextBox()
-        Me.TextBox2 = New System.Windows.Forms.TextBox()
-        Me.listboxNames = New System.Windows.Forms.ListBox()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
         Me.Panel2.SuspendLayout()
@@ -71,6 +71,45 @@ Partial Class ucSearch
         Me.Panel1.Size = New System.Drawing.Size(345, 845)
         Me.Panel1.TabIndex = 3
         '
+        'listboxNames
+        '
+        Me.listboxNames.FormattingEnabled = True
+        Me.listboxNames.HorizontalScrollbar = True
+        Me.listboxNames.Location = New System.Drawing.Point(3, 102)
+        Me.listboxNames.Name = "listboxNames"
+        Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+        Me.listboxNames.Size = New System.Drawing.Size(329, 381)
+        Me.listboxNames.Sorted = True
+        Me.listboxNames.TabIndex = 42
+        '
+        'TextBox2
+        '
+        Me.TextBox2.Location = New System.Drawing.Point(3, 489)
+        Me.TextBox2.Multiline = True
+        Me.TextBox2.Name = "TextBox2"
+        Me.TextBox2.Size = New System.Drawing.Size(329, 346)
+        Me.TextBox2.TabIndex = 40
+        '
+        'filterText
+        '
+        Me.filterText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterText.Location = New System.Drawing.Point(3, 33)
+        Me.filterText.Name = "filterText"
+        Me.filterText.ScrollBars = System.Windows.Forms.ScrollBars.Both
+        Me.filterText.Size = New System.Drawing.Size(308, 23)
+        Me.filterText.TabIndex = 39
+        '
+        'Panel2
+        '
+        Me.Panel2.Controls.Add(Me.shwOhneLight)
+        Me.Panel2.Controls.Add(Me.shwRedLight)
+        Me.Panel2.Controls.Add(Me.shwGreenLight)
+        Me.Panel2.Controls.Add(Me.shwYellowLight)
+        Me.Panel2.Location = New System.Drawing.Point(250, 0)
+        Me.Panel2.Name = "Panel2"
+        Me.Panel2.Size = New System.Drawing.Size(92, 27)
+        Me.Panel2.TabIndex = 38
+        '
         'shwOhneLight
         '
         Me.shwOhneLight.AutoSize = True
@@ -79,6 +118,16 @@ Partial Class ucSearch
         Me.shwOhneLight.Size = New System.Drawing.Size(15, 14)
         Me.shwOhneLight.TabIndex = 34
         Me.shwOhneLight.UseVisualStyleBackColor = True
+        '
+        'shwRedLight
+        '
+        Me.shwRedLight.AutoSize = True
+        Me.shwRedLight.BackColor = System.Drawing.Color.Firebrick
+        Me.shwRedLight.Location = New System.Drawing.Point(67, 3)
+        Me.shwRedLight.Name = "shwRedLight"
+        Me.shwRedLight.Size = New System.Drawing.Size(15, 14)
+        Me.shwRedLight.TabIndex = 37
+        Me.shwRedLight.UseVisualStyleBackColor = False
         '
         'shwGreenLight
         '
@@ -99,55 +148,6 @@ Partial Class ucSearch
         Me.shwYellowLight.Size = New System.Drawing.Size(15, 14)
         Me.shwYellowLight.TabIndex = 36
         Me.shwYellowLight.UseVisualStyleBackColor = False
-        '
-        'shwRedLight
-        '
-        Me.shwRedLight.AutoSize = True
-        Me.shwRedLight.BackColor = System.Drawing.Color.Firebrick
-        Me.shwRedLight.Location = New System.Drawing.Point(67, 3)
-        Me.shwRedLight.Name = "shwRedLight"
-        Me.shwRedLight.Size = New System.Drawing.Size(15, 14)
-        Me.shwRedLight.TabIndex = 37
-        Me.shwRedLight.UseVisualStyleBackColor = False
-        '
-        'Panel2
-        '
-        Me.Panel2.Controls.Add(Me.shwOhneLight)
-        Me.Panel2.Controls.Add(Me.shwRedLight)
-        Me.Panel2.Controls.Add(Me.shwGreenLight)
-        Me.Panel2.Controls.Add(Me.shwYellowLight)
-        Me.Panel2.Location = New System.Drawing.Point(250, 0)
-        Me.Panel2.Name = "Panel2"
-        Me.Panel2.Size = New System.Drawing.Size(92, 27)
-        Me.Panel2.TabIndex = 38
-        '
-        'filterText
-        '
-        Me.filterText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.filterText.Location = New System.Drawing.Point(3, 33)
-        Me.filterText.Name = "filterText"
-        Me.filterText.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.filterText.Size = New System.Drawing.Size(308, 23)
-        Me.filterText.TabIndex = 39
-        '
-        'TextBox2
-        '
-        Me.TextBox2.Location = New System.Drawing.Point(3, 489)
-        Me.TextBox2.Multiline = True
-        Me.TextBox2.Name = "TextBox2"
-        Me.TextBox2.Size = New System.Drawing.Size(329, 346)
-        Me.TextBox2.TabIndex = 40
-        '
-        'listboxNames
-        '
-        Me.listboxNames.FormattingEnabled = True
-        Me.listboxNames.HorizontalScrollbar = True
-        Me.listboxNames.Location = New System.Drawing.Point(3, 102)
-        Me.listboxNames.Name = "listboxNames"
-        Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.listboxNames.Size = New System.Drawing.Size(329, 381)
-        Me.listboxNames.Sorted = True
-        Me.listboxNames.TabIndex = 42
         '
         'ucSearch
         '
