@@ -11,24 +11,6 @@ Public Class Ribbon1
 
     End Sub
 
-    Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
-
-        Dim msg As String = ""
-        If userIsEntitled(msg) Then
-
-            ' wird das Formular aktuell angezeigt ? 
-            If IsNothing(infoFrm) And Not formIsShown Then
-                infoFrm = New frmInfo
-                formIsShown = True
-                infoFrm.Show()
-            End If
-
-        Else
-            Call MsgBox(msg)
-        End If
-
-
-    End Sub
 
 
 
@@ -166,6 +148,40 @@ Public Class Ribbon1
         End If
     End Sub
 
+    Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
+
+        Dim msg As String = ""
+        If userIsEntitled(msg) Then
+
+            ' wird das Formular aktuell angezeigt ? 
+            If IsNothing(infoFrm) And Not formIsShown Then
+                infoFrm = New frmInfo
+                formIsShown = True
+                infoFrm.Show()
+            End If
+
+        Else
+            Call MsgBox(msg)
+        End If
+
+    End Sub
+
+
+    Private Sub activateSearch_Click(sender As Object, e As RibbonControlEventArgs) Handles activateSearch.Click
+
+        If searchPane.Visible Then
+            searchPane.Visible = False
+        Else
+            searchPane.Visible = True
+            If slideHasSmartElements Then
+                ucSearchView.cathegoryList.SelectedItem = "Name"
+            End If
+
+        End If
+
+
+    End Sub
+
     Private Sub activateInfo_Click(sender As Object, e As RibbonControlEventArgs) Handles activateInfo.Click
 
         If propertiesPane.Visible Then
@@ -175,6 +191,7 @@ Public Class Ribbon1
         End If
 
     End Sub
+
 
     Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
 
@@ -258,6 +275,30 @@ Public Class Ribbon1
 
     End Sub
 
+
+    ''' <summary>
+    ''' zeitgt die Veränderungen zweier Versionen an
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnShowChanges_Click(sender As Object, e As RibbonControlEventArgs) Handles btnShowChanges.Click
+
+        Try
+            ' das Formular aufschalten 
+            If IsNothing(changeFrm) Then
+                changeFrm = New frmChanges
+                changeFrm.Show()
+            Else
+                changeFrm.neuAufbau()
+            End If
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+
     ''' <summary>
     ''' zeigt die nächste Version an
     ''' </summary>
@@ -325,5 +366,20 @@ Public Class Ribbon1
     End Sub
 
 
+    Private Sub btnEnd2_Click(sender As Object, e As RibbonControlEventArgs) Handles btnEnd2.Click
+
+    End Sub
+    Private Sub btnFastForward_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastForward.Click
+
+    End Sub
+    Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
+
+    End Sub
+    Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
+
+    End Sub
+    Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
+
+    End Sub
 End Class
 

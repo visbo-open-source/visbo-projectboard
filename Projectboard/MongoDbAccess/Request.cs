@@ -46,6 +46,7 @@ namespace MongoDbAccess
         protected IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
         protected IMongoCollection<clsFilterDB> CollectionFilter;
         protected IGridFSBucket BucketDocuments;
+        private String User;
         
         /// <summary>
         /// Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort
@@ -97,6 +98,7 @@ namespace MongoDbAccess
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
             BucketDocuments = new GridFSBucket(Database, new GridFSBucketOptions{BucketName = "documents"});
+            User = username;
 
         }
         
@@ -2134,6 +2136,9 @@ namespace MongoDbAccess
 
 
  
+        // TODO: add user permission logic to queries. Use this.User for the currently logged in username
+        // TODO: create and use mapper classes for FileInfo and File.
+
 
         /// <summary>
         /// Uploads a document from the local file system to the database. See also the asynchronous method <seealso cref="StoreDocumentToDBAsync(string, string, string[], string)"/>.
@@ -2279,9 +2284,23 @@ namespace MongoDbAccess
             return fileNames;
         }
 
-        public List<String> FindLatestRevisionOfAllDocumentsInDB()
+        public async Task<List<String>> FindLatestRevisionOfAllDocumentsInDBAsync()
         {
-            //TODO
+            PipelineDefinition<GridFSFileInfo, BsonDocument> pipeline = new BsonDocument[]{
+                new BsonDocument { { "$match", new BsonDocument("metadata.entitled", this.User)} },
+                new BsonDocument { { "$sort", new BsonDocument("uploadDate", -1)} },
+                new BsonDocument { { "$group", new BsonDocument { {"_id", "$filename"}, {"latest", new BsonDocument("$first", "$$ROOT") } } } }
+            };
+            
+            IMongoCollection<GridFSFileInfo> CollectionDocs = Database.GetCollection<GridFSFileInfo>("documents.files");
+
+            var results = await CollectionDocs.Aggregate<BsonDocument>(pipeline).ToListAsync();
+
+            foreach (BsonDocument elem in results)
+            {
+                GridFSFileInfo info = new GridFSFileInfo((BsonDocument)elem.GetValue("latest"));
+                Console.WriteLine(info.Filename + ": " + info.UploadDateTime);
+            }
             return null;
         }
 

@@ -328,6 +328,8 @@ Public Module Module1
         Protocol = 6
         Dauer = 7
         Abkuerzung = 8
+        Verantwortlich = 9
+        percentDone = 10
     End Enum
 
 
@@ -367,6 +369,8 @@ Public Module Module1
         betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
         Budget = 19
         FitRisikoDependency = 20
+        PhaseCategories = 21
+        MilestoneCategories = 22
     End Enum
 
     ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 
@@ -544,6 +548,7 @@ Public Module Module1
         vorlage = 0
         projekt = 1
         nameList = 2
+        categoryList = 3
     End Enum
 
     ''' <summary>
@@ -726,7 +731,7 @@ Public Module Module1
     ' portfolio
 
     ' Variable nimmt die Namen der Diagramm-Typen auf 
-    Public DiagrammTypen(6) As String
+    Public DiagrammTypen(8) As String
 
     ' Variable nimmt die Namen der Windows auf  
     Public windowNames(4) As String
@@ -1137,6 +1142,7 @@ Public Module Module1
 
             End If
             If weitermachen Then
+
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
                     If currentFilter.doesNotBlock(kvp.Value) Then
 
@@ -1382,7 +1388,8 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Phasen Then
+                If CInt(tmpStr(1)) = PTpfdk.Phasen Or _
+                    CInt(tmpStr(1)) = PTpfdk.PhaseCategories Then
 
                     found = True
 
@@ -1418,7 +1425,9 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Then
+                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Or _
+                    CInt(tmpStr(1)) = PTpfdk.MilestoneCategories Then
+
                     found = True
 
                 End If
@@ -2881,6 +2890,24 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' berechnet den Namen, der in selectedphases bzw. selectedMilestones reinkommt, wenn awinsettings.considercategory true ist  
+    ''' Breadcrumb und elemName; Breadcrumb und die einzelnen Stufen des Breadcrumbs sind getrennt durch #
+    ''' </summary>
+    ''' <param name="category">bezeichnet die Darstellungsklasse des Meilensteins , der Phase</param>
+    ''' <param name="isMilestone">gibt an ob es sich um einen Meilenstein oder eine Phase handelt</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcHryCategoryName(ByVal category As String, ByVal isMilestone As boolean) As String
+
+        If isMilestone Then
+            calcHryCategoryName = "[C:" & category & "]M"
+        Else
+            calcHryCategoryName = "[C:" & category & "]P"
+        End If
+
+    End Function
+
+    ''' <summary>
     ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstein oder eine Phase 
     ''' </summary>
     ''' <param name="hproj"></param>
@@ -2900,6 +2927,8 @@ Public Module Module1
 
     ''' <summary>
     ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
+    ''' es kann unterschieden werden zwischen [P:Projekt-Name], 
+    ''' [V:Vorlagen-Name] und [C:Category-Name]
     ''' </summary>
     ''' <param name="fullname"></param>
     ''' <param name="elemName"></param>
@@ -2913,11 +2942,14 @@ Public Module Module1
         Dim anzahl As Integer
 
         ' enthält der pvName die Kennung für Vorlage oder Projekt ? 
-        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Then
+        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Or _
+            fullname.StartsWith("[C:") Then
             If fullname.StartsWith("[P:") Then
                 type = PTProjektType.projekt
-            Else
+            ElseIf fullname.StartsWith("[V:") Then
                 type = PTProjektType.vorlage
+            Else
+                type = PTProjektType.categoryList
             End If
 
             Dim startPos As Integer = 3
@@ -2951,7 +2983,7 @@ Public Module Module1
     End Sub
 
     ''' <summary>
-    ''' zerhackt den übergebenen String in seine Bestandteile [V:vorlagen-name] bzw. [P:projekt-name] und 
+    ''' zerhackt den übergebenen String in seine Bestandteile [C:KAtegorie], [V:vorlagen-name] bzw. [P:projekt-name] und 
     ''' Breadcrumb-Name
     ''' 
     ''' </summary>
@@ -2964,13 +2996,20 @@ Public Module Module1
         Dim breadCrumb As String = ""
         Dim type As Integer = -1
         Dim pvName As String = ""
+
         Call splitHryFullnameTo2(fullname, elemName, breadCrumb, type, pvName)
 
-        If breadCrumb = "" Then
-            tmpResult = elemName
+        If type = PTProjektType.categoryList Then
+            ' hier steht im pvName der Name der Kategorie ...
+            tmpResult = pvName
         Else
-            tmpResult = breadCrumb.Replace("#", "-") & "-" & elemName
+            If breadCrumb = "" Then
+                tmpResult = elemName
+            Else
+                tmpResult = breadCrumb.Replace("#", "-") & "-" & elemName
+            End If
         End If
+        
 
         splitHryFullnameTo1 = tmpResult
 
@@ -3530,6 +3569,7 @@ Public Module Module1
     ''' 0 = Projekt-Struktur (Vorlage)
     ''' 1 = Projekt-Struktur(Projekt)
     ''' 2 = Namensliste
+    ''' 3 = Category Liste
     ''' </summary>
     ''' <param name="selectedBUs"></param>
     ''' <param name="selectedTyps"></param>
@@ -3539,133 +3579,140 @@ Public Module Module1
     ''' <param name="selectedCosts"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function selectionTyp(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
-                                           ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
-                                           ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Integer
+    Public Function selectionTyp(ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection) As Integer
 
         Dim element As String = ""
-        Dim tmpresult As PTProjektType = PTProjektType.nameList
+        Dim tmpresult As Integer = PTProjektType.nameList
         Dim i As Integer = 1
 
-        ' Check ob selectedPhases P: oder V: enthält
+        ' Check ob selectedPhases P:, V: oder C: enthält
         Do While tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
-            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
-                Do While tmpresult = PTProjektType.nameList And i <= selectedPhases.Count
-                    element = selectedPhases.Item(i).ToString
-                    Dim hstr1() As String = Split(element, "V:")
-                    If hstr1.Length > 1 Then
-                        tmpresult = PTProjektType.vorlage
-                    End If
-                    Dim hstr2() As String = Split(element, "P:")
-                    If hstr2.Length > 1 Then
-                        tmpresult = PTProjektType.projekt
-                    End If
-                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
-                        tmpresult = PTProjektType.nameList
-                    End If
-                    i = i + 1
-                Loop
-                i = i + 1
-            Loop
+
+            element = selectedPhases.Item(i).ToString
+
+            Dim elemName As String = ""
+            Dim bc As String = ""
+            Dim tmpType As Integer = -1
+            Dim pvcName As String = ""
+            Call splitHryFullnameTo2(element, elemName, bc, tmpType, pvcName)
+
+            If tmpType = PTProjektType.vorlage Or tmpType = PTProjektType.projekt Then
+                tmpresult = tmpType
+            ElseIf tmpresult = PTProjektType.nameList And tmpType = PTProjektType.categoryList Then
+                tmpresult = tmpType
+            End If
+
             i = i + 1
         Loop
 
-        ' Check ob selectedMeilstones P: oder V: enthält
+
+        ' Schleife ist nur solange notwendig, solange tmpResult nicht gleich Projekt-Typ ist 
         i = 1
         Do While tmpresult <> PTProjektType.projekt And i <= selectedMilestones.Count
-            Do While tmpresult <> PTProjektType.vorlage And tmpresult <> PTProjektType.projekt And i <= selectedMilestones.Count
-                Do While tmpresult = PTProjektType.nameList And i <= selectedMilestones.Count
-                    element = selectedMilestones.Item(i).ToString
-                    Dim hstr1() As String = Split(element, "V:")
-                    If hstr1.Length > 1 Then
-                        tmpresult = PTProjektType.vorlage
-                    End If
-                    Dim hstr2() As String = Split(element, "P:")
-                    If hstr2.Length > 1 Then
-                        tmpresult = PTProjektType.projekt
-                    End If
-                    If (hstr1.Length = 1) And (hstr2.Length = 1) Then
-                        tmpresult = PTProjektType.nameList
-                    End If
-                    i = i + 1
-                Loop
-                i = i + 1
-            Loop
+
+            element = selectedMilestones.Item(i).ToString
+
+            Dim elemName As String = ""
+            Dim bc As String = ""
+            Dim tmpType As Integer = -1
+            Dim pvcName As String = ""
+            Call splitHryFullnameTo2(element, elemName, bc, tmpType, pvcName)
+
+            If tmpType = PTProjektType.vorlage Or tmpType = PTProjektType.projekt Then
+                tmpresult = tmpType
+            ElseIf tmpresult = PTProjektType.nameList And tmpType = PTProjektType.categoryList Then
+                tmpresult = tmpType
+            End If
+
             i = i + 1
+
         Loop
 
 
-        ' gleiches noch todo für Milensteine, rollen, kosten, ...
+                ' gleiches noch todo für Milensteine, rollen, kosten, ...
 
         selectionTyp = tmpresult
 
     End Function
 
    
-    ''' <summary>
-    ''' 
-    ''' </summary>
-    ''' <param name="selectedBUs"></param>
-    ''' <param name="selectedTyps"></param>
-    ''' <param name="selectedPhases"></param>
-    ''' <param name="selectedMilestones"></param>
-    ''' <param name="selectedRoles"></param>
-    ''' <param name="selectedCosts"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function checkFilter(ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
-                                               ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
-                                               ByRef selectedRoles As Collection, ByRef selectedCosts As Collection) As Collection
+    ' ''' <summary>
+    ' ''' 
+    ' ''' </summary>
+    ' ''' <param name="selectedBUs"></param>
+    ' ''' <param name="selectedTyps"></param>
+    ' ''' <param name="selectedPhases"></param>
+    ' ''' <param name="selectedMilestones"></param>
+    ' ''' <param name="selectedRoles"></param>
+    ' ''' <param name="selectedCosts"></param>
+    ' ''' <returns></returns>
+    ' ''' <remarks></remarks>
+    'Public Function checkFilter(ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+    '                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+    '                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection) As Collection
 
-        Dim element As String = ""
-        Dim outputCollection As New Collection
-        Dim tmpresult As PTProjektType = PTProjektType.nameList
-        Dim i As Integer = 1
-        Dim projName As String = ""
+    '    Dim element As String = ""
+    '    Dim outputCollection As New Collection
+
+    '    Dim i As Integer = 1
+    '    Dim projName As String = ""
+
+    '    Dim elemName As String = ""
+    '    Dim bc As String = ""
+    '    Dim type As Integer = -1
+    '    Dim pvcName As String = ""
 
 
-        For i = 1 To selectedPhases.Count
+    '    For i = 1 To selectedPhases.Count
 
-            element = selectedPhases.Item(i).ToString
-            Dim hstr() As String = Split(element, "P:")
-            If hstr.Length > 1 Then
-                Dim hstr1() As String = Split(hstr(1), "]", , )
-                If hstr1.Length > 0 Then
-                    projName = hstr1(0)
-                    If Not ShowProjekte.contains(projName) Then
-                        If Not outputCollection.Contains(projName) Then
-                            outputCollection.Add(projName, projName)
-                        End If
-                    End If
-                End If
-            End If
-        Next i
+    '        element = selectedPhases.Item(i).ToString
 
-        For i = 1 To selectedMilestones.Count
+    '        If element.StartsWith("[P:") Then
+    '            Call splitHryFullnameTo2(element, elemName, bc, type, pvcName)
+    '        End If
 
-            element = selectedMilestones.Item(i).ToString
-            Dim hstr() As String = Split(element, "P:")
-            If hstr.Length > 1 Then
-                Dim hstr1() As String = Split(hstr(1), "]", , )
-                If hstr1.Length > 0 Then
-                    projName = hstr1(0)
-                    If Not ShowProjekte.contains(projName) Then
-                        If Not outputCollection.Contains(projName) Then
-                            outputCollection.Add(projName, projName)
-                        End If
-                    End If
-                End If
-            End If
-        Next i
 
-        Dim explstr As String = "Folgende Projekte sind im Filter enthalten, doch nicht in der Multprojekt-Tafel geladen"
-        Dim headerstr As String = "nicht geladene Projekte"
+    '        Dim hstr() As String = Split(element, "P:")
+    '        If hstr.Length > 1 Then
+    '            Dim hstr1() As String = Split(hstr(1), "]", , )
+    '            If hstr1.Length > 0 Then
+    '                projName = hstr1(0)
+    '                If Not ShowProjekte.contains(projName) Then
+    '                    If Not outputCollection.Contains(projName) Then
+    '                        outputCollection.Add(projName, projName)
+    '                    End If
+    '                End If
+    '            End If
+    '        End If
+    '    Next i
 
-        Call showOutPut(outputCollection, headerstr, explstr)
+    '    For i = 1 To selectedMilestones.Count
 
-        checkFilter = outputCollection
-  
-    End Function
+    '        element = selectedMilestones.Item(i).ToString
+    '        Dim hstr() As String = Split(element, "P:")
+    '        If hstr.Length > 1 Then
+    '            Dim hstr1() As String = Split(hstr(1), "]", , )
+    '            If hstr1.Length > 0 Then
+    '                projName = hstr1(0)
+    '                If Not ShowProjekte.contains(projName) Then
+    '                    If Not outputCollection.Contains(projName) Then
+    '                        outputCollection.Add(projName, projName)
+    '                    End If
+    '                End If
+    '            End If
+    '        End If
+    '    Next i
+
+    '    Dim explstr As String = "Folgende Projekte sind im Filter enthalten, doch nicht in der Multprojekt-Tafel geladen"
+    '    Dim headerstr As String = "nicht geladene Projekte"
+
+    '    Call showOutPut(outputCollection, headerstr, explstr)
+
+    '    checkFilter = outputCollection
+
+    'End Function
 
 
 
@@ -3790,7 +3837,9 @@ Public Module Module1
                                           ByVal bestShortName As String, ByVal bestLongName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
                                           ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
-                                          ByVal lieferumfaenge As String)
+                                          ByVal lieferumfaenge As String, _
+                                          ByVal verantwortlich As String, _
+                                          ByVal percentDone As Double)
 
         Dim nullDate As Date = Nothing
 
@@ -3895,6 +3944,26 @@ Public Module Module1
                             .Tags.Delete("LU")
                         End If
                         .Tags.Add("LU", lieferumfaenge)
+                    End If
+
+                End If
+
+                If Not IsNothing(verantwortlich) Then
+                    If verantwortlich.Trim.Length > 0 Then
+                        If .Tags.Item("VE").Length > 0 Then
+                            .Tags.Delete("VE")
+                        End If
+                        .Tags.Add("VE", verantwortlich.Trim)
+                    End If
+
+                End If
+
+                If Not IsNothing(percentDone) Then
+                    If percentDone > 0 Then
+                        If .Tags.Item("PD").Length > 0 Then
+                            .Tags.Delete("PD")
+                        End If
+                        .Tags.Add("PD", percentDone.ToString("0#."))
                     End If
 
                 End If

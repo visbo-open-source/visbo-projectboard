@@ -20,4 +20,8 @@
     Private Sub eleName_Click(sender As Object, e As EventArgs) Handles eleName.Click
 
     End Sub
+
+    Private Sub eleDeliverables_TextChanged(sender As Object, e As EventArgs) Handles eleDeliverables.TextChanged
+
+    End Sub
 End Class

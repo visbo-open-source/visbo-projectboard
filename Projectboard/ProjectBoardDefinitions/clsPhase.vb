@@ -54,7 +54,12 @@ Public Class clsPhase
         End Get
         Set(value As Double)
             If value >= 0 Then
-                _percentDone = value
+                If value <= 1.0 Then
+                    _percentDone = value
+                Else
+                    _percentDone = 1.0 ' kann keine größeren Werte als 1 annehmen 
+                End If
+
             Else
                 Throw New ArgumentException("percent Done Value must not be negativ ...")
             End If
@@ -460,6 +465,10 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
+            ' tk 28.11.17
+            If PhaseDefinitions.Contains(Me.name) Then
+                _appearance = PhaseDefinitions.getAppearance(Me.name)
+            End If
             appearance = _appearance
         End Get
         Set(value As String)
@@ -514,7 +523,7 @@ Public Class clsPhase
     Public Property ampelStatus As Integer
         Get
             If Me.bewertungsCount >= 1 Then
-                ampelStatus = Me.getBewertung(1).colorIndex
+                ampelStatus = Me.getBewertung(Me.bewertungsCount).colorIndex
             Else
                 ampelStatus = 0
             End If
@@ -553,7 +562,7 @@ Public Class clsPhase
     Public Property ampelErlaeuterung As String
         Get
             If Me.bewertungsCount >= 1 Then
-                ampelErlaeuterung = Me.getBewertung(1).description
+                ampelErlaeuterung = Me.getBewertung(Me.bewertungsCount).description
             Else
                 ampelErlaeuterung = ""
             End If

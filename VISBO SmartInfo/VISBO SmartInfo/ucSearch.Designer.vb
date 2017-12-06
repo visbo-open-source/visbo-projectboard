@@ -22,61 +22,155 @@ Partial Class ucSearch
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.Label1 = New System.Windows.Forms.Label()
-        Me.ComboBox1 = New System.Windows.Forms.ComboBox()
+        Me.cathegoryList = New System.Windows.Forms.ComboBox()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.Panel1 = New System.Windows.Forms.Panel()
-        Me.TextBox1 = New System.Windows.Forms.TextBox()
+        Me.listboxNames = New System.Windows.Forms.ListBox()
+        Me.TextBox2 = New System.Windows.Forms.TextBox()
+        Me.filterText = New System.Windows.Forms.TextBox()
+        Me.Panel2 = New System.Windows.Forms.Panel()
+        Me.shwOhneLight = New System.Windows.Forms.CheckBox()
+        Me.shwRedLight = New System.Windows.Forms.CheckBox()
+        Me.shwGreenLight = New System.Windows.Forms.CheckBox()
+        Me.shwYellowLight = New System.Windows.Forms.CheckBox()
+        Me.PictureMarker = New System.Windows.Forms.PictureBox()
+        Me.CheckBxMarker = New System.Windows.Forms.CheckBox()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
+        Me.Panel2.SuspendLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
-        'Label1
+        'cathegoryList
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(15, 15)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(51, 13)
-        Me.Label1.TabIndex = 0
-        Me.Label1.Text = "SEARCH"
-        '
-        'ComboBox1
-        '
-        Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(18, 48)
-        Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(277, 21)
-        Me.ComboBox1.TabIndex = 1
+        Me.cathegoryList.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.cathegoryList.FormattingEnabled = True
+        Me.cathegoryList.Location = New System.Drawing.Point(3, 62)
+        Me.cathegoryList.Name = "cathegoryList"
+        Me.cathegoryList.Size = New System.Drawing.Size(329, 24)
+        Me.cathegoryList.TabIndex = 1
         '
         'PictureBox1
         '
         Me.PictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
         Me.PictureBox1.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view1
-        Me.PictureBox1.Location = New System.Drawing.Point(263, 3)
+        Me.PictureBox1.Location = New System.Drawing.Point(310, 32)
         Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(32, 32)
+        Me.PictureBox1.Size = New System.Drawing.Size(22, 24)
         Me.PictureBox1.TabIndex = 2
         Me.PictureBox1.TabStop = False
         '
         'Panel1
         '
-        Me.Panel1.Controls.Add(Me.TextBox1)
-        Me.Panel1.Controls.Add(Me.Label1)
+        Me.Panel1.Controls.Add(Me.CheckBxMarker)
+        Me.Panel1.Controls.Add(Me.PictureMarker)
+        Me.Panel1.Controls.Add(Me.listboxNames)
+        Me.Panel1.Controls.Add(Me.TextBox2)
+        Me.Panel1.Controls.Add(Me.filterText)
+        Me.Panel1.Controls.Add(Me.Panel2)
         Me.Panel1.Controls.Add(Me.PictureBox1)
-        Me.Panel1.Controls.Add(Me.ComboBox1)
+        Me.Panel1.Controls.Add(Me.cathegoryList)
         Me.Panel1.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.Panel1.Location = New System.Drawing.Point(0, 3)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(345, 845)
         Me.Panel1.TabIndex = 3
         '
-        'TextBox1
+        'listboxNames
         '
-        Me.TextBox1.Location = New System.Drawing.Point(18, 99)
-        Me.TextBox1.Multiline = True
-        Me.TextBox1.Name = "TextBox1"
-        Me.TextBox1.Size = New System.Drawing.Size(314, 743)
-        Me.TextBox1.TabIndex = 4
+        Me.listboxNames.FormattingEnabled = True
+        Me.listboxNames.HorizontalScrollbar = True
+        Me.listboxNames.Location = New System.Drawing.Point(3, 102)
+        Me.listboxNames.Name = "listboxNames"
+        Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+        Me.listboxNames.Size = New System.Drawing.Size(329, 381)
+        Me.listboxNames.Sorted = True
+        Me.listboxNames.TabIndex = 42
+        '
+        'TextBox2
+        '
+        Me.TextBox2.Location = New System.Drawing.Point(3, 489)
+        Me.TextBox2.Multiline = True
+        Me.TextBox2.Name = "TextBox2"
+        Me.TextBox2.Size = New System.Drawing.Size(329, 346)
+        Me.TextBox2.TabIndex = 40
+        '
+        'filterText
+        '
+        Me.filterText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterText.Location = New System.Drawing.Point(3, 33)
+        Me.filterText.Name = "filterText"
+        Me.filterText.ScrollBars = System.Windows.Forms.ScrollBars.Both
+        Me.filterText.Size = New System.Drawing.Size(308, 23)
+        Me.filterText.TabIndex = 39
+        '
+        'Panel2
+        '
+        Me.Panel2.Controls.Add(Me.shwOhneLight)
+        Me.Panel2.Controls.Add(Me.shwRedLight)
+        Me.Panel2.Controls.Add(Me.shwGreenLight)
+        Me.Panel2.Controls.Add(Me.shwYellowLight)
+        Me.Panel2.Location = New System.Drawing.Point(250, 0)
+        Me.Panel2.Name = "Panel2"
+        Me.Panel2.Size = New System.Drawing.Size(92, 27)
+        Me.Panel2.TabIndex = 38
+        '
+        'shwOhneLight
+        '
+        Me.shwOhneLight.AutoSize = True
+        Me.shwOhneLight.Location = New System.Drawing.Point(3, 3)
+        Me.shwOhneLight.Name = "shwOhneLight"
+        Me.shwOhneLight.Size = New System.Drawing.Size(15, 14)
+        Me.shwOhneLight.TabIndex = 34
+        Me.shwOhneLight.UseVisualStyleBackColor = True
+        '
+        'shwRedLight
+        '
+        Me.shwRedLight.AutoSize = True
+        Me.shwRedLight.BackColor = System.Drawing.Color.Firebrick
+        Me.shwRedLight.Location = New System.Drawing.Point(67, 3)
+        Me.shwRedLight.Name = "shwRedLight"
+        Me.shwRedLight.Size = New System.Drawing.Size(15, 14)
+        Me.shwRedLight.TabIndex = 37
+        Me.shwRedLight.UseVisualStyleBackColor = False
+        '
+        'shwGreenLight
+        '
+        Me.shwGreenLight.AutoSize = True
+        Me.shwGreenLight.BackColor = System.Drawing.Color.LawnGreen
+        Me.shwGreenLight.Location = New System.Drawing.Point(25, 3)
+        Me.shwGreenLight.Name = "shwGreenLight"
+        Me.shwGreenLight.Size = New System.Drawing.Size(15, 14)
+        Me.shwGreenLight.TabIndex = 35
+        Me.shwGreenLight.UseVisualStyleBackColor = False
+        '
+        'shwYellowLight
+        '
+        Me.shwYellowLight.AutoSize = True
+        Me.shwYellowLight.BackColor = System.Drawing.Color.Yellow
+        Me.shwYellowLight.Location = New System.Drawing.Point(46, 3)
+        Me.shwYellowLight.Name = "shwYellowLight"
+        Me.shwYellowLight.Size = New System.Drawing.Size(15, 14)
+        Me.shwYellowLight.TabIndex = 36
+        Me.shwYellowLight.UseVisualStyleBackColor = False
+        '
+        'PictureMarker
+        '
+        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
+        Me.PictureMarker.Location = New System.Drawing.Point(3, 1)
+        Me.PictureMarker.Name = "PictureMarker"
+        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
+        Me.PictureMarker.TabIndex = 43
+        Me.PictureMarker.TabStop = False
+        '
+        'CheckBxMarker
+        '
+        Me.CheckBxMarker.AutoSize = True
+        Me.CheckBxMarker.Location = New System.Drawing.Point(20, 3)
+        Me.CheckBxMarker.Name = "CheckBxMarker"
+        Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
+        Me.CheckBxMarker.TabIndex = 44
+        Me.CheckBxMarker.UseVisualStyleBackColor = True
         '
         'ucSearch
         '
@@ -89,13 +183,24 @@ Partial Class ucSearch
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
+        Me.Panel2.ResumeLayout(False)
+        Me.Panel2.PerformLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
-    Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents ComboBox1 As System.Windows.Forms.ComboBox
+    Friend WithEvents cathegoryList As System.Windows.Forms.ComboBox
     Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
     Friend WithEvents Panel1 As System.Windows.Forms.Panel
-    Friend WithEvents TextBox1 As System.Windows.Forms.TextBox
+    Friend WithEvents shwOhneLight As System.Windows.Forms.CheckBox
+    Friend WithEvents shwGreenLight As System.Windows.Forms.CheckBox
+    Friend WithEvents shwYellowLight As System.Windows.Forms.CheckBox
+    Friend WithEvents Panel2 As System.Windows.Forms.Panel
+    Friend WithEvents shwRedLight As System.Windows.Forms.CheckBox
+    Friend WithEvents filterText As System.Windows.Forms.TextBox
+    Friend WithEvents TextBox2 As System.Windows.Forms.TextBox
+    Friend WithEvents listboxNames As System.Windows.Forms.ListBox
+    Friend WithEvents PictureMarker As System.Windows.Forms.PictureBox
+    Friend WithEvents CheckBxMarker As System.Windows.Forms.CheckBox
 
 End Class

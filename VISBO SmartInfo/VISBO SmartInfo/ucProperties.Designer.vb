@@ -39,6 +39,7 @@ Partial Class ucProperties
         'eleName
         '
         Me.eleName.AutoSize = True
+        Me.eleName.Enabled = False
         Me.eleName.Font = New System.Drawing.Font("Segoe UI Emoji", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleName.Location = New System.Drawing.Point(3, 12)
         Me.eleName.Name = "eleName"
@@ -60,6 +61,7 @@ Partial Class ucProperties
         'eleDatum
         '
         Me.eleDatum.AutoSize = True
+        Me.eleDatum.Enabled = False
         Me.eleDatum.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!)
         Me.eleDatum.Location = New System.Drawing.Point(94, 53)
         Me.eleDatum.Name = "eleDatum"
@@ -80,6 +82,7 @@ Partial Class ucProperties
         'eleRespons
         '
         Me.eleRespons.AutoSize = True
+        Me.eleRespons.Enabled = False
         Me.eleRespons.Location = New System.Drawing.Point(94, 88)
         Me.eleRespons.Name = "eleRespons"
         Me.eleRespons.Size = New System.Drawing.Size(70, 13)
@@ -99,6 +102,7 @@ Partial Class ucProperties
         'eleAmpel
         '
         Me.eleAmpel.BackColor = System.Drawing.Color.Gray
+        Me.eleAmpel.Enabled = False
         Me.eleAmpel.Location = New System.Drawing.Point(267, 121)
         Me.eleAmpel.Name = "eleAmpel"
         Me.eleAmpel.Size = New System.Drawing.Size(23, 20)
@@ -106,10 +110,13 @@ Partial Class ucProperties
         '
         'eleAmpelText
         '
+        Me.eleAmpelText.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.eleAmpelText.Enabled = False
         Me.eleAmpelText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleAmpelText.Location = New System.Drawing.Point(9, 155)
         Me.eleAmpelText.Multiline = True
         Me.eleAmpelText.Name = "eleAmpelText"
+        Me.eleAmpelText.ReadOnly = True
         Me.eleAmpelText.ScrollBars = System.Windows.Forms.ScrollBars.Both
         Me.eleAmpelText.Size = New System.Drawing.Size(281, 176)
         Me.eleAmpelText.TabIndex = 8
@@ -127,11 +134,14 @@ Partial Class ucProperties
         '
         'eleDeliverables
         '
+        Me.eleDeliverables.BackColor = System.Drawing.SystemColors.Window
         Me.eleDeliverables.Dock = System.Windows.Forms.DockStyle.Bottom
+        Me.eleDeliverables.Enabled = False
         Me.eleDeliverables.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleDeliverables.Location = New System.Drawing.Point(0, 39)
         Me.eleDeliverables.Multiline = True
         Me.eleDeliverables.Name = "eleDeliverables"
+        Me.eleDeliverables.ReadOnly = True
         Me.eleDeliverables.ScrollBars = System.Windows.Forms.ScrollBars.Both
         Me.eleDeliverables.Size = New System.Drawing.Size(286, 192)
         Me.eleDeliverables.TabIndex = 10
@@ -149,7 +159,7 @@ Partial Class ucProperties
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.BackColor = System.Drawing.SystemColors.Control
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.Controls.Add(Me.Panel1)
         Me.Controls.Add(Me.eleAmpelText)
         Me.Controls.Add(Me.eleAmpel)

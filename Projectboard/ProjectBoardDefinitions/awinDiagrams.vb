@@ -137,7 +137,7 @@ Public Module awinDiagrams
         'Dim korr_abstand As Double
         Dim minwert As Double, maxwert As Double
         Dim nr_pts As Integer
-        Dim diagramTitle As String
+        Dim diagramTitle As String = ""
         Dim objektFarbe As Object
         Dim ampelfarbe(3) As Long
         Dim Xdatenreihe() As String
@@ -273,6 +273,26 @@ Public Module awinDiagrams
                 diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
             End If
 
+        ElseIf prcTyp = DiagrammTypen(7) Then
+            ' Phasen Kategorien
+            chtobjName = calcChartKennung("pf", PTpfdk.PhaseCategories, myCollection)
+
+            If myCollection.Count > 1 Then
+                diagramTitle = "Phase-Categories"
+            Else
+                diagramTitle = "Category " & splitHryFullnameTo1(CStr(myCollection.Item(1)))
+            End If
+
+        ElseIf prcTyp = DiagrammTypen(8) Then
+            ' Meilenstein-Kategorien
+            chtobjName = calcChartKennung("pf", PTpfdk.MilestoneCategories, myCollection)
+
+            If myCollection.Count > 1 Then
+                diagramTitle = "Milestone-Categories"
+            Else
+                diagramTitle = "Category " & splitHryFullnameTo1(CStr(myCollection.Item(1)))
+            End If
+
         Else
             chtobjName = repMessages.getmsg(114)
             diagramTitle = repMessages.getmsg(114)
@@ -360,6 +380,11 @@ Public Module awinDiagrams
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                             ' Phasen oder Meilensteine ..
                             Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvName)
+
+                        ElseIf prcTyp = DiagrammTypen(7) Or prcTyp = DiagrammTypen(8) Then
+                            Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvName)
+                            prcName = pvName ' der Name der Kategorie steht hier im pvName 
+
                         Else
                             prcName = CStr(myCollection.Item(r))
                         End If
@@ -381,6 +406,18 @@ Public Module awinDiagrams
                             End If
 
                             datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb, type, pvName)
+
+                        ElseIf prcTyp = DiagrammTypen(7) Then
+                            ' Phasen-Kategorie 
+                            einheit = " "
+
+                            If appearanceDefinitions.ContainsKey(prcName) Then
+                                objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                            Else
+                                objektFarbe = awinSettings.AmpelNichtBewertet
+                            End If
+
+                            datenreihe = ShowProjekte.getCountPhaseCategoriesInMonth(prcName)
 
                         ElseIf prcTyp = DiagrammTypen(1) Then
                             ' Rollen 
@@ -488,6 +525,17 @@ Public Module awinDiagrams
 
                             msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb, type, pvName)
 
+                        ElseIf prcTyp = DiagrammTypen(8) Then
+                            ' Meilenstein-Kategorie 
+                            einheit = " "
+
+                            If appearanceDefinitions.ContainsKey(prcName) Then
+                                objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                            Else
+                                objektFarbe = awinSettings.AmpelNichtBewertet
+                            End If
+
+                            datenreihe = ShowProjekte.getCountMilestoneCategoriesInMonth(prcName)
                         End If
 
                         If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
@@ -577,8 +625,8 @@ Public Module awinDiagrams
                                                 .Name = legendName & ": Platzhalter"
                                             End If
                                         End If
-                                        
-                                        
+
+
                                     Else
                                         .Name = legendName
                                     End If
@@ -751,10 +799,6 @@ Public Module awinDiagrams
                         End If
                     End If
 
-
-
-
-
                     If prcTyp = DiagrammTypen(1) Or _
                         (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
                         (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
@@ -793,8 +837,11 @@ Public Module awinDiagrams
                     .HasTitle = True
 
                     If prcTyp = DiagrammTypen(0) Or _
-                        prcTyp = DiagrammTypen(5) Then
+                        prcTyp = DiagrammTypen(5) Or _
+                        prcTyp = DiagrammTypen(7) Or _
+                        prcTyp = DiagrammTypen(8) Then
                         titleSumme = ""
+
                     ElseIf prcTyp = DiagrammTypen(1) Then
                         einheit = awinSettings.kapaEinheit
                         titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
@@ -1176,6 +1223,11 @@ Public Module awinDiagrams
 
                 If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                     Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvname)
+
+                ElseIf prcTyp = DiagrammTypen(7) Or prcTyp = DiagrammTypen(8) Then
+                    Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb, type, pvname)
+                    prcName = pvname ' der Name der Kategorie steht hier im pvName 
+
                 Else
                     prcName = CStr(myCollection.Item(r))
                 End If
@@ -1209,6 +1261,17 @@ Public Module awinDiagrams
                         Next
                     End If
 
+                ElseIf prcTyp = DiagrammTypen(7) Then
+                    ' Phasen-Kategorie 
+                    einheit = " "
+
+                    If appearanceDefinitions.ContainsKey(prcName) Then
+                        objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                    Else
+                        objektFarbe = awinSettings.AmpelNichtBewertet
+                    End If
+
+                    datenreihe = ShowProjekte.getCountPhaseCategoriesInMonth(prcName)
 
                 ElseIf prcTyp = DiagrammTypen(1) Then
                     einheit = " " & awinSettings.kapaEinheit
@@ -1341,6 +1404,18 @@ Public Module awinDiagrams
                         objektFarbe = tmpMilestoneDef.farbe
                     End If
                     msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb, type, pvname)
+
+                ElseIf prcTyp = DiagrammTypen(8) Then
+                    ' Meilenstein-Kategorie 
+                    einheit = " "
+
+                    If appearanceDefinitions.ContainsKey(prcName) Then
+                        objektFarbe = appearanceDefinitions.Item(prcName).form.Fill.ForeColor.RGB
+                    Else
+                        objektFarbe = awinSettings.AmpelNichtBewertet
+                    End If
+
+                    datenreihe = ShowProjekte.getCountMilestoneCategoriesInMonth(prcName)
 
                 End If
 
@@ -1600,7 +1675,9 @@ Public Module awinDiagrams
 
 
             If prcTyp = DiagrammTypen(0) Or _
-                    prcTyp = DiagrammTypen(5) Then
+                    prcTyp = DiagrammTypen(5) Or _
+                    prcTyp = DiagrammTypen(7) Or _
+                    prcTyp = DiagrammTypen(8) Then
                 titleSumme = ""
 
             ElseIf prcTyp = DiagrammTypen(1) Then

@@ -20499,24 +20499,15 @@ Public Module Projekte
                 '
                 ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
                 Try
-
-                    If Not IsNothing(cBewertung.description) Or Not IsNothing(tmpDeliverables) Then
-                        If cBewertung.description.Length > 0 Or tmpDeliverables.Length > 0 Then
-                            If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Or _
-                                tmpDeliverables.Contains(vbLf) Or tmpDeliverables.Contains(vbCr) Then
-                                CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
-                            End If
-                        End If
-                    End If
-
+                    CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
                 Catch ex As Exception
 
                 End Try
 
 
                 .Cells(rowOffset + zeile, columnOffset + 7).value = cphase.verantwortlich
-                .Cells(rowOffset + zeile, columnOffset + 8).value = cphase.percentDone / 100
-                .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0.00%"
+                .Cells(rowOffset + zeile, columnOffset + 8).value = cphase.percentDone
+                .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
                 .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                 ' Änderung tk 1.11.15:
 
@@ -20570,6 +20561,12 @@ Public Module Projekte
                     tmpDeliverables = cResult.getAllDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+
+                    ' Änderung tk 4.12. Schreiben verantwortlich und percentDone
+                    .Cells(rowOffset + zeile, columnOffset + 7).value = cResult.verantwortlich
+                    .Cells(rowOffset + zeile, columnOffset + 8).value = cResult.percentDone
+                    .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
+                    .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
 
                     '
                     ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
@@ -22215,8 +22212,33 @@ Public Module Projekte
 
                         End If
 
+                    Case PTpfdk.PhaseCategories
+
+                        For i = 1 To mycollection.Count
+
+                            cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))
+                            'cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                            ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
+                            Try
+                                IDkennung = IDkennung & "#" & cName
+                            Catch ex As Exception
+                                IDkennung = IDkennung & "#"
+                            End Try
+
+                        Next
+
                     Case PTpfdk.Meilenstein
 
+                        For i = 1 To mycollection.Count
+                            ' Änderung tk 30.5.17
+                            cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))
+                            'cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                            IDkennung = IDkennung & "#" & cName
+
+                        Next
+
+
+                    Case PTpfdk.MilestoneCategories
                         For i = 1 To mycollection.Count
                             ' Änderung tk 30.5.17
                             cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))

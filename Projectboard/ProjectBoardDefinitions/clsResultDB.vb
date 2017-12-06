@@ -13,6 +13,7 @@
     Public appearance As String
 
     Public deliverables As List(Of String)
+    Public percentDone As Double
 
     'Friend Property fileLink As Uri
 
@@ -57,6 +58,10 @@
 
                 If Not IsNothing(Me.appearance) Then
                     .appearance = Me.appearance
+                End If
+
+                If Not IsNothing(Me.percentDone) Then
+                    .percentDone = Me.percentDone
                 End If
 
                 Try
@@ -131,6 +136,8 @@
 
             Me.alternativeColor = .individualColor
 
+            Me.percentDone = .percentDone
+           
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
                 Me.deliverables.Add(tmpDeliverable)
@@ -139,7 +146,7 @@
             Try
                 For i = 1 To .bewertungsCount
                     Dim newb As New clsBewertungDB
-                    newb.copyfrom(.getBewertung(i))
+                    newb.Copyfrom(.getBewertung(i))
                     Me.addBewertung(newb)
                 Next
             Catch ex As Exception
@@ -201,6 +208,7 @@
 
     Sub New()
 
+        percentDone = 0.0
         bewertungen = New SortedList(Of String, clsBewertungDB)
         deliverables = New List(Of String)
 

@@ -14,21 +14,22 @@
     Private Sub ThisAddIn_Startup() Handles Me.Startup
         pptAPP = Application
 
-        ucPropertiesView = New ucProperties
-        propertiesPane = Me.CustomTaskPanes.Add(ucPropertiesView, "Eigenschaften")
-        With propertiesPane
+        ' Definition des Search-Pane
+        ucSearchView = New ucSearch
+        searchPane = Me.CustomTaskPanes.Add(ucSearchView, "SUCHE")
+        With searchPane
             .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
             .Height = 500
             .Width = 500
             .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
-            .Width = 320
+            .Width = 350
             .Visible = False
         End With
 
-
-        ucSearchView = New ucSearch
-        searchPane = Me.CustomTaskPanes.Add(ucSearchView, "SEARCH")
-        With searchPane
+        ' Definition des Info-Pane
+        ucPropertiesView = New ucProperties
+        propertiesPane = Me.CustomTaskPanes.Add(ucPropertiesView, "EIGENSCHAFTEN")
+        With propertiesPane
             .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
             .Height = 500
             .Width = 500

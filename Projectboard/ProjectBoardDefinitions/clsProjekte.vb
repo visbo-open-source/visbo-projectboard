@@ -348,49 +348,7 @@ Public Class clsProjekte
         End Get
     End Property
 
-    ' wurde ersetzt durch andere getPhaseNAmes
-    '' ''' <summary>
-    '' ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 
-    '' ''' </summary>
-    '' ''' <value></value>
-    '' ''' <returns></returns>
-    '' ''' <remarks></remarks>
-    ''Public ReadOnly Property getPhaseNames() As Collection
-
-    ''    Get
-
-    ''        Dim tmpListe As New Collection
-    ''        Dim cphase As clsPhase
-    ''        Dim phaseName As String
-
-    ''        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-
-    ''            Try
-    ''                ' beginnt bei 2, weil die 1.Phase immer die mit der Projektlänge identische Phase ist ...
-    ''                For p = 2 To kvp.Value.CountPhases
-    ''                    cphase = kvp.Value.getPhase(p)
-    ''                    phaseName = cphase.name
-
-    ''                    If tmpListe.Contains(phaseName) Then
-    ''                        ' nichts tun 
-    ''                    Else
-    ''                        tmpListe.Add(phaseName, phaseName)
-    ''                    End If
-
-
-    ''                Next
-    ''            Catch ex As Exception
-
-    ''            End Try
-
-
-    ''        Next
-
-    ''        getPhaseNames = tmpListe
-
-    ''    End Get
-    ''End Property
-
+   
 
     ''' <summary>
     ''' gibt eine Liste der vorkommenden Meilenstein Namen in der Menge von Projekte zurück 
@@ -407,7 +365,13 @@ Public Class clsProjekte
             ' neu 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-                Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
+                'Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
+                Dim tmpCollection As Collection
+                If awinSettings.considerCategories Then
+                    tmpCollection = kvp.Value.getMilestoneCategoryNames
+                Else
+                    tmpCollection = kvp.Value.getMilestoneNames
+                End If
 
                 For Each tmpName As String In tmpCollection
                     If Not tmpListe.Contains(tmpName) Then
@@ -416,34 +380,40 @@ Public Class clsProjekte
                 Next
 
             Next
-            ' neu Ende
-
-            ' alt : ohne Ausnutzung Hierarchy ...
-            ''For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-
-            ''    Try
-            ''        For p = 1 To kvp.Value.CountPhases
-
-            ''            cphase = kvp.Value.getPhase(p)
-            ''            For r = 1 To cphase.countMilestones
-
-            ''                msName = cphase.getMilestone(r).name
-            ''                If tmpListe.Contains(msName) Then
-            ''                Else
-            ''                    tmpListe.Add(msName, msName)
-            ''                End If
-
-            ''            Next
-
-            ''        Next
-            ''    Catch ex As Exception
-
-            ''    End Try
-
-
-            ''Next
 
             getMilestoneNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Liste der vorkommenden Meilenstein Klassen in der Menge von Projekte zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneCategoryNames() As Collection
+
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                'Dim tmpCollection As Collection = kvp.Value.getMilestoneNames
+                Dim tmpCollection As Collection
+                tmpCollection = kvp.Value.getMilestoneCategoryNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+            getMilestoneCategoryNames = tmpListe
 
         End Get
     End Property
@@ -475,6 +445,39 @@ Public Class clsProjekte
 
 
             getPhaseNames = tmpListe
+
+        End Get
+    End Property
+
+
+
+    ''' <summary>
+    ''' gibt die Liste der vorkommenden Phasen-KlassenNamen in der Menge der Projekte an ...  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseCategoryNames() As Collection
+
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getPhaseCategoryNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getPhaseCategoryNames = tmpListe
 
         End Get
     End Property
@@ -1367,6 +1370,63 @@ Public Class clsProjekte
         End Get
     End Property
 
+
+    Public ReadOnly Property getCountMilestoneCategoriesInMonth(ByVal categoryName As String) As Double()
+        Get
+            Dim milestoneValues() As Double
+            Dim zeitraum As Integer
+            Dim anzProjekte As Integer
+
+            'Dim cphase As clsPhase
+            'Dim cresult As clsMeilenstein
+            Dim cMilestone As clsMeilenstein
+            Dim hproj As clsProjekt
+            Dim ix As Integer
+            Dim idFarbe As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim milestoneValues(zeitraum)
+
+            anzProjekte = _allProjects.Count
+
+            ' Schleife über alle Projekte 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+                ' hole die IDs aller Meilensteine, die die besagte Category haben 
+                Dim IDCollection As Collection = kvp.Value.getMilestoneIDsWithCat(categoryName)
+
+                For Each elemID As String In IDCollection
+
+                    cMilestone = kvp.Value.getMilestoneByID(elemID)
+                    If Not IsNothing(cMilestone) Then
+                        ' bestimme den monatsbezogenen Index im Array 
+                        ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
+
+                        If ix >= 0 And ix <= zeitraum Then
+
+                            If cMilestone.bewertungsCount > 0 Then
+                                idFarbe = cMilestone.getBewertung(1).colorIndex
+                            Else
+                                idFarbe = 0
+                            End If
+
+                            milestoneValues(ix) = milestoneValues(ix) + 1
+
+                        End If
+                    End If
+                Next
+
+            Next kvp
+
+            getCountMilestoneCategoriesInMonth = milestoneValues
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 
     ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf
@@ -1556,6 +1616,104 @@ Public Class clsProjekte
 
 
             getCountPhasesInMonth = phasevalues
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' gibt einen Array zurück, der angibt, wie oft die angegebene Phasen-Klasse vorkommt
+    ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf 
+    ''' 
+    ''' </summary>
+    ''' <param name="categoryName">Name der Phase</param>
+    ''' <value></value>
+    ''' <returns>gibt einen Array der Länge (showrangeright-showrangeleft+1) zurück </returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCountPhaseCategoriesInMonth(ByVal categoryName As String) As Double()
+
+        Get
+            Dim phasevalues() As Double
+
+            'Dim anzPhasen As Integer
+            Dim zeitraum As Integer
+            'Dim projektstart As Integer
+            Dim anzProjekte As Integer
+            'Dim found As Boolean
+            Dim i As Integer ', pr As Integer, ph As Integer
+            Dim hphase As clsPhase
+            Dim hproj As clsProjekt
+            'Dim lookforIndex As Boolean
+            'Dim phasenStart As Integer, phasenEnde As Integer
+            Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer, phAnfang As Integer, phEnde As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            'lookforIndex = IsNumeric(phaseId)
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim phasevalues(zeitraum)
+
+            anzProjekte = _allProjects.Count
+
+            ' anzPhasen = AllPhases.Count
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                hproj = kvp.Value
+
+                With hproj
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                End With
+
+                Dim IDCollection As Collection = kvp.Value.getMilestoneIDsWithCat(categoryName)
+
+                For Each elemID As String In IDCollection
+
+                    hphase = kvp.Value.getPhaseByID(elemID)
+
+                    If Not IsNothing(hphase) Then
+
+
+                        If istBereichInTimezone(prAnfang, prEnde) Then
+                            'projektstart = hproj.Start
+
+                            With hphase
+                                phAnfang = prAnfang + .relStart - 1
+                                phEnde = prAnfang + .relEnde - 1
+                            End With
+
+                            Dim ixKorrektur As Integer = hphase.relStart - 1
+
+                            Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
+
+                            If anzLoops > 0 Then
+
+                                'ReDim tempArray(phEnde - phAnfang)
+                                tempArray = hproj.getPhasenBedarf(hphase.name)
+
+                                For i = 0 To anzLoops - 1
+                                    ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
+                                    ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
+                                    phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i + ixKorrektur)
+                                Next i
+
+                            End If
+
+
+                        End If
+
+                    End If
+
+                Next elemID
+
+
+            Next kvp
+
+
+            getCountPhaseCategoriesInMonth = phasevalues
 
         End Get
 
@@ -1823,8 +1981,8 @@ Public Class clsProjekte
                     ok = False
                 End If
 
-                    ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
-                    ' soll der Schwellwert angezeigt werden 
+                ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
+                ' soll der Schwellwert angezeigt werden 
                 If ok Then
                     For m = 0 To zeitraum
                         ' Änderung 31.5 Holen der Schwellwerte einer Phase 
@@ -2462,7 +2620,7 @@ Public Class clsProjekte
                             riskValues(ixZeitraum + i) = riskValues(ixZeitraum + i) + tempArray(ix + i) * riskweightedMarge
                         Next i
                     End If
-                    
+
 
 
                 End If

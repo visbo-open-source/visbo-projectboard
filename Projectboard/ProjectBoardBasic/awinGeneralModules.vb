@@ -966,6 +966,8 @@ Public Module awinGeneralModules
             DiagrammTypen(4) = "Ergebnis"
             DiagrammTypen(5) = "Meilenstein"
             DiagrammTypen(6) = "Meilenstein Trendanalyse"
+            DiagrammTypen(7) = "Phasen-Kategorie"
+            DiagrammTypen(8) = "Meilenstein-Kategorie"
 
 
             Try
@@ -14516,14 +14518,23 @@ Public Module awinGeneralModules
 
 
                 If selectedPhases.Count > 0 Then
-                    chTyp = DiagrammTypen(0)
+                    If awinSettings.considerCategories Then
+                        chTyp = DiagrammTypen(7)
+                    Else
+                        chTyp = DiagrammTypen(0)
+                    End If
                     Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedPhases.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
-                                                   chtop, chleft, chwidth, chheight)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedMilestones.Count > 0 Then
-                    chTyp = DiagrammTypen(5)
+                    If awinSettings.considerCategories Then
+                        chTyp = DiagrammTypen(8)
+                    Else
+                        chTyp = DiagrammTypen(5)
+                    End If
+
                     Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedMilestones.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart, _
                                                    chtop, chleft, chwidth, chHeight)
@@ -15304,13 +15315,15 @@ Public Module awinGeneralModules
         Dim colAbbrev As Integer = -1
         Dim colVorgangsKlasse As Integer = -1
         Dim colDescription As Integer = -1
+        Dim colVerantwortlich As Integer = -1
+        Dim colPercentDone As Integer = -1
 
         Dim pDescription As String = ""
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(8) As String
+        Dim suchstr(10) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -15320,7 +15333,8 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.Protocol) = "Übernommen als"
         suchstr(ptPlanNamen.Dauer) = "Duration"
         suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
-
+        suchstr(ptPlanNamen.Verantwortlich) = "Responsible"
+        suchstr(ptPlanNamen.percentDone) = "%-Done"
 
         zeile = 2
         spalte = 5
@@ -15399,6 +15413,17 @@ Public Module awinGeneralModules
 
         End Try
 
+        Try
+            colVerantwortlich = firstZeile.Find(What:=suchstr(ptPlanNamen.Verantwortlich), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            colPercentDone = firstZeile.Find(What:=suchstr(ptPlanNamen.percentDone), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
 
         With aktivesSheet
 
@@ -15462,6 +15487,8 @@ Public Module awinGeneralModules
                 CType(.Cells(1, colProtocol + 5), Excel.Range).Value = "Quelle"
                 CType(.Cells(1, colProtocol + 8), Excel.Range).Value = "PT Hierarchie"
                 CType(.Cells(1, colProtocol + 9), Excel.Range).Value = "PT Klasse"
+                CType(.Cells(1, colProtocol + 10), Excel.Range).Value = "Verantwortlich"
+                CType(.Cells(1, colProtocol + 11), Excel.Range).Value = "%-Done"
             End If
 
             ' wird immer geschrieben 
@@ -15687,6 +15714,8 @@ Public Module awinGeneralModules
                         Dim txtVorgangsKlasse As String
                         Dim origVorgangsKlasse As String
                         Dim txtAbbrev As String
+                        Dim verantwortlich As String = ""
+                        Dim percentDone As Double = 0.0
                         ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
                         Dim origItem As String = ""
 
@@ -15699,6 +15728,9 @@ Public Module awinGeneralModules
                             txtVorgangsKlasse = ""
                             txtAbbrev = ""
                             logMessage = ""
+                            verantwortlich = ""
+                            percentDone = 0.0
+
 
                             Dim indentLevel As Integer
 
@@ -15754,10 +15786,12 @@ Public Module awinGeneralModules
 
 
 
-                                        ' Änderung 26.1.15 Ignorieren 
-
-                                        itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                       
+                                        
+                                        logMessage = "ungültiges Startdatum ..."
                                         itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+                                        logMessage = ""
+
 
                                         If IsNothing(CType(.Cells(curZeile, colAnfang), Excel.Range).Value) Then
                                             isMilestone = True
@@ -15766,6 +15800,11 @@ Public Module awinGeneralModules
                                             isMilestone = True
                                             itemStartDate = itemEndDate
                                         Else
+                                            ' jetzt das Startdatum lesen 
+                                            logMessage = "ungültiges Startdatum ..."
+                                            itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                            logMessage = ""
+
                                             If DateDiff(DateInterval.Minute, itemStartDate, itemEndDate) = 0 Then
                                                 isMilestone = True
                                             Else
@@ -15863,6 +15902,23 @@ Public Module awinGeneralModules
                                     End Try
                                 End If
 
+                                If colVerantwortlich > 0 Then
+                                    Try
+                                        verantwortlich = CStr(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        verantwortlich = ""
+                                    End Try
+                                End If
+
+                                ' jetzt %-Done auslesen 
+                                If colPercentDone > 0 Then
+                                    Try
+                                        percentDone = CDbl(CType(.Cells(curZeile, colPercentDone), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        percentDone = 0.0
+                                    End Try
+                                End If
+
                                 '
                                 ' jetzt muss protokolliert werden 
                                 Dim oLevel As Integer
@@ -15878,6 +15934,8 @@ Public Module awinGeneralModules
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 3), Excel.Range).Value = origVorgangsKlasse
                                     ' Abkürzung
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 4), Excel.Range).Value = txtAbbrev
+                                    ' %-Done
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 11), Excel.Range).Value = percentDone.ToString
                                 End If
 
 
@@ -16031,6 +16089,15 @@ Public Module awinGeneralModules
                                         cphase.nameID = elemID
                                         cphase.changeStartandDauer(startoffset, duration)
 
+                                        ' tk 26.11.17, den Wert für verantwortlich mitaufnehmen ...
+                                        cphase.verantwortlich = verantwortlich
+
+                                        ' Vorgangslasse eintragen 
+                                        cphase.appearance = txtVorgangsKlasse
+
+                                        ' percentDone eintragen 
+                                        cphase.percentDone = percentDone
+
                                         ' der Aufbau der Hierarchie erfolgt in addphase
                                         hproj.AddPhase(cphase, origName:=origItem.Trim, _
                                                        parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
@@ -16045,7 +16112,10 @@ Public Module awinGeneralModules
 
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 10), Excel.Range).Value = verantwortlich
+
                                         End If
+
                                         ' neuer Breadcrumb 
                                         'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
 
@@ -16192,6 +16262,11 @@ Public Module awinGeneralModules
                                             With cmilestone
                                                 .nameID = elemID
                                                 .setDate = itemEndDate
+                                                ' tk 26.11.17 
+                                                .verantwortlich = verantwortlich
+                                                .appearance = txtVorgangsKlasse
+                                                .percentDone = percentDone
+
                                                 If Not cbewertung Is Nothing Then
                                                     .addBewertung(cbewertung)
                                                 End If
@@ -16215,6 +16290,7 @@ Public Module awinGeneralModules
 
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 10), Excel.Range).Value = verantwortlich
                                                 End If
 
                                                 If stdName.Trim <> origItem.Trim Then
@@ -16249,7 +16325,7 @@ Public Module awinGeneralModules
 
                                     Catch ex As Exception
                                         CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
-                                                            "Fehler in Zeile " & zeile & ", Item-Name: " & itemName
+                                                            ex.Message & ": " & vbLf & "Fehler in Zeile " & curZeile & ", Item-Name: " & itemName
                                         CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
                                     End Try
 
