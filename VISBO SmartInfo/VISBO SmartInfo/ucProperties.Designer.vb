@@ -110,6 +110,8 @@ Partial Class ucProperties
         '
         'eleAmpelText
         '
+        Me.eleAmpelText.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleAmpelText.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.eleAmpelText.Enabled = False
         Me.eleAmpelText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
@@ -134,8 +136,9 @@ Partial Class ucProperties
         '
         'eleDeliverables
         '
+        Me.eleDeliverables.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleDeliverables.BackColor = System.Drawing.SystemColors.Window
-        Me.eleDeliverables.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.eleDeliverables.Enabled = False
         Me.eleDeliverables.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleDeliverables.Location = New System.Drawing.Point(0, 39)
@@ -143,16 +146,18 @@ Partial Class ucProperties
         Me.eleDeliverables.Name = "eleDeliverables"
         Me.eleDeliverables.ReadOnly = True
         Me.eleDeliverables.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.eleDeliverables.Size = New System.Drawing.Size(286, 192)
+        Me.eleDeliverables.Size = New System.Drawing.Size(286, 500)
         Me.eleDeliverables.TabIndex = 10
         '
         'Panel1
         '
+        Me.Panel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Panel1.Controls.Add(Me.labelDeliver)
         Me.Panel1.Controls.Add(Me.eleDeliverables)
-        Me.Panel1.Location = New System.Drawing.Point(3, 347)
+        Me.Panel1.Location = New System.Drawing.Point(4, 349)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(286, 231)
+        Me.Panel1.Size = New System.Drawing.Size(286, 539)
         Me.Panel1.TabIndex = 12
         '
         'ucProperties
@@ -170,7 +175,7 @@ Partial Class ucProperties
         Me.Controls.Add(Me.labelDate)
         Me.Controls.Add(Me.eleName)
         Me.Name = "ucProperties"
-        Me.Size = New System.Drawing.Size(303, 650)
+        Me.Size = New System.Drawing.Size(303, 900)
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
         Me.ResumeLayout(False)

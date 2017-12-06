@@ -25,20 +25,20 @@ Partial Class ucSearch
         Me.cathegoryList = New System.Windows.Forms.ComboBox()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.CheckBxMarker = New System.Windows.Forms.CheckBox()
+        Me.PictureMarker = New System.Windows.Forms.PictureBox()
         Me.listboxNames = New System.Windows.Forms.ListBox()
-        Me.TextBox2 = New System.Windows.Forms.TextBox()
         Me.filterText = New System.Windows.Forms.TextBox()
         Me.Panel2 = New System.Windows.Forms.Panel()
         Me.shwOhneLight = New System.Windows.Forms.CheckBox()
         Me.shwRedLight = New System.Windows.Forms.CheckBox()
         Me.shwGreenLight = New System.Windows.Forms.CheckBox()
         Me.shwYellowLight = New System.Windows.Forms.CheckBox()
-        Me.PictureMarker = New System.Windows.Forms.PictureBox()
-        Me.CheckBxMarker = New System.Windows.Forms.CheckBox()
+        Me.selListboxNames = New System.Windows.Forms.ListBox()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
-        Me.Panel2.SuspendLayout()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.Panel2.SuspendLayout()
         Me.SuspendLayout()
         '
         'cathegoryList
@@ -62,10 +62,10 @@ Partial Class ucSearch
         '
         'Panel1
         '
+        Me.Panel1.Controls.Add(Me.selListboxNames)
         Me.Panel1.Controls.Add(Me.CheckBxMarker)
         Me.Panel1.Controls.Add(Me.PictureMarker)
         Me.Panel1.Controls.Add(Me.listboxNames)
-        Me.Panel1.Controls.Add(Me.TextBox2)
         Me.Panel1.Controls.Add(Me.filterText)
         Me.Panel1.Controls.Add(Me.Panel2)
         Me.Panel1.Controls.Add(Me.PictureBox1)
@@ -76,8 +76,28 @@ Partial Class ucSearch
         Me.Panel1.Size = New System.Drawing.Size(345, 845)
         Me.Panel1.TabIndex = 3
         '
+        'CheckBxMarker
+        '
+        Me.CheckBxMarker.AutoSize = True
+        Me.CheckBxMarker.Location = New System.Drawing.Point(20, 3)
+        Me.CheckBxMarker.Name = "CheckBxMarker"
+        Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
+        Me.CheckBxMarker.TabIndex = 44
+        Me.CheckBxMarker.UseVisualStyleBackColor = True
+        '
+        'PictureMarker
+        '
+        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
+        Me.PictureMarker.Location = New System.Drawing.Point(3, 1)
+        Me.PictureMarker.Name = "PictureMarker"
+        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
+        Me.PictureMarker.TabIndex = 43
+        Me.PictureMarker.TabStop = False
+        '
         'listboxNames
         '
+        Me.listboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.listboxNames.FormattingEnabled = True
         Me.listboxNames.HorizontalScrollbar = True
         Me.listboxNames.Location = New System.Drawing.Point(3, 102)
@@ -86,14 +106,6 @@ Partial Class ucSearch
         Me.listboxNames.Size = New System.Drawing.Size(329, 381)
         Me.listboxNames.Sorted = True
         Me.listboxNames.TabIndex = 42
-        '
-        'TextBox2
-        '
-        Me.TextBox2.Location = New System.Drawing.Point(3, 489)
-        Me.TextBox2.Multiline = True
-        Me.TextBox2.Name = "TextBox2"
-        Me.TextBox2.Size = New System.Drawing.Size(329, 346)
-        Me.TextBox2.TabIndex = 40
         '
         'filterText
         '
@@ -154,23 +166,16 @@ Partial Class ucSearch
         Me.shwYellowLight.TabIndex = 36
         Me.shwYellowLight.UseVisualStyleBackColor = False
         '
-        'PictureMarker
+        'selListboxNames
         '
-        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(3, 1)
-        Me.PictureMarker.Name = "PictureMarker"
-        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
-        Me.PictureMarker.TabIndex = 43
-        Me.PictureMarker.TabStop = False
-        '
-        'CheckBxMarker
-        '
-        Me.CheckBxMarker.AutoSize = True
-        Me.CheckBxMarker.Location = New System.Drawing.Point(20, 3)
-        Me.CheckBxMarker.Name = "CheckBxMarker"
-        Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
-        Me.CheckBxMarker.TabIndex = 44
-        Me.CheckBxMarker.UseVisualStyleBackColor = True
+        Me.selListboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.selListboxNames.FormattingEnabled = True
+        Me.selListboxNames.HorizontalScrollbar = True
+        Me.selListboxNames.Location = New System.Drawing.Point(3, 498)
+        Me.selListboxNames.Name = "selListboxNames"
+        Me.selListboxNames.Size = New System.Drawing.Size(329, 329)
+        Me.selListboxNames.TabIndex = 45
         '
         'ucSearch
         '
@@ -183,9 +188,9 @@ Partial Class ucSearch
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
-        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
@@ -198,9 +203,9 @@ Partial Class ucSearch
     Friend WithEvents Panel2 As System.Windows.Forms.Panel
     Friend WithEvents shwRedLight As System.Windows.Forms.CheckBox
     Friend WithEvents filterText As System.Windows.Forms.TextBox
-    Friend WithEvents TextBox2 As System.Windows.Forms.TextBox
     Friend WithEvents listboxNames As System.Windows.Forms.ListBox
     Friend WithEvents PictureMarker As System.Windows.Forms.PictureBox
     Friend WithEvents CheckBxMarker As System.Windows.Forms.CheckBox
+    Friend WithEvents selListboxNames As System.Windows.Forms.ListBox
 
 End Class

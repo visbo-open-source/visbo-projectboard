@@ -20420,7 +20420,7 @@ Public Module Projekte
             Dim phaseName As String
             Dim r As Integer
             Dim cResult As New clsMeilenstein(parent:=cphase)
-            Dim cBewertung As clsBewertung
+            Dim cBewertung As clsBewertung = Nothing
             Dim phaseStart As Date
             Dim phaseEnde As Date
             Dim tbl As Excel.Range

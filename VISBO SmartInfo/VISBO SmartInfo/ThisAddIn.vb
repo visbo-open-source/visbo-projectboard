@@ -16,7 +16,12 @@
 
         ' Definition des Search-Pane
         ucSearchView = New ucSearch
-        searchPane = Me.CustomTaskPanes.Add(ucSearchView, "SUCHE")
+        If englishLanguage Then
+            searchPane = Me.CustomTaskPanes.Add(ucSearchView, "SEARCH")
+        Else
+            searchPane = Me.CustomTaskPanes.Add(ucSearchView, "SUCHE")
+        End If
+
         With searchPane
             .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
             .Height = 500
@@ -28,7 +33,12 @@
 
         ' Definition des Info-Pane
         ucPropertiesView = New ucProperties
-        propertiesPane = Me.CustomTaskPanes.Add(ucPropertiesView, "EIGENSCHAFTEN")
+        If englishLanguage Then
+            propertiesPane = Me.CustomTaskPanes.Add(ucPropertiesView, "PROPERTIES")
+        Else
+            propertiesPane = Me.CustomTaskPanes.Add(ucPropertiesView, "EIGENSCHAFTEN")
+        End If
+
         With propertiesPane
             .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
             .Height = 500
@@ -65,9 +75,4 @@
     End Sub
 
 
-    Public Function showPropertiesPane(ByVal custPropPane As Microsoft.Office.Tools.CustomTaskPane) As Boolean
-
-
-
-    End Function
 End Class
