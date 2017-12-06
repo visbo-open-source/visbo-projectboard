@@ -2429,7 +2429,7 @@ Module Module1
                     Dim elemBC As String = tmpShape.Tags.Item("BC")
 
                     If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
-                        ' es handelt sich um einen Swimlane Namen oder Segment Name: kein Verschieben , aber das das Setzen der Tags ist notwendig  
+                        ' es handelt sich um einen Swimlane Namen oder Segment Name: kein Verschieben , aber das Setzen der Tags ist notwendig  
                         '
                         Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                         If IsNothing(ph) Then
