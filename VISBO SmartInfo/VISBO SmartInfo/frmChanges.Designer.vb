@@ -22,6 +22,7 @@ Partial Class frmChanges
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmChanges))
         Me.changeListTable = New System.Windows.Forms.DataGridView()
         Me.colPname = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.colElemName = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -49,7 +50,7 @@ Partial Class frmChanges
         Me.changeListTable.ShowCellToolTips = False
         Me.changeListTable.ShowEditingIcon = False
         Me.changeListTable.ShowRowErrors = False
-        Me.changeListTable.Size = New System.Drawing.Size(480, 86)
+        Me.changeListTable.Size = New System.Drawing.Size(612, 86)
         Me.changeListTable.TabIndex = 0
         '
         'colPname
@@ -101,8 +102,10 @@ Partial Class frmChanges
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(480, 86)
+        Me.ClientSize = New System.Drawing.Size(612, 86)
         Me.Controls.Add(Me.changeListTable)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Location = New System.Drawing.Point(24, 922)
         Me.MaximizeBox = False
         Me.Name = "frmChanges"
         Me.Text = "Veränderungen"
