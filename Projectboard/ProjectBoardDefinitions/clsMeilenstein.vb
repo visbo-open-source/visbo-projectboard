@@ -2,6 +2,11 @@
 Imports Microsoft.Office.Interop.Excel
 Public Class clsMeilenstein
 
+    ' tk Änderung 4.12.17 , 
+    ' - es wurde ein Attribut für percentDone aufgenommen
+    ' - damit kann unterschieden werden, ob ein Meilenstein, dessen Datum in der Vergangenheit liegt, auch tatsächlich abgeschlossen wurde
+
+    Private _percentDone As Double
 
     Private _nameID As String
     Private _parentPhase As clsPhase
@@ -19,6 +24,30 @@ Public Class clsMeilenstein
 
     Private _deliverables As List(Of String)
     Private _bewertungen As SortedList(Of String, clsBewertung)
+
+    ''' <summary>
+    ''' es wird eine PercentDone Regelung eingeführt , mit der beurteilt werden kann, wie wit die Ergebnisse bereits sind  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property percentDone As Double
+        Get
+            percentDone = _percentDone
+        End Get
+        Set(value As Double)
+            If value >= 0 Then
+                If value <= 1.0 Then
+                    _percentDone = value
+                Else
+                    _percentDone = 1.0 ' kann keine größeren Werte als 1 annehmen 
+                End If
+
+            Else
+                Throw New ArgumentException("percent Done Value must not be negativ ...")
+            End If
+        End Set
+    End Property
 
 
     ''' <summary>
@@ -42,7 +71,8 @@ Public Class clsMeilenstein
                     Me.verantwortlich = .verantwortlich And _
                     Me.offset = .offset And _
                     Me.countDeliverables = .countDeliverables And _
-                    Me.bewertungsCount = .bewertungsCount Then
+                    Me.bewertungsCount = .bewertungsCount And _
+                    Me.percentDone = .percentDone Then
                     stillOK = True
 
                     ' prüfen auf Deliverables ... 
@@ -65,7 +95,7 @@ Public Class clsMeilenstein
                     End If
 
 
-                
+
                 End If
 
             End With
@@ -168,6 +198,10 @@ Public Class clsMeilenstein
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
+            ' tk. 28.11.17
+            If MilestoneDefinitions.Contains(Me.name) Then
+                _appearance = MilestoneDefinitions.getAppearance(Me.name)
+            End If
             appearance = _appearance
         End Get
         Set(value As String)
@@ -688,6 +722,7 @@ Public Class clsMeilenstein
         _nameID = ""
         _parentPhase = parent
 
+        _percentDone = 0.0
         _bewertungen = New SortedList(Of String, clsBewertung)
         _deliverables = New List(Of String)
 

@@ -1296,11 +1296,14 @@
     Public ReadOnly Property getMilestoneIndices(ByVal name As String, Optional ByVal breadcrumb As String = "") As Integer(,)
         Get
             Dim milestoneIndices(,) As Integer
+
             Dim first As Integer, last As Integer
+
             Dim elemID As String = calcHryElemKey(name, True)
             Dim i As Integer, k As Integer
             Dim phaseID As String
             Dim anzahlNodes As Integer = _allNodes.Count
+
 
             ' da die Liste sortiert ist, reicht es den Index des ersten und den Index des letzten Elements zu bestimmen 
 
