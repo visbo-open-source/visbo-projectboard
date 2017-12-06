@@ -63,7 +63,7 @@ Partial Class ucProperties
         Me.eleDatum.AutoSize = True
         Me.eleDatum.Enabled = False
         Me.eleDatum.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!)
-        Me.eleDatum.Location = New System.Drawing.Point(94, 53)
+        Me.eleDatum.Location = New System.Drawing.Point(93, 52)
         Me.eleDatum.Name = "eleDatum"
         Me.eleDatum.Size = New System.Drawing.Size(205, 19)
         Me.eleDatum.TabIndex = 3
@@ -83,9 +83,10 @@ Partial Class ucProperties
         '
         Me.eleRespons.AutoSize = True
         Me.eleRespons.Enabled = False
+        Me.eleRespons.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleRespons.Location = New System.Drawing.Point(94, 88)
         Me.eleRespons.Name = "eleRespons"
-        Me.eleRespons.Size = New System.Drawing.Size(70, 13)
+        Me.eleRespons.Size = New System.Drawing.Size(93, 19)
         Me.eleRespons.TabIndex = 5
         Me.eleRespons.Text = "                     "
         '
@@ -103,18 +104,19 @@ Partial Class ucProperties
         '
         Me.eleAmpel.BackColor = System.Drawing.Color.Gray
         Me.eleAmpel.Enabled = False
-        Me.eleAmpel.Location = New System.Drawing.Point(267, 121)
+        Me.eleAmpel.Location = New System.Drawing.Point(94, 121)
         Me.eleAmpel.Name = "eleAmpel"
         Me.eleAmpel.Size = New System.Drawing.Size(23, 20)
         Me.eleAmpel.TabIndex = 7
         '
         'eleAmpelText
         '
-        Me.eleAmpelText.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.eleAmpelText.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleAmpelText.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.eleAmpelText.Enabled = False
-        Me.eleAmpelText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.eleAmpelText.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleAmpelText.Location = New System.Drawing.Point(9, 155)
         Me.eleAmpelText.Multiline = True
         Me.eleAmpelText.Name = "eleAmpelText"
@@ -140,13 +142,13 @@ Partial Class ucProperties
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleDeliverables.BackColor = System.Drawing.SystemColors.Window
         Me.eleDeliverables.Enabled = False
-        Me.eleDeliverables.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.eleDeliverables.Location = New System.Drawing.Point(0, 39)
+        Me.eleDeliverables.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.eleDeliverables.Location = New System.Drawing.Point(0, 34)
         Me.eleDeliverables.Multiline = True
         Me.eleDeliverables.Name = "eleDeliverables"
         Me.eleDeliverables.ReadOnly = True
         Me.eleDeliverables.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.eleDeliverables.Size = New System.Drawing.Size(286, 500)
+        Me.eleDeliverables.Size = New System.Drawing.Size(280, 486)
         Me.eleDeliverables.TabIndex = 10
         '
         'Panel1
@@ -155,9 +157,9 @@ Partial Class ucProperties
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Panel1.Controls.Add(Me.labelDeliver)
         Me.Panel1.Controls.Add(Me.eleDeliverables)
-        Me.Panel1.Location = New System.Drawing.Point(4, 349)
+        Me.Panel1.Location = New System.Drawing.Point(10, 356)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(286, 539)
+        Me.Panel1.Size = New System.Drawing.Size(280, 520)
         Me.Panel1.TabIndex = 12
         '
         'ucProperties
