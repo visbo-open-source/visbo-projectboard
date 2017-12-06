@@ -15786,11 +15786,11 @@ Public Module awinGeneralModules
 
 
 
-                                        ' Änderung 26.1.15 Ignorieren 
-
-                                        itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
-                                        itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
                                        
+                                        
+                                        logMessage = "ungültiges Startdatum ..."
+                                        itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+                                        logMessage = ""
 
 
                                         If IsNothing(CType(.Cells(curZeile, colAnfang), Excel.Range).Value) Then
@@ -15800,6 +15800,11 @@ Public Module awinGeneralModules
                                             isMilestone = True
                                             itemStartDate = itemEndDate
                                         Else
+                                            ' jetzt das Startdatum lesen 
+                                            logMessage = "ungültiges Startdatum ..."
+                                            itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                            logMessage = ""
+
                                             If DateDiff(DateInterval.Minute, itemStartDate, itemEndDate) = 0 Then
                                                 isMilestone = True
                                             Else

@@ -177,7 +177,5 @@
     End Sub
 
     
-    Private Sub changeListTable_CellContentClick(sender As Object, e As Windows.Forms.DataGridViewCellEventArgs) Handles changeListTable.CellContentClick
-
-    End Sub
+    
 End Class
