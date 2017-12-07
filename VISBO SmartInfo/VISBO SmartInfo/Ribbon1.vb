@@ -173,9 +173,9 @@ Public Class Ribbon1
             searchPane.Visible = False
         Else
             searchPane.Visible = True
-            If slideHasSmartElements Then
-                ucSearchView.cathegoryList.SelectedItem = "Name"
-            End If
+            'If slideHasSmartElements Then
+            '    ucSearchView.cathegoryList.SelectedItem = "Name"
+            'End If
 
         End If
 

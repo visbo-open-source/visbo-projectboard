@@ -4668,7 +4668,7 @@ Module Module1
 
     ''
     ''' <summary>
-    ''' aktualisiert das Search-Pane mit den Feldern  
+    ''' löscht das Search-Pane mit den Feldern  
     ''' </summary>
     ''' <param name="tmpShape"></param>
     ''' <param name="isMovedShape"></param>
@@ -4677,14 +4677,14 @@ Module Module1
 
         If IsNothing(tmpShape) And Not slideHasSmartElements Then
             With ucSearchView
-
-                .cathegoryList.SelectedItem = ""
+                .cathegoryList.SelectedItem = " "
                 .shwOhneLight.Checked = False
                 .shwGreenLight.Checked = False
                 .shwYellowLight.Checked = False
                 .shwRedLight.Checked = False
                 .filterText.Text = ""
                 .listboxNames.Items.Clear()
+                .selListboxNames.Items.Clear()
                 .fülltListbox()
             End With
         End If
@@ -4739,9 +4739,22 @@ Module Module1
 
                         .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
 
-                        Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
+                        'Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
 
-                        .eleAmpel.BackColor = Drawing.Color.FromArgb(255, rgbFarbe)
+                        Dim ampelfarbe As Integer = CInt(tmpShape.Tags.Item("AC"))
+
+                        Select Case CInt(tmpShape.Tags.Item("AC"))
+
+                            Case PTfarbe.none
+                                .eleAmpel.BackColor = Drawing.Color.Silver
+                            Case PTfarbe.green
+                                .eleAmpel.BackColor = Drawing.Color.Green
+                            Case PTfarbe.yellow
+                                .eleAmpel.BackColor = Drawing.Color.Yellow
+                            Case PTfarbe.red
+                                .eleAmpel.BackColor = Drawing.Color.Firebrick
+
+                        End Select
 
                         .percentDone.Text = bestimmeElemPD(tmpShape)
 
@@ -4755,7 +4768,6 @@ Module Module1
 
                 ElseIf selectedPlanShapes.Count > 1 Then
 
-
                     'Dim rdbCode As Integer = calcRDB()
 
                     With ucPropertiesView
@@ -4767,9 +4779,12 @@ Module Module1
                             .eleDatum.Text = " ... "
                         End If
 
+                        .eleRespons.Text = ""
                         .eleDatum.Enabled = False
-
-
+                        .eleDeliverables.Text = ""
+                        .eleAmpelText.Text = ""
+                        .eleAmpel.BackColor = Drawing.Color.Silver
+                        .percentDone.Text = ""
                     End With
 
                 End If
@@ -4779,9 +4794,10 @@ Module Module1
                     .eleName.Text = ""
                     .eleDatum.Text = ""
                     .eleDeliverables.Text = ""
+                    .eleAmpel.BackColor = Drawing.Color.Silver
                     .eleAmpelText.Text = ""
                     .eleRespons.Text = ""
-                    .eleAmpel.BackColor = System.Drawing.Color.White
+                    .percentDone.Text = ""
                 End With
 
             End If
@@ -4868,7 +4884,7 @@ Module Module1
         Dim tmpText As String = ""
 
         If curShape.Tags.Item("PD").Length > 0 Then
-            tmpText = tmpText & (curShape.Tags.Item("PD") * 100).ToString & " %"
+            tmpText = tmpText & (CDbl(curShape.Tags.Item("PD")) * 100).ToString & " %"
         End If
 
         bestimmeElemPD = tmpText

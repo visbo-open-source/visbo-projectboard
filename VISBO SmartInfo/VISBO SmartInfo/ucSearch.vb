@@ -140,6 +140,8 @@ Public Class ucSearch
 
         If Not dontFire Then
 
+            selListboxNames.Items.Clear()
+
             colorCode = calcColorCode()
 
             Dim catCode As Integer
@@ -197,7 +199,7 @@ Public Class ucSearch
                         catCode = pptInfoType.cName
                 End Select
             End If
-           
+
 
             'If rdbName.Checked Then
             '    rdbCode = pptInfoType.cName
@@ -346,7 +348,7 @@ Public Class ucSearch
 
     Private Sub filterText_TextChanged(sender As Object, e As EventArgs) Handles filterText.TextChanged
 
-        selListboxNames.Items.Clear()
+        ' ''selListboxNames.Items.Clear()
         suchString = filterText.Text
         Call fülltListbox()
 
@@ -525,7 +527,7 @@ Public Class ucSearch
     Private Sub cathegoryList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cathegoryList.SelectedIndexChanged
 
         Dim newCathegory As String = cathegoryList.SelectedItem
-        selListboxNames.Items.Clear()
+        ' ''selListboxNames.Items.Clear()
         Call fülltListbox()
 
     End Sub
