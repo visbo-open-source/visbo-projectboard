@@ -28,17 +28,19 @@ Partial Class ucInfo
         Me.labelAmpel = New System.Windows.Forms.Label()
         Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel()
         Me.eleAmpelText = New System.Windows.Forms.Label()
-        Me.eleDeliverables = New System.Windows.Forms.TextBox()
         Me.labelDeliver = New System.Windows.Forms.Label()
         Me.eleDatum = New System.Windows.Forms.Label()
         Me.eleRespons = New System.Windows.Forms.Label()
         Me.eleAmpel = New System.Windows.Forms.Label()
-        Me.RichTextBox1 = New System.Windows.Forms.RichTextBox()
+        Me.eleDeliverables = New System.Windows.Forms.RichTextBox()
         Me.FlowLayoutPanel1 = New System.Windows.Forms.FlowLayoutPanel()
         Me.eleName = New System.Windows.Forms.Label()
         Me.eleType = New System.Windows.Forms.Label()
+        Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.percentDone = New System.Windows.Forms.Label()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.FlowLayoutPanel1.SuspendLayout()
+        Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
         '
         'labelDate
@@ -85,15 +87,14 @@ Partial Class ucInfo
         Me.TableLayoutPanel1.Controls.Add(Me.labelRespons, 0, 1)
         Me.TableLayoutPanel1.Controls.Add(Me.labelDate, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.eleAmpelText, 0, 3)
-        Me.TableLayoutPanel1.Controls.Add(Me.eleDeliverables, 1, 5)
         Me.TableLayoutPanel1.Controls.Add(Me.labelDeliver, 0, 5)
         Me.TableLayoutPanel1.Controls.Add(Me.eleDatum, 1, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.eleRespons, 1, 1)
-        Me.TableLayoutPanel1.Controls.Add(Me.eleAmpel, 1, 2)
-        Me.TableLayoutPanel1.Controls.Add(Me.RichTextBox1, 0, 7)
+        Me.TableLayoutPanel1.Controls.Add(Me.eleDeliverables, 0, 6)
+        Me.TableLayoutPanel1.Controls.Add(Me.Panel1, 1, 2)
         Me.TableLayoutPanel1.Location = New System.Drawing.Point(3, 43)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
-        Me.TableLayoutPanel1.RowCount = 9
+        Me.TableLayoutPanel1.RowCount = 8
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
@@ -101,9 +102,9 @@ Partial Class ucInfo
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
-        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100.0!))
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20.0!))
-        Me.TableLayoutPanel1.Size = New System.Drawing.Size(229, 457)
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20.0!))
+        Me.TableLayoutPanel1.Size = New System.Drawing.Size(229, 474)
         Me.TableLayoutPanel1.TabIndex = 6
         '
         'eleAmpelText
@@ -113,7 +114,7 @@ Partial Class ucInfo
         Me.eleAmpelText.AutoSize = True
         Me.eleAmpelText.BackColor = System.Drawing.Color.Transparent
         Me.TableLayoutPanel1.SetColumnSpan(Me.eleAmpelText, 2)
-        Me.eleAmpelText.Location = New System.Drawing.Point(3, 71)
+        Me.eleAmpelText.Location = New System.Drawing.Point(3, 74)
         Me.eleAmpelText.Margin = New System.Windows.Forms.Padding(3, 8, 3, 0)
         Me.eleAmpelText.MaximumSize = New System.Drawing.Size(220, 0)
         Me.eleAmpelText.Name = "eleAmpelText"
@@ -121,27 +122,10 @@ Partial Class ucInfo
         Me.eleAmpelText.TabIndex = 6
         Me.eleAmpelText.Text = resources.GetString("eleAmpelText.Text")
         '
-        'eleDeliverables
-        '
-        Me.eleDeliverables.AcceptsReturn = True
-        Me.eleDeliverables.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.eleDeliverables.BorderStyle = System.Windows.Forms.BorderStyle.None
-        Me.TableLayoutPanel1.SetColumnSpan(Me.eleDeliverables, 2)
-        Me.eleDeliverables.Location = New System.Drawing.Point(3, 199)
-        Me.eleDeliverables.Multiline = True
-        Me.eleDeliverables.Name = "eleDeliverables"
-        Me.eleDeliverables.ReadOnly = True
-        Me.eleDeliverables.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.eleDeliverables.Size = New System.Drawing.Size(223, 111)
-        Me.eleDeliverables.TabIndex = 7
-        Me.eleDeliverables.Text = resources.GetString("eleDeliverables.Text")
-        '
         'labelDeliver
         '
         Me.labelDeliver.AutoSize = True
-        Me.labelDeliver.Location = New System.Drawing.Point(3, 183)
+        Me.labelDeliver.Location = New System.Drawing.Point(3, 186)
         Me.labelDeliver.Margin = New System.Windows.Forms.Padding(3, 8, 3, 0)
         Me.labelDeliver.Name = "labelDeliver"
         Me.labelDeliver.Size = New System.Drawing.Size(68, 13)
@@ -170,29 +154,29 @@ Partial Class ucInfo
         '
         'eleAmpel
         '
-        Me.eleAmpel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.eleAmpel.AutoSize = True
-        Me.eleAmpel.BackColor = System.Drawing.SystemColors.ActiveCaption
-        Me.eleAmpel.Location = New System.Drawing.Point(83, 50)
-        Me.eleAmpel.Margin = New System.Windows.Forms.Padding(3, 8, 3, 0)
+        Me.eleAmpel.BackColor = System.Drawing.Color.DarkGray
+        Me.eleAmpel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.eleAmpel.Location = New System.Drawing.Point(3, 0)
+        Me.eleAmpel.Margin = New System.Windows.Forms.Padding(3, 3, 3, 0)
         Me.eleAmpel.Name = "eleAmpel"
-        Me.eleAmpel.Size = New System.Drawing.Size(143, 13)
+        Me.eleAmpel.Size = New System.Drawing.Size(18, 18)
         Me.eleAmpel.TabIndex = 11
         '
-        'RichTextBox1
+        'eleDeliverables
         '
-        Me.RichTextBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+        Me.eleDeliverables.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.RichTextBox1.BackColor = System.Drawing.SystemColors.ActiveCaption
-        Me.RichTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None
-        Me.TableLayoutPanel1.SetColumnSpan(Me.RichTextBox1, 2)
-        Me.RichTextBox1.Location = New System.Drawing.Point(3, 316)
-        Me.RichTextBox1.Name = "RichTextBox1"
-        Me.RichTextBox1.Size = New System.Drawing.Size(223, 118)
-        Me.RichTextBox1.TabIndex = 12
-        Me.RichTextBox1.Text = resources.GetString("RichTextBox1.Text")
+        Me.eleDeliverables.BackColor = System.Drawing.SystemColors.Control
+        Me.eleDeliverables.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.TableLayoutPanel1.SetColumnSpan(Me.eleDeliverables, 2)
+        Me.eleDeliverables.Location = New System.Drawing.Point(3, 202)
+        Me.eleDeliverables.MaximumSize = New System.Drawing.Size(0, 200)
+        Me.eleDeliverables.Name = "eleDeliverables"
+        Me.eleDeliverables.ReadOnly = True
+        Me.eleDeliverables.Size = New System.Drawing.Size(223, 98)
+        Me.eleDeliverables.TabIndex = 12
+        Me.eleDeliverables.Text = resources.GetString("eleDeliverables.Text")
         '
         'FlowLayoutPanel1
         '
@@ -227,6 +211,29 @@ Partial Class ucInfo
         Me.eleType.TabIndex = 4
         Me.eleType.Text = "Objekttyp (zb. Meilenstein, Phase, etc.)"
         '
+        'Panel1
+        '
+        Me.Panel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.percentDone)
+        Me.Panel1.Controls.Add(Me.eleAmpel)
+        Me.Panel1.Location = New System.Drawing.Point(83, 45)
+        Me.Panel1.Name = "Panel1"
+        Me.Panel1.Size = New System.Drawing.Size(143, 18)
+        Me.Panel1.TabIndex = 13
+        '
+        'percentDone
+        '
+        Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.percentDone.AutoSize = True
+        Me.percentDone.Location = New System.Drawing.Point(77, 5)
+        Me.percentDone.Name = "percentDone"
+        Me.percentDone.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.percentDone.Size = New System.Drawing.Size(42, 13)
+        Me.percentDone.TabIndex = 12
+        Me.percentDone.Text = "% done"
+        Me.percentDone.TextAlign = System.Drawing.ContentAlignment.TopRight
+        '
         'ucInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -240,6 +247,8 @@ Partial Class ucInfo
         Me.TableLayoutPanel1.PerformLayout()
         Me.FlowLayoutPanel1.ResumeLayout(False)
         Me.FlowLayoutPanel1.PerformLayout()
+        Me.Panel1.ResumeLayout(False)
+        Me.Panel1.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -249,7 +258,6 @@ Partial Class ucInfo
     Friend WithEvents labelAmpel As Windows.Forms.Label
     Friend WithEvents TableLayoutPanel1 As Windows.Forms.TableLayoutPanel
     Friend WithEvents eleAmpelText As Windows.Forms.Label
-    Friend WithEvents eleDeliverables As Windows.Forms.TextBox
     Friend WithEvents FlowLayoutPanel1 As Windows.Forms.FlowLayoutPanel
     Friend WithEvents eleName As Windows.Forms.Label
     Friend WithEvents eleType As Windows.Forms.Label
@@ -257,5 +265,7 @@ Partial Class ucInfo
     Friend WithEvents eleDatum As Windows.Forms.Label
     Friend WithEvents eleRespons As Windows.Forms.Label
     Friend WithEvents eleAmpel As Windows.Forms.Label
-    Friend WithEvents RichTextBox1 As Windows.Forms.RichTextBox
+    Friend WithEvents eleDeliverables As Windows.Forms.RichTextBox
+    Friend WithEvents Panel1 As Windows.Forms.Panel
+    Friend WithEvents percentDone As Windows.Forms.Label
 End Class
