@@ -1,8 +1,8 @@
 ﻿Public Class ThisAddIn
 
-    'Private ucPropertiesView As ucProperties
+    Private pane As ucInfo
     'Private ucSearchView As ucSearch
-    'Private WithEvents propertiesPane As Microsoft.Office.Tools.CustomTaskPane
+    Private WithEvents thePane As Microsoft.Office.Tools.CustomTaskPane
     'Private WithEvents searchPane As Microsoft.Office.Tools.CustomTaskPane
 
     Private Sub ThisAddIn_Disposed(sender As Object, e As EventArgs) Handles Me.Disposed
@@ -47,6 +47,18 @@
             .Width = 320
             .Visible = False
         End With
+
+        pane = New ucInfo
+        thePane = Me.CustomTaskPanes.Add(pane, "Info")
+        With thePane
+            .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
+            .Height = 500
+            .Width = 500
+            .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
+            .Width = 320
+            .Visible = True
+        End With
+
 
         trafficLightColors(0) = PowerPoint.XlRgbColor.rgbGray
         trafficLightColors(1) = PowerPoint.XlRgbColor.rgbGreen
