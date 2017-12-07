@@ -1070,7 +1070,7 @@ Public Module Module1
         Dim foundDiagram As clsDiagramm = Nothing
         Dim index As Integer = -1
         Dim tmpCollection As New Collection
-
+        Dim diagrammType As Integer = -1
         Dim currentFilter As New clsFilter
 
         ' EnableEvents ausschalten ...
@@ -1095,10 +1095,18 @@ Public Module Module1
         End Try
 
         Try
-
             foundDiagram = DiagramList.getDiagramm(chtObj.Name)
             If Not IsNothing(foundDiagram) Then
                 myCollection = foundDiagram.gsCollection
+                If foundDiagram.diagrammTyp = DiagrammTypen(0) Then
+                    diagrammType = PTpfdk.Phasen
+                ElseIf foundDiagram.diagrammTyp = DiagrammTypen(5) Then
+                    diagrammType = PTpfdk.Meilenstein
+                ElseIf foundDiagram.diagrammTyp = DiagrammTypen(7) Then
+                    diagrammType = PTpfdk.PhaseCategories
+                ElseIf foundDiagram.diagrammTyp = DiagrammTypen(8) Then
+                    diagrammType = PTpfdk.MilestoneCategories
+                End If
                 found = True
             End If
 
@@ -1106,15 +1114,16 @@ Public Module Module1
             myCollection = New Collection
         End Try
 
-
+        Dim showPhasesMilestones As Boolean = False
         ' es ist ein Rollen Diagramm mit der Menge von angegebenen Rollen in myCollection 
+
         If found Then
             Dim weitermachen As Boolean = False
             If istRollenDiagramm(chtObj) Then
                 currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
                                                                 myCollection, Nothing)
                 weitermachen = True
-                
+
 
             ElseIf istKostenartDiagramm(chtObj) Then
                 currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
@@ -1125,10 +1134,13 @@ Public Module Module1
                 currentFilter = New clsFilter("temp", Nothing, Nothing, myCollection, Nothing, _
                                                                Nothing, Nothing)
                 weitermachen = True
+                showPhasesMilestones = True
+
             ElseIf istMileStoneDiagramm(chtObj) Then
                 currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, myCollection, _
                                                                Nothing, Nothing)
                 weitermachen = True
+                showPhasesMilestones = True
 
             ElseIf istErgebnisDiagramm(chtObj, index) Then
 
@@ -1149,10 +1161,27 @@ Public Module Module1
                         If kvp.Value.marker = False Then
                             ' dann muss es neu markiert und angezeigt werden 
                             Try
+                                Dim idCollection As Collection = Nothing
+                                Dim msNames As New Collection
+                                Dim phNames As New Collection
+
+                                If showPhasesMilestones Then
+                                    If diagrammType = PTpfdk.Meilenstein Or _
+                                        diagrammType = PTpfdk.MilestoneCategories Then
+
+                                        msNames = myCollection
+
+                                    ElseIf diagrammType = PTpfdk.Phasen Or _
+                                        diagrammType = PTpfdk.PhaseCategories Then
+
+                                        phNames = myCollection
+
+                                    End If
+                                End If
 
                                 kvp.Value.marker = True
                                 Dim tmpC As New Collection
-                                Call ZeichneProjektinPlanTafel(tmpC, kvp.Value.name, kvp.Value.tfZeile, tmpC, tmpC)
+                                Call ZeichneProjektinPlanTafel(tmpC, kvp.Value.name, kvp.Value.tfZeile, phNames, msNames)
 
                             Catch ex As Exception
                                 Call MsgBox(ex.Message)
