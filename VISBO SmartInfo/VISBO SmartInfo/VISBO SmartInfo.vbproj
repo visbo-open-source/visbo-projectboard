@@ -274,6 +274,12 @@
     <Compile Include="ThisAddIn.vb">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ucInfo.Designer.vb">
+      <DependentUpon>ucInfo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ucInfo.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="ucProperties.Designer.vb">
       <DependentUpon>ucProperties.vb</DependentUpon>
     </Compile>
@@ -306,6 +312,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Ribbon1.resx">
       <DependentUpon>Ribbon1.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucInfo.resx">
+      <DependentUpon>ucInfo.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ucProperties.resx">
       <DependentUpon>ucProperties.vb</DependentUpon>

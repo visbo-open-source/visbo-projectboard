@@ -33,10 +33,10 @@ Partial Class ucInfo
         Me.eleDatum = New System.Windows.Forms.Label()
         Me.eleRespons = New System.Windows.Forms.Label()
         Me.eleAmpel = New System.Windows.Forms.Label()
+        Me.RichTextBox1 = New System.Windows.Forms.RichTextBox()
         Me.FlowLayoutPanel1 = New System.Windows.Forms.FlowLayoutPanel()
         Me.eleName = New System.Windows.Forms.Label()
         Me.eleType = New System.Windows.Forms.Label()
-        Me.RichTextBox1 = New System.Windows.Forms.RichTextBox()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.FlowLayoutPanel1.SuspendLayout()
         Me.SuspendLayout()
@@ -102,6 +102,7 @@ Partial Class ucInfo
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100.0!))
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20.0!))
         Me.TableLayoutPanel1.Size = New System.Drawing.Size(229, 457)
         Me.TableLayoutPanel1.TabIndex = 6
         '
@@ -179,6 +180,20 @@ Partial Class ucInfo
         Me.eleAmpel.Size = New System.Drawing.Size(143, 13)
         Me.eleAmpel.TabIndex = 11
         '
+        'RichTextBox1
+        '
+        Me.RichTextBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.RichTextBox1.BackColor = System.Drawing.SystemColors.ActiveCaption
+        Me.RichTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.TableLayoutPanel1.SetColumnSpan(Me.RichTextBox1, 2)
+        Me.RichTextBox1.Location = New System.Drawing.Point(3, 316)
+        Me.RichTextBox1.Name = "RichTextBox1"
+        Me.RichTextBox1.Size = New System.Drawing.Size(223, 118)
+        Me.RichTextBox1.TabIndex = 12
+        Me.RichTextBox1.Text = resources.GetString("RichTextBox1.Text")
+        '
         'FlowLayoutPanel1
         '
         Me.FlowLayoutPanel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
@@ -211,20 +226,6 @@ Partial Class ucInfo
         Me.eleType.Size = New System.Drawing.Size(191, 13)
         Me.eleType.TabIndex = 4
         Me.eleType.Text = "Objekttyp (zb. Meilenstein, Phase, etc.)"
-        '
-        'RichTextBox1
-        '
-        Me.RichTextBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.RichTextBox1.BackColor = System.Drawing.SystemColors.ActiveCaption
-        Me.RichTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None
-        Me.TableLayoutPanel1.SetColumnSpan(Me.RichTextBox1, 2)
-        Me.RichTextBox1.Location = New System.Drawing.Point(3, 316)
-        Me.RichTextBox1.Name = "RichTextBox1"
-        Me.RichTextBox1.Size = New System.Drawing.Size(223, 64)
-        Me.RichTextBox1.TabIndex = 12
-        Me.RichTextBox1.Text = resources.GetString("RichTextBox1.Text")
         '
         'ucInfo
         '
