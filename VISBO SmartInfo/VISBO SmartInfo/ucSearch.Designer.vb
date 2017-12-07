@@ -73,7 +73,6 @@ Partial Class ucSearch
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Panel1.AutoScroll = True
-        Me.Panel1.AutoSize = True
         Me.Panel1.Controls.Add(Me.Label2)
         Me.Panel1.Controls.Add(Me.Label1)
         Me.Panel1.Controls.Add(Me.selListboxNames)
@@ -91,14 +90,14 @@ Partial Class ucSearch
         '
         'selListboxNames
         '
-        Me.selListboxNames.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.selListboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.selListboxNames.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.selListboxNames.FormattingEnabled = True
         Me.selListboxNames.HorizontalScrollbar = True
         Me.selListboxNames.ItemHeight = 17
         Me.selListboxNames.Location = New System.Drawing.Point(8, 493)
+        Me.selListboxNames.MinimumSize = New System.Drawing.Size(0, 50)
         Me.selListboxNames.Name = "selListboxNames"
         Me.selListboxNames.Size = New System.Drawing.Size(257, 225)
         Me.selListboxNames.TabIndex = 45
@@ -130,6 +129,7 @@ Partial Class ucSearch
         Me.listboxNames.HorizontalScrollbar = True
         Me.listboxNames.ItemHeight = 17
         Me.listboxNames.Location = New System.Drawing.Point(8, 134)
+        Me.listboxNames.MinimumSize = New System.Drawing.Size(0, 50)
         Me.listboxNames.Name = "listboxNames"
         Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.listboxNames.Size = New System.Drawing.Size(257, 327)
@@ -232,7 +232,6 @@ Partial Class ucSearch
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
         Me.ResumeLayout(False)
-        Me.PerformLayout()
 
     End Sub
     Friend WithEvents cathegoryList As System.Windows.Forms.ComboBox
