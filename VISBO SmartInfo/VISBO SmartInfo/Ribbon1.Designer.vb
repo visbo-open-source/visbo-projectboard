@@ -44,21 +44,21 @@
         Me.Tab1 = Me.Factory.CreateRibbonTab
         Me.Tab2 = Me.Factory.CreateRibbonTab
         Me.Group2 = Me.Factory.CreateRibbonGroup
-        Me.btnUpdate = Me.Factory.CreateRibbonButton
         Me.Group3 = Me.Factory.CreateRibbonGroup
-        Me.btnStart = Me.Factory.CreateRibbonButton
-        Me.btnFastBack = Me.Factory.CreateRibbonButton
-        Me.btnShowChanges = Me.Factory.CreateRibbonButton
-        Me.btnFastForward = Me.Factory.CreateRibbonButton
-        Me.btnEnd2 = Me.Factory.CreateRibbonButton
         Me.Group4 = Me.Factory.CreateRibbonGroup
-        Me.activateSearch = Me.Factory.CreateRibbonButton
-        Me.activateInfo = Me.Factory.CreateRibbonButton
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.timeMachineTab = Me.Factory.CreateRibbonButton
         Me.variantTab_Click = Me.Factory.CreateRibbonButton
         Me.settingsTab = Me.Factory.CreateRibbonButton
         Me.Separator1 = Me.Factory.CreateRibbonSeparator
+        Me.btnUpdate = Me.Factory.CreateRibbonButton
+        Me.btnStart = Me.Factory.CreateRibbonButton
+        Me.btnFastBack = Me.Factory.CreateRibbonButton
+        Me.btnShowChanges = Me.Factory.CreateRibbonButton
+        Me.btnFastForward = Me.Factory.CreateRibbonButton
+        Me.btnEnd2 = Me.Factory.CreateRibbonButton
+        Me.activateSearch = Me.Factory.CreateRibbonButton
+        Me.activateInfo = Me.Factory.CreateRibbonButton
         Me.activateTab = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
@@ -88,14 +88,6 @@
         Me.Group2.Label = "Update"
         Me.Group2.Name = "Group2"
         '
-        'btnUpdate
-        '
-        Me.btnUpdate.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnUpdate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Visbo_update_Button
-        Me.btnUpdate.Label = "Current"
-        Me.btnUpdate.Name = "btnUpdate"
-        Me.btnUpdate.ShowImage = True
-        '
         'Group3
         '
         Me.Group3.Items.Add(Me.btnStart)
@@ -106,69 +98,12 @@
         Me.Group3.Label = "Time Machine"
         Me.Group3.Name = "Group3"
         '
-        'btnStart
-        '
-        Me.btnStart.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnStart.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_beginning1
-        Me.btnStart.Label = "First"
-        Me.btnStart.Name = "btnStart"
-        Me.btnStart.ShowImage = True
-        '
-        'btnFastBack
-        '
-        Me.btnFastBack.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnFastBack.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_left
-        Me.btnFastBack.Label = "Previous"
-        Me.btnFastBack.Name = "btnFastBack"
-        Me.btnFastBack.ShowImage = True
-        '
-        'btnShowChanges
-        '
-        Me.btnShowChanges.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnShowChanges.Image = Global.VISBO_SmartInfo.My.Resources.Resources.shape_triangle
-        Me.btnShowChanges.Label = "Difference"
-        Me.btnShowChanges.Name = "btnShowChanges"
-        Me.btnShowChanges.ShowImage = True
-        '
-        'btnFastForward
-        '
-        Me.btnFastForward.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnFastForward.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_right
-        Me.btnFastForward.Label = "Next"
-        Me.btnFastForward.Name = "btnFastForward"
-        Me.btnFastForward.ShowImage = True
-        '
-        'btnEnd2
-        '
-        Me.btnEnd2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnEnd2.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_end
-        Me.btnEnd2.Label = "Current"
-        Me.btnEnd2.Name = "btnEnd2"
-        Me.btnEnd2.ScreenTip = " fösadlkfsödlkf"
-        Me.btnEnd2.ShowImage = True
-        '
         'Group4
         '
         Me.Group4.Items.Add(Me.activateSearch)
         Me.Group4.Items.Add(Me.activateInfo)
         Me.Group4.Label = "Actions"
         Me.Group4.Name = "Group4"
-        '
-        'activateSearch
-        '
-        Me.activateSearch.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.activateSearch.Image = Global.VISBO_SmartInfo.My.Resources.Resources.find
-        Me.activateSearch.Label = "Suchen"
-        Me.activateSearch.Name = "activateSearch"
-        Me.activateSearch.ShowImage = True
-        '
-        'activateInfo
-        '
-        Me.activateInfo.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.activateInfo.Image = Global.VISBO_SmartInfo.My.Resources.Resources.information2
-        Me.activateInfo.Label = "Eigenschaften"
-        Me.activateInfo.Name = "activateInfo"
-        Me.activateInfo.ShowImage = True
         '
         'SmartInfo
         '
@@ -198,6 +133,71 @@
         'Separator1
         '
         Me.Separator1.Name = "Separator1"
+        '
+        'btnUpdate
+        '
+        Me.btnUpdate.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnUpdate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Visbo_update_Button
+        Me.btnUpdate.Label = "Current"
+        Me.btnUpdate.Name = "btnUpdate"
+        Me.btnUpdate.ShowImage = True
+        '
+        'btnStart
+        '
+        Me.btnStart.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnStart.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_beginning2
+        Me.btnStart.Label = "First"
+        Me.btnStart.Name = "btnStart"
+        Me.btnStart.ShowImage = True
+        '
+        'btnFastBack
+        '
+        Me.btnFastBack.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnFastBack.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_left1
+        Me.btnFastBack.Label = "Previous"
+        Me.btnFastBack.Name = "btnFastBack"
+        Me.btnFastBack.ShowImage = True
+        '
+        'btnShowChanges
+        '
+        Me.btnShowChanges.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnShowChanges.Image = Global.VISBO_SmartInfo.My.Resources.Resources.shape_triangle
+        Me.btnShowChanges.Label = "Difference"
+        Me.btnShowChanges.Name = "btnShowChanges"
+        Me.btnShowChanges.ShowImage = True
+        '
+        'btnFastForward
+        '
+        Me.btnFastForward.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnFastForward.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_right1
+        Me.btnFastForward.Label = "Next"
+        Me.btnFastForward.Name = "btnFastForward"
+        Me.btnFastForward.ShowImage = True
+        '
+        'btnEnd2
+        '
+        Me.btnEnd2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnEnd2.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_end1
+        Me.btnEnd2.Label = "Current"
+        Me.btnEnd2.Name = "btnEnd2"
+        Me.btnEnd2.ScreenTip = " fösadlkfsödlkf"
+        Me.btnEnd2.ShowImage = True
+        '
+        'activateSearch
+        '
+        Me.activateSearch.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.activateSearch.Image = Global.VISBO_SmartInfo.My.Resources.Resources.find
+        Me.activateSearch.Label = "Search"
+        Me.activateSearch.Name = "activateSearch"
+        Me.activateSearch.ShowImage = True
+        '
+        'activateInfo
+        '
+        Me.activateInfo.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.activateInfo.Image = Global.VISBO_SmartInfo.My.Resources.Resources.information2
+        Me.activateInfo.Label = "Properties"
+        Me.activateInfo.Name = "activateInfo"
+        Me.activateInfo.ShowImage = True
         '
         'activateTab
         '
