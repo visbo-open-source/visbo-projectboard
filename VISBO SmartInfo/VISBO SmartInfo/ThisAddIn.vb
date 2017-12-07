@@ -1,6 +1,6 @@
 ﻿Public Class ThisAddIn
 
-    Private pane As ucInfo
+    'Private pane As ucInfo
     'Private ucSearchView As ucSearch
     Private WithEvents thePane As Microsoft.Office.Tools.CustomTaskPane
     'Private WithEvents searchPane As Microsoft.Office.Tools.CustomTaskPane
@@ -48,16 +48,16 @@
             .Visible = False
         End With
 
-        pane = New ucInfo
-        thePane = Me.CustomTaskPanes.Add(pane, "Info")
-        With thePane
-            .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
-            .Height = 500
-            .Width = 500
-            .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
-            .Width = 320
-            .Visible = True
-        End With
+        'pane = New ucInfo
+        'thePane = Me.CustomTaskPanes.Add(pane, "Info")
+        'With thePane
+        '    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
+        '    .Height = 500
+        '    .Width = 500
+        '    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
+        '    .Width = 320
+        '    .Visible = True
+        'End With
 
 
         trafficLightColors(0) = PowerPoint.XlRgbColor.rgbGray
