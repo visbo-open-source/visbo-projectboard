@@ -6657,7 +6657,7 @@ Public Module testModule
 
         Dim milestoneName As String = ""
         Dim breadcrumbMS As String = ""
-        Dim shortName As String
+        Dim shortName As String = ""
         Dim factor As Double
         Dim tmpBU As clsBusinessUnit
 
