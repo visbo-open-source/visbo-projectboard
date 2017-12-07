@@ -2429,7 +2429,7 @@ Module Module1
                     Dim elemBC As String = tmpShape.Tags.Item("BC")
 
                     If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Then
-                        ' es handelt sich um einen Swimlane Namen oder Segment Name: kein Verschieben , aber das das Setzen der Tags ist notwendig  
+                        ' es handelt sich um einen Swimlane Namen oder Segment Name: kein Verschieben , aber das Setzen der Tags ist notwendig  
                         '
                         Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                         If IsNothing(ph) Then
@@ -4711,43 +4711,40 @@ Module Module1
                         ' ''    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
                         ' ''End If
 
-                        .eleName.Text = bestimmeElemText(tmpShape, False, True)
-                        .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
-
                         ' ''Dim rdbCode As Integer = calcRDB()
-
                         ' ''Dim tmpStr() As String
                         ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+
+                        If englishLanguage Then
+                            .labelDate.Text = "Date:"
+                            .labelAmpel.Text = "traffic light:"
+                            .labelDeliver.Text = "Deliverables:"
+                            .labelRespons.Text = "Responsible:"
+                        Else
+                            .labelDate.Text = "Datum:"
+                            .labelAmpel.Text = "Ampel:"
+                            .labelDeliver.Text = "Lieferumfänge:"
+                            .labelRespons.Text = "Verantwortlich:"
+                        End If
+
+                        .eleName.Text = bestimmeElemText(tmpShape, False, True)
+
+                        .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
 
                         Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
 
                         .eleAmpel.BackColor = Drawing.Color.FromArgb(255, rgbFarbe)
 
-                        If englishLanguage Then
-                            .labelAmpel.Text = "traffic light:"
-                        Else
-                            .labelAmpel.Text = "Ampel:"
-                        End If
                         .eleAmpelText.Text = bestimmeElemAE(tmpShape)
 
-                        If englishLanguage Then
-                            .labelDeliver.Text = "Deliverables:"
-                        Else
-                            .labelDeliver.Text = "Lieferumfänge:"
-                        End If
                         .eleDeliverables.Text = bestimmeElemLU(tmpShape)
 
-
-                        If englishLanguage Then
-                            .labelRespons.Text = "Responsible:"
-                        Else
-                            .labelRespons.Text = "Verantwortlich:"
-                        End If
                         .eleRespons.Text = bestimmeElemVE(tmpShape)
 
                     End With
 
                 ElseIf selectedPlanShapes.Count > 1 Then
+
 
                     'Dim rdbCode As Integer = calcRDB()
 

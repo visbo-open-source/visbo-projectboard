@@ -33,7 +33,8 @@ Public Class ucSearch
     ' ''Friend positionIndexPD As Integer = 8
     ' ''Friend positionIndexPT As Integer = 6
 
-
+    ' hierin werden zu den angezeigten Namen in selListboxNames die shape-Namen gemerkt
+    Friend shpNameSav As New SortedList(Of String, String)
 
     ''' <summary>
     ''' ist gecheckt, wenn ein Pfeil für das/die ausgewählten Elemente angezeigt werden soll
@@ -147,29 +148,56 @@ Public Class ucSearch
             ''
             '' hier muss die Textbox categoryList ausgelesen werden. Hier wird gefiltert
             ''
+            If englishLanguage Then
 
-            Select Case cathegoryList.SelectedItem
-                Case "Name"
-                    catCode = pptInfoType.cName
-                Case "Original Name"
-                    catCode = pptInfoType.oName
-                Case "Verantwortlich"
-                    catCode = pptInfoType.responsible
-                Case "Abkürzung"
-                    catCode = pptInfoType.sName
-                Case "voller Name"
-                    catCode = pptInfoType.bCrumb
-                Case "Lieferumfänge"
-                    catCode = pptInfoType.lUmfang
-                Case "Termin-Änderungen"
-                    catCode = pptInfoType.mvElement
-                Case "Ressourcen"
-                    catCode = pptInfoType.resources
-                Case "Kosten"
-                    catCode = pptInfoType.costs
-                Case Else
-                    catCode = pptInfoType.cName
-            End Select
+                Select Case cathegoryList.SelectedItem
+                    Case "Name"
+                        catCode = pptInfoType.cName
+                    Case "Responsibilities"
+                        catCode = pptInfoType.responsible
+                    Case "Original Name"
+                        catCode = pptInfoType.oName
+                    Case "Abbreviation"
+                        catCode = pptInfoType.sName
+                    Case "voller Name"
+                        catCode = pptInfoType.bCrumb
+                    Case "Deliverables"
+                        catCode = pptInfoType.lUmfang
+                    Case "Changed Dates"
+                        catCode = pptInfoType.mvElement
+                    Case "Resources"
+                        catCode = pptInfoType.resources
+                    Case "Cost"
+                        catCode = pptInfoType.costs
+                    Case Else
+                        catCode = pptInfoType.cName
+                End Select
+
+            Else
+                Select Case cathegoryList.SelectedItem
+                    Case "Name"
+                        catCode = pptInfoType.cName
+                    Case "Verantwortlich"
+                        catCode = pptInfoType.responsible
+                    Case "Original Name"
+                        catCode = pptInfoType.oName
+                    Case "Abkürzung"
+                        catCode = pptInfoType.sName
+                    Case "voller Name"
+                        catCode = pptInfoType.bCrumb
+                    Case "Lieferumfänge"
+                        catCode = pptInfoType.lUmfang
+                    Case "Termin-Änderungen"
+                        catCode = pptInfoType.mvElement
+                    Case "Ressourcen"
+                        catCode = pptInfoType.resources
+                    Case "Kosten"
+                        catCode = pptInfoType.costs
+                    Case Else
+                        catCode = pptInfoType.cName
+                End Select
+            End If
+           
 
             'If rdbName.Checked Then
             '    rdbCode = pptInfoType.cName
@@ -266,18 +294,34 @@ Public Class ucSearch
     Private Sub ucSearch_Load(sender As Object, e As EventArgs) Handles Me.Load
 
         cathegoryList.MaxDropDownItems = 9
-        cathegoryList.Items.Add("Name")
-        cathegoryList.Items.Add("Verantwortlich")
-        cathegoryList.Items.Add("Lieferumfänge")
-        cathegoryList.Items.Add("Original Name")
-        cathegoryList.Items.Add("Ressourcen")
-        cathegoryList.Items.Add("Abkürzung")
-        cathegoryList.Items.Add("Kosten")
-        cathegoryList.Items.Add("Termin-Änderungen")
+        If englishLanguage Then
+            cathegoryList.Items.Add("Name")
+            cathegoryList.Items.Add("Responsibilities")
+            cathegoryList.Items.Add("Deliverables")
+            cathegoryList.Items.Add("Original Name")
+            cathegoryList.Items.Add("Resources")
+            cathegoryList.Items.Add("Abbreviation")
+            cathegoryList.Items.Add("Cost")
+            cathegoryList.Items.Add("Changed Dates")
 
-        If slideHasSmartElements Then
-            cathegoryList.SelectedItem = "Name"
+            If slideHasSmartElements Then
+                cathegoryList.SelectedItem = "Name"
+            End If
+        Else
+            cathegoryList.Items.Add("Name")
+            cathegoryList.Items.Add("Verantwortlich")
+            cathegoryList.Items.Add("Lieferumfänge")
+            cathegoryList.Items.Add("Original Name")
+            cathegoryList.Items.Add("Ressourcen")
+            cathegoryList.Items.Add("Abkürzung")
+            cathegoryList.Items.Add("Kosten")
+            cathegoryList.Items.Add("Termin-Änderungen")
+
+            If slideHasSmartElements Then
+                cathegoryList.SelectedItem = "Name"
+            End If
         End If
+      
 
 
         'Call fülltListbox()
@@ -302,6 +346,7 @@ Public Class ucSearch
 
     Private Sub filterText_TextChanged(sender As Object, e As EventArgs) Handles filterText.TextChanged
 
+        selListboxNames.Items.Clear()
         suchString = filterText.Text
         Call fülltListbox()
 
@@ -313,6 +358,7 @@ Public Class ucSearch
         ' es können pro Name auch mehrere Shapes selektiert werden müssen 
         ' wenn Ampeln anzeigen an ist, dann werden auch die entsprechenden Ampel-Farben angezeigt ... 
 
+        selListboxNames.Items.Clear()
 
         Dim nameArrayI() As String
         Dim nameArrayO() As String
@@ -320,27 +366,55 @@ Public Class ucSearch
 
         Dim catCode As Integer
 
+        If englishLanguage Then
+            Select Case cathegoryList.SelectedItem
+                Case "Name"
+                    catCode = pptInfoType.cName
+                Case "Responsibilities"
+                    catCode = pptInfoType.responsible
+                Case "Original Name"
+                    catCode = pptInfoType.oName
+                Case "Abbreviation"
+                    catCode = pptInfoType.sName
+                Case "voller Name"
+                    catCode = pptInfoType.bCrumb
+                Case "Deliverables"
+                    catCode = pptInfoType.lUmfang
+                Case "Changed Dates"
+                    catCode = pptInfoType.mvElement
+                Case "Resources"
+                    catCode = pptInfoType.resources
+                Case "Cost"
+                    catCode = pptInfoType.costs
+                Case Else
+                    catCode = pptInfoType.cName
+            End Select
+        Else
+            Select Case cathegoryList.SelectedItem
+                Case "Name"
+                    catCode = pptInfoType.cName
+                Case "Verantwortlich"
+                    catCode = pptInfoType.responsible
+                Case "Original Name"
+                    catCode = pptInfoType.oName
+                Case "Abkürzung"
+                    catCode = pptInfoType.sName
+                Case "voller Name"
+                    catCode = pptInfoType.bCrumb
+                Case "Lieferumfänge"
+                    catCode = pptInfoType.lUmfang
+                Case "Termin-Änderungen"
+                    catCode = pptInfoType.mvElement
+                Case "Ressourcen"
+                    catCode = pptInfoType.resources
+                Case "Kosten"
+                    catCode = pptInfoType.costs
+                Case Else
+                    catCode = pptInfoType.cName
+            End Select
+        End If
 
-        Select Case cathegoryList.SelectedItem
-            Case "Name"
-                catCode = pptInfoType.cName
-            Case "Original Name"
-                catCode = pptInfoType.oName
-            Case "Abkürzung"
-                catCode = pptInfoType.sName
-            Case "voller Name"
-                catCode = pptInfoType.bCrumb
-            Case "Lieferumfänge"
-                catCode = pptInfoType.lUmfang
-            Case "Termin-Änderungen"
-                catCode = pptInfoType.mvElement
-            Case "Ressourcen"
-                catCode = pptInfoType.resources
-            Case "Kosten"
-                catCode = pptInfoType.costs
-            Case Else
-                catCode = pptInfoType.cName
-        End Select
+        
 
         ' ''If rdbName.Checked Then
         ' ''    rdbCode = pptInfoType.cName
@@ -377,6 +451,8 @@ Public Class ucSearch
 
         Dim colorCode As Integer = calcColorCode()
 
+        ' in tmpCollection werden alle Elementnamen geschoben, auf die die Selection in listboxNames zutrifft
+
         Dim tmpCollection As Collection = smartSlideLists.getShapesNames(nameArrayI, catCode, colorCode)
 
         anzSelected = tmpCollection.Count
@@ -384,7 +460,7 @@ Public Class ucSearch
 
         If anzSelected >= 1 Then
 
-            ' wenn das erste Element selektiert wird udn die Anzahl Marker > 0 ist, dann müssen hier die MArker gelöscht werden 
+            ' wenn das erste Element selektiert wird und die Anzahl Marker > 0 ist, dann müssen hier die MArker gelöscht werden 
             If listboxNames.SelectedItems.Count = 1 And markerShpNames.Count > 0 Then
                 Call deleteMarkerShapes()
             End If
@@ -413,6 +489,27 @@ Public Class ucSearch
                     End If
                 End If
 
+                ' löschen der Liste an Elemente, die zur Selection gehören
+                selListboxNames.Items.Clear()
+                shpNameSav.Clear()
+
+                'neue Elemente aus Selection in Liste bringen
+                For Each selEleShpName In tmpCollection
+
+                    Dim curShape As PowerPoint.Shape = currentSlide.Shapes(selEleShpName)
+
+                    Dim bln As String = curShape.Tags.Item("BLN")
+                    bln = bestimmeElemText(curShape, False, False)
+                    Dim pname As String = getPVnameFromShpName(selEleShpName)
+                    Dim selListboxEle As String = pname & "  -  " & bln
+
+                    selListboxNames.Items.Add(selListboxEle)
+
+                    ' merken der Zuordnung zwischen angezeigtem Namen und ShapeNamen
+                    shpNameSav.Add(selListboxEle, selEleShpName)
+
+                Next
+
             Catch ex As Exception
 
             End Try
@@ -428,8 +525,61 @@ Public Class ucSearch
     Private Sub cathegoryList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cathegoryList.SelectedIndexChanged
 
         Dim newCathegory As String = cathegoryList.SelectedItem
-
+        selListboxNames.Items.Clear()
         Call fülltListbox()
+
+    End Sub
+
+    Private Sub selListboxNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles selListboxNames.SelectedIndexChanged
+
+        Dim nameArrayO() As String
+        Dim anzSelected As Integer = selListboxNames.SelectedItems.Count
+        Dim ShpName As String = ""
+
+        If anzSelected = 1 Then
+
+
+            ' wenn das erste Element selektiert wird und die Anzahl Marker > 0 ist, dann müssen hier die MArker gelöscht werden 
+            If selListboxNames.SelectedItems.Count = 1 And markerShpNames.Count > 0 Then
+                Call deleteMarkerShapes()
+            End If
+
+            ReDim nameArrayO(anzSelected - 1)
+
+            ShpName = CStr(shpNameSav.Item(selListboxNames.SelectedItem))
+            nameArrayO(0) = ShpName
+           
+            Try
+                selectedPlanShapes = currentSlide.Shapes.Range(nameArrayO)
+                selectedPlanShapes.Select()
+
+                ' die WindowsSelection Change Routine gleich wieder verlassen ... damit die MArkerShapes nicht gleich wieder gelöscht werden 
+
+                If showMarker Then
+                    If selectedPlanShapes.Count > 1 Then
+
+                        Call createMarkerShapes(pptShapes:=selectedPlanShapes)
+
+                    ElseIf selectedPlanShapes.Count = 1 Then
+
+                        Call createMarkerShapes(pptShape:=selectedPlanShapes.Item(1))
+
+                    End If
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' nichts tun ...
+
+        End If
+
+
+        Dim curShape As PowerPoint.Shape = currentSlide.Shapes(ShpName)
+
+        Call aktualisiereInfoPane(curShape, False)
 
     End Sub
 End Class

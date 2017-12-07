@@ -26,6 +26,10 @@ Public Class clsEventsPrcCharts
                 Call unmarkPfDiagrams()
             End If
 
+            ' ausserdem müssen alle ggf gezeigten Phasen und Meilensteine gelöscht werden ..
+            Call awinDeleteProjectChildShapes(0)
+
+
             ' die Projekte und das Chart markieren 
             Call markProjectsOFChart(chtobj)
 

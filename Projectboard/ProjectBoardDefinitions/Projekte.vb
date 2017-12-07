@@ -15369,13 +15369,16 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub bringChartsToFront(ByVal projectShape As Excel.Shape)
 
-        Dim worksheetShapes As Excel.Shapes
+        Dim worksheetShapes As Excel.Shapes = Nothing
         Dim chtobj As Excel.ChartObject
 
         ' sicherstellen, dass projectshape auch etwas enthält ... 
         If IsNothing(projectShape) Then
             Exit Sub
         End If
+
+        ' Änderung tk, 6.12.17 Charts sind jetzt alle auf extra sheets und in extra window, ist nicht mehr notwendig ??
+        Exit Sub
 
         Try
 
@@ -16021,6 +16024,7 @@ Public Module Projekte
         Dim oldAlternativeText As String = ""
 
 
+
         Try
 
             worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
@@ -16452,12 +16456,15 @@ Public Module Projekte
 
         Dim msNumber As Integer = 0
         If drawPhaseList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
-            Call zeichnePhasenInProjekt(hproj, drawPhaseList, False, msNumber)
+            Call zeichnePhasenInProjekt(hproj:=hproj, namenListe:=drawPhaseList, numberIt:=False, msNumber:=msNumber, _
+                                        vonMonth:=showRangeLeft, bisMonth:=showRangeRight)
+            'Call zeichnePhasenInProjekt(hproj, drawPhaseList, False, msNumber)
         End If
 
         msNumber = 0
         If drawMilestoneList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
-            Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
+            Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, showRangeLeft, showRangeRight, False, msNumber, False)
+            'Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
         End If
 
 
@@ -20420,7 +20427,7 @@ Public Module Projekte
             Dim phaseName As String
             Dim r As Integer
             Dim cResult As New clsMeilenstein(parent:=cphase)
-            Dim cBewertung As clsBewertung
+            Dim cBewertung As clsBewertung = Nothing
             Dim phaseStart As Date
             Dim phaseEnde As Date
             Dim tbl As Excel.Range
