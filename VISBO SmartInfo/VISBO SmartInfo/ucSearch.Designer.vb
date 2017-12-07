@@ -43,20 +43,21 @@ Partial Class ucSearch
         '
         'cathegoryList
         '
-        Me.cathegoryList.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.cathegoryList.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.cathegoryList.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.cathegoryList.FormattingEnabled = True
-        Me.cathegoryList.Location = New System.Drawing.Point(3, 62)
+        Me.cathegoryList.Location = New System.Drawing.Point(3, 79)
         Me.cathegoryList.Name = "cathegoryList"
         Me.cathegoryList.Size = New System.Drawing.Size(329, 25)
         Me.cathegoryList.TabIndex = 1
         '
         'PictureBox1
         '
-        Me.PictureBox1.Anchor = System.Windows.Forms.AnchorStyles.Right
+        Me.PictureBox1.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.PictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.PictureBox1.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view1
-        Me.PictureBox1.Location = New System.Drawing.Point(310, 33)
+        Me.PictureBox1.Location = New System.Drawing.Point(310, 34)
         Me.PictureBox1.Name = "PictureBox1"
         Me.PictureBox1.Size = New System.Drawing.Size(22, 24)
         Me.PictureBox1.TabIndex = 2
@@ -64,6 +65,10 @@ Partial Class ucSearch
         '
         'Panel1
         '
+        Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.AutoSize = True
         Me.Panel1.Controls.Add(Me.selListboxNames)
         Me.Panel1.Controls.Add(Me.CheckBxMarker)
         Me.Panel1.Controls.Add(Me.PictureMarker)
@@ -72,21 +77,21 @@ Partial Class ucSearch
         Me.Panel1.Controls.Add(Me.Panel2)
         Me.Panel1.Controls.Add(Me.PictureBox1)
         Me.Panel1.Controls.Add(Me.cathegoryList)
-        Me.Panel1.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.Panel1.Location = New System.Drawing.Point(0, 3)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(345, 845)
+        Me.Panel1.Size = New System.Drawing.Size(345, 842)
         Me.Panel1.TabIndex = 3
         '
         'selListboxNames
         '
-        Me.selListboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.selListboxNames.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.selListboxNames.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.selListboxNames.FormattingEnabled = True
         Me.selListboxNames.HorizontalScrollbar = True
         Me.selListboxNames.ItemHeight = 17
-        Me.selListboxNames.Location = New System.Drawing.Point(3, 498)
+        Me.selListboxNames.Location = New System.Drawing.Point(3, 493)
         Me.selListboxNames.Name = "selListboxNames"
         Me.selListboxNames.Size = New System.Drawing.Size(329, 327)
         Me.selListboxNames.TabIndex = 45
@@ -111,16 +116,16 @@ Partial Class ucSearch
         '
         'listboxNames
         '
-        Me.listboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.listboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.listboxNames.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.listboxNames.FormattingEnabled = True
         Me.listboxNames.HorizontalScrollbar = True
         Me.listboxNames.ItemHeight = 17
-        Me.listboxNames.Location = New System.Drawing.Point(3, 102)
+        Me.listboxNames.Location = New System.Drawing.Point(3, 132)
         Me.listboxNames.Name = "listboxNames"
         Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.listboxNames.Size = New System.Drawing.Size(329, 378)
+        Me.listboxNames.Size = New System.Drawing.Size(329, 344)
         Me.listboxNames.Sorted = True
         Me.listboxNames.TabIndex = 42
         '
@@ -193,7 +198,7 @@ Partial Class ucSearch
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.Controls.Add(Me.Panel1)
         Me.Name = "ucSearch"
-        Me.Size = New System.Drawing.Size(345, 848)
+        Me.Size = New System.Drawing.Size(345, 908)
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
@@ -201,6 +206,7 @@ Partial Class ucSearch
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
         Me.ResumeLayout(False)
+        Me.PerformLayout()
 
     End Sub
     Friend WithEvents cathegoryList As System.Windows.Forms.ComboBox
