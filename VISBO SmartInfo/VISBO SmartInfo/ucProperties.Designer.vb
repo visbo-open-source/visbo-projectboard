@@ -34,7 +34,6 @@ Partial Class ucProperties
         Me.eleDeliverables = New System.Windows.Forms.TextBox()
         Me.labelDeliver = New System.Windows.Forms.Label()
         Me.Panel1 = New System.Windows.Forms.Panel()
-        Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
         '
         'eleName
@@ -95,25 +94,27 @@ Partial Class ucProperties
         '
         Me.labelAmpel.AutoSize = True
         Me.labelAmpel.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelAmpel.Location = New System.Drawing.Point(6, 122)
+        Me.labelAmpel.Location = New System.Drawing.Point(3, 122)
         Me.labelAmpel.Name = "labelAmpel"
-        Me.labelAmpel.Size = New System.Drawing.Size(77, 19)
+        Me.labelAmpel.Size = New System.Drawing.Size(79, 19)
         Me.labelAmpel.TabIndex = 6
-        Me.labelAmpel.Text = "traffic light:"
+        Me.labelAmpel.Text = "Traffic light:"
         '
         'eleAmpel
         '
         Me.eleAmpel.BackColor = System.Drawing.Color.Silver
+        Me.eleAmpel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.eleAmpel.Cursor = System.Windows.Forms.Cursors.Default
         Me.eleAmpel.Enabled = False
         Me.eleAmpel.Location = New System.Drawing.Point(94, 121)
         Me.eleAmpel.Name = "eleAmpel"
+        Me.eleAmpel.ReadOnly = True
         Me.eleAmpel.Size = New System.Drawing.Size(23, 20)
         Me.eleAmpel.TabIndex = 7
         '
         'eleAmpelText
         '
-        Me.eleAmpelText.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.eleAmpelText.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleAmpelText.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.eleAmpelText.Enabled = False
@@ -123,7 +124,7 @@ Partial Class ucProperties
         Me.eleAmpelText.Name = "eleAmpelText"
         Me.eleAmpelText.ReadOnly = True
         Me.eleAmpelText.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.eleAmpelText.Size = New System.Drawing.Size(281, 176)
+        Me.eleAmpelText.Size = New System.Drawing.Size(277, 176)
         Me.eleAmpelText.TabIndex = 8
         '
         'percentDone
@@ -131,7 +132,7 @@ Partial Class ucProperties
         Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.percentDone.AutoSize = True
         Me.percentDone.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.percentDone.Location = New System.Drawing.Point(251, 128)
+        Me.percentDone.Location = New System.Drawing.Point(247, 128)
         Me.percentDone.Name = "percentDone"
         Me.percentDone.Size = New System.Drawing.Size(0, 19)
         Me.percentDone.TabIndex = 13
@@ -139,25 +140,24 @@ Partial Class ucProperties
         '
         'eleDeliverables
         '
-        Me.eleDeliverables.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.eleDeliverables.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleDeliverables.BackColor = System.Drawing.SystemColors.Window
         Me.eleDeliverables.Enabled = False
         Me.eleDeliverables.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.eleDeliverables.Location = New System.Drawing.Point(0, 34)
+        Me.eleDeliverables.Location = New System.Drawing.Point(8, 378)
         Me.eleDeliverables.Multiline = True
         Me.eleDeliverables.Name = "eleDeliverables"
         Me.eleDeliverables.ReadOnly = True
         Me.eleDeliverables.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.eleDeliverables.Size = New System.Drawing.Size(280, 486)
+        Me.eleDeliverables.Size = New System.Drawing.Size(276, 148)
         Me.eleDeliverables.TabIndex = 10
         '
         'labelDeliver
         '
         Me.labelDeliver.AutoSize = True
-        Me.labelDeliver.Dock = System.Windows.Forms.DockStyle.Top
         Me.labelDeliver.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelDeliver.Location = New System.Drawing.Point(0, 0)
+        Me.labelDeliver.Location = New System.Drawing.Point(4, 356)
         Me.labelDeliver.Name = "labelDeliver"
         Me.labelDeliver.Size = New System.Drawing.Size(85, 19)
         Me.labelDeliver.TabIndex = 9
@@ -165,17 +165,12 @@ Partial Class ucProperties
         '
         'Panel1
         '
-        Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Panel1.AutoScroll = True
         Me.Panel1.AutoSize = True
         Me.Panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink
-        Me.Panel1.Controls.Add(Me.labelDeliver)
-        Me.Panel1.Controls.Add(Me.eleDeliverables)
         Me.Panel1.Location = New System.Drawing.Point(10, 356)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(280, 520)
+        Me.Panel1.Size = New System.Drawing.Size(0, 0)
         Me.Panel1.TabIndex = 12
         '
         'ucProperties
@@ -183,6 +178,8 @@ Partial Class ucProperties
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.Controls.Add(Me.eleDeliverables)
+        Me.Controls.Add(Me.labelDeliver)
         Me.Controls.Add(Me.percentDone)
         Me.Controls.Add(Me.Panel1)
         Me.Controls.Add(Me.eleAmpelText)
@@ -194,9 +191,7 @@ Partial Class ucProperties
         Me.Controls.Add(Me.labelDate)
         Me.Controls.Add(Me.eleName)
         Me.Name = "ucProperties"
-        Me.Size = New System.Drawing.Size(303, 900)
-        Me.Panel1.ResumeLayout(False)
-        Me.Panel1.PerformLayout()
+        Me.Size = New System.Drawing.Size(299, 546)
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
