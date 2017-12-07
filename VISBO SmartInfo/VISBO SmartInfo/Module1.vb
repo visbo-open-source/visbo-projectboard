@@ -943,15 +943,16 @@ Module Module1
                     ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
                     ' Listbox passt 
 
-                    ' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
-                    ' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
-                    If Not IsNothing(infoFrm) And formIsShown Then
-                        If infoFrm.rdbName.Visible Then
-                            If infoFrm.listboxNames.SelectedItems.Count > 0 Then
-                                'Call infoFrm.listboxNames.SelectedItems.Clear()
-                            End If
-                        End If
-                    End If
+                    '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
+                    '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
+                    ' ''If Not IsNothing(infoFrm) And formIsShown Then
+                    ' ''    If infoFrm.rdbName.Visible Then
+                    ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
+                    ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
+                    ' ''        End If
+                    ' ''    End If
+                    ' ''End If
+
 
                     ' jetzt ggf die angezeigten Marker löschen 
                     If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
@@ -1008,10 +1009,13 @@ Module Module1
                 ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
                 If relevantShapeNames.Count >= 1 Then
                     ''''???
-                    ' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
-                    If Not IsNothing(propertiesPane) And Not propertiesPane.Visible Then
-                        propertiesPane.Visible = True
-                    End If
+                    '' '' '' '' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
+                    ' '' '' ''If Not IsNothing(propertiesPane) And Not propertiesPane.Visible Then
+                    ' '' '' ''    propertiesPane.Visible = True
+                    ' '' '' ''End If
+
+
+
                     ' ur: wegen Pane
                     ' ''If IsNothing(infoFrm) And Not formIsShown Then
                     ' ''    infoFrm = New frmInfo
@@ -1060,7 +1064,7 @@ Module Module1
                     Next
 
                     ' hier wird die Information zu dem selektierten Shape angezeigt 
-                    If propertiesPane.Visible Then
+                    If Not IsNothing(propertiesPane) Then
                         Call aktualisiereInfoPane(tmpShape, elemWasMoved)
                     End If
                     ' ur: wegen Pane
@@ -1072,6 +1076,10 @@ Module Module1
                     ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
                     ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
                     Call ensureVisibilityOfSelection(selectedPlanShapes)
+
+                    If Not IsNothing(propertiesPane) Then
+                        propertiesPane.Visible = True
+                    End If
                 Else
 
                     Call checkHomeChangeBtnEnablement()
@@ -4735,6 +4743,8 @@ Module Module1
 
                         .eleAmpel.BackColor = Drawing.Color.FromArgb(255, rgbFarbe)
 
+                        .percentDone.Text = bestimmeElemPD(tmpShape)
+
                         .eleAmpelText.Text = bestimmeElemAE(tmpShape)
 
                         .eleDeliverables.Text = bestimmeElemLU(tmpShape)
@@ -4845,6 +4855,23 @@ Module Module1
             tmpText = tmpText & curShape.Tags.Item("MVE")
         End If
         bestimmeElemMVE = tmpText
+
+    End Function
+    ''' <summary>
+    ''' bestimme die percentDone einer Phase ( Tag= PD)
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeElemPD(ByVal curShape As PowerPoint.Shape) As String
+
+        Dim tmpText As String = ""
+
+        If curShape.Tags.Item("PD").Length > 0 Then
+            tmpText = tmpText & (curShape.Tags.Item("PD") * 100).ToString & " %"
+        End If
+
+        bestimmeElemPD = tmpText
 
     End Function
 

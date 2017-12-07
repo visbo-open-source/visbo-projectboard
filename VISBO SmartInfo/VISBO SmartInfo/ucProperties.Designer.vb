@@ -33,6 +33,7 @@ Partial Class ucProperties
         Me.labelDeliver = New System.Windows.Forms.Label()
         Me.eleDeliverables = New System.Windows.Forms.TextBox()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.percentDone = New System.Windows.Forms.Label()
         Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -54,9 +55,9 @@ Partial Class ucProperties
         Me.labelDate.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelDate.Location = New System.Drawing.Point(3, 52)
         Me.labelDate.Name = "labelDate"
-        Me.labelDate.Size = New System.Drawing.Size(54, 19)
+        Me.labelDate.Size = New System.Drawing.Size(41, 19)
         Me.labelDate.TabIndex = 2
-        Me.labelDate.Text = "Datum:"
+        Me.labelDate.Text = "Date:"
         '
         'eleDatum
         '
@@ -75,9 +76,9 @@ Partial Class ucProperties
         Me.labelRespons.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelRespons.Location = New System.Drawing.Point(4, 86)
         Me.labelRespons.Name = "labelRespons"
-        Me.labelRespons.Size = New System.Drawing.Size(73, 19)
+        Me.labelRespons.Size = New System.Drawing.Size(84, 19)
         Me.labelRespons.TabIndex = 4
-        Me.labelRespons.Text = "Zuständig:"
+        Me.labelRespons.Text = "Responsible:"
         '
         'eleRespons
         '
@@ -96,9 +97,9 @@ Partial Class ucProperties
         Me.labelAmpel.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelAmpel.Location = New System.Drawing.Point(6, 122)
         Me.labelAmpel.Name = "labelAmpel"
-        Me.labelAmpel.Size = New System.Drawing.Size(51, 19)
+        Me.labelAmpel.Size = New System.Drawing.Size(77, 19)
         Me.labelAmpel.TabIndex = 6
-        Me.labelAmpel.Text = "Ampel:"
+        Me.labelAmpel.Text = "traffic light:"
         '
         'eleAmpel
         '
@@ -162,11 +163,23 @@ Partial Class ucProperties
         Me.Panel1.Size = New System.Drawing.Size(280, 520)
         Me.Panel1.TabIndex = 12
         '
+        'percentDone
+        '
+        Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.percentDone.AutoSize = True
+        Me.percentDone.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.percentDone.Location = New System.Drawing.Point(251, 128)
+        Me.percentDone.Name = "percentDone"
+        Me.percentDone.Size = New System.Drawing.Size(0, 19)
+        Me.percentDone.TabIndex = 13
+        Me.percentDone.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
         'ucProperties
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.Controls.Add(Me.percentDone)
         Me.Controls.Add(Me.Panel1)
         Me.Controls.Add(Me.eleAmpelText)
         Me.Controls.Add(Me.eleAmpel)
@@ -195,5 +208,6 @@ Partial Class ucProperties
     Friend WithEvents labelDeliver As System.Windows.Forms.Label
     Friend WithEvents eleDeliverables As System.Windows.Forms.TextBox
     Friend WithEvents Panel1 As System.Windows.Forms.Panel
+    Friend WithEvents percentDone As System.Windows.Forms.Label
 
 End Class
