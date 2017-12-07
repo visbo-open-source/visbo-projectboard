@@ -216,65 +216,6 @@ Public Class Ribbon1
 
     End Sub
 
-    ''' <summary>
-    ''' zeigt die Ursprüngliche Version an
-    ''' </summary>
-    ''' <param name="sender"></param>
-    ''' <param name="e"></param>
-    ''' <remarks></remarks>
-    Private Sub btnStart_Click(sender As Object, e As EventArgs) Handles btnStart.Click
-
-
-        If IsNothing(varPPTTM) Then
-            Call initPPTTimeMachine(varPPTTM)
-        End If
-        If Not IsNothing(varPPTTM.timeStamps) Then
-            If varPPTTM.timeStamps.Count > 0 Then
-
-                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
-
-                If newDate <> currentTimestamp Then
-
-                    Call performBtnAction(newDate)
-
-                End If
-
-            End If
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' zeigt die vorige Version an
-    ''' </summary>
-    ''' <param name="sender"></param>
-    ''' <param name="e"></param>
-    ''' <remarks></remarks>
-    Private Sub btnFastBack_Click(sender As Object, e As EventArgs) Handles btnFastBack.Click
-
-        If IsNothing(varPPTTM) Then
-            Call initPPTTimeMachine(varPPTTM)
-        End If
-
-        If Not IsNothing(varPPTTM.timeStamps) Then
-
-            If varPPTTM.timeStamps.Count > 0 Then
-
-                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
-
-                If newDate <> currentTimestamp Then
-
-                    Call performBtnAction(newDate)
-
-                End If
-
-
-            End If
-        End If
-
-
-    End Sub
-
 
     ''' <summary>
     ''' zeitgt die Veränderungen zweier Versionen an
@@ -300,12 +241,50 @@ Public Class Ribbon1
 
 
     ''' <summary>
-    ''' zeigt die nächste Version an
+    ''' zeigt die letzte Version an
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
-    Private Sub btnFastForward_Click(sender As Object, e As EventArgs) Handles btnFastForward.Click
+    Private Sub btnEnd2_Click(sender As Object, e As RibbonControlEventArgs) Handles btnEnd2.Click
+
+        Call visboUpdate()
+
+    End Sub
+
+    ''' <summary>
+    ''' führt den Code gehe-zum-letzten bzw Visbo-Update aus 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub visboUpdate()
+
+        If IsNothing(varPPTTM) Then
+            Call initPPTTimeMachine(varPPTTM)
+        End If
+
+        If Not IsNothing(varPPTTM.timeStamps) Then
+
+            If varPPTTM.timeStamps.Count > 0 Then
+
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+
+                If newDate <> currentTimestamp Then
+
+                    Call performBtnAction(newDate)
+
+                End If
+            End If
+        End If
+
+    End Sub
+    ''' <summary>
+    ''' geht einen Schritt in die Zukunft 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnFastForward_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastForward.Click
+
         Dim newDate As Date
         Dim found As Boolean = False
         Dim weitermachen As Boolean = False
@@ -329,19 +308,15 @@ Public Class Ribbon1
             End If
         End If
 
-
-
-
     End Sub
 
-
     ''' <summary>
-    ''' zeigt die letzte Version an
+    ''' zeigt die vorige Version an
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
-    Private Sub btnEnd2_Click(sender As Object, e As EventArgs) Handles btnEnd2.Click
+    Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
 
         If IsNothing(varPPTTM) Then
             Call initPPTTimeMachine(varPPTTM)
@@ -351,35 +326,48 @@ Public Class Ribbon1
 
             If varPPTTM.timeStamps.Count > 0 Then
 
-                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
+
+                If newDate <> currentTimestamp Then
+
+                    Call performBtnAction(newDate)
+
+
+                End If
+
+
+            End If
+        End If
+
+    End Sub
+    ''' <summary>
+    ''' positioniert auf den ersten Timestamp 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
+
+        If IsNothing(varPPTTM) Then
+            Call initPPTTimeMachine(varPPTTM)
+        End If
+        If Not IsNothing(varPPTTM.timeStamps) Then
+            If varPPTTM.timeStamps.Count > 0 Then
+
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
 
                 If newDate <> currentTimestamp Then
 
                     Call performBtnAction(newDate)
 
                 End If
+
             End If
         End If
 
-
-
-    End Sub
-
-
-    Private Sub btnEnd2_Click(sender As Object, e As RibbonControlEventArgs) Handles btnEnd2.Click
-
-    End Sub
-    Private Sub btnFastForward_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastForward.Click
-
-    End Sub
-    Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
-
-    End Sub
-    Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
-
     End Sub
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
-
+        Call visboUpdate()
     End Sub
 End Class
 

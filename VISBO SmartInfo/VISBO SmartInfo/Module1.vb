@@ -825,9 +825,10 @@ Module Module1
 
                         Dim bigID As Integer = CInt(tmpShape.Tags.Item("BID"))
                         Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
-                        If Not (bigID = ptReportBigTypes.components And (detailID = ptReportComponents.prStand Or detailID = ptReportComponents.pfStand)) Then
-                            thereIsNoVersionFieldOnSlide = False
-                        End If
+                        'If Not ((bigID = ptReportBigTypes.components And detailID = ptReportComponents.prStand) _
+                        '        Or (bigID = ptReportBigTypes.components And detailID = ptReportComponents.pfStand)) Then
+                        '    thereIsNoVersionFieldOnSlide = False
+                        'End If
 
                         Dim pvName As String = ""
                         If tmpShape.Tags.Item("PNM").Length > 0 Then
@@ -1077,9 +1078,10 @@ Module Module1
                     ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
                     Call ensureVisibilityOfSelection(selectedPlanShapes)
 
-                    If Not IsNothing(propertiesPane) Then
-                        propertiesPane.Visible = True
-                    End If
+                    ' tk 7.12.17, auskommentiert, weil mit Fehler auf Office 2010
+                    'If Not IsNothing(propertiesPane) Then
+                    '    propertiesPane.Visible = True
+                    'End If
                 Else
 
                     Call checkHomeChangeBtnEnablement()
@@ -5221,10 +5223,8 @@ Module Module1
 
         If newdate <> currentTimestamp Then
 
-
-            'Me.UseWaitCursor = True
             ' clear changelist 
-            'Call changeListe.clearChangeList()
+            Call changeListe.clearChangeList()
 
             previousVariantName = currentVariantname
             previousTimeStamp = currentTimestamp
@@ -5243,17 +5243,16 @@ Module Module1
             End If
 
             ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
-            ' If showChangeList.Checked = True Then
-            ' das Formular aufschalten 
-            'If IsNothing(changeFrm) Then
-            '    changeFrm = New frmChanges
-            '    changeFrm.Show()
-            'Else
-            '    changeFrm.neuAufbau()
-            'End If
+
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If IsNothing(changeFrm) Then
+                ' Nichts tun, user soll ja explizit aufschalten ..
+            Else
+                changeFrm.neuAufbau()
+            End If
             'End If
 
-            'Me.UseWaitCursor = False
+
 
         End If
 

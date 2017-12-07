@@ -15370,7 +15370,7 @@ Public Module Projekte
     Public Sub bringChartsToFront(ByVal projectShape As Excel.Shape)
 
         Dim worksheetShapes As Excel.Shapes = Nothing
-        Dim chtobj As Excel.ChartObject
+        'Dim chtobj As Excel.ChartObject
 
         ' sicherstellen, dass projectshape auch etwas enthält ... 
         If IsNothing(projectShape) Then
@@ -15378,36 +15378,35 @@ Public Module Projekte
         End If
 
         ' Änderung tk, 6.12.17 Charts sind jetzt alle auf extra sheets und in extra window, ist nicht mehr notwendig ??
-        Exit Sub
 
-        Try
+        'Try
 
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
+        '    worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
-        Catch ex As Exception
-            Throw New Exception("in bringChartstoFront : keine Shapes Zuordnung möglich ")
-        End Try
-
-
-        For Each chtobj In CType(CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
-
-            Try
-                With chtobj
-                    If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
-                        (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
-                        ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
-                        (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
-
-                        CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(core.MsoZOrderCmd.msoBringToFront)
-
-                    End If
-                End With
-            Catch ex As Exception
-
-            End Try
+        'Catch ex As Exception
+        '    Throw New Exception("in bringChartstoFront : keine Shapes Zuordnung möglich ")
+        'End Try
 
 
-        Next
+        'For Each chtobj In CType(CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
+
+        '    Try
+        '        With chtobj
+        '            If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
+        '                (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
+        '                ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
+        '                (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
+
+        '                CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(core.MsoZOrderCmd.msoBringToFront)
+
+        '            End If
+        '        End With
+        '    Catch ex As Exception
+
+        '    End Try
+
+
+        'Next
 
 
     End Sub
