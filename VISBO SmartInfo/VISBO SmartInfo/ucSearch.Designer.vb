@@ -35,6 +35,8 @@ Partial Class ucSearch
         Me.shwRedLight = New System.Windows.Forms.CheckBox()
         Me.shwGreenLight = New System.Windows.Forms.CheckBox()
         Me.shwYellowLight = New System.Windows.Forms.CheckBox()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.Label2 = New System.Windows.Forms.Label()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel1.SuspendLayout()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -47,19 +49,21 @@ Partial Class ucSearch
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.cathegoryList.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.cathegoryList.FormattingEnabled = True
-        Me.cathegoryList.Location = New System.Drawing.Point(3, 79)
+        Me.cathegoryList.Location = New System.Drawing.Point(8, 79)
         Me.cathegoryList.Name = "cathegoryList"
-        Me.cathegoryList.Size = New System.Drawing.Size(329, 25)
+        Me.cathegoryList.Size = New System.Drawing.Size(257, 25)
         Me.cathegoryList.TabIndex = 1
         '
         'PictureBox1
         '
         Me.PictureBox1.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.PictureBox1.BackColor = System.Drawing.SystemColors.Control
+        Me.PictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center
         Me.PictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.PictureBox1.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view1
-        Me.PictureBox1.Location = New System.Drawing.Point(310, 34)
+        Me.PictureBox1.Location = New System.Drawing.Point(237, 33)
         Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(22, 24)
+        Me.PictureBox1.Size = New System.Drawing.Size(28, 25)
         Me.PictureBox1.TabIndex = 2
         Me.PictureBox1.TabStop = False
         '
@@ -68,7 +72,10 @@ Partial Class ucSearch
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.AutoScroll = True
         Me.Panel1.AutoSize = True
+        Me.Panel1.Controls.Add(Me.Label2)
+        Me.Panel1.Controls.Add(Me.Label1)
         Me.Panel1.Controls.Add(Me.selListboxNames)
         Me.Panel1.Controls.Add(Me.CheckBxMarker)
         Me.Panel1.Controls.Add(Me.PictureMarker)
@@ -79,7 +86,7 @@ Partial Class ucSearch
         Me.Panel1.Controls.Add(Me.cathegoryList)
         Me.Panel1.Location = New System.Drawing.Point(0, 3)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(345, 842)
+        Me.Panel1.Size = New System.Drawing.Size(276, 740)
         Me.Panel1.TabIndex = 3
         '
         'selListboxNames
@@ -91,15 +98,15 @@ Partial Class ucSearch
         Me.selListboxNames.FormattingEnabled = True
         Me.selListboxNames.HorizontalScrollbar = True
         Me.selListboxNames.ItemHeight = 17
-        Me.selListboxNames.Location = New System.Drawing.Point(3, 493)
+        Me.selListboxNames.Location = New System.Drawing.Point(8, 493)
         Me.selListboxNames.Name = "selListboxNames"
-        Me.selListboxNames.Size = New System.Drawing.Size(329, 327)
+        Me.selListboxNames.Size = New System.Drawing.Size(257, 225)
         Me.selListboxNames.TabIndex = 45
         '
         'CheckBxMarker
         '
         Me.CheckBxMarker.AutoSize = True
-        Me.CheckBxMarker.Location = New System.Drawing.Point(20, 3)
+        Me.CheckBxMarker.Location = New System.Drawing.Point(26, 5)
         Me.CheckBxMarker.Name = "CheckBxMarker"
         Me.CheckBxMarker.Size = New System.Drawing.Size(15, 14)
         Me.CheckBxMarker.TabIndex = 44
@@ -108,7 +115,7 @@ Partial Class ucSearch
         'PictureMarker
         '
         Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(3, 1)
+        Me.PictureMarker.Location = New System.Drawing.Point(8, 3)
         Me.PictureMarker.Name = "PictureMarker"
         Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
         Me.PictureMarker.TabIndex = 43
@@ -122,10 +129,10 @@ Partial Class ucSearch
         Me.listboxNames.FormattingEnabled = True
         Me.listboxNames.HorizontalScrollbar = True
         Me.listboxNames.ItemHeight = 17
-        Me.listboxNames.Location = New System.Drawing.Point(3, 132)
+        Me.listboxNames.Location = New System.Drawing.Point(8, 134)
         Me.listboxNames.Name = "listboxNames"
         Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.listboxNames.Size = New System.Drawing.Size(329, 344)
+        Me.listboxNames.Size = New System.Drawing.Size(257, 327)
         Me.listboxNames.Sorted = True
         Me.listboxNames.TabIndex = 42
         '
@@ -134,10 +141,10 @@ Partial Class ucSearch
         Me.filterText.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.filterText.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.filterText.Location = New System.Drawing.Point(3, 33)
+        Me.filterText.Location = New System.Drawing.Point(8, 33)
         Me.filterText.Name = "filterText"
         Me.filterText.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.filterText.Size = New System.Drawing.Size(308, 25)
+        Me.filterText.Size = New System.Drawing.Size(230, 25)
         Me.filterText.TabIndex = 39
         '
         'Panel2
@@ -147,7 +154,7 @@ Partial Class ucSearch
         Me.Panel2.Controls.Add(Me.shwRedLight)
         Me.Panel2.Controls.Add(Me.shwGreenLight)
         Me.Panel2.Controls.Add(Me.shwYellowLight)
-        Me.Panel2.Location = New System.Drawing.Point(250, 0)
+        Me.Panel2.Location = New System.Drawing.Point(181, 0)
         Me.Panel2.Name = "Panel2"
         Me.Panel2.Size = New System.Drawing.Size(92, 27)
         Me.Panel2.TabIndex = 38
@@ -191,14 +198,33 @@ Partial Class ucSearch
         Me.shwYellowLight.TabIndex = 36
         Me.shwYellowLight.UseVisualStyleBackColor = False
         '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(7, 116)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(77, 13)
+        Me.Label1.TabIndex = 46
+        Me.Label1.Text = "Search results:"
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(7, 475)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(53, 13)
+        Me.Label2.TabIndex = 47
+        Me.Label2.Text = "Elements:"
+        '
         'ucSearch
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScroll = True
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.Controls.Add(Me.Panel1)
         Me.Name = "ucSearch"
-        Me.Size = New System.Drawing.Size(345, 908)
+        Me.Size = New System.Drawing.Size(279, 746)
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
@@ -222,5 +248,6 @@ Partial Class ucSearch
     Friend WithEvents PictureMarker As System.Windows.Forms.PictureBox
     Friend WithEvents CheckBxMarker As System.Windows.Forms.CheckBox
     Friend WithEvents selListboxNames As System.Windows.Forms.ListBox
-
+    Friend WithEvents Label2 As Windows.Forms.Label
+    Friend WithEvents Label1 As Windows.Forms.Label
 End Class
