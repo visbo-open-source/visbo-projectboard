@@ -1849,6 +1849,82 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Anzahl an Meilenstein bzw. Phasen Kategorien zurück 
+    ''' </summary>
+    ''' <param name="lookingforMS"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCategoryCount(ByVal lookingforMS As Boolean) As Integer
+        Get
+            Dim anzCategories As Integer = 0
+            Dim nameCollection As New Collection
+            Dim idCollection As Collection = Me.getAllElemIDs(lookingforMS)
+
+            For Each elemID As String In idCollection
+                If lookingforMS Then
+                    Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
+                    If Not IsNothing(cMilestone) Then
+                        Dim catName As String = cMilestone.appearance
+                        If Not nameCollection.Contains(catName) Then
+                            nameCollection.Add(Item:=catName, Key:=catName)
+                        End If
+                    End If
+                Else
+                    Dim cPhase As clsPhase = Me.getPhaseByID(elemID)
+                    If Not IsNothing(cPhase) Then
+                        Dim catName As String = cPhase.appearance
+                        If Not nameCollection.Contains(catName) Then
+                            nameCollection.Add(Item:=catName, Key:=catName)
+                        End If
+                    End If
+                End If
+                
+            Next
+
+            getCategoryCount = nameCollection.Count
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Namen der vorkommenden Meilenstein- bzw. Phasen Kategorien zurück 
+    ''' </summary>
+    ''' <param name="lookingforMS"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCategoryNames(ByVal lookingforMS As Boolean) As Collection
+        Get
+            Dim anzCategories As Integer = 0
+            Dim nameCollection As New Collection
+            Dim idCollection As Collection = Me.getAllElemIDs(lookingforMS)
+
+            For Each elemID As String In idCollection
+                If lookingforMS Then
+                    Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
+                    If Not IsNothing(cMilestone) Then
+                        Dim catName As String = cMilestone.appearance
+                        If Not nameCollection.Contains(catName) Then
+                            nameCollection.Add(Item:=catName, Key:=catName)
+                        End If
+                    End If
+                Else
+                    Dim cPhase As clsPhase = Me.getPhaseByID(elemID)
+                    If Not IsNothing(cPhase) Then
+                        Dim catName As String = cPhase.appearance
+                        If Not nameCollection.Contains(catName) Then
+                            nameCollection.Add(Item:=catName, Key:=catName)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            getCategoryNames = nameCollection
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 

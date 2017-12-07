@@ -313,13 +313,13 @@ Public Class clsawinSettings
 
         ' Settings für Einzel- und Multiprojekt Sichten 
         _mppShowAllIfOne = False
-        _mppShowMsDate = True
-        _mppShowMsName = True
-        _mppShowPhDate = True
-        _mppShowPhName = True
+        _mppShowMsDate = False
+        _mppShowMsName = False
+        _mppShowPhDate = False
+        _mppShowPhName = False
         _mppShowAmpel = False
         _mppShowProjectLine = True
-        _mppVertikalesRaster = False
+        _mppVertikalesRaster = True
         _mppShowLegend = False
         _mppFullyContained = False
         _mppSortiertDauer = False
