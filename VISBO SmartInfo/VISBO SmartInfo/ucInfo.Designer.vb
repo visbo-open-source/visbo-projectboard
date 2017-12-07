@@ -36,6 +36,7 @@ Partial Class ucInfo
         Me.FlowLayoutPanel1 = New System.Windows.Forms.FlowLayoutPanel()
         Me.eleName = New System.Windows.Forms.Label()
         Me.eleType = New System.Windows.Forms.Label()
+        Me.RichTextBox1 = New System.Windows.Forms.RichTextBox()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.FlowLayoutPanel1.SuspendLayout()
         Me.SuspendLayout()
@@ -89,9 +90,10 @@ Partial Class ucInfo
         Me.TableLayoutPanel1.Controls.Add(Me.eleDatum, 1, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.eleRespons, 1, 1)
         Me.TableLayoutPanel1.Controls.Add(Me.eleAmpel, 1, 2)
+        Me.TableLayoutPanel1.Controls.Add(Me.RichTextBox1, 0, 7)
         Me.TableLayoutPanel1.Location = New System.Drawing.Point(3, 43)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
-        Me.TableLayoutPanel1.RowCount = 7
+        Me.TableLayoutPanel1.RowCount = 9
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
@@ -99,8 +101,8 @@ Partial Class ucInfo
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
-        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20.0!))
-        Me.TableLayoutPanel1.Size = New System.Drawing.Size(229, 474)
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100.0!))
+        Me.TableLayoutPanel1.Size = New System.Drawing.Size(229, 457)
         Me.TableLayoutPanel1.TabIndex = 6
         '
         'eleAmpelText
@@ -121,7 +123,8 @@ Partial Class ucInfo
         'eleDeliverables
         '
         Me.eleDeliverables.AcceptsReturn = True
-        Me.eleDeliverables.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+        Me.eleDeliverables.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleDeliverables.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.TableLayoutPanel1.SetColumnSpan(Me.eleDeliverables, 2)
@@ -129,8 +132,8 @@ Partial Class ucInfo
         Me.eleDeliverables.Multiline = True
         Me.eleDeliverables.Name = "eleDeliverables"
         Me.eleDeliverables.ReadOnly = True
-        Me.eleDeliverables.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.eleDeliverables.Size = New System.Drawing.Size(223, 143)
+        Me.eleDeliverables.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.eleDeliverables.Size = New System.Drawing.Size(223, 111)
         Me.eleDeliverables.TabIndex = 7
         Me.eleDeliverables.Text = resources.GetString("eleDeliverables.Text")
         '
@@ -209,6 +212,20 @@ Partial Class ucInfo
         Me.eleType.TabIndex = 4
         Me.eleType.Text = "Objekttyp (zb. Meilenstein, Phase, etc.)"
         '
+        'RichTextBox1
+        '
+        Me.RichTextBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.RichTextBox1.BackColor = System.Drawing.SystemColors.ActiveCaption
+        Me.RichTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.TableLayoutPanel1.SetColumnSpan(Me.RichTextBox1, 2)
+        Me.RichTextBox1.Location = New System.Drawing.Point(3, 316)
+        Me.RichTextBox1.Name = "RichTextBox1"
+        Me.RichTextBox1.Size = New System.Drawing.Size(223, 64)
+        Me.RichTextBox1.TabIndex = 12
+        Me.RichTextBox1.Text = resources.GetString("RichTextBox1.Text")
+        '
         'ucInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -239,4 +256,5 @@ Partial Class ucInfo
     Friend WithEvents eleDatum As Windows.Forms.Label
     Friend WithEvents eleRespons As Windows.Forms.Label
     Friend WithEvents eleAmpel As Windows.Forms.Label
+    Friend WithEvents RichTextBox1 As Windows.Forms.RichTextBox
 End Class
