@@ -31,16 +31,16 @@ Partial Class ucInfo
         Me.labelDeliver = New System.Windows.Forms.Label()
         Me.eleDatum = New System.Windows.Forms.Label()
         Me.eleRespons = New System.Windows.Forms.Label()
-        Me.eleAmpel = New System.Windows.Forms.Label()
         Me.eleDeliverables = New System.Windows.Forms.RichTextBox()
+        Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.percentDone = New System.Windows.Forms.Label()
+        Me.eleAmpel = New System.Windows.Forms.Label()
         Me.FlowLayoutPanel1 = New System.Windows.Forms.FlowLayoutPanel()
         Me.eleName = New System.Windows.Forms.Label()
         Me.eleType = New System.Windows.Forms.Label()
-        Me.Panel1 = New System.Windows.Forms.Panel()
-        Me.percentDone = New System.Windows.Forms.Label()
         Me.TableLayoutPanel1.SuspendLayout()
-        Me.FlowLayoutPanel1.SuspendLayout()
         Me.Panel1.SuspendLayout()
+        Me.FlowLayoutPanel1.SuspendLayout()
         Me.SuspendLayout()
         '
         'labelDate
@@ -79,7 +79,7 @@ Partial Class ucInfo
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TableLayoutPanel1.AutoScrollMargin = New System.Drawing.Size(10, 10)
-        Me.TableLayoutPanel1.BackColor = System.Drawing.SystemColors.Control
+        Me.TableLayoutPanel1.BackColor = System.Drawing.Color.White
         Me.TableLayoutPanel1.ColumnCount = 2
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 80.0!))
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle())
@@ -152,22 +152,12 @@ Partial Class ucInfo
         Me.eleRespons.TabIndex = 10
         Me.eleRespons.Text = "Label9"
         '
-        'eleAmpel
-        '
-        Me.eleAmpel.BackColor = System.Drawing.Color.DarkGray
-        Me.eleAmpel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.eleAmpel.Location = New System.Drawing.Point(3, 0)
-        Me.eleAmpel.Margin = New System.Windows.Forms.Padding(3, 3, 3, 0)
-        Me.eleAmpel.Name = "eleAmpel"
-        Me.eleAmpel.Size = New System.Drawing.Size(18, 18)
-        Me.eleAmpel.TabIndex = 11
-        '
         'eleDeliverables
         '
         Me.eleDeliverables.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.eleDeliverables.BackColor = System.Drawing.SystemColors.Control
+        Me.eleDeliverables.BackColor = System.Drawing.Color.White
         Me.eleDeliverables.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.TableLayoutPanel1.SetColumnSpan(Me.eleDeliverables, 2)
         Me.eleDeliverables.Location = New System.Drawing.Point(3, 202)
@@ -177,6 +167,39 @@ Partial Class ucInfo
         Me.eleDeliverables.Size = New System.Drawing.Size(223, 98)
         Me.eleDeliverables.TabIndex = 12
         Me.eleDeliverables.Text = resources.GetString("eleDeliverables.Text")
+        '
+        'Panel1
+        '
+        Me.Panel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.percentDone)
+        Me.Panel1.Controls.Add(Me.eleAmpel)
+        Me.Panel1.Location = New System.Drawing.Point(83, 45)
+        Me.Panel1.Name = "Panel1"
+        Me.Panel1.Size = New System.Drawing.Size(143, 18)
+        Me.Panel1.TabIndex = 13
+        '
+        'percentDone
+        '
+        Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.percentDone.AutoSize = True
+        Me.percentDone.Location = New System.Drawing.Point(77, 5)
+        Me.percentDone.Name = "percentDone"
+        Me.percentDone.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.percentDone.Size = New System.Drawing.Size(42, 13)
+        Me.percentDone.TabIndex = 12
+        Me.percentDone.Text = "% done"
+        Me.percentDone.TextAlign = System.Drawing.ContentAlignment.TopRight
+        '
+        'eleAmpel
+        '
+        Me.eleAmpel.BackColor = System.Drawing.Color.DarkGray
+        Me.eleAmpel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.eleAmpel.Location = New System.Drawing.Point(3, 0)
+        Me.eleAmpel.Margin = New System.Windows.Forms.Padding(3, 3, 3, 0)
+        Me.eleAmpel.Name = "eleAmpel"
+        Me.eleAmpel.Size = New System.Drawing.Size(18, 18)
+        Me.eleAmpel.TabIndex = 11
         '
         'FlowLayoutPanel1
         '
@@ -211,29 +234,6 @@ Partial Class ucInfo
         Me.eleType.TabIndex = 4
         Me.eleType.Text = "Objekttyp (zb. Meilenstein, Phase, etc.)"
         '
-        'Panel1
-        '
-        Me.Panel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Panel1.Controls.Add(Me.percentDone)
-        Me.Panel1.Controls.Add(Me.eleAmpel)
-        Me.Panel1.Location = New System.Drawing.Point(83, 45)
-        Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(143, 18)
-        Me.Panel1.TabIndex = 13
-        '
-        'percentDone
-        '
-        Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.percentDone.AutoSize = True
-        Me.percentDone.Location = New System.Drawing.Point(77, 5)
-        Me.percentDone.Name = "percentDone"
-        Me.percentDone.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.percentDone.Size = New System.Drawing.Size(42, 13)
-        Me.percentDone.TabIndex = 12
-        Me.percentDone.Text = "% done"
-        Me.percentDone.TextAlign = System.Drawing.ContentAlignment.TopRight
-        '
         'ucInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -245,10 +245,10 @@ Partial Class ucInfo
         Me.Size = New System.Drawing.Size(232, 520)
         Me.TableLayoutPanel1.ResumeLayout(False)
         Me.TableLayoutPanel1.PerformLayout()
-        Me.FlowLayoutPanel1.ResumeLayout(False)
-        Me.FlowLayoutPanel1.PerformLayout()
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
+        Me.FlowLayoutPanel1.ResumeLayout(False)
+        Me.FlowLayoutPanel1.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
