@@ -1172,33 +1172,33 @@ Module Module1
     ''' <remarks></remarks>
     Friend Function calcRDB() As Integer
         Dim tmpResult As Integer = pptInfoType.cName
-        If formIsShown And Not IsNothing(infoFrm) Then
-            With infoFrm
-                If .rdbName.Checked Then
-                    tmpResult = pptInfoType.cName
-                ElseIf .rdbOriginalName.Checked Then
-                    tmpResult = pptInfoType.oName
-                ElseIf .rdbAbbrev.Checked Then
-                    tmpResult = pptInfoType.sName
-                ElseIf .rdbBreadcrumb.Checked Then
-                    tmpResult = pptInfoType.bCrumb
-                ElseIf .rdbLU.Checked Then
-                    tmpResult = pptInfoType.lUmfang
-                ElseIf .rdbMV.Checked Then
-                    tmpResult = pptInfoType.mvElement
-                ElseIf .rdbResources.Checked Then
-                    tmpResult = pptInfoType.resources
-                ElseIf .rdbCosts.Checked Then
-                    tmpResult = pptInfoType.costs
-                ElseIf .rdbVerantwortlichkeiten.Checked Then
-                    tmpResult = pptInfoType.responsible
-                Else
-                    tmpResult = pptInfoType.cName
-                End If
-            End With
-        Else
-            tmpResult = pptInfoType.cName
-        End If
+        'If formIsShown And Not IsNothing(infoFrm) Then
+        '    With infoFrm
+        '        If .rdbName.Checked Then
+        '            tmpResult = pptInfoType.cName
+        '        ElseIf .rdbOriginalName.Checked Then
+        '            tmpResult = pptInfoType.oName
+        '        ElseIf .rdbAbbrev.Checked Then
+        '            tmpResult = pptInfoType.sName
+        '        ElseIf .rdbBreadcrumb.Checked Then
+        '            tmpResult = pptInfoType.bCrumb
+        '        ElseIf .rdbLU.Checked Then
+        '            tmpResult = pptInfoType.lUmfang
+        '        ElseIf .rdbMV.Checked Then
+        '            tmpResult = pptInfoType.mvElement
+        '        ElseIf .rdbResources.Checked Then
+        '            tmpResult = pptInfoType.resources
+        '        ElseIf .rdbCosts.Checked Then
+        '            tmpResult = pptInfoType.costs
+        '        ElseIf .rdbVerantwortlichkeiten.Checked Then
+        '            tmpResult = pptInfoType.responsible
+        '        Else
+        '            tmpResult = pptInfoType.cName
+        '        End If
+        '    End With
+        'Else
+        '    tmpResult = pptInfoType.cName
+        'End If
 
         calcRDB = tmpResult
 
@@ -2911,8 +2911,8 @@ Module Module1
         If Not IsNothing(infoFrm) Then
 
             With infoFrm
-                .btnSendToHome.Enabled = homeButtonRelevance
-                .btnSentToChange.Enabled = changedButtonRelevance
+                '.btnSendToHome.Enabled = homeButtonRelevance
+                '.btnSentToChange.Enabled = changedButtonRelevance
             End With
 
             If Not IsNothing(tmpShape) Then
@@ -2926,28 +2926,28 @@ Module Module1
                             Call .setDTPicture(pptShapeIsMilestone(tmpShape))
 
                             .elemName.Text = bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked)
-                            If showBreadCrumbField Then
-                                .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
-                            End If
+                            'If showBreadCrumbField Then
+                            '    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
+                            'End If
                             .elemDate.Text = bestimmeElemDateText(tmpShape, False)
 
                             Dim rdbCode As Integer = calcRDB()
 
                             Dim tmpStr() As String
                             tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
-                            .aLuTvText.Lines = tmpStr
+                            '.aLuTvText.Lines = tmpStr
 
                             ' Änderungen bei Datum und Erläuterung erlauben 
                             If isMovedShape Then
                                 .elemDate.Enabled = True
-                                If .rdbMV.Checked Then
-                                    .aLuTvText.ReadOnly = False
-                                Else
-                                    .aLuTvText.ReadOnly = True
-                                End If
+                                'If .rdbMV.Checked Then
+                                '    .aLuTvText.ReadOnly = False
+                                'Else
+                                '    .aLuTvText.ReadOnly = True
+                                'End If
                             Else
                                 .elemDate.Enabled = False
-                                .aLuTvText.ReadOnly = True
+                                '.aLuTvText.ReadOnly = True
                             End If
 
 
@@ -2967,9 +2967,9 @@ Module Module1
                                 .elemDate.Text = " ... "
                             End If
 
-                            .aLuTvText.Text = " ... "
+                            '.aLuTvText.Text = " ... "
 
-                            .aLuTvText.ReadOnly = True
+                            '.aLuTvText.ReadOnly = True
                             .elemDate.Enabled = False
 
 
@@ -2980,9 +2980,9 @@ Module Module1
                     ' Info Formular Inhalte zurücksetzen ... 
                     With infoFrm
                         .elemName.Text = ""
-                        .fullBreadCrumb.Text = ""
+                        '.fullBreadCrumb.Text = ""
                         .elemDate.Text = ""
-                        .aLuTvText.Text = ""
+                        '.aLuTvText.Text = ""
                     End With
 
                 End If
@@ -2993,9 +2993,9 @@ Module Module1
                 ' Info Formular Inhalte zurücksetzen ... 
                 With infoFrm
                     .elemName.Text = ""
-                    .fullBreadCrumb.Text = ""
+                    '.fullBreadCrumb.Text = ""
                     .elemDate.Text = ""
-                    .aLuTvText.Text = ""
+                    '.aLuTvText.Text = ""
                 End With
 
             End If
@@ -4706,7 +4706,11 @@ Module Module1
     Friend Sub zeichneShadows(ByVal nameArrayO() As String, ByVal isOtherVariant As Boolean)
 
         Dim anzElemente As Integer = nameArrayO.Length
+        Dim vTextShadowShape As PowerPoint.Shape = Nothing
+        Dim vTextOrigShape As PowerPoint.Shape = Nothing
 
+        ' wird verwendet , um nur ein einziges Mal die Beschriftung der Versionen anzubringen, aber bei Mehrfach-Selektion kein zweites Mal 
+        Dim versionAlreadyNoted As Boolean = False
 
         For i As Integer = 1 To anzElemente
 
@@ -4732,8 +4736,14 @@ Module Module1
                     End If
                     .Top = origShape.Top
                     .Left = origShape.Left
-                    .Shadow.Blur = 10.0
-                    .Shadow.Size = 5.0
+                    .Shadow.Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                    .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                    .Shadow.Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                    .Shadow.OffsetX = 0
+                    .Shadow.OffsetY = 0
+                    .Shadow.Blur = 15.0
+                    .Shadow.Size = 180.0
+                    .Shadow.ForeColor.RGB = RGB(220, 220, 220)
                 End With
 
                 If isMilestone Then
@@ -4754,6 +4764,13 @@ Module Module1
                         Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing, _
                                                   cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
                                                   cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, Nothing)
+
+                        If Not versionAlreadyNoted Then
+                            Call beschrifteOrigAndShadow(shadowShape.Name, origShape.Name)
+                            versionAlreadyNoted = True
+                        End If
+
+
                     End If
                 Else
                     ' es handelt sich um eine Phase
@@ -4781,58 +4798,176 @@ Module Module1
                 If isMilestone Then
 
                     If System.Math.Abs(mvDiff) > 1.5 * shadowShape.Width Then
-                        Dim verbindungsShape As PowerPoint.Shape
-                        If mvDiff < 0 Then
-                            ' newShape ist links vom Original 
-                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                        Dim verbindungsShape As PowerPoint.Shape = Nothing
+
+                        If previousTimeStamp < currentTimestamp Then
+                            'If currentTimestamp > previousTimeStamp Then
+
+                            If mvDiff < 0 Then
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
                                                                                                         shadowShape.Left + shadowShape.Width, shadowShape.Top + shadowShape.Height / 2, _
-                                                                                                        origShape.Left, origShape.Top + shadowShape.Height / 2)
-                        Else
-                            ' newShape ist rechts vom Original 
-                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        origShape.Left, origShape.Top + origShape.Height / 2)
+                            Else
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
                                                                                                         shadowShape.Left, shadowShape.Top + shadowShape.Height / 2, _
-                                                                                                        origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2)
+                                                                                                        origShape.Left + origShape.Width, origShape.Top + origShape.Height / 2)
+                            End If
+
+                        Else
+                            ' currentTimeStamp < previoustimestamp
+                            If mvDiff > 0 Then
+
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        origShape.Left + origShape.Width, origShape.Top + origShape.Height / 2, _
+                                                                                                        shadowShape.Left, shadowShape.Top + shadowShape.Height / 2)
+
+
+                            Else
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        origShape.Left, origShape.Top + origShape.Height / 2, _
+                                                                                                        shadowShape.Left + shadowShape.Width, shadowShape.Top + shadowShape.Height / 2)
+                            End If
 
                         End If
+
                         With verbindungsShape
+
                             .Name = .Name & shadowName
                             .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
                             .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
+                            .Line.Weight = 5.0
+
                         End With
                     End If
 
                 Else
                     Dim verbindungsShape As PowerPoint.Shape = Nothing
-                    If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
 
-                        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
-                                                                                                        shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
-                                                                                                        origShape.Left, origShape.Top + shadowShape.Height / 2)
-                    ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
+                    If previousTimeStamp < currentTimestamp Then
 
-                        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
-                                                                                                        shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
-                                                                                                        origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2)
+                        If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
+
+                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                                                                                                            shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
+                                                                                                            origShape.Left, origShape.Top + shadowShape.Height / 2)
+                        ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
+
+                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                                                                                                            shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
+                                                                                                            origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2)
+
+                        End If
+
+                    Else
+                        If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
+
+                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                                                                                origShape.Left, origShape.Top + shadowShape.Height / 2, _
+                                                                                shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height)
+
+                        ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
+
+                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                                                                                origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2, _
+                                                                                shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height)
+                        End If
+
+                        If Not IsNothing(verbindungsShape) Then
+                            With verbindungsShape
+                                .Name = .Name & shadowName
+                                .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
+                                .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
+                                .Line.Weight = 5.0
+                            End With
+                        End If
 
                     End If
 
-                    If Not IsNothing(verbindungsShape) Then
-                        With verbindungsShape
-                            .Name = .Name & shadowName
-                            .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
-                            .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
-                        End With
-                    End If
-                    
+
                 End If
-
-
             End If
 
         Next
 
 
 
+    End Sub
+
+    Friend Sub beschrifteOrigAndShadow(ByVal shadowShapeName As String, ByVal origShapeName As String)
+
+        Try
+            Dim shadowShape As PowerPoint.Shape = currentSlide.Shapes(shadowShapeName)
+            Dim origShape As PowerPoint.Shape = currentSlide.Shapes(origShapeName)
+
+            Dim shadowIsLeft As Boolean = (shadowShape.Left < origShape.Left)
+
+            ' jetzt die Beschriftung vornehmen
+            Dim vTextShadow As String = "Version" & vbLf & previousTimeStamp.ToShortDateString
+            Dim vTextOrig As String = "Version" & vbLf & currentTimestamp.ToShortDateString
+
+            Dim vTextOrigShape As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                                                                origShape.Left + origShape.Width + 2, _
+                                                                origShape.Top, 50, 50)
+            With vTextOrigShape
+                .TextFrame2.TextRange.Text = vTextOrig
+                .TextFrame2.TextRange.Font.Size = 10
+                .TextFrame2.MarginLeft = 0
+                .TextFrame2.MarginRight = 0
+                .TextFrame2.MarginTop = 0
+                .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+                .Name = .Name & shadowName ' durch den Zusatz shadowName wird sichergestellt, dass die hinterher gelöscht werden
+            End With
+
+
+            Dim vTextShadowShape As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                                                            shadowShape.Left - 50, _
+                                                            shadowShape.Top, 50, 50)
+
+            With vTextShadowShape
+                .TextFrame2.TextRange.Text = vTextShadow
+                .TextFrame2.TextRange.Font.Size = 10
+                .TextFrame2.MarginLeft = 0
+                .TextFrame2.MarginRight = 0
+                .TextFrame2.MarginTop = 0
+                .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+                .Name = .Name & shadowName ' durch den Zusatz shadowName wird sichergestellt, dass die hinterher gelöscht werden 
+            End With
+
+
+            If shadowIsLeft Then
+                ' Shadow links beschriften , Orig rechts beschriften
+
+                With vTextShadowShape
+                    .Left = shadowShape.Left - (.Width + 3)
+                    .Top = shadowShape.Top - (.Height - shadowShape.Height) / 2
+                    .Visible = True
+                End With
+
+                With vTextOrigShape
+                    .Left = origShape.Left + origShape.Width + 3
+                    .Top = origShape.Top - (.Height - origShape.Height) / 2
+                    .Visible = True
+                End With
+
+            Else
+                ' Shadow rechts beschriften, orig links 
+                With vTextOrigShape
+                    .Left = origShape.Left - (.Width + 3)
+                    .Top = origShape.Top
+                    .Visible = True
+                End With
+
+                With vTextShadowShape
+                    .Left = shadowShape.Left + shadowShape.Width + 3
+                    .Top = shadowShape.Top
+                    .Visible = True
+                End With
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        
     End Sub
 
     ''' <summary>
@@ -4876,7 +5011,7 @@ Module Module1
 
 
     ''' <summary>
-    ''' löscht alle Shadow Shapes
+    ''' löscht alle Shadow Shapes: ein Shadow Element ist das zu einem bestimmten Element gehörende  timestamp Element 
     ''' </summary>
     ''' <remarks></remarks>
     Friend Sub deleteShadows()
@@ -5346,15 +5481,21 @@ Module Module1
                         tmpIndex = varPPTTM.timeStamps.Count - 1
                     End If
 
-                    If smartSlideLists.countProjects = 1 Then
-                        tmpDate = varPPTTM.timeStamps.ElementAt(tmpIndex).Key
+                    If currentTimestamp.AddMonths(1) < varPPTTM.timeStamps.Last.Key Then
+                        tmpDate = currentTimestamp.AddMonths(1)
                     Else
-                        If currentTimestamp.AddMonths(1) < varPPTTM.timeStamps.Last.Key Then
-                            tmpDate = currentTimestamp.AddMonths(1)
-                        Else
-                            tmpDate = varPPTTM.timeStamps.Last.Key
-                        End If
+                        tmpDate = varPPTTM.timeStamps.Last.Key
                     End If
+
+                    'If smartSlideLists.countProjects = 1 Then
+                    '    tmpDate = varPPTTM.timeStamps.ElementAt(tmpIndex).Key
+                    'Else
+                    '    If currentTimestamp.AddMonths(1) < varPPTTM.timeStamps.Last.Key Then
+                    '        tmpDate = currentTimestamp.AddMonths(1)
+                    '    Else
+                    '        tmpDate = varPPTTM.timeStamps.Last.Key
+                    '    End If
+                    'End If
                 End If
 
             Case ptNavigationButtons.vorher
@@ -5366,15 +5507,21 @@ Module Module1
                         tmpIndex = 0
                     End If
 
-                    If smartSlideLists.countProjects = 1 Then
-                        tmpDate = varPPTTM.timeStamps.ElementAt(tmpIndex).Key
+                    If currentTimestamp.AddMonths(-1) > varPPTTM.timeStamps.First.Key Then
+                        tmpDate = currentTimestamp.AddMonths(-1)
                     Else
-                        If currentTimestamp.AddMonths(-1) > varPPTTM.timeStamps.First.Key Then
-                            tmpDate = currentTimestamp.AddMonths(-1)
-                        Else
-                            tmpDate = varPPTTM.timeStamps.First.Key
-                        End If
+                        tmpDate = varPPTTM.timeStamps.First.Key
                     End If
+
+                    'If smartSlideLists.countProjects = 1 Then
+                    '    tmpDate = varPPTTM.timeStamps.ElementAt(tmpIndex).Key
+                    'Else
+                    '    If currentTimestamp.AddMonths(-1) > varPPTTM.timeStamps.First.Key Then
+                    '        tmpDate = currentTimestamp.AddMonths(-1)
+                    '    Else
+                    '        tmpDate = varPPTTM.timeStamps.First.Key
+                    '    End If
+                    'End If
                 End If
 
 
