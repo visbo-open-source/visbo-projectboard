@@ -38,10 +38,12 @@ Partial Class ucProperties
         '
         'eleName
         '
+        Me.eleName.AutoEllipsis = True
         Me.eleName.AutoSize = True
         Me.eleName.Enabled = False
         Me.eleName.Font = New System.Drawing.Font("Segoe UI Emoji", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleName.Location = New System.Drawing.Point(3, 12)
+        Me.eleName.MaximumSize = New System.Drawing.Size(0, 42)
         Me.eleName.Name = "eleName"
         Me.eleName.Size = New System.Drawing.Size(130, 21)
         Me.eleName.TabIndex = 1
