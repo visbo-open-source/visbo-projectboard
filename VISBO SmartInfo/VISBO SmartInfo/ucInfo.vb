@@ -7,12 +7,12 @@
         eleDeliverables.Height = eleDeliverables.CreateGraphics().MeasureString(eleDeliverables.Text, eleDeliverables.Font, eleDeliverables.Width).Height
     End Sub
 
-    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles eleDeliverables.TextChanged
+
+    Private Sub RichTextBox1_TextChanged(sender As Object, e As EventArgs) Handles eleDeliverables.TextChanged
         ' TODO: adjust size of textbox and show or hide scrollbar
 
         ' textbox resize
         ' eleDeliverables.Height = eleDeliverables.CreateGraphics().MeasureString(eleDeliverables.Text, eleDeliverables.Font, eleDeliverables.Width).Height
 
     End Sub
-
 End Class
