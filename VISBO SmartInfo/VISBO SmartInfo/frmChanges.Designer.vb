@@ -22,6 +22,12 @@ Partial Class frmChanges
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle3 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle4 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle5 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle6 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmChanges))
         Me.changeListTable = New System.Windows.Forms.DataGridView()
         Me.colPname = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -37,6 +43,14 @@ Partial Class frmChanges
         Me.changeListTable.AllowUserToAddRows = False
         Me.changeListTable.AllowUserToDeleteRows = False
         Me.changeListTable.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells
+        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.changeListTable.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle1
         Me.changeListTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.changeListTable.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colPname, Me.colElemName, Me.ts1, Me.ts2, Me.colDiff})
         Me.changeListTable.Dock = System.Windows.Forms.DockStyle.Fill
@@ -56,6 +70,8 @@ Partial Class frmChanges
         'colPname
         '
         Me.colPname.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
+        DataGridViewCellStyle2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.colPname.DefaultCellStyle = DataGridViewCellStyle2
         Me.colPname.HeaderText = "Project"
         Me.colPname.MinimumWidth = 20
         Me.colPname.Name = "colPname"
@@ -65,6 +81,8 @@ Partial Class frmChanges
         'colElemName
         '
         Me.colElemName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
+        DataGridViewCellStyle3.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.colElemName.DefaultCellStyle = DataGridViewCellStyle3
         Me.colElemName.HeaderText = "Element"
         Me.colElemName.MinimumWidth = 20
         Me.colElemName.Name = "colElemName"
@@ -74,6 +92,8 @@ Partial Class frmChanges
         'ts1
         '
         Me.ts1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
+        DataGridViewCellStyle4.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.ts1.DefaultCellStyle = DataGridViewCellStyle4
         Me.ts1.HeaderText = "Version 23.06.17"
         Me.ts1.MinimumWidth = 20
         Me.ts1.Name = "ts1"
@@ -83,6 +103,8 @@ Partial Class frmChanges
         'ts2
         '
         Me.ts2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
+        DataGridViewCellStyle5.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.ts2.DefaultCellStyle = DataGridViewCellStyle5
         Me.ts2.HeaderText = "Version 01.07.18"
         Me.ts2.MinimumWidth = 20
         Me.ts2.Name = "ts2"
@@ -92,6 +114,8 @@ Partial Class frmChanges
         'colDiff
         '
         Me.colDiff.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
+        DataGridViewCellStyle6.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.colDiff.DefaultCellStyle = DataGridViewCellStyle6
         Me.colDiff.HeaderText = "Difference End-Date"
         Me.colDiff.MinimumWidth = 30
         Me.colDiff.Name = "colDiff"

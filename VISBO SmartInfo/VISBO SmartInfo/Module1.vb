@@ -16,6 +16,7 @@ Module Module1
     'Friend visboInfoActivated As Boolean = False
     Friend formIsShown As Boolean = False
     Friend Const markerName As String = "VisboMarker"
+    Friend Const shadowName As String = "VisboShadow"
     Friend Const protectionTag As String = "VisboProtection"
     Friend Const protectionValue As String = "VisboValue"
     Friend Const noVariantName As String = "-9999999"
@@ -988,7 +989,8 @@ Module Module1
                         'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
 
                         If isRelevantShape(tmpShape) Then
-                            If bekannteIDs.ContainsKey(tmpShape.Id) Then
+                            If bekannteIDs.ContainsKey(tmpShape.Id) Or _
+                                tmpShape.Name.EndsWith(shadowName) Then
 
                                 If Not relevantShapeNames.Contains(tmpShape.Name) Then
                                     relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
@@ -2601,6 +2603,62 @@ Module Module1
 
 
     ''' <summary>
+    ''' diese Methode verschiebt das Shadow-Shape; es erfolgt keinerlei Setzen von Tag-Information
+    ''' Der Wert von Diff wird dafür verwendet, um den zugehörigen Datums- oder Annotation Text des Elements zu verschieben ...er orientiert sich deshalb immer am left des Elements 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="tsStartdate"></param>
+    ''' <param name="tsEndDate"></param>
+    ''' <remarks></remarks>
+    Friend Function mvPhaseShadowToNewPosition(ByRef tmpShape As PowerPoint.Shape, ByVal tsStartdate As Date, ByVal tsEndDate As Date, _
+                                               ByVal showOtherVariant As Boolean) As Double
+
+        Dim x1Pos As Double, x2Pos As Double
+        Dim diffEnde As Double = 0.0
+        Dim diffDuration As Double = 0.0
+        Dim diff As Double = 0.0
+
+        Dim oldLeft As Double, oldWidth As Double
+        'Dim expla As String = "Version: " & timeStamp.ToShortDateString
+
+
+        Dim oldStartdate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left)
+        Dim oldEndDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width)
+
+        If tsStartdate <> oldStartdate Or tsEndDate <> oldEndDate Then
+            '
+            ' es hat sich was geändert ... 
+            diffEnde = DateDiff(DateInterval.Day, oldEndDate, tsEndDate)
+            diffDuration = DateDiff(DateInterval.Day, tsStartdate, tsEndDate) + 1 - (DateDiff(DateInterval.Day, oldStartdate, oldEndDate) + 1)
+
+            If previousTimeStamp > currentTimestamp Then
+                diffEnde = -1 * diffEnde
+                diffDuration = -1 * diffDuration
+            End If
+
+            'homeButtonRelevance = True
+            Call slideCoordInfo.calculatePPTx1x2(tsStartdate, tsEndDate, x1Pos, x2Pos)
+
+            With tmpShape
+                oldLeft = .Left
+                oldWidth = .Width
+
+                .Left = x1Pos
+                .Width = x2Pos - x1Pos
+
+            End With
+
+            ' diff dient dazu , um das ggf angezeigte Annotation-Feld Name / Datum zu verschieben 
+            diff = tmpShape.Left + tmpShape.Width / 2 - (oldLeft + oldWidth / 2)
+
+        Else
+            ' nichts tun ...
+        End If
+
+        mvPhaseShadowToNewPosition = diff
+    End Function
+
+    ''' <summary>
     ''' diese Methode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
     ''' auch eine HomeButtonRelevance besetht nicht mehr; das neue Home ist mit dem TimeStamp erreicht 
     ''' Der Wert von Diff wird dafür verwendet, um den zugehörigen Datums- oder Annotation Text des Elements zu verschieben ...er orientiert sich deshalb immer am left des Elements 
@@ -2761,6 +2819,55 @@ Module Module1
         End If
 
         mvMilestoneToTimestampPosition = diff
+
+    End Function
+
+    ''' <summary>
+    ''' diese Methode verschiebt das Shadow-Shape an seine Position; es erfolgt keinerlei Setzen von Tag-Information
+    ''' vor allem erfolgt hier kein Eintrag in der Changeliste 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="msDate"></param>
+    ''' <param name="showOtherVariant"></param>
+    ''' <remarks></remarks>
+    Friend Function mvMilestoneShadowToNewPosition(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal showOtherVariant As Boolean) As Double
+        Dim x1Pos As Double, x2Pos As Double
+        Dim diff As Double = 0.0
+        Dim diffInDays As Integer
+
+        Dim oldLeft As Double = tmpShape.Left
+        Dim oldDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2).Date
+        'Dim expla As String = "Version: " & timeStamp.ToShortDateString
+
+        msDate = msDate.Date
+
+        If msDate <> oldDate Then
+            ' es hat sich was geändert ... 
+
+            Call slideCoordInfo.calculatePPTx1x2(msDate, msDate, x1Pos, x2Pos)
+
+
+            ' jetzt die Shape-Info 
+            With tmpShape
+                .Left = x1Pos - tmpShape.Width / 2
+                diff = .Left - oldLeft
+                diffInDays = DateDiff(DateInterval.Day, oldDate, msDate)
+                If previousTimeStamp > currentTimestamp Then
+                    diffInDays = -1 * diffInDays
+                End If
+                ' jetzt wird ggf die smartlists.changeList aufgebaut ... 
+
+            End With
+        Else
+            ' Änderung tk 13.8.17: das Element soll unverändert bleiben ... 
+            'With tmpShape.Glow
+            '    .Radius = 0
+            '    '.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+
+            'End With
+        End If
+
+        mvMilestoneShadowToNewPosition = diff
 
     End Function
 
@@ -4559,6 +4666,238 @@ Module Module1
 
     End Function
 
+
+    ''' <summary>
+    ''' wird aufgerufen, um die Elemente aus der ChangeListe (TimeMachine) ervorheben zu können, die sich verändert haben. 
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub dimAllShapesExceptThese(ByVal exceptionArray() As String)
+
+        Dim oldValue As Single = 0.0
+
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+
+            If isRelevantMSPHShape(tmpShape) Then
+                If Not exceptionArray.Contains(tmpShape.Name) Then
+                    ' Shape abdimmen , aber vorher den Wert merken .. 
+
+                    If tmpShape.Tags.Item("DIMF").Length > 0 Then
+                        tmpShape.Tags.Delete("DIMF")
+                    End If
+
+                    oldValue = tmpShape.Fill.Transparency
+                    tmpShape.Tags.Add("DIMF", oldValue.ToString("#0.#"))
+
+                    tmpShape.Fill.Transparency = 0.8
+
+                End If
+            End If
+
+        Next
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet die Shadows zu dem angegebenen Shapes 
+    ''' </summary>
+    ''' <param name="nameArrayO"></param>
+    ''' <remarks></remarks>
+    Friend Sub zeichneShadows(ByVal nameArrayO() As String, ByVal isOtherVariant As Boolean)
+
+        Dim anzElemente As Integer = nameArrayO.Length
+
+
+        For i As Integer = 1 To anzElemente
+
+            Dim mvDiff As Double = 0.0
+            Dim elemID As String = getElemIDFromShpName(nameArrayO(i - 1))
+            Dim pvName As String = getPVnameFromShpName(nameArrayO(i - 1))
+            Dim origShape As PowerPoint.Shape = currentSlide.Shapes(nameArrayO(i - 1))
+
+            Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName:=pvName, tsDate:=previousTimeStamp)
+            Dim isMilestone As Boolean = elemIDIstMeilenstein(elemID)
+
+            If Not IsNothing(origShape) Then
+
+                origShape.Copy()
+                Dim newShape As PowerPoint.ShapeRange = currentSlide.Shapes.Paste()
+                Dim shadowShape As PowerPoint.Shape = newShape(1)
+
+                With shadowShape
+                    .Name = origShape.Name & shadowName
+                    If Not isMilestone Then
+                        ' damit der Unterschied bei den Phasen besser erkennbar, d.h überlappungsfrei erkennbar ist ...
+                        .Top = origShape.Top - (origShape.Height + 1)
+                    End If
+                    .Top = origShape.Top
+                    .Left = origShape.Left
+                    .Shadow.Blur = 10.0
+                    .Shadow.Size = 5.0
+                End With
+
+                If isMilestone Then
+                    ' Meilenstein
+                    Dim cMilestone As clsMeilenstein = tsProj.getMilestoneByID(elemID)
+
+                    If IsNothing(cMilestone) Then
+                        ' wenn es diesen Meilenstein in der Variante bzw. Timestamp nicht gibt wird das new'Shape wieder gelöscht ...  
+                        newShape.Delete()
+                    Else
+                        ' jetzt bewegen 
+                        mvDiff = mvMilestoneShadowToNewPosition(newShape(1), cMilestone.getDate, isOtherVariant)
+                        Dim bsn As String = origShape.Tags.Item("BSN")
+                        Dim bln As String = origShape.Tags.Item("BLN")
+                        Dim elemName As String = origShape.Tags.Item("CN")
+                        Dim elemBC As String = origShape.Tags.Item("BC")
+                        ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing, _
+                                                  cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
+                                                  cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, Nothing)
+                    End If
+                Else
+                    ' es handelt sich um eine Phase
+                    Dim ph As clsPhase = tsProj.getPhaseByID(elemID)
+
+                    If IsNothing(ph) Then
+                        ' wenn es diese Phase in der Variante bzw. Timestamp nicht gibt wird das new'Shape wieder gelöscht ...  
+                        newShape.Delete()
+                    Else
+                        mvDiff = mvPhaseShadowToNewPosition(newShape(1), ph.getStartDate, ph.getEndDate, isOtherVariant)
+
+                        Dim bsn As String = origShape.Tags.Item("BSN")
+                        Dim bln As String = origShape.Tags.Item("BLN")
+                        Dim elemName As String = origShape.Tags.Item("CN")
+                        Dim elemBC As String = origShape.Tags.Item("BC")
+                        ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
+                                                  ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
+                                                  ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
+                    End If
+                End If
+
+                ' jetzt wird entscheiden , ob eine Verbindungslinie gezeichnet wird 
+
+                If isMilestone Then
+
+                    If System.Math.Abs(mvDiff) > 1.5 * shadowShape.Width Then
+                        Dim verbindungsShape As PowerPoint.Shape
+                        If mvDiff < 0 Then
+                            ' newShape ist links vom Original 
+                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        shadowShape.Left + shadowShape.Width, shadowShape.Top + shadowShape.Height / 2, _
+                                                                                                        origShape.Left, origShape.Top + shadowShape.Height / 2)
+                        Else
+                            ' newShape ist rechts vom Original 
+                            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        shadowShape.Left, shadowShape.Top + shadowShape.Height / 2, _
+                                                                                                        origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2)
+
+                        End If
+                        With verbindungsShape
+                            .Name = .Name & shadowName
+                            .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
+                            .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
+                        End With
+                    End If
+
+                Else
+                    Dim verbindungsShape As PowerPoint.Shape = Nothing
+                    If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
+
+                        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
+                                                                                                        origShape.Left, origShape.Top + shadowShape.Height / 2)
+                    ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
+
+                        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
+                                                                                                        origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2)
+
+                    End If
+
+                    If Not IsNothing(verbindungsShape) Then
+                        With verbindungsShape
+                            .Name = .Name & shadowName
+                            .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
+                            .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
+                        End With
+                    End If
+                    
+                End If
+
+
+            End If
+
+        Next
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' hebt das Abdimmen wieder auf, das eingesetzt wurde, um die Phasen und Meilenstein Shapes, die sich verändert haben hervorzuheben 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub undimAllShapes()
+
+
+
+        Dim tValue As Single = 1.0
+
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+
+            If isRelevantMSPHShape(tmpShape) Then
+                tValue = 0.0
+
+                If tmpShape.Tags.Item("DIMF").Length > 0 Then
+                    Try
+                        tValue = CSng(tmpShape.Tags.Item("DIMF"))
+                        If tValue < 0 Or tValue > 1.0 Then
+                            tValue = 0.0
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+                    tmpShape.Tags.Delete("DIMF")
+                    ' innerhalb der if .. Clause aufrufen
+                    tmpShape.Fill.Transparency = tValue
+                End If
+
+
+            End If
+
+        Next
+
+        ' jetzt noch alle Shadow-Elemente löschen
+        Call deleteShadows()
+
+    End Sub
+
+
+    ''' <summary>
+    ''' löscht alle Shadow Shapes
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub deleteShadows()
+        Dim bigTodoList As New Collection
+
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+            bigTodoList.Add(tmpShape.Name)
+        Next
+
+        For Each tmpShpName As String In bigTodoList
+            Try
+
+                If tmpShpName.EndsWith(shadowName) Then
+                    Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
+                    tmpShape.Delete()
+                End If
+            Catch ex As Exception
+
+            End Try
+        Next
+    End Sub
 
     ''' <summary>
     ''' setzt die Markierung zurück, dass Elemente über Time-Machine / andere Variante  verschoben wurden 

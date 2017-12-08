@@ -1900,26 +1900,38 @@
             Dim anzCategories As Integer = 0
             Dim nameCollection As New Collection
             Dim idCollection As Collection = Me.getAllElemIDs(lookingforMS)
+            Dim tmpSortList As New SortedList(Of Integer, String)
 
             For Each elemID As String In idCollection
                 If lookingforMS Then
                     Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
                     If Not IsNothing(cMilestone) Then
                         Dim catName As String = cMilestone.appearance
-                        If Not nameCollection.Contains(catName) Then
-                            nameCollection.Add(Item:=catName, Key:=catName)
+                        Dim sortkey As Integer = appearanceDefinitions.IndexOfKey(catName)
+                        If Not tmpSortList.ContainsKey(sortkey) Then
+                            tmpSortList.Add(key:=sortkey, value:=catName)
                         End If
                     End If
                 Else
                     Dim cPhase As clsPhase = Me.getPhaseByID(elemID)
                     If Not IsNothing(cPhase) Then
                         Dim catName As String = cPhase.appearance
-                        If Not nameCollection.Contains(catName) Then
-                            nameCollection.Add(Item:=catName, Key:=catName)
+                        Dim sortkey As Integer = appearanceDefinitions.IndexOfKey(catName)
+                        If Not tmpSortList.ContainsKey(sortkey) Then
+                            tmpSortList.Add(key:=sortkey, value:=catName)
                         End If
                     End If
                 End If
 
+            Next
+
+            ' jetzt umkopieren 
+
+            For i As Integer = 0 To tmpSortList.Count - 1
+                Dim catName As String = tmpSortList.ElementAt(i).Value
+                If Not nameCollection.Contains(catName) Then
+                    nameCollection.Add(catName, catName)
+                End If
             Next
 
             getCategoryNames = nameCollection
