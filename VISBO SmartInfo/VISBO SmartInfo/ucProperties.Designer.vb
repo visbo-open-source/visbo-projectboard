@@ -38,10 +38,12 @@ Partial Class ucProperties
         '
         'eleName
         '
+        Me.eleName.AutoEllipsis = True
         Me.eleName.AutoSize = True
         Me.eleName.Enabled = False
         Me.eleName.Font = New System.Drawing.Font("Segoe UI Emoji", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleName.Location = New System.Drawing.Point(3, 12)
+        Me.eleName.MaximumSize = New System.Drawing.Size(0, 42)
         Me.eleName.Name = "eleName"
         Me.eleName.Size = New System.Drawing.Size(130, 21)
         Me.eleName.TabIndex = 1
@@ -149,6 +151,7 @@ Partial Class ucProperties
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleDeliverables.BackColor = System.Drawing.Color.White
         Me.eleDeliverables.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.eleDeliverables.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleDeliverables.Location = New System.Drawing.Point(10, 318)
         Me.eleDeliverables.Name = "eleDeliverables"
         Me.eleDeliverables.ReadOnly = True
@@ -162,6 +165,7 @@ Partial Class ucProperties
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.eleAmpelText.BackColor = System.Drawing.Color.White
         Me.eleAmpelText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.eleAmpelText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleAmpelText.Location = New System.Drawing.Point(10, 144)
         Me.eleAmpelText.Name = "eleAmpelText"
         Me.eleAmpelText.ReadOnly = True
