@@ -42,7 +42,7 @@ Partial Class ucProperties
         Me.eleName.AutoSize = True
         Me.eleName.Enabled = False
         Me.eleName.Font = New System.Drawing.Font("Segoe UI Emoji", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.eleName.Location = New System.Drawing.Point(3, 12)
+        Me.eleName.Location = New System.Drawing.Point(5, 12)
         Me.eleName.MaximumSize = New System.Drawing.Size(0, 42)
         Me.eleName.Name = "eleName"
         Me.eleName.Size = New System.Drawing.Size(130, 21)
@@ -54,7 +54,7 @@ Partial Class ucProperties
         '
         Me.labelDate.AutoSize = True
         Me.labelDate.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelDate.Location = New System.Drawing.Point(3, 52)
+        Me.labelDate.Location = New System.Drawing.Point(5, 52)
         Me.labelDate.Name = "labelDate"
         Me.labelDate.Size = New System.Drawing.Size(41, 19)
         Me.labelDate.TabIndex = 2
@@ -75,7 +75,7 @@ Partial Class ucProperties
         '
         Me.labelRespons.AutoSize = True
         Me.labelRespons.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelRespons.Location = New System.Drawing.Point(4, 86)
+        Me.labelRespons.Location = New System.Drawing.Point(6, 86)
         Me.labelRespons.Name = "labelRespons"
         Me.labelRespons.Size = New System.Drawing.Size(84, 19)
         Me.labelRespons.TabIndex = 4
@@ -96,7 +96,7 @@ Partial Class ucProperties
         '
         Me.labelAmpel.AutoSize = True
         Me.labelAmpel.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelAmpel.Location = New System.Drawing.Point(3, 122)
+        Me.labelAmpel.Location = New System.Drawing.Point(6, 122)
         Me.labelAmpel.Name = "labelAmpel"
         Me.labelAmpel.Size = New System.Drawing.Size(79, 19)
         Me.labelAmpel.TabIndex = 6
@@ -129,7 +129,7 @@ Partial Class ucProperties
         '
         Me.labelDeliver.AutoSize = True
         Me.labelDeliver.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelDeliver.Location = New System.Drawing.Point(4, 296)
+        Me.labelDeliver.Location = New System.Drawing.Point(6, 296)
         Me.labelDeliver.Name = "labelDeliver"
         Me.labelDeliver.Size = New System.Drawing.Size(85, 19)
         Me.labelDeliver.TabIndex = 9

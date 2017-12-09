@@ -7,11 +7,22 @@
     End Sub
 
     Private Sub ucProperties_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'Call MsgBox("load")
+        If englishLanguage Then
+            With Me
+                .labelAmpel.Text = "Traffic Light:"
+                .labelDate.Text = "Date:"
+                .labelDeliver.Text = "Deliverables:"
+                .labelRespons.Text = "Responsible:"
+            End With
+        Else
+            With Me
+                .labelAmpel.Text = "Ampel:"
+                .labelDate.Text = "Datum:"
+                .labelDeliver.Text = "Leistungsumfänge:"
+                .labelRespons.Text = "Verantwortlich:"
+            End With
+        End If
     End Sub
 
-    Private Sub ucProperties_VisibleChanged(sender As Object, e As EventArgs) Handles Me.VisibleChanged
-        'Call MsgBox("visibleChanged")
-    End Sub
 
 End Class

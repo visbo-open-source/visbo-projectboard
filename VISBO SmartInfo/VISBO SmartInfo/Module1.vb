@@ -554,9 +554,6 @@ Module Module1
 
     End Sub
 
-    Private Sub pptAPP_NewPresentation(Pres As Microsoft.Office.Interop.PowerPoint.Presentation) Handles pptAPP.NewPresentation
-
-    End Sub
 
     Private Sub pptAPP_PresentationBeforeClose(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeClose
 
@@ -1071,9 +1068,9 @@ Module Module1
                         Call aktualisiereInfoPane(tmpShape, elemWasMoved)
                     End If
                     ' ur: wegen Pane
-                    ' ''If formIsShown Then
-                    ' ''    Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
-                    ' ''End If
+                    If formIsShown Then
+                        Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                    End If
 
 
                     ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
@@ -5236,17 +5233,17 @@ Module Module1
                         ' ''Dim tmpStr() As String
                         ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
 
-                        If englishLanguage Then
-                            .labelDate.Text = "Date:"
-                            .labelAmpel.Text = "traffic light:"
-                            .labelDeliver.Text = "Deliverables:"
-                            .labelRespons.Text = "Responsible:"
-                        Else
-                            .labelDate.Text = "Datum:"
-                            .labelAmpel.Text = "Ampel:"
-                            .labelDeliver.Text = "Lieferumfänge:"
-                            .labelRespons.Text = "Verantwortlich:"
-                        End If
+                        ' ''If englishLanguage Then
+                        ' ''    .labelDate.Text = "Date:"
+                        ' ''    .labelAmpel.Text = "Traffic Light:"
+                        ' ''    .labelDeliver.Text = "Deliverables:"
+                        ' ''    .labelRespons.Text = "Responsible:"
+                        ' ''Else
+                        ' ''    .labelDate.Text = "Datum:"
+                        ' ''    .labelAmpel.Text = "Ampel:"
+                        ' ''    .labelDeliver.Text = "Lieferumfänge:"
+                        ' ''    .labelRespons.Text = "Verantwortlich:"
+                        ' ''End If
 
                         .eleName.Text = bestimmeElemText(tmpShape, False, True)
 

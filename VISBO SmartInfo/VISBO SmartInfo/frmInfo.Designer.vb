@@ -151,7 +151,7 @@ Partial Class frmInfo
         Me.Controls.Add(Me.writeText)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmInfo"
-        Me.Text = "VISBO Smart-Info"
+        Me.Text = "Beschriften"
         Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()

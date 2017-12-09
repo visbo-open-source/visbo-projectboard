@@ -54,6 +54,7 @@ Public Class frmInfo
 
         If englishLanguage Then
             With Me
+                .Text = "Annotate"
                 '.TabControl1.TabPages.Item(0).Text = "Information"
                 '.TabControl1.TabPages.Item(1).Text = "Measure"
                 '.showAbbrev.Text = "Abbreviation"

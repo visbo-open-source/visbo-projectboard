@@ -23,11 +23,11 @@ Partial Class ucSearch
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.cathegoryList = New System.Windows.Forms.ComboBox()
-        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.Label1 = New System.Windows.Forms.Label()
         Me.selListboxNames = New System.Windows.Forms.ListBox()
         Me.CheckBxMarker = New System.Windows.Forms.CheckBox()
-        Me.PictureMarker = New System.Windows.Forms.PictureBox()
         Me.listboxNames = New System.Windows.Forms.ListBox()
         Me.filterText = New System.Windows.Forms.TextBox()
         Me.Panel2 = New System.Windows.Forms.Panel()
@@ -35,12 +35,12 @@ Partial Class ucSearch
         Me.shwRedLight = New System.Windows.Forms.CheckBox()
         Me.shwGreenLight = New System.Windows.Forms.CheckBox()
         Me.shwYellowLight = New System.Windows.Forms.CheckBox()
-        Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.PictureMarker = New System.Windows.Forms.PictureBox()
+        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.Panel1.SuspendLayout()
-        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel2.SuspendLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'cathegoryList
@@ -53,19 +53,6 @@ Partial Class ucSearch
         Me.cathegoryList.Name = "cathegoryList"
         Me.cathegoryList.Size = New System.Drawing.Size(257, 25)
         Me.cathegoryList.TabIndex = 1
-        '
-        'PictureBox1
-        '
-        Me.PictureBox1.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.PictureBox1.BackColor = System.Drawing.SystemColors.Control
-        Me.PictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center
-        Me.PictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.PictureBox1.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view1
-        Me.PictureBox1.Location = New System.Drawing.Point(237, 33)
-        Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(28, 25)
-        Me.PictureBox1.TabIndex = 2
-        Me.PictureBox1.TabStop = False
         '
         'Panel1
         '
@@ -88,6 +75,24 @@ Partial Class ucSearch
         Me.Panel1.Size = New System.Drawing.Size(276, 740)
         Me.Panel1.TabIndex = 3
         '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(7, 475)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(53, 13)
+        Me.Label2.TabIndex = 47
+        Me.Label2.Text = "Elements:"
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(7, 114)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(77, 13)
+        Me.Label1.TabIndex = 46
+        Me.Label1.Text = "Search results:"
+        '
         'selListboxNames
         '
         Me.selListboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
@@ -97,7 +102,7 @@ Partial Class ucSearch
         Me.selListboxNames.HorizontalScrollbar = True
         Me.selListboxNames.ItemHeight = 17
         Me.selListboxNames.Location = New System.Drawing.Point(8, 493)
-        Me.selListboxNames.MinimumSize = New System.Drawing.Size(0, 50)
+        Me.selListboxNames.MinimumSize = New System.Drawing.Size(4, 50)
         Me.selListboxNames.Name = "selListboxNames"
         Me.selListboxNames.Size = New System.Drawing.Size(257, 225)
         Me.selListboxNames.TabIndex = 45
@@ -111,15 +116,6 @@ Partial Class ucSearch
         Me.CheckBxMarker.TabIndex = 44
         Me.CheckBxMarker.UseVisualStyleBackColor = True
         '
-        'PictureMarker
-        '
-        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(8, 3)
-        Me.PictureMarker.Name = "PictureMarker"
-        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
-        Me.PictureMarker.TabIndex = 43
-        Me.PictureMarker.TabStop = False
-        '
         'listboxNames
         '
         Me.listboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
@@ -129,7 +125,7 @@ Partial Class ucSearch
         Me.listboxNames.HorizontalScrollbar = True
         Me.listboxNames.ItemHeight = 17
         Me.listboxNames.Location = New System.Drawing.Point(8, 134)
-        Me.listboxNames.MinimumSize = New System.Drawing.Size(0, 50)
+        Me.listboxNames.MinimumSize = New System.Drawing.Size(4, 50)
         Me.listboxNames.Name = "listboxNames"
         Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.listboxNames.Size = New System.Drawing.Size(257, 327)
@@ -198,23 +194,27 @@ Partial Class ucSearch
         Me.shwYellowLight.TabIndex = 36
         Me.shwYellowLight.UseVisualStyleBackColor = False
         '
-        'Label1
+        'PictureMarker
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(7, 116)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(77, 13)
-        Me.Label1.TabIndex = 46
-        Me.Label1.Text = "Search results:"
+        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
+        Me.PictureMarker.Location = New System.Drawing.Point(8, 3)
+        Me.PictureMarker.Name = "PictureMarker"
+        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
+        Me.PictureMarker.TabIndex = 43
+        Me.PictureMarker.TabStop = False
         '
-        'Label2
+        'PictureBox1
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(7, 475)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(53, 13)
-        Me.Label2.TabIndex = 47
-        Me.Label2.Text = "Elements:"
+        Me.PictureBox1.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.PictureBox1.BackColor = System.Drawing.SystemColors.Control
+        Me.PictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center
+        Me.PictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.PictureBox1.Image = Global.VISBO_SmartInfo.My.Resources.Resources.view1
+        Me.PictureBox1.Location = New System.Drawing.Point(237, 33)
+        Me.PictureBox1.Name = "PictureBox1"
+        Me.PictureBox1.Size = New System.Drawing.Size(28, 25)
+        Me.PictureBox1.TabIndex = 2
+        Me.PictureBox1.TabStop = False
         '
         'ucSearch
         '
@@ -225,12 +225,12 @@ Partial Class ucSearch
         Me.Controls.Add(Me.Panel1)
         Me.Name = "ucSearch"
         Me.Size = New System.Drawing.Size(279, 746)
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
-        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
