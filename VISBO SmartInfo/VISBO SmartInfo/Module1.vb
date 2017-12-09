@@ -697,9 +697,11 @@ Module Module1
                             initialHomeButtonRelevance = homeButtonRelevance
                             initialChangedButtonRelevance = changedButtonRelevance
                             If searchPane.Visible Then
+
+                                'Call clearSearchPane(Nothing)
                                 If slideHasSmartElements Then
 
-                                    ucSearchView.cathegoryList.SelectedItem = "Name"
+                                    ucSearchView.fülltListbox()
 
                                 End If
                             End If
