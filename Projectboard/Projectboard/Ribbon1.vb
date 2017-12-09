@@ -142,7 +142,8 @@ Imports System.Windows
 
     Sub PTLadenKonstellation(control As IRibbonControl)
 
-        Dim loadFromDatenbank As String = "PT5G1B1"
+        Dim load1FromDatenbank As String = "PT5G1B1"
+        Dim load2FromDatenbank As String = "PT5G1"
         Dim loadConstellationFrm As New frmLoadConstellation
         Dim storedAtOrBefore As Date = Date.Now
         Dim ControlID As String = control.Id
@@ -160,7 +161,7 @@ Imports System.Windows
 
         ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
-        If ControlID = loadFromDatenbank And Not noDB Then
+        If (ControlID = load1FromDatenbank Or ControlID = load2FromDatenbank) And Not noDB Then
 
             If request.pingMongoDb() Then
 
