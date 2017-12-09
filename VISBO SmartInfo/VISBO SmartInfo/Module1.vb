@@ -4687,7 +4687,9 @@ Module Module1
                     oldValue = tmpShape.Fill.Transparency
                     tmpShape.Tags.Add("DIMF", oldValue.ToString("#0.#"))
 
+                    tmpShape.Glow.Radius = 0
                     tmpShape.Fill.Transparency = 0.8
+                    tmpShape.Fill.Solid()
 
                 End If
             End If
@@ -4780,6 +4782,7 @@ Module Module1
                     End If
                 Else
                     ' es handelt sich um eine Phase
+                    ' wichtig: die Project Linie soll aber nicht betrachtet werden  
                     Dim ph As clsPhase = tsProj.getPhaseByID(elemID)
 
                     If IsNothing(ph) Then
@@ -4797,106 +4800,109 @@ Module Module1
                                                   ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
                                                   ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
                     End If
+
+                    If Not versionAlreadyNotedAtPH Then
+                        Call beschrifteOrigAndShadow(shadowShape.Name, origShape.Name, False)
+                        versionAlreadyNotedAtPH = True
+                    End If
+
                 End If
 
-                If Not versionAlreadyNotedAtPH Then
-                    Call beschrifteOrigAndShadow(shadowShape.Name, origShape.Name, False)
-                    versionAlreadyNotedAtPH = True
-                End If
-
+                
                 ' jetzt wird entscheiden , ob eine Verbindungslinie gezeichnet wird 
                 ' bei Phasen wird überhaupt keine Verbindungslinie gezeichnet , hier wird der Unterschied durch oben / unten klar 
 
-                'If isMilestone Then
+                If isMilestone Then
 
-                '    If System.Math.Abs(mvDiff) > 1.5 * shadowShape.Width Then
-                '        Dim verbindungsShape As PowerPoint.Shape = Nothing
+                    If System.Math.Abs(mvDiff) > 1.5 * shadowShape.Width Then
+                        Dim verbindungsShape As PowerPoint.Shape = Nothing
 
-                '        If previousTimeStamp < currentTimestamp Then
-                '            'If currentTimestamp > previousTimeStamp Then
+                        If previousTimeStamp < currentTimestamp Then
+                            'If currentTimestamp > previousTimeStamp Then
 
-                '            If mvDiff < 0 Then
-                '                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
-                '                                                                                        shadowShape.Left + shadowShape.Width, shadowShape.Top + shadowShape.Height / 2, _
-                '                                                                                        origShape.Left, origShape.Top + origShape.Height / 2)
-                '            Else
-                '                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
-                '                                                                                        shadowShape.Left, shadowShape.Top + shadowShape.Height / 2, _
-                '                                                                                        origShape.Left + origShape.Width, origShape.Top + origShape.Height / 2)
-                '            End If
+                            If mvDiff < 0 Then
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        shadowShape.Left + shadowShape.Width, shadowShape.Top + shadowShape.Height / 2, _
+                                                                                                        origShape.Left, origShape.Top + origShape.Height / 2)
+                            Else
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        shadowShape.Left, shadowShape.Top + shadowShape.Height / 2, _
+                                                                                                        origShape.Left + origShape.Width, origShape.Top + origShape.Height / 2)
+                            End If
 
-                '        Else
-                '            ' currentTimeStamp < previoustimestamp
-                '            If mvDiff > 0 Then
+                        Else
+                            ' currentTimeStamp < previoustimestamp
+                            If mvDiff > 0 Then
 
-                '                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
-                '                                                                                        origShape.Left + origShape.Width, origShape.Top + origShape.Height / 2, _
-                '                                                                                        shadowShape.Left, shadowShape.Top + shadowShape.Height / 2)
-
-
-                '            Else
-                '                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
-                '                                                                                        origShape.Left, origShape.Top + origShape.Height / 2, _
-                '                                                                                        shadowShape.Left + shadowShape.Width, shadowShape.Top + shadowShape.Height / 2)
-                '            End If
-
-                '        End If
-
-                '        With verbindungsShape
-
-                '            .Name = .Name & shadowName
-                '            .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
-                '            .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
-                '            .Line.Weight = 5.0
-
-                '        End With
-                '    End If
-
-                'Else
-                '    Dim verbindungsShape As PowerPoint.Shape = Nothing
-
-                '    If previousTimeStamp < currentTimestamp Then
-
-                '        If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
-
-                '            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
-                '                                                                                            shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
-                '                                                                                            origShape.Left, origShape.Top + shadowShape.Height / 2)
-                '        ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
-
-                '            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
-                '                                                                                            shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
-                '                                                                                            origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2)
-
-                '        End If
-
-                '    Else
-                '        If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
-
-                '            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
-                '                                                                origShape.Left, origShape.Top + shadowShape.Height / 2, _
-                '                                                                shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height)
-
-                '        ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
-
-                '            verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
-                '                                                                origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2, _
-                '                                                                shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height)
-                '        End If
-
-                '        If Not IsNothing(verbindungsShape) Then
-                '            With verbindungsShape
-                '                .Name = .Name & shadowName
-                '                .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
-                '                .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
-                '                .Line.Weight = 5.0
-                '            End With
-                '        End If
-
-                '    End If
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        origShape.Left + origShape.Width, origShape.Top + origShape.Height / 2, _
+                                                                                                        shadowShape.Left, shadowShape.Top + shadowShape.Height / 2)
 
 
-                'End If
+                            Else
+                                verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorStraight, _
+                                                                                                        origShape.Left, origShape.Top + origShape.Height / 2, _
+                                                                                                        shadowShape.Left + shadowShape.Width, shadowShape.Top + shadowShape.Height / 2)
+                            End If
+
+                        End If
+
+                        With verbindungsShape
+
+                            .Name = .Name & shadowName
+                            .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
+                            .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
+                            .Line.Weight = 5.0
+
+                        End With
+                    End If
+
+                Else
+                    Dim verbindungsShape As PowerPoint.Shape = Nothing
+
+                    ' tk, für Phasen soll keine Verbindunslinie gezeichnet werden  
+                    'If previousTimeStamp < currentTimestamp Then
+
+                    '    If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
+
+                    '        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                    '                                                                                        shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
+                    '                                                                                        origShape.Left, origShape.Top + shadowShape.Height / 2)
+                    '    ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
+
+                    '        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                    '                                                                                        shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height, _
+                    '                                                                                        origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2)
+
+                    '    End If
+
+                    'Else
+                    '    If shadowShape.Left + shadowShape.Width / 2 < origShape.Left Then
+
+                    '        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                    '                                                            origShape.Left, origShape.Top + shadowShape.Height / 2, _
+                    '                                                            shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height)
+
+                    '    ElseIf shadowShape.Left + shadowShape.Width / 2 > origShape.Left + origShape.Width Then
+
+                    '        verbindungsShape = currentSlide.Shapes.AddConnector(Microsoft.Office.Core.MsoConnectorType.msoConnectorElbow, _
+                    '                                                            origShape.Left + origShape.Width, origShape.Top + shadowShape.Height / 2, _
+                    '                                                            shadowShape.Left + shadowShape.Width / 2, shadowShape.Top + shadowShape.Height)
+                    '    End If
+
+                    '    If Not IsNothing(verbindungsShape) Then
+                    '        With verbindungsShape
+                    '            .Name = .Name & shadowName
+                    '            .Line.BeginArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadNone
+                    '            .Line.EndArrowheadStyle = Microsoft.Office.Core.MsoArrowheadStyle.msoArrowheadTriangle
+                    '            .Line.Weight = 5.0
+                    '        End With
+                    '    End If
+
+                    'End If
+
+
+                End If
             End If
 
         Next

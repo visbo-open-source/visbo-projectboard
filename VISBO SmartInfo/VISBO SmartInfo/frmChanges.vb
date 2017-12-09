@@ -9,6 +9,8 @@
         ' Koordinaten merken
         frmCoord(PTfrm.changes, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.changes, PTpinfo.left) = Me.Left
+        frmCoord(PTfrm.changes, PTpinfo.width) = Me.Width
+        frmCoord(PTfrm.changes, PTpinfo.height) = Me.Height
 
 
     End Sub
@@ -18,6 +20,8 @@
         If frmCoord(PTfrm.changes, PTpinfo.top) > 0 Then
             Me.Top = frmCoord(PTfrm.changes, PTpinfo.top)
             Me.Left = frmCoord(PTfrm.changes, PTpinfo.left)
+            Me.Width = frmCoord(PTfrm.changes, PTpinfo.width)
+            Me.Height = frmCoord(PTfrm.changes, PTpinfo.height)
         Else
             Me.Top = 922
             Me.Left = 24
