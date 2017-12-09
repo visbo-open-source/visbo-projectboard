@@ -116,6 +116,13 @@
 
             Next
         End If
+
+        If anzChangeItems = 1 Then
+            ' es muss eine zusätzliche Zeile hinzugefügt werden, sonst ist diese eine Zeile nicht zu selektieren 
+            changeListTable.Rows.Add(1)
+            changeListTable.Rows.Item(0).Selected = False
+            changeListTable.Rows.Item(1).Selected = True
+        End If
     End Sub
 
     Friend Sub neuAufbau()
