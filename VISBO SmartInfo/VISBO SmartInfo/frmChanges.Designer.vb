@@ -56,7 +56,6 @@ Partial Class frmChanges
         Me.changeListTable.Dock = System.Windows.Forms.DockStyle.Fill
         Me.changeListTable.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically
         Me.changeListTable.Location = New System.Drawing.Point(0, 0)
-        Me.changeListTable.MultiSelect = False
         Me.changeListTable.Name = "changeListTable"
         Me.changeListTable.ReadOnly = True
         Me.changeListTable.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
