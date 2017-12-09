@@ -47,10 +47,7 @@
         Me.Group3 = Me.Factory.CreateRibbonGroup
         Me.Group4 = Me.Factory.CreateRibbonGroup
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
-        Me.timeMachineTab = Me.Factory.CreateRibbonButton
-        Me.variantTab_Click = Me.Factory.CreateRibbonButton
         Me.settingsTab = Me.Factory.CreateRibbonButton
-        Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.btnUpdate = Me.Factory.CreateRibbonButton
         Me.btnStart = Me.Factory.CreateRibbonButton
         Me.btnFastBack = Me.Factory.CreateRibbonButton
@@ -102,42 +99,24 @@
         '
         Me.Group4.Items.Add(Me.activateSearch)
         Me.Group4.Items.Add(Me.activateInfo)
+        Me.Group4.Items.Add(Me.activateTab)
         Me.Group4.Label = "Actions"
         Me.Group4.Name = "Group4"
         '
         'SmartInfo
         '
-        Me.SmartInfo.Items.Add(Me.timeMachineTab)
-        Me.SmartInfo.Items.Add(Me.variantTab_Click)
         Me.SmartInfo.Items.Add(Me.settingsTab)
-        Me.SmartInfo.Items.Add(Me.Separator1)
-        Me.SmartInfo.Items.Add(Me.activateTab)
-        Me.SmartInfo.Label = "Smart-Info (alt)"
         Me.SmartInfo.Name = "SmartInfo"
-        '
-        'timeMachineTab
-        '
-        Me.timeMachineTab.Label = "Time-Machine"
-        Me.timeMachineTab.Name = "timeMachineTab"
-        '
-        'variantTab_Click
-        '
-        Me.variantTab_Click.Label = "Variants"
-        Me.variantTab_Click.Name = "variantTab_Click"
         '
         'settingsTab
         '
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
-        'Separator1
-        '
-        Me.Separator1.Name = "Separator1"
-        '
         'btnUpdate
         '
         Me.btnUpdate.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnUpdate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Visbo_update_Button
+        Me.btnUpdate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.refresh
         Me.btnUpdate.Label = "Current"
         Me.btnUpdate.Name = "btnUpdate"
         Me.btnUpdate.ShowImage = True
@@ -178,15 +157,14 @@
         '
         Me.btnEnd2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
         Me.btnEnd2.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_end1
-        Me.btnEnd2.Label = "Current"
+        Me.btnEnd2.Label = "Last"
         Me.btnEnd2.Name = "btnEnd2"
-        Me.btnEnd2.ScreenTip = " fösadlkfsödlkf"
         Me.btnEnd2.ShowImage = True
         '
         'activateSearch
         '
         Me.activateSearch.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.activateSearch.Image = Global.VISBO_SmartInfo.My.Resources.Resources.find
+        Me.activateSearch.Image = Global.VISBO_SmartInfo.My.Resources.Resources.find1
         Me.activateSearch.Label = "Search"
         Me.activateSearch.Name = "activateSearch"
         Me.activateSearch.ShowImage = True
@@ -194,14 +172,15 @@
         'activateInfo
         '
         Me.activateInfo.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.activateInfo.Image = Global.VISBO_SmartInfo.My.Resources.Resources.information2
+        Me.activateInfo.Image = Global.VISBO_SmartInfo.My.Resources.Resources.about
         Me.activateInfo.Label = "Properties"
         Me.activateInfo.Name = "activateInfo"
         Me.activateInfo.ShowImage = True
         '
         'activateTab
         '
-        Me.activateTab.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
+        Me.activateTab.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.activateTab.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue1
         Me.activateTab.Label = "Annotate"
         Me.activateTab.Name = "activateTab"
         Me.activateTab.ShowImage = True
@@ -242,10 +221,7 @@
     Friend WithEvents Group4 As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents activateInfo As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents SmartInfo As Microsoft.Office.Tools.Ribbon.RibbonGroup
-    Friend WithEvents timeMachineTab As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents variantTab_Click As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents settingsTab As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents Separator1 As Microsoft.Office.Tools.Ribbon.RibbonSeparator
     Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 

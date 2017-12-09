@@ -297,6 +297,10 @@ Public Class ucSearch
 
         cathegoryList.MaxDropDownItems = 9
         If englishLanguage Then
+            With Me
+                .Label1.Text = "Search Results:"
+                .Label2.Text = "Elements:"
+            End With
             cathegoryList.Items.Add("Name")
             cathegoryList.Items.Add("Responsibilities")
             cathegoryList.Items.Add("Deliverables")
@@ -310,6 +314,10 @@ Public Class ucSearch
                 cathegoryList.SelectedItem = "Name"
             End If
         Else
+            With Me
+                .Label1.Text = "Suchergebnisse:"
+                .Label2.Text = "Elemente:"
+            End With
             cathegoryList.Items.Add("Name")
             cathegoryList.Items.Add("Verantwortlich")
             cathegoryList.Items.Add("Lieferumfänge")
@@ -323,8 +331,6 @@ Public Class ucSearch
                 cathegoryList.SelectedItem = "Name"
             End If
         End If
-      
-
 
         'Call fülltListbox()
 

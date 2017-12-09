@@ -8,7 +8,39 @@ Public Class Ribbon1
 
 
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
-
+        If englishLanguage Then
+            With Me
+                .Group2.Label = "Update"
+                .Group3.Label = "Time Machine"
+                .Group4.Label = "Actions"
+                .btnUpdate.Label = "Update"
+                .btnStart.Label = "First  "
+                .btnFastBack.Label = "Prev."
+                .btnShowChanges.Label = "Difference"
+                .btnFastForward.Label = "Next"
+                .btnEnd2.Label = "Last"
+                .activateInfo.Label = "Properties"
+                .activateSearch.Label = "Search"
+                .activateTab.Label = "Annotate"
+                .settingsTab.Label = "Settings"
+            End With
+        Else
+            With Me
+                .Group2.Label = "Aktualisieren"
+                .Group3.Label = "Time Machine"
+                .Group4.Label = "Aktionen"
+                .btnUpdate.Label = "Aktuell"
+                .btnStart.Label = "Erste Version"
+                .btnFastBack.Label = "Vorgänger Version"
+                .btnShowChanges.Label = "Veränderung"
+                .btnFastForward.Label = "Nächste Version"
+                .btnEnd2.Label = "Neueste Version"
+                .activateInfo.Label = "Eigenschaften"
+                .activateSearch.Label = "Suche"
+                .activateTab.Label = "Beschriften"
+                .settingsTab.Label = "Einstellungen"
+            End With
+        End If
     End Sub
 
 
@@ -29,7 +61,7 @@ Public Class Ribbon1
 
     End Sub
 
-    Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs) Handles timeMachineTab.Click
+    Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs)
         Dim msg As String = ""
 
         If userIsEntitled(msg) Then
@@ -99,7 +131,7 @@ Public Class Ribbon1
     End Sub
 
 
-    Private Sub variantTab_Click_Click(sender As Object, e As RibbonControlEventArgs) Handles variantTab_Click.Click
+    Private Sub variantTab_Click_Click(sender As Object, e As RibbonControlEventArgs)
         Dim msg As String = ""
 
         If userIsEntitled(msg) Then
