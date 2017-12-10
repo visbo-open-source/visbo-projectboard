@@ -620,11 +620,17 @@ Module Module1
     ''' <param name="SldRange"></param>
     ''' <remarks></remarks>
     Private Sub pptAPP_SlideSelectionChanged(SldRange As PowerPoint.SlideRange) Handles pptAPP.SlideSelectionChanged
-
-            ' die aktuelle Slide setzen 
+        ' die aktuelle Slide setzen 
         If SldRange.Count = 1 Then
-            ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
 
+
+            smartSlideLists = New clsSmartSlideListen
+
+            If searchPane.Visible Then
+                Call clearSearchPane(Nothing)
+            End If
+
+            ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
             currentSlide = SldRange.Item(1)
 
             Try
@@ -641,93 +647,95 @@ Module Module1
             Catch ex As Exception
 
             End Try
-            
-            thereIsNoVersionFieldOnSlide = True
 
-            If currentSlide.Tags.Count > 0 Then
-                Try
-                    If currentSlide.Tags.Item("SMART").Length > 0 Then
+                thereIsNoVersionFieldOnSlide = True
 
-                        ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
-                        Call getDBsettings()
+                If currentSlide.Tags.Count > 0 Then
+                    Try
+                        If currentSlide.Tags.Item("SMART").Length > 0 Then
 
-                        Dim msg As String = ""
-                        If userIsEntitled(msg) Then
+                            ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
+                            Call getDBsettings()
 
-                            ' die HomeButtonRelevanz setzen 
-                            homeButtonRelevance = False
-                            changedButtonRelevance = False
+                            Dim msg As String = ""
+                            If userIsEntitled(msg) Then
 
-                            slideHasSmartElements = True
+                                ' die HomeButtonRelevanz setzen 
+                                homeButtonRelevance = False
+                                changedButtonRelevance = False
 
-                            Try
+                                slideHasSmartElements = True
 
-                                slideCoordInfo = New clsPPTShapes
-                                slideCoordInfo.pptSlide = currentSlide
+                                Try
 
-                                With currentSlide
+                                    slideCoordInfo = New clsPPTShapes
+                                    slideCoordInfo.pptSlide = currentSlide
 
-                                    ' currentTimeStamp setzen 
-                                    If .Tags.Item("CRD").Length > 0 Then
-                                        currentTimestamp = CDate(.Tags.Item("CRD"))
+                                    With currentSlide
+
+                                        ' currentTimeStamp setzen 
+                                        If .Tags.Item("CRD").Length > 0 Then
+                                            currentTimestamp = CDate(.Tags.Item("CRD"))
+                                        End If
+
+                                        If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
+                                            Dim tmpSD As String = .Tags.Item("CALL")
+                                            Dim tmpED As String = .Tags.Item("CALR")
+                                            slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                                        End If
+
+                                        If .Tags.Item("SOC").Length > 0 Then
+                                            StartofCalendar = CDate(.Tags.Item("SOC"))
+                                        End If
+
+
+
+                                    End With
+
+                                Catch ex As Exception
+                                    slideCoordInfo = Nothing
+                                End Try
+
+
+                                Call buildSmartSlideLists()
+
+                                ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                                initialHomeButtonRelevance = homeButtonRelevance
+                                initialChangedButtonRelevance = changedButtonRelevance
+                                If searchPane.Visible Then
+
+                                    'Call clearSearchPane(Nothing)
+                                    If slideHasSmartElements Then
+
+                                        ucSearchView.fülltListbox()
+
                                     End If
-
-                                    If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-                                        Dim tmpSD As String = .Tags.Item("CALL")
-                                        Dim tmpED As String = .Tags.Item("CALR")
-                                        slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-                                    End If
-
-                                    If .Tags.Item("SOC").Length > 0 Then
-                                        StartofCalendar = CDate(.Tags.Item("SOC"))
-                                    End If
-
-
-
-                                End With
-
-                            Catch ex As Exception
-                                slideCoordInfo = Nothing
-                            End Try
-
-
-                            Call buildSmartSlideLists()
-
-                            ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-                            initialHomeButtonRelevance = homeButtonRelevance
-                            initialChangedButtonRelevance = changedButtonRelevance
-                            If searchPane.Visible Then
-                                If slideHasSmartElements Then
-
-                                    ucSearchView.cathegoryList.SelectedItem = "Name"
-
                                 End If
+
+                            Else
+                                Call MsgBox(msg)
                             End If
 
-                        Else
-                            Call MsgBox(msg)
                         End If
+                    Catch ex As Exception
 
+                    End Try
+                Else
+                    slideHasSmartElements = False
+                    ' Listen löschen
+                    smartSlideLists = New clsSmartSlideListen
+
+                    If searchPane.Visible Then
+                        Call clearSearchPane(Nothing)
                     End If
-                Catch ex As Exception
 
-                End Try
-            Else
-                slideHasSmartElements = False
-                ' Listen löschen
-                smartSlideLists = New clsSmartSlideListen
 
-                If searchPane.Visible Then
-                    Call clearSearchPane(Nothing)
                 End If
 
 
+            Else
+                ' nichts tun, das heisst auch nichts verändern ...
             End If
-
-
-        Else
-            ' nichts tun, das heisst auch nichts verändern ...
-        End If
 
     End Sub
 
@@ -4813,7 +4821,7 @@ Module Module1
 
                 End If
 
-                
+
                 ' jetzt wird entscheiden , ob eine Verbindungslinie gezeichnet wird 
                 ' bei Phasen wird überhaupt keine Verbindungslinie gezeichnet , hier wird der Unterschied durch oben / unten klar 
 
@@ -5199,7 +5207,7 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub clearSearchPane(ByVal tmpShape As PowerPoint.Shape, Optional ByVal isMovedShape As Boolean = False)
 
-        If IsNothing(tmpShape) And Not slideHasSmartElements Then
+        If IsNothing(tmpShape) Then
             With ucSearchView
                 .cathegoryList.SelectedItem = " "
                 .shwOhneLight.Checked = False

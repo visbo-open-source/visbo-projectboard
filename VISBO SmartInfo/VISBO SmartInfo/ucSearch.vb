@@ -310,26 +310,26 @@ Public Class ucSearch
             cathegoryList.Items.Add("Cost")
             cathegoryList.Items.Add("Changed Dates")
 
-            If slideHasSmartElements Then
-                cathegoryList.SelectedItem = "Name"
-            End If
+            'If slideHasSmartElements Then
+            '    cathegoryList.SelectedItem = "Name"
+            'End If
         Else
-            With Me
-                .Label1.Text = "Suchergebnisse:"
-                .Label2.Text = "Elemente:"
-            End With
-            cathegoryList.Items.Add("Name")
-            cathegoryList.Items.Add("Verantwortlich")
-            cathegoryList.Items.Add("Lieferumfänge")
-            cathegoryList.Items.Add("Original Name")
-            cathegoryList.Items.Add("Ressourcen")
-            cathegoryList.Items.Add("Abkürzung")
-            cathegoryList.Items.Add("Kosten")
-            cathegoryList.Items.Add("Termin-Änderungen")
+        With Me
+            .Label1.Text = "Suchergebnisse:"
+            .Label2.Text = "Elemente:"
+        End With
+        cathegoryList.Items.Add("Name")
+        cathegoryList.Items.Add("Verantwortlich")
+        cathegoryList.Items.Add("Lieferumfänge")
+        cathegoryList.Items.Add("Original Name")
+        cathegoryList.Items.Add("Ressourcen")
+        cathegoryList.Items.Add("Abkürzung")
+        cathegoryList.Items.Add("Kosten")
+        cathegoryList.Items.Add("Termin-Änderungen")
 
-            If slideHasSmartElements Then
-                cathegoryList.SelectedItem = "Name"
-            End If
+        'If slideHasSmartElements Then
+        '    cathegoryList.SelectedItem = "Name"
+        'End If
         End If
 
         'Call fülltListbox()
@@ -501,6 +501,8 @@ Public Class ucSearch
                 selListboxNames.Items.Clear()
                 shpNameSav.Clear()
 
+                Dim selListboxEle As String = ""
+
                 'neue Elemente aus Selection in Liste bringen
                 For Each selEleShpName In tmpCollection
 
@@ -509,12 +511,11 @@ Public Class ucSearch
                     Dim bln As String = curShape.Tags.Item("BLN")
                     bln = bestimmeElemText(curShape, False, False)
                     Dim pname As String = getPVnameFromShpName(selEleShpName)
-                    Dim selListboxEle As String = pname & "  -  " & bln
-
-                    selListboxNames.Items.Add(selListboxEle)
-
+                    selListboxEle = pname & "  -  " & bln
                     ' merken der Zuordnung zwischen angezeigtem Namen und ShapeNamen
                     shpNameSav.Add(selListboxEle, selEleShpName)
+
+                    selListboxNames.Items.Add(selListboxEle)
 
                 Next
 
@@ -588,6 +589,14 @@ Public Class ucSearch
         Dim curShape As PowerPoint.Shape = currentSlide.Shapes(ShpName)
 
         Call aktualisiereInfoPane(curShape, False)
+
+    End Sub
+
+    Private Sub listboxNames_SelectedValueChanged(sender As Object, e As EventArgs) Handles listboxNames.SelectedValueChanged
+
+    End Sub
+
+    Private Sub selListboxNames_SelectedValueChanged(sender As Object, e As EventArgs) Handles selListboxNames.SelectedValueChanged
 
     End Sub
 End Class
