@@ -4688,8 +4688,13 @@ Module Module1
                     tmpShape.Tags.Add("DIMF", oldValue.ToString("#0.#"))
 
                     tmpShape.Glow.Radius = 0
+
                     tmpShape.Fill.Transparency = 0.8
                     tmpShape.Fill.Solid()
+
+                    tmpShape.Line.Transparency = 0.8
+
+
 
                 End If
             End If
@@ -5037,6 +5042,9 @@ Module Module1
                     tmpShape.Tags.Delete("DIMF")
                     ' innerhalb der if .. Clause aufrufen
                     tmpShape.Fill.Transparency = tValue
+
+
+                    tmpShape.Line.Transparency = tValue
                 End If
 
 

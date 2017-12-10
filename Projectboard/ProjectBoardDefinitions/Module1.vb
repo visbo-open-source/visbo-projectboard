@@ -330,6 +330,8 @@ Public Module Module1
         Abkuerzung = 8
         Verantwortlich = 9
         percentDone = 10
+        TrafficLight = 11
+        TLExplanation = 12
     End Enum
 
 

@@ -12420,7 +12420,7 @@ Public Module awinGeneralModules
                                 fehler = True
 
                                 If awinSettings.englishLanguage Then
-                                    msgtxt = "Error reading planning holidays: Please check die calendar in this file ..."
+                                    msgtxt = "Error reading planning holidays: Please check the calendar in this file ..."
                                 Else
                                     msgtxt = "Fehler beim Lesen der Urlaubsplanung: Bitte prüfen Sie die Korrektheit des Kalenders ..."
                                 End If
@@ -15264,6 +15264,7 @@ Public Module awinGeneralModules
         Dim nameSopTyp As String = " "
         Dim nameProduktlinie As String = ""
         Dim defaultBU As String = ""
+        
 
         Dim startDate As Date, endDate As Date
         Dim startoffset As Long, duration As Long
@@ -15317,13 +15318,15 @@ Public Module awinGeneralModules
         Dim colDescription As Integer = -1
         Dim colVerantwortlich As Integer = -1
         Dim colPercentDone As Integer = -1
+        Dim colTrafficLight As Integer = -1
+        Dim colTLExplanation As Integer = -1
 
         Dim pDescription As String = ""
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(10) As String
+        Dim suchstr(12) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -15335,6 +15338,8 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
         suchstr(ptPlanNamen.Verantwortlich) = "Responsible"
         suchstr(ptPlanNamen.percentDone) = "%-Done"
+        suchstr(ptPlanNamen.TrafficLight) = "traffic light"
+        suchstr(ptPlanNamen.TLExplanation) = "Explanation"
 
         zeile = 2
         spalte = 5
@@ -15425,6 +15430,18 @@ Public Module awinGeneralModules
 
         End Try
 
+        Try
+            colTrafficLight = firstZeile.Find(What:=suchstr(ptPlanNamen.TrafficLight), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            colTLExplanation = firstZeile.Find(What:=suchstr(ptPlanNamen.TLExplanation), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
         With aktivesSheet
 
             lastRow = System.Math.Max(CType(.Cells(40000, colName), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row, _
@@ -15489,6 +15506,8 @@ Public Module awinGeneralModules
                 CType(.Cells(1, colProtocol + 9), Excel.Range).Value = "PT Klasse"
                 CType(.Cells(1, colProtocol + 10), Excel.Range).Value = "Verantwortlich"
                 CType(.Cells(1, colProtocol + 11), Excel.Range).Value = "%-Done"
+                CType(.Cells(1, colProtocol + 12), Excel.Range).Value = "Ampel"
+                CType(.Cells(1, colProtocol + 13), Excel.Range).Value = "Explanation"
             End If
 
             ' wird immer geschrieben 
@@ -15706,6 +15725,31 @@ Public Module awinGeneralModules
 
                         End Try
 
+                        Dim ampel As Integer = 0
+                        Dim ampelExplanation As String = ""
+
+                        ' wenn eine Ampel Bewertung für das Projekt abgegeben wurde 
+                        If colTrafficLight > 0 Then
+                            Try
+                                ampel = CInt(CType(.Cells(zeile, colTrafficLight), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                hproj.ampelStatus = ampel
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                        If colTLExplanation > 0 Then
+                            Try
+                                ampelExplanation = CInt(CType(.Cells(zeile, colTLExplanation), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                hproj.ampelErlaeuterung = ampelExplanation
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                        ' jetzt die Projekt-Ampel ggf setzen 
+
+
                         Dim itemStartDate As Date
                         Dim itemEndDate As Date
                         Dim ok As Boolean = True
@@ -15730,7 +15774,8 @@ Public Module awinGeneralModules
                             logMessage = ""
                             verantwortlich = ""
                             percentDone = 0.0
-
+                            ampel = 0
+                            ampelExplanation = ""
 
                             Dim indentLevel As Integer
 
@@ -15919,6 +15964,24 @@ Public Module awinGeneralModules
                                     End Try
                                 End If
 
+                                ' jetzt Ampel-Farbe  auslesen 
+                                If colTrafficLight > 0 Then
+                                    Try
+                                        ampel = CInt(CType(.Cells(curZeile, colTrafficLight), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        ampel = 0
+                                    End Try
+                                End If
+
+                                ' jetzt Ampel-Erläuterung  auslesen 
+                                If colTLExplanation > 0 Then
+                                    Try
+                                        ampelExplanation = CStr(CType(.Cells(curZeile, colTLExplanation), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        ampelExplanation = ""
+                                    End Try
+                                End If
+
                                 '
                                 ' jetzt muss protokolliert werden 
                                 Dim oLevel As Integer
@@ -15936,6 +15999,10 @@ Public Module awinGeneralModules
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 4), Excel.Range).Value = txtAbbrev
                                     ' %-Done
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 11), Excel.Range).Value = percentDone.ToString
+                                    ' Ampel 
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 12), Excel.Range).Value = ampel.ToString
+                                    ' Erläuterung 
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 13), Excel.Range).Value = ampelExplanation
                                 End If
 
 
@@ -16098,6 +16165,17 @@ Public Module awinGeneralModules
                                         ' percentDone eintragen 
                                         cphase.percentDone = percentDone
 
+                                        ' ampel eintragen 
+                                        If ampel > 0 And ampel <= 3 Then
+                                            cphase.ampelStatus = ampel
+                                        End If
+
+                                        ' ampel Erläuterung eintragen 
+                                        If ampelExplanation <> "" Then
+                                            cphase.ampelErlaeuterung = ampelExplanation
+                                        End If
+
+
                                         ' der Aufbau der Hierarchie erfolgt in addphase
                                         hproj.AddPhase(cphase, origName:=origItem.Trim, _
                                                        parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
@@ -16154,8 +16232,7 @@ Public Module awinGeneralModules
 
                                     Try
 
-                                        Dim bewertungsAmpel As Integer = 0
-                                        Dim explanation As String = ""
+                                       
 
                                         ' hole die Parentphase
                                         cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
@@ -16166,9 +16243,9 @@ Public Module awinGeneralModules
                                         ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
                                         With cbewertung
                                             '.bewerterName = resultVerantwortlich
-                                            .colorIndex = bewertungsAmpel
+                                            .colorIndex = ampel
                                             .datum = Date.Now
-                                            .description = explanation
+                                            .description = ampelExplanation
                                         End With
 
 
