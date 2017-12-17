@@ -5136,8 +5136,9 @@ Public Module Module1
 
     Sub massEditZeileEinfügen(ByVal controlID As String)
 
-
+        Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim currentCell As Excel.Range
+        Dim currentCellPlus1 As Excel.Range
         appInstance.EnableEvents = False
 
         Try
@@ -5155,7 +5156,8 @@ Public Module Module1
             Dim columnRC As Integer = visboZustaende.meColRC
 
             Dim hoehe As Double = CDbl(currentCell.Height)
-            currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+            currentCellPlus1 = CType(ws.Cells(currentCell.Row + 1, currentCell.Column), Excel.Range)
+            currentCellPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
             Dim zeile As Integer = currentCell.Row
 
             ' Blattschutz aufheben ... 
@@ -5178,13 +5180,13 @@ Public Module Module1
 
 
                 Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
+                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnEndData - 1)), Excel.Range)
                 copySource.Copy(Destination:=copyDestination)
 
-                CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
+                CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
 
                 For c As Integer = columnStartData - 3 To columnEndData + 1
-                    CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
+                    CType(.Cells(zeile + 1, c), Excel.Range).Value = Nothing
                 Next
 
                 ' jetzt wieder ausblenden ... 
@@ -5196,9 +5198,9 @@ Public Module Module1
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
+            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range).Select()
 
-            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range)
+            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
 
                 ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
 

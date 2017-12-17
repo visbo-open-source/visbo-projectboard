@@ -487,7 +487,13 @@ Public Class Tabelle2
                                     ' aktuelle Rolle immer noch ausgewählt, muss aber nicht eingefügt werden, sondern nur alle anderen
                                 Else
                                     ' Zeile im MassenEdit-Tabelle einfügen und Namen einfügen
-                                    Call massEditZeileEinfügen("")
+                                    ' es soll nur dann eine Zeile eingefügt werden, wenn bereits etwas für Rolle/Kostenart eingetragen ist 
+                                    If i > 1 Or rcName <> "" Then
+                                        Call massEditZeileEinfügen("")
+                                        ' da in massEdit jetzt in der Zeile danach eins eingefügt wird, muss hier die zeile um eins erhöht werden ...
+                                        zeile = zeile + 1
+                                    End If
+                                    
                                     Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(i))
 
                                     If meWS.ProtectContents Then
