@@ -3994,7 +3994,8 @@ Public Module Module1
                         If .Tags.Item("PD").Length > 0 Then
                             .Tags.Delete("PD")
                         End If
-                        .Tags.Add("PD", percentDone.ToString("0#."))
+                        Dim tmpValue As Double = 100 * percentDone
+                        .Tags.Add("PD", tmpValue.ToString("0#."))
                     End If
 
                 End If

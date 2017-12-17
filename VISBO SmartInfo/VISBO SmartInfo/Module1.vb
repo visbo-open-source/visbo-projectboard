@@ -4805,7 +4805,7 @@ Module Module1
                         Dim bln As String = origShape.Tags.Item("BLN")
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
-                        ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                        ' jetzt müssen die Tags-Informationen der Phase gesetzt werden 
                         Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
                                                   ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
                                                   ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
@@ -5507,7 +5507,15 @@ Module Module1
         Dim tmpText As String = ""
 
         If curShape.Tags.Item("PD").Length > 0 Then
-            tmpText = tmpText & (CDbl(curShape.Tags.Item("PD")) * 100).ToString & " %"
+
+            ' Änderung tk, wenn PercentDone als 50, etc.  eingetragen worden ist ..
+            If CDbl(curShape.Tags.Item("PD")) > 1.0 Then
+                tmpText = tmpText & (CDbl(curShape.Tags.Item("PD"))).ToString & " %"
+            Else
+                tmpText = tmpText & (CDbl(curShape.Tags.Item("PD")) * 100).ToString & " %"
+            End If
+
+
         End If
 
         bestimmeElemPD = tmpText

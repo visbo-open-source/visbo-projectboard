@@ -3652,8 +3652,8 @@ Public Module awinGeneralModules
                                 Catch e As OverflowException
                                     Call MsgBox(hpercent(1) & " is outside the range of a Double.")
                                 End Try
-
-                                cphase.percentDone = vPercentDone
+                                ' Änderung tk: percentDone sollte immer Werte zwischen 0..1 haben 
+                                cphase.percentDone = vPercentDone / 100
 
                             End If
 
@@ -8325,7 +8325,7 @@ Public Module awinGeneralModules
                                             ' das Feld %Done wird hier ausgelesen ...
                                             Try
                                                 ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
-                                                percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double) * 100
+                                                percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double)
                                                 If IsNothing(percentDone) Then
                                                     percentDone = 0.0
                                                 End If
