@@ -1080,10 +1080,7 @@ Module Module1
                     If propertiesPane.Visible Then
                         Call aktualisiereInfoPane(Nothing)
                     End If
-                    ' ur: wegen Pane
-                    ' ''If formIsShown Then
-                    ' ''    Call aktualisiereInfoFrm(Nothing)
-                    ' ''End If
+                    
 
 
                 End If
@@ -4682,8 +4679,13 @@ Module Module1
                     tmpShape.Tags.Add("DIMF", oldValue.ToString("#0.#"))
 
                     tmpShape.Glow.Radius = 0
+
                     tmpShape.Fill.Transparency = 0.8
                     tmpShape.Fill.Solid()
+
+                    tmpShape.Line.Transparency = 0.8
+
+
 
                 End If
             End If
@@ -4789,7 +4791,7 @@ Module Module1
                         Dim bln As String = origShape.Tags.Item("BLN")
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
-                        ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
+                        ' jetzt müssen die Tags-Informationen der Phase gesetzt werden 
                         Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
                                                   ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
                                                   ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
@@ -5031,6 +5033,9 @@ Module Module1
                     tmpShape.Tags.Delete("DIMF")
                     ' innerhalb der if .. Clause aufrufen
                     tmpShape.Fill.Transparency = tValue
+
+
+                    tmpShape.Line.Transparency = tValue
                 End If
 
 
@@ -5043,6 +5048,100 @@ Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' wird benötigt, um eine Smart Powerpoint Slide von allen smart Tags zu befreien ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub stripOffAllSmartInfo()
+
+        If MsgBox("Wirklich alle Smart-Info löschen ? ", MsgBoxStyle.OkCancel) = MsgBoxResult.Ok Then
+
+            Dim tagNames(35) As String
+            tagNames(0) = "BC"
+            tagNames(1) = "CN"
+            tagNames(2) = "SN"
+            tagNames(3) = "ON"
+            tagNames(4) = "BSN"
+            tagNames(5) = "BLN"
+            tagNames(6) = "SD"
+            tagNames(7) = "ED"
+            tagNames(8) = "AC"
+            tagNames(9) = "AE"
+            tagNames(10) = "LU"
+            tagNames(11) = "MVD"
+            tagNames(21) = "MVE"
+            tagNames(22) = "CMT"
+            tagNames(23) = "VE"
+            tagNames(24) = "PD"
+            tagNames(25) = "CHON"
+            tagNames(26) = "PRPF"
+            tagNames(27) = "PNM"
+            tagNames(28) = "VNM"
+            tagNames(29) = "CHT"
+            tagNames(30) = "ASW"
+            tagNames(31) = "COL"
+            tagNames(31) = "Q1"
+            tagNames(32) = "Q2"
+            tagNames(33) = "BID"
+            tagNames(34) = "DID"
+            tagNames(35) = "NIDS"
+
+            ' Smartslide Info löschen ..
+
+            With currentSlide
+                If .Tags.Item("DBURL").Length > 0 Then
+                    .Tags.Delete("DBURL")
+                End If
+
+                If .Tags.Item("DBNAME").Length > 0 Then
+                    .Tags.Delete("DBNAME")
+                End If
+
+                If .Tags.Item("SMART").Length > 0 Then
+                    .Tags.Delete("SMART")
+                End If
+
+                If .Tags.Item("SOC").Length > 0 Then
+                    .Tags.Delete("SOC")
+                End If
+
+                If .Tags.Item("CRD").Length > 0 Then
+                    .Tags.Delete("CRD")
+                End If
+            End With
+
+            Try
+                For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+
+                    If isRelevantShape(tmpShape) Then
+
+                        Dim anzTags As Integer = tmpShape.Tags.Count
+
+                        For i As Integer = 0 To 35
+
+                            If tmpShape.Tags.Item(tagNames(i)).Length > 0 Then
+                                tmpShape.Tags.Delete(tagNames(i))
+                            End If
+
+                        Next
+
+
+                    End If
+
+                Next
+
+                Call MsgBox("ok, alle SmartInfo gelöscht ...")
+
+            Catch ex As Exception
+
+            End Try
+
+
+        Else ' nichts tun 
+        End If
+
+
+    End Sub
 
     ''' <summary>
     ''' löscht alle Shadow Shapes: ein Shadow Element ist das zu einem bestimmten Element gehörende  timestamp Element 
@@ -5394,7 +5493,15 @@ Module Module1
         Dim tmpText As String = ""
 
         If curShape.Tags.Item("PD").Length > 0 Then
-            tmpText = tmpText & (CDbl(curShape.Tags.Item("PD")) * 100).ToString & " %"
+
+            ' Änderung tk, wenn PercentDone als 50, etc.  eingetragen worden ist ..
+            If CDbl(curShape.Tags.Item("PD")) > 1.0 Then
+                tmpText = tmpText & (CDbl(curShape.Tags.Item("PD"))).ToString & " %"
+            Else
+                tmpText = tmpText & (CDbl(curShape.Tags.Item("PD")) * 100).ToString & " %"
+            End If
+
+
         End If
 
         bestimmeElemPD = tmpText

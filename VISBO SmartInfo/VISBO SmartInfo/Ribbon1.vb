@@ -50,6 +50,9 @@ Public Class Ribbon1
 
         Dim msg As String = ""
 
+        ' tk 11.1217 nur aktiv machen, wenn man Slides zur Weitergabe komplett strippen möchte ... um zu verhindern, dass die Re-Engineering machen ...
+        'Call stripOffAllSmartInfo()
+
         If userIsEntitled(msg) Then
             Dim settingsfrm As New frmSettings
             With settingsfrm

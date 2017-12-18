@@ -57,7 +57,8 @@ Public Class clsPhase
                 If value <= 1.0 Then
                     _percentDone = value
                 Else
-                    _percentDone = 1.0 ' kann keine größeren Werte als 1 annehmen 
+                    ' dann müssen die PErcentDone Werte erst noch normiert werden 
+                    _percentDone = value / 100
                 End If
 
             Else
@@ -573,7 +574,7 @@ Public Class clsPhase
             End If
 
             If Me.bewertungsCount >= 1 Then
-                Me.getBewertung(1).description = value
+                Me.getBewertung(Me.bewertungsCount).description = value
             Else
                 Dim tmpB As New clsBewertung
                 With tmpB

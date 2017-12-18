@@ -78,6 +78,7 @@ Public Class ThisAddIn
                 propertiesPane = Me.CustomTaskPanes.Add(ucPropertiesView, "EIGENSCHAFTEN")
             End If
 
+            ' tk, try , whether selection Fehler ist immer noch drin 
             With propertiesPane
                 .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
                 .Height = 500

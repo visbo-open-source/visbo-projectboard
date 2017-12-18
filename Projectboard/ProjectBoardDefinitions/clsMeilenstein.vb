@@ -40,7 +40,7 @@ Public Class clsMeilenstein
                 If value <= 1.0 Then
                     _percentDone = value
                 Else
-                    _percentDone = 1.0 ' kann keine größeren Werte als 1 annehmen 
+                    _percentDone = value / 100  ' muss erst noch normiert werden, kann keine größeren Werte als 1 annehmen 
                 End If
 
             Else

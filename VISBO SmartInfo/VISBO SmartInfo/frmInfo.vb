@@ -178,89 +178,6 @@ Public Class frmInfo
         setALuTvText = tmpResult
     End Function
 
-    Private Sub showAbbrev_CheckedChanged(sender As Object, e As EventArgs)
-
-        showShortName = showAbbrev.Checked
-
-        If dontFire Then
-            Exit Sub
-        End If
-
-        Try
-            If showAbbrev.Checked Then
-
-                dontFire = True
-                Me.showOrginalName.Checked = False
-                showOrigName = False
-                ' Text neu berechnen 
-                If Not IsNothing(selectedPlanShapes) Then
-                    If selectedPlanShapes.Count = 1 Then
-                        Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                        Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
-                        ' wird im Formular immer lang dargestellt 
-                        Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
-                    End If
-                End If
-
-
-
-            ElseIf Not IsNothing(selectedPlanShapes) Then
-
-                If selectedPlanShapes.Count = 1 Then
-                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, showOrginalName.Checked)
-                    ' wird im Formular immer lang dargestellt 
-                    Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
-                End If
-
-            End If
-        Catch ex As Exception
-
-        End Try
-
-
-        dontFire = False
-
-    End Sub
-
-    Private Sub showOrginalName_CheckedChanged(sender As Object, e As EventArgs)
-
-        showOrigName = showOrginalName.Checked
-
-        If dontFire Then
-            Exit Sub
-        End If
-
-        Try
-            If showOrginalName.Checked Then
-
-                dontFire = True
-                Me.showAbbrev.Checked = False
-                showShortName = False
-
-                ' Text neu berechnen 
-                If Not IsNothing(selectedPlanShapes) Then
-                    If selectedPlanShapes.Count = 1 Then
-                        Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                        Me.elemName.Text = bestimmeElemText(tmpShape, False, True)
-                    End If
-                End If
-
-
-            ElseIf Not IsNothing(selectedPlanShapes) Then
-
-                If selectedPlanShapes.Count = 1 Then
-                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                    Me.elemName.Text = bestimmeElemText(tmpShape, False, False)
-                End If
-
-            End If
-        Catch ex As Exception
-
-        End Try
-
-        dontFire = False
-    End Sub
 
 
     ''' <summary>
@@ -712,5 +629,88 @@ Public Class frmInfo
         Catch ex As Exception
 
         End Try
+    End Sub
+
+    Private Sub showAbbrev_CheckedChanged_1(sender As Object, e As EventArgs) Handles showAbbrev.CheckedChanged
+
+        showShortName = showAbbrev.Checked
+
+        If dontFire Then
+            Exit Sub
+        End If
+
+        Try
+            If showAbbrev.Checked Then
+
+                dontFire = True
+                Me.showOrginalName.Checked = False
+                showOrigName = False
+                ' Text neu berechnen 
+                If Not IsNothing(selectedPlanShapes) Then
+                    If selectedPlanShapes.Count = 1 Then
+                        Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                        Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
+                        ' wird im Formular immer lang dargestellt 
+                        Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
+                    End If
+                End If
+
+
+
+            ElseIf Not IsNothing(selectedPlanShapes) Then
+
+                If selectedPlanShapes.Count = 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, showOrginalName.Checked)
+                    ' wird im Formular immer lang dargestellt 
+                    Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+        dontFire = False
+
+    End Sub
+
+    Private Sub showOrginalName_CheckedChanged_1(sender As Object, e As EventArgs) Handles showOrginalName.CheckedChanged
+        showOrigName = showOrginalName.Checked
+
+        If dontFire Then
+            Exit Sub
+        End If
+
+        Try
+            If showOrginalName.Checked Then
+
+                dontFire = True
+                Me.showAbbrev.Checked = False
+                showShortName = False
+
+                ' Text neu berechnen 
+                If Not IsNothing(selectedPlanShapes) Then
+                    If selectedPlanShapes.Count = 1 Then
+                        Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                        Me.elemName.Text = bestimmeElemText(tmpShape, False, True)
+                    End If
+                End If
+
+
+            ElseIf Not IsNothing(selectedPlanShapes) Then
+
+                If selectedPlanShapes.Count = 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, False, False)
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        dontFire = False
     End Sub
 End Class
