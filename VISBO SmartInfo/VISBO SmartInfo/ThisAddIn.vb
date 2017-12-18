@@ -103,4 +103,5 @@ Public Class ThisAddIn
         End If
 
     End Sub
+
 End Class

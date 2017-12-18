@@ -1016,20 +1016,6 @@ Module Module1
                 '' Anfang ... das war vorher innerhalb der next Schleife .. 
                 ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
                 If relevantShapeNames.Count >= 1 Then
-                    ''''???
-                    '' '' '' '' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
-                    ' '' '' ''If Not IsNothing(propertiesPane) And Not propertiesPane.Visible Then
-                    ' '' '' ''    propertiesPane.Visible = True
-                    ' '' '' ''End If
-
-
-
-                    ' ur: wegen Pane
-                    ' ''If IsNothing(infoFrm) And Not formIsShown Then
-                    ' ''    infoFrm = New frmInfo
-                    ' ''    formIsShown = True
-                    ' ''    infoFrm.Show()
-                    ' ''End If
 
                     ReDim arrayOfNames(relevantShapeNames.Count - 1)
 
@@ -1044,10 +1030,7 @@ Module Module1
                     If propertiesPane.Visible Then
                         Call aktualisiereInfoPane(Nothing)
                     End If
-                    ' ur: wegen Pane
-                    ' ''If formIsShown Then
-                    ' ''    Call aktualisiereInfoFrm(Nothing)
-                    ' ''End If
+                  
                 End If
                 '' Ende ...
 
@@ -1075,7 +1058,8 @@ Module Module1
                     If Not IsNothing(propertiesPane) Then
                         Call aktualisiereInfoPane(tmpShape, elemWasMoved)
                     End If
-                    ' ur: wegen Pane
+
+                    ' ur: hier wird das Annotate-Fenster aktualisiert
                     If formIsShown Then
                         Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
                     End If
@@ -1086,9 +1070,10 @@ Module Module1
                     Call ensureVisibilityOfSelection(selectedPlanShapes)
 
                     ' tk 7.12.17, auskommentiert, weil mit Fehler auf Office 2010
-                    'If Not IsNothing(propertiesPane) Then
-                    '    propertiesPane.Visible = True
-                    'End If
+                    ' ur 11.12.17 wieder hinzugenommen zum Test, da anzeigen der Panes verändert
+                    If Not IsNothing(propertiesPane) Then
+                        propertiesPane.Visible = True
+                    End If
                 Else
 
                     Call checkHomeChangeBtnEnablement()
@@ -1099,6 +1084,7 @@ Module Module1
                     ' ''If formIsShown Then
                     ' ''    Call aktualisiereInfoFrm(Nothing)
                     ' ''End If
+
 
                 End If
 

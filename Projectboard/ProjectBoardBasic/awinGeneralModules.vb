@@ -12382,8 +12382,29 @@ Public Module awinGeneralModules
                             monthDays.Clear()
                             anzDays = 0
 
-                            lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
                             lastSpalte = CType(currentWS.Cells(4, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                            lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                            ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
+                            ' -------------------------------------
+                            Dim rng As Range
+                            Dim rngEnd As Range
+
+                            rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
+
+                            If rng.MergeCells Then
+
+                                rng = rng.MergeArea
+                                rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
+
+                                ' dann ist die lastZeile neu zu besetzen
+                                lastZeile = rngEnd.Row
+                            End If
+
+                            ' nun hat die Variable lastZeile sicher den richtigen Wert
+                            ' --------------------------------------
+
 
                             Dim vglColor As Integer = noColor         ' keine Farbe
                             Dim i As Integer = firstUrlspalte
@@ -12451,6 +12472,7 @@ Public Module awinGeneralModules
                             Else
 
                                 For iZ = 5 To lastZeile
+
 
                                     rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
                                     If rolename <> "" Then
