@@ -16789,7 +16789,7 @@ Public Module awinGeneralModules
         ' bestimme die Farbe - sie steht im Excel Ausgabe File in der Zeile 2, Spalte 1 
         ws = CType(appInstance.ActiveWorkbook.Worksheets("Export VISBO Projekttafel"), Excel.Worksheet)
 
-        Dim suchstr(8) As String
+        Dim suchstr(12) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -16799,8 +16799,22 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.Protocol) = "Übernommen als"
         suchstr(ptPlanNamen.Dauer) = "Duration"
         suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
+        suchstr(ptPlanNamen.Verantwortlich) = "Responsible"
+        suchstr(ptPlanNamen.percentDone) = "%-Done"
+        suchstr(ptPlanNamen.TrafficLight) = "traffic light"
+        suchstr(ptPlanNamen.TLExplanation) = "Explanation"
 
         ' jetzt werden die Spaltenüberschriften geschrieben 
+        Dim üColor As Long = CLng(CType(ws.Cells(1, 1), Excel.Range).Interior.Color)
+
+        CType(ws.Rows(1), Excel.Range).Interior.Color = üColor
+        With CType(ws.Rows(1), Excel.Range).Borders(XlBordersIndex.xlEdgeBottom)
+            .LineStyle = XlLineStyle.xlContinuous
+            .ColorIndex = 1
+            .TintAndShade = 0
+            .Weight = XlBorderWeight.xlThick
+        End With
+
         Dim colName As Integer = 1
         CType(ws.Cells(1, colName), Excel.Range).Value = suchstr(ptPlanNamen.Name)
         Dim colStart As Integer = 2
@@ -16815,6 +16829,17 @@ Public Module awinGeneralModules
         CType(ws.Cells(1, colAppearance), Excel.Range).Value = suchstr(ptPlanNamen.Vorgangsklasse)
         Dim colAbbrev As Integer = 7
         CType(ws.Cells(1, colAbbrev), Excel.Range).Value = suchstr(ptPlanNamen.Abkuerzung)
+        Dim colRespons As Integer = 8
+        CType(ws.Cells(1, colRespons), Excel.Range).Value = suchstr(ptPlanNamen.Verantwortlich)
+        Dim colPercent As Integer = 9
+        CType(ws.Cells(1, colPercent), Excel.Range).Value = suchstr(ptPlanNamen.percentDone)
+        Dim colAmpel As Integer = 10
+        CType(ws.Cells(1, colAmpel), Excel.Range).Value = suchstr(ptPlanNamen.TrafficLight)
+        Dim colExplan As Integer = 11
+        CType(ws.Cells(1, colExplan), Excel.Range).Value = suchstr(ptPlanNamen.TLExplanation)
+
+       
+
 
         color = CLng(CType(ws.Cells(2, 1), Excel.Range).Interior.Color)
 
@@ -16837,7 +16862,7 @@ Public Module awinGeneralModules
             zeile = zeile + 1
             cmilestone = cphase.getMilestone(im)
             startdate = cmilestone.getDate
-            
+
             curName = cmilestone.name
 
             indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
@@ -16857,6 +16882,24 @@ Public Module awinGeneralModules
 
             CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
             CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
+
+            ' jetzt Responsible, percentDone, TrafficLight und Explanation schreiben, falls vorhanden
+            ' ur 18.12.17, den Wert für verantwortlich mitaufnehmen ...
+            Dim tmpVerantwortlich As String = cmilestone.verantwortlich
+            CType(ws.Cells(zeile, colRespons), Excel.Range).Value = tmpVerantwortlich
+
+            ' percentDone eintragen 
+            Dim tmpPercentDone As String = (cmilestone.percentDone * 100).ToString & " %"
+            CType(ws.Cells(zeile, colPercent), Excel.Range).Value = tmpPercentDone
+
+            ' TrafficLight eintragen 
+            Dim tmpAmpel As Integer = cmilestone.ampelStatus
+            CType(ws.Cells(zeile, colAmpel), Excel.Range).Value = tmpAmpel
+
+            ' Explanation eintragen 
+            Dim tmpExplan As String = cmilestone.ampelErlaeuterung
+            CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
 
         Next
 
@@ -16891,11 +16934,29 @@ Public Module awinGeneralModules
             CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
             CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
 
+            ' ur 18.12.17, den Wert für verantwortlich mitaufnehmen ...
+            Dim tmpVerantwortlich As String = cphase.verantwortlich
+            CType(ws.Cells(zeile, colRespons), Excel.Range).Value = tmpVerantwortlich
+
+            ' percentDone eintragen 
+            Dim tmpPercentDone As String = (cphase.percentDone * 100).ToString & " %"
+            CType(ws.Cells(zeile, colPercent), Excel.Range).Value = tmpPercentDone
+
+            ' ampel eintragen 
+            Dim tmpAmpel As Integer = cphase.ampelStatus
+            CType(ws.Cells(zeile, colAmpel), Excel.Range).Value = tmpAmpel
+
+            ' ampel Erläuterung eintragen 
+            Dim tmpExplan As String = cphase.ampelErlaeuterung
+            CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
+
+
             For im = 1 To cphase.countMilestones
                 zeile = zeile + 1
                 cmilestone = cphase.getMilestone(im)
                 startdate = cmilestone.getDate
-                
+
 
                 curName = cmilestone.name
                 indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
@@ -16915,6 +16976,24 @@ Public Module awinGeneralModules
 
                 CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
                 CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
+
+                ' jetzt Responsible, percentDone, TrafficLight und Explanation schreiben, falls vorhanden
+                ' ur 18.12.17, den Wert für verantwortlich mitaufnehmen ...
+                tmpVerantwortlich = cmilestone.verantwortlich
+                CType(ws.Cells(zeile, colRespons), Excel.Range).Value = tmpVerantwortlich
+
+                ' percentDone eintragen 
+                tmpPercentDone = (cmilestone.percentDone * 100).ToString & " %"
+                CType(ws.Cells(zeile, colPercent), Excel.Range).Value = tmpPercentDone
+
+                ' TrafficLight eintragen 
+                tmpAmpel = cmilestone.ampelStatus
+                CType(ws.Cells(zeile, colAmpel), Excel.Range).Value = tmpAmpel
+
+                ' Explanation eintragen 
+                tmpExplan = cmilestone.ampelErlaeuterung
+                CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
             Next
 
         Next
