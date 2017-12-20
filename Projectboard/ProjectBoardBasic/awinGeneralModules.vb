@@ -16808,12 +16808,18 @@ Public Module awinGeneralModules
         Dim üColor As Long = CLng(CType(ws.Cells(1, 1), Excel.Range).Interior.Color)
 
         CType(ws.Rows(1), Excel.Range).Interior.Color = üColor
-        With CType(ws.Rows(1), Excel.Range).Borders(XlBordersIndex.xlEdgeBottom)
-            .LineStyle = XlLineStyle.xlContinuous
-            .ColorIndex = 1
-            .TintAndShade = 0
-            .Weight = XlBorderWeight.xlThick
+        With CType(ws.Cells(1, 1), Excel.Range)
+            .Copy()
         End With
+        With CType(ws.Rows(1), Excel.Range)
+            .PasteSpecial(XlPasteType.xlPasteFormats, XlPasteSpecialOperation.xlPasteSpecialOperationNone, False, False)
+        End With
+        'With CType(ws.Rows(1), Excel.Range).Borders(XlBordersIndex.xlEdgeBottom)
+        '    .LineStyle = XlLineStyle.xlContinuous
+        '    .ColorIndex = 1
+        '    .TintAndShade = 0
+        '    .Weight = XlBorderWeight.xlThick
+        'End With
 
         Dim colName As Integer = 1
         CType(ws.Cells(1, colName), Excel.Range).Value = suchstr(ptPlanNamen.Name)
@@ -16838,7 +16844,7 @@ Public Module awinGeneralModules
         Dim colExplan As Integer = 11
         CType(ws.Cells(1, colExplan), Excel.Range).Value = suchstr(ptPlanNamen.TLExplanation)
 
-       
+
 
 
         color = CLng(CType(ws.Cells(2, 1), Excel.Range).Interior.Color)
