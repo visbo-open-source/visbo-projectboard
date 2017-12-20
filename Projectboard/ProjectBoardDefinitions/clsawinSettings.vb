@@ -174,6 +174,9 @@ Public Class clsawinSettings
     ' steuert, ob im Massen-Edit zu jedem Monat auch die Monats-Auslastung / freien Tage angezeigt werden sollen 
     Public Property meExtendedColumnsView As Boolean
 
+    ' tk, 28.11.17 steuert, ob bei Namen die Phasen-/Meilenstein Namen angegeben werden oder aber die Kategorien ..
+    Public Property considerCategories As Boolean
+
     ' die Farben und Fonts des Schutzes 
     Public Property protectedPermanentFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Italic)
     Public Property normalFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
@@ -208,6 +211,11 @@ Public Class clsawinSettings
     Public Property visboTaskClass As String
     Public Property visboAbbreviation As String
     Public Property visboAmpel As String
+    Public Property visboAmpelText As String
+    Public Property visbodeliverables As String
+    Public Property visbopercentDone As String
+    Public Property visboresponsible As String
+
 
     ' Settings für Einzelprojekt-Reports
     ' tk 7.2.16 ist überflüssig
@@ -305,13 +313,13 @@ Public Class clsawinSettings
 
         ' Settings für Einzel- und Multiprojekt Sichten 
         _mppShowAllIfOne = False
-        _mppShowMsDate = True
-        _mppShowMsName = True
-        _mppShowPhDate = True
-        _mppShowPhName = True
+        _mppShowMsDate = False
+        _mppShowMsName = False
+        _mppShowPhDate = False
+        _mppShowPhName = False
         _mppShowAmpel = False
         _mppShowProjectLine = True
-        _mppVertikalesRaster = False
+        _mppVertikalesRaster = True
         _mppShowLegend = False
         _mppFullyContained = False
         _mppSortiertDauer = False
@@ -334,6 +342,8 @@ Public Class clsawinSettings
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
         _meExtendedColumnsView = False
+
+        _considerCategories = True
 
 
         ' Settings für den Schutz von Projekten 

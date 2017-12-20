@@ -124,6 +124,42 @@ Partial Public NotInheritable Class MySettings
             Return CType(Me("VISBODebug"),Boolean)
         End Get
     End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel Text")>  _
+    Public ReadOnly Property VISBOAmpelText() As String
+        Get
+            Return CType(Me("VISBOAmpelText"),String)
+        End Get
+    End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Deliverables")>  _
+    Public ReadOnly Property VISBOdeliverables() As String
+        Get
+            Return CType(Me("VISBOdeliverables"),String)
+        End Get
+    End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Responsible")>  _
+    Public ReadOnly Property VISBOresponsible() As String
+        Get
+            Return CType(Me("VISBOresponsible"),String)
+        End Get
+    End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("% Work Complete")>  _
+    Public ReadOnly Property VISBOpercentDone() As String
+        Get
+            Return CType(Me("VISBOpercentDone"),String)
+        End Get
+    End Property
 End Class
 
 Namespace My

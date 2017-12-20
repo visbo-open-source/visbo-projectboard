@@ -966,6 +966,8 @@ Public Module awinGeneralModules
             DiagrammTypen(4) = "Ergebnis"
             DiagrammTypen(5) = "Meilenstein"
             DiagrammTypen(6) = "Meilenstein Trendanalyse"
+            DiagrammTypen(7) = "Phasen-Kategorie"
+            DiagrammTypen(8) = "Meilenstein-Kategorie"
 
 
             Try
@@ -3368,6 +3370,10 @@ Public Module awinGeneralModules
         Dim visbo_taskclass As MSProject.PjField = Nothing
         Dim visbo_abbrev As MSProject.PjField = Nothing
         Dim visbo_ampel As MSProject.PjField = Nothing
+        Dim visbo_ampeltext As MSProject.PjField = Nothing
+        Dim visbo_deliverables As MSProject.PjField = Nothing
+        Dim visbo_responsible As MSProject.PjField = Nothing
+        Dim visbo_percentDone As MSProject.PjField = Nothing
 
         ' Liste, die aufgebaut wird beim Einlesen der Tasks. Hier wird vermerkt, welche Task das Visbo-Flag mit YES und welche mit NO
         ' gesetzt hat d.h. berücksichtigt werden soll
@@ -3433,6 +3439,26 @@ Public Module awinGeneralModules
                     visbo_ampel = CType(prj.FieldNameToFieldConstant(awinSettings.visboAmpel, MSProject.PjFieldType.pjTask), MSProject.PjField)
                 Catch ex As Exception
                     visbo_ampel = 0
+                End Try
+                Try
+                    visbo_ampeltext = CType(prj.FieldNameToFieldConstant(awinSettings.visboAmpelText, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_ampeltext = 0
+                End Try
+                Try
+                    visbo_deliverables = CType(prj.FieldNameToFieldConstant(awinSettings.visbodeliverables, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_deliverables = 0
+                End Try
+                Try
+                    visbo_responsible = CType(prj.FieldNameToFieldConstant(awinSettings.visboresponsible, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_responsible = 0
+                End Try
+                Try
+                    visbo_percentDone = CType(prj.FieldNameToFieldConstant(awinSettings.visbopercentDone, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_percentDone = 0
                 End Try
 
                 If modus = "BHTC" Then
@@ -3598,6 +3624,7 @@ Public Module awinGeneralModules
 
                         With cphase
 
+                            Dim phBewertung As New clsBewertung
                             If Not istElemID(msTask.Name) Then
                                 .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
                             End If
@@ -3611,6 +3638,89 @@ Public Module awinGeneralModules
                                 visboFlagListe.Add(.nameID, hflag)
 
                             End If
+
+                            'percentDone, falls Customfiels visbo_percentDone definiert ist
+                            If visbo_percentDone <> 0 Then
+                                Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
+                                Dim hpercent() As String = Split(strPercentDone, "%", , )
+                                Dim vPercentDone As Double
+                                Try
+                                    vPercentDone = Convert.ToDouble(hpercent(0))
+
+                                Catch e As FormatException
+                                    vPercentDone = 0.0
+                                Catch e As OverflowException
+                                    Call MsgBox(hpercent(1) & " is outside the range of a Double.")
+                                End Try
+                                ' Änderung tk: percentDone sollte immer Werte zwischen 0..1 haben 
+                                cphase.percentDone = vPercentDone / 100
+
+                            End If
+
+
+                            ' Deliverables, falls Customfield visbo_delivaerables definiert ist
+                            Dim count As Integer = 0
+                            Dim hvDel() As String
+                            If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
+                                Dim vDeliverable As String = ""
+                                If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
+                                    vDeliverable = msTask.Notes
+                                    hvDel = Split(vDeliverable, vbCr, , )
+                                    count = hvDel.Length
+                                Else
+                                    vDeliverable = msTask.GetField(visbo_deliverables)
+                                    hvDel = Split(vDeliverable, ";", , )
+                                    count = hvDel.Length
+                                End If
+                                For iDel As Integer = 0 To count - 1
+                                    If Not cphase.containsDeliverable(hvDel(iDel)) Then
+                                        cphase.addDeliverable(hvDel(iDel))
+                                    End If
+                                Next iDel
+                               
+                            End If
+
+                            ' Responsible, falls Customfield visbo_responsible definiert ist
+                            If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
+                                Dim vResponsible As String = msTask.GetField(visbo_responsible)
+                                cphase.verantwortlich = vResponsible
+                            End If
+
+
+                            ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
+                            If visbo_ampeltext <> 0 Then
+                                Dim vAmpelText As String = ""
+                                If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
+                                    vAmpelText = msTask.Notes
+                                Else
+                                    vAmpelText = msTask.GetField(visbo_ampeltext)
+                                End If
+                                phBewertung.description = vAmpelText
+                            End If
+
+                            If visbo_ampel <> 0 Then
+
+                                Dim visboAmpel As String = msTask.GetField(visbo_ampel)
+
+                                Select Case visboAmpel
+
+                                    Case "none"
+                                        phBewertung.colorIndex = PTfarbe.none
+                                    Case "red"
+                                        phBewertung.colorIndex = PTfarbe.red
+                                    Case "green"
+                                        phBewertung.colorIndex = PTfarbe.green
+                                    Case "yellow"
+                                        phBewertung.colorIndex = PTfarbe.yellow
+                                    Case Else
+                                        phBewertung.colorIndex = PTfarbe.none
+
+                                End Select
+
+                            Else
+                                phBewertung.colorIndex = PTfarbe.none
+                            End If
+                            cphase.addBewertung(phBewertung)
 
                             ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                             Dim cphaseStartOffset As Long
@@ -3948,6 +4058,7 @@ Public Module awinGeneralModules
                             Else
                                 msDef.darstellungsKlasse = ""
                             End If
+                        
 
                             msDef.schwellWert = 0
                             msDef.UID = MilestoneDefinitions.Count + 1
@@ -3967,7 +4078,47 @@ Public Module awinGeneralModules
                             Dim msBewertung As New clsBewertung
                             cmilestone.setDate = CType(msTask.Start, Date)
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
-                            msBewertung.description = msTask.Notes
+
+                            ' Deliverables, falls Customfield visbo_delivaerables definiert ist
+                            Dim count As Integer = 0
+                            Dim hvDel() As String
+                            If visbo_deliverables <> 0 Then          ' VISBO Deliverables ist definiert
+                                Dim vDeliverable As String = ""
+                                If visbo_deliverables = MSProject.PjField.pjTaskIndicators Then
+                                    vDeliverable = msTask.Notes
+                                    hvDel = Split(vDeliverable, vbCr, , )
+                                    count = hvDel.Length
+                                Else
+                                    vDeliverable = msTask.GetField(visbo_deliverables)
+                                    hvDel = Split(vDeliverable, ";", , )
+                                    count = hvDel.Length
+                                End If
+                                For iDel As Integer = 0 To count - 1
+                                    If Not cmilestone.containsDeliverable(hvDel(iDel)) Then
+                                        cmilestone.addDeliverable(hvDel(iDel))
+                                    End If
+                                Next iDel
+
+                            End If
+
+                            ' Responsible, falls Customfield visbo_responsible definiert ist
+                            If visbo_responsible <> 0 Then          ' VISBO-Responsible ist definiert
+                                Dim vResponsible As String = msTask.GetField(visbo_responsible)
+                                cmilestone.verantwortlich = vResponsible
+                            End If
+
+
+                            ' Ampel-Erläuterung, falls Customfield visbo_ampeltext definiert ist
+                            If visbo_ampeltext <> 0 Then
+                                Dim vAmpelText As String = ""
+                                If visbo_ampeltext = MSProject.PjField.pjTaskIndicators Then
+                                    vAmpelText = msTask.Notes
+                                Else
+                                    vAmpelText = msTask.GetField(visbo_ampeltext)
+                                End If
+                                msBewertung.description = vAmpelText
+                            End If
+
                             If visbo_ampel <> 0 Then
 
                                 Dim visboAmpel As String = msTask.GetField(visbo_ampel)
@@ -7656,6 +7807,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' liest einen ProjektSteckbrief mit Hierarchie ein 
     ''' Außerdem gibt es die Spalte Summe, in der die Summe der Kosten enthalten sein kann.
+    ''' 
     ''' </summary>
     ''' <param name="hprojekt"></param>
     ''' <param name="hprojTemp"></param>
@@ -7901,10 +8053,11 @@ Public Module awinGeneralModules
                             Dim phaseNameID As String
                             Dim milestoneName As String
                             Dim milestoneDate As Date
-                            Dim resultVerantwortlich As String = ""
                             Dim bewertungsAmpel As Integer
                             Dim explanation As String
                             Dim deliverables As String
+                            Dim responsible As String = ""
+                            Dim percentDone As Double = 0.0
                             Dim bewertungsdatum As Date = importDatum
                             Dim tbl As Excel.Range
                             Dim rowOffset As Integer
@@ -7944,7 +8097,7 @@ Public Module awinGeneralModules
 
 
                                 Dim cMilestone As clsMeilenstein
-                                Dim cBewertung As clsBewertung
+                                Dim cBewertung As New clsBewertung
 
                                 Dim objectName As String
                                 Dim startDate As Date, endeDate As Date
@@ -8112,6 +8265,98 @@ Public Module awinGeneralModules
                                                 .changeStartandDauer(offset, duration)
                                                 Dim phaseStartdate As Date = .getStartDate
                                                 Dim phaseEnddate As Date = .getEndDate
+
+                                            End With
+
+
+                                            Try
+                                                bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                                If IsNothing(bewertungsAmpel) Then
+                                                    bewertungsAmpel = 0
+                                                End If
+                                            Catch ex As Exception
+                                                bewertungsAmpel = 0
+                                            End Try
+
+                                            Try
+                                                explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+                                                If IsNothing(explanation) Then
+                                                    explanation = ""
+                                                End If
+                                            Catch ex As Exception
+                                                explanation = ""
+                                            End Try
+
+                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                                ' es gibt keine Bewertung
+                                                bewertungsAmpel = 0
+                                            End If
+
+                                            ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                            With cBewertung
+                                                '.bewerterName = resultVerantwortlich
+                                                .colorIndex = bewertungsAmpel
+                                                .datum = importDatum
+                                                .description = explanation
+                                            End With
+
+                                            ' das Feld Deliverables wird hier ausgelesen ...
+                                            Try
+                                                ' Ergänzung tk 2.11 deliverables ergänzt 
+                                                deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
+                                                If IsNothing(deliverables) Then
+                                                    deliverables = ""
+                                                End If
+                                            Catch ex As Exception
+                                                deliverables = ""
+                                            End Try
+
+                                            ' das Feld Responsible wird hier ausgelesen ...
+                                            Try
+                                                ' Ergänzung tk 26.10.17 responsible ergänzt 
+                                                responsible = CType(CType(.Cells(zeile, columnOffset + 7), Excel.Range).Value, String)
+                                                If IsNothing(responsible) Then
+                                                    responsible = ""
+                                                End If
+                                            Catch ex As Exception
+                                                responsible = ""
+                                            End Try
+
+                                            ' das Feld %Done wird hier ausgelesen ...
+                                            Try
+                                                ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
+                                                percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double)
+                                                If IsNothing(percentDone) Then
+                                                    percentDone = 0.0
+                                                End If
+                                            Catch ex As Exception
+                                                percentDone = 0.0
+                                            End Try
+
+
+
+
+                                            With cphase
+                                                .percentDone = percentDone
+                                                .verantwortlich = responsible
+                                                If Not IsNothing(cBewertung) Then
+                                                    .addBewertung(cBewertung)
+                                                End If
+
+                                                ' ur: 09.11.2017
+                                                ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
+                                                Try
+                                                    If deliverables.Trim.Length > 0 Then
+                                                        Dim splitStr() As String = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+
+                                                        ' tk 29.5.16 Deliverables jetzt als einzelnen Items 
+                                                        For ix As Integer = 1 To splitStr.Length
+                                                            .addDeliverable(splitStr(ix - 1))
+                                                        Next
+                                                    End If
+                                                Catch ex As Exception
+
+                                                End Try
                                             End With
 
 
@@ -8224,7 +8469,6 @@ Public Module awinGeneralModules
 
                                             End If
 
-                                            ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
                                             Try
                                                 bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
                                                 If IsNothing(bewertungsAmpel) Then
@@ -8234,6 +8478,11 @@ Public Module awinGeneralModules
                                                 bewertungsAmpel = 0
                                             End Try
 
+                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                                ' es gibt keine Bewertung
+                                                bewertungsAmpel = 0
+                                            End If
+
                                             Try
                                                 explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
                                                 If IsNothing(explanation) Then
@@ -8242,6 +8491,16 @@ Public Module awinGeneralModules
                                             Catch ex As Exception
                                                 explanation = ""
                                             End Try
+
+
+                                            ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                            With cBewertung
+                                                '.bewerterName = resultVerantwortlich
+                                                .colorIndex = bewertungsAmpel
+                                                .datum = importDatum
+                                                .description = explanation
+                                            End With
+
 
                                             Try
                                                 ' Ergänzung tk 2.11 deliverables ergänzt 
@@ -8254,6 +8513,26 @@ Public Module awinGeneralModules
                                             End Try
 
 
+                                            Try
+                                                ' Ergänzung tk 26.10.17 responsible ergänzt 
+                                                responsible = CType(CType(.Cells(zeile, columnOffset + 7), Excel.Range).Value, String)
+                                                If IsNothing(responsible) Then
+                                                    responsible = ""
+                                                End If
+                                            Catch ex As Exception
+                                                responsible = ""
+                                            End Try
+
+                                            ' das Feld %Done wird hier nicht ausgelesen ...
+
+                                            With cMilestone
+                                                .setDate = milestoneDate
+                                                .verantwortlich = responsible
+                                                .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
+                                                If Not cBewertung Is Nothing Then
+                                                    .addBewertung(cBewertung)
+                                                End If
+                                            End With
 
                                             ' tk 29.5.16
                                             ' hier müssen die Deliverables jetzt auseinander dividiert werden in die einzelnen Items
@@ -8269,29 +8548,6 @@ Public Module awinGeneralModules
                                             Catch ex As Exception
 
                                             End Try
-
-                                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                                ' es gibt keine Bewertung
-                                                bewertungsAmpel = 0
-                                            End If
-                                            ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                                            With cBewertung
-                                                '.bewerterName = resultVerantwortlich
-                                                .colorIndex = bewertungsAmpel
-                                                .datum = importDatum
-                                                .description = explanation
-                                            End With
-
-
-
-                                            With cMilestone
-                                                .setDate = milestoneDate
-                                                '.verantwortlich = resultVerantwortlich
-                                                .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
-                                                If Not cBewertung Is Nothing Then
-                                                    .addBewertung(cBewertung)
-                                                End If
-                                            End With
 
 
                                             Try
@@ -12126,8 +12382,29 @@ Public Module awinGeneralModules
                             monthDays.Clear()
                             anzDays = 0
 
-                            lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
                             lastSpalte = CType(currentWS.Cells(4, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+                            lastZeile = CType(currentWS.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row
+
+                            ' letzte Zeile bestimmen, wenn dies verbunden Zellen sind
+                            ' -------------------------------------
+                            Dim rng As Range
+                            Dim rngEnd As Range
+
+                            rng = CType(currentWS.Cells(lastZeile, 1), Global.Microsoft.Office.Interop.Excel.Range)
+
+                            If rng.MergeCells Then
+
+                                rng = rng.MergeArea
+                                rngEnd = rng.Cells(rng.Rows.Count, rng.Columns.Count)
+
+                                ' dann ist die lastZeile neu zu besetzen
+                                lastZeile = rngEnd.Row
+                            End If
+
+                            ' nun hat die Variable lastZeile sicher den richtigen Wert
+                            ' --------------------------------------
+
 
                             Dim vglColor As Integer = noColor         ' keine Farbe
                             Dim i As Integer = firstUrlspalte
@@ -12164,7 +12441,7 @@ Public Module awinGeneralModules
                                 fehler = True
 
                                 If awinSettings.englishLanguage Then
-                                    msgtxt = "Error reading planning holidays: Please check die calendar in this file ..."
+                                    msgtxt = "Error reading planning holidays: Please check the calendar in this file ..."
                                 Else
                                     msgtxt = "Fehler beim Lesen der Urlaubsplanung: Bitte prüfen Sie die Korrektheit des Kalenders ..."
                                 End If
@@ -12195,6 +12472,7 @@ Public Module awinGeneralModules
                             Else
 
                                 For iZ = 5 To lastZeile
+
 
                                     rolename = CType(currentWS.Cells(iZ, 2), Global.Microsoft.Office.Interop.Excel.Range).Text
                                     If rolename <> "" Then
@@ -14262,14 +14540,23 @@ Public Module awinGeneralModules
 
 
                 If selectedPhases.Count > 0 Then
-                    chTyp = DiagrammTypen(0)
+                    If awinSettings.considerCategories Then
+                        chTyp = DiagrammTypen(7)
+                    Else
+                        chTyp = DiagrammTypen(0)
+                    End If
                     Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedPhases.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
-                                                   chtop, chleft, chwidth, chheight)
+                                                   chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedMilestones.Count > 0 Then
-                    chTyp = DiagrammTypen(5)
+                    If awinSettings.considerCategories Then
+                        chTyp = DiagrammTypen(8)
+                    Else
+                        chTyp = DiagrammTypen(5)
+                    End If
+
                     Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedMilestones.Count, chtop, chleft, chwidth, chHeight)
                     Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart, _
                                                    chtop, chleft, chwidth, chHeight)
@@ -14999,6 +15286,7 @@ Public Module awinGeneralModules
         Dim nameSopTyp As String = " "
         Dim nameProduktlinie As String = ""
         Dim defaultBU As String = ""
+        
 
         Dim startDate As Date, endDate As Date
         Dim startoffset As Long, duration As Long
@@ -15050,13 +15338,17 @@ Public Module awinGeneralModules
         Dim colAbbrev As Integer = -1
         Dim colVorgangsKlasse As Integer = -1
         Dim colDescription As Integer = -1
+        Dim colVerantwortlich As Integer = -1
+        Dim colPercentDone As Integer = -1
+        Dim colTrafficLight As Integer = -1
+        Dim colTLExplanation As Integer = -1
 
         Dim pDescription As String = ""
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(8) As String
+        Dim suchstr(12) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -15066,7 +15358,10 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.Protocol) = "Übernommen als"
         suchstr(ptPlanNamen.Dauer) = "Duration"
         suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
-
+        suchstr(ptPlanNamen.Verantwortlich) = "Responsible"
+        suchstr(ptPlanNamen.percentDone) = "%-Done"
+        suchstr(ptPlanNamen.TrafficLight) = "traffic light"
+        suchstr(ptPlanNamen.TLExplanation) = "Explanation"
 
         zeile = 2
         spalte = 5
@@ -15145,6 +15440,29 @@ Public Module awinGeneralModules
 
         End Try
 
+        Try
+            colVerantwortlich = firstZeile.Find(What:=suchstr(ptPlanNamen.Verantwortlich), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            colPercentDone = firstZeile.Find(What:=suchstr(ptPlanNamen.percentDone), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            colTrafficLight = firstZeile.Find(What:=suchstr(ptPlanNamen.TrafficLight), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            colTLExplanation = firstZeile.Find(What:=suchstr(ptPlanNamen.TLExplanation), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
 
         With aktivesSheet
 
@@ -15208,6 +15526,10 @@ Public Module awinGeneralModules
                 CType(.Cells(1, colProtocol + 5), Excel.Range).Value = "Quelle"
                 CType(.Cells(1, colProtocol + 8), Excel.Range).Value = "PT Hierarchie"
                 CType(.Cells(1, colProtocol + 9), Excel.Range).Value = "PT Klasse"
+                CType(.Cells(1, colProtocol + 10), Excel.Range).Value = "Verantwortlich"
+                CType(.Cells(1, colProtocol + 11), Excel.Range).Value = "%-Done"
+                CType(.Cells(1, colProtocol + 12), Excel.Range).Value = "Ampel"
+                CType(.Cells(1, colProtocol + 13), Excel.Range).Value = "Explanation"
             End If
 
             ' wird immer geschrieben 
@@ -15425,6 +15747,31 @@ Public Module awinGeneralModules
 
                         End Try
 
+                        Dim ampel As Integer = 0
+                        Dim ampelExplanation As String = ""
+
+                        ' wenn eine Ampel Bewertung für das Projekt abgegeben wurde 
+                        If colTrafficLight > 0 Then
+                            Try
+                                ampel = CInt(CType(.Cells(zeile, colTrafficLight), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                hproj.ampelStatus = ampel
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                        If colTLExplanation > 0 Then
+                            Try
+                                ampelExplanation = CInt(CType(.Cells(zeile, colTLExplanation), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                hproj.ampelErlaeuterung = ampelExplanation
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                        ' jetzt die Projekt-Ampel ggf setzen 
+
+
                         Dim itemStartDate As Date
                         Dim itemEndDate As Date
                         Dim ok As Boolean = True
@@ -15433,6 +15780,8 @@ Public Module awinGeneralModules
                         Dim txtVorgangsKlasse As String
                         Dim origVorgangsKlasse As String
                         Dim txtAbbrev As String
+                        Dim verantwortlich As String = ""
+                        Dim percentDone As Double = 0.0
                         ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
                         Dim origItem As String = ""
 
@@ -15445,6 +15794,10 @@ Public Module awinGeneralModules
                             txtVorgangsKlasse = ""
                             txtAbbrev = ""
                             logMessage = ""
+                            verantwortlich = ""
+                            percentDone = 0.0
+                            ampel = 0
+                            ampelExplanation = ""
 
                             Dim indentLevel As Integer
 
@@ -15500,10 +15853,12 @@ Public Module awinGeneralModules
 
 
 
-                                        ' Änderung 26.1.15 Ignorieren 
-
-                                        itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                       
+                                        
+                                        logMessage = "ungültiges Startdatum ..."
                                         itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+                                        logMessage = ""
+
 
                                         If IsNothing(CType(.Cells(curZeile, colAnfang), Excel.Range).Value) Then
                                             isMilestone = True
@@ -15512,6 +15867,11 @@ Public Module awinGeneralModules
                                             isMilestone = True
                                             itemStartDate = itemEndDate
                                         Else
+                                            ' jetzt das Startdatum lesen 
+                                            logMessage = "ungültiges Startdatum ..."
+                                            itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                            logMessage = ""
+
                                             If DateDiff(DateInterval.Minute, itemStartDate, itemEndDate) = 0 Then
                                                 isMilestone = True
                                             Else
@@ -15609,6 +15969,41 @@ Public Module awinGeneralModules
                                     End Try
                                 End If
 
+                                If colVerantwortlich > 0 Then
+                                    Try
+                                        verantwortlich = CStr(CType(.Cells(curZeile, colVerantwortlich), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        verantwortlich = ""
+                                    End Try
+                                End If
+
+                                ' jetzt %-Done auslesen 
+                                If colPercentDone > 0 Then
+                                    Try
+                                        percentDone = CDbl(CType(.Cells(curZeile, colPercentDone), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        percentDone = 0.0
+                                    End Try
+                                End If
+
+                                ' jetzt Ampel-Farbe  auslesen 
+                                If colTrafficLight > 0 Then
+                                    Try
+                                        ampel = CInt(CType(.Cells(curZeile, colTrafficLight), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        ampel = 0
+                                    End Try
+                                End If
+
+                                ' jetzt Ampel-Erläuterung  auslesen 
+                                If colTLExplanation > 0 Then
+                                    Try
+                                        ampelExplanation = CStr(CType(.Cells(curZeile, colTLExplanation), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        ampelExplanation = ""
+                                    End Try
+                                End If
+
                                 '
                                 ' jetzt muss protokolliert werden 
                                 Dim oLevel As Integer
@@ -15624,6 +16019,12 @@ Public Module awinGeneralModules
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 3), Excel.Range).Value = origVorgangsKlasse
                                     ' Abkürzung
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 4), Excel.Range).Value = txtAbbrev
+                                    ' %-Done
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 11), Excel.Range).Value = percentDone.ToString
+                                    ' Ampel 
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 12), Excel.Range).Value = ampel.ToString
+                                    ' Erläuterung 
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 13), Excel.Range).Value = ampelExplanation
                                 End If
 
 
@@ -15777,6 +16178,26 @@ Public Module awinGeneralModules
                                         cphase.nameID = elemID
                                         cphase.changeStartandDauer(startoffset, duration)
 
+                                        ' tk 26.11.17, den Wert für verantwortlich mitaufnehmen ...
+                                        cphase.verantwortlich = verantwortlich
+
+                                        ' Vorgangslasse eintragen 
+                                        cphase.appearance = txtVorgangsKlasse
+
+                                        ' percentDone eintragen 
+                                        cphase.percentDone = percentDone
+
+                                        ' ampel eintragen 
+                                        If ampel > 0 And ampel <= 3 Then
+                                            cphase.ampelStatus = ampel
+                                        End If
+
+                                        ' ampel Erläuterung eintragen 
+                                        If ampelExplanation <> "" Then
+                                            cphase.ampelErlaeuterung = ampelExplanation
+                                        End If
+
+
                                         ' der Aufbau der Hierarchie erfolgt in addphase
                                         hproj.AddPhase(cphase, origName:=origItem.Trim, _
                                                        parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
@@ -15791,7 +16212,10 @@ Public Module awinGeneralModules
 
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                            CType(aktivesSheet.Cells(curZeile, colProtocol + 10), Excel.Range).Value = verantwortlich
+
                                         End If
+
                                         ' neuer Breadcrumb 
                                         'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
 
@@ -15830,8 +16254,7 @@ Public Module awinGeneralModules
 
                                     Try
 
-                                        Dim bewertungsAmpel As Integer = 0
-                                        Dim explanation As String = ""
+                                       
 
                                         ' hole die Parentphase
                                         cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
@@ -15842,9 +16265,9 @@ Public Module awinGeneralModules
                                         ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
                                         With cbewertung
                                             '.bewerterName = resultVerantwortlich
-                                            .colorIndex = bewertungsAmpel
+                                            .colorIndex = ampel
                                             .datum = Date.Now
-                                            .description = explanation
+                                            .description = ampelExplanation
                                         End With
 
 
@@ -15938,6 +16361,11 @@ Public Module awinGeneralModules
                                             With cmilestone
                                                 .nameID = elemID
                                                 .setDate = itemEndDate
+                                                ' tk 26.11.17 
+                                                .verantwortlich = verantwortlich
+                                                .appearance = txtVorgangsKlasse
+                                                .percentDone = percentDone
+
                                                 If Not cbewertung Is Nothing Then
                                                     .addBewertung(cbewertung)
                                                 End If
@@ -15961,6 +16389,7 @@ Public Module awinGeneralModules
 
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
+                                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 10), Excel.Range).Value = verantwortlich
                                                 End If
 
                                                 If stdName.Trim <> origItem.Trim Then
@@ -15995,7 +16424,7 @@ Public Module awinGeneralModules
 
                                     Catch ex As Exception
                                         CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = _
-                                                            "Fehler in Zeile " & zeile & ", Item-Name: " & itemName
+                                                            ex.Message & ": " & vbLf & "Fehler in Zeile " & curZeile & ", Item-Name: " & itemName
                                         CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
                                     End Try
 
@@ -16360,7 +16789,7 @@ Public Module awinGeneralModules
         ' bestimme die Farbe - sie steht im Excel Ausgabe File in der Zeile 2, Spalte 1 
         ws = CType(appInstance.ActiveWorkbook.Worksheets("Export VISBO Projekttafel"), Excel.Worksheet)
 
-        Dim suchstr(8) As String
+        Dim suchstr(12) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -16370,8 +16799,28 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.Protocol) = "Übernommen als"
         suchstr(ptPlanNamen.Dauer) = "Duration"
         suchstr(ptPlanNamen.Abkuerzung) = "Abbreviation"
+        suchstr(ptPlanNamen.Verantwortlich) = "Responsible"
+        suchstr(ptPlanNamen.percentDone) = "%-Done"
+        suchstr(ptPlanNamen.TrafficLight) = "traffic light"
+        suchstr(ptPlanNamen.TLExplanation) = "Explanation"
 
         ' jetzt werden die Spaltenüberschriften geschrieben 
+        Dim üColor As Long = CLng(CType(ws.Cells(1, 1), Excel.Range).Interior.Color)
+
+        CType(ws.Rows(1), Excel.Range).Interior.Color = üColor
+        With CType(ws.Cells(1, 1), Excel.Range)
+            .Copy()
+        End With
+        With CType(ws.Rows(1), Excel.Range)
+            .PasteSpecial(XlPasteType.xlPasteFormats, XlPasteSpecialOperation.xlPasteSpecialOperationNone, False, False)
+        End With
+        'With CType(ws.Rows(1), Excel.Range).Borders(XlBordersIndex.xlEdgeBottom)
+        '    .LineStyle = XlLineStyle.xlContinuous
+        '    .ColorIndex = 1
+        '    .TintAndShade = 0
+        '    .Weight = XlBorderWeight.xlThick
+        'End With
+
         Dim colName As Integer = 1
         CType(ws.Cells(1, colName), Excel.Range).Value = suchstr(ptPlanNamen.Name)
         Dim colStart As Integer = 2
@@ -16386,6 +16835,17 @@ Public Module awinGeneralModules
         CType(ws.Cells(1, colAppearance), Excel.Range).Value = suchstr(ptPlanNamen.Vorgangsklasse)
         Dim colAbbrev As Integer = 7
         CType(ws.Cells(1, colAbbrev), Excel.Range).Value = suchstr(ptPlanNamen.Abkuerzung)
+        Dim colRespons As Integer = 8
+        CType(ws.Cells(1, colRespons), Excel.Range).Value = suchstr(ptPlanNamen.Verantwortlich)
+        Dim colPercent As Integer = 9
+        CType(ws.Cells(1, colPercent), Excel.Range).Value = suchstr(ptPlanNamen.percentDone)
+        Dim colAmpel As Integer = 10
+        CType(ws.Cells(1, colAmpel), Excel.Range).Value = suchstr(ptPlanNamen.TrafficLight)
+        Dim colExplan As Integer = 11
+        CType(ws.Cells(1, colExplan), Excel.Range).Value = suchstr(ptPlanNamen.TLExplanation)
+
+
+
 
         color = CLng(CType(ws.Cells(2, 1), Excel.Range).Interior.Color)
 
@@ -16408,7 +16868,7 @@ Public Module awinGeneralModules
             zeile = zeile + 1
             cmilestone = cphase.getMilestone(im)
             startdate = cmilestone.getDate
-            
+
             curName = cmilestone.name
 
             indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
@@ -16428,6 +16888,24 @@ Public Module awinGeneralModules
 
             CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
             CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
+
+            ' jetzt Responsible, percentDone, TrafficLight und Explanation schreiben, falls vorhanden
+            ' ur 18.12.17, den Wert für verantwortlich mitaufnehmen ...
+            Dim tmpVerantwortlich As String = cmilestone.verantwortlich
+            CType(ws.Cells(zeile, colRespons), Excel.Range).Value = tmpVerantwortlich
+
+            ' percentDone eintragen 
+            Dim tmpPercentDone As String = (cmilestone.percentDone * 100).ToString & " %"
+            CType(ws.Cells(zeile, colPercent), Excel.Range).Value = tmpPercentDone
+
+            ' TrafficLight eintragen 
+            Dim tmpAmpel As Integer = cmilestone.ampelStatus
+            CType(ws.Cells(zeile, colAmpel), Excel.Range).Value = tmpAmpel
+
+            ' Explanation eintragen 
+            Dim tmpExplan As String = cmilestone.ampelErlaeuterung
+            CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
 
         Next
 
@@ -16462,11 +16940,29 @@ Public Module awinGeneralModules
             CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
             CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
 
+            ' ur 18.12.17, den Wert für verantwortlich mitaufnehmen ...
+            Dim tmpVerantwortlich As String = cphase.verantwortlich
+            CType(ws.Cells(zeile, colRespons), Excel.Range).Value = tmpVerantwortlich
+
+            ' percentDone eintragen 
+            Dim tmpPercentDone As String = (cphase.percentDone * 100).ToString & " %"
+            CType(ws.Cells(zeile, colPercent), Excel.Range).Value = tmpPercentDone
+
+            ' ampel eintragen 
+            Dim tmpAmpel As Integer = cphase.ampelStatus
+            CType(ws.Cells(zeile, colAmpel), Excel.Range).Value = tmpAmpel
+
+            ' ampel Erläuterung eintragen 
+            Dim tmpExplan As String = cphase.ampelErlaeuterung
+            CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
+
+
             For im = 1 To cphase.countMilestones
                 zeile = zeile + 1
                 cmilestone = cphase.getMilestone(im)
                 startdate = cmilestone.getDate
-                
+
 
                 curName = cmilestone.name
                 indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
@@ -16486,6 +16982,24 @@ Public Module awinGeneralModules
 
                 CType(ws.Cells(zeile, colAbbrev), Excel.Range).Value = tmpAbbrev
                 CType(ws.Cells(zeile, colAppearance), Excel.Range).Value = tmpAppearance
+
+                ' jetzt Responsible, percentDone, TrafficLight und Explanation schreiben, falls vorhanden
+                ' ur 18.12.17, den Wert für verantwortlich mitaufnehmen ...
+                tmpVerantwortlich = cmilestone.verantwortlich
+                CType(ws.Cells(zeile, colRespons), Excel.Range).Value = tmpVerantwortlich
+
+                ' percentDone eintragen 
+                tmpPercentDone = (cmilestone.percentDone * 100).ToString & " %"
+                CType(ws.Cells(zeile, colPercent), Excel.Range).Value = tmpPercentDone
+
+                ' TrafficLight eintragen 
+                tmpAmpel = cmilestone.ampelStatus
+                CType(ws.Cells(zeile, colAmpel), Excel.Range).Value = tmpAmpel
+
+                ' Explanation eintragen 
+                tmpExplan = cmilestone.ampelErlaeuterung
+                CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
             Next
 
         Next
@@ -20875,6 +21389,14 @@ Public Module awinGeneralModules
                             awinSettings.visboAbbreviation = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "VISBOAmpel"
                             awinSettings.visboAmpel = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOAmpelText"
+                            awinSettings.visboAmpelText = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOdeliverables"
+                            awinSettings.visbodeliverables = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOresponsible"
+                            awinSettings.visboresponsible = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOpercentDone"
+                            awinSettings.visbopercentDone = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "VISBODebug"
                             awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
 

@@ -30,6 +30,7 @@ Partial Class frmMEhryRoleCost
         '
         'hryRoleCost
         '
+        Me.hryRoleCost.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.hryRoleCost.Location = New System.Drawing.Point(0, 0)
         Me.hryRoleCost.Name = "hryRoleCost"
         Me.hryRoleCost.Size = New System.Drawing.Size(567, 337)

@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\tom\Documents\Project-Tafel Folder\VISBO Project Add-In</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\VISBO Project Add-In</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>
@@ -25,6 +25,18 @@
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">VISBO AmpelText</Value>
+    </Setting>
+    <Setting Name="VISBOdeliverables" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">VISBO Deliverables</Value>
+    </Setting>
+    <Setting Name="VISBOresponsible" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">VISBO Responsible</Value>
+    </Setting>
+    <Setting Name="VISBOpercentDone" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">% Work Complete</Value>
     </Setting>
   </Settings>
 </SettingsFile>

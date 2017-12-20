@@ -712,6 +712,7 @@ Public Module testModule
                         kennzeichnung = "AllePlanElemente" Or _
                         kennzeichnung = "Swimlanes" Or _
                         kennzeichnung = "Swimlanes2" Or _
+                        kennzeichnung = "MilestoneCategories" Or _
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
                         kennzeichnung = "Meilenstein Trendanalyse" Or _
@@ -1074,6 +1075,29 @@ Public Module testModule
                                                                       worker, e, False, True, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+                                End Try
+
+
+                            Case "MilestoneCategories"
+                                Try
+
+
+                                    Call zeichneCategorySwimlaneSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
+                                                                      selectedPhases, selectedMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTyps, _
+                                                                      worker, e, False, hproj, kennzeichnung)
+
+                                    .TextFrame2.TextRange.Text = ""
+                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+
+                                    ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
+                                    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
+                                    'swimlaneMode = True
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -3205,9 +3229,11 @@ Public Module testModule
                         kennzeichnung = "Bisherige Zielerreichung" Or _
                         kennzeichnung = "Prognose Zielerreichung" Or _
                         kennzeichnung = "Phase" Or _
+                        kennzeichnung = "P-Category" Or _
                         kennzeichnung = "Rolle" Or _
                         kennzeichnung = "Kostenart" Or _
                         kennzeichnung = "Meilenstein" Or _
+                        kennzeichnung = "M-Category" Or _
                         kennzeichnung = "Stand:" Or _
                         kennzeichnung = "Zeitraum:" Then
 
@@ -4807,6 +4833,129 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
+                        Case "M-Category"
+
+
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.MilestoneCategories, qualifier, selectedMilestones)
+
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                ' Diagramm-Typen 8 ist Milestone Categories
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(8), True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    If myCollection.Count > 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(120)
+                                        .Chart.ChartTitle.Text = "Milestone Categories"
+                                    ElseIf myCollection.Count = 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                        '                            splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                        .Chart.ChartTitle.Text = "Milestone Category " & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                    Else
+                                        .Chart.ChartTitle.Text = boxName
+                                    End If
+
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                                With newShapeRange.Item(1)
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
+                                End With
+
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                            End If
+
+                        Case "P-Category"
+
+
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.PhaseCategories, qualifier, selectedPhases)
+
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                ' Diagramm-Typen 7 ist Phase Categories
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(7), True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    If myCollection.Count > 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(120)
+                                        .Chart.ChartTitle.Text = "Phase Categories"
+                                    ElseIf myCollection.Count = 1 Then
+                                        '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
+                                        '.Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                        '                            splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                        .Chart.ChartTitle.Text = "Phase Category " & _
+                                                                    splitHryFullnameTo1(CStr(myCollection.Item(1)))
+                                    Else
+                                        .Chart.ChartTitle.Text = boxName
+                                    End If
+
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                                With newShapeRange.Item(1)
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
+                                End With
+
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                            End If
 
 
                         Case "Rolle"
@@ -6429,23 +6578,32 @@ Public Module testModule
         Dim fullName As String = ""
         Dim elemName As String = ""
         Dim breadcrumb As String = ""
-
+        Dim namesAreCategories As Boolean = False
 
         ' die eindeutigen Klassen-Namen bestimmen
         ' nur für die muss eine Legende geschrieben werden 
         If selectedPhases.Count > 0 Then
             For i As Integer = 1 To selectedPhases.Count
                 fullName = CStr(selectedPhases.Item(i))
-
+                Dim tmpName As String = ""
                 Dim type As Integer = -1
                 Dim pvName As String = ""
                 Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
-                If uniquePhases.Contains(elemName) Then
+                If type = PTProjektType.categoryList Then
+                    namesAreCategories = True
+                    tmpName = pvName
+                Else
+                    namesAreCategories = False
+                    tmpName = elemName
+                End If
+
+                If uniquePhases.Contains(tmpName) Then
                     ' nichts tun
                 Else
-                    uniquePhases.Add(elemName, elemName)
+                    uniquePhases.Add(tmpName, tmpName)
                 End If
+                
             Next
         End If
 
@@ -6453,16 +6611,25 @@ Public Module testModule
         If selectedMilestones.Count > 0 Then
             For i As Integer = 1 To selectedMilestones.Count
                 fullName = CStr(selectedMilestones.Item(i))
-
+                Dim tmpName As String = ""
                 Dim type As Integer = -1
                 Dim pvName As String = ""
                 Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
-                If uniqueMilestones.Contains(elemName) Then
+                If type = PTProjektType.categoryList Then
+                    namesAreCategories = True
+                    tmpName = pvName
+                Else
+                    namesAreCategories = False
+                    tmpName = elemName
+                End If
+
+                If uniqueMilestones.Contains(tmpName) Then
                     ' nichts tun
                 Else
-                    uniqueMilestones.Add(elemName, elemName)
+                    uniqueMilestones.Add(tmpName, tmpName)
                 End If
+
             Next
         End If
 
@@ -6508,13 +6675,13 @@ Public Module testModule
         Dim curZeile As Integer = 2
         Dim curSpalte As Integer = 1
 
-        Dim phaseShape As xlNS.Shape
-        Dim milestoneShape As xlNS.Shape
+        Dim phaseShape As xlNS.Shape = Nothing
+        Dim milestoneShape As xlNS.Shape = Nothing
         Dim phaseName As String = ""
 
         Dim milestoneName As String = ""
         Dim breadcrumbMS As String = ""
-        Dim shortName As String
+        Dim shortName As String = ""
         Dim factor As Double
         Dim tmpBU As clsBusinessUnit
 
@@ -6596,15 +6763,23 @@ Public Module testModule
             phaseName = CStr(uniquePhases(j))
             Dim isMissingDefinition As Boolean
 
-            If PhaseDefinitions.Contains(phaseName) Then
-                phaseShape = PhaseDefinitions.getShape(phaseName)
-                shortName = PhaseDefinitions.getAbbrev(phaseName)
-                isMissingDefinition = False
+            If namesAreCategories Then
+                If appearanceDefinitions.ContainsKey(phaseName) Then
+                    phaseShape = appearanceDefinitions.Item(phaseName).form
+                    shortName = ""
+                End If
             Else
-                phaseShape = missingPhaseDefinitions.getShape(phaseName)
-                shortName = missingPhaseDefinitions.getAbbrev(phaseName)
-                isMissingDefinition = True
+                If PhaseDefinitions.Contains(phaseName) Then
+                    phaseShape = PhaseDefinitions.getShape(phaseName)
+                    shortName = PhaseDefinitions.getAbbrev(phaseName)
+                    isMissingDefinition = False
+                Else
+                    phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                    shortName = missingPhaseDefinitions.getAbbrev(phaseName)
+                    isMissingDefinition = True
+                End If
             End If
+            
 
 
             ' Phasen-Shape 
@@ -6651,16 +6826,28 @@ Public Module testModule
 
             milestoneName = CStr(uniqueMilestones(j))
 
-            ' Änderung tk 26.11.15
-            If MilestoneDefinitions.Contains(milestoneName) Then
-                milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+            ' Änderung tk 3.12.17 
+            If namesAreCategories Then
+                If appearanceDefinitions.ContainsKey(milestoneName) Then
+                    milestoneShape = appearanceDefinitions.Item(milestoneName).form
+                    shortName = ""
+                End If
             Else
-                milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+                If MilestoneDefinitions.Contains(milestoneName) Then
+                    milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+                    shortName = MilestoneDefinitions.getAbbrev(milestoneName)
+                Else
+                    milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+                    shortName = missingMilestoneDefinitions.getAbbrev(milestoneName)
+                End If
+
             End If
+
+            
 
 
             factor = milestoneShape.Width / milestoneShape.Height
-            shortName = MilestoneDefinitions.getAbbrev(milestoneName)
+
             ' Meilenstein-Shape 
             ''milestoneShape.Copy()
             ''copiedShape = pptslide.Shapes.Paste()
@@ -9066,7 +9253,7 @@ Public Module testModule
                     ' hier werden die Symbole gezeichnet, die anzeigen wie sich der jeweilige Wert im Vergleich zum letzten / ersten Stand verändert hat 
                     ' angezeigt werden nur positive oder negative Abweichungen 
 
-                    If hErloes - vErloes <> 0 Then
+                    If System.Math.Abs(hErloes - vErloes) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString(formatierung) & "/" & _
@@ -9099,7 +9286,7 @@ Public Module testModule
                         vValue = vPersKosten
                     End If
 
-                    If hValue - vValue <> 0 Then
+                    If System.Math.Abs(hValue - vValue) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString(formatierung) & "/" & _
@@ -9123,7 +9310,7 @@ Public Module testModule
 
                     End If
 
-                    If hSonstKosten - vSonstKosten <> 0 Then
+                    If System.Math.Abs(hSonstKosten - vSonstKosten) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString(formatierung) & "/" & _
@@ -9145,7 +9332,7 @@ Public Module testModule
                         End With
                     End If
 
-                    If hErgebnis - vErgebnis <> 0 Then
+                    If System.Math.Abs(hErgebnis - vErgebnis) > 1 Then
 
                         With tabelle
                             CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString(formatierung) & "/" & _
@@ -11311,9 +11498,10 @@ Public Module testModule
                         kvp.Value.getMinMaxDatesAndDuration(selectedPhases, selectedMilestones, _
                                                             tmpMinDate, tmpMaxDate, tmpDuration)
 
-                        ' das erfordert am Schluss die Behandlung, dass Elementat(0) den Schlüssel 3, Elementat(1) den Schlüssel 4, etc bekommt 
+                        ' der Schlüssel soll ja die Dauer sein  
                         key = tmpDuration
                     Else
+                        ' der Schlüssel soll die Zeile sein, Projekte sollen ja in der Reihenfolge wie auf Projekt-Tafel dargestellt werden
                         ' der ganzzahlige Teil des Keys ist also immer die Zeile, in der gezeichnet werden muss ... 
                         key = kvp.Value.tfZeile + DateDiff(DateInterval.Day, StartofCalendar, kvp.Value.startDate) / 100000
                     End If
@@ -11449,8 +11637,49 @@ Public Module testModule
                                 End If
                             Next ' ix
 
+                        ElseIf type = PTProjektType.categoryList Then
+
+                            Dim idCollection As Collection = hproj.getPhaseIDsWithCat(pvName)
+                            For Each tmpID As String In idCollection
+
+                                cphase = hproj.getPhaseByID(tmpID)
+                                If Not IsNothing(cphase) Then
+                                    If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
+                                        ' das umschliesst jetzt bereits fullyContained 
+
+                                        If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                            tmpMinimum = cphase.getStartDate
+                                        End If
+
+                                        If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                            tmpMaximum = cphase.getEndDate
+                                        End If
+
+
+                                    Else
+                                        ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
+                                        ' andernfalls muss nichts gemacht werden 
+
+                                        If awinSettings.mppFullyContained Then
+                                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+
+                                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                                    tmpMinimum = cphase.getStartDate
+                                                End If
+
+                                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                                    tmpMaximum = cphase.getEndDate
+                                                End If
+
+                                            End If
+                                        End If
+                                    End If
+                                End If
+
+                            Next
+
                         End If
-                        
+
                     Catch ex As Exception
 
                         Call MsgBox(" in catch von for each phase")
@@ -11506,6 +11735,30 @@ Public Module testModule
 
                                 End Try
 
+                            End If
+
+                        Next
+                    ElseIf type = PTProjektType.categoryList Then
+
+                        Dim idCollection As Collection = hproj.getMilestoneIDsWithCat(pvName)
+
+                        For Each tmpID As String In idCollection
+
+                            Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(tmpID)
+
+                            If Not IsNothing(cMilestone) Then
+                                tmpDate = cMilestone.getDate
+                                If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+
+                                    If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                                        tmpMinimum = tmpDate
+                                    End If
+
+                                    If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                                        tmpMaximum = tmpDate
+                                    End If
+
+                                End If
                             End If
 
                         Next
@@ -12970,7 +13223,8 @@ Public Module testModule
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
                                             bestShortName, bestLongName, _
                                             cphase.getStartDate, cphase.getEndDate, _
-                                            Nothing, Nothing, Nothing)
+                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                            cphase.verantwortlich, cphase.percentDone)
 
             End If
 
@@ -13040,7 +13294,8 @@ Public Module testModule
                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
                                                 bestShortName, bestLongName, _
                                                 cphase.getStartDate, cphase.getEndDate, _
-                                                Nothing, Nothing, Nothing)
+                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                                cphase.verantwortlich, cphase.percentDone)
 
                 End If
 
@@ -13391,7 +13646,339 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Swimlanes 
+    ''' </summary>
+    ''' <param name="rds"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="categoryName">der Name der Meilenstein-Klasse , die gezeichnet werden soll </param>
+    ''' <param name="considerAll">sollen alle Pan-Elemente in der Swimlane gezeichnet werden </param>
+    ''' <param name="selectedPhaseIDs">die NameIDs, die in diesem Projekt der Liste der gewählten Phasen entspricht </param>
+    ''' <param name="selectedMilestoneIDs">die NameIDs, die in diesem Projekt der Liste der gewählten Meilensteine entspricht</param>
+    ''' <param name="selectedRoles">für später: die ausgewählten Rollen</param>
+    ''' <param name="selectedCosts">für später: die ausgewählten Kostearten</param>
+    ''' <remarks></remarks>
+    Sub zeichneCategoryOfProject(ByRef rds As clsPPTShapes, ByRef curYPosition As Double, _
+                                 ByRef toggleRowDifferentiator As Boolean, _
+                                 ByVal hproj As clsProjekt, categoryName As String, _
+                                 ByVal considerAll As Boolean, _
+                                 ByVal considerZeitraum As Boolean, ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer, _
+                                 ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection, _
+                                 ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                 ByVal kontrolleAnzZeilen As Integer)
 
+
+
+
+        ' nimmt die Namen aller erzeugten Shapes auf: daraus wird später die Gruppe erzeugt 
+        Dim shapeNameCollection As New Collection
+
+
+        Dim childPhaseIDs As New Collection
+        Dim childMilestoneIDs As Collection = hproj.getMilestoneIDsWithCat(categoryName)
+
+        Dim extended As Boolean = False
+
+
+        ' '' startNr, endNr sind die Anfangs- und End-Indices der Kind-Phasen der Swimlane
+        ''Dim startNr As Integer = 0
+        ''Dim endNr As Integer = 0
+
+        ' ###########################################################
+        ' wenn diese Meilenstein-Klasse in diesem Projekt nicht existiert , dann exit    
+        '
+        If childMilestoneIDs.Count = 0 Then
+            Exit Sub
+        End If
+
+
+
+        ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
+        Dim aktuelleYPosition As Double = curYPosition
+
+        ' '' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
+        ' '' in endNr ist die Phasen-Nummer des letzten Kindes 
+        ''Call hproj.calcStartEndChildNrs(swimlaneNameID, startNr, endNr)
+
+        'Dim fullSwlBreadCrumb As String = hproj.getBcElemName(swimlaneNameID)
+
+        Dim copiedShape As pptNS.ShapeRange
+
+
+
+        ''If Not considerAll Then
+        ''    childPhaseIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedPhaseIDs)
+        ''    childMilestoneIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedMilestoneIDs)
+        ''End If
+
+
+
+        ' ###########################################################
+        ' zeichnen des Swimlane-Namens
+        '
+        copiedShape = pptCopypptPaste(rds.projectNameVorlagenShape, rds.pptSlide)
+
+        Dim swlNameShape As pptNS.Shape = copiedShape.Item(1)
+        ' Ergänzung 19.4.16
+        'Dim swlShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
+        Dim swlShapeName As String = categoryName
+
+        With copiedShape.Item(1)
+            .Top = CSng(curYPosition) + rds.YprojectName
+            .Left = rds.projectListLeft
+            '.TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
+            .TextFrame2.TextRange.Text = categoryName
+            .Name = .Name & .Id
+            '.Name = swlShapeName & PTpptAnnotationType.text
+
+
+            ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
+            shapeNameCollection.Add(.Name)
+
+
+            ''If awinSettings.mppEnableSmartPPT Then
+
+            ''    'Dim fullBreadCrumb As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+            ''    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+            ''    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+            ''    Dim shortText As String = cphase.shortName
+            ''    Dim originalName As String = cphase.originalName
+
+            ''    Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+            ''    Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
+
+            ''    If originalName = cphase.name Then
+            ''        originalName = Nothing
+            ''    End If
+
+
+            ''    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+            ''                                fullBreadCrumb, cphase.name, shortText, originalName, _
+            ''                                bestShortName, bestLongName, _
+            ''                                cphase.getStartDate, cphase.getEndDate, _
+            ''                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+            ''                                cphase.verantwortlich, cphase.percentDone)
+
+            ''End If
+
+
+        End With
+
+
+
+
+        ' weiter mit Zeichnen der Swimlane ...
+
+        ' '' ###########################################################
+        ' '' optionales Zeichnen der Swimlane-Linie 
+        ' ''
+
+        ''Call rds.calculatePPTx1x2(cphase.getStartDate, cphase.getEndDate, x1, x2)
+
+        ''With swlNameShape
+        ''    ' jetzt muss überprüft werden, ob SwimlaneName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+        ''    If .Left + .Width > x1 Then
+        ''        ' jetzt muss der Name entsprechend gekürzt werden 
+        ''        .TextFrame2.WordWrap = MsoTriState.msoTrue
+        ''        .Width = x1 - .Left
+
+        ''        ' jetzt, wenn es in die nächste Zeile reingeht, so weit hochschieben, dass der Name nicht mehr in die nächste Zeile reicht 
+        ''        If .Top + .Height > curYPosition + rds.zeilenHoehe Then
+        ''            .Top = curYPosition + rds.zeilenHoehe - .Height
+        ''        End If
+
+        ''    End If
+        ''End With
+
+
+
+        ''If awinSettings.mppShowProjectLine Then
+
+        ''    ''rds.projectVorlagenShape.Copy()
+        ''    ''copiedShape = rds.pptSlide.Shapes.Paste()
+        ''    copiedShape = pptCopypptPaste(rds.projectVorlagenShape, rds.pptSlide)
+
+        ''    With copiedShape(1)
+        ''        .Top = CSng(curYPosition) + rds.YProjectLine
+        ''        .Left = CSng(x1)
+        ''        .Width = CSng(x2 - x1)
+        ''        .Name = .Name & .Id
+
+        ''        shapeNameCollection.Add(.Name)
+
+        ''        If awinSettings.mppEnableSmartPPT Then
+
+        ''            'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+        ''            'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+        ''            'Dim originalName As String = cphase.originalName
+
+        ''            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+        ''            Dim shortText As String = cphase.shortName
+        ''            Dim originalName As String = cphase.originalName
+
+        ''            Dim bestShortName As String = hproj.getBestNameOfID(cphase.nameID, True, True)
+        ''            Dim bestLongName As String = hproj.getBestNameOfID(cphase.nameID, True, False)
+
+        ''            If originalName = cphase.name Then
+        ''                originalName = Nothing
+        ''            End If
+
+        ''            Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+        ''                                        fullBreadCrumb, cphase.name, shortText, originalName, _
+        ''                                        bestShortName, bestLongName, _
+        ''                                        cphase.getStartDate, cphase.getEndDate, _
+        ''                                        cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+        ''                                        cphase.verantwortlich, cphase.percentDone)
+
+        ''        End If
+
+
+        ''        ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+        ''        If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
+        ''            .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+        ''        End If
+
+        ''        ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+        ''        If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
+        ''            .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+        ''        End If
+
+
+        ''    End With
+
+
+
+        ''End If
+
+
+        ' ###########################################################
+        ' optionales zeichnen der horizontalen Zeilen - es wird immer nur die Zeile oben gezeichnet ... andernfalls hätte man 
+        ' Doppelzeichnungen 
+        ' bei der ersten Swimlane auf einer Seite wird die horizontale nicht gezeichnet ... 
+        '
+        If awinSettings.mppShowHorizontals Then
+
+            ''rds.horizontalLineShape.Copy()
+            ''copiedShape = rds.pptSlide.Shapes.Paste() 
+            copiedShape = pptCopypptPaste(rds.horizontalLineShape, rds.pptSlide)
+
+            With copiedShape.Item(1)
+                .Top = CSng(curYPosition)
+                .Left = rds.drawingAreaLeft
+                .Width = rds.drawingAreaWidth
+                .Name = .Name & .Id
+                shapeNameCollection.Add(.Name)
+            End With
+
+        End If
+
+
+        ' ###########################################################
+        ' optionales zeichnen der Zeilen-Markierung
+        '
+        If (Not IsNothing(rds.rowDifferentiatorShape)) And toggleRowDifferentiator Then
+            ' zeichnen des RowDifferentiators 
+            ''rds.rowDifferentiatorShape.Copy()
+            ''copiedShape = rds.pptSlide.Shapes.Paste()
+            copiedShape = pptCopypptPaste(rds.rowDifferentiatorShape, rds.pptSlide)
+
+            With copiedShape.Item(1)
+                .Top = CSng(curYPosition)
+                .Left = rds.projectListLeft
+                .Height = kontrolleAnzZeilen * rds.zeilenHoehe
+                .Width = rds.drawingAreaRight - .Left
+                .Name = .Name & .Id
+                shapeNameCollection.Add(.Name)
+
+                .ZOrder(MsoZOrderCmd.msoSendToBack)
+
+            End With
+        End If
+
+
+        ' ###########################################################
+        ' jetzt werden die Meilensteine gezeichnet, 
+        ' 
+        Dim swlMilestoneCollection As New Collection
+
+        For Each msID As String In childMilestoneIDs
+            Dim curMs As clsMeilenstein = hproj.getMilestoneByID(msID)
+
+            If Not IsNothing(curMs) Then
+
+                If considerAll Or childMilestoneIDs.Contains(curMs.nameID) Then
+                    If Not considerZeitraum _
+                                Or _
+                                (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
+                                                                            zeitraumGrenzeL, zeitraumGrenzeR)) Then
+                        ' zeichne den Meilenstein 
+                        Dim tmpCollection As New Collection
+                        Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
+                                                          "", curMs.nameID, curYPosition)
+
+                        ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
+                        For Each tmpName As String In tmpCollection
+
+                            shapeNameCollection.Add(tmpName)
+
+                            ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                            swlMilestoneCollection.Add(tmpName)
+
+                        Next
+                    End If
+
+                End If
+
+            End If
+        Next
+
+        ' ###########################################################
+        ' Weiterschalten der CurYPosition 
+        ' Umschalten des toggleRowDifferentiators: dadurch wird die Zeilen - bzw. Projekt - Markierung 
+        ' nur bei jedem zweiten Mal gezeichnet ... 
+        '
+        toggleRowDifferentiator = Not toggleRowDifferentiator
+
+        ' eine Zeile für die nächste Swimlane weiterschalten ...
+        curYPosition = curYPosition + rds.zeilenHoehe
+        'curYPosition = curYPosition + maxOffsetZeile * rds.zeilenHoehe
+
+
+        ' ###########################################################
+        ' alle Milestones in den Vordergrund holen 
+        '
+        Dim anzElements As Integer = swlMilestoneCollection.Count
+        Dim arrayOFNames() As String
+        Dim shapeGruppe As pptNS.ShapeRange
+
+        If anzElements > 1 Then
+
+            ReDim arrayOFNames(anzElements - 1)
+
+            For i = 1 To anzElements
+                arrayOFNames(i - 1) = CStr(swlMilestoneCollection.Item(i))
+            Next
+
+            Try
+                shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+                shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+
+        ElseIf anzElements = 1 Then
+            Try
+                Dim msShape As pptNS.Shape = rds.pptSlide.Shapes.Item(swlMilestoneCollection.Item(1))
+                msShape.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+
+    End Sub
 
     
     ''Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByRef projectCollection As SortedList(Of Double, String), _
@@ -14827,7 +15414,8 @@ Public Module testModule
                                                         Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                         Nothing, Nothing, _
                                                         hproj.startDate, hproj.endeDate, _
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
+                                                        hproj.leadPerson, Nothing)
 
                         End If
 
@@ -14852,7 +15440,8 @@ Public Module testModule
                                                         Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                         Nothing, Nothing, _
                                                         hproj.startDate, hproj.endeDate, _
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
+                                                        hproj.leadPerson, Nothing)
 
                         End If
 
@@ -14941,7 +15530,8 @@ Public Module testModule
                                                    Nothing, hproj.getShapeText, Nothing, Nothing, _
                                                    Nothing, Nothing, _
                                                    hproj.startDate, hproj.endeDate, _
-                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing)
+                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
+                                                   hproj.leadPerson, Nothing)
 
                         End If
 
@@ -14978,6 +15568,8 @@ Public Module testModule
                         Dim breadcrumb As String = ""
                         ' gibt den vollen Breadcrumb zurück 
                         Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                        ' falls in selPhases Categories stehen 
+                        Dim vglCategoryName As String = calcHryCategoryName(cphase.appearance, False)
                         Dim selPhaseName As String = ""
 
                         While j <= selectedPhases.Count And Not found
@@ -14996,6 +15588,14 @@ Public Module testModule
                                     Else
                                         j = j + 1
                                     End If
+                                Else
+                                    j = j + 1
+                                End If
+
+                            ElseIf type = PTProjektType.categoryList Then
+
+                                If selectedPhases.Contains(vglCategoryName) Then
+                                    found = True
                                 Else
                                     j = j + 1
                                 End If
@@ -15301,7 +15901,8 @@ Public Module testModule
                                                                 fullBreadCrumb, cphase.name, shortText, originalName, _
                                                                 bestShortName, bestLongName, _
                                                                 phaseStart, phaseEnd, _
-                                                                Nothing, Nothing, Nothing)
+                                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                                                cphase.verantwortlich, cphase.percentDone)
                                 End If
 
                                 phShapeNames.Add(copiedShape(1).Name)
@@ -15982,7 +16583,7 @@ Public Module testModule
                                         bestShortName, bestLongName, _
                                         Nothing, msdate, _
                                         MS.getBewertung(1).colorIndex, MS.getBewertung(1).description, _
-                                        lieferumfaenge)
+                                        lieferumfaenge, MS.verantwortlich, MS.percentDone)
         End If
 
         msShapeNames.Add(copiedShape.Item(1).Name)
@@ -16043,7 +16644,7 @@ Public Module testModule
 
         Dim phShapeName As String = calcPPTShapeName(hproj, phaseID)
 
-        Dim phaseTypShape As xlNS.Shape
+        Dim phaseTypShape As xlNS.Shape = Nothing
         Dim copiedShape As pptNS.ShapeRange
         Dim phaseName As String = elemNameOfElemID(phaseID)
         Dim cphase As clsPhase = hproj.getPhaseByID(phaseID)
@@ -16061,11 +16662,21 @@ Public Module testModule
         Dim phDescription As String = hproj.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
 
-        If PhaseDefinitions.Contains(phaseName) Then
-            phaseTypShape = PhaseDefinitions.getShape(phaseName)
-        Else
-            phaseTypShape = missingPhaseDefinitions.getShape(phaseName)
+        Try
+            phaseTypShape = appearanceDefinitions.Item(cphase.appearance).form
+        Catch ex As Exception
+
+        End Try
+        If IsNothing(phaseTypShape) Then
+            Exit Sub
         End If
+
+        ' tk 7.12.17, obige Zuweisung ist besser 
+        'If PhaseDefinitions.Contains(phaseName) Then
+        '    phaseTypShape = PhaseDefinitions.getShape(phaseName)
+        'Else
+        '    phaseTypShape = missingPhaseDefinitions.getShape(phaseName)
+        'End If
 
 
         ' jetzt wegen evtl innerer Beschriftung den Size-Faktor bestimmen 
@@ -16222,7 +16833,8 @@ Public Module testModule
                                             fullBreadCrumb, cphase.name, shortText, originalName, _
                                             bestShortName, bestLongName, _
                                             phStartDate, phEndDate, _
-                                            Nothing, Nothing, Nothing)
+                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
+                                            cphase.verantwortlich, cphase.percentDone)
             End If
 
         End If
@@ -16248,7 +16860,7 @@ Public Module testModule
                                                ByVal milestoneID As String, _
                                                ByVal yPosition As Double)
 
-        Dim milestoneTypShape As xlNS.Shape
+        Dim milestoneTypShape As xlNS.Shape = Nothing
         Dim copiedShape As pptNS.ShapeRange
         Dim milestoneName As String = elemNameOfElemID(milestoneID)
         Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
@@ -16265,11 +16877,25 @@ Public Module testModule
         Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
                                                              awinSettings.mppUseAbbreviation)
 
-        If MilestoneDefinitions.Contains(milestoneName) Then
-            milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
-        Else
-            milestoneTypShape = missingMilestoneDefinitions.getShape(milestoneName)
+        ' eigentlih muss es das sein ..
+        Try
+            milestoneTypShape = appearanceDefinitions.Item(cMilestone.appearance).form
+        Catch ex As Exception
+
+        End Try
+
+        ' Exit , wenn nichts gefunden  
+        If IsNothing(milestoneTypShape) Then
+            Exit Sub
         End If
+
+
+        ' tk, Änderung 7.12.17 obige Zuweisung ist besser ... 
+        ''If MilestoneDefinitions.Contains(milestoneName) Then
+        ''    milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
+        ''Else
+        ''    milestoneTypShape = missingMilestoneDefinitions.getShape(milestoneName)
+        ''End If
 
         Dim sizeFaktor As Double
 
@@ -16409,7 +17035,7 @@ Public Module testModule
                                                 bestShortName, bestLongName, _
                                                 Nothing, msDate, _
                                                 cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
-                                                lieferumfaenge)
+                                                lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone)
                 End If
 
                 shapeNames.Add(.Name)
@@ -16716,10 +17342,11 @@ Public Module testModule
         yCursor = legendAreaTop
 
         ' jetzt ggf die Phasen-Legende zeichnen 
-        Dim phaseShape As xlNS.Shape
-        Dim phaseName As String = ""
+        Dim phaseShape As xlNS.Shape = Nothing
+        Dim phaseOrCategoryName As String = ""
         Dim maxBreite As Double = 0.0
 
+        Dim namesAreCategories As Boolean = False
         Dim breadcrumb As String = ""
         Dim selPhaseName As String = ""
 
@@ -16732,96 +17359,125 @@ Public Module testModule
         For i = 1 To selectedPhases.Count
             Dim type As Integer = -1
             Dim pvName As String = ""
-            Call splitHryFullnameTo2(CStr(selectedPhases(i)), phaseName, breadcrumb, type, pvName)
+            Call splitHryFullnameTo2(CStr(selectedPhases(i)), phaseOrCategoryName, breadcrumb, type, pvName)
 
-            If uniqueElemClasses.Contains(phaseName) Then
+            If type = PTProjektType.categoryList Then
+                ' es geht um die Kategorie-Bezeichnung 
+                phaseOrCategoryName = pvName
+                namesAreCategories = True
+            Else
+                ' andernfalls steht der richtige Wert schon in phaseOrCategoryName
+            End If
+
+            If uniqueElemClasses.Contains(phaseOrCategoryName) Then
                 ' nichts tun, ist schon enthalten 
             Else
-                uniqueElemClasses.Add(phaseName, phaseName)
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(phaseOrCategoryName) Then
+                        uniqueElemClasses.Add(phaseOrCategoryName, phaseOrCategoryName)
+                    End If
+                Else
+                    uniqueElemClasses.Add(phaseOrCategoryName, phaseOrCategoryName)
+                End If
+
             End If
         Next
 
         For i = 1 To uniqueElemClasses.Count
 
-            phaseName = CStr(uniqueElemClasses(i))
-            Dim phShortname As String
+            Try
+                phaseOrCategoryName = CStr(uniqueElemClasses(i))
+                Dim phShortname As String = ""
 
-            ' Änderung tk 26.11.15
-            If PhaseDefinitions.Contains(phaseName) Then
-                phaseShape = PhaseDefinitions.getShape(phaseName)
-                phShortname = PhaseDefinitions.getAbbrev(phaseName)
-            Else
-                phaseShape = missingPhaseDefinitions.getShape(phaseName)
-                phShortname = missingPhaseDefinitions.getAbbrev(phaseName)
-            End If
-
-            ' Phasen-Shape 
-            ''phaseShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
-
-            With copiedShape(1)
-
-                .Height = legendPhaseVorlagenShape.Height
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor
-                .Width = legendPhaseVorlagenShape.Width
-
-            End With
-
-            ' Phasen-Text
-            ''legendTextVorlagenShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
-
-            With copiedShape(1)
-
-                .TextFrame2.TextRange.Text = phShortname & " (=" & phaseName & ")"
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + legendPhaseVorlagenShape.Width + 3
-
-                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
-                If .Left + .Width > legendAreaRight Then
-                    Dim tmpWidth As Double = legendAreaRight - .Left
-                    If tmpWidth > 0.3 * .Width Then
-                        .TextFrame.WordWrap = MsoTriState.msoTrue
-                        .Width = tmpWidth
-                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
-                        yCursor = yCursor + .Height - zeilenHoehe + 2
-
+                ' Änderung tk 3.12.17
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(phaseOrCategoryName) Then
+                        phaseShape = appearanceDefinitions.Item(phaseOrCategoryName).form
+                        phShortname = ""
+                    End If
+                Else
+                    ' Änderung tk 26.11.15
+                    If PhaseDefinitions.Contains(phaseOrCategoryName) Then
+                        phaseShape = PhaseDefinitions.getShape(phaseOrCategoryName)
+                        phShortname = PhaseDefinitions.getAbbrev(phaseOrCategoryName)
+                    Else
+                        phaseShape = missingPhaseDefinitions.getShape(phaseOrCategoryName)
+                        phShortname = missingPhaseDefinitions.getAbbrev(phaseOrCategoryName)
                     End If
                 End If
 
-                If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
-                    maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
-                End If
-            End With
 
-            If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
+                ' Phasen-Shape 
+                ''phaseShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = xlnsCopypptPaste(phaseShape, pptslide)
 
-                xCursor = xCursor + maxBreite
-                If xCursor > legendAreaRight Then
-                    'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
-                    Throw New ArgumentException(repMessages.getmsg(16))
-                End If
-                maxBreite = 0.0
-                yCursor = legendAreaTop
-            Else
-                yCursor = yCursor + zeilenHoehe
-                If yCursor > legendAreaBottom + 5 Then
-                    yCursor = legendAreaTop
+                With copiedShape(1)
+
+                    .Height = legendPhaseVorlagenShape.Height
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Left = xCursor
+                    .Width = legendPhaseVorlagenShape.Width
+
+                End With
+
+                ' Phasen-Text
+                ''legendTextVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = phShortname & " (=" & phaseOrCategoryName & ")"
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Left = xCursor + legendPhaseVorlagenShape.Width + 3
+
+                    ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                    If .Left + .Width > legendAreaRight Then
+                        Dim tmpWidth As Double = legendAreaRight - .Left
+                        If tmpWidth > 0.3 * .Width Then
+                            .TextFrame.WordWrap = MsoTriState.msoTrue
+                            .Width = tmpWidth
+                            .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                            yCursor = yCursor + .Height - zeilenHoehe + 2
+
+                        End If
+                    End If
+
+                    If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
+                        maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
+                    End If
+                End With
+
+                If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
+
                     xCursor = xCursor + maxBreite
-                    maxBreite = 0.0
                     If xCursor > legendAreaRight Then
-                        ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                        'Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                         Throw New ArgumentException(repMessages.getmsg(16))
                     End If
+                    maxBreite = 0.0
+                    yCursor = legendAreaTop
+                Else
+                    yCursor = yCursor + zeilenHoehe
+                    If yCursor > legendAreaBottom + 5 Then
+                        yCursor = legendAreaTop
+                        xCursor = xCursor + maxBreite
+                        maxBreite = 0.0
+                        If xCursor > legendAreaRight Then
+                            ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                            Throw New ArgumentException(repMessages.getmsg(16))
+                        End If
+
+                    End If
 
                 End If
 
-            End If
 
+            Catch ex As Exception
 
+            End Try
+            
 
         Next
 
@@ -16831,107 +17487,132 @@ Public Module testModule
         yCursor = legendAreaTop
 
         ' jetzt ggf die Meilenstein-Legende zeichnen 
-        Dim meilensteinShape As xlNS.Shape
-        Dim msShortname As String
+        Dim meilensteinShape As xlNS.Shape = Nothing
+        Dim msShortname As String = ""
         maxBreite = 0.0
 
-        Dim msName As String = ""
+        Dim msOrCategoryName As String = ""
         Dim breadcrumbMS As String = ""
 
         uniqueElemClasses.Clear()
+
         For i = 1 To selectedMilestones.Count
             Dim type As Integer = -1
             Dim pvName As String = ""
-            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(i)), msName, breadcrumbMS, type, pvName)
+            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(i)), msOrCategoryName, breadcrumbMS, type, pvName)
 
-            If uniqueElemClasses.Contains(msName) Then
+            If type = PTProjektType.categoryList Then
+                ' es geht um die Kategorie-Bezeichnung 
+                msOrCategoryName = pvName
+                namesAreCategories = True
+            Else
+                ' andernfalls steht der richtige Wert schon in phaseOrCategoryName
+            End If
+
+            If uniqueElemClasses.Contains(msOrCategoryName) Then
                 ' nichts tun, ist schon enthalten 
             Else
-                uniqueElemClasses.Add(msName, msName)
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(msOrCategoryName) Then
+                        uniqueElemClasses.Add(msOrCategoryName, msOrCategoryName)
+                    End If
+                Else
+                    uniqueElemClasses.Add(msOrCategoryName, msOrCategoryName)
+                End If
+
             End If
         Next
 
 
         For i = 1 To uniqueElemClasses.Count
+            Try
 
-            msName = CStr(uniqueElemClasses.Item(i))
+                msOrCategoryName = CStr(uniqueElemClasses.Item(i))
 
+                If namesAreCategories Then
+                    If appearanceDefinitions.ContainsKey(msOrCategoryName) Then
+                        meilensteinShape = appearanceDefinitions.Item(msOrCategoryName).form
+                        msShortname = ""
+                    End If
 
-
-            ' Änderung tk 26.11.15
-            If MilestoneDefinitions.Contains(msName) Then
-                meilensteinShape = MilestoneDefinitions.getShape(msName)
-                msShortname = MilestoneDefinitions.getAbbrev(msName)
-            Else
-                meilensteinShape = missingMilestoneDefinitions.getShape(msName)
-                msShortname = missingMilestoneDefinitions.getAbbrev(msName)
-            End If
-
-
-            ' Meilenstein-Shape 
-            ''meilensteinShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
-
-            With copiedShape(1)
-                .Left = xCursor
-                .Height = legendMilestoneVorlagenShape.Height
-                .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-            End With
-
-            ' Meilenstein-Text
-            ''legendTextVorlagenShape.Copy()
-            ''copiedShape = pptslide.Shapes.Paste()
-            copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
-
-
-            With copiedShape(1)
-
-                .TextFrame2.TextRange.Text = msShortname & " (=" & msName & ")"
-                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
-                .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
-
-                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
-                If .Left + .Width > legendAreaRight Then
-                    Dim tmpWidth As Double = legendAreaRight - .Left
-                    If tmpWidth > 0.3 * .Width Then
-                        .TextFrame2.WordWrap = MsoTriState.msoTrue
-                        .Width = tmpWidth
-                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
-                        yCursor = yCursor + .Height - zeilenHoehe + 2
+                Else
+                    ' Änderung tk 26.11.15
+                    If MilestoneDefinitions.Contains(msOrCategoryName) Then
+                        meilensteinShape = MilestoneDefinitions.getShape(msOrCategoryName)
+                        msShortname = MilestoneDefinitions.getAbbrev(msOrCategoryName)
+                    Else
+                        meilensteinShape = missingMilestoneDefinitions.getShape(msOrCategoryName)
+                        msShortname = missingMilestoneDefinitions.getAbbrev(msOrCategoryName)
                     End If
                 End If
 
-                If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
-                    maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
-                End If
-            End With
+                ' Meilenstein-Shape 
+                ''meilensteinShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = xlnsCopypptPaste(meilensteinShape, pptslide)
 
-            If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
+                With copiedShape(1)
+                    .Left = xCursor
+                    .Height = legendMilestoneVorlagenShape.Height
+                    .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                End With
 
-                xCursor = xCursor + maxBreite
-                If xCursor > legendAreaRight Then
-                    ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
-                    Throw New ArgumentException(repMessages.getmsg(16))
-                End If
-                yCursor = legendAreaTop
-                maxBreite = 0.0
-            Else
-                yCursor = yCursor + zeilenHoehe
-                If yCursor > legendAreaBottom + 5 Then
-                    yCursor = legendAreaTop
+                ' Meilenstein-Text
+                ''legendTextVorlagenShape.Copy()
+                ''copiedShape = pptslide.Shapes.Paste()
+                copiedShape = pptCopypptPaste(legendTextVorlagenShape, pptslide)
+
+
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = msShortname & " (=" & msOrCategoryName & ")"
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
+
+                    ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                    If .Left + .Width > legendAreaRight Then
+                        Dim tmpWidth As Double = legendAreaRight - .Left
+                        If tmpWidth > 0.3 * .Width Then
+                            .TextFrame2.WordWrap = MsoTriState.msoTrue
+                            .Width = tmpWidth
+                            .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                            yCursor = yCursor + .Height - zeilenHoehe + 2
+                        End If
+                    End If
+
+                    If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
+                        maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
+                    End If
+                End With
+
+                If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
+
                     xCursor = xCursor + maxBreite
-                    maxBreite = 0.0
                     If xCursor > legendAreaRight Then
                         ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                         Throw New ArgumentException(repMessages.getmsg(16))
                     End If
+                    yCursor = legendAreaTop
+                    maxBreite = 0.0
+                Else
+                    yCursor = yCursor + zeilenHoehe
+                    If yCursor > legendAreaBottom + 5 Then
+                        yCursor = legendAreaTop
+                        xCursor = xCursor + maxBreite
+                        maxBreite = 0.0
+                        If xCursor > legendAreaRight Then
+                            ''Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                            Throw New ArgumentException(repMessages.getmsg(16))
+                        End If
 
+                    End If
                 End If
-            End If
 
 
+            Catch ex As Exception
+
+            End Try
 
         Next
 
@@ -17368,6 +18049,49 @@ Public Module testModule
                             Call splitHryFullnameTo2(tmpName, phName, tmpBC, typePv, pvName)
                             If PhaseDefinitions.Contains(phName) Then
                                 tmpCollection.Add(tmpName, tmpName)
+                            End If
+
+                        Case PTpfdk.PhaseCategories
+
+                            Dim catName As String = ""
+                            Dim tmpBC As String = ""
+                            Dim typePv As Integer = -1
+                            Dim pvName As String = ""
+
+                            
+                            Call splitHryFullnameTo2(tmpName, catName, tmpBC, typePv, pvName)
+
+                            If typePv = PTProjektType.categoryList Then
+                                catName = pvName
+                            End If
+                            If appearanceDefinitions.ContainsKey(catName) Then
+                                tmpName = calcHryCategoryName(catName, False)
+
+                                If Not tmpCollection.Contains(tmpName) Then
+                                    tmpCollection.Add(tmpName, tmpName)
+                                End If
+
+                            End If
+
+                        Case PTpfdk.MilestoneCategories
+
+                            Dim catName As String = ""
+                            Dim tmpBC As String = ""
+                            Dim typePv As Integer = -1
+                            Dim pvName As String = ""
+
+                            Call splitHryFullnameTo2(tmpName, catName, tmpBC, typePv, pvName)
+
+                            If typePv = PTProjektType.categoryList Then
+                                catName = pvName
+                            End If
+                            If appearanceDefinitions.ContainsKey(catName) Then
+                                tmpName = calcHryCategoryName(catName, True)
+
+                                If Not tmpCollection.Contains(tmpName) Then
+                                    tmpCollection.Add(tmpName, tmpName)
+                                End If
+
                             End If
 
                         Case PTpfdk.Meilenstein
@@ -18642,6 +19366,689 @@ Public Module testModule
                 End If
 
             End If
+
+        ElseIf Not IsNothing(rds.errorVorlagenShape) Then
+            ''rds.errorVorlagenShape.Copy()
+            ''errorShape = pptslide.Shapes.Paste
+            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
+            With errorShape.Item(1)
+                .TextFrame2.TextRange.Text = missingShapes
+            End With
+        End If
+
+        ' jetzt werden alle Shapes gelöscht ... 
+        Call rds.setShapesInvisible()
+
+
+    End Sub
+
+
+
+    ''' <summary>
+    ''' zeichnet sowohl Swimlanes im BHTC Modus als auch im Normal -Modus
+    ''' BHTC: Segmente customer Milestones, BHTC Milestones  
+    ''' normal: Swimlane ist alles auf Hierarchie-Ebene 1 (also die Kinder der rootphase Ebene) 
+    ''' es wird immer nur ein Projekt betrachtet 
+    ''' es können x Swimlanes sein - es muss unterschieden werden, ob alles auf eine Seite geht oder mehrere Seiten gemacht werden 
+    ''' Rahmenbedingung bei dieser Routine: es wird nur ein Project aufgerufen, ohne Varianten 
+    ''' es geht also nur darum , alle Swimlanes eines Projektes zu zeichnen bzw. die ausgewählten Swimlanes eines PRojektes zu zeichnen  
+    ''' </summary>
+    ''' <param name="pptApp"></param>
+    ''' <param name="pptCurrentPresentation"></param>
+    ''' <param name="pptslide"></param>
+    ''' <param name="swimLanesToDo"></param>
+    ''' <param name="swimLanesDone"></param>
+    ''' <param name="pptFirstTime"></param>
+    ''' <param name="zeilenhoehe"></param>
+    ''' <param name="legendFontSize"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="worker"></param>
+    ''' <param name="e"></param>
+    ''' <param name="isMultiprojektSicht"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="kennzeichnung"></param>
+    ''' <remarks></remarks>
+    Private Sub zeichneCategorySwimlaneSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
+                                                 ByRef swimLanesToDo As Integer, ByRef swimLanesDone As Integer, ByRef pptFirstTime As Boolean, _
+                                                 ByRef zeilenhoehe As Double, ByRef legendFontSize As Double, _
+                                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                                 ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                                 ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                                 ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
+                                                 ByVal isMultiprojektSicht As Boolean, ByVal hproj As clsProjekt, _
+                                                 ByVal kennzeichnung As String)
+
+
+
+        ' Wichtig für Kalendar 
+        Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
+        Dim errorShape As pptNS.ShapeRange = Nothing
+
+
+        Dim dinFormatA(4, 1) As Double
+        Dim querFormat As Boolean
+        Dim curFormatSize(1) As Double
+
+        Dim maxZeilen As Integer = 0
+        Dim anzZeilen As Integer = 0
+        Dim gesamtAnzZeilen As Integer = 0
+
+        Dim msgTxt As String
+
+        ' in diesem Fall, Meilensteine zeichnen ist sie immer 1 
+        Dim swimLaneZeilen As Integer = 1
+
+        dinFormatA(0, 0) = 3120.0
+        dinFormatA(0, 1) = 2206.15
+
+        dinFormatA(1, 0) = 2206.15
+        dinFormatA(1, 1) = 1560.0
+
+        dinFormatA(2, 0) = 1560.0
+        dinFormatA(2, 1) = 1103.0
+
+        dinFormatA(3, 0) = 1103.0
+        dinFormatA(3, 1) = 780.0
+
+        dinFormatA(4, 0) = 780.0
+        dinFormatA(4, 1) = 540.0
+
+        ' Ende Übernahme
+
+        Dim format As Integer = 4
+        'Dim tmpslideID As Integer
+
+        ' an der Variablen lässt sich in der Folge erkennen, ob die Segmente BHTC Milestones gezeichnet werden müssen oder 
+        ' ob ganz allgemein nach Swimlanes gesucht wird ... 
+        Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
+
+        Dim rds As New clsPPTShapes
+        Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight >= showRangeLeft)
+
+        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
+        rds.pptSlide = pptslide
+
+
+        ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
+        'If completeMppDefinition.Sum = completeMppDefinition.Length Then
+        Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+        If missingShapes.Length = 0 Then
+            ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
+
+            If pptCurrentPresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                querFormat = True
+            Else
+                querFormat = False
+            End If
+
+
+            curFormatSize(0) = pptCurrentPresentation.PageSetup.SlideWidth
+            curFormatSize(1) = pptCurrentPresentation.PageSetup.SlideHeight
+
+            ' jetzt werden die DinA Formate gesetzt 
+            ' Voraussetzung ist allerdings, dass es sich bei der Vorlage um DIN A4 handelt 
+            Dim paperSizeRatio As Double
+
+            Dim considerAll As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
+            Dim selectedPhaseIDs As New Collection
+            Dim selectedMilestoneIDs As New Collection
+            Dim breadcrumbArray As String() = Nothing
+
+            If Not considerAll Then
+                selectedPhaseIDs = hproj.getElemIdsOf(selectedPhases, False)
+                selectedMilestoneIDs = hproj.getElemIdsOf(selectedMilestones, True)
+                breadcrumbArray = hproj.getBreadCrumbArray(selectedPhaseIDs, selectedMilestoneIDs)
+            End If
+
+            ' Änderung tk 23.2.16: wenn mehrere Projekte mit swimlanes gezeichnet werden, so muss hier bestimmt werden
+            ' wieviele Swimlanes zu zeichnen sind; ab dem 2. Projekt kann man sich nicht mehr auf pptFirsttime abstützen ! 
+            ' wenn ein Projekt erstmalig hier reinkommt, ist swimlanestodo = 0, pptFirsttime kann true oder false sein   
+            If swimLanesToDo = 0 Then
+                swimLanesToDo = hproj.getCategoryCount(True)
+                'swimLanesToDo = hproj.getSwimLanesCount(considerAll, breadcrumbArray, isBHTCSchema)
+            End If
+
+            If pptFirstTime Then
+
+
+                If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
+
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(4, 0) = curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(1)
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(0)
+                        dinFormatA(4, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
+                    dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
+
+                ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(3, 0) = curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(1)
+
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(0)
+                        dinFormatA(3, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
+                    dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
+
+                Else
+                    'Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    Call MsgBox(repMessages.getmsg(8))
+                    'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                End If
+
+
+                For i = 2 To 0 Step -1
+                    dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
+                    dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
+                Next
+            Else
+                ' pptFirstTime war False, d.h. das Format wurde bereits angepasst
+            End If
+
+
+            Call rds.plausibilityAdjustments()
+
+
+            Call rds.bestimmeZeichenKoordinaten()
+
+            Dim projCollection As New SortedList(Of Double, String)
+            Dim minDate As Date, maxDate As Date
+
+            ' bestimme die Projekte, die gezeichnet werden sollen
+            ' und bestimme das kleinste / resp größte auftretende Datum 
+            Call bestimmeProjekteAndMinMaxDates(selectedPhases, selectedMilestones, _
+                                                selectedRoles, selectedCosts, _
+                                                selectedBUs, selectedTyps, _
+                                                showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
+                                                projCollection, minDate, maxDate, _
+                                                isMultiprojektSicht, False, hproj)
+
+
+            ' wird benötigt für die Bestimmung der Anzahl zielen und das Zeichnen der Swimlane Phase / Meilensteine
+            ' wenn mppshowallIFOne = false, dann sollte zeitRaumGrenzeL = showrangeL und zeitRaumGrenzeR = showrangeR
+            ' andernfalls ist der Zeitraum ggf. deutlich größer als Showrange 
+            Dim zeitraumGrenzeL As Integer
+            Dim zeitraumGrenzeR As Integer
+
+            If awinSettings.mppShowAllIfOne Then
+
+                zeitraumGrenzeL = getColumnOfDate(minDate)
+                zeitraumGrenzeR = getColumnOfDate(maxDate)
+
+            Else
+
+                zeitraumGrenzeL = showRangeLeft
+                zeitraumGrenzeR = showRangeRight
+
+            End If
+
+            ' aktuell wird davon ausgegangen , dass in projMitVariants nur eine Variante ist
+            ' Swimlane wird aktuell nur für BHTC erstellt , da gibt es noch keine Varianten 
+
+
+
+            ' tk:1.2.16 ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. oder aber considerAll gilt: 
+            awinSettings.mppExtendedMode = (awinSettings.mppExtendedMode And (selectedPhases.Count > 0)) Or _
+                                            (awinSettings.mppExtendedMode And considerAll)
+
+
+
+            ' muss nur bestimmt werden, wenn zum ersten Mal reinkommt 
+
+
+            '
+            ' bestimme das Start und Ende Datum des PPT Kalenders
+            Call calcStartEndePPTKalender(minDate, maxDate, _
+                                          pptStartofCalendar, pptEndOfCalendar)
+
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
+            Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+
+            ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
+
+            Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+
+
+            ' tk 1.2.16
+            ' eigentlich muss er das Ganze nur machen, wenn pptFirsttime 
+            If pptFirstTime Then
+
+                'If awinSettings.mppExtendedMode Then
+
+                '    ' jetzt muss die Gesamt-Zahl an Zeilen ermittelt werden , die die einzelnen Swimlanes bentötigen 
+
+                '    For i = 1 To swimLanesToDo
+
+                '        cphase = hproj.getSwimlane(i, considerAll, breadcrumbArray, isBHTCSchema)
+
+                '        Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
+                '                                                                 awinSettings.mppExtendedMode, _
+                '                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                '                                                                 considerAll)
+
+                '        anzZeilen = anzZeilen + swimLaneZeilen
+                '    Next
+
+
+                'Else
+                '    anzZeilen = swimLanesToDo
+                'End If
+                anzZeilen = swimLanesToDo
+
+                '
+                ' bestimme das Format  
+
+                Dim neededSpace As Double
+
+
+                If isBHTCSchema Then
+                    ' jetzt müssen noch die Segment Höhen  berechnet werden 
+
+                    neededSpace = anzZeilen * rds.zeilenHoehe + _
+                                    hproj.getSegmentsCount(considerAll, breadcrumbArray, isBHTCSchema) * rds.segmentHoehe
+                Else
+
+                    neededSpace = anzZeilen * rds.zeilenHoehe
+
+                End If
+
+
+
+                Dim oldHeight As Double
+                Dim oldwidth As Double
+
+                oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                oldwidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+
+                Dim curHeight As Double = oldHeight
+                Dim curWidth As Double = oldwidth
+
+
+
+                If (rds.availableSpace < neededSpace And awinSettings.mppOnePage) Then
+
+                    ' es muss das Format angepasst werden ... 
+
+                    Dim ix As Integer = format
+                    Dim ok As Boolean = True
+                    ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
+
+                    Dim sizeMemory() As Single
+                    Dim relativeSizeMemory As New SortedList(Of String, Double())
+
+                    With rds
+                        sizeMemory = saveSizesOfElements(.projectNameVorlagenShape, _
+                                                     .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                                     .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                                     .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                                     .projectVorlagenShape, .ampelVorlagenShape, _
+                                                     .segmentVorlagenShape)
+                    End With
+
+
+                    If pptApp.Version = "14.0" Then
+                        ' muss nichts machen
+
+                    Else
+
+                        relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
+
+                    End If
+
+
+                    Do While rds.availableSpace < neededSpace And ix > 0
+
+                        With pptCurrentPresentation
+
+                            .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
+                            If querFormat Then
+                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
+                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
+                            Else
+                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
+                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
+                            End If
+
+
+                        End With
+
+                        curHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                        curWidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+                        ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                        ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+
+                        If pptApp.Version = "14.0" Then
+                            ' muss nichts machen
+                        Else
+
+                            Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
+                        End If
+
+                        ' jetzt wieder die Koordinaten neu berechnen 
+                        Call rds.bestimmeZeichenKoordinaten()
+
+
+                        If rds.availableSpace < neededSpace Then
+                            ix = ix - 1
+                        End If
+
+                    Loop
+
+                    ix = ix - 1
+                    If ix < 0 Then
+                        ix = 0
+                    End If
+
+                    ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
+                    If pptApp.Version = "14.0" Then
+                        With rds
+                            Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape, _
+                                                .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                                .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                                .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                                .projectVorlagenShape, .ampelVorlagenShape, _
+                                                .segmentVorlagenShape)
+                        End With
+
+
+                    End If
+
+
+                    ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
+                    ' entsprechend um den errechneten Faktor anpassen
+
+                    Dim enlargeTxtFaktor As Double = curHeight / oldHeight
+                    Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
+
+                    ' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
+                    ' tk 2.2 braucht man nicht mehr ...
+                    'With rds
+                    '    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
+                    '    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
+
+                    '    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
+                    '    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
+                    'End With
+
+                End If
+
+            End If
+
+
+
+            If pptFirstTime Then
+
+                ' jetzt erst mal den Kalender zeichnen 
+                ' zeichne den Kalender
+                'Dim calendargroup As pptNS.Shape = Nothing
+
+                Try
+
+                    With rds
+
+                        Call zeichne3RowsCalendar(rds)
+
+                    End With
+
+
+
+                Catch ex As Exception
+
+                End Try
+
+                ' wenn Legende gezeichnet werden soll - die Legende zeichnen 
+
+                ' zeichne die Legende 
+                If awinSettings.mppShowLegend Then
+                    Try
+                        ' tk , wird bei Category als Swimlane zeichnen nicht gebraucht 
+                        ' '' Änderung tk: noch überprüfen, ob ob considerAll = true , dann sollen die selectedPhase entsprechend aufgebaut werden ...
+                        ''Dim tmpphases As New Collection
+                        ''Dim tmpMilestones As New Collection
+
+                        ''If considerAll Then
+
+                        ''    Try
+                        ''        For Each cphase In hproj.AllPhases
+
+                        ''            If Not hproj.isSwimlaneOrSegment(cphase.name) Then
+
+                        ''                Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                        ''                If tmpstr <> "" Then
+                        ''                    tmpstr = tmpstr & "#" & cphase.name
+
+                        ''                    If Not tmpphases.Contains(tmpstr) Then
+                        ''                        tmpphases.Add(tmpstr, tmpstr)
+                        ''                    End If
+
+                        ''                End If
+                        ''            End If
+
+
+
+
+                        ''        Next
+
+
+
+                        ''        ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                        ''        Dim mSList As SortedList(Of Date, String)
+
+                        ''        mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
+
+                        ''        If mSList.Count > 0 Then
+                        ''            For Each kvp As KeyValuePair(Of Date, String) In mSList
+
+                        ''                Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                        ''                If Not tmpMilestones.Contains(tmpstr) Then
+                        ''                    tmpMilestones.Add(tmpstr, tmpstr)
+                        ''                End If
+
+                        ''            Next
+                        ''        End If
+                        ''    Catch ex As Exception
+
+                        ''    End Try
+                        ''    ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+
+                        ''Else
+
+                        ''    For Each phaseItem As String In selectedPhases
+                        ''        If Not hproj.isSwimlaneOrSegment(CStr(phaseItem)) Then
+                        ''            If Not tmpphases.Contains(CStr(phaseItem)) Then
+                        ''                tmpphases.Add(CStr(phaseItem), CStr(phaseItem))
+                        ''            End If
+                        ''        End If
+                        ''    Next
+
+                        ''    tmpMilestones = selectedMilestones
+                        ''End If
+                        ' Phasen werden hier vorläufig nicht betrachtet 
+                        Dim tmpPhases As New Collection
+                        Dim tmpMilestones As Collection
+                        If considerAll Then
+                            tmpMilestones = hproj.getMilestoneCategoryNames
+                        Else
+                            tmpMilestones = selectedMilestones
+                        End If
+                        
+                            With rds
+                                Call zeichnePPTlegende(pptslide, _
+                                                tmpPhases, tmpMilestones, selectedRoles, selectedCosts, _
+                                                .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
+                                                .legendLineShape, .legendStartShape, _
+                                                .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
+                                                .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape, True)
+
+                            End With
+
+
+                    Catch ex As Exception
+
+                        If Not IsNothing(rds.errorVorlagenShape) Then
+                            ''rds.errorVorlagenShape.Copy()
+                            ''errorShape = pptslide.Shapes.Paste
+                            errorShape = pptCopypptPaste(rds.errorVorlagenShape, pptslide)
+
+                            With errorShape.Item(1)
+                                .Top = rds.legendLineShape.Top + 10
+                                .TextFrame2.TextRange.Text = ex.Message
+                            End With
+                        End If
+
+                    End Try
+
+                End If
+
+                Dim smartInfoCRD As Date = Date.MinValue
+                ' jetzt wird hier die Date Info eingetragen ... 
+                Try
+                    For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                        Dim tmpProj As clsProjekt = AlleProjekte.getProject(kvp.Value)
+                        If Not IsNothing(tmpProj) Then
+                            If smartInfoCRD < tmpProj.timeStamp Then
+                                smartInfoCRD = tmpProj.timeStamp
+                            End If
+                        End If
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+                ' 
+                ' jetzt wird das Slide gekennzeichnet als Smart Slide 
+                Call addSmartPPTSlideCalInfo(rds.pptSlide, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar, smartInfoCRD)
+
+                'ur: 25.03.2015: sichern der im Format veränderten Folie
+                rds.pptSlide.Copy()
+                pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
+                pptFirstTime = False
+                legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
+
+            End If
+
+
+
+            ' hier ist die Schleife, die alle swimlanes von swimlanesdone+1 bis todo zeichnet 
+            ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
+
+            Dim curYPosition As Double = rds.drawingAreaTop
+            
+
+            ' steuert im Wechsel, dass eine Zeilendifferenzierung gezeichnet wird / nicht gezeichnet wird 
+            ' hat nur dann einen Effekt, wenn rds.rowDifferentiator <> Nothing 
+
+            Dim toggleRow As Boolean = False
+
+            Dim curSwimlaneIndex As Integer = swimLanesDone + 1
+
+            Dim categoriesToDraw As Collection = hproj.getCategoryNames(True)
+
+
+            ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
+            'Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
+            '                                                                 awinSettings.mppExtendedMode, _
+            '                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+            '                                                                 considerAll)
+
+            Dim categoryToDraw As String = ""
+
+            Do While (curSwimlaneIndex <= swimLanesToDo) And _
+                    (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
+
+                If Not IsNothing(worker) Then
+                    ' Zwischen-Meldung ausgeben ...
+                    If worker.WorkerSupportsCancellation Then
+                        If worker.CancellationPending Then
+                            e.Cancel = True
+                            msgTxt = "Berichterstellung abgebrochen ..."
+                            If awinSettings.englishLanguage Then
+                                msgTxt = "Report Creation cancelled ..."
+                            End If
+                            e.Result = msgTxt
+                            Exit Sub
+                        End If
+
+                    End If
+
+                    categoryToDraw = categoriesToDraw.Item(curSwimlaneIndex)
+                    ' Zwischenbericht abgeben ...
+                    msgTxt = "Kategorie Swimlane '" & categoryToDraw & "' wird gezeichnet  ...."
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Drawing category Swimlane '" & categoryToDraw & "'  ...."
+                    End If
+                    e.Result = msgTxt
+                    If worker.WorkerReportsProgress Then
+                        worker.ReportProgress(0, e)
+                    Else
+                        Call logfileSchreiben("Swimlane '" & categoryToDraw & "' wird gezeichnet  ....", "zeichneSwimlane2Sicht", 0)
+                    End If
+                End If
+
+
+                ' jetzt die Swimlane zeichnen
+                ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
+
+                Call zeichneCategoryOfProject(rds, curYPosition, toggleRow, _
+                                              hproj, categoryToDraw, considerAll, _
+                                              considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                              selectedPhaseIDs, selectedMilestoneIDs, _
+                                              selectedRoles, selectedCosts, _
+                                              swimLaneZeilen)
+
+
+
+                curSwimlaneIndex = curSwimlaneIndex + 1
+                swimLaneZeilen = 1
+
+
+            Loop
+
+            If curSwimlaneIndex = swimLanesDone + 1 Then
+                ' es wurde in der Schleife keine Swimmlane gezeichnet, da sie zu groß ist für eine Seite
+                ' Abbruch provoziere
+                ' Zwischenbericht abgeben ...
+                msgTxt = "Swimlane '" & categoryToDraw & "' kann nicht gezeichnet werden; kein Platz  ...."
+                If awinSettings.englishLanguage Then
+                    msgTxt = "Swimlane '" & categoryToDraw & "' could not be drawn: not enough space ...."
+                End If
+                e.Result = msgTxt
+                If worker.WorkerReportsProgress Then
+                    worker.ReportProgress(0, e)
+                End If
+                Throw New ArgumentException(msgTxt)
+                swimLanesDone = 0
+                swimLanesToDo = 0
+
+            Else
+
+                ' jetzt die Anzahl ..Done bestimmen
+                swimLanesDone = curSwimlaneIndex - 1
+
+            End If
+
+
 
         ElseIf Not IsNothing(rds.errorVorlagenShape) Then
             ''rds.errorVorlagenShape.Copy()

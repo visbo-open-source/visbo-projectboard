@@ -74,7 +74,6 @@ Imports System.Windows
             If returnValue = DialogResult.OK Then
                 constellationName = storeConstellationFrm.ComboBox1.Text
 
-
                 Call storeSessionConstellation(constellationName)
 
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
@@ -143,7 +142,8 @@ Imports System.Windows
 
     Sub PTLadenKonstellation(control As IRibbonControl)
 
-        Dim loadFromDatenbank As String = "PT5G1B1"
+        Dim load1FromDatenbank As String = "PT5G1B1"
+        Dim load2FromDatenbank As String = "PT5G1"
         Dim loadConstellationFrm As New frmLoadConstellation
         Dim storedAtOrBefore As Date = Date.Now
         Dim ControlID As String = control.Id
@@ -161,7 +161,7 @@ Imports System.Windows
 
         ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
-        If ControlID = loadFromDatenbank And Not noDB Then
+        If (ControlID = load1FromDatenbank Or ControlID = load2FromDatenbank) And Not noDB Then
 
             If request.pingMongoDb() Then
 
@@ -2998,6 +2998,7 @@ Imports System.Windows
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
+
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
@@ -3059,7 +3060,9 @@ Imports System.Windows
 
                 Try
                     enableOnUpdate = False
+
                     Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+
                     appInstance.EnableEvents = True
 
                     Try
@@ -3304,7 +3307,7 @@ Imports System.Windows
 
             End With
         Catch ex As Exception
-            Dim a As Integer = 1
+
         End Try
 
 

@@ -15,5 +15,16 @@ Public Class frmProjekteSpeichern
 
     Private Sub frmProjekteSpeichern_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Call LanguageSettings()
+
+    End Sub
+
+    Private Sub languageSettings()
+
+        If awinSettings.englishLanguage Then
+            Label1.Text = "Would you like to store your changes?"
+            JAButton.Text = "Yes"
+            NEINButton.Text = "No"
+        End If
     End Sub
 End Class

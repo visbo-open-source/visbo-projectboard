@@ -1849,6 +1849,94 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Anzahl an Meilenstein bzw. Phasen Kategorien zurück 
+    ''' </summary>
+    ''' <param name="lookingforMS"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCategoryCount(ByVal lookingforMS As Boolean) As Integer
+        Get
+            Dim anzCategories As Integer = 0
+            Dim nameCollection As New Collection
+            Dim idCollection As Collection = Me.getAllElemIDs(lookingforMS)
+
+            For Each elemID As String In idCollection
+                If lookingforMS Then
+                    Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
+                    If Not IsNothing(cMilestone) Then
+                        Dim catName As String = cMilestone.appearance
+                        If Not nameCollection.Contains(catName) Then
+                            nameCollection.Add(Item:=catName, Key:=catName)
+                        End If
+                    End If
+                Else
+                    Dim cPhase As clsPhase = Me.getPhaseByID(elemID)
+                    If Not IsNothing(cPhase) Then
+                        Dim catName As String = cPhase.appearance
+                        If Not nameCollection.Contains(catName) Then
+                            nameCollection.Add(Item:=catName, Key:=catName)
+                        End If
+                    End If
+                End If
+                
+            Next
+
+            getCategoryCount = nameCollection.Count
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Namen der vorkommenden Meilenstein- bzw. Phasen Kategorien zurück 
+    ''' </summary>
+    ''' <param name="lookingforMS"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCategoryNames(ByVal lookingforMS As Boolean) As Collection
+        Get
+            Dim anzCategories As Integer = 0
+            Dim nameCollection As New Collection
+            Dim idCollection As Collection = Me.getAllElemIDs(lookingforMS)
+            Dim tmpSortList As New SortedList(Of Integer, String)
+
+            For Each elemID As String In idCollection
+                If lookingforMS Then
+                    Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
+                    If Not IsNothing(cMilestone) Then
+                        Dim catName As String = cMilestone.appearance
+                        Dim sortkey As Integer = appearanceDefinitions.IndexOfKey(catName)
+                        If Not tmpSortList.ContainsKey(sortkey) Then
+                            tmpSortList.Add(key:=sortkey, value:=catName)
+                        End If
+                    End If
+                Else
+                    Dim cPhase As clsPhase = Me.getPhaseByID(elemID)
+                    If Not IsNothing(cPhase) Then
+                        Dim catName As String = cPhase.appearance
+                        Dim sortkey As Integer = appearanceDefinitions.IndexOfKey(catName)
+                        If Not tmpSortList.ContainsKey(sortkey) Then
+                            tmpSortList.Add(key:=sortkey, value:=catName)
+                        End If
+                    End If
+                End If
+
+            Next
+
+            ' jetzt umkopieren 
+
+            For i As Integer = 0 To tmpSortList.Count - 1
+                Dim catName As String = tmpSortList.ElementAt(i).Value
+                If Not nameCollection.Contains(catName) Then
+                    nameCollection.Add(catName, catName)
+                End If
+            Next
+
+            getCategoryNames = nameCollection
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 
@@ -2847,6 +2935,222 @@
 
 
             getMilestoneNames = tmpCollection
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert eine Liste der vorkommenden Meilenstein Kategorien im Projekt zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneCategoryNames As Collection
+        Get
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim tmpCollection As New Collection
+            Dim firstMilestone As Integer = hry.getIndexOf1stMilestone
+
+
+            If firstMilestone > 0 Then
+                For ix As Integer = firstMilestone To hry.count
+                    Dim tmpID As String = hry.getIDAtIndex(ix)
+                    Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(tmpID)
+                    If Not IsNothing(cMilestone) Then
+                        Dim catName As String = cMilestone.appearance
+                        If Not tmpCollection.Contains(catName) Then
+                            tmpCollection.Add(catName, catName)
+                        End If
+                    End If
+
+                Next
+            End If
+
+            getMilestoneCategoryNames = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Liste an ElemIDs von Meilensteinen zurück, die zu der angegebenen Category / appearance gehören  
+    ''' </summary>
+    ''' <param name="category"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneIDsWithCat(ByVal category As String) As Collection
+        Get
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim tmpCollection As New Collection
+            Dim firstMilestone As Integer = hry.getIndexOf1stMilestone
+
+            If firstMilestone > 0 Then
+                For ix As Integer = firstMilestone To hry.count
+                    Dim msID As String = hry.getIDAtIndex(ix)
+                    Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(msID)
+
+                    If Not IsNothing(cMilestone) Then
+
+                        If cMilestone.appearance = category Then
+
+                            If Not tmpCollection.Contains(msID) Then
+                                tmpCollection.Add(msID, msID)
+                            End If
+
+                        End If
+                    End If
+
+                Next
+            End If
+
+            getMilestoneIDsWithCat = tmpCollection
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn das Projekt mindestens einen MEilenstein der angegebenen Category enthält 
+    ''' </summary>
+    ''' <param name="category"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsMilestoneCategory(ByVal category As String) As Boolean
+        Get
+
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim found As Boolean = False
+            Dim firstMilestone As Integer = hry.getIndexOf1stMilestone
+            Dim ix As Integer = firstMilestone
+
+            If firstMilestone > 0 Then
+                While ix <= hry.count And Not found
+                    Dim msID As String = hry.getIDAtIndex(ix)
+                    Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(msID)
+
+                    If Not IsNothing(cMilestone) Then
+                        If cMilestone.appearance = category Then
+                            found = True
+                        End If
+                    End If
+
+                    ix = ix + 1
+                End While
+
+            End If
+
+            containsMilestoneCategory = found
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert eine Liste der vorkommenden Meilenstein Kategorien im Projekt zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseCategoryNames As Collection
+        Get
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim tmpCollection As New Collection
+            Dim lastPhaseIx As Integer = hry.getIndexOf1stMilestone - 1
+            If lastPhaseIx < 0 Then
+                ' es gibt keine Meilensteine 
+                lastPhaseIx = hry.count
+            End If
+
+
+            For ix As Integer = 1 To lastPhaseIx
+                Dim tmpID As String = hry.getIDAtIndex(ix)
+                Dim cPhase As clsPhase = Me.getPhaseByID(tmpID)
+                If Not IsNothing(cPhase) Then
+                    Dim catName As String = cPhase.appearance
+                    If Not tmpCollection.Contains(catName) Then
+                        tmpCollection.Add(catName, catName)
+                    End If
+                End If
+
+            Next
+
+
+            getPhaseCategoryNames = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Liste an ElemIDs von Phasen zurück, die zu der angegebenen Category / appearance gehören  
+    ''' </summary>
+    ''' <param name="category"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseIDsWithCat(ByVal category As String) As Collection
+        Get
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim tmpCollection As New Collection
+            Dim lastPhaseIx As Integer = hry.getIndexOf1stMilestone - 1
+            If lastPhaseIx < 0 Then
+                lastPhaseIx = hry.count
+            End If
+
+            For ix As Integer = 1 To lastPhaseIx
+                Dim phID As String = hry.getIDAtIndex(ix)
+                Dim cPhase As clsPhase = Me.getPhaseByID(phID)
+
+                If Not IsNothing(cPhase) Then
+
+                    If cPhase.appearance = category Then
+
+                        If Not tmpCollection.Contains(phID) Then
+                            tmpCollection.Add(phID, phID)
+                        End If
+
+                    End If
+                End If
+
+            Next
+
+            getPhaseIDsWithCat = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn das Projekt mindesten einen Phase der angegebenen Category enthält 
+    ''' </summary>
+    ''' <param name="category"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPhaseCategory(ByVal category As String) As Boolean
+        Get
+
+            Dim hry As clsHierarchy = Me.hierarchy
+            Dim found As Boolean = False
+            Dim lastPhaseIx As Integer = hry.getIndexOf1stMilestone - 1
+            If lastPhaseIx < 0 Then
+                lastPhaseIx = hry.count
+            End If
+            Dim ix As Integer = 1
+
+
+            While ix <= lastPhaseIx And Not found
+                Dim phID As String = hry.getIDAtIndex(ix)
+                Dim cphase As clsPhase = Me.getPhaseByID(phID)
+
+                If Not IsNothing(cphase) Then
+                    If cphase.appearance = category Then
+                        found = True
+                    End If
+                End If
+
+                ix = ix + 1
+            End While
+
+
+
+            containsPhaseCategory = found
+
         End Get
     End Property
 

@@ -13,6 +13,7 @@
     Public appearance As String
 
     Public deliverables As List(Of String)
+    Public percentDone As Double
 
     'Friend Property fileLink As Uri
 
@@ -59,6 +60,10 @@
                     .appearance = Me.appearance
                 End If
 
+                If Not IsNothing(Me.percentDone) Then
+                    .percentDone = Me.percentDone
+                End If
+
                 Try
                     If Not IsNothing(Me.alternativeColor) Then
                         .farbe = CInt(Me.alternativeColor)
@@ -69,29 +74,29 @@
 
                 End Try
 
-                If Me.deliverables.Count > 0 Then
-                    For i = 1 To Me.deliverables.Count
-                        Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
-                        .addDeliverable(tmpDeliverable)
-                    Next
-                Else
-                    ' evtl sind die noch in der Bewertung vergraben ... 
-                    If Me.bewertungsCount > 0 Then
-                        If Not IsNothing(Me.getBewertung(1).deliverables) Then
-                            Dim allDeliverables As String = Me.getBewertung(1).deliverables
+                If Not IsNothing(Me.deliverables) Then
+                    If Me.deliverables.Count > 0 Then
+                        For i = 1 To Me.deliverables.Count
+                            Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
+                            .addDeliverable(tmpDeliverable)
+                        Next
+                    Else
+                        ' evtl sind die noch in der Bewertung vergraben ... 
+                        If Me.bewertungsCount > 0 Then
+                            If Not IsNothing(Me.getBewertung(1).deliverables) Then
+                                Dim allDeliverables As String = Me.getBewertung(1).deliverables
 
-                            If allDeliverables.Trim.Length > 0 Then
-                                Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
-                                For i = 1 To tmpstr.Length
-                                    .addDeliverable(tmpstr(i - 1))
-                                Next
+                                If allDeliverables.Trim.Length > 0 Then
+                                    Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                                    For i = 1 To tmpstr.Length
+                                        .addDeliverable(tmpstr(i - 1))
+                                    Next
+                                End If
+
                             End If
-
                         End If
                     End If
                 End If
-
-
 
                 For i = 1 To Me.bewertungsCount
 
@@ -131,6 +136,8 @@
 
             Me.alternativeColor = .individualColor
 
+            Me.percentDone = .percentDone
+           
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
                 Me.deliverables.Add(tmpDeliverable)
@@ -139,7 +146,7 @@
             Try
                 For i = 1 To .bewertungsCount
                     Dim newb As New clsBewertungDB
-                    newb.copyfrom(.getBewertung(i))
+                    newb.Copyfrom(.getBewertung(i))
                     Me.addBewertung(newb)
                 Next
             Catch ex As Exception
@@ -201,6 +208,7 @@
 
     Sub New()
 
+        percentDone = 0.0
         bewertungen = New SortedList(Of String, clsBewertungDB)
         deliverables = New List(Of String)
 

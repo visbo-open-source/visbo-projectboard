@@ -74,6 +74,8 @@
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
+    <Compile Include="clsDocuments.vb" />
+    <Compile Include="clsDocumentsDB.vb" />
     <Compile Include="clsHierarchyDB.vb" />
     <Compile Include="clsHierarchyNodeDB.vb" />
     <Compile Include="clsKostenartDB.vb" />

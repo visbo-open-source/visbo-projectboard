@@ -4,6 +4,11 @@
     Public AllResults As List(Of clsResultDB)
     Public AllBewertungen As SortedList(Of String, clsBewertungDB)
 
+    Public percentDone As Double
+    Public responsible As String
+
+    Public deliverables As List(Of String)
+
     Public ampelStatus As Integer
     Public ampelErlaeuterung As String
 
@@ -33,7 +38,7 @@
 
     Sub copyFrom(ByVal phase As clsPhase, ByVal hfarbe As Integer)
 
-        Dim r As Integer, k As Integer
+        Dim i As Integer, r As Integer, k As Integer
 
         With phase
             Me.earliestStart = .earliestStart
@@ -50,6 +55,9 @@
             Me.originalName = .originalName
             Me.appearance = .appearance
 
+            Me.responsible = .verantwortlich
+            Me.percentDone = .percentDone
+
             Me.ampelErlaeuterung = .ampelErlaeuterung
             Me.ampelStatus = .ampelStatus
 
@@ -61,6 +69,12 @@
             Catch ex As Exception
                 Me.farbe = hfarbe
             End Try
+
+            ' jetzt die evtl vorhandenen Deliverables zuweisen ...
+            For i = 1 To .countDeliverables
+                Dim tmpDeliverable As String = .getDeliverable(i)
+                Me.deliverables.Add(tmpDeliverable)
+            Next
 
 
             For r = 1 To .countRoles
@@ -121,6 +135,14 @@
             '.minDauer = Me.minDauer
             '.maxDauer = Me.maxDauer
 
+            If Not IsNothing(Me.responsible) Then
+                .verantwortlich = Me.responsible
+            End If
+
+            If Not IsNothing(Me.percentDone) Then
+                .percentDone = Me.percentDone
+            End If
+
             If Not IsNothing(Me.shortName) Then
                 .shortName = Me.shortName
             End If
@@ -133,6 +155,15 @@
                 .appearance = Me.appearance
             End If
 
+            ' jetzt die Deliverables aufnehmen 
+            If Not IsNothing(Me.deliverables) Then
+                If Me.deliverables.Count > 0 Then
+                    For i = 1 To Me.deliverables.Count
+                        Dim tmpDeliverable As String = Me.deliverables.Item(i - 1)
+                        .addDeliverable(tmpDeliverable)
+                    Next
+                End If
+            End If
 
             ' Ergänzung 9.5.16 AmpelStatus und Erläuterung mitaufgenommen ... 
             .ampelStatus = Me.ampelStatus
@@ -264,6 +295,11 @@
         AllCosts = New List(Of clsKostenartDB)
         AllResults = New List(Of clsResultDB)
         AllBewertungen = New SortedList(Of String, clsBewertungDB)
+
+        deliverables = New List(Of String)
+
+        percentDone = 0.0
+        responsible = ""
 
         ampelStatus = 0
         ampelErlaeuterung = ""
