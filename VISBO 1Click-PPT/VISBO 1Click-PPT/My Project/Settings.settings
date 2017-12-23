@@ -27,16 +27,16 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO AmpelText</Value>
+      <Value Profile="(Default)">Indikatoren</Value>
     </Setting>
     <Setting Name="VISBOdeliverables" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Deliverables</Value>
     </Setting>
     <Setting Name="VISBOresponsible" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO Responsible</Value>
+      <Value Profile="(Default)">Kontaktperson</Value>
     </Setting>
     <Setting Name="VISBOpercentDone" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">% Work Complete</Value>
+      <Value Profile="(Default)">% Abgeschlossen</Value>
     </Setting>
   </Settings>
 </SettingsFile>

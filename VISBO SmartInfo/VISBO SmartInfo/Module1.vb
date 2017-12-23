@@ -79,6 +79,8 @@ Module Module1
     'Friend userPWD As String = ""
 
     Friend noDBAccessInPPT As Boolean = True
+    Friend myUserName As String = ""
+    Friend myUserPWD As String = ""
 
     Friend defaultSprache As String = "Original"
     Friend selectedLanguage As String = defaultSprache
@@ -942,162 +944,252 @@ Module Module1
 
             If Not IsNothing(shpRange) And slideHasSmartElements Then
 
+                ' jetzt muss hier die Behandlung für Office 2010 rein 
+                Dim correctErrorShape1 As PowerPoint.Shape = Nothing
+                Dim correctErrorShape2 As PowerPoint.Shape = Nothing
 
-                ' es sind ein oder mehrere Shapes selektiert worden 
-                Dim i As Integer = 0
-                If shpRange.Count = 1 Then
+                ' nur was machen, wenn es sich um Office 2010 handelt ... 
+                If pptAPP.Version = "14.0" Then
+                    Try
+                        correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
+                    Catch ex As Exception
 
-                    ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
-                    ' Listbox passt 
+                    End Try
 
-                    '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
-                    '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
-                    ' ''If Not IsNothing(infoFrm) And formIsShown Then
-                    ' ''    If infoFrm.rdbName.Visible Then
-                    ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
-                    ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
-                    ' ''        End If
-                    ' ''    End If
-                    ' ''End If
+                    Try
+                        correctErrorShape2 = currentSlide.Shapes("visboCorrectError2")
+                    Catch ex As Exception
+
+                    End Try
+                End If
+                
+
+                If ((pptAPP.Version = "14.0") And _
+                    (((Not propertiesPane.Visible) Or _
+                    (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or _
+                    (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
+                    ' Erzeugen eines Hilfs-Elements
+
+                    ' Ist es 
+                    If IsNothing(correctErrorShape1) And IsNothing(correctErrorShape2) And Not isRelevantMSPHShape(shpRange(1)) Then
+                        ' nichts machen 
+                    Else
+                        If IsNothing(correctErrorShape1) Then
+                            ' erzeugen und selektieren der beiden Shapes  
+                            Dim oldShape As PowerPoint.Shape = shpRange(1)
+
+                            Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                                                                                               0, 0, 50, 50)
 
 
-                    ' jetzt ggf die angezeigten Marker löschen 
-                    If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
-                        Call deleteMarkerShapes()
-                    ElseIf markerShpNames.Count > 1 Then
-                        Call deleteMarkerShapes(shpRange(1).Name)
+
+                            If Not IsNothing(helpShape1) Then
+                                helpShape1.Name = "visboCorrectError1"
+                                helpShape1.Tags.Add("formerSN", oldShape.Name)
+                                helpShape1.Select()
+                            End If
+
+
+
+                        ElseIf IsNothing(correctErrorShape2) Then
+
+                            ' jetzt die zweite Welle 
+                            propertiesPane.Visible = True
+
+                            Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                                                                                               0, 0, 50, 50)
+                            If Not IsNothing(helpShape2) Then
+                                helpShape2.Name = "visboCorrectError2"
+                                helpShape2.Select()
+                            End If
+                        Else
+
+
+                            ' Selektieren des vorher geklickten shapes 
+                            Dim formerShapeName As String = correctErrorShape1.Tags.Item("formerSN")
+                            Dim formerSelShape As PowerPoint.Shape = Nothing
+
+                            If formerShapeName.Length > 0 Then
+                                Try
+
+                                    formerSelShape = currentSlide.Shapes(formerShapeName)
+
+                                    ' Löschen der Hilfs-Shapes 
+                                    correctErrorShape1.Delete()
+                                    correctErrorShape2.Delete()
+
+                                    ' Selektieren des formerShapes
+                                    formerSelShape.Select()
+
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+                        End If
                     End If
 
-                    ' prüfen, ob es ein Kommentar ist 
-                    Dim tmpShape As PowerPoint.Shape = shpRange(1)
-                    If isCommentShape(tmpShape) Then
-                        Call markReferenceShape(tmpShape.Name)
-                    End If
-                ElseIf shpRange.Count > 1 Then
-                    ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
-                    For Each tmpShape As PowerPoint.Shape In shpRange
+                Else
+                    ' es sind ein oder mehrere Shapes selektiert worden 
+                    Dim i As Integer = 0
+                    If shpRange.Count = 1 Then
+
+                        ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
+                        ' Listbox passt 
+
+                        '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
+                        '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
+                        ' ''If Not IsNothing(infoFrm) And formIsShown Then
+                        ' ''    If infoFrm.rdbName.Visible Then
+                        ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
+                        ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
+                        ' ''        End If
+                        ' ''    End If
+                        ' ''End If
+
+
+                        ' jetzt ggf die angezeigten Marker löschen 
+                        If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
+                            Call deleteMarkerShapes()
+                        ElseIf markerShpNames.Count > 1 Then
+                            Call deleteMarkerShapes(shpRange(1).Name)
+                        End If
+
+                        ' prüfen, ob es ein Kommentar ist 
+                        Dim tmpShape As PowerPoint.Shape = shpRange(1)
                         If isCommentShape(tmpShape) Then
                             Call markReferenceShape(tmpShape.Name)
                         End If
-                    Next
-                ElseIf shpRange.Count = 0 Then
+                    ElseIf shpRange.Count > 1 Then
+                        ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
+                        For Each tmpShape As PowerPoint.Shape In shpRange
+                            If isCommentShape(tmpShape) Then
+                                Call markReferenceShape(tmpShape.Name)
+                            End If
+                        Next
+                    ElseIf shpRange.Count = 0 Then
 
-                    Call deleteMarkerShapes()
+                        Call deleteMarkerShapes()
 
-                End If
+                    End If
 
 
-                For Each tmpShape As PowerPoint.Shape In shpRange
+                    For Each tmpShape As PowerPoint.Shape In shpRange
 
-                    If tmpShape.Tags.Count > 0 Then
+                        If tmpShape.Tags.Count > 0 Then
 
-                        'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
+                            'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
 
-                        If isRelevantShape(tmpShape) Then
-                            If bekannteIDs.ContainsKey(tmpShape.Id) Or _
-                                tmpShape.Name.EndsWith(shadowName) Then
+                            If isRelevantShape(tmpShape) Then
+                                If bekannteIDs.ContainsKey(tmpShape.Id) Or _
+                                    tmpShape.Name.EndsWith(shadowName) Then
 
-                                If Not relevantShapeNames.Contains(tmpShape.Name) Then
-                                    relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
+                                    If Not relevantShapeNames.Contains(tmpShape.Name) Then
+                                        relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
+                                    End If
+
+                                Else
+                                    ' die vorhandenen Tags löschen ... und den Namen ändern 
+                                    Call deleteShpTags(tmpShape)
                                 End If
 
+                            End If
+
+                        End If
+
+
+                    Next
+
+                    '' Anfang ... das war vorher innerhalb der next Schleife .. 
+                    ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
+                    If relevantShapeNames.Count >= 1 Then
+                        ''''???
+                        '' '' '' '' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
+                        ' '' '' ''If Not IsNothing(propertiesPane) And Not propertiesPane.Visible Then
+                        ' '' '' ''    propertiesPane.Visible = True
+                        ' '' '' ''End If
+
+
+
+                        ' ur: wegen Pane
+                        ' ''If IsNothing(infoFrm) And Not formIsShown Then
+                        ' ''    infoFrm = New frmInfo
+                        ' ''    formIsShown = True
+                        ' ''    infoFrm.Show()
+                        ' ''End If
+
+                        ReDim arrayOfNames(relevantShapeNames.Count - 1)
+
+                        For ix As Integer = 1 To relevantShapeNames.Count
+                            arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
+                        Next
+
+                        selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+                    Else
+                        ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
+                        Call checkHomeChangeBtnEnablement()
+                        If propertiesPane.Visible Then
+                            Call aktualisiereInfoPane(Nothing)
+                        End If
+                        ' ur: wegen Pane
+                        ' ''If formIsShown Then
+                        ' ''    Call aktualisiereInfoFrm(Nothing)
+                        ' ''End If
+                    End If
+                    '' Ende ...
+
+
+                    If Not IsNothing(selectedPlanShapes) Then
+
+                        Dim tmpShape As PowerPoint.Shape = Nothing
+                        Dim elemWasMoved As Boolean = False
+                        For Each tmpShape In selectedPlanShapes
+                            ' hier sind nur noch richtige Shapes  
+
+                            ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                            elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                            If elemWasMoved Then
+                                homeButtonRelevance = True
                             Else
-                                ' die vorhandenen Tags löschen ... und den Namen ändern 
-                                Call deleteShpTags(tmpShape)
+                                If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                    changedButtonRelevance = True
+                                End If
                             End If
 
+                        Next
+
+                        ' hier wird die Information zu dem selektierten Shape angezeigt 
+                        If Not IsNothing(propertiesPane) Then
+                            Call aktualisiereInfoPane(tmpShape, elemWasMoved)
+                        End If
+                        ' ur: wegen Pane
+                        If formIsShown Then
+                            Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
                         End If
 
-                    End If
 
+                        ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
+                        ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
+                        Call ensureVisibilityOfSelection(selectedPlanShapes)
 
-                Next
+                        ' kann jetzt wieder aktiviert werden ...
+                        If Not IsNothing(propertiesPane) Then
+                            propertiesPane.Visible = True
+                        End If
+                    Else
 
-                '' Anfang ... das war vorher innerhalb der next Schleife .. 
-                ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
-                If relevantShapeNames.Count >= 1 Then
-                    ''''???
-                    '' '' '' '' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
-                    ' '' '' ''If Not IsNothing(propertiesPane) And Not propertiesPane.Visible Then
-                    ' '' '' ''    propertiesPane.Visible = True
-                    ' '' '' ''End If
-
-
-
-                    ' ur: wegen Pane
-                    ' ''If IsNothing(infoFrm) And Not formIsShown Then
-                    ' ''    infoFrm = New frmInfo
-                    ' ''    formIsShown = True
-                    ' ''    infoFrm.Show()
-                    ' ''End If
-
-                    ReDim arrayOfNames(relevantShapeNames.Count - 1)
-
-                    For ix As Integer = 1 To relevantShapeNames.Count
-                        arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
-                    Next
-
-                    selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
-                Else
-                    ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
-                    Call checkHomeChangeBtnEnablement()
-                    If propertiesPane.Visible Then
-                        Call aktualisiereInfoPane(Nothing)
-                    End If
-                    ' ur: wegen Pane
-                    ' ''If formIsShown Then
-                    ' ''    Call aktualisiereInfoFrm(Nothing)
-                    ' ''End If
-                End If
-                '' Ende ...
-
-
-                If Not IsNothing(selectedPlanShapes) Then
-
-                    Dim tmpShape As PowerPoint.Shape = Nothing
-                    Dim elemWasMoved As Boolean = False
-                    For Each tmpShape In selectedPlanShapes
-                        ' hier sind nur noch richtige Shapes  
-
-                        ' sollen Home- bzw. Change-Button angezeigt werden ? 
-                        elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
-                        If elemWasMoved Then
-                            homeButtonRelevance = True
-                        Else
-                            If tmpShape.Tags.Item("MVD").Length > 0 Then
-                                changedButtonRelevance = True
-                            End If
+                        Call checkHomeChangeBtnEnablement()
+                        If propertiesPane.Visible Then
+                            Call aktualisiereInfoPane(Nothing)
                         End If
 
-                    Next
 
-                    ' hier wird die Information zu dem selektierten Shape angezeigt 
-                    If Not IsNothing(propertiesPane) Then
-                        Call aktualisiereInfoPane(tmpShape, elemWasMoved)
                     End If
-                    ' ur: wegen Pane
-                    If formIsShown Then
-                        Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
-                    End If
-
-
-                    ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
-                    ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
-                    Call ensureVisibilityOfSelection(selectedPlanShapes)
-
-                    ' tk 7.12.17, auskommentiert, weil mit Fehler auf Office 2010
-                    'If Not IsNothing(propertiesPane) Then
-                    '    propertiesPane.Visible = True
-                    'End If
-                Else
-
-                    Call checkHomeChangeBtnEnablement()
-                    If propertiesPane.Visible Then
-                        Call aktualisiereInfoPane(Nothing)
-                    End If
-                    
-
                 End If
+
+
+
 
             End If
 
@@ -1217,8 +1309,38 @@ Module Module1
             Dim msg As String
             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                ' tk: 17.11.16: Einloggen in Datenbank 
-                noDBAccessInPPT = Not loginProzedur()
+                ' jetzt prüfen , ob es bereits gespeicherte User-Credentials gibt 
+                If IsNothing(My.Settings.userNamePWD) Then
+                    ' tk: 17.11.16: Einloggen in Datenbank 
+                    noDBAccessInPPT = Not loginProzedur()
+
+                    ' in diesem Fall das mySettings setzen 
+                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                    My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                Else
+                    If My.Settings.userNamePWD = "" Then
+                        ' tk: 17.11.16: Einloggen in Datenbank 
+                        noDBAccessInPPT = Not loginProzedur()
+
+                        ' in diesem Fall das mySettings setzen 
+                        Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                        My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                    Else
+                        ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
+                        noDBAccessInPPT = Not autoVisboLogin(My.Settings.userNamePWD)
+
+                        ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
+                        If noDBAccessInPPT Then
+                            noDBAccessInPPT = Not loginProzedur()
+
+                            ' in diesem Fall das mySettings setzen 
+                            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                            My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                        End If
+                    End If
+                End If
+                
+                
 
                 If noDBAccessInPPT Then
                     If englishLanguage Then
@@ -2491,7 +2613,7 @@ Module Module1
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                                 Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing, _
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
-                                                          ms.getAllDeliverables("#"), ms.verantwortlich, Nothing)
+                                                          ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone)
                             End If
 
 
@@ -4702,6 +4824,9 @@ Module Module1
 
 
                 End If
+
+            ElseIf isAnnotationShape(tmpShape) Then
+                tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
             End If
 
         Next
@@ -4709,7 +4834,7 @@ Module Module1
     End Sub
 
     ''' <summary>
-    ''' zeichnet die Shadows zu dem angegebenen Shapes 
+    ''' zeichnet die Shadows, das heisst die Elemente des letzten Timestamps zu dem angegebenen Shapes 
     ''' </summary>
     ''' <param name="nameArrayO"></param>
     ''' <remarks></remarks>
@@ -4740,7 +4865,10 @@ Module Module1
                 Dim shadowShape As PowerPoint.Shape = newShape(1)
 
                 With shadowShape
+                    ' das shadow soll nicht den Schatten aus dem Original Shape übernehmen 
+                    .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                     .Name = origShape.Name & shadowName
+
                     If Not isMilestone Then
                         ' damit der Unterschied bei den Phasen besser erkennbar, d.h überlappungsfrei erkennbar ist ...
                         .Top = origShape.Top - (origShape.Height + 3)
@@ -4750,16 +4878,21 @@ Module Module1
 
                     .Left = origShape.Left
 
-                    If isMilestone Then
-                        .Shadow.Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
-                        .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                        .Shadow.Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
-                        .Shadow.OffsetX = 0
-                        .Shadow.OffsetY = 0
-                        .Shadow.Blur = 15.0
-                        .Shadow.Size = 180.0
-                        .Shadow.ForeColor.RGB = RGB(220, 220, 220)
-                    End If
+                    ' das Shadow Shape soll immer als dunkles Schatten-Shape gezeichnet werden ...
+                    .Fill.ForeColor.RGB = RGB(20, 20, 20)
+                    .Line.ForeColor.RGB = RGB(20, 20, 20)
+
+
+                    'If isMilestone Then
+                    '    .Shadow.Type = Microsoft.Office.Core.MsoShadowType.msoShadow25
+                    '    .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                    '    .Shadow.Style = Microsoft.Office.Core.MsoShadowStyle.msoShadowStyleOuterShadow
+                    '    .Shadow.OffsetX = 0
+                    '    .Shadow.OffsetY = 0
+                    '    .Shadow.Blur = 15.0
+                    '    .Shadow.Size = 180.0
+                    '    .Shadow.ForeColor.RGB = RGB(220, 220, 220)
+                    'End If
 
                 End With
 
@@ -4780,7 +4913,7 @@ Module Module1
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                         Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing, _
                                                   cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
-                                                  cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, Nothing)
+                                                  cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone)
 
 
                         If Not versionAlreadyNotedAtMS Then
@@ -5052,7 +5185,8 @@ Module Module1
                     tmpShape.Line.Transparency = tValue
                 End If
 
-
+            ElseIf isAnnotationShape(tmpShape) Then
+                tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
             End If
 
         Next

@@ -3674,7 +3674,13 @@ Public Module awinGeneralModules
                                 End If
                                 For iDel As Integer = 0 To count - 1
                                     If Not cphase.containsDeliverable(hvDel(iDel)) Then
-                                        cphase.addDeliverable(hvDel(iDel))
+
+                                        Try
+                                            cphase.addDeliverable(hvDel(iDel).Trim)
+                                        Catch ex As Exception
+
+                                        End Try
+
                                     End If
                                 Next iDel
                                
@@ -4079,6 +4085,24 @@ Public Module awinGeneralModules
                             cmilestone.setDate = CType(msTask.Start, Date)
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
 
+                            'percentDone, falls Customfiels visbo_percentDone definiert ist
+                            If visbo_percentDone <> 0 Then
+                                Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
+                                Dim hpercent() As String = Split(strPercentDone, "%", , )
+                                Dim vPercentDone As Double
+                                Try
+                                    vPercentDone = Convert.ToDouble(hpercent(0))
+
+                                Catch e As FormatException
+                                    vPercentDone = 0.0
+                                Catch e As OverflowException
+                                    Call MsgBox(hpercent(1) & " is outside the range of a Double.")
+                                End Try
+                                ' Änderung tk: percentDone sollte immer Werte zwischen 0..1 haben 
+                                cmilestone.percentDone = vPercentDone / 100
+
+                            End If
+
                             ' Deliverables, falls Customfield visbo_delivaerables definiert ist
                             Dim count As Integer = 0
                             Dim hvDel() As String
@@ -4095,7 +4119,13 @@ Public Module awinGeneralModules
                                 End If
                                 For iDel As Integer = 0 To count - 1
                                     If Not cmilestone.containsDeliverable(hvDel(iDel)) Then
-                                        cmilestone.addDeliverable(hvDel(iDel))
+
+                                        Try
+                                            cmilestone.addDeliverable(hvDel(iDel).Trim)
+                                        Catch ex As Exception
+
+                                        End Try
+
                                     End If
                                 Next iDel
 
@@ -13295,6 +13325,46 @@ Public Module awinGeneralModules
     End Function
 
     ''' <summary>
+    ''' macht einen Auto-Login in der Datenbank, die in awinsettings angegeben ist 
+    ''' gibt true zurück, wenn alles ok, false wenn login gescheitert
+    ''' </summary>
+    ''' <param name="cipherText"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function autoVisboLogin(ByVal cipherText As String) As Boolean
+
+        Dim tmpResult As Boolean = False
+
+        Try
+            Dim pwd As String
+            Dim user As String
+
+            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+
+            user = visboCrypto.getUserNameFromCipher(cipherText)
+            pwd = visboCrypto.getPwdFromCipher(cipherText)
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+            Dim ok As Boolean = request.createIndicesOnce()
+            If Not ok Then
+                tmpResult = False
+            Else
+                tmpResult = True
+                ' jetzt müssen die globalen Variablen dbusername und dbpasswod gesetzt werden 
+                dbUsername = user
+                dbPasswort = pwd
+            End If
+
+        Catch ex As Exception
+            tmpResult = False
+        End Try
+
+
+        autoVisboLogin = tmpResult
+    End Function
+
+
+    ''' <summary>
     ''' Funktion testet die vorhandene Datenbank-authorisierungsinfog
     ''' </summary>
     ''' <param name="user"></param>
@@ -13359,6 +13429,8 @@ Public Module awinGeneralModules
         End If
 
     End Function
+
+    
 
     ''' <summary>
     ''' erstellt das Vorlagen File aus der Liste der Phasen 

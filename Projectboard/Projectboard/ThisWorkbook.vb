@@ -92,6 +92,7 @@ Public Class ThisWorkbook
                 awinSettings.awinPath = My.Settings.awinPath
                 awinSettings.visboTaskClass = My.Settings.TaskClass
                 awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+                awinSettings.visboAmpel = My.Settings.VISBOAmpel
                 awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
                 awinSettings.visboresponsible = My.Settings.VISBOresponsible
                 awinSettings.visbodeliverables = My.Settings.VISBOdeliverables

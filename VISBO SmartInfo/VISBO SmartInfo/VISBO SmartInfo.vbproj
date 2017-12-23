@@ -271,6 +271,7 @@
     <Compile Include="Ribbon1.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Settings.vb" />
     <Compile Include="ThisAddIn.vb">
       <SubType>Code</SubType>
     </Compile>
@@ -322,6 +323,7 @@
     <EmbeddedResource Include="ucSearch.resx">
       <DependentUpon>ucSearch.vb</DependentUpon>
     </EmbeddedResource>
+    <None Include="app.config" />
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.vb</DependentUpon>
     </None>
