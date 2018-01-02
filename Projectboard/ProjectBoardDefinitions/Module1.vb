@@ -23,6 +23,9 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
     Public noDB As Boolean = True
 
+    ' wird verwendet um Informationen verschlüsselt zu schreiben 
+    Public visboCryptoKey As String = "Berge2007QuebecKanada&2010SeilmitZeltThomasUtePhilippDenise060162130790141090050715&@Tecoplan@IPEQ@Visbo"
+
     Public myWindowsName As String
 
     Public awinSettings As New clsawinSettings
@@ -5445,4 +5448,6 @@ Public Module Module1
         noDuplicatesInSheet = Not found
 
     End Function
+
+    
 End Module

@@ -2288,13 +2288,14 @@ Public Class clsPhase
         _deliverables = New List(Of String)
 
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' bei der Initialisierung wird nicht automatisch eine Bewertung angelegt ..
         ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
-        Dim tmpB As New clsBewertung
-        With tmpB
-            .description = ""
-            .colorIndex = 0
-        End With
-        Me.addBewertung(tmpB)
+        'Dim tmpB As New clsBewertung
+        'With tmpB
+        '    .description = ""
+        '    .colorIndex = 0
+        'End With
+        'Me.addBewertung(tmpB)
         
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)
@@ -2340,13 +2341,14 @@ Public Class clsPhase
         _deliverables = New List(Of String)
 
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' Änderung tk, bei der Initialisierung wird nicht automatisch eine Bewertung angelegt .. 
         ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
-        Dim tmpB As New clsBewertung
-        With tmpB
-            .description = ""
-            .colorIndex = 0
-        End With
-        Me.addBewertung(tmpB)
+        'Dim tmpB As New clsBewertung
+        'With tmpB
+        '    .description = ""
+        '    .colorIndex = 0
+        'End With
+        'Me.addBewertung(tmpB)
 
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)

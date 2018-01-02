@@ -1,8 +1,9 @@
 ﻿Public Class ucProperties
 
-    Private Sub ucProperties_DockChanged(sender As Object, e As EventArgs) Handles Me.DockChanged
+    Private Sub ucProperties_Leave(sender As Object, e As EventArgs) Handles Me.Leave
 
     End Sub
+
 
     Private Sub ucProperties_SizeChanged(sender As Object, e As EventArgs) Handles Me.SizeChanged
         ' label resize
@@ -29,7 +30,4 @@
     End Sub
 
 
-    Private Sub ucProperties_VisibleChanged(sender As Object, e As EventArgs) Handles Me.VisibleChanged
-
-    End Sub
 End Class

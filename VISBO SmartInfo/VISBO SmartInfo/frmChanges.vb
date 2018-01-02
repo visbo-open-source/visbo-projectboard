@@ -12,8 +12,15 @@
         frmCoord(PTfrm.changes, PTpinfo.width) = Me.Width
         frmCoord(PTfrm.changes, PTpinfo.height) = Me.Height
 
+        Call faerbeShapes(0, showTrafficLights(0))
+        Call faerbeShapes(1, showTrafficLights(0))
+        Call faerbeShapes(2, showTrafficLights(0))
+        Call faerbeShapes(3, showTrafficLights(0))
+
+
 
     End Sub
+
 
     Private Sub frmChanges_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -194,4 +201,5 @@
     End Sub
 
    
+    
 End Class
