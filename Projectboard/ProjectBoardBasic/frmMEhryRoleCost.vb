@@ -15,8 +15,8 @@ Public Class frmMEhryRoleCost
     Public phaseNameID As String
     Public hproj As clsProjekt
 
-    Friend existingRoleFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
-    Friend normalRoleFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25, System.Drawing.FontStyle.Regular)
+    Friend existingRoleFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75, System.Drawing.FontStyle.Regular)
+    Friend normalRoleFont As System.Drawing.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75, System.Drawing.FontStyle.Regular)
     Friend normalRoleColor As System.Drawing.Color = System.Drawing.Color.Black
     Friend existingRoleColor As System.Drawing.Color = System.Drawing.Color.DimGray
 

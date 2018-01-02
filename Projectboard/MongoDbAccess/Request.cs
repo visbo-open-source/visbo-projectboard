@@ -15,7 +15,8 @@ using MongoDB.Driver.Linq;
 
 using ProjectBoardDefinitions;
 using MongoDbAccess.Properties;
-
+using MongoDB.Driver.GridFS;
+using System.IO;
 
 namespace MongoDbAccess
 {
@@ -44,6 +45,8 @@ namespace MongoDbAccess
         protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
         protected IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
         protected IMongoCollection<clsFilterDB> CollectionFilter;
+        protected IGridFSBucket BucketDocuments;
+        private String User;
         
         /// <summary>
         /// Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort
@@ -94,6 +97,8 @@ namespace MongoDbAccess
             CollectionTrashConstellations = Database.GetCollection<clsConstellationDB>("trashconstellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
             CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
+            BucketDocuments = new GridFSBucket(Database, new GridFSBucketOptions{BucketName = "documents"});
+            User = username;
 
         }
         
@@ -2128,5 +2133,182 @@ namespace MongoDbAccess
 
             return result;
         }
+
+
+ 
+        // TODO: add user permission logic to queries. Use this.User for the currently logged in username
+        // TODO: create and use mapper classes for FileInfo and File.
+
+
+        /// <summary>
+        /// Uploads a document from the local file system to the database. See also the asynchronous method <seealso cref="StoreDocumentToDBAsync(string, string, string[], string)"/>.
+        /// </summary>
+        /// <param name="filePath">the path where to find the document on the local file system</param>
+        /// <param name="userName">the username of the currently logged in user</param>
+        /// <param name="entitled">array of usernames of all users who are eligible to download and upload the document</param>
+        /// <param name="description">a description of the document given by the user</param>
+        /// <remarks>Warning: permission management should be done by built-in database logic if possible instead of an "entitled" parameter</remarks>
+        /// <returns>the string representation of the unique objectId that the database has assigned to the uploaded document</returns>
+        public String StoreDocumentToDB(string filePath, string userName, string[] entitled, string description)
+        {
+            var uploadOptions = new GridFSUploadOptions {
+                Metadata = new BsonDocument {
+                    { "filetype", Path.GetExtension(filePath) },
+                    { "entitled", new BsonArray().AddRange(entitled) },
+                    { "description", description }
+                }
+            };
+            Stream stream = new FileStream(filePath, FileMode.Open);
+
+            ObjectId objectId = BucketDocuments.UploadFromStream(Path.GetFileName(filePath), stream, uploadOptions);            
+            return objectId.ToString();
+        }
+
+        /// <summary>
+        /// Asynchronous method to upload a document from the local file system to the database. See description of <see cref="StoreDocumentToDB(string, string, string[], string)"/>
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="userName"></param>
+        /// <param name="entitled"></param>
+        /// <param name="description"></param>
+        /// <returns>an awaitable <code>Task</code> object that, once the upload is finished, will contain the string representation of the unique objectId that the database has assigned to the document</returns>
+        public async Task<String> StoreDocumentToDBAsync(string filePath, int fileType, string userName, string[] entitled, string description)
+        {
+            var uploadOptions = new GridFSUploadOptions {
+                Metadata = new BsonDocument {
+                    { "filetype", Path.GetExtension(filePath) },
+                    { "entitled", new BsonArray().AddRange(entitled) },
+                    { "description", description }
+                }
+            };
+            Stream stream = new FileStream(filePath, FileMode.Open);
+
+            ObjectId objectId = await BucketDocuments.UploadFromStreamAsync(Path.GetFileName(filePath), stream, uploadOptions);
+            return objectId.ToString();
+        }
+        
+        /// <summary>
+        /// Downloads a document from the database to the local file system by specifying its unique id.
+        /// </summary>
+        /// <param name="id">string representation of the unique objectId of the document that is retrieved from the database</param>
+        /// <param name="userName">the username of the currently logged in user</param>
+        /// <param name="filePath">the path where to put the document on the local file system</param>
+        /// <returns>the file path where the document was put on the local file system</returns>
+        public String retrieveDocumentFromDBById(String id, String userName, String filePath)
+        {
+            Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
+            BucketDocuments.DownloadToStream(new ObjectId(id), stream);
+            stream.Close();
+            return filePath;
+        }
+
+        /// <summary>
+        /// Asynchronous method to download a document from the database to the local file system. For description see <see cref="retrieveDocumentFromDBById(string, string, string)"/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="userName"></param>
+        /// <param name="filePath"></param>
+        /// <returns>an awaitable <code>Task</code> object that, once the download is finished, will contain the file path where the document was put on the local file system</returns>
+        public async Task<String> retrieveDocumentFromDBByIdAsync(String id, String userName, String filePath)
+        {
+            Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
+            await BucketDocuments.DownloadToStreamAsync(new ObjectId(id), stream);
+            stream.Close();
+            return filePath;
+        }
+        
+        /// <summary>
+        /// Downloads a document from the database to the local file system by specifying its filename and revision number.
+        /// </summary>
+        /// <param name="fileName">the filename of the document that is retrieved from the database</param>
+        /// <param name="fileRevision">the revision number of the named document that is retrieved from the database. 
+        /// Specify 0 for the original version of the document, 1 for the first revision, ..., -1 for the latest revision, -2 for the second latest, etc.</param>
+        /// <param name="userName">the username of the currently logged in user</param>
+        /// <param name="filePath">the path where to put the document on the local file system</param>
+        /// <returns>the file path where the document was put on the local file system</returns>
+        public String retrieveDocumentFromDBByName(String fileName, int fileRevision, String userName, String filePath)
+        {
+            Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
+            BucketDocuments.DownloadToStreamByName(fileName, stream, new GridFSDownloadByNameOptions { Revision = fileRevision });
+            stream.Close();
+            return filePath;
+        }
+
+        /// <summary>
+        /// Asynchronous method to download a document from the database to the local file system by specifying its filename and revision number. 
+        /// See <see cref="retrieveDocumentFromDBByName(string, int, string, string)"/>
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="fileRevision"></param>
+        /// <param name="userName"></param>
+        /// <param name="filePath"></param>
+        /// <returns>an awaitable <code>Task</code> object that, once the download is finished, contains the file path where the document was put on the local file system</returns>
+        public async Task<String> retrieveDocumentFromDBByNameAsync(String fileName, int fileRevision, String userName, String filePath)
+        {
+            Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
+            await BucketDocuments.DownloadToStreamByNameAsync(fileName, stream, new GridFSDownloadByNameOptions { Revision = fileRevision });
+            stream.Close();
+            return filePath;
+        }
+
+
+
+
+        public String replaceDocument(string filePath, DateAndTime timeStamp, string userName, string[] entitled)
+        {
+            //TODO: what does replace mean? replace a single version or replace all versions of the document?
+            deleteDocumentFromDB(Path.GetFileName(filePath));
+            return StoreDocumentToDB(filePath, userName, entitled, "desc");
+        }
+
+        public String deleteDocumentFromDB(string fileName)
+        {
+            //delete all documents with given filename
+            return "";
+        }
+
+        public List<String> FindAllRevisionsOfDocumentInDB(String fileName)
+        {
+            List<String> fileNames = new List<String>();
+            var filter = Builders<GridFSFileInfo>.Filter.Eq(x => x.Filename, fileName);
+            using (var cursor = BucketDocuments.Find(filter/*, new GridFSFindOptions*/))
+            {
+                var ff = cursor.ToList().DefaultIfEmpty();
+                // fileInfo either has the matching file information or is null
+                foreach (GridFSFileInfo info in ff)
+                {
+                    fileNames.Add(info.Filename);
+                    Console.WriteLine(info.Filename + ": " + info.UploadDateTime);
+                }
+            }
+            return fileNames;
+        }
+
+        public async Task<List<String>> FindLatestRevisionOfAllDocumentsInDBAsync()
+        {
+            PipelineDefinition<GridFSFileInfo, BsonDocument> pipeline = new BsonDocument[]{
+                new BsonDocument { { "$match", new BsonDocument("metadata.entitled", this.User)} },
+                new BsonDocument { { "$sort", new BsonDocument("uploadDate", -1)} },
+                new BsonDocument { { "$group", new BsonDocument { {"_id", "$filename"}, {"latest", new BsonDocument("$first", "$$ROOT") } } } }
+            };
+            
+            IMongoCollection<GridFSFileInfo> CollectionDocs = Database.GetCollection<GridFSFileInfo>("documents.files");
+
+            var results = await CollectionDocs.Aggregate<BsonDocument>(pipeline).ToListAsync();
+
+            foreach (BsonDocument elem in results)
+            {
+                GridFSFileInfo info = new GridFSFileInfo((BsonDocument)elem.GetValue("latest"));
+                Console.WriteLine(info.Filename + ": " + info.UploadDateTime);
+            }
+            return null;
+        }
+
+        public void clearDocuments()
+        {
+            BucketDocuments.Drop();
+        }
+
+
     }
 }

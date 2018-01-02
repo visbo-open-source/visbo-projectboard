@@ -183,6 +183,9 @@ Public Class clsPPTShapes
                         Case "Swimlanes2"
                             containerShape = pptShape
 
+                        Case "MilestoneCategories"
+                            containerShape = pptShape
+
                         Case "CalendarHeight"
                             calendarHeightShape = pptShape
 

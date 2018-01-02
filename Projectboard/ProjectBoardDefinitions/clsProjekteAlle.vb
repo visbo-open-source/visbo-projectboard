@@ -205,6 +205,36 @@ Public Class clsProjekteAlle
     End Property
 
     ''' <summary>
+    ''' gibt eine Liste der vorkommenden Meilenstein Namen in der Menge von Projekte zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneCategoryNames() As Collection
+
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getMilestoneCategoryNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+            getMilestoneCategoryNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Liste der vorkommenden Phasen-Namen in der Menge der Projekte an ...  
     ''' </summary>
     ''' <value></value>
@@ -231,6 +261,37 @@ Public Class clsProjekteAlle
 
 
             getPhaseNames = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Liste der vorkommenden Phasen-Namen in der Menge der Projekte an ...  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseCategoryNames() As Collection
+
+        Get
+
+            Dim tmpListe As New Collection
+
+            ' neu 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                Dim tmpCollection As Collection = kvp.Value.getPhaseCategoryNames
+
+                For Each tmpName As String In tmpCollection
+                    If Not tmpListe.Contains(tmpName) Then
+                        tmpListe.Add(tmpName, tmpName)
+                    End If
+                Next
+
+            Next
+
+
+            getPhaseCategoryNames = tmpListe
 
         End Get
     End Property

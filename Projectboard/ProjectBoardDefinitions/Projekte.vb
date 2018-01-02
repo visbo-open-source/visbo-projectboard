@@ -15369,42 +15369,44 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub bringChartsToFront(ByVal projectShape As Excel.Shape)
 
-        Dim worksheetShapes As Excel.Shapes
-        Dim chtobj As Excel.ChartObject
+        Dim worksheetShapes As Excel.Shapes = Nothing
+        'Dim chtobj As Excel.ChartObject
 
         ' sicherstellen, dass projectshape auch etwas enthält ... 
         If IsNothing(projectShape) Then
             Exit Sub
         End If
 
-        Try
+        ' Änderung tk, 6.12.17 Charts sind jetzt alle auf extra sheets und in extra window, ist nicht mehr notwendig ??
 
-            worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
+        'Try
 
-        Catch ex As Exception
-            Throw New Exception("in bringChartstoFront : keine Shapes Zuordnung möglich ")
-        End Try
+        '    worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
-
-        For Each chtobj In CType(CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
-
-            Try
-                With chtobj
-                    If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
-                        (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
-                        ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
-                        (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
-
-                        CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(core.MsoZOrderCmd.msoBringToFront)
-
-                    End If
-                End With
-            Catch ex As Exception
-
-            End Try
+        'Catch ex As Exception
+        '    Throw New Exception("in bringChartstoFront : keine Shapes Zuordnung möglich ")
+        'End Try
 
 
-        Next
+        'For Each chtobj In CType(CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
+
+        '    Try
+        '        With chtobj
+        '            If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
+        '                (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
+        '                ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
+        '                (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
+
+        '                CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(core.MsoZOrderCmd.msoBringToFront)
+
+        '            End If
+        '        End With
+        '    Catch ex As Exception
+
+        '    End Try
+
+
+        'Next
 
 
     End Sub
@@ -16021,6 +16023,7 @@ Public Module Projekte
         Dim oldAlternativeText As String = ""
 
 
+
         Try
 
             worksheetShapes = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
@@ -16452,12 +16455,15 @@ Public Module Projekte
 
         Dim msNumber As Integer = 0
         If drawPhaseList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
-            Call zeichnePhasenInProjekt(hproj, drawPhaseList, False, msNumber)
+            Call zeichnePhasenInProjekt(hproj:=hproj, namenListe:=drawPhaseList, numberIt:=False, msNumber:=msNumber, _
+                                        vonMonth:=showRangeLeft, bisMonth:=showRangeRight)
+            'Call zeichnePhasenInProjekt(hproj, drawPhaseList, False, msNumber)
         End If
 
         msNumber = 0
         If drawMilestoneList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
-            Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
+            Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, showRangeLeft, showRangeRight, False, msNumber, False)
+            'Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
         End If
 
 
@@ -19809,13 +19815,13 @@ Public Module Projekte
                 .range("BewertgErläuterung").value = hproj.ampelErlaeuterung
 
 
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                ' Blattschutz setzen
+                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
         Catch ex As Exception
             '' Blattschutz setzen
-            'appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            appInstance.ActiveWorkbook.Worksheets("Stammdaten").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Stammdaten")
@@ -20044,13 +20050,20 @@ Public Module Projekte
                     rowOffset = rowOffset + 1
                 Next p
 
-                '' Blattschutz setzen
-                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                ' Blattschutz setzen
+                appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True, _
+                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
+                '. Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
 
             End With
         Catch ex As Exception
             ' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            appInstance.ActiveWorkbook.Worksheets("Ressourcen").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True, _
+                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
+            '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Ressourcen")
@@ -20367,9 +20380,15 @@ Public Module Projekte
 
                 .Visible = Excel.XlSheetVisibility.xlSheetHidden
 
+                ' Blattschutz setzen
+                appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
             End With
 
         Catch ex As Exception
+
+            ' Blattschutz setzen
+            appInstance.ActiveWorkbook.Worksheets("Settings").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Settings")
         End Try
@@ -20407,12 +20426,12 @@ Public Module Projekte
             Dim phaseName As String
             Dim r As Integer
             Dim cResult As New clsMeilenstein(parent:=cphase)
-            Dim cBewertung As clsBewertung
+            Dim cBewertung As clsBewertung = Nothing
             Dim phaseStart As Date
             Dim phaseEnde As Date
             Dim tbl As Excel.Range
             Dim itemNameID As String
-
+            Dim tmpDeliverables As String
 
             tbl = .Range("ErgebnTabelle")
             rowOffset = tbl.Row
@@ -20466,13 +20485,47 @@ Public Module Projekte
                 .Cells(rowOffset + zeile, columnOffset + 2).value = phaseStart
                 .Cells(rowOffset + zeile, columnOffset + 3).value = phaseEnde
                 .Cells(rowOffset + zeile, columnOffset + 4).value = "0"
-                .Cells(rowOffset + zeile, columnOffset + 4).interior.color = awinSettings.AmpelNichtBewertet
-                .Cells(rowOffset + zeile, columnOffset + 5).value = " "
-                .Cells(rowOffset + zeile, columnOffset + 6).value = " "
 
-                ' Änderung tk 1.11.15: 
+                ' Änderung tk 
+                .Cells(rowOffset + zeile, columnOffset + 4).value = cphase.ampelStatus
+                '.Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
+                .Cells(rowOffset + zeile, columnOffset + 5).value = cphase.ampelErlaeuterung
+                .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+
+                'If cphase.bewertungsListe.Count > 0 Then
+                '    For Each kvp As KeyValuePair(Of String, clsBewertung) In cphase.bewertungsListe
+                '        cBewertung = kvp.Value
+                '        .Cells(rowOffset + zeile, columnOffset + 4).value = cBewertung.colorIndex
+                '        .Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
+                '        ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
+                '        .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
+                '        .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+                '    Next
+                'End If
+
+               
+                ' Änderung tk 2.11 Ergänzung um Deliverables 
+                tmpDeliverables = cphase.getAllDeliverables
+                .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
+                .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+
+                '
+                ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
                 Try
-                    For offs As Integer = 2 To 6
+                    CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
+                Catch ex As Exception
+
+                End Try
+
+
+                .Cells(rowOffset + zeile, columnOffset + 7).value = cphase.verantwortlich
+                .Cells(rowOffset + zeile, columnOffset + 8).value = cphase.percentDone
+                .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
+                .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                ' Änderung tk 1.11.15:
+
+                Try
+                    For offs As Integer = 2 To 8
                         .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                     Next
                 Catch ex As Exception
@@ -20518,9 +20571,15 @@ Public Module Projekte
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
                     ' Änderung tk 2.11 Ergänzung um Deliverables 
-                    Dim tmpDeliverables As String = cResult.getAllDeliverables
+                    tmpDeliverables = cResult.getAllDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).value = tmpDeliverables
                     .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+
+                    ' Änderung tk 4.12. Schreiben verantwortlich und percentDone
+                    .Cells(rowOffset + zeile, columnOffset + 7).value = cResult.verantwortlich
+                    .Cells(rowOffset + zeile, columnOffset + 8).value = cResult.percentDone
+                    .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
+                    .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
 
                     '
                     ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
@@ -20535,7 +20594,7 @@ Public Module Projekte
                         End If
 
 
-                        For offs As Integer = 2 To 6
+                        For offs As Integer = 2 To 8
                             .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                         Next
                     Catch ex As Exception
@@ -20549,8 +20608,13 @@ Public Module Projekte
 
             Next
 
-            '' Blattschutz setzen
+
+            ' Blattschutz setzen
+            appInstance.ActiveWorkbook.Worksheets("Termine").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True, AllowFormattingCells:=True, AllowFormattingRows:=True, _
+                                                                       AllowInsertingRows:=True, AllowDeletingRows:=True)
             '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
 
         End With
 
@@ -20783,9 +20847,8 @@ Public Module Projekte
 
 
 
-                    '' Blattschutz setzen
-                    '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
-
+                    ' Blattschutz setzen
+                    .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
                 Catch ex As Exception
 
@@ -20795,7 +20858,10 @@ Public Module Projekte
             End With
         Catch ex As Exception
             '' Blattschutz setzen
-            'appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, _
+                                                                       Contents:=True, Scenarios:=True)
+
+          
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
         End Try
@@ -22159,8 +22225,33 @@ Public Module Projekte
 
                         End If
 
+                    Case PTpfdk.PhaseCategories
+
+                        For i = 1 To mycollection.Count
+
+                            cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))
+                            'cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                            ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
+                            Try
+                                IDkennung = IDkennung & "#" & cName
+                            Catch ex As Exception
+                                IDkennung = IDkennung & "#"
+                            End Try
+
+                        Next
+
                     Case PTpfdk.Meilenstein
 
+                        For i = 1 To mycollection.Count
+                            ' Änderung tk 30.5.17
+                            cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))
+                            'cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                            IDkennung = IDkennung & "#" & cName
+
+                        Next
+
+
+                    Case PTpfdk.MilestoneCategories
                         For i = 1 To mycollection.Count
                             ' Änderung tk 30.5.17
                             cName = splitHryFullnameTo1(CStr(mycollection.Item(i)))

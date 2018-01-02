@@ -437,9 +437,7 @@
 
                                     tmpMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
                                     If IsNothing(tmpMilestone) Then
-
-
-
+                                        ' nichts tun ...
                                     Else
 
                                         If showRangeLeft > 0 And showRangeRight > 0 And showRangeRight >= showRangeLeft Then
@@ -457,6 +455,30 @@
                                     End If
 
 
+                                Next
+                            ElseIf type = PTProjektType.categoryList Then
+
+                                Dim idCollection As Collection = hproj.getMilestoneIDsWithCat(pvName)
+                                For mx As Integer = 1 To idCollection.Count
+                                    tmpMilestone = hproj.getMilestoneByID(CStr(idCollection.Item(mx)))
+
+                                    If IsNothing(tmpMilestone) Then
+                                        ' nichts tun ...
+                                    Else
+
+                                        If showRangeLeft > 0 And showRangeRight > 0 And showRangeRight >= showRangeLeft Then
+                                            ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+                                            Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
+                                            If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
+                                                containsMS = True
+                                                Exit For
+                                            End If
+                                        Else
+                                            containsMS = True
+                                            Exit For
+                                        End If
+
+                                    End If
                                 Next
 
                             End If
@@ -518,7 +540,7 @@
                                                 Else
                                                     containsPH = True
                                                 End If
-                                                ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+                                                ' jetzt muss geprüft werden, ob die Phase Meilenstein auch im angegebenen Bereich liegt 
 
                                             Else
                                                 containsPH = True
@@ -530,6 +552,42 @@
                                             Exit For
                                         End If
 
+                                    Next
+
+                                ElseIf type = PTProjektType.categoryList Then
+
+                                    Dim idCollection As Collection = hproj.getPhaseIDsWithCat(pvName)
+                                    For px As Integer = 1 To idCollection.Count
+                                        tmpPhase = hproj.getPhaseByID(CStr(idCollection.Item(px)))
+
+                                        If IsNothing(tmpPhase) Then
+
+                                        Else
+
+                                            If showRangeLeft > 0 And showRangeRight > 0 Then
+
+                                                Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                                Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
+                                                Dim tmpPhStart As Date = tmpPhase.getStartDate
+                                                Dim tmpPhEnde As Date = tmpPhase.getEndDate
+
+                                                If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
+                                                    DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
+
+                                                Else
+                                                    containsPH = True
+                                                End If
+                                                ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+
+                                            Else
+                                                containsPH = True
+                                            End If
+
+                                        End If
+
+                                        If containsPH Then
+                                            Exit For
+                                        End If
                                     Next
 
                                 End If

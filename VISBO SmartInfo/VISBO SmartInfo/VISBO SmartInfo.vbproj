@@ -41,7 +41,7 @@
     <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.0.11</ApplicationVersion>
+    <ApplicationVersion>1.0.0.12</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -162,9 +162,6 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -175,20 +172,13 @@
     <Reference Include="MongoDbAccess">
       <HintPath>..\..\Projectboard\MongoDbAccess\bin\Debug\MongoDbAccess.dll</HintPath>
     </Reference>
-    <Reference Include="Office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="ProjectBoardBasic">
       <HintPath>..\..\Projectboard\ProjectBoardBasic\bin\Debug\ProjectBoardBasic.dll</HintPath>
     </Reference>
     <Reference Include="ProjectBoardDefinitions">
       <HintPath>..\..\Projectboard\ProjectBoardDefinitions\bin\Debug\ProjectBoardDefinitions.dll</HintPath>
     </Reference>
-    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
@@ -233,6 +223,7 @@
     <Compile Include="clsChangeItem.vb" />
     <Compile Include="clsChangeListe.vb" />
     <Compile Include="clsLanguages.vb" />
+    <Compile Include="clsPPTTimeMachine.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
     <Compile Include="frmChanges.Designer.vb">
       <DependentUpon>frmChanges.vb</DependentUpon>
@@ -280,8 +271,27 @@
     <Compile Include="Ribbon1.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Settings.vb" />
     <Compile Include="ThisAddIn.vb">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ucInfo.Designer.vb">
+      <DependentUpon>ucInfo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ucInfo.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ucProperties.Designer.vb">
+      <DependentUpon>ucProperties.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ucProperties.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ucSearch.Designer.vb">
+      <DependentUpon>ucSearch.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ucSearch.vb">
+      <SubType>UserControl</SubType>
     </Compile>
     <EmbeddedResource Include="frmChanges.resx">
       <DependentUpon>frmChanges.vb</DependentUpon>
@@ -304,6 +314,16 @@
     <EmbeddedResource Include="Ribbon1.resx">
       <DependentUpon>Ribbon1.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ucInfo.resx">
+      <DependentUpon>ucInfo.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucProperties.resx">
+      <DependentUpon>ucProperties.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ucSearch.resx">
+      <DependentUpon>ucSearch.vb</DependentUpon>
+    </EmbeddedResource>
+    <None Include="app.config" />
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.vb</DependentUpon>
     </None>
@@ -409,13 +429,33 @@
     <None Include="Resources\navigate_end.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Ribbon.xml" />
+    <EmbeddedResource Include="Ribbon.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <COMReference Include="Microsoft.Office.Core">
+      <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>5</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
     <COMReference Include="Microsoft.Office.Interop.Excel">
       <Guid>{00020813-0000-0000-C000-000000000046}</Guid>
       <VersionMajor>1</VersionMajor>
       <VersionMinor>7</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="Microsoft.Office.Interop.PowerPoint">
+      <Guid>{91493440-5A91-11CF-8700-00AA0060263B}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>10</VersionMinor>
       <Lcid>0</Lcid>
       <WrapperTool>primary</WrapperTool>
       <Isolated>False</Isolated>
@@ -432,10 +472,24 @@
     <None Include="Resources\Calendar-icon 128x128 Last.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Ribbon1.xml" />
+    <EmbeddedResource Include="Ribbon1.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Visbo_update_Button1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{94E38DFF-614B-4CBD-B67C-F211BB35CE8B}" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\information2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\shape_triangle.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\find.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -458,7 +512,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>57D079AC4608E7A5EEAB9503591B51D9E4ADB64F</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>06A1E789552A35A634B26DD6CE7A5566D0999EB8</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a Visual Basic project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
@@ -468,7 +522,7 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="PowerPoint" HostPackage="{29A7B9D7-A7F1-4328-8EF0-6B2D1A56B2C1}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="PowerPoint" Language="vb" TemplatesPath="VSTOTemplates" DebugInfoExeName="#Software\Microsoft\Office\15.0\PowerPoint\InstallRoot\Path#powerpnt.exe" AddItemTemplatesGuid="{DCFE8D25-4715-4C33-9EAB-A34A9EBC9544}" />
+        <ProjectProperties HostName="PowerPoint" HostPackage="{20A848B8-E01F-4801-962E-25DB0FF57389}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="PowerPoint" Language="vb" TemplatesPath="" DebugInfoExeName="#Software\Microsoft\Office\14.0\PowerPoint\InstallRoot\Path#powerpnt.exe" AddItemTemplatesGuid="{DCFE8D25-4715-4C33-9EAB-A34A9EBC9544}" />
         <Host Name="PowerPoint" PublishedHash="69C324AB27932AA2FBF2B7EA72250886FF164DE6" IconIndex="0">
           <HostItem Name="ThisAddIn" Code="ThisAddIn.vb" CanonicalName="AddIn" PublishedHash="4C5D5A31CDD30B54923809392FDCF076F0434B9B" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.vb" />
         </Host>

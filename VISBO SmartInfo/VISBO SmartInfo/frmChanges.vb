@@ -1,13 +1,38 @@
 ﻿Public Class frmChanges
 
-    
-    
 
     Private Sub frmChanges_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
         changeFrm = Nothing
+
+        Call undimAllShapes()
+
+        ' Koordinaten merken
+        frmCoord(PTfrm.changes, PTpinfo.top) = Me.Top
+        frmCoord(PTfrm.changes, PTpinfo.left) = Me.Left
+        frmCoord(PTfrm.changes, PTpinfo.width) = Me.Width
+        frmCoord(PTfrm.changes, PTpinfo.height) = Me.Height
+
+        Call faerbeShapes(0, showTrafficLights(0))
+        Call faerbeShapes(1, showTrafficLights(0))
+        Call faerbeShapes(2, showTrafficLights(0))
+        Call faerbeShapes(3, showTrafficLights(0))
+
+
+
     End Sub
 
+
     Private Sub frmChanges_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        If frmCoord(PTfrm.changes, PTpinfo.top) > 0 Then
+            Me.Top = frmCoord(PTfrm.changes, PTpinfo.top)
+            Me.Left = frmCoord(PTfrm.changes, PTpinfo.left)
+            Me.Width = frmCoord(PTfrm.changes, PTpinfo.width)
+            Me.Height = frmCoord(PTfrm.changes, PTpinfo.height)
+        Else
+            Me.Top = 922
+            Me.Left = 24
+        End If
 
         Call listeAufbauen()
 
@@ -98,6 +123,13 @@
 
             Next
         End If
+
+        If anzChangeItems = 1 Then
+            ' es muss eine zusätzliche Zeile hinzugefügt werden, sonst ist diese eine Zeile nicht zu selektieren 
+            changeListTable.Rows.Add(1)
+            changeListTable.Rows.Item(0).Selected = False
+            changeListTable.Rows.Item(1).Selected = True
+        End If
     End Sub
 
     Friend Sub neuAufbau()
@@ -107,14 +139,6 @@
 
     End Sub
 
-    Private Sub frmChanges_ResizeEnd(sender As Object, e As EventArgs) Handles Me.ResizeEnd
-
-        'If Me.Height > changeListTable.Height + 38 Then
-        '    Me.Height = changeListTable.Height + 38
-        'End If
-
-
-    End Sub
 
 
     Private Sub changeListTable_SelectionChanged(sender As Object, e As EventArgs) Handles changeListTable.SelectionChanged
@@ -137,10 +161,14 @@
 
         anzSelected = tmpCollection.Count
 
+        ' vorher alle ggf abgedimmten Shapes wieder voll anzeigen 
+        Call undimAllShapes()
+
+
 
         If anzSelected >= 1 Then
 
-            ' wenn das erste Element selektiert wird udn die Anzahl Marker > 0 ist, dann müssen hier die MArker gelöscht werden 
+            ' wenn das erste Element selektiert wird und die Anzahl Marker > 0 ist, dann müssen hier die MArker gelöscht werden 
             If changeListTable.SelectedRows.Count = 1 And markerShpNames.Count > 0 Then
                 Call deleteMarkerShapes()
             End If
@@ -155,15 +183,11 @@
                 selectedPlanShapes = currentSlide.Shapes.Range(nameArrayO)
                 selectedPlanShapes.Select()
 
-                If selectedPlanShapes.Count > 1 Then
+                ' jetzt werden alle anderen - relevanten Visbo Shapes - mit Transparenz 80% dargestellt 
+                Call dimAllShapesExceptThese(nameArrayO)
 
-                    Call createMarkerShapes(pptShapes:=selectedPlanShapes)
-
-                ElseIf selectedPlanShapes.Count = 1 Then
-
-                    Call createMarkerShapes(pptShape:=selectedPlanShapes.Item(1))
-
-                End If
+                ' jetzt werden noch die Schatten-Previous-Version Shapes gezeichnet ...  
+                Call zeichneShadows(nameArrayO, False)
 
             Catch ex As Exception
 
@@ -176,8 +200,6 @@
 
     End Sub
 
+   
     
-    Private Sub changeListTable_CellContentClick(sender As Object, e As Windows.Forms.DataGridViewCellEventArgs) Handles changeListTable.CellContentClick
-
-    End Sub
 End Class

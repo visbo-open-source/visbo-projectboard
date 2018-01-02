@@ -3,6 +3,14 @@ Public Class clsPhase
 
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
+    ' tk Änderung 26.10.17 , 
+    ' - es wurde ein Attribut für percentDone aufgenommen
+    ' - Phasen können jetzt auch Deliverables haben, damit muss eine Phase nicht mit einem Meilenstein abgeschlossen werden , um ein 
+    '   oder mehrere Deliverables zu haben 
+    Private _percentDone As Double
+
+    ' Liste an Deliverables, die die Phase haben kann 
+    Private _deliverables As List(Of String)
 
     Private _nameID As String
     Private _parentProject As clsProjekt
@@ -13,6 +21,7 @@ Public Class clsPhase
     Private _appearance As String
     Private _color As Integer
 
+    ' wer ist für die Phase, die Ergebnisse und Einhaltung der Ressourcen verantwortlich? 
     Private _verantwortlich As String
     ' wird benötigt, um bei Optimierungs-Läufen einen Tryout Wert zu haben ..
     Private _offset As Integer
@@ -32,6 +41,31 @@ Public Class clsPhase
     Private _allMilestones As List(Of clsMeilenstein)
     Private _allRoles As List(Of clsRolle)
     Private _allCosts As List(Of clsKostenart)
+
+    ''' <summary>
+    ''' es wird eine PercentDone Regelung eingeführt , mit der beurteilt werden kann, wie wit die Ergebnisse bereits sind  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property percentDone As Double
+        Get
+            percentDone = _percentDone
+        End Get
+        Set(value As Double)
+            If value >= 0 Then
+                If value <= 1.0 Then
+                    _percentDone = value
+                Else
+                    ' dann müssen die PErcentDone Werte erst noch normiert werden 
+                    _percentDone = value / 100
+                End If
+
+            Else
+                Throw New ArgumentException("percent Done Value must not be negativ ...")
+            End If
+        End Set
+    End Property
 
 
     ''' <summary>
@@ -120,7 +154,9 @@ Public Class clsPhase
 
                             If Me.countCosts = .countCosts And _
                                 Me.countRoles = .countRoles And _
+                                Me.countDeliverables = .countDeliverables And _
                                 Me.countMilestones = .countMilestones And _
+                                Me.percentDone = .percentDone And _
                                 Me.bewertungsCount = .bewertungsCount Then
 
                                 If Me.ampelErlaeuterung = .ampelErlaeuterung And _
@@ -137,7 +173,7 @@ Public Class clsPhase
                                             Me.offset = .offset Then
 
                                             stillOK = True
-                                        
+
                                         End If
 
                                     End If
@@ -147,6 +183,25 @@ Public Class clsPhase
                             End If
 
                         End If
+
+                    End If
+
+                    ' jetzt die Deliverables prüfen  
+                    Dim MeDelis As String = Me.getAllDeliverables("#")
+                    Dim vglDelis As String = .getAllDeliverables("#")
+
+                    If MeDelis = vglDelis Then
+                        ' prüfen auf Bewertungen ... 
+                        ix = 1
+                        Do While stillOK And ix <= Me.bewertungsCount
+                            Dim MeBewertung As clsBewertung = Me.getBewertung(ix)
+                            Dim vglBewertung As clsBewertung = .getBewertung(ix)
+                            If MeBewertung.isIdenticalTo(vglBewertung) Then
+                                ix = ix + 1
+                            Else
+                                stillOK = False
+                            End If
+                        Loop
 
                     End If
 
@@ -218,6 +273,88 @@ Public Class clsPhase
             End Try
 
             isIdenticalTo = stillOK
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl Deliverables für diesen Meilenstein zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countDeliverables As Integer
+        Get
+            countDeliverables = _deliverables.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt an , ob das Deliverable existiert ...
+    ''' </summary>
+    ''' <param name="item"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsDeliverable(ByVal item As String) As Boolean
+        Get
+            containsDeliverable = _deliverables.Contains(item)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt das Deliverable Item der Liste hinzu; 
+    ''' wenn das Item bereits in der Liste vorhanden ist, passiert nichts 
+    ''' </summary>
+    ''' <param name="item"></param>
+    ''' <remarks></remarks>
+    Public Sub addDeliverable(ByVal item As String)
+
+        If Not _deliverables.Contains(item) Then
+            _deliverables.Add(item)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt das Element an der bezeichneten Stelle zurück
+    ''' index kann Werte zwischen 1 .. count annehmen 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getDeliverable(ByVal index As Integer) As String
+        Get
+            Dim tmpValue As String = ""
+            If index >= 1 And index <= _deliverables.Count Then
+                tmpValue = _deliverables.Item(index - 1)
+            End If
+            getDeliverable = tmpValue
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Liste der Deliverables eines Meilensteins als einen String zurück; 
+    ''' die einzelnen Deliverables sind by default durch einen vblf getrennt
+    ''' oder getrennt durch das übergebene trennzeichen  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAllDeliverables(Optional ByVal trennzeichen As String = vbLf) As String
+        Get
+            Dim tmpDeliverables As String = ""
+            For i As Integer = 1 To _deliverables.Count
+                If i = 1 Then
+                    tmpDeliverables = _deliverables.Item(i - 1)
+                Else
+                    tmpDeliverables = tmpDeliverables & trennzeichen & _
+                        _deliverables.Item(i - 1)
+                End If
+            Next
+
+            getAllDeliverables = tmpDeliverables
 
         End Get
     End Property
@@ -329,6 +466,10 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Property appearance As String
         Get
+            ' tk 28.11.17
+            If PhaseDefinitions.Contains(Me.name) Then
+                _appearance = PhaseDefinitions.getAppearance(Me.name)
+            End If
             appearance = _appearance
         End Get
         Set(value As String)
@@ -383,7 +524,7 @@ Public Class clsPhase
     Public Property ampelStatus As Integer
         Get
             If Me.bewertungsCount >= 1 Then
-                ampelStatus = Me.getBewertung(1).colorIndex
+                ampelStatus = Me.getBewertung(Me.bewertungsCount).colorIndex
             Else
                 ampelStatus = 0
             End If
@@ -422,7 +563,7 @@ Public Class clsPhase
     Public Property ampelErlaeuterung As String
         Get
             If Me.bewertungsCount >= 1 Then
-                ampelErlaeuterung = Me.getBewertung(1).description
+                ampelErlaeuterung = Me.getBewertung(Me.bewertungsCount).description
             Else
                 ampelErlaeuterung = ""
             End If
@@ -433,7 +574,7 @@ Public Class clsPhase
             End If
 
             If Me.bewertungsCount >= 1 Then
-                Me.getBewertung(1).description = value
+                Me.getBewertung(Me.bewertungsCount).description = value
             Else
                 Dim tmpB As New clsBewertung
                 With tmpB
@@ -2143,14 +2284,18 @@ Public Class clsPhase
         _parentProject = parent
         _vorlagenParent = Nothing
 
+        _percentDone = 0.0
+        _deliverables = New List(Of String)
+
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' bei der Initialisierung wird nicht automatisch eine Bewertung angelegt ..
         ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
-        Dim tmpB As New clsBewertung
-        With tmpB
-            .description = ""
-            .colorIndex = 0
-        End With
-        Me.addBewertung(tmpB)
+        'Dim tmpB As New clsBewertung
+        'With tmpB
+        '    .description = ""
+        '    .colorIndex = 0
+        'End With
+        'Me.addBewertung(tmpB)
         
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)
@@ -2192,15 +2337,18 @@ Public Class clsPhase
         _parentProject = Nothing
         _vorlagenParent = parent
 
+        _percentDone = 0.0
+        _deliverables = New List(Of String)
 
         _bewertungen = New SortedList(Of String, clsBewertung)
+        ' Änderung tk, bei der Initialisierung wird nicht automatisch eine Bewertung angelegt .. 
         ' tk 28.12.16 jede Phase bekommt eine leere Bewertung 
-        Dim tmpB As New clsBewertung
-        With tmpB
-            .description = ""
-            .colorIndex = 0
-        End With
-        Me.addBewertung(tmpB)
+        'Dim tmpB As New clsBewertung
+        'With tmpB
+        '    .description = ""
+        '    .colorIndex = 0
+        'End With
+        'Me.addBewertung(tmpB)
 
         _allRoles = New List(Of clsRolle)
         _allCosts = New List(Of clsKostenart)

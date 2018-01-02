@@ -74,6 +74,8 @@
     <Compile Include="clsCustomField.vb" />
     <Compile Include="clsCustomFieldDefinition.vb" />
     <Compile Include="clsCustomFieldDefinitions.vb" />
+    <Compile Include="clsDocuments.vb" />
+    <Compile Include="clsDocumentsDB.vb" />
     <Compile Include="clsHierarchyDB.vb" />
     <Compile Include="clsHierarchyNodeDB.vb" />
     <Compile Include="clsKostenartDB.vb" />
@@ -90,6 +92,7 @@
     <Compile Include="clsEventsWindows.vb" />
     <Compile Include="clsroleHrchy.vb" />
     <Compile Include="clsroleNode.vb" />
+    <Compile Include="clsVisboCryptography.vb" />
     <Compile Include="clsWindowWithEvents.vb" />
     <Compile Include="clsWriteProtectionItem.vb" />
     <Compile Include="clsWriteProtectionItemDB.vb" />

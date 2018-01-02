@@ -5,34 +5,53 @@ Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 
 Public Class Ribbon1
+
+
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
-
-    End Sub
-
-    Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
-
-        Dim msg As String = ""
-        If userIsEntitled(msg) Then
-
-            ' wird das Formular aktuell angezeigt ? 
-            If IsNothing(infoFrm) And Not formIsShown Then
-                infoFrm = New frmInfo
-                formIsShown = True
-                infoFrm.Show()
-            End If
-
+        If englishLanguage Then
+            With Me
+                .Group2.Label = "Update"
+                .Group3.Label = "Time Machine"
+                .Group4.Label = "Actions"
+                .btnUpdate.Label = "Update"
+                .btnStart.Label = "First  "
+                .btnFastBack.Label = "Prev."
+                .btnShowChanges.Label = "Difference"
+                .btnFastForward.Label = "Next"
+                .btnEnd2.Label = "Last"
+                .activateInfo.Label = "Properties"
+                .activateSearch.Label = "Search"
+                .activateTab.Label = "Annotate"
+                .settingsTab.Label = "Settings"
+            End With
         Else
-            Call MsgBox(msg)
+            With Me
+                .Group2.Label = "Aktualisieren"
+                .Group3.Label = "Time Machine"
+                .Group4.Label = "Aktionen"
+                .btnUpdate.Label = "Aktuell"
+                .btnStart.Label = "Erste Version"
+                .btnFastBack.Label = "Vorgänger Version"
+                .btnShowChanges.Label = "Veränderung"
+                .btnFastForward.Label = "Nächste Version"
+                .btnEnd2.Label = "Neueste Version"
+                .activateInfo.Label = "Eigenschaften"
+                .activateSearch.Label = "Suche"
+                .activateTab.Label = "Beschriften"
+                .settingsTab.Label = "Einstellungen"
+            End With
         End If
-
-
     End Sub
+
 
 
 
     Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
 
         Dim msg As String = ""
+
+        ' tk 11.1217 nur aktiv machen, wenn man Slides zur Weitergabe komplett strippen möchte ... um zu verhindern, dass die Re-Engineering machen ...
+        'Call stripOffAllSmartInfo()
 
         If userIsEntitled(msg) Then
             Dim settingsfrm As New frmSettings
@@ -45,7 +64,7 @@ Public Class Ribbon1
 
     End Sub
 
-    Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs) Handles timeMachineTab.Click
+    Private Sub timeMachineTab_Click(sender As Object, e As RibbonControlEventArgs)
         Dim msg As String = ""
 
         If userIsEntitled(msg) Then
@@ -113,9 +132,284 @@ Public Class Ribbon1
         End If
 
     End Sub
-    
-   
-    Private Sub variantTab_Click_Click(sender As Object, e As RibbonControlEventArgs) Handles variantTab_Click.Click
+
+
+    Private Sub variantTab_Click_Click(sender As Object, e As RibbonControlEventArgs)
+        Dim msg As String = ""
+
+        If userIsEntitled(msg) Then
+            Dim anzahlProjekte As Integer = smartSlideLists.countProjects
+            ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
+            If anzahlProjekte > 0 Then
+
+                ' muss noch eingeloggt werden ? 
+                If noDBAccessInPPT Then
+
+                    Call logInToMongoDB()
+
+                    ' jetzt soll der username, pwd verschlüsselt gemerkt werden ...
+
+                    Dim tmpKey As String = ""
+
+                End If
+
+                If Not noDBAccessInPPT Then
+
+                    ' die MArker, falls welche sichtbar sind , wegmachen ... 
+                    Call deleteMarkerShapes()
+
+                    ' aktuell nur für ein Projekt implementiert 
+                    If anzahlProjekte = 1 Then
+                        Dim tmpName As String = smartSlideLists.getPVName(1)
+
+                        ' jetzt wird das Formular Varianten  aufgerufen ...
+                        Dim variantFormular As New frmSelectVariant
+                        With variantFormular
+                            .pName = getPnameFromKey(tmpName)
+                            .vName = getVariantnameFromKey(tmpName)
+                        End With
+
+                        Dim dgRes As Windows.Forms.DialogResult = variantFormular.ShowDialog
+
+                    Else
+                        Call MsgBox("method not yet implemented ...")
+
+                    End If
+
+
+                End If
+
+            Else
+                Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
+            End If
+        Else
+            Call MsgBox(msg)
+        End If
+    End Sub
+
+    Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
+
+        Dim msg As String = ""
+        If userIsEntitled(msg) Then
+
+            ' wird das Formular aktuell angezeigt ? 
+            If IsNothing(infoFrm) And Not formIsShown Then
+                infoFrm = New frmInfo
+                formIsShown = True
+                infoFrm.Show()
+            End If
+
+        Else
+            Call MsgBox(msg)
+        End If
+
+    End Sub
+
+
+    Private Sub activateSearch_Click(sender As Object, e As RibbonControlEventArgs) Handles activateSearch.Click
+
+        If searchPane.Visible Then
+            searchPane.Visible = False
+        Else
+            searchPane.Visible = True
+            'If slideHasSmartElements Then
+            '    ucSearchView.cathegoryList.SelectedItem = "Name"
+            'End If
+
+        End If
+
+
+    End Sub
+
+    Private Sub activateInfo_Click(sender As Object, e As RibbonControlEventArgs) Handles activateInfo.Click
+
+        If propertiesPane.Visible Then
+            propertiesPane.Visible = False
+        Else
+            propertiesPane.Visible = True
+        End If
+
+    End Sub
+
+
+    Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+
+        If IsNothing(varPPTTM) Then
+            Call initPPTTimeMachine(varPPTTM)
+        End If
+
+        If Not IsNothing(varPPTTM.timeStamps) Then
+
+            If varPPTTM.timeStamps.Count > 0 Then
+
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+
+                If newDate <> currentTimestamp Then
+
+                    Call performBtnAction(newDate)
+
+                End If
+            End If
+        End If
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' zeitgt die Veränderungen zweier Versionen an
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnShowChanges_Click(sender As Object, e As RibbonControlEventArgs) Handles btnShowChanges.Click
+
+        Try
+            ' das Formular aufschalten 
+            If IsNothing(changeFrm) Then
+                changeFrm = New frmChanges
+                changeFrm.Show()
+            Else
+                changeFrm.neuAufbau()
+            End If
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+
+    ''' <summary>
+    ''' zeigt die letzte Version an
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnEnd2_Click(sender As Object, e As RibbonControlEventArgs) Handles btnEnd2.Click
+
+        Call visboUpdate()
+
+    End Sub
+
+    ''' <summary>
+    ''' führt den Code gehe-zum-letzten bzw Visbo-Update aus 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub visboUpdate()
+
+        If IsNothing(varPPTTM) Then
+            Call initPPTTimeMachine(varPPTTM)
+        End If
+
+        If Not IsNothing(varPPTTM.timeStamps) Then
+
+            If varPPTTM.timeStamps.Count > 0 Then
+
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+
+                If newDate <> currentTimestamp Then
+
+                    Call performBtnAction(newDate)
+
+                End If
+            End If
+        End If
+
+    End Sub
+    ''' <summary>
+    ''' geht einen Schritt in die Zukunft 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnFastForward_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastForward.Click
+
+        Dim newDate As Date
+        Dim found As Boolean = False
+        Dim weitermachen As Boolean = False
+
+
+        If IsNothing(varPPTTM) Then
+            Call initPPTTimeMachine(varPPTTM)
+        End If
+
+        If Not IsNothing(varPPTTM.timeStamps) Then
+            If varPPTTM.timeStamps.Count > 0 Then
+
+                newDate = getNextNavigationDate(ptNavigationButtons.nachher)
+
+                If newDate <> currentTimestamp Then
+
+                    Call performBtnAction(newDate)
+
+                End If
+
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' zeigt die vorige Version an
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
+
+        If IsNothing(varPPTTM) Then
+            Call initPPTTimeMachine(varPPTTM)
+        End If
+
+        If Not IsNothing(varPPTTM.timeStamps) Then
+
+            If varPPTTM.timeStamps.Count > 0 Then
+
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
+
+                If newDate <> currentTimestamp Then
+
+                    Call performBtnAction(newDate)
+
+
+                End If
+
+
+            End If
+        End If
+
+    End Sub
+    ''' <summary>
+    ''' positioniert auf den ersten Timestamp 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
+
+        If IsNothing(varPPTTM) Then
+            Call initPPTTimeMachine(varPPTTM)
+        End If
+        If Not IsNothing(varPPTTM.timeStamps) Then
+            If varPPTTM.timeStamps.Count > 0 Then
+
+                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
+
+                If newDate <> currentTimestamp Then
+
+                    Call performBtnAction(newDate)
+
+                End If
+
+            End If
+        End If
+
+    End Sub
+    Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
+        Call visboUpdate()
+    End Sub
+
+    Private Sub varianten_Tab_Click(sender As Object, e As RibbonControlEventArgs) Handles varianten_Tab.Click
         Dim msg As String = ""
 
         If userIsEntitled(msg) Then
@@ -163,6 +457,5 @@ Public Class Ribbon1
             Call MsgBox(msg)
         End If
     End Sub
-    
 End Class
 
