@@ -20485,16 +20485,23 @@ Public Module Projekte
                 .Cells(rowOffset + zeile, columnOffset + 2).value = phaseStart
                 .Cells(rowOffset + zeile, columnOffset + 3).value = phaseEnde
                 .Cells(rowOffset + zeile, columnOffset + 4).value = "0"
-                If cphase.bewertungsListe.Count > 0 Then
-                    For Each kvp As KeyValuePair(Of String, clsBewertung) In cphase.bewertungsListe
-                        cBewertung = kvp.Value
-                        .Cells(rowOffset + zeile, columnOffset + 4).value = cBewertung.colorIndex
-                        .Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
-                        ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
-                        .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
-                        .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
-                    Next
-                End If
+
+                ' Änderung tk 
+                .Cells(rowOffset + zeile, columnOffset + 4).value = cphase.ampelStatus
+                '.Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
+                .Cells(rowOffset + zeile, columnOffset + 5).value = cphase.ampelErlaeuterung
+                .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+
+                'If cphase.bewertungsListe.Count > 0 Then
+                '    For Each kvp As KeyValuePair(Of String, clsBewertung) In cphase.bewertungsListe
+                '        cBewertung = kvp.Value
+                '        .Cells(rowOffset + zeile, columnOffset + 4).value = cBewertung.colorIndex
+                '        .Cells(rowOffset + zeile, columnOffset + 4).interior.color = cBewertung.color
+                '        ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
+                '        .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
+                '        .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+                '    Next
+                'End If
 
                
                 ' Änderung tk 2.11 Ergänzung um Deliverables 
