@@ -179,6 +179,8 @@ Module Module1
         resources = 9
         costs = 10
         responsible = 11
+        overDue = 12
+        noProgress = 13
     End Enum
 
     Friend Enum pptPositionType
@@ -1480,6 +1482,28 @@ Module Module1
                 Catch ex As Exception
 
                 End Try
+            End If
+
+            ' Overdue behandeln 
+            tmpName = tmpShape.Tags.Item("ED")
+            If tmpName.Trim.Length > 0 Then
+                Try
+                    Dim tmpName2 As String = tmpShape.Tags.Item("PD")
+                    Dim finishDate As Date = CDate(tmpName)
+                    If DateDiff(DateInterval.Day, finishDate, Date.Now) > 0 Then
+                        ' ist abgeschlossen, sollte also auf 100% sein
+                        Dim percentDone As Double = CDbl(tmpName2)
+                        If percentDone > 1 Then
+                            percentDone = percentDone / 100
+                        End If
+                        If percentDone < 1.0 Then
+                            Call smartSlideLists.addOvd(shapeName, isMilestone)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+                
             End If
 
             ' wurde das Element verschoben ? 

@@ -171,6 +171,8 @@ Public Class ucSearch
                         catCode = pptInfoType.resources
                     Case "Cost"
                         catCode = pptInfoType.costs
+                    Case "OverDue"
+                        catCode = pptInfoType.overDue
                     Case Else
                         catCode = pptInfoType.cName
                 End Select
@@ -195,6 +197,8 @@ Public Class ucSearch
                         catCode = pptInfoType.resources
                     Case "Kosten"
                         catCode = pptInfoType.costs
+                    Case "Überfällig"
+                        catCode = pptInfoType.overDue
                     Case Else
                         catCode = pptInfoType.cName
                 End Select
@@ -304,7 +308,8 @@ Public Class ucSearch
             cathegoryList.Items.Add("Name")
             cathegoryList.Items.Add("Responsibilities")
             cathegoryList.Items.Add("Deliverables")
-            cathegoryList.Items.Add("Original Name")
+            'cathegoryList.Items.Add("Original Name")
+            cathegoryList.Items.Add("Overdue")
             cathegoryList.Items.Add("Resources")
             cathegoryList.Items.Add("Abbreviation")
             cathegoryList.Items.Add("Cost")
@@ -314,22 +319,20 @@ Public Class ucSearch
             '    cathegoryList.SelectedItem = "Name"
             'End If
         Else
-        With Me
-            .Label1.Text = "Suchergebnisse:"
-            .Label2.Text = "Elemente:"
-        End With
-        cathegoryList.Items.Add("Name")
-        cathegoryList.Items.Add("Verantwortlich")
-        cathegoryList.Items.Add("Lieferumfänge")
-        cathegoryList.Items.Add("Original Name")
-        cathegoryList.Items.Add("Ressourcen")
-        cathegoryList.Items.Add("Abkürzung")
-        cathegoryList.Items.Add("Kosten")
-        cathegoryList.Items.Add("Termin-Änderungen")
+            With Me
+                .Label1.Text = "Suchergebnisse:"
+                .Label2.Text = "Elemente:"
+            End With
+            cathegoryList.Items.Add("Name")
+            cathegoryList.Items.Add("Verantwortlich")
+            cathegoryList.Items.Add("Lieferumfänge")
+            'cathegoryList.Items.Add("Original Name")
+            cathegoryList.Items.Add("Überfällig")
+            cathegoryList.Items.Add("Ressourcen")
+            cathegoryList.Items.Add("Abkürzung")
+            cathegoryList.Items.Add("Kosten")
+            cathegoryList.Items.Add("Termin-Änderungen")
 
-        'If slideHasSmartElements Then
-        '    cathegoryList.SelectedItem = "Name"
-        'End If
         End If
 
         'Call fülltListbox()
@@ -394,6 +397,8 @@ Public Class ucSearch
                     catCode = pptInfoType.resources
                 Case "Cost"
                     catCode = pptInfoType.costs
+                Case "Overdue"
+                    catCode = pptInfoType.overDue
                 Case Else
                     catCode = pptInfoType.cName
             End Select
@@ -417,6 +422,8 @@ Public Class ucSearch
                     catCode = pptInfoType.resources
                 Case "Kosten"
                     catCode = pptInfoType.costs
+                Case "Überfällig"
+                    catCode = pptInfoType.overDue
                 Case Else
                     catCode = pptInfoType.cName
             End Select
