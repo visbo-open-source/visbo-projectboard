@@ -40,6 +40,8 @@ Public Class ThisAddIn
             awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
             awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
             awinSettings.visboDebug = My.Settings.VISBODebug
+            awinSettings.visboMapping = My.Settings.VISBOMapping
+
 
             dbUsername = ""
             dbPasswort = ""

@@ -583,11 +583,9 @@ Public Class frmHierarchySelection
                     .rdbNameList.Visible = False
                     .rdbNameList.Checked = False
                     
-
-
                     .rdbProjStruktProj.Enabled = False
                     .rdbProjStruktProj.Visible = False
-                    .rdbProjStruktProj.Checked = False
+                    .rdbProjStruktProj.Checked = True
 
                     .rdbProjStruktTyp.Enabled = False
                     .rdbProjStruktTyp.Visible = False
@@ -599,7 +597,7 @@ Public Class frmHierarchySelection
                     .picturePhasen.Visible = False
 
                     .rdbPhaseMilest.Visible = False
-                    .rdbPhaseMilest.Checked = True
+                    .rdbPhaseMilest.Checked = False
                     .picturePhaseMilest.Visible = False
 
                     .rdbMilestones.Visible = False
@@ -836,13 +834,15 @@ Public Class frmHierarchySelection
                 End If
 
 
-            Case PTmenue.reportMultiprojektTafel
-                ' ur: 11.09.2017: beginnt mit ProjektStruktur
+            Case PTmenue.reportMultiprojektTafel Or PTmenue.reportBHTC
+                ' ur: 11.09.2017: beginnt mit ProjektStruktur  ?????
 
-
-                Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportMultiprojektTafel, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
-                If IsNothing(repProfil) Then
-                    Throw New ArgumentException("Fehler beim Lesen des ausgewählten ReportProfils")
+                If PTmenue.reportMultiprojektTafel Then
+                    Call MsgBox("PTmenue.reportMultiprojektTafel")
+                    Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportMultiprojektTafel, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
+                    If IsNothing(repProfil) Then
+                        Throw New ArgumentException("Fehler beim Lesen des ausgewählten ReportProfils")
+                    End If
                 End If
 
                 auswahl = PTProjektType.projekt
@@ -851,7 +851,7 @@ Public Class frmHierarchySelection
                 Select Case auswahl
                     Case PTProjektType.nameList
 
-                       
+
                         Call buildHryTreeViewNew(PTProjektType.nameList)
 
                         Me.rdbNameList.Checked = True
@@ -892,10 +892,10 @@ Public Class frmHierarchySelection
 
                 End Select
 
-                    ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
-                    If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
-                        hryTreeView.ExpandAll()
-                    End If
+                ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+                If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                    hryTreeView.ExpandAll()
+                End If
 
         End Select
 

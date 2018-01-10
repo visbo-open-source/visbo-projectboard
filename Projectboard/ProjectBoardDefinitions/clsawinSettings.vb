@@ -215,6 +215,7 @@ Public Class clsawinSettings
     Public Property visbodeliverables As String
     Public Property visbopercentDone As String
     Public Property visboresponsible As String
+    Public Property visboMapping As String
 
 
     ' Settings für Einzelprojekt-Reports
@@ -343,7 +344,7 @@ Public Class clsawinSettings
         _meAuslastungIsInclExt = True
         _meExtendedColumnsView = False
 
-        _considerCategories = True
+        _considerCategories = False
 
 
         ' Settings für den Schutz von Projekten 
