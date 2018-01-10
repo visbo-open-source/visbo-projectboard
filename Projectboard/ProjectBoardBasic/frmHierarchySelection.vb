@@ -838,7 +838,7 @@ Public Class frmHierarchySelection
                 ' ur: 11.09.2017: beginnt mit ProjektStruktur  ?????
 
                 If PTmenue.reportMultiprojektTafel Then
-                    Call MsgBox("PTmenue.reportMultiprojektTafel")
+
                     Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportMultiprojektTafel, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
                     If IsNothing(repProfil) Then
                         Throw New ArgumentException("Fehler beim Lesen des ausgewählten ReportProfils")
