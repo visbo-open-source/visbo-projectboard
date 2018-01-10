@@ -165,13 +165,13 @@ Public Class ucSearch
                         catCode = pptInfoType.bCrumb
                     Case "Deliverables"
                         catCode = pptInfoType.lUmfang
-                    Case "Changed Dates"
+                    Case "manually Changed Dates"
                         catCode = pptInfoType.mvElement
                     Case "Resources"
                         catCode = pptInfoType.resources
                     Case "Cost"
                         catCode = pptInfoType.costs
-                    Case "OverDue"
+                    Case "Overdue"
                         catCode = pptInfoType.overDue
                     Case Else
                         catCode = pptInfoType.cName
@@ -191,7 +191,7 @@ Public Class ucSearch
                         catCode = pptInfoType.bCrumb
                     Case "Lieferumfänge"
                         catCode = pptInfoType.lUmfang
-                    Case "Termin-Änderungen"
+                    Case "manuelle Termin-Änderungen"
                         catCode = pptInfoType.mvElement
                     Case "Ressourcen"
                         catCode = pptInfoType.resources
@@ -313,7 +313,7 @@ Public Class ucSearch
             cathegoryList.Items.Add("Resources")
             cathegoryList.Items.Add("Abbreviation")
             cathegoryList.Items.Add("Cost")
-            cathegoryList.Items.Add("Changed Dates")
+            cathegoryList.Items.Add("manually Changed Dates")
 
             'If slideHasSmartElements Then
             '    cathegoryList.SelectedItem = "Name"
@@ -331,7 +331,7 @@ Public Class ucSearch
             cathegoryList.Items.Add("Ressourcen")
             cathegoryList.Items.Add("Abkürzung")
             cathegoryList.Items.Add("Kosten")
-            cathegoryList.Items.Add("Termin-Änderungen")
+            cathegoryList.Items.Add("manuelle Termin-Änderungen")
 
         End If
 
@@ -391,7 +391,7 @@ Public Class ucSearch
                     catCode = pptInfoType.bCrumb
                 Case "Deliverables"
                     catCode = pptInfoType.lUmfang
-                Case "Changed Dates"
+                Case "manually Changed Dates"
                     catCode = pptInfoType.mvElement
                 Case "Resources"
                     catCode = pptInfoType.resources
@@ -416,7 +416,7 @@ Public Class ucSearch
                     catCode = pptInfoType.bCrumb
                 Case "Lieferumfänge"
                     catCode = pptInfoType.lUmfang
-                Case "Termin-Änderungen"
+                Case "manuelle Termin-Änderungen"
                     catCode = pptInfoType.mvElement
                 Case "Ressourcen"
                     catCode = pptInfoType.resources
@@ -515,14 +515,21 @@ Public Class ucSearch
 
                     Dim curShape As PowerPoint.Shape = currentSlide.Shapes(selEleShpName)
 
-                    Dim bln As String = curShape.Tags.Item("BLN")
-                    bln = bestimmeElemText(curShape, False, False)
+                    'Dim bln As String = curShape.Tags.Item("BLN")
+                    Dim bln As String = bestimmeElemText(curShape, False, False)
                     Dim pname As String = getPVnameFromShpName(selEleShpName)
                     selListboxEle = pname & "  -  " & bln
                     ' merken der Zuordnung zwischen angezeigtem Namen und ShapeNamen
-                    shpNameSav.Add(selListboxEle, selEleShpName)
 
-                    selListboxNames.Items.Add(selListboxEle)
+                    Dim lfdNr As Integer = 1
+                    Dim tmpKey As String = selListboxEle
+                    Do While shpNameSav.ContainsKey(tmpKey)
+                        lfdNr = lfdNr + 1
+                        tmpKey = selListboxEle & " (" & lfdNr.ToString & ")"
+                    Loop
+                    shpNameSav.Add(tmpKey, selEleShpName)
+
+                    selListboxNames.Items.Add(tmpKey)
 
                 Next
 

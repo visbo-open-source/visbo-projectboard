@@ -451,7 +451,7 @@ Public Class clsSmartSlideListen
             If listOfShapeNames.ContainsKey(uid) Then
                 ' nichts tun , ist schon drin ...
             Else
-                ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
+                ' aufnehmen ; der bool'sche Value sagt aus, ob es sich um einen Meilenstein handelt oder einen Vorgang / Phase  
                 listOfShapeNames.Add(uid, isMilestone)
             End If
         Else
@@ -753,30 +753,48 @@ Public Class clsSmartSlideListen
     ''' <param name="shapeName"></param>
     ''' <param name="isMilestone"></param>
     ''' <remarks></remarks>
-    Public Sub addOvd(ByVal shapeName As String, ByVal isMilestone As Boolean)
+    Public Sub addOvd(ByVal anzTage As Integer, ByVal shapeName As String, ByVal isMilestone As Boolean)
+
+        Dim lt1 As String = ""
+        Dim lt2 As String = ""
+        Dim splitNr As Integer = 30
+
+        If englishLanguage Then
+            lt1 = "<= 30 days"
+            lt2 = "> 30 days"
+        Else
+            lt1 = "<= 30 Tage"
+            lt2 = "> 30 Tage"
+        End If
 
         Dim uid As Integer = Me.getUID(shapeName)
-        Dim tmpKey As String = "Overdue"
+
         Dim listOfShapeNames As SortedList(Of Integer, Boolean)
 
         ' konsistent machen ... wenn die Farbe nicht erkannt werden kann, wird sie wie <nicht gesetzt> behandelt 
-
-        If _ovdList.ContainsKey(tmpKey) Then
-            listOfShapeNames = _ovdList.Item(tmpKey)
-            If listOfShapeNames.ContainsKey(uid) Then
-                ' nichts tun , ist schon drin ...
+        If anzTage > 0 Then
+            Dim qualifier As String = ""
+            If anzTage <= splitNr Then
+                qualifier = lt1
             Else
-                ' aufnehmen ; der bool'sche Value ist die Angabe, ob Milestone doer nicht  
-                listOfShapeNames.Add(uid, isMilestone)
+                qualifier = lt2
             End If
-        Else
-            ' dann muss das erste aufgenommen werden 
-            listOfShapeNames = New SortedList(Of Integer, Boolean)
-            listOfShapeNames.Add(uid, isMilestone)
-            _ovdList.Add(tmpKey, listOfShapeNames)
+
+            If _ovdList.ContainsKey(qualifier) Then
+                listOfShapeNames = _ovdList.Item(qualifier)
+                If listOfShapeNames.ContainsKey(uid) Then
+                    ' nichts tun , ist schon drin ...
+                Else
+                    ' aufnehmen ; der bool'sche Value ist die Angabe, ob Milestone doer nicht  
+                    listOfShapeNames.Add(uid, isMilestone)
+                End If
+            Else
+                ' dann muss das erste aufgenommen werden 
+                listOfShapeNames = New SortedList(Of Integer, Boolean)
+                listOfShapeNames.Add(uid, isMilestone)
+                _ovdList.Add(qualifier, listOfShapeNames)
+            End If
         End If
-
-
 
     End Sub
 

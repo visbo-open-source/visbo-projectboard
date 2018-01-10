@@ -587,7 +587,7 @@ Public Class frmHierarchySelection
 
                     .rdbProjStruktProj.Enabled = False
                     .rdbProjStruktProj.Visible = False
-                    .rdbProjStruktProj.Checked = False
+                    .rdbProjStruktProj.Checked = True
 
                     .rdbProjStruktTyp.Enabled = False
                     .rdbProjStruktTyp.Visible = False

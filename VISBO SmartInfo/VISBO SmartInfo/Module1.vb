@@ -1490,14 +1490,20 @@ Module Module1
                 Try
                     Dim tmpName2 As String = tmpShape.Tags.Item("PD")
                     Dim finishDate As Date = CDate(tmpName)
-                    If DateDiff(DateInterval.Day, finishDate, Date.Now) > 0 Then
+                    Dim anzTageOVD As Integer = DateDiff(DateInterval.Day, finishDate, currentTimestamp)
+                    If anzTageOVD > 0 Then
                         ' ist abgeschlossen, sollte also auf 100% sein
-                        Dim percentDone As Double = CDbl(tmpName2)
+
+                        Dim percentDone As Double = 0.0
+                        If tmpName2.Trim.Length > 0 Then
+                            percentDone = CDbl(tmpName2)
+                        End If
                         If percentDone > 1 Then
                             percentDone = percentDone / 100
                         End If
+                        ' jetzt wird es als überfällig eingestuft, da das Finish Datum in der Vergangenheit liegt und ausserdem PercentDone nicht gleich 1 ist
                         If percentDone < 1.0 Then
-                            Call smartSlideLists.addOvd(shapeName, isMilestone)
+                            Call smartSlideLists.addOvd(anzTageOVD, shapeName, isMilestone)
                         End If
                     End If
                 Catch ex As Exception
