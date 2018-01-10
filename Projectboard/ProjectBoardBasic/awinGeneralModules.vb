@@ -3361,9 +3361,9 @@ Public Module awinGeneralModules
 
 
     End Sub
-    Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef importdate As Date)
+    Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef mapProj As clsProjekt, ByRef importdate As Date)
 
-        Dim mapStruktur As String = "TMS"
+        Dim mapStruktur As String = awinSettings.mappingVorlage
 
         Dim prj As MSProject.Application
         Dim msproj As MSProject.Project
@@ -3552,7 +3552,7 @@ Public Module awinGeneralModules
                 Dim anzTasks As Integer = msproj.Tasks.Count
                 anzTasks = msproj.NumberOfTasks
                 Dim projSumTask As MSProject.Task = msproj.ProjectSummaryTask
-              
+
 
                 Dim resPool As MSProject.Resources = msproj.Resources
 
@@ -3699,7 +3699,7 @@ Public Module awinGeneralModules
 
                                     End If
                                 Next iDel
-                               
+
                             End If
 
                             ' Responsible, falls Customfield visbo_responsible definiert ist
@@ -4080,7 +4080,7 @@ Public Module awinGeneralModules
                             Else
                                 msDef.darstellungsKlasse = ""
                             End If
-                        
+
 
                             msDef.schwellWert = 0
                             msDef.UID = MilestoneDefinitions.Count + 1
@@ -4275,91 +4275,40 @@ Public Module awinGeneralModules
 
                 Next  ' Schleife über alle Phasen/Meilensteine zum entfernern derer, die VISBO-Flag nicht gesetzt haben
 
-         
-
-                If modus <> "BHTC" And visbo_mapping = 0 Then
-
-                    Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
-
-                    ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-                    ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-                    If AlleProjekte.Containskey(key) Then
-                        AlleProjekte.Remove(key)
-                    End If
-
-                    AlleProjekte.Add(hproj)
-
-                    If Not ShowProjekte.contains(hproj.name) Then
-                        ShowProjekte.Add(hproj)
-                    Else
-                        ShowProjekte.Remove(hproj.name)
-                        ShowProjekte.Add(hproj)
-                        'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
-                    End If
-
-                    ' Fehlermeldung: Falsche Währung vordefiniert.
-                    If msproj.CurrencyCode <> "EUR" Then
-                        Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
-                    End If
-
-                    prj.FileExit(MSProject.PjSaveType.pjDoNotSave)
-
-                Else  ' modus = "BHTC"
 
 
-                    '' '' '' -------------------------------------------------------------------------
-                    '' '' '' Check, ob gemappt werden muss (visbo_mapping enthält Angaben zum Mapping)
-                    '' '' ''
-                    '' '' '' Bestimmung von minDate und maxDate des gemappten Projektes
-                    '' '' '' -------------------------------------------------------------------------
+
+                Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+                If AlleProjekte.Containskey(key) Then
+                    AlleProjekte.Remove(key)
+                End If
+
+                AlleProjekte.Add(hproj)
 
 
-                    ' '' ''Dim msTask As MSProject.Task
-                    ' '' ''Dim vMappingText As String
+                If modus = "BHTC" Then
+                    ' Alle Projekte löschen
+                    ShowProjekte.Clear()
+                End If
 
-                    '' '' '' vMapping = true, wenn Mapping-Spalte Inhalte hat
-                    ' '' ''Dim vMapping As Boolean = False
+                If Not ShowProjekte.contains(hproj.name) Then
+                    ShowProjekte.Add(hproj)
+                Else
+                    ShowProjekte.Remove(hproj.name)
+                    ShowProjekte.Add(hproj)
+                    'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
+                End If
 
-
-                    '' '' ''  Mapping - Spalte defíniert
-
-                    ' '' ''If visbo_mapping <> 0 Then
-
-                    ' '' ''    ' MINimum und MAXimum Datum für Start und Ende des TMS-Projektes zu finden
-
-                    ' '' ''    Dim minDate As Date = hproj.endeDate
-                    ' '' ''    Dim maxDate As Date = hproj.startDate
-
-                    ' '' ''    For i = 1 To anzTasks
-
-                    ' '' ''        msTask = msproj.Tasks.Item(i)
-
-                    ' '' ''        Try
-                    ' '' ''            vMappingText = Trim(msTask.GetField(visbo_mapping))
-                    ' '' ''        Catch ex As Exception
-                    ' '' ''            vMappingText = ""
-                    ' '' ''        End Try
+                ' Fehlermeldung: Falsche Währung vordefiniert.
+                If msproj.CurrencyCode <> "EUR" Then
+                    Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                End If
 
 
-                    ' '' ''        If vMappingText <> "" Then
-
-                    ' '' ''            If minDate > msTask.Start Then
-                    ' '' ''                minDate = msTask.Start
-                    ' '' ''            End If
-                    ' '' ''            If maxDate < msTask.Finish Then
-                    ' '' ''                maxDate = msTask.Finish
-                    ' '' ''            End If
-                    ' '' ''            vMapping = vMapping Or True
-                    ' '' ''        End If
-
-                    ' '' ''    Next i
-
-                    ' '' ''    ' ENDE min-max - Bestimmung
-                    ' '' ''    ' ------------------------------
-
-                    ' '' ''    ' ----------------------------------------------------------------------------------
-                    ' '' ''    ' vMapping = true: In der Spalte visbo_mapping sind Mapping-Vorschriften enthalten => es wird gemappt
-
+                If modus = "BHTC" Or visbo_mapping <> 0 Then
 
                     ' ---------------------
                     ' Mapping gewünscht
@@ -4367,7 +4316,7 @@ Public Module awinGeneralModules
 
                     If visbo_mapping <> 0 Then
 
-                        hproj = mappingProject(msproj, mapStruktur, hproj, visbo_mapping)
+                        mapProj = mappingProject(msproj, mapStruktur, hproj, visbo_mapping)
 
                     End If
 
@@ -4381,31 +4330,44 @@ Public Module awinGeneralModules
                     '
                     ' ist erforderlich für die Erstellung des Reports
 
-                    Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
+                    If Not IsNothing(mapProj) Then
 
-                    ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-                    ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-                    If AlleProjekte.Containskey(key) Then
-                        AlleProjekte.Remove(key)
-                    End If
+                        key = calcProjektKey(mapProj.name, mapProj.variantName)
 
-                    AlleProjekte.Add(hproj)
+                        ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                        ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+                        If AlleProjekte.Containskey(key) Then
+                            AlleProjekte.Remove(key)
+                        End If
 
-                    ' Alle Projekte entfernen
-                    ShowProjekte.Clear()
+                        AlleProjekte.Add(mapProj)
 
-                    If Not ShowProjekte.contains(hproj.name) Then
-                        ShowProjekte.Add(hproj)
+                        If modus = "BHTC" Then
+                            ' Alle Projekte entfernen
+                            ShowProjekte.Clear()
+                        End If
+               
+
+                        If Not ShowProjekte.contains(mapProj.name) Then
+                            ShowProjekte.Add(mapProj)
+
+                        End If
+
+                        ' Fehlermeldung: Falsche Währung vordefiniert.
+                        If msproj.CurrencyCode <> "EUR" Then
+                            Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
+                        End If
                     Else
-                        ShowProjekte.Remove(hproj.name)
-                        ShowProjekte.Add(hproj)
-                        'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
+
+                        Call MsgBox("Mapping misslungen")
+
                     End If
 
-                    ' Fehlermeldung: Falsche Währung vordefiniert.
-                    If msproj.CurrencyCode <> "EUR" Then
-                        Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
-                    End If
+                End If
+
+                ' Wenn Aufruf aus VisualBoard, so muss MS Project wieder geschlossen werden
+                If modus <> "BHTC" Then
+                    prj.FileExit(MSProject.PjSaveType.pjDoNotSave)
                 End If
 
             Else
@@ -4423,8 +4385,20 @@ Public Module awinGeneralModules
     End Sub
 
 
+    ''' <summary>
+    ''' Es wird ein Projekt in  VISBO-Stuktur erzeugt.
+    ''' msproj, ein Projekt von MS Project wird in ein Projekt hproj gemäß der Struktur mapStruktur gemappt.
+    ''' die entsprechende Vorschriften sind in den Custom-Field visbo_mapping definiert.
+    ''' Ergebnis: gemapptes Projekt
+    ''' </summary>
+    ''' <param name="msproj">MS Project - Projekt</param>
+    ''' <param name="mapStruktur">Vorlage</param>
+    ''' <param name="hproj">bereits von MS Project eingelesenes Projekt in VISBO-Struktur</param>
+    ''' <param name="visbo_mapping">Definition des MSProject-CustomField</param>
+    ''' <returns>gemapptes Projekt in VISBO-Struktur</returns>
+    ''' <remarks></remarks>
     Public Function mappingProject(ByVal msproj As MSProject.Project, ByVal mapStruktur As String, ByVal hproj As clsProjekt, _
-                                ByVal visbo_mapping As MSProject.PjCustomField) As clsProjekt
+                                    ByVal visbo_mapping As MSProject.PjCustomField) As clsProjekt
 
 
 
@@ -4491,127 +4465,137 @@ Public Module awinGeneralModules
             vproj = erstelleProjektAusVorlage("TMSHilfsproj", mapStruktur, minDate, maxDate, hproj.Erloes, 0, _
                                      hproj.StrategicFit, hproj.Risiko, Nothing, hproj.description, hproj.businessUnit)
 
-            mproj = New clsProjekt(minDate, minDate, minDate)
-            mproj.variantName = mapStruktur
-            Try
-                With mproj
-                    .name = hproj.name
-                    .VorlagenName = vproj.VorlagenName
-                    .startDate = vproj.startDate
-                    .businessUnit = vproj.businessUnit
-                    .Erloes = vproj.Erloes
-                    .earliestStartDate = vproj.earliestStartDate
-                    .latestStartDate = vproj.latestStartDate
-                    .Status = vproj.Status
-                    .description = vproj.description
+            If Not IsNothing(vproj) Then
 
-                    .StrategicFit = vproj.StrategicFit
-                    .Risiko = vproj.Risiko
-                    'plen = .anzahlRasterElemente
-                    'pcolor = .farbe
-                End With
-            Catch ex As Exception
+                mproj = New clsProjekt(minDate, minDate, minDate)
+                mproj.variantName = mapStruktur
+                Try
+                    With mproj
+                        .name = hproj.name
+                        .VorlagenName = vproj.VorlagenName
+                        .startDate = vproj.startDate
+                        .businessUnit = vproj.businessUnit
+                        .Erloes = vproj.Erloes
+                        .earliestStartDate = vproj.earliestStartDate
+                        .latestStartDate = vproj.latestStartDate
+                        .Status = vproj.Status
+                        .description = vproj.description
 
-            End Try
-            ' alle Phasen des TMS_Projektes vproj durchgehen, in das mproj eintragen und in MSProjekt 
-            ' die zugehörigen Phasen und Meilensteine suchen und übernehmen aus hproj
+                        .StrategicFit = vproj.StrategicFit
+                        .Risiko = vproj.Risiko
+                        'plen = .anzahlRasterElemente
+                        'pcolor = .farbe
+                    End With
+                Catch ex As Exception
 
-
-            ' übernehmen der RootPhase aus vproj
-            Dim cphase As New clsPhase(mproj)
-            vproj.AllPhases.ElementAt(0).copyTo(cphase, True)
-            cphase.nameID = rootPhaseName
-            mproj.AddPhase(cphase)
-
-            For hi As Integer = 1 To vproj.AllPhases.Count - 1
-
-                Dim aktPhase As New clsPhase(mproj)
-                vproj.AllPhases.ElementAt(hi).copyTo(aktPhase, True)
-                aktPhase.nameID = mproj.hierarchy.findUniqueElemKey(vproj.AllPhases.ElementAt(hi).name, False)
-                Dim parentID As String = vproj.hierarchy.getParentIDOfID(aktPhase.nameID)
-
-                ' aktuelle Phase des VorlagenProjekts in MappingProjekt übernehmen
-                mproj.AddPhase(aktPhase, aktPhase.name, parentID)
+                End Try
+                ' alle Phasen des TMS_Projektes vproj durchgehen, in das mproj eintragen und in MSProjekt 
+                ' die zugehörigen Phasen und Meilensteine suchen und übernehmen aus hproj
 
 
-                For i = 1 To anztasks
+                ' übernehmen der RootPhase aus vproj
+                Dim cphase As New clsPhase(mproj)
+                vproj.AllPhases.ElementAt(0).copyTo(cphase, True)
+                cphase.nameID = rootPhaseName
+                mproj.AddPhase(cphase)
 
-                    msTask = msproj.Tasks.Item(i)
+                For hi As Integer = 1 To vproj.AllPhases.Count - 1
 
-                    Try
-                        vMappingText = Trim(msTask.GetField(visbo_mapping))
-                    Catch ex As Exception
-                        vMappingText = ""
-                    End Try
+                    Dim aktPhase As New clsPhase(mproj)
+                    vproj.AllPhases.ElementAt(hi).copyTo(aktPhase, True)
+                    aktPhase.nameID = mproj.hierarchy.findUniqueElemKey(vproj.AllPhases.ElementAt(hi).name, False)
+                    Dim parentID As String = vproj.hierarchy.getParentIDOfID(aktPhase.nameID)
 
-
-                    If vMappingText = aktPhase.name Then
-
-                        If Not CType(msTask.Milestone, Boolean) Or _
-                            (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
-
-                            ' mstask ist Phase
-
-                            mPhase = New clsPhase(mproj)
-
-                            Dim hPhase As clsPhase = hproj.getPhase(msTask.Name)
-
-                            hPhase.copyTo(mPhase, True)
-                            mPhase.nameID = mPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, False)
-                            Try
-                                ' Berechnung Phasen-Start
-                                Dim mphaseStartOffset As Long
-                                Dim dauerIndays As Long
-                                mphaseStartOffset = DateDiff(DateInterval.Day, minDate, CDate(msTask.Start))
-                                dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
-                                mPhase.changeStartandDauer(mphaseStartOffset, dauerIndays)
-                                mPhase.offset = 0
-                                ' eintragen Phase
-                                mproj.AddPhase(mPhase, msTask.Name, aktPhase.nameID)
-                            Catch ex As Exception
-                                Call MsgBox(ex.Message)
-                            End Try
-
-                        Else
-                            ' mstask ist Meilenstein
-
-                            aktPhase = mproj.getPhaseByID(aktPhase.nameID)
-
-                            mMilestone = New clsMeilenstein(aktPhase)
-
-                            Dim hMilestone As clsMeilenstein = hproj.getMilestone(msTask.Name)
-
-                            Dim newMSNameID As String = aktPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, True)
-                            hMilestone.copyTo(mMilestone, newMSNameID)
-
-                            Dim hMSDate As Date = hMilestone.getDate
-                            mMilestone.setDate = hMSDate
+                    ' aktuelle Phase des VorlagenProjekts in MappingProjekt übernehmen
+                    mproj.AddPhase(aktPhase, aktPhase.name, parentID)
 
 
-                            Try
-                                aktPhase.addMilestone(mMilestone, origName:=msTask.Name)
+                    For i = 1 To anztasks
 
-                            Catch ex As Exception
-                                Call MsgBox(ex.Message)
-                            End Try
+                        msTask = msproj.Tasks.Item(i)
+
+                        Try
+                            vMappingText = Trim(msTask.GetField(visbo_mapping))
+                        Catch ex As Exception
+                            vMappingText = ""
+                        End Try
+
+
+                        If vMappingText = aktPhase.name Then
+
+                            If Not CType(msTask.Milestone, Boolean) Or _
+                                (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
+
+                                ' mstask ist Phase
+
+                                mPhase = New clsPhase(mproj)
+
+                                Dim hPhase As clsPhase = hproj.getPhase(msTask.Name)
+
+                                hPhase.copyTo(mPhase, True)
+                                mPhase.nameID = mPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, False)
+                                Try
+                                    ' Berechnung Phasen-Start
+                                    Dim mphaseStartOffset As Long
+                                    Dim dauerIndays As Long
+                                    mphaseStartOffset = DateDiff(DateInterval.Day, minDate, CDate(msTask.Start))
+                                    dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
+                                    mPhase.changeStartandDauer(mphaseStartOffset, dauerIndays)
+                                    mPhase.offset = 0
+                                    ' eintragen Phase
+                                    mproj.AddPhase(mPhase, msTask.Name, aktPhase.nameID)
+                                Catch ex As Exception
+                                    Call MsgBox(ex.Message)
+                                End Try
+
+                            Else
+                                ' mstask ist Meilenstein
+
+                                aktPhase = mproj.getPhaseByID(aktPhase.nameID)
+
+                                mMilestone = New clsMeilenstein(aktPhase)
+
+                                Dim hMilestone As clsMeilenstein = hproj.getMilestone(msTask.Name)
+
+                                Dim newMSNameID As String = aktPhase.parentProject.hierarchy.findUniqueElemKey(msTask.Name, True)
+                                hMilestone.copyTo(mMilestone, newMSNameID)
+
+                                Dim hMSDate As Date = hMilestone.getDate
+                                mMilestone.setDate = hMSDate
+
+
+                                Try
+                                    aktPhase.addMilestone(mMilestone, origName:=msTask.Name)
+
+                                Catch ex As Exception
+                                    Call MsgBox(ex.Message)
+                                End Try
+
+                            End If
 
                         End If
 
-                    End If
-
-                Next i
+                    Next i
 
 
-            Next hi
+                Next hi
 
-            mappingProject = mproj
+                mappingProject = mproj
+
+
+            Else
+
+                mappingProject = Nothing
+
+            End If
+
 
 
         Else
 
             ' Kein Mapping definiert
 
-            mappingProject = hproj
+            mappingProject = Nothing
         End If
 
 
@@ -22462,24 +22446,24 @@ Public Module awinGeneralModules
                     hproj.timeStamp = jetzt
                 End If
 
-                Dim storeNeeded As Boolean = True
+                'Dim storeNeeded As Boolean = True
 
                 ' ur: 20170904: Funktion hproj.isIdenticalTo hat Probleme
 
-                ' '' ''Dim storeNeeded As Boolean
-                ' '' ''If request.projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
-                ' '' ''    ' prüfen, ob es Unterschied gibt 
-                ' '' ''    Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
-                ' '' ''    If Not IsNothing(standInDB) Then
-                ' '' ''        ' prüfe, ob es Unterschiede gibt
-                ' '' ''        storeNeeded = Not hproj.isIdenticalTo(standInDB)
-                ' '' ''    Else
-                ' '' ''        ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
-                ' '' ''        storeNeeded = True
-                ' '' ''    End If
-                ' '' ''Else
-                ' '' ''    storeNeeded = True
-                ' '' ''End If
+                Dim storeNeeded As Boolean
+                If request.projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                    ' prüfen, ob es Unterschied gibt 
+                    Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                    If Not IsNothing(standInDB) Then
+                        ' prüfe, ob es Unterschiede gibt
+                        storeNeeded = Not hproj.isIdenticalTo(standInDB)
+                    Else
+                        ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
+                        storeNeeded = True
+                    End If
+                Else
+                    storeNeeded = True
+                End If
 
                 If storeNeeded Then
                     If request.storeProjectToDB(hproj, dbUsername) Then

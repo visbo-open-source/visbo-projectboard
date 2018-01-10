@@ -22,6 +22,7 @@ Public Class Ribbon1
                 Dim hierarchiefenster As New frmHierarchySelection
                 Dim returnvalue As DialogResult
                 Dim hproj As New clsProjekt
+                Dim mapProj As clsProjekt = Nothing
                 Dim aktuellesDatum = Date.Now
                 Dim validDatum As Date = "29.Feb.2016"
                 Dim filename As String = ""
@@ -42,17 +43,45 @@ Public Class Ribbon1
                 If lizenzen.validLicence(user, komponente) Then
 
 
+
                     'Call MsgBox("EPReport_Click")
 
                     ' Laden des aktuell geladenen Projektes
-                    Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
+                    Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
 
-                    If hproj.name <> "" And Not IsNothing(hproj.name) Then
+                    If Not IsNothing(hproj) Then
+                        If hproj.name <> "" And Not IsNothing(hproj.name) Then
+                            Try
+                                Call speichereProjektToDB(hproj)
+                            Catch ex As Exception
+                                Call MsgBox("Fehler beim Speichern in DB")
+                            End Try
+                        End If
+                    End If
+
+                    If Not IsNothing(mapProj) Then
+                        If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
+                            Try
+                                Call speichereProjektToDB(mapProj)
+                            Catch ex As Exception
+                                Call MsgBox("Fehler beim Speichern in DB")
+                            End Try
+                        End If
+
                         reportAuswahl.calledFrom = "MS Project"
-                        reportAuswahl.hproj = hproj
+                        reportAuswahl.hproj = mapProj
                         reportAuswahl.calledFrom = "MS Project"
                         returnvalue = reportAuswahl.ShowDialog
+                    Else
+                        If Not IsNothing(hproj) Then
+
+                            reportAuswahl.calledFrom = "MS Project"
+                            reportAuswahl.hproj = hproj
+                            reportAuswahl.calledFrom = "MS Project"
+                            returnvalue = reportAuswahl.ShowDialog
+                        End If
                     End If
+
                 Else
                     Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
                                 & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
@@ -77,9 +106,9 @@ Public Class Ribbon1
 
 
         Catch ex As Exception
-
-            Throw New ArgumentException(" Bitte kontaktieren Sie ihren Systemadministrator")
             Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
+            Throw New ArgumentException(" Bitte kontaktieren Sie ihren Systemadministrator")
+
         End Try
     End Sub
 
@@ -94,6 +123,7 @@ Public Class Ribbon1
                 Dim reportAuswahl As New frmReportProfil
                 Dim hierarchiefenster As New frmHierarchySelection
                 Dim hproj As New clsProjekt
+                Dim mapProj As clsProjekt = Nothing
                 Dim aktuellesDatum = Date.Now
                 Dim validDatum As Date = "29.Feb.2016"
                 Dim filename As String = ""
@@ -116,81 +146,91 @@ Public Class Ribbon1
 
                     'Call MsgBox("EPReport_Click")
 
-                    ' Laden des aktuell geladenen Projektes
-                    Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
+                    ' Laden des aktuell geladenen Projektes und des eventuell gemappten
+                    Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
 
                     If hproj.name <> "" And Not IsNothing(hproj.name) Then
-                        Try
-                            ' LOGIN in DB machen
-                            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                                noDB = False
+                        Call speichereProjektToDB(hproj)
 
-                                If dbUsername = "" Or dbPasswort = "" Then
-
-                                    ' ur: 23.01.2015: Abfragen der Login-Informationen
-                                    loginErfolgreich = loginProzedur()
-
-
-                                    If Not loginErfolgreich Then
-                                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
-                                        Call MsgBox("LOGIN cancelled ...")
-                                    Else
-                                        Dim speichernInDBOk As Boolean = False
-                                        Dim identical As Boolean = False
-                                        Try
-                                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
-                                            If speichernInDBOk Then
-                                                If Not identical Then
-                                                    Call MsgBox("Projekt '" & hproj.name & "' wurde erfolgreich in der Datenbank gespeichert")
-                                                Else
-                                                    Call MsgBox("Projekt '" & hproj.name & "' ist identisch mit der aktuellen Version in der DB")
-                                                End If
-                                            Else
-                                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
-                                            End If
-
-
-                                        Catch ex As Exception
-                                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
-                                        End Try
-
-                                    End If
-
-                                Else
-
-                                    If testLoginInfo_OK(dbUsername, dbPasswort) Then
-                                        Dim speichernInDBOk As Boolean
-                                        Dim identical As Boolean = False
-                                        Try
-                                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
-                                            If speichernInDBOk Then
-                                                If Not identical Then
-                                                    Call MsgBox("Projekt '" & hproj.name & "' wurde erfolgreich in der Datenbank gespeichert")
-                                                Else
-                                                    Call MsgBox("Projekt '" & hproj.name & "' ist identisch mit der aktuellen Version in der DB")
-                                                End If
-                                            Else
-                                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
-                                            End If
-                                        Catch ex As Exception
-                                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
-                                        End Try
-                                    Else
-                                        Call MsgBox("LOGIN fehlerhaft ...")
-                                    End If
-
-                                End If
-
-
-                            End If
-
-
-                        Catch ex As Exception
-                            Call MsgBox(ex.Message)
-                        End Try
-                      
                     End If
+                    If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
+
+                        Call speichereProjektToDB(mapProj)
+
+                    End If
+
+                    '' ''    Try
+                    '' ''        ' LOGIN in DB machen
+                    '' ''        If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                    '' ''            noDB = False
+
+                    '' ''            If dbUsername = "" Or dbPasswort = "" Then
+
+                    '' ''                ' ur: 23.01.2015: Abfragen der Login-Informationen
+                    '' ''                loginErfolgreich = loginProzedur()
+
+
+                    '' ''                If Not loginErfolgreich Then
+                    '' ''                    Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                    '' ''                    Call MsgBox("LOGIN cancelled ...")
+                    '' ''                Else
+                    '' ''                    Dim speichernInDBOk As Boolean = False
+                    '' ''                    Dim identical As Boolean = False
+                    '' ''                    Try
+                    '' ''                        speichernInDBOk = storeSingleProjectToDB(hproj, identical)
+                    '' ''                        If speichernInDBOk Then
+                    '' ''                            If Not identical Then
+                    '' ''                                Call MsgBox("Projekt '" & hproj.name & "' wurde erfolgreich in der Datenbank gespeichert")
+                    '' ''                            Else
+                    '' ''                                Call MsgBox("Projekt '" & hproj.name & "' ist identisch mit der aktuellen Version in der DB")
+                    '' ''                            End If
+                    '' ''                        Else
+                    '' ''                            Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                    '' ''                        End If
+
+
+                    '' ''                    Catch ex As Exception
+                    '' ''                        Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                    '' ''                    End Try
+
+                    '' ''                End If
+
+                    '' ''            Else
+
+                    '' ''                If testLoginInfo_OK(dbUsername, dbPasswort) Then
+                    '' ''                    Dim speichernInDBOk As Boolean
+                    '' ''                    Dim identical As Boolean = False
+                    '' ''                    Try
+                    '' ''                        speichernInDBOk = storeSingleProjectToDB(hproj, identical)
+                    '' ''                        If speichernInDBOk Then
+                    '' ''                            If Not identical Then
+                    '' ''                                Call MsgBox("Projekt '" & hproj.name & "' wurde erfolgreich in der Datenbank gespeichert")
+                    '' ''                            Else
+                    '' ''                                Call MsgBox("Projekt '" & hproj.name & "' ist identisch mit der aktuellen Version in der DB")
+                    '' ''                            End If
+                    '' ''                        Else
+                    '' ''                            Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                    '' ''                        End If
+                    '' ''                    Catch ex As Exception
+                    '' ''                        Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                    '' ''                    End Try
+                    '' ''                Else
+                    '' ''                    Call MsgBox("LOGIN fehlerhaft ...")
+                    '' ''                End If
+
+                    '' ''            End If
+
+
+                    '' ''        End If
+
+
+                    '' ''    Catch ex As Exception
+                    '' ''        Call MsgBox(ex.Message)
+                    '' ''    End Try
+
+
                 Else
                     Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
                                 & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")

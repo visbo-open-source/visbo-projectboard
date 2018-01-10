@@ -216,6 +216,7 @@ Public Class clsawinSettings
     Public Property visbopercentDone As String
     Public Property visboresponsible As String
     Public Property visboMapping As String
+    Public Property mappingVorlage As String = "TMS"
 
 
     ' Settings für Einzelprojekt-Reports

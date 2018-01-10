@@ -156,8 +156,8 @@ Public Class clsPhase
                                 Me.countRoles = .countRoles And _
                                 Me.countDeliverables = .countDeliverables And _
                                 Me.countMilestones = .countMilestones And _
-                                Me.percentDone = .percentDone And _
-                                Me.bewertungsCount = .bewertungsCount Then
+                                Me.percentDone = .percentDone Then
+                                'ur: 20180110 Me.bewertungsCount = .bewertungsCount Then
 
                                 If Me.ampelErlaeuterung = .ampelErlaeuterung And _
                                     Me.ampelStatus = .ampelStatus Then
