@@ -4359,7 +4359,7 @@ Public Module awinGeneralModules
                         End If
                     Else
 
-                        Call MsgBox("Mapping misslungen")
+                        Call MsgBox("Kein Mapping erfolgt")
 
                     End If
 
