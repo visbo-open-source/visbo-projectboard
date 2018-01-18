@@ -292,6 +292,9 @@ Public Class ucSearch
             For Each elem As Object In nameCollection
                 listboxNames.Items.Add(CStr(elem))
             Next
+
+            listboxNames.Focus()
+
         End If
 
     End Sub
@@ -339,6 +342,7 @@ Public Class ucSearch
 
     End Sub
 
+
     ''' <summary>
     ''' 
     ''' </summary>
@@ -363,12 +367,15 @@ Public Class ucSearch
 
     End Sub
 
+
+
     Private Sub listboxNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles listboxNames.SelectedIndexChanged
 
         ' es werden alle selektierten Namen als Shapes selektiert ....
-        ' es können pro Name auch mehrere Shapes selektiert werden müssen 
+        ' pro Name auch mehrere Shapes selektiert werden müssen 
         ' wenn Ampeln anzeigen an ist, dann werden auch die entsprechenden Ampel-Farben angezeigt ... 
 
+        ' die zur Auswahl gehörenden Namen werden gelöscht 
         selListboxNames.Items.Clear()
 
         Dim nameArrayI() As String
@@ -548,8 +555,15 @@ Public Class ucSearch
     Private Sub cathegoryList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cathegoryList.SelectedIndexChanged
 
         Dim newCathegory As String = cathegoryList.SelectedItem
-        ' ''selListboxNames.Items.Clear()
-        Call fülltListbox()
+        Dim oldFilterText As String = filterText.Text
+
+        filterText.Text = ""
+        ' tk, 11.1.18 das folgende muss nur dann aufgerufen werden, wenn es keine Änderung im Filtertext-Feld gab. Dann muss das fülltListbox  in dem Event Aufruf von cathegoryList_SelectedIndexChanged
+        If oldFilterText = "" Then
+            Call fülltListbox()
+        End If
+
+        listboxNames.Focus()
 
     End Sub
 

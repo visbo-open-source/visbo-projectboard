@@ -951,6 +951,9 @@ Module Module1
                 Dim correctErrorShape2 As PowerPoint.Shape = Nothing
 
                 ' nur was machen, wenn es sich um Office 2010 handelt ... 
+                ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
+                ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
+                ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
                 If pptAPP.Version = "14.0" Then
                     Try
                         correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
@@ -2696,6 +2699,7 @@ Module Module1
     Friend Sub showTSMessage(ByVal currentTimestamp As Date)
 
         Dim tsMsgBox As PowerPoint.Shape
+
         Try
             tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
         Catch ex As Exception
@@ -2707,7 +2711,7 @@ Module Module1
             tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
                                       200, 5, 70, 20)
             With tsMsgBox
-                .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+                .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse + 6)
                 .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = trafficLightColors(3)
                 .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
@@ -2722,9 +2726,9 @@ Module Module1
         Else
             With tsMsgBox
                 If englishLanguage Then
-                    .TextFrame2.TextRange.Text = "Version: " & currentTimestamp.ToString
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 Else
-                    .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 End If
 
             End With
@@ -5464,15 +5468,20 @@ Module Module1
 
         If IsNothing(tmpShape) Then
             With ucSearchView
-                .cathegoryList.SelectedItem = " "
-                .shwOhneLight.Checked = False
-                .shwGreenLight.Checked = False
-                .shwYellowLight.Checked = False
-                .shwRedLight.Checked = False
-                .filterText.Text = ""
-                .listboxNames.Items.Clear()
+                ' eigentlich soll doch nur selListboxNames zurückgesetzt werden und die Auswahlen daraus ...
+                '.cathegoryList.SelectedItem = Nothing
+                '.shwOhneLight.Checked = False
+                '.shwGreenLight.Checked = False
+                '.shwYellowLight.Checked = False
+                '.shwRedLight.Checked = False
+                '.filterText.Text = ""
+                '.listboxNames.Items.Clear()
+                '.selListboxNames.Items.Clear()
+                '.fülltListbox()
+
+                ' tk 11.1.18
+                .listboxNames.SelectedItems.Clear()
                 .selListboxNames.Items.Clear()
-                .fülltListbox()
             End With
         End If
 

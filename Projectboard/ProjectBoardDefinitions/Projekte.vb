@@ -1568,7 +1568,8 @@ Public Module Projekte
 
                         For m = 1 To todoCollection.Count
                             Dim milestoneID As String = CStr(todoCollection.Item(m))
-                            Dim cellNameID As String = calcPPTShapeName(hproj, milestoneID)
+                            ' wird gar nicht benötigt ..
+                            'Dim cellNameID As String = calcPPTShapeName(hproj, milestoneID)
 
                             Dim cResult As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
                             Dim cBewertung As clsBewertung = cResult.getBewertung(1)
@@ -6941,7 +6942,7 @@ Public Module Projekte
         ' jetzt muss die tmpDaten und Xdatenreihen aufgebaut werden  
 
         For r = 1 To anzItems
-            If r <= anzPieSegments - 1 Then
+            If (anzItems > anzPieSegments And r <= anzPieSegments - 1) Then
                 tdatenreihe(r - 1) = CInt(sortierteListe.ElementAt(anzItems - r).Key)
                 Xdatenreihe(r - 1) = sortierteListe.ElementAt(anzItems - r).Value
             Else
@@ -7094,7 +7095,16 @@ Public Module Projekte
                     If anzPieSegments > 1 Then
                         .gsCollection = New Collection
                         Dim tmpAnz As Integer = sortierteListe.Count
-                        For i = 1 To anzPieSegments - 1
+                        Dim loopNrs As Integer
+
+                        If sortierteListe.Count = anzPieSegments Then
+                            loopNrs = sortierteListe.Count
+                        Else
+                            ' in diesem Fall ist anzPieSegments < sortierteListe.count 
+                            loopNrs = anzPieSegments - 1
+                        End If
+
+                        For i = 1 To loopNrs
                             Try
                                 .gsCollection.Add(sortierteListe.ElementAt(tmpAnz - i).Value)
                             Catch ex As Exception

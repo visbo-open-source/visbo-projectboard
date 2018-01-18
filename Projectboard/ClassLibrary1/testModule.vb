@@ -8888,7 +8888,8 @@ Public Module testModule
 
                 For m = 1 To todoCollection.Count
                     Dim milestoneID As String = CStr(todoCollection.Item(m))
-                    Dim cellNameID As String = calcPPTShapeName(hproj, milestoneID)
+                    ' wird gar nicht benötigt .... 
+                    'Dim cellNameID As String = calcPPTShapeName(hproj, milestoneID)
 
                     Dim cResult As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
                     Dim cBewertung As clsBewertung = cResult.getBewertung(1)
@@ -13196,7 +13197,13 @@ Public Module testModule
             .Left = rds.projectListLeft
             .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
             '.Name = .Name & .Id
-            .Name = swlShapeName & PTpptAnnotationType.text
+            Try
+                .Name = swlShapeName & PTpptAnnotationType.text
+            Catch ex As Exception
+                ' wenn der Name zu lang ist wird hiermit der Fehler abgefangen  
+
+            End Try
+
 
 
             ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
@@ -13432,140 +13439,145 @@ Public Module testModule
         If Not swimlaneNameID = rootPhaseName Then
             ' hier werden jetzt alle Phasen-Kinder inkl ihrer Meilensteine untersucht, ob sie gezeichnet werden sollen ... 
             For swlIX As Integer = startNr + 1 To endNr
-                curPhase = hproj.getPhase(swlIX)
 
+                Try
+                    curPhase = hproj.getPhase(swlIX)
+                    If Not IsNothing(curPhase) Then
 
-                If Not IsNothing(curPhase) Then
+                        If considerAll Or childPhaseIDs.Contains(curPhase.nameID) Then
+                            If Not considerZeitraum _
+                                        Or _
+                                        (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
+                                                                                    zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
-                    If considerAll Or childPhaseIDs.Contains(curPhase.nameID) Then
-                        If Not considerZeitraum _
-                                    Or _
-                                    (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
-                                                                                zeitraumGrenzeL, zeitraumGrenzeR)) Then
+                                Dim requiredZeilen As Integer
 
-                            Dim requiredZeilen As Integer
+                                ' ermittle den Zeilenoffset
+                                If extended Then
+                                    requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID, _
+                                                                                            selectedPhaseIDs, _
+                                                                                            selectedMilestoneIDs, _
+                                                                                            extended, _
+                                                                                            considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                            considerAll)
 
-                            ' ermittle den Zeilenoffset
-                            If extended Then
-                                requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID, _
-                                                                                        selectedPhaseIDs, _
-                                                                                        selectedMilestoneIDs, _
-                                                                                        extended, _
-                                                                                        considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
-                                                                                        considerAll)
+                                    Dim bestStart As Integer = 0
+                                    ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
+                                    ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
 
-                                Dim bestStart As Integer = 0
-                                ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
-                                ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
+                                    Dim parentFound As Boolean = False
+                                    Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
+                                    Dim ix As Integer = maxOffsetZeile
 
-                                Dim parentFound As Boolean = False
-                                Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
-                                Dim ix As Integer = maxOffsetZeile
+                                    While ix > 0 And Not parentFound
+                                        If listOfPhases(ix - 1).Count > 0 Then
+                                            Dim kx As Integer = 1
 
-                                While ix > 0 And Not parentFound
-                                    If listOfPhases(ix - 1).Count > 0 Then
-                                        Dim kx As Integer = 1
+                                            While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                                Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
+                                                If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                                    parentFound = True
+                                                Else
+                                                    kx = kx + 1
+                                                End If
+                                            End While
 
-                                        While kx <= listOfPhases(ix - 1).Count And Not parentFound
-                                            Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
-                                            If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
-                                                parentFound = True
-                                            Else
-                                                kx = kx + 1
+                                            If Not parentFound Then
+                                                ix = ix - 1
                                             End If
-                                        End While
 
-                                        If Not parentFound Then
+                                        Else
                                             ix = ix - 1
                                         End If
+                                    End While
 
+                                    If parentFound Then
+                                        bestStart = ix
                                     Else
-                                        ix = ix - 1
+                                        bestStart = 0
                                     End If
-                                End While
 
-                                If parentFound Then
-                                    bestStart = ix
+                                    zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
                                 Else
-                                    bestStart = 0
+                                    requiredZeilen = 1
+                                    zeilenoffset = 1
                                 End If
 
-                                zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
-                            Else
-                                requiredZeilen = 1
-                                zeilenoffset = 1
+                                'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
+                                ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
+                                maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
+
+                                ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
+                                If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
+                                    listOfPhases(zeilenoffset - 1).Add(curPhase.nameID, curPhase.nameID)
+                                End If
+
+                                ' merken, bis wohin in dieser Zeile bereits gezeichnet wurde 
+                                If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
+                                    lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
+                                End If
+
+                                aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
+
+                                Try
+                                    Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
+                                                            curPhase.nameID, aktuelleYPosition)
+                                Catch ex As Exception
+                                    Dim a As Integer = 1
+                                End Try
+
+                                'lastEndDate = curPhase.getEndDate
                             End If
 
-                            'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
-                            ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
-                            maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
-
-                            ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
-                            If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
-                                listOfPhases(zeilenoffset - 1).Add(curPhase.nameID, curPhase.nameID)
-                            End If
-
-                            ' merken, bis wohin in dieser Zeile bereits gezeichnet wurde 
-                            If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
-                                lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
-                            End If
-
-                            aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
-
-                            Try
-                                Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
-                                                        curPhase.nameID, aktuelleYPosition)
-                            Catch ex As Exception
-                                'Dim a As Integer = 1
-                            End Try
-
-                            'lastEndDate = curPhase.getEndDate
                         End If
 
+                        ' für jeden Meilenstein dieser Phase untersuchen, ob er gezeigt werden soll 
+
+                        For msIX As Integer = 1 To curPhase.countMilestones
+                            Dim curMs As clsMeilenstein = curPhase.getMilestone(msIX)
+
+                            If Not IsNothing(curMs) Then
+
+                                If considerAll Or childMilestoneIDs.Contains(curMs.nameID) Then
+                                    If Not considerZeitraum _
+                                                Or _
+                                                (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
+                                                                                            zeitraumGrenzeL, zeitraumGrenzeR)) Then
+
+
+                                        ' zeichne den Meilenstein 
+                                        ' die aktuelle Y-Position muss nicht bestimmt werden, weil das ja bereits mit der Phase geschehen ist 
+                                        ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
+                                        Dim tmpCollection As New Collection
+                                        Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
+                                                                          swimlaneNameID, curMs.nameID, aktuelleYPosition)
+
+                                        ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
+                                        Try
+                                            For Each tmpName As String In tmpCollection
+                                                shapeNameCollection.Add(tmpName)
+                                                ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                                                swlMilestoneCollection.Add(tmpName)
+                                            Next
+                                        Catch ex As Exception
+                                            Dim a As Integer = 1
+                                        End Try
+
+
+                                    End If
+
+                                End If
+
+                            End If
+
+                        Next
+                    Else
+                        Dim a As Integer = 1
                     End If
+                Catch ex As Exception
+                    Dim a As Integer = swlIX
+                End Try
 
-                    ' für jeden Meilenstein dieser Phase untersuchen, ob er gezeigt werden soll 
-
-                    For msIX As Integer = 1 To curPhase.countMilestones
-                        Dim curMs As clsMeilenstein = curPhase.getMilestone(msIX)
-
-                        If Not IsNothing(curMs) Then
-
-                            If considerAll Or childMilestoneIDs.Contains(curMs.nameID) Then
-                                If Not considerZeitraum _
-                                            Or _
-                                            (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
-                                                                                        zeitraumGrenzeL, zeitraumGrenzeR)) Then
-
-
-                                    ' zeichne den Meilenstein 
-                                    ' die aktuelle Y-Position muss nicht bestimmt werden, weil das ja bereits mit der Phase geschehen ist 
-                                    ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
-                                    Dim tmpCollection As New Collection
-                                    Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
-                                                                      swimlaneNameID, curMs.nameID, aktuelleYPosition)
-
-                                    ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
-                                    Try
-                                        For Each tmpName As String In tmpCollection
-                                            shapeNameCollection.Add(tmpName)
-                                            ' die Milestones werden nachher alle in den Vordergrund geholt ...
-                                            swlMilestoneCollection.Add(tmpName)
-                                        Next
-                                    Catch ex As Exception
-                                        Dim a As Integer = 1
-                                    End Try
-
-
-                                End If
-
-                            End If
-
-                        End If
-
-                    Next
-
-                End If
 
             Next
         End If
@@ -15766,7 +15778,12 @@ Public Module testModule
                                     With copiedShape(1)
 
                                         '.Name = .Name & .Id
-                                        .Name = phShapeName & PTpptAnnotationType.text
+                                        Try
+                                            .Name = phShapeName & PTpptAnnotationType.text
+                                        Catch ex As Exception
+                                            ' Fehler abfangen ..
+                                        End Try
+
                                         .Title = "Beschriftung"
                                         .AlternativeText = ""
 
@@ -15801,8 +15818,12 @@ Public Module testModule
                                     With copiedShape(1)
 
                                         '.Name = .Name & .Id
+                                        Try
+                                            .Name = phShapeName & PTpptAnnotationType.datum
+                                        Catch ex As Exception
 
-                                        .Name = phShapeName & PTpptAnnotationType.datum
+                                        End Try
+
                                         .Title = "Datum"
                                         .AlternativeText = ""
 
@@ -15868,8 +15889,12 @@ Public Module testModule
                                     .Width = CSng(x2 - x1)
                                     .Height = rds.phaseVorlagenShape.Height
                                     '.Name = .Name & .Id
+                                    Try
+                                        .Name = phShapeName
+                                    Catch ex As Exception
 
-                                    .Name = phShapeName
+                                    End Try
+
                                     '.Title = phaseName
                                     '.AlternativeText = phDateText
 
@@ -16451,6 +16476,7 @@ Public Module testModule
         Dim msBeschriftung As String = hproj.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
                                                              awinSettings.mppUseAbbreviation)
 
+
         Dim x1 As Double
         Dim x2 As Double
 
@@ -16501,7 +16527,12 @@ Public Module testModule
                 '.Left = CSng(x1) - .Width / 2
                 .Left = CSng(x1) - .Width / 2
                 '.Name = .Name & .Id
-                .Name = msShapeName & PTpptAnnotationType.text
+                Try
+                    .Name = msShapeName & PTpptAnnotationType.text
+                Catch ex As Exception
+
+                End Try
+
                 .Title = "Beschriftung"
                 .AlternativeText = ""
             End With
@@ -16528,7 +16559,12 @@ Public Module testModule
                 .Top = CSng(milestoneGrafikYPos) + CSng(rds.yOffsetMsToDate)
                 .Left = CSng(x1) - .Width / 2
                 '.Name = .Name & .Id
-                .Name = msShapeName & PTpptAnnotationType.datum
+                Try
+                    .Name = msShapeName & PTpptAnnotationType.datum
+                Catch ex As Exception
+                    
+                End Try
+
                 .Title = "Datum"
                 .AlternativeText = ""
 
@@ -16553,8 +16589,12 @@ Public Module testModule
                     .Glow.Radius = 2
                 End If
             End If
+            Try
+                .Name = msShapeName
+            Catch ex As Exception
+                
+            End Try
 
-            .Name = msShapeName
             '.Title = MS.name
             '.AlternativeText = MS.getDate.ToShortDateString
 
@@ -16613,11 +16653,13 @@ Public Module testModule
                 .Left = CSng(rds.drawingAreaLeft)
                 .Width = CSng(rds.drawingAreaWidth)
                 .TextFrame2.TextRange.Text = elemNameOfElemID(segmentPhaseID)
-                .Name = .Name & .Id
-                '.AlternativeText = "Segment " & elemNameOfElemID(segmentPhaseID)
-
-                ' Current Y-Position aktualisieren 
                 curYPosition = curYPosition + .Height
+
+                Try
+                    .Name = .Name & .Id
+                Catch ex As Exception
+
+                End Try
             End With
         End If
 
@@ -16731,8 +16773,12 @@ Public Module testModule
                     End If
 
                     '.Name = .Name & .Id
+                    Try
+                        .Name = phShapeName & PTpptAnnotationType.text
+                    Catch ex As Exception
+                        
+                    End Try
 
-                    .Name = phShapeName & PTpptAnnotationType.text
                     .Title = "Beschriftung"
                     .AlternativeText = ""
 
@@ -16763,7 +16809,12 @@ Public Module testModule
                     End If
 
                     '.Name = .Name & .Id
-                    .Name = phShapeName & PTpptAnnotationType.datum
+                    Try
+                        .Name = phShapeName & PTpptAnnotationType.datum
+                    Catch ex As Exception
+                        
+                    End Try
+
                     .Title = "Datum"
                     .AlternativeText = ""
 
@@ -16788,7 +16839,12 @@ Public Module testModule
                 .Left = CSng(x1)
                 '.Name = .Name & .Id
 
-                .Name = phShapeName
+                Try
+                    .Name = phShapeName
+                Catch ex As Exception
+                    
+                End Try
+
                 '.Title = phaseName
                 '.AlternativeText = phDateText
 
@@ -16865,6 +16921,7 @@ Public Module testModule
         Dim milestoneName As String = elemNameOfElemID(milestoneID)
         Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
 
+
         If IsNothing(cMilestone) Then
             Exit Sub ' einfach nichts machen 
         End If
@@ -16874,6 +16931,8 @@ Public Module testModule
         Dim x2 As Double
 
         Dim msShapeName As String = calcPPTShapeName(hproj, milestoneID)
+        ' Es muss abgefragt werden, wie lange der NAme ist, evtl muss eine Fehlermeldung kommen .,.. 
+        Dim nameLength As Integer = msShapeName.Length
         Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
                                                              awinSettings.mppUseAbbreviation)
 
@@ -16923,123 +16982,142 @@ Public Module testModule
             ' Fertig 
         Else
 
-            ' jetzt muss ggf die Beschriftung angebracht werden 
-            ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
-            ' überdeckt werden soll 
-            If awinSettings.mppShowMsName Then
+
+            Try
+                ' jetzt muss ggf die Beschriftung angebracht werden 
+                ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+                ' überdeckt werden soll 
+                If awinSettings.mppShowMsName Then
 
 
-                ''rds.MsDescVorlagenShape.Copy()
-                ''copiedShape = rds.pptSlide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(rds.MsDescVorlagenShape, rds.pptSlide)
+                    ''rds.MsDescVorlagenShape.Copy()
+                    ''copiedShape = rds.pptSlide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(rds.MsDescVorlagenShape, rds.pptSlide)
 
-                With copiedShape(1)
+                    With copiedShape(1)
 
-                    .TextFrame2.TextRange.Text = msBeschriftung
-                    .Top = CSng(yPosition + rds.YMilestoneText)
+                        .TextFrame2.TextRange.Text = msBeschriftung
+                        .Top = CSng(yPosition + rds.YMilestoneText)
+                        .Left = CSng(x1) - .Width / 2
+                        '.Name = .Name & .Id
+                        Try
+                            .Name = msShapeName & PTpptAnnotationType.text
+                        Catch ex As Exception
+
+                        End Try
+
+                        .Title = "Beschriftung"
+                        .AlternativeText = ""
+
+                        shapeNames.Add(.Name)
+
+                    End With
+
+
+                End If
+
+                ' jetzt muss ggf das Datum angebracht werden 
+                Dim msDateText As String = ""
+                If awinSettings.mppShowMsDate Then
+
+                    msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+
+                    ''rds.MsDateVorlagenShape.Copy()
+                    ''copiedShape = rds.pptSlide.Shapes.Paste()
+                    copiedShape = pptCopypptPaste(rds.MsDateVorlagenShape, rds.pptSlide)
+
+                    With copiedShape(1)
+
+                        .TextFrame2.TextRange.Text = msDateText
+                        .Top = CSng(yPosition + rds.YMilestoneDate)
+                        .Left = CSng(x1) - .Width / 2
+                        Try
+                            .Name = msShapeName & PTpptAnnotationType.datum
+                        Catch ex As Exception
+                           
+                        End Try
+
+                        .Title = "Datum"
+                        .AlternativeText = ""
+
+                        shapeNames.Add(.Name)
+                    End With
+
+                End If
+
+
+                ' Erst jetzt wird der Meilenstein gezeichnet 
+                '' ''milestoneTypShape.Copy()
+                '' ''copiedShape = rds.pptSlide.Shapes.Paste()
+                copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
+
+                With copiedShape.Item(1)
+                    .Height = sizeFaktor * .Height
+                    .Width = sizeFaktor * .Width
+                    .Top = CSng(yPosition + rds.YMilestone)
                     .Left = CSng(x1) - .Width / 2
+
                     '.Name = .Name & .Id
-                    .Name = msShapeName & PTpptAnnotationType.text
-                    .Title = "Beschriftung"
-                    .AlternativeText = ""
+                    '.Title = milestoneName
+                    '.AlternativeText = msDate.ToShortDateString
+                    Try
+                        .Name = msShapeName
+                    Catch ex As Exception
+
+                    End Try
+
+                    '.Title = milestoneName
+                    '.AlternativeText = msDate.ToShortDateString
+
+                    If awinSettings.mppShowAmpel Then
+                        .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
+                        If .Glow.Radius = 0 Then
+                            .Glow.Radius = 2
+                        End If
+                    End If
+
+                    Dim msKwText As String = ""
+                    If awinSettings.mppKwInMilestone Then
+
+                        msKwText = calcKW(msDate).ToString("0#")
+                        If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
+                            .TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size)
+                            .TextFrame2.TextRange.Text = msKwText
+                        End If
+
+                    End If
+
+                    If awinSettings.mppEnableSmartPPT Then
+                        'Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
+                        'Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
+                        'Dim originalName As String = cMilestone.originalName
+
+                        Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestoneID)
+                        Dim shortText As String = cMilestone.shortName
+                        Dim originalName As String = cMilestone.originalName
+
+                        Dim bestShortName As String = hproj.getBestNameOfID(cMilestone.nameID, True, True)
+                        Dim bestLongName As String = hproj.getBestNameOfID(cMilestone.nameID, True, False)
+
+                        If originalName = cMilestone.name Then
+                            originalName = Nothing
+                        End If
+
+                        Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
+                        Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                                    fullBreadCrumb, cMilestone.name, shortText, originalName, _
+                                                    bestShortName, bestLongName, _
+                                                    Nothing, msDate, _
+                                                    cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
+                                                    lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone)
+                    End If
 
                     shapeNames.Add(.Name)
-
                 End With
-
-
-            End If
-
-            ' jetzt muss ggf das Datum angebracht werden 
-            Dim msDateText As String = ""
-            If awinSettings.mppShowMsDate Then
-
-                msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
-
-                ''rds.MsDateVorlagenShape.Copy()
-                ''copiedShape = rds.pptSlide.Shapes.Paste()
-                copiedShape = pptCopypptPaste(rds.MsDateVorlagenShape, rds.pptSlide)
-
-                With copiedShape(1)
-
-                    .TextFrame2.TextRange.Text = msDateText
-                    .Top = CSng(yPosition + rds.YMilestoneDate)
-                    .Left = CSng(x1) - .Width / 2
-                    '.Name = .Name & .Id
-                    .Name = msShapeName & PTpptAnnotationType.datum
-                    .Title = "Datum"
-                    .AlternativeText = ""
-
-                    shapeNames.Add(.Name)
-                End With
-
-            End If
-
-
-            ' Erst jetzt wird der Meilenstein gezeichnet 
-            '' ''milestoneTypShape.Copy()
-            '' ''copiedShape = rds.pptSlide.Shapes.Paste()
-            copiedShape = xlnsCopypptPaste(milestoneTypShape, rds.pptSlide)
-
-            With copiedShape.Item(1)
-                .Height = sizeFaktor * .Height
-                .Width = sizeFaktor * .Width
-                .Top = CSng(yPosition + rds.YMilestone)
-                .Left = CSng(x1) - .Width / 2
-
-                '.Name = .Name & .Id
-                '.Title = milestoneName
-                '.AlternativeText = msDate.ToShortDateString
-
-                .Name = msShapeName
-                '.Title = milestoneName
-                '.AlternativeText = msDate.ToShortDateString
-
-                If awinSettings.mppShowAmpel Then
-                    .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
-                    If .Glow.Radius = 0 Then
-                        .Glow.Radius = 2
-                    End If
-                End If
-
-                Dim msKwText As String = ""
-                If awinSettings.mppKwInMilestone Then
-
-                    msKwText = calcKW(msDate).ToString("0#")
-                    If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
-                        .TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size)
-                        .TextFrame2.TextRange.Text = msKwText
-                    End If
-
-                End If
-
-                If awinSettings.mppEnableSmartPPT Then
-                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
-                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
-                    'Dim originalName As String = cMilestone.originalName
-
-                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestoneID)
-                    Dim shortText As String = cMilestone.shortName
-                    Dim originalName As String = cMilestone.originalName
-
-                    Dim bestShortName As String = hproj.getBestNameOfID(cMilestone.nameID, True, True)
-                    Dim bestLongName As String = hproj.getBestNameOfID(cMilestone.nameID, True, False)
-
-                    If originalName = cMilestone.name Then
-                        originalName = Nothing
-                    End If
-
-                    Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
-                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                                fullBreadCrumb, cMilestone.name, shortText, originalName, _
-                                                bestShortName, bestLongName, _
-                                                Nothing, msDate, _
-                                                cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
-                                                lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone)
-                End If
-
-                shapeNames.Add(.Name)
-            End With
+            Catch ex As Exception
+                Call MsgBox("fehler in zeichneMeilenstein;" & vbLf & ex.Message)
+            End Try
+           
 
 
         End If

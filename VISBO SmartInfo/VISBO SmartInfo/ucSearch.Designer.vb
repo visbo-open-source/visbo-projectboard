@@ -28,6 +28,7 @@ Partial Class ucSearch
         Me.Label1 = New System.Windows.Forms.Label()
         Me.selListboxNames = New System.Windows.Forms.ListBox()
         Me.CheckBxMarker = New System.Windows.Forms.CheckBox()
+        Me.PictureMarker = New System.Windows.Forms.PictureBox()
         Me.listboxNames = New System.Windows.Forms.ListBox()
         Me.filterText = New System.Windows.Forms.TextBox()
         Me.Panel2 = New System.Windows.Forms.Panel()
@@ -35,11 +36,10 @@ Partial Class ucSearch
         Me.shwRedLight = New System.Windows.Forms.CheckBox()
         Me.shwGreenLight = New System.Windows.Forms.CheckBox()
         Me.shwYellowLight = New System.Windows.Forms.CheckBox()
-        Me.PictureMarker = New System.Windows.Forms.PictureBox()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.Panel1.SuspendLayout()
-        Me.Panel2.SuspendLayout()
         CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.Panel2.SuspendLayout()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -47,11 +47,11 @@ Partial Class ucSearch
         '
         Me.cathegoryList.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.cathegoryList.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.cathegoryList.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.cathegoryList.FormattingEnabled = True
         Me.cathegoryList.Location = New System.Drawing.Point(8, 79)
         Me.cathegoryList.Name = "cathegoryList"
-        Me.cathegoryList.Size = New System.Drawing.Size(257, 25)
+        Me.cathegoryList.Size = New System.Drawing.Size(257, 24)
         Me.cathegoryList.TabIndex = 1
         '
         'Panel1
@@ -97,14 +97,14 @@ Partial Class ucSearch
         '
         Me.selListboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.selListboxNames.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.selListboxNames.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.selListboxNames.FormattingEnabled = True
         Me.selListboxNames.HorizontalScrollbar = True
-        Me.selListboxNames.ItemHeight = 17
+        Me.selListboxNames.ItemHeight = 16
         Me.selListboxNames.Location = New System.Drawing.Point(8, 493)
         Me.selListboxNames.MinimumSize = New System.Drawing.Size(4, 50)
         Me.selListboxNames.Name = "selListboxNames"
-        Me.selListboxNames.Size = New System.Drawing.Size(257, 225)
+        Me.selListboxNames.Size = New System.Drawing.Size(257, 212)
         Me.selListboxNames.TabIndex = 45
         '
         'CheckBxMarker
@@ -116,19 +116,28 @@ Partial Class ucSearch
         Me.CheckBxMarker.TabIndex = 44
         Me.CheckBxMarker.UseVisualStyleBackColor = True
         '
+        'PictureMarker
+        '
+        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
+        Me.PictureMarker.Location = New System.Drawing.Point(8, 3)
+        Me.PictureMarker.Name = "PictureMarker"
+        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
+        Me.PictureMarker.TabIndex = 43
+        Me.PictureMarker.TabStop = False
+        '
         'listboxNames
         '
         Me.listboxNames.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.listboxNames.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.listboxNames.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.listboxNames.FormattingEnabled = True
         Me.listboxNames.HorizontalScrollbar = True
-        Me.listboxNames.ItemHeight = 17
+        Me.listboxNames.ItemHeight = 16
         Me.listboxNames.Location = New System.Drawing.Point(8, 134)
         Me.listboxNames.MinimumSize = New System.Drawing.Size(4, 50)
         Me.listboxNames.Name = "listboxNames"
         Me.listboxNames.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.listboxNames.Size = New System.Drawing.Size(257, 327)
+        Me.listboxNames.Size = New System.Drawing.Size(257, 324)
         Me.listboxNames.Sorted = True
         Me.listboxNames.TabIndex = 42
         '
@@ -136,11 +145,11 @@ Partial Class ucSearch
         '
         Me.filterText.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.filterText.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.filterText.Location = New System.Drawing.Point(8, 33)
         Me.filterText.Name = "filterText"
         Me.filterText.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.filterText.Size = New System.Drawing.Size(230, 25)
+        Me.filterText.Size = New System.Drawing.Size(230, 23)
         Me.filterText.TabIndex = 39
         '
         'Panel2
@@ -194,15 +203,6 @@ Partial Class ucSearch
         Me.shwYellowLight.TabIndex = 36
         Me.shwYellowLight.UseVisualStyleBackColor = False
         '
-        'PictureMarker
-        '
-        Me.PictureMarker.Image = Global.VISBO_SmartInfo.My.Resources.Resources.arrow_down_blue
-        Me.PictureMarker.Location = New System.Drawing.Point(8, 3)
-        Me.PictureMarker.Name = "PictureMarker"
-        Me.PictureMarker.Size = New System.Drawing.Size(16, 16)
-        Me.PictureMarker.TabIndex = 43
-        Me.PictureMarker.TabStop = False
-        '
         'PictureBox1
         '
         Me.PictureBox1.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
@@ -227,9 +227,9 @@ Partial Class ucSearch
         Me.Size = New System.Drawing.Size(279, 746)
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
+        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
-        CType(Me.PictureMarker, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
