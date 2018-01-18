@@ -293,7 +293,7 @@ Public Class ucSearch
                 listboxNames.Items.Add(CStr(elem))
             Next
 
-            listboxNames.Focus()
+            'listboxNames.Focus()
 
         End If
 
