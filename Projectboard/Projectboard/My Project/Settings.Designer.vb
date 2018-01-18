@@ -160,6 +160,15 @@ Partial Public NotInheritable Class MySettings
             Return CType(Me("VISBOpercentDone"),String)
         End Get
     End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("TMS Mapping")>  _
+    Public ReadOnly Property VISBOMapping() As String
+        Get
+            Return CType(Me("VISBOMapping"),String)
+        End Get
+    End Property
 End Class
 
 Namespace My

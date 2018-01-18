@@ -10760,103 +10760,110 @@ Public Module Projekte
                                  ByVal endedate As Date, ByVal budgetVorgabe As Double, _
                                  ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String, _
                                  ByVal kurzBeschreibung As String, ByVal buName As String)
-        Dim newprojekt As Boolean
-        Dim hproj As clsProjekt
-        Dim pStatus As String = ProjektStatus(0)
-        Dim zeile As Integer = tafelZeile
-        'Dim spalte As Integer = start
-        Dim plen As Integer
-        'Dim top As Double, left As Double, width As Double, height As Double
-        'Dim shpElement As Excel.Shape
-        Dim pcolor As Object
-        Dim heute As Date = Date.Now
-        Dim heute1 As Date = Now
-        Dim key As String = pname & "#"
-        Dim ms As Long = heute.Millisecond
-        Dim zielrenditenVorgabe As Double = Nothing
-        Dim zielrenditenVorgabe1 As Double = Nothing
-        Dim zielrenditenVorgabe2 As Double = Nothing
-        newprojekt = True
 
-        '
-        ' ein neues Projekt wird als Objekt angelegt ....
-        '
+        Dim hproj As clsProjekt = Nothing
 
-        hproj = New clsProjekt
+        hproj = erstelleProjektAusVorlage(pname, vorlagenName, startdate, endedate, budgetVorgabe, _
+                                  tafelZeile, sfit, risk, profitUserAskedFor, _
+                                  kurzBeschreibung, buName)
 
-        If Projektvorlagen.Contains(vorlagenName) Then
-            ' jetzt wird bestimmt, ob es eine Zielrenditen Vorgabe gibt ... 
-            If IsNothing(profitUserAskedFor) Then
-                ' nichts weiter tun ... zielrenditenVorgabe ist mit Nothing besetzt 
-            Else
-                If IsNumeric(profitUserAskedFor) Then
-                    Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
-                    If referenceBudget > 0 Then
-                        'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
-                        'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
-                        'zielrenditenVorgabe1 = (budgetVorgabe * (CDbl(profitUserAskedFor) / 100 + 1)) / referenceBudget
-                        zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUserAskedFor) / 100)) / referenceBudget
-                    End If
-                    
-                Else
-                    Call MsgBox("keine zulässige Renditen Angabe ...")
-                    Exit Sub
-                End If
-            End If
-        Else
-            Call MsgBox("es gibt keine entsprechende Vorlage ..")
-            Exit Sub
-        End If
+        ' '' ''Dim newprojekt As Boolean
+        ' '' ''Dim hproj As clsProjekt
+        ' '' ''Dim pStatus As String = ProjektStatus(0)
+        ' '' ''Dim zeile As Integer = tafelZeile
+        '' '' ''Dim spalte As Integer = start
+        ' '' ''Dim plen As Integer
+        '' '' ''Dim top As Double, left As Double, width As Double, height As Double
+        '' '' ''Dim shpElement As Excel.Shape
+        ' '' ''Dim pcolor As Object
+        ' '' ''Dim heute As Date = Date.Now
+        ' '' ''Dim heute1 As Date = Now
+        ' '' ''Dim key As String = pname & "#"
+        ' '' ''Dim ms As Long = heute.Millisecond
+        ' '' ''Dim zielrenditenVorgabe As Double = Nothing
+        ' '' ''Dim zielrenditenVorgabe1 As Double = Nothing
+        ' '' ''Dim zielrenditenVorgabe2 As Double = Nothing
+        ' '' ''newprojekt = True
 
+        '' '' ''
+        '' '' '' ein neues Projekt wird als Objekt angelegt ....
+        '' '' ''
 
-        Try
-            ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
-            Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
+        ' '' ''hproj = New clsProjekt
 
-        Catch ex As Exception
-            Call MsgBox("es gibt keine entsprechende Vorlage ..")
-            Exit Sub
-        End Try
+        ' '' ''If Projektvorlagen.Contains(vorlagenName) Then
+        ' '' ''    ' jetzt wird bestimmt, ob es eine Zielrenditen Vorgabe gibt ... 
+        ' '' ''    If IsNothing(profitUserAskedFor) Then
+        ' '' ''        ' nichts weiter tun ... zielrenditenVorgabe ist mit Nothing besetzt 
+        ' '' ''    Else
+        ' '' ''        If IsNumeric(profitUserAskedFor) Then
+        ' '' ''            Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+        ' '' ''            If referenceBudget > 0 Then
+        ' '' ''                'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
+        ' '' ''                'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
+        ' '' ''                'zielrenditenVorgabe1 = (budgetVorgabe * (CDbl(profitUserAskedFor) / 100 + 1)) / referenceBudget
+        ' '' ''                zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUserAskedFor) / 100)) / referenceBudget
+        ' '' ''            End If
+
+        ' '' ''        Else
+        ' '' ''            Call MsgBox("keine zulässige Renditen Angabe ...")
+        ' '' ''            Exit Sub
+        ' '' ''        End If
+        ' '' ''    End If
+        ' '' ''Else
+        ' '' ''    Call MsgBox("es gibt keine entsprechende Vorlage ..")
+        ' '' ''    Exit Sub
+        ' '' ''End If
 
 
-        Try
-            With hproj
-                .name = pname
-                .VorlagenName = vorlagenName
-                .startDate = startdate
-                .businessUnit = buName
-                .Erloes = budgetVorgabe
-                .earliestStartDate = .startDate.AddMonths(.earliestStart)
-                .latestStartDate = .startDate.AddMonths(.latestStart)
-                .Status = ProjektStatus(PTProjektStati.geplant)
-                .description = kurzBeschreibung
+        ' '' ''Try
+        ' '' ''    ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
+        ' '' ''    Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
 
-                .StrategicFit = sfit
-                .Risiko = risk
-                plen = .anzahlRasterElemente
-                pcolor = .farbe
-            End With
+        ' '' ''Catch ex As Exception
+        ' '' ''    Call MsgBox("es gibt keine entsprechende Vorlage ..")
+        ' '' ''    Exit Sub
+        ' '' ''End Try
 
 
-            ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
-            ' workaround
-            Dim tmpdata As Integer = hproj.dauerInDays
-            'Call awinCreateBudgetWerte(hproj)
+        ' '' ''Try
+        ' '' ''    With hproj
+        ' '' ''        .name = pname
+        ' '' ''        .VorlagenName = vorlagenName
+        ' '' ''        .startDate = startdate
+        ' '' ''        .businessUnit = buName
+        ' '' ''        .Erloes = budgetVorgabe
+        ' '' ''        .earliestStartDate = .startDate.AddMonths(.earliestStart)
+        ' '' ''        .latestStartDate = .startDate.AddMonths(.latestStart)
+        ' '' ''        .Status = ProjektStatus(PTProjektStati.geplant)
+        ' '' ''        .description = kurzBeschreibung
 
-        Catch ex As Exception
-            Call MsgBox(ex.Message)
-            Exit Sub
-        End Try
-
-        ' Anpassen der Daten für die Termine 
-        ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen 
-        ' nein - das darf nicht gemacht werden; evtl liegt ja dann der Meilenstein vor der Phase 
-        ' grundsätzlich sollte der Anwender hier bestimmen, nicht das Programm
+        ' '' ''        .StrategicFit = sfit
+        ' '' ''        .Risiko = risk
+        ' '' ''        plen = .anzahlRasterElemente
+        ' '' ''        pcolor = .farbe
+        ' '' ''    End With
 
 
-        '
-        ' Ende Objekt Anlage
-        '
+        ' '' ''    ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
+        ' '' ''    ' workaround
+        ' '' ''    Dim tmpdata As Integer = hproj.dauerInDays
+        ' '' ''    'Call awinCreateBudgetWerte(hproj)
+
+        ' '' ''Catch ex As Exception
+        ' '' ''    Call MsgBox(ex.Message)
+        ' '' ''    Exit Sub
+        ' '' ''End Try
+
+        '' '' '' Anpassen der Daten für die Termine 
+        '' '' '' wenn Samstag oder Sonntag, dann auf den Freitag davor legen 
+        '' '' '' nein - das darf nicht gemacht werden; evtl liegt ja dann der Meilenstein vor der Phase 
+        '' '' '' grundsätzlich sollte der Anwender hier bestimmen, nicht das Programm
+
+
+        '' '' ''
+        '' '' '' Ende Objekt Anlage
+        '' '' ''
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -10898,6 +10905,113 @@ Public Module Projekte
         appInstance.EnableEvents = formerEE
 
     End Sub
+    Public Function erstelleProjektAusVorlage(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
+                                ByVal endedate As Date, ByVal budgetVorgabe As Double, _
+                                ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String, _
+                                ByVal kurzBeschreibung As String, ByVal buName As String) As clsProjekt
+        Dim newprojekt As Boolean
+        Dim hproj As clsProjekt
+        Dim pStatus As String = ProjektStatus(0)
+        Dim zeile As Integer = tafelZeile
+        'Dim spalte As Integer = start
+        Dim plen As Integer
+        'Dim top As Double, left As Double, width As Double, height As Double
+        'Dim shpElement As Excel.Shape
+        Dim pcolor As Object
+        Dim heute As Date = Date.Now
+        Dim heute1 As Date = Now
+        Dim key As String = pname & "#"
+        Dim ms As Long = heute.Millisecond
+        Dim zielrenditenVorgabe As Double = Nothing
+        Dim zielrenditenVorgabe1 As Double = Nothing
+        Dim zielrenditenVorgabe2 As Double = Nothing
+        newprojekt = True
+
+        '
+        ' ein neues Projekt wird als Objekt angelegt ....
+        '
+
+        hproj = New clsProjekt
+
+        If Projektvorlagen.Contains(vorlagenName) Then
+            ' jetzt wird bestimmt, ob es eine Zielrenditen Vorgabe gibt ... 
+            If IsNothing(profitUserAskedFor) Then
+                ' nichts weiter tun ... zielrenditenVorgabe ist mit Nothing besetzt 
+            Else
+                If IsNumeric(profitUserAskedFor) Then
+                    Dim referenceBudget As Double = Projektvorlagen.getProject(vorlagenName).getSummeKosten
+                    If referenceBudget > 0 Then
+                        'Dim verfuegbaresBudget As Double = budgetVorgabe / (CDbl(profitUserAskedFor) / 100 + 1)
+                        'zielrenditenVorgabe = verfuegbaresBudget / referenceBudget
+                        'zielrenditenVorgabe1 = (budgetVorgabe * (CDbl(profitUserAskedFor) / 100 + 1)) / referenceBudget
+                        zielrenditenVorgabe = (budgetVorgabe * (1 - CDbl(profitUserAskedFor) / 100)) / referenceBudget
+                    End If
+
+                Else
+                    Call MsgBox("keine zulässige Renditen Angabe ...")
+                    erstelleProjektAusVorlage = Nothing
+                    Exit Function
+                End If
+            End If
+        Else
+            Call MsgBox("es gibt keine entsprechende Vorlage ..")
+            erstelleProjektAusVorlage = Nothing
+            Exit Function
+        End If
+
+
+        Try
+            ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
+            Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate, zielrenditenVorgabe)
+
+        Catch ex As Exception
+            Call MsgBox("es gibt keine entsprechende Vorlage ..")
+            erstelleProjektAusVorlage = Nothing
+            Exit Function
+        End Try
+
+
+        Try
+            With hproj
+                .name = pname
+                .VorlagenName = vorlagenName
+                .startDate = startdate
+                .businessUnit = buName
+                .Erloes = budgetVorgabe
+                .earliestStartDate = .startDate.AddMonths(.earliestStart)
+                .latestStartDate = .startDate.AddMonths(.latestStart)
+                .Status = ProjektStatus(PTProjektStati.geplant)
+                .description = kurzBeschreibung
+
+                .StrategicFit = sfit
+                .Risiko = risk
+                plen = .anzahlRasterElemente
+                pcolor = .farbe
+            End With
+
+
+            ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
+            ' workaround
+            Dim tmpdata As Integer = hproj.dauerInDays
+            'Call awinCreateBudgetWerte(hproj)
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+            erstelleProjektAusVorlage = Nothing
+            Exit Function
+        End Try
+
+        ' Anpassen der Daten für die Termine 
+        ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen 
+        ' nein - das darf nicht gemacht werden; evtl liegt ja dann der Meilenstein vor der Phase 
+        ' grundsätzlich sollte der Anwender hier bestimmen, nicht das Programm
+
+
+        '
+        ' Ende Objekt Anlage
+        erstelleProjektAusVorlage = hproj
+
+    End Function
 
 
     '

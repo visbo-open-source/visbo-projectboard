@@ -156,8 +156,8 @@ Public Class clsPhase
                                 Me.countRoles = .countRoles And _
                                 Me.countDeliverables = .countDeliverables And _
                                 Me.countMilestones = .countMilestones And _
-                                Me.percentDone = .percentDone And _
-                                Me.bewertungsCount = .bewertungsCount Then
+                                Me.percentDone = .percentDone Then
+                                'ur: 20180110 Me.bewertungsCount = .bewertungsCount Then
 
                                 If Me.ampelErlaeuterung = .ampelErlaeuterung And _
                                     Me.ampelStatus = .ampelStatus Then
@@ -1740,7 +1740,17 @@ Public Class clsPhase
 
 
 
-    Public Sub copyTo(ByRef newphase As clsPhase)
+    ''' <summary>
+    ''' Property, die die aktuelle Phase in die newphase kopiert.
+    ''' mapping = true: es werden keine Rollen, Kosten und Meilensteine übernommen
+    '''                 auch die nameID wird nicht übernommen sondern hinterher neu berechnet
+    ''' mapping = false: alles wird übernommen
+    ''' </summary>
+    ''' <param name="newphase"></param>
+    ''' <param name="mapping"></param>
+    ''' <remarks></remarks>
+    Public Sub copyTo(ByRef newphase As clsPhase, Optional ByVal mapping As Boolean = False)
+
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle
         Dim newcost As clsKostenart
@@ -1755,7 +1765,13 @@ Public Class clsPhase
             .earliestStart = Me._earliestStart
             .latestStart = Me._latestStart
             .offset = Me._offset
-            .nameID = _nameID
+
+            ' eindeutiger Name muss bei Mapping neu zusammengesetzt werden
+            ' wird also bei Mapping nicht übernommen
+            If Not mapping Then
+                .nameID = _nameID
+            End If
+
 
             ' sonstigen Elemente übernehmen 
             .shortName = Me._shortName
@@ -1764,24 +1780,29 @@ Public Class clsPhase
             .farbe = Me._color
             .verantwortlich = Me._verantwortlich
 
-            For r = 1 To Me.countRoles
-                'newrole = New clsRolle(relEnde - relStart)
+            ' Rollen und kosten werden bei Mapping nicht übernommen
+            If Not mapping Then
 
-                dimension = Me.getRole(r).getDimension
-                newrole = New clsRolle(dimension)
-                Me.getRole(r).CopyTo(newrole)
-                .addRole(newrole)
-            Next r
+                For r = 1 To Me.countRoles
+                    'newrole = New clsRolle(relEnde - relStart)
+
+                    dimension = Me.getRole(r).getDimension
+                    newrole = New clsRolle(dimension)
+                    Me.getRole(r).CopyTo(newrole)
+                    .addRole(newrole)
+                Next r
 
 
-            For k = 1 To Me.countCosts
-                'newcost = New clsKostenart(relEnde - relStart)
+                For k = 1 To Me.countCosts
+                    'newcost = New clsKostenart(relEnde - relStart)
 
-                dimension = Me.getCost(k).getDimension
-                newcost = New clsKostenart(dimension)
-                Me.getCost(k).CopyTo(newcost)
-                .AddCost(newcost)
-            Next k
+                    dimension = Me.getCost(k).getDimension
+                    newcost = New clsKostenart(dimension)
+                    Me.getCost(k).CopyTo(newcost)
+                    .AddCost(newcost)
+                Next k
+
+            End If
 
 
             ' Änderung 16.1.2014: zuerst die Rollen und Kosten übertragen, dann die relStart und RelEnde, dann die Results
@@ -1790,17 +1811,21 @@ Public Class clsPhase
 
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
-            For r = 1 To Me._allMilestones.Count
-                newresult = New clsMeilenstein(parent:=newphase)
-                Me.getMilestone(r).copyTo(newresult)
+            ' Meilensteine werden bei Mapping nicht übernommen
+            If Not mapping Then
 
-                Try
-                    .addMilestone(newresult)
-                Catch ex As Exception
+                For r = 1 To Me._allMilestones.Count
+                    newresult = New clsMeilenstein(parent:=newphase)
+                    Me.getMilestone(r).copyTo(newresult)
 
-                End Try
+                    Try
+                        .addMilestone(newresult)
+                    Catch ex As Exception
 
-            Next
+                    End Try
+
+                Next
+            End If
 
 
             ' jetzt noch die evtl vorhandenen Bewertungen kopieren 

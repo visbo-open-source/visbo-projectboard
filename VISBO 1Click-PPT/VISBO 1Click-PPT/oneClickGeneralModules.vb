@@ -2029,5 +2029,89 @@ Module oneClickGeneralModules
 
     ' '' ''End Sub
 
+    Public Sub speichereProjektToDB(ByVal hproj As clsProjekt)
+
+        Dim hprojVariante As String = ""
+
+        Try
+            ' LOGIN in DB machen
+            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+                noDB = False
+
+                If dbUsername = "" Or dbPasswort = "" Then
+
+                    ' ur: 23.01.2015: Abfragen der Login-Informationen
+                    loginErfolgreich = loginProzedur()
+
+
+                    If Not loginErfolgreich Then
+                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                        Call MsgBox("LOGIN cancelled ...")
+                    Else
+                        Dim speichernInDBOk As Boolean = False
+                        Dim identical As Boolean = False
+                        Try
+                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
+
+                            If hproj.variantName <> "" Then
+                                hprojVariante = "[" & hproj.variantName & "]"
+
+                            End If
+
+                            If speichernInDBOk Then
+                                If Not identical Then
+                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                Else
+                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                End If
+                            Else
+                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                            End If
+
+
+                        Catch ex As Exception
+                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                        End Try
+
+                    End If
+
+                Else
+
+                    If testLoginInfo_OK(dbUsername, dbPasswort) Then
+                        Dim speichernInDBOk As Boolean
+                        Dim identical As Boolean = False
+                        Try
+                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
+                            If hproj.variantName <> "" Then
+                                hprojVariante = "[" & hproj.variantName & "]"
+
+                            End If
+                            If speichernInDBOk Then
+                                If Not identical Then
+                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                Else
+                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                End If
+                            Else
+                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                            End If
+                        Catch ex As Exception
+                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                        End Try
+                    Else
+                        Call MsgBox("LOGIN fehlerhaft ...")
+                    End If
+
+                End If
+
+
+            End If
+
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+    End Sub
 
 End Module

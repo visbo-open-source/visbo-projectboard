@@ -5388,14 +5388,26 @@ Imports System.Windows
 
                 ' '' ''If Not skip Then
                 ' '' ''    pname = ""
+
                 hproj = New clsProjekt
+
+                ' Definition für ein eventuelles Mapping
+                Dim mapProj As clsProjekt = Nothing
+
                 Try
-                    Call awinImportMSProject("", dateiName, hproj, importDate)
+                    Call awinImportMSProject("", dateiName, hproj, mapProj, importDate)
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
                         ImportProjekte.Add(hproj, False)
                         myCollection.Add(calcProjektKey(hproj))
+
+                        If Not IsNothing(mapProj) Then
+                            keyStr = calcProjektKey(mapProj)
+                            ImportProjekte.Add(mapProj, False)
+                            myCollection.Add(calcProjektKey(mapProj))
+
+                        End If
                     Catch ex2 As Exception
                         Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
                     End Try
