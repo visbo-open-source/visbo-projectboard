@@ -149,15 +149,24 @@ Public Class Ribbon1
                     ' Laden des aktuell geladenen Projektes und des eventuell gemappten
                     Call awinImportMSProject("BHTC", filename, hproj, mapProj, aktuellesDatum)
 
-                    If hproj.name <> "" And Not IsNothing(hproj.name) Then
-
-                        Call speichereProjektToDB(hproj)
-
+                    If Not IsNothing(hproj) Then
+                        If hproj.name <> "" And Not IsNothing(hproj.name) Then
+                            Try
+                                Call speichereProjektToDB(hproj)
+                            Catch ex As Exception
+                                Call MsgBox("Fehler beim Speichern von OriginalProjekt in DB")
+                            End Try
+                        End If
                     End If
-                    If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
 
-                        Call speichereProjektToDB(mapProj)
-
+                    If Not IsNothing(mapProj) Then
+                        If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
+                            Try
+                                Call speichereProjektToDB(mapProj)
+                            Catch ex As Exception
+                                Call MsgBox("Fehler beim Speichern des MappedProjekt in DB")
+                            End Try
+                        End If
                     End If
 
                     '' ''    Try
@@ -251,7 +260,7 @@ Public Class Ribbon1
                 '' ''End If ' Ende if Lizenzprüfung
 
 
-            End If
+                End If
 
         Catch ex As Exception
             Call MsgBox("Fehler mit Message:  " & ex.Message)
@@ -260,5 +269,9 @@ Public Class Ribbon1
 
     Private Sub Einstellung_Click(sender As Object, e As RibbonControlEventArgs) Handles Einstellung.Click
 
+    End Sub
+
+    Private Sub Ribbon1_Close(sender As Object, e As EventArgs) Handles Me.Close
+        My.Settings.Save()
     End Sub
 End Class

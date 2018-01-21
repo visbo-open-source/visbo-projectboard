@@ -2042,8 +2042,10 @@ Module oneClickGeneralModules
                 If dbUsername = "" Or dbPasswort = "" Then
 
                     ' ur: 23.01.2015: Abfragen der Login-Informationen
-                    loginErfolgreich = loginProzedur()
+                    'loginErfolgreich = loginProzedur()
+                    loginErfolgreich = logInToMongoDB(True)
 
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
 
                     If Not loginErfolgreich Then
                         Call logfileSchreiben("LOGIN cancelled ...", "", -1)

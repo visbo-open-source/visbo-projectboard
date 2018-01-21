@@ -46,13 +46,14 @@
         Me.oneClickPPT = Me.Factory.CreateRibbonTab
         Me.VISBO = Me.Factory.CreateRibbonGroup
         Me.EinzelprojektReport = Me.Factory.CreateRibbonButton
-        Me.Einstellung = Me.Factory.CreateRibbonButton
-        Me.DBspeichern = Me.Factory.CreateRibbonButton
         Me.Separator1 = Me.Factory.CreateRibbonSeparator
+        Me.DBspeichern = Me.Factory.CreateRibbonButton
         Me.Separator2 = Me.Factory.CreateRibbonSeparator
+        Me.Einstellung = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.oneClickPPT.SuspendLayout()
         Me.VISBO.SuspendLayout()
+        Me.SuspendLayout()
         '
         'Tab1
         '
@@ -84,14 +85,9 @@
         Me.EinzelprojektReport.Name = "EinzelprojektReport"
         Me.EinzelprojektReport.ShowImage = True
         '
-        'Einstellung
+        'Separator1
         '
-        Me.Einstellung.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.Einstellung.Image = CType(resources.GetObject("Einstellung.Image"), System.Drawing.Image)
-        Me.Einstellung.Label = "Einstellungen"
-        Me.Einstellung.Name = "Einstellung"
-        Me.Einstellung.ScreenTip = "Einstellu"
-        Me.Einstellung.ShowImage = True
+        Me.Separator1.Name = "Separator1"
         '
         'DBspeichern
         '
@@ -101,13 +97,18 @@
         Me.DBspeichern.Name = "DBspeichern"
         Me.DBspeichern.ShowImage = True
         '
-        'Separator1
-        '
-        Me.Separator1.Name = "Separator1"
-        '
         'Separator2
         '
         Me.Separator2.Name = "Separator2"
+        '
+        'Einstellung
+        '
+        Me.Einstellung.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.Einstellung.Image = CType(resources.GetObject("Einstellung.Image"), System.Drawing.Image)
+        Me.Einstellung.Label = "Einstellungen"
+        Me.Einstellung.Name = "Einstellung"
+        Me.Einstellung.ScreenTip = "Einstellu"
+        Me.Einstellung.ShowImage = True
         '
         'Ribbon1
         '
@@ -121,6 +122,7 @@
         Me.oneClickPPT.PerformLayout()
         Me.VISBO.ResumeLayout(False)
         Me.VISBO.PerformLayout()
+        Me.ResumeLayout(False)
 
     End Sub
 
