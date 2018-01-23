@@ -55,18 +55,12 @@ Public Class frmInfo
         If englishLanguage Then
             With Me
                 .Text = "Annotate"
-                '.TabControl1.TabPages.Item(0).Text = "Information"
-                '.TabControl1.TabPages.Item(1).Text = "Measure"
-                '.showAbbrev.Text = "Abbreviation"
-                '.lblAmpeln.Text = "Traffic-Light"
-                '.lblAmpeln.Left = 432 - 20
-                '.rdbLU.Text = "Deliverables"
-                '.rdbMV.Text = "Changed Dates"
-                '.rdbResources.Text = "Resources"
-                '.rdbCosts.Text = "Cost"
-                '.rdbAbbrev.Text = "Abbreviation"
-                '.rdbBreadcrumb.Text = "full breadcrumb"
-                '.rdbVerantwortlichkeiten.Text = "Responsibilities"
+                .showAbbrev.Text = "Abbreviation"
+            End With
+        Else
+            With Me
+                .Text = "Beschriften"
+                .showAbbrev.Text = "Abkürzung"
             End With
         End If
 
