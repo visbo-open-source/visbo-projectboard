@@ -83,7 +83,11 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
-                My.Settings.userNamePWD = awinSettings.userNamePWD
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                Else
+                    My.Settings.userNamePWD = ""
+                End If
 
 
                 'appInstance.ScreenUpdating = True
@@ -115,7 +119,11 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
-                My.Settings.userNamePWD = awinSettings.userNamePWD
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                Else
+                    My.Settings.userNamePWD = ""
+                End If
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
 

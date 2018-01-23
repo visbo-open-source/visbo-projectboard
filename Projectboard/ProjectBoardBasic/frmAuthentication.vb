@@ -9,6 +9,8 @@ Imports System.Windows.Forms
 
 Public Class frmAuthentication
 
+    ' öffentliche Variable, ob userNamePWD gemerkt werden soll
+
     'Public loginResult As Integer = 0
 
     Private Sub benutzer_KeyDown(sender As Object, e As KeyEventArgs) Handles benutzer.KeyDown
@@ -82,7 +84,7 @@ Public Class frmAuthentication
                 End If
 
             Catch ex As Exception
-                
+
             End Try
 
         End If
@@ -113,7 +115,7 @@ Public Class frmAuthentication
 
         Dim pwd As String
         Dim user As String
-       
+
         user = benutzer.Text
         pwd = maskedPwd.Text
         messageBox.Text = ""
@@ -138,13 +140,22 @@ Public Class frmAuthentication
                 Dim initOK As Integer = request.initWriteProtectionsOnce(dbUsername)
 
             End If
-            
+
         Catch ex As Exception
-            
+
         End Try
     End Sub
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        chbx_remember.Checked = awinSettings.rememberUserPwd
+    End Sub
 
+    Private Sub chbx_remember_CheckedChanged(sender As Object, e As EventArgs) Handles chbx_remember.CheckedChanged
+
+        If chbx_remember.Checked Then
+            awinSettings.rememberUserPwd = True
+        Else
+            awinSettings.rememberUserPwd = False
+        End If
     End Sub
 End Class

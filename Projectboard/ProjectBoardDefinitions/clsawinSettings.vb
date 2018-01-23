@@ -49,6 +49,7 @@ Public Class clsawinSettings
     Public Property databaseName As String
     Public Property databaseURL As String
     Public Property userNamePWD As String
+    Public Property rememberUserPwd As Boolean = False
 
     Public Property globalPath As String
     Public Property awinPath As String

@@ -11,6 +11,8 @@ Partial Friend NotInheritable Class MySettings
 
     Private Sub MySettings_SettingsLoaded(sender As Object, e As SettingsLoadedEventArgs) Handles Me.SettingsLoaded
         'Call MsgBox("hier loaded")
+        'My.Settings.userNamePWD = ""
+
     End Sub
 
     Private Sub MySettings_SettingsSaving(sender As Object, e As CancelEventArgs) Handles Me.SettingsSaving

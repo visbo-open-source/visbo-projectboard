@@ -2045,7 +2045,12 @@ Module oneClickGeneralModules
                     'loginErfolgreich = loginProzedur()
                     loginErfolgreich = logInToMongoDB(True)
 
-                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                    If awinSettings.rememberUserPwd Then
+                        My.Settings.userNamePWD = awinSettings.userNamePWD
+                    Else
+                        My.Settings.userNamePWD = ""
+                    End If
+
 
                     If Not loginErfolgreich Then
                         Call logfileSchreiben("LOGIN cancelled ...", "", -1)
