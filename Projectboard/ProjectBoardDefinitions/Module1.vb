@@ -2955,6 +2955,16 @@ Public Module Module1
             tmpName = "(" & hproj.name & "#" & hproj.variantName & ")" & elemID
         End If
 
+        If tmpName.Length > 240 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("Name too long: " & tmpName & vbLf & tmpName.Length & " characters; please reduce to less than 240 characters")
+            Else
+                Call MsgBox("Name ist zu lang: " & tmpName & vbLf & tmpName.Length & " Zeichen; bitte auf weniger als 240 Zeichen reduzieren")
+            End If
+
+            tmpName = tmpName.Substring(0, 240)
+        End If
+
         calcPPTShapeName = tmpName
 
     End Function

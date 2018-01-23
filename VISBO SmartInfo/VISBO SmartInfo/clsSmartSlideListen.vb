@@ -40,6 +40,8 @@ Public Class clsSmartSlideListen
     Private _costList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' tk, 18.11.17 vEList enthält die Liste der Verantwortlichen, und wofür sie alles verantwortlich sind 
     Private _vEList As SortedList(Of String, SortedList(Of Integer, Boolean))
+    ' tk, ovdList enthält die Liste aller Overdue Elemente, also alle Elemente deren Ende in der Vergangenheit liegt, aber noch nicht mit 100% bewertet sind 
+    Private _ovdList As SortedList(Of String, SortedList(Of Integer, Boolean))
 
     Private _creationDate As Date
 
@@ -449,7 +451,7 @@ Public Class clsSmartSlideListen
             If listOfShapeNames.ContainsKey(uid) Then
                 ' nichts tun , ist schon drin ...
             Else
-                ' aufnehmen ; der bool'sche Value hat aktuell keine Bedeutung 
+                ' aufnehmen ; der bool'sche Value sagt aus, ob es sich um einen Meilenstein handelt oder einen Vorgang / Phase  
                 listOfShapeNames.Add(uid, isMilestone)
             End If
         Else
@@ -746,6 +748,57 @@ Public Class clsSmartSlideListen
     End Sub
 
     ''' <summary>
+    ''' fügt der Liste an Overdue / Überfällig Elementen eine weitere hinzu
+    ''' </summary>
+    ''' <param name="shapeName"></param>
+    ''' <param name="isMilestone"></param>
+    ''' <remarks></remarks>
+    Public Sub addOvd(ByVal anzTage As Integer, ByVal shapeName As String, ByVal isMilestone As Boolean)
+
+        Dim lt1 As String = ""
+        Dim lt2 As String = ""
+        Dim splitNr As Integer = 30
+
+        If englishLanguage Then
+            lt1 = "<= 30 days"
+            lt2 = "> 30 days"
+        Else
+            lt1 = "<= 30 Tage"
+            lt2 = "> 30 Tage"
+        End If
+
+        Dim uid As Integer = Me.getUID(shapeName)
+
+        Dim listOfShapeNames As SortedList(Of Integer, Boolean)
+
+        ' konsistent machen ... wenn die Farbe nicht erkannt werden kann, wird sie wie <nicht gesetzt> behandelt 
+        If anzTage > 0 Then
+            Dim qualifier As String = ""
+            If anzTage <= splitNr Then
+                qualifier = lt1
+            Else
+                qualifier = lt2
+            End If
+
+            If _ovdList.ContainsKey(qualifier) Then
+                listOfShapeNames = _ovdList.Item(qualifier)
+                If listOfShapeNames.ContainsKey(uid) Then
+                    ' nichts tun , ist schon drin ...
+                Else
+                    ' aufnehmen ; der bool'sche Value ist die Angabe, ob Milestone doer nicht  
+                    listOfShapeNames.Add(uid, isMilestone)
+                End If
+            Else
+                ' dann muss das erste aufgenommen werden 
+                listOfShapeNames = New SortedList(Of Integer, Boolean)
+                listOfShapeNames.Add(uid, isMilestone)
+                _ovdList.Add(qualifier, listOfShapeNames)
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' gibt für die angegebene Ampelfarbe die Namen alle Shapes zurück, die diese Ampelfarbe haben 
     ''' leere Collection, wenn es keine Shapes dieser Farbe gibt
     ''' </summary>
@@ -891,6 +944,8 @@ Public Class clsSmartSlideListen
                     NList = _costList
                 Case pptInfoType.responsible
                     NList = _vEList
+                Case pptInfoType.overDue
+                    NList = _ovdList
                 Case Else
                     NList = _cNList
             End Select
@@ -984,6 +1039,8 @@ Public Class clsSmartSlideListen
                     NList = _costList
                 Case pptInfoType.responsible
                     NList = _vEList
+                Case pptInfoType.overDue
+                    NList = _ovdList
                 Case Else
                     NList = _cNList
             End Select
@@ -1305,6 +1362,7 @@ Public Class clsSmartSlideListen
         _LUList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _mVList = New SortedList(Of Integer, Boolean)
         _vEList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+        _ovdList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 
         _projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
         _listOfTimeStamps = New SortedList(Of Date, Boolean)

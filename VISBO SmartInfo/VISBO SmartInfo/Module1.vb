@@ -179,6 +179,8 @@ Module Module1
         resources = 9
         costs = 10
         responsible = 11
+        overDue = 12
+        noProgress = 13
     End Enum
 
     Friend Enum pptPositionType
@@ -949,6 +951,9 @@ Module Module1
                 Dim correctErrorShape2 As PowerPoint.Shape = Nothing
 
                 ' nur was machen, wenn es sich um Office 2010 handelt ... 
+                ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
+                ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
+                ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
                 If pptAPP.Version = "14.0" Then
                     Try
                         correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
@@ -1480,6 +1485,34 @@ Module Module1
                 Catch ex As Exception
 
                 End Try
+            End If
+
+            ' Overdue behandeln 
+            tmpName = tmpShape.Tags.Item("ED")
+            If tmpName.Trim.Length > 0 Then
+                Try
+                    Dim tmpName2 As String = tmpShape.Tags.Item("PD")
+                    Dim finishDate As Date = CDate(tmpName)
+                    Dim anzTageOVD As Integer = DateDiff(DateInterval.Day, finishDate, currentTimestamp)
+                    If anzTageOVD > 0 Then
+                        ' ist abgeschlossen, sollte also auf 100% sein
+
+                        Dim percentDone As Double = 0.0
+                        If tmpName2.Trim.Length > 0 Then
+                            percentDone = CDbl(tmpName2)
+                        End If
+                        If percentDone > 1 Then
+                            percentDone = percentDone / 100
+                        End If
+                        ' jetzt wird es als überfällig eingestuft, da das Finish Datum in der Vergangenheit liegt und ausserdem PercentDone nicht gleich 1 ist
+                        If percentDone < 1.0 Then
+                            Call smartSlideLists.addOvd(anzTageOVD, shapeName, isMilestone)
+                        End If
+                    End If
+                Catch ex As Exception
+
+                End Try
+                
             End If
 
             ' wurde das Element verschoben ? 
@@ -2666,6 +2699,7 @@ Module Module1
     Friend Sub showTSMessage(ByVal currentTimestamp As Date)
 
         Dim tsMsgBox As PowerPoint.Shape
+
         Try
             tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
         Catch ex As Exception
@@ -2677,7 +2711,7 @@ Module Module1
             tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
                                       200, 5, 70, 20)
             With tsMsgBox
-                .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+                .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse + 6)
                 .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = trafficLightColors(3)
                 .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
@@ -2692,9 +2726,9 @@ Module Module1
         Else
             With tsMsgBox
                 If englishLanguage Then
-                    .TextFrame2.TextRange.Text = "Version: " & currentTimestamp.ToString
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 Else
-                    .TextFrame2.TextRange.Text = "Stand: " & currentTimestamp.ToString
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 End If
 
             End With
@@ -5434,15 +5468,20 @@ Module Module1
 
         If IsNothing(tmpShape) Then
             With ucSearchView
-                .cathegoryList.SelectedItem = " "
-                .shwOhneLight.Checked = False
-                .shwGreenLight.Checked = False
-                .shwYellowLight.Checked = False
-                .shwRedLight.Checked = False
-                .filterText.Text = ""
-                .listboxNames.Items.Clear()
+                ' eigentlich soll doch nur selListboxNames zurückgesetzt werden und die Auswahlen daraus ...
+                '.cathegoryList.SelectedItem = Nothing
+                '.shwOhneLight.Checked = False
+                '.shwGreenLight.Checked = False
+                '.shwYellowLight.Checked = False
+                '.shwRedLight.Checked = False
+                '.filterText.Text = ""
+                '.listboxNames.Items.Clear()
+                '.selListboxNames.Items.Clear()
+                '.fülltListbox()
+
+                ' tk 11.1.18
+                .listboxNames.SelectedItems.Clear()
                 .selListboxNames.Items.Clear()
-                .fülltListbox()
             End With
         End If
 

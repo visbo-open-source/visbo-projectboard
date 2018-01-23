@@ -165,12 +165,14 @@ Public Class ucSearch
                         catCode = pptInfoType.bCrumb
                     Case "Deliverables"
                         catCode = pptInfoType.lUmfang
-                    Case "Changed Dates"
+                    Case "manually Changed Dates"
                         catCode = pptInfoType.mvElement
                     Case "Resources"
                         catCode = pptInfoType.resources
                     Case "Cost"
                         catCode = pptInfoType.costs
+                    Case "Overdue"
+                        catCode = pptInfoType.overDue
                     Case Else
                         catCode = pptInfoType.cName
                 End Select
@@ -189,12 +191,14 @@ Public Class ucSearch
                         catCode = pptInfoType.bCrumb
                     Case "Lieferumfänge"
                         catCode = pptInfoType.lUmfang
-                    Case "Termin-Änderungen"
+                    Case "manuelle Termin-Änderungen"
                         catCode = pptInfoType.mvElement
                     Case "Ressourcen"
                         catCode = pptInfoType.resources
                     Case "Kosten"
                         catCode = pptInfoType.costs
+                    Case "Überfällig"
+                        catCode = pptInfoType.overDue
                     Case Else
                         catCode = pptInfoType.cName
                 End Select
@@ -288,6 +292,9 @@ Public Class ucSearch
             For Each elem As Object In nameCollection
                 listboxNames.Items.Add(CStr(elem))
             Next
+
+            'listboxNames.Focus()
+
         End If
 
     End Sub
@@ -304,37 +311,37 @@ Public Class ucSearch
             cathegoryList.Items.Add("Name")
             cathegoryList.Items.Add("Responsibilities")
             cathegoryList.Items.Add("Deliverables")
-            cathegoryList.Items.Add("Original Name")
+            'cathegoryList.Items.Add("Original Name")
+            cathegoryList.Items.Add("Overdue")
             cathegoryList.Items.Add("Resources")
             cathegoryList.Items.Add("Abbreviation")
             cathegoryList.Items.Add("Cost")
-            cathegoryList.Items.Add("Changed Dates")
+            cathegoryList.Items.Add("manually Changed Dates")
 
             'If slideHasSmartElements Then
             '    cathegoryList.SelectedItem = "Name"
             'End If
         Else
-        With Me
-            .Label1.Text = "Suchergebnisse:"
-            .Label2.Text = "Elemente:"
-        End With
-        cathegoryList.Items.Add("Name")
-        cathegoryList.Items.Add("Verantwortlich")
-        cathegoryList.Items.Add("Lieferumfänge")
-        cathegoryList.Items.Add("Original Name")
-        cathegoryList.Items.Add("Ressourcen")
-        cathegoryList.Items.Add("Abkürzung")
-        cathegoryList.Items.Add("Kosten")
-        cathegoryList.Items.Add("Termin-Änderungen")
+            With Me
+                .Label1.Text = "Suchergebnisse:"
+                .Label2.Text = "Elemente:"
+            End With
+            cathegoryList.Items.Add("Name")
+            cathegoryList.Items.Add("Verantwortlich")
+            cathegoryList.Items.Add("Lieferumfänge")
+            'cathegoryList.Items.Add("Original Name")
+            cathegoryList.Items.Add("Überfällig")
+            cathegoryList.Items.Add("Ressourcen")
+            cathegoryList.Items.Add("Abkürzung")
+            cathegoryList.Items.Add("Kosten")
+            cathegoryList.Items.Add("manuelle Termin-Änderungen")
 
-        'If slideHasSmartElements Then
-        '    cathegoryList.SelectedItem = "Name"
-        'End If
         End If
 
         'Call fülltListbox()
 
     End Sub
+
 
     ''' <summary>
     ''' 
@@ -360,12 +367,15 @@ Public Class ucSearch
 
     End Sub
 
+
+
     Private Sub listboxNames_SelectedIndexChanged(sender As Object, e As EventArgs) Handles listboxNames.SelectedIndexChanged
 
         ' es werden alle selektierten Namen als Shapes selektiert ....
-        ' es können pro Name auch mehrere Shapes selektiert werden müssen 
+        ' pro Name auch mehrere Shapes selektiert werden müssen 
         ' wenn Ampeln anzeigen an ist, dann werden auch die entsprechenden Ampel-Farben angezeigt ... 
 
+        ' die zur Auswahl gehörenden Namen werden gelöscht 
         selListboxNames.Items.Clear()
 
         Dim nameArrayI() As String
@@ -388,12 +398,14 @@ Public Class ucSearch
                     catCode = pptInfoType.bCrumb
                 Case "Deliverables"
                     catCode = pptInfoType.lUmfang
-                Case "Changed Dates"
+                Case "manually Changed Dates"
                     catCode = pptInfoType.mvElement
                 Case "Resources"
                     catCode = pptInfoType.resources
                 Case "Cost"
                     catCode = pptInfoType.costs
+                Case "Overdue"
+                    catCode = pptInfoType.overDue
                 Case Else
                     catCode = pptInfoType.cName
             End Select
@@ -411,12 +423,14 @@ Public Class ucSearch
                     catCode = pptInfoType.bCrumb
                 Case "Lieferumfänge"
                     catCode = pptInfoType.lUmfang
-                Case "Termin-Änderungen"
+                Case "manuelle Termin-Änderungen"
                     catCode = pptInfoType.mvElement
                 Case "Ressourcen"
                     catCode = pptInfoType.resources
                 Case "Kosten"
                     catCode = pptInfoType.costs
+                Case "Überfällig"
+                    catCode = pptInfoType.overDue
                 Case Else
                     catCode = pptInfoType.cName
             End Select
@@ -508,14 +522,21 @@ Public Class ucSearch
 
                     Dim curShape As PowerPoint.Shape = currentSlide.Shapes(selEleShpName)
 
-                    Dim bln As String = curShape.Tags.Item("BLN")
-                    bln = bestimmeElemText(curShape, False, False)
+                    'Dim bln As String = curShape.Tags.Item("BLN")
+                    Dim bln As String = bestimmeElemText(curShape, False, False)
                     Dim pname As String = getPVnameFromShpName(selEleShpName)
                     selListboxEle = pname & "  -  " & bln
                     ' merken der Zuordnung zwischen angezeigtem Namen und ShapeNamen
-                    shpNameSav.Add(selListboxEle, selEleShpName)
 
-                    selListboxNames.Items.Add(selListboxEle)
+                    Dim lfdNr As Integer = 1
+                    Dim tmpKey As String = selListboxEle
+                    Do While shpNameSav.ContainsKey(tmpKey)
+                        lfdNr = lfdNr + 1
+                        tmpKey = selListboxEle & " (" & lfdNr.ToString & ")"
+                    Loop
+                    shpNameSav.Add(tmpKey, selEleShpName)
+
+                    selListboxNames.Items.Add(tmpKey)
 
                 Next
 
@@ -534,8 +555,15 @@ Public Class ucSearch
     Private Sub cathegoryList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cathegoryList.SelectedIndexChanged
 
         Dim newCathegory As String = cathegoryList.SelectedItem
-        ' ''selListboxNames.Items.Clear()
-        Call fülltListbox()
+        Dim oldFilterText As String = filterText.Text
+
+        filterText.Text = ""
+        ' tk, 11.1.18 das folgende muss nur dann aufgerufen werden, wenn es keine Änderung im Filtertext-Feld gab. Dann muss das fülltListbox  in dem Event Aufruf von cathegoryList_SelectedIndexChanged
+        If oldFilterText = "" Then
+            Call fülltListbox()
+        End If
+
+        listboxNames.Focus()
 
     End Sub
 

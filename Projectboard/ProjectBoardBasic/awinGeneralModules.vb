@@ -14977,7 +14977,12 @@ Public Module awinGeneralModules
                     Else
                         chTyp = DiagrammTypen(0)
                     End If
-                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedPhases.Count, chtop, chleft, chwidth, chHeight)
+
+                    If oneChart Then
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedPhases.Count, chtop, chleft, chwidth, chHeight)
+                    Else
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 1, chtop, chleft, chwidth, chHeight)
+                    End If
                     Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart,
                                                    chtop, chleft, chwidth, chHeight)
                 End If
@@ -14989,21 +14994,36 @@ Public Module awinGeneralModules
                         chTyp = DiagrammTypen(5)
                     End If
 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedMilestones.Count, chtop, chleft, chwidth, chHeight)
+                    If oneChart Then
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedMilestones.Count, chtop, chleft, chwidth, chHeight)
+                    Else
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 1, chtop, chleft, chwidth, chHeight)
+                    End If
                     Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart,
                                                    chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedRoles.Count > 0 Then
                     chTyp = DiagrammTypen(1)
-                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedRoles.Count, chtop, chleft, chwidth, chHeight)
+
+                    If oneChart Then
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedRoles.Count, chtop, chleft, chwidth, chHeight)
+                    Else
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 1, chtop, chleft, chwidth, chHeight)
+                    End If
                     Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, oneChart,
                                                    chtop, chleft, chwidth, chHeight)
                 End If
 
                 If selectedCosts.Count > 0 Then
                     chTyp = DiagrammTypen(2)
-                    Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedCosts.Count, chtop, chleft, chwidth, chHeight)
+
+                    If oneChart Then
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, selectedCosts.Count, chtop, chleft, chwidth, chHeight)
+                    Else
+                        Call bestimmeChartPositionAndSize(ptTables.mptPfCharts, 1, chtop, chleft, chwidth, chHeight)
+                    End If
+
                     Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, oneChart,
                                                    chtop, chleft, chwidth, chHeight)
                 End If
