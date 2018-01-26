@@ -395,6 +395,11 @@ Public Module Module1
         SollIstPersonalkosten = 18
         SollIstSonstKosten = 19
         SollIstGesamtkosten = 20
+        SollIstPersonalkostenC = 21
+        SollIstSonstKostenC = 22
+        SollIstGesamtkostenC = 23
+        SollIstRolleC = 24
+        SollIstKostenartC = 25
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 

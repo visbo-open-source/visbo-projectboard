@@ -9,6 +9,8 @@ Imports System.Windows.Forms
 
 Public Class frmAuthentication
 
+    ' öffentliche Variable, ob userNamePWD gemerkt werden soll
+
     'Public loginResult As Integer = 0
 
     Private Sub benutzer_KeyDown(sender As Object, e As KeyEventArgs) Handles benutzer.KeyDown
@@ -65,7 +67,12 @@ Public Class frmAuthentication
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
                 Dim ok As Boolean = request.createIndicesOnce()
                 If Not ok Then
-                    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                    If awinSettings.englishLanguage Then
+                        messageBox.Text = "Wrong username or password!"
+                    Else
+                        messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                    End If
+
                     benutzer.Text = ""
                     maskedPwd.Text = ""
                     dbUsername = benutzer.Text
@@ -82,7 +89,7 @@ Public Class frmAuthentication
                 End If
 
             Catch ex As Exception
-                
+
             End Try
 
         End If
@@ -113,16 +120,21 @@ Public Class frmAuthentication
 
         Dim pwd As String
         Dim user As String
-       
+
         user = benutzer.Text
         pwd = maskedPwd.Text
         messageBox.Text = ""
 
         Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+            'Dim ok As Boolean = request.loginSucessful(awinSettings.databaseName, user, pwd)
             Dim ok As Boolean = request.createIndicesOnce()
             If Not ok Then
-                messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                If awinSettings.englishLanguage Then
+                    messageBox.Text = "Wrong username or password!"
+                Else
+                    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                End If
                 benutzer.Text = ""
                 maskedPwd.Text = ""
                 dbUsername = benutzer.Text
@@ -130,6 +142,7 @@ Public Class frmAuthentication
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
+                'ok = request.createIndicesOnce()
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
                 messageBox.Text = ""
@@ -138,13 +151,22 @@ Public Class frmAuthentication
                 Dim initOK As Integer = request.initWriteProtectionsOnce(dbUsername)
 
             End If
-            
+
         Catch ex As Exception
-            
+
         End Try
     End Sub
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        chbx_remember.Checked = awinSettings.rememberUserPwd
+    End Sub
 
+    Private Sub chbx_remember_CheckedChanged(sender As Object, e As EventArgs) Handles chbx_remember.CheckedChanged
+
+        If chbx_remember.Checked Then
+            awinSettings.rememberUserPwd = True
+        Else
+            awinSettings.rememberUserPwd = False
+        End If
     End Sub
 End Class

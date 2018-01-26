@@ -1038,7 +1038,7 @@ Public Module testModule
                                                                   selectedBUs, selectedTyps, _
                                                                   worker, e, False, False, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
-                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -1056,7 +1056,7 @@ Public Module testModule
                                                                       selectedBUs, selectedTyps, _
                                                                       worker, e, False, False, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
-                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -1074,7 +1074,7 @@ Public Module testModule
                                                                       selectedBUs, selectedTyps, _
                                                                       worker, e, False, True, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
-                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -2776,7 +2776,8 @@ Public Module testModule
                             If Not reportObj Is Nothing Then
                                 Try
                                     With reportObj
-                                        .Chart.ChartTitle.Text = boxName
+                                        ' der soll doch nicht umbestimmt werden ...
+                                        '.Chart.ChartTitle.Text = boxName
                                         .Chart.ChartTitle.Font.Size = pptSize
                                     End With
 
@@ -3368,7 +3369,7 @@ Public Module testModule
                                                               selectedBUs, selectedTyps, _
                                                               worker, e, True, False, tmpProjekt, kennzeichnung)
                                 .TextFrame2.TextRange.Text = ""
-                                .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                '.ZOrder(MsoZOrderCmd.msoSendToBack)
                             Catch ex As Exception
                                 .TextFrame2.TextRange.Text = ex.Message
                                 objectsDone = objectsToDo

@@ -47,7 +47,6 @@ Partial Class frmSettings
         Me.Label1 = New System.Windows.Forms.Label()
         Me.btnLanguageExp = New System.Windows.Forms.Button()
         Me.btnLanguageImp = New System.Windows.Forms.Button()
-        Me.chkbxUniqueNames = New System.Windows.Forms.CheckBox()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
@@ -118,7 +117,6 @@ Partial Class frmSettings
         '
         'TabPage1
         '
-        Me.TabPage1.Controls.Add(Me.chkbxUniqueNames)
         Me.TabPage1.Controls.Add(Me.btnChangeLanguage)
         Me.TabPage1.Controls.Add(Me.txtboxLanguage)
         Me.TabPage1.Controls.Add(Me.lblLanguage)
@@ -213,7 +211,7 @@ Partial Class frmSettings
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage2.Size = New System.Drawing.Size(282, 156)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "Schutz"
         Me.TabPage2.UseVisualStyleBackColor = True
@@ -268,7 +266,7 @@ Partial Class frmSettings
         Me.TabPage4.Controls.Add(Me.btnLanguageImp)
         Me.TabPage4.Location = New System.Drawing.Point(4, 22)
         Me.TabPage4.Name = "TabPage4"
-        Me.TabPage4.Size = New System.Drawing.Size(282, 141)
+        Me.TabPage4.Size = New System.Drawing.Size(282, 156)
         Me.TabPage4.TabIndex = 3
         Me.TabPage4.Text = "Sprachen I/E"
         Me.TabPage4.UseVisualStyleBackColor = True
@@ -299,16 +297,6 @@ Partial Class frmSettings
         Me.btnLanguageImp.TabIndex = 0
         Me.btnLanguageImp.Text = "Importieren"
         Me.btnLanguageImp.UseVisualStyleBackColor = True
-        '
-        'chkbxUniqueNames
-        '
-        Me.chkbxUniqueNames.AutoSize = True
-        Me.chkbxUniqueNames.Location = New System.Drawing.Point(8, 81)
-        Me.chkbxUniqueNames.Name = "chkbxUniqueNames"
-        Me.chkbxUniqueNames.Size = New System.Drawing.Size(189, 17)
-        Me.chkbxUniqueNames.TabIndex = 40
-        Me.chkbxUniqueNames.Text = "mit eindeutigen Namen beschriften"
-        Me.chkbxUniqueNames.UseVisualStyleBackColor = True
         '
         'frmSettings
         '
@@ -353,5 +341,4 @@ Partial Class frmSettings
     Friend WithEvents btnChangeLanguage As System.Windows.Forms.Button
     Friend WithEvents rdbDBLogin As System.Windows.Forms.RadioButton
     Public WithEvents txtboxLanguage As System.Windows.Forms.ComboBox
-    Friend WithEvents chkbxUniqueNames As System.Windows.Forms.CheckBox
 End Class

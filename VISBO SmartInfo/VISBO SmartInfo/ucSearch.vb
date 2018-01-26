@@ -523,7 +523,7 @@ Public Class ucSearch
                     Dim curShape As PowerPoint.Shape = currentSlide.Shapes(selEleShpName)
 
                     'Dim bln As String = curShape.Tags.Item("BLN")
-                    Dim bln As String = bestimmeElemText(curShape, False, False)
+                    Dim bln As String = bestimmeElemText(curShape, False, False, showBestName)
                     Dim pname As String = getPVnameFromShpName(selEleShpName)
                     selListboxEle = pname & "  -  " & bln
                     ' merken der Zuordnung zwischen angezeigtem Namen und ShapeNamen

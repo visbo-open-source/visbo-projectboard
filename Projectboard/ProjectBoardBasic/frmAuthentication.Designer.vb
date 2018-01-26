@@ -32,6 +32,7 @@ Partial Class frmAuthentication
         Me.abbrButton = New System.Windows.Forms.Button()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.OKButton = New System.Windows.Forms.Button()
+        Me.chbx_remember = New System.Windows.Forms.CheckBox()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -47,7 +48,7 @@ Partial Class frmAuthentication
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(12, 128)
+        Me.Label2.Location = New System.Drawing.Point(13, 125)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(55, 13)
         Me.Label2.TabIndex = 1
@@ -56,7 +57,7 @@ Partial Class frmAuthentication
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(12, 172)
+        Me.Label3.Location = New System.Drawing.Point(13, 165)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(50, 13)
         Me.Label3.TabIndex = 2
@@ -65,7 +66,7 @@ Partial Class frmAuthentication
         'benutzer
         '
         Me.benutzer.BackColor = System.Drawing.Color.WhiteSmoke
-        Me.benutzer.Location = New System.Drawing.Point(91, 125)
+        Me.benutzer.Location = New System.Drawing.Point(91, 122)
         Me.benutzer.Name = "benutzer"
         Me.benutzer.Size = New System.Drawing.Size(260, 20)
         Me.benutzer.TabIndex = 4
@@ -73,7 +74,7 @@ Partial Class frmAuthentication
         'maskedPwd
         '
         Me.maskedPwd.BackColor = System.Drawing.Color.WhiteSmoke
-        Me.maskedPwd.Location = New System.Drawing.Point(91, 169)
+        Me.maskedPwd.Location = New System.Drawing.Point(91, 161)
         Me.maskedPwd.Name = "maskedPwd"
         Me.maskedPwd.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
         Me.maskedPwd.Size = New System.Drawing.Size(260, 20)
@@ -93,7 +94,7 @@ Partial Class frmAuthentication
         'abbrButton
         '
         Me.abbrButton.DialogResult = System.Windows.Forms.DialogResult.Abort
-        Me.abbrButton.Location = New System.Drawing.Point(255, 205)
+        Me.abbrButton.Location = New System.Drawing.Point(254, 235)
         Me.abbrButton.Name = "abbrButton"
         Me.abbrButton.Size = New System.Drawing.Size(96, 23)
         Me.abbrButton.TabIndex = 8
@@ -104,7 +105,7 @@ Partial Class frmAuthentication
         '
         Me.PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), System.Drawing.Image)
         Me.PictureBox1.InitialImage = Nothing
-        Me.PictureBox1.Location = New System.Drawing.Point(0, 28)
+        Me.PictureBox1.Location = New System.Drawing.Point(15, 27)
         Me.PictureBox1.Name = "PictureBox1"
         Me.PictureBox1.Size = New System.Drawing.Size(193, 73)
         Me.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -113,20 +114,32 @@ Partial Class frmAuthentication
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(91, 205)
+        Me.OKButton.Location = New System.Drawing.Point(91, 235)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(102, 23)
         Me.OKButton.TabIndex = 10
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
+        'chbx_remember
+        '
+        Me.chbx_remember.AutoSize = True
+        Me.chbx_remember.Location = New System.Drawing.Point(14, 200)
+        Me.chbx_remember.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chbx_remember.Name = "chbx_remember"
+        Me.chbx_remember.Size = New System.Drawing.Size(110, 17)
+        Me.chbx_remember.TabIndex = 11
+        Me.chbx_remember.Text = "Remember Me     "
+        Me.chbx_remember.UseVisualStyleBackColor = True
+        '
         'frmAuthentication
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(390, 248)
+        Me.ClientSize = New System.Drawing.Size(390, 266)
         Me.ControlBox = False
+        Me.Controls.Add(Me.chbx_remember)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.abbrButton)
@@ -154,4 +167,5 @@ Partial Class frmAuthentication
     Friend WithEvents abbrButton As System.Windows.Forms.Button
     Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
+    Friend WithEvents chbx_remember As Windows.Forms.CheckBox
 End Class

@@ -29,5 +29,12 @@
         End If
     End Sub
 
+    Private Sub eleAmpelText_MouseDoubleClick(sender As Object, e As Windows.Forms.MouseEventArgs) Handles eleAmpelText.MouseDoubleClick
 
+    End Sub
+
+
+    Private Sub eleAmpelText_TextChanged(sender As Object, e As EventArgs) Handles eleAmpelText.TextChanged
+
+    End Sub
 End Class
