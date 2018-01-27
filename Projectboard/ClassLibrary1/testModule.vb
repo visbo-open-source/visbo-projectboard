@@ -1093,7 +1093,7 @@ Public Module testModule
                                                                       worker, e, False, hproj, kennzeichnung)
 
                                     .TextFrame2.TextRange.Text = ""
-                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
 
                                     ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
                                     ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
@@ -1117,7 +1117,7 @@ Public Module testModule
                                                                       worker, e, False, hproj, kennzeichnung)
 
                                     .TextFrame2.TextRange.Text = ""
-                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
 
                                     ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
                                     ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
@@ -1143,7 +1143,7 @@ Public Module testModule
                                                                       worker, e, False, hproj, kennzeichnung)
                                     awinSettings.mppExtendedMode = formerSetting
                                     .TextFrame2.TextRange.Text = ""
-                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                    '.ZOrder(MsoZOrderCmd.msoSendToBack)
 
                                     ' sonst wird pptLasttime benötigt, um bei mehreren Projekten 
                                     ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
