@@ -2046,6 +2046,13 @@ Module Module1
 
                                                                 Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
 
+                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or _
+                                                            chartTyp = PTprdk.SollIstPersonalkostenC Or _
+                                                            chartTyp = PTprdk.SollIstSonstKostenC Or _
+                                                            chartTyp = PTprdk.SollIstRolleC Or _
+                                                            chartTyp = PTprdk.SollIstKostenartC Then
+                                                                ' Aktualisieren der Strategie-Charts
+                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, "", True)
                                                             End If
 
                                                         ElseIf prpfTyp = ptPRPFType.portfolio Then
@@ -2442,7 +2449,7 @@ Module Module1
         Next
 
         ' jetzt muss die todolist noch extra abgearbeitet werden , wenn Charts drin waren, dürfen die nicht in der oberen Schleife behandelt werden, weil 
-        ' bei de rchart Behandlung Charts gelöscht udn kopiert werden 
+        ' bei der chart Behandlung Charts gelöscht und kopiert werden 
         For Each tmpShpName As String In toDoList
             Try
                 Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)

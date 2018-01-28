@@ -4694,6 +4694,329 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
+    ''' aktualisiert im SmartInfo Powerpoint das übergebene ChartObject  
+    ''' </summary>
+    ''' <param name="chtObj"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="vProj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="qualifier"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePPTSollIstCurveOfProject(ByRef chtObj As Excel.ChartObject, ByVal hproj As clsProjekt, vProj As clsProjekt, _
+                                                   ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean)
+        Dim xlsChart As Excel.Chart = chtObj.Chart
+        Dim i As Integer, ix As Integer = 0
+        Dim abbruch As Boolean = False
+        Dim pname As String = hproj.name
+        Dim fullname As String = hproj.getShapeText
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
+        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim titelTeile(2) As String
+        Dim titelTeilLaengen(2) As Integer
+        Dim sumB As Double, sumC As Double
+        ' zaehleinheit ist T€ oder PT ...
+        Dim zaehlEinheit As String = ""
+
+
+        Dim maxlenTitle1 As Integer = 20
+
+        Dim heute As Date = Date.Now
+        ' aktuell wird es nur von Report Generation aufgerufen ...
+        Dim calledFromReporting As Boolean = True
+        Dim chartType As Excel.XlChartType
+        Dim curmaxScale As Double
+
+        ' die ganzen Vor-Klärungen machen ...
+        With xlsChart
+            chartType = .ChartType
+
+            'Dim refName As String = CStr(myChartData.Workbook.name)
+            'Dim refWorkbook As xlNS.Workbook = CType(myChartData.Workbook, xlNS.Workbook)
+            '.SetSourceData("C:\temp\Mappe1.xlsx")
+            'refName = CStr(myChartData.Workbook.name)
+
+
+            If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+                    curmaxScale = .MaximumScale
+                    .MaximumScaleIsAuto = False
+                End With
+
+            End If
+
+        End With
+
+
+        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(heute) - 1
+        Dim pastAndFuture As Boolean = False
+
+        Dim werteB(vProj.anzahlRasterElemente - 1) As Double
+        Dim werteC(hproj.anzahlRasterElemente - 1) As Double
+
+        Dim Xdatenreihe() As String
+        ' die folgenden müssen die gleiche Dimension haben ihre Pendants oben ...
+        Dim tdatenreiheB(vProj.anzahlRasterElemente - 1) As Double
+        Dim tdatenreiheC(hproj.anzahlRasterElemente - 1) As Double
+
+        Dim gesterndatenreihe() As Double
+        Dim Xgestern() As String
+
+
+        ' wird benötigt, weil xml-texte aktuell noch nicht in DB sind - und sonst kann das nicht aktualisiert werden 
+        Dim repMSg(6) As String
+        If awinSettings.englishLanguage Then
+            repMSg(0) = "cumulated Personnel Cost"
+            repMSg(1) = "cumulated Other Cost"
+            repMSg(2) = "cumulated Total Cost"
+            repMSg(3) = "approved version"
+            repMSg(4) = "last version"
+            repMSg(5) = "actual values"
+            repMSg(6) = "Version from"
+        Else
+            repMSg(0) = "kumulierte Personalkosten"
+            repMSg(1) = "kumulierte Sonstige Kosten"
+            repMSg(2) = "kumulierte Gesamtkosten"
+            repMSg(3) = "Beauftragung"
+            repMSg(4) = "letzter Stand"
+            repMSg(5) = "Ist-Werte"
+            repMSg(6) = "Stand vom"
+        End If
+
+
+        Select Case auswahl
+            Case 1
+                ' Personalkosten
+                titelTeile(0) = repMSg(0)
+                zaehlEinheit = "T€"
+                werteB = vProj.getAllPersonalKosten
+                werteC = hproj.getAllPersonalKosten
+
+            Case 2
+                ' Sonstige Kosten
+
+                'titelTeile(0) = "Soll/Ist Sonstige Kosten" 
+                titelTeile(0) = repMSg(1)
+
+                werteB = vProj.getGesamtAndereKosten
+                werteC = hproj.getGesamtAndereKosten
+
+            Case 3
+                ' Gesamt Kosten
+                titelTeile(0) = repMSg(2)
+
+                zaehlEinheit = "T€"
+
+                werteB = vProj.getGesamtKostenBedarf
+                werteC = hproj.getGesamtKostenBedarf
+
+            Case 4
+                ' Rollen mit Qualifier
+                titelTeile(0) = qualifier
+                zaehlEinheit = awinSettings.kapaEinheit
+
+                Try
+                    werteB = vProj.getPersonalKosten(qualifier)
+                    werteC = hproj.getPersonalKosten(qualifier)
+                Catch ex As Exception
+                    'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
+                End Try
+
+            Case 5
+                ' Kostenart mit Qualifier
+                titelTeile(0) = qualifier
+                zaehlEinheit = "T€"
+
+                Try
+                    werteB = vProj.getKostenBedarf(qualifier)
+                    werteC = hproj.getKostenBedarf(qualifier)
+                Catch ex As Exception
+                    'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
+                End Try
+
+            Case Else
+                ' Gesamt Kosten
+
+                'titelTeile(0) = "Soll/Ist Gesamtkosten"
+                titelTeile(0) = repMSg(2)
+
+                zaehlEinheit = "T€"
+                werteB = vProj.getGesamtKostenBedarf
+                werteC = hproj.getGesamtKostenBedarf
+                auswahl = 3
+
+        End Select
+
+        ' tk, 25.1.18 
+        Dim tmpSum As String
+
+        tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+
+
+
+        titelTeile(0) = titelTeile(0) & tmpSum
+        titelTeilLaengen(0) = titelTeile(0).Length
+
+        diagramTitle = titelTeile(0)
+
+
+        minColumn = 10000
+        If vProj.Start < minColumn Then
+            minColumn = vProj.Start
+        End If
+
+        If hproj.Start < minColumn Then
+            minColumn = hproj.Start
+        End If
+
+
+        With hproj
+            maxColumn = .Start + .anzahlRasterElemente - 1
+            ReDim tdatenreiheC(maxColumn - minColumn)
+        End With
+
+        With vProj
+            If maxColumn < .Start + .anzahlRasterElemente - 1 Then
+                maxColumn = .Start + .anzahlRasterElemente - 1
+            End If
+            ReDim tdatenreiheB(.Start + .anzahlRasterElemente - 1 - minColumn)
+        End With
+
+        ReDim Xdatenreihe(maxColumn - minColumn)
+
+        sumB = 0.0
+        sumC = 0.0
+
+        For i = minColumn To maxColumn
+            Xdatenreihe(i - minColumn) = StartofCalendar.AddMonths(i - 1).ToString("MMM yy", repCult)
+            With vProj
+                If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
+                    tdatenreiheB(i - minColumn) = sumB + werteB(i - .Start)
+                    sumB = tdatenreiheB(i - minColumn)
+                Else
+                    ' tk 25.1.18 nichts machen
+                    'tdatenreiheB(i - minColumn) = sumB
+                End If
+            End With
+
+
+            With hproj
+                If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
+                    tdatenreiheC(i - minColumn) = sumC + werteC(i - .Start)
+                    sumC = tdatenreiheC(i - minColumn)
+                Else
+                    ' tk 25.1.18 nichts machen
+                    ' tdatenreiheC(i - minColumn) = sumC
+                End If
+            End With
+
+        Next i
+
+
+        If gesternColumn >= minColumn And _
+            gesternColumn <= maxColumn Then
+
+            pastAndFuture = True
+            ReDim gesterndatenreihe(gesternColumn - minColumn)
+            ReDim Xgestern(gesternColumn - minColumn)
+            For i = minColumn To gesternColumn
+                gesterndatenreihe(i - minColumn) = tdatenreiheC(i - minColumn)
+                Xgestern(i - minColumn) = Xdatenreihe(i - minColumn)
+            Next
+        Else
+            ReDim gesterndatenreihe(0)
+            ReDim Xgestern(0)
+            pastAndFuture = False
+
+        End If
+
+        ' jetzt wird das Diagramm gezeichnet 
+
+        With CType(chtObj.Chart, Excel.Chart)
+            ' remove old series
+            Try
+                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+            End If
+
+        End With
+
+        With chtObj.Chart
+
+            If pastAndFuture Then
+                ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
+
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    '.name = "Istwerte"
+                    '.Name = repMessages.getmsg(194)
+                    .Name = repMSg(5)
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = gesterndatenreihe
+                    '.XValues = Xgestern
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlArea
+
+                End With
+
+            End If
+
+            ' heutiger stand 
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
+                .Name = repMSg(6) & " " & hproj.timeStamp.ToString("d")
+                '.Name = "Version (" & hproj.timeStamp.ToString("d") & ")"
+                '.Interior.Color = awinSettings.SollIstFarbeC
+                .Interior.Color = visboFarbeBlau
+                .Values = tdatenreiheC
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlLine
+                .Format.Line.Weight = 6
+                .Format.Line.ForeColor.RGB = visboFarbeBlau
+            End With
+
+
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+
+                If vglBaseline Then
+                    .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
+                Else
+                    .Name = repMSg(4) & " " & vProj.timeStamp.ToString("d")
+                End If
+
+                .Interior.Color = visboFarbeOrange
+                .Values = tdatenreiheB
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlLine
+                .Format.Line.Weight = 6
+                .Format.Line.ForeColor.RGB = visboFarbeOrange
+
+            End With
+
+
+
+
+        End With
+
+
+
+
+    End Sub
+
+    ''' <summary>
     ''' Methode zeigt zum ausgewählten Projekt die Trendanalyse zu den in der myCollection übergebenen Meilensteinen an 
     ''' </summary>
     ''' <param name="hproj">Verweis auf Projekt</param>
@@ -5607,12 +5930,6 @@ Public Module Projekte
         ' die ganzen Vor-Klärungen machen ...
         With xlsChart
             chartType = .ChartType
-
-            'Dim refName As String = CStr(myChartData.Workbook.name)
-            'Dim refWorkbook As xlNS.Workbook = CType(myChartData.Workbook, xlNS.Workbook)
-            '.SetSourceData("C:\temp\Mappe1.xlsx")
-            'refName = CStr(myChartData.Workbook.name)
-
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 

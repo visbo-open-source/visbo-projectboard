@@ -2332,6 +2332,8 @@ Public Module testModule
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstPersonalkostenC
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
@@ -2406,6 +2408,8 @@ Public Module testModule
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstSonstKostenC
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
@@ -2481,6 +2485,8 @@ Public Module testModule
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstGesamtkostenC
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
@@ -2555,6 +2561,8 @@ Public Module testModule
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstRolleC
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
@@ -2627,6 +2635,8 @@ Public Module testModule
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstKostenartC
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
