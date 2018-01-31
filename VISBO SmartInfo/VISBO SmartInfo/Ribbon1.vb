@@ -41,6 +41,10 @@ Public Class Ribbon1
                 .settingsTab.Label = "Einstellungen"
             End With
         End If
+
+        ' password by default merken ...
+        awinSettings.rememberUserPwd = True
+
     End Sub
 
 

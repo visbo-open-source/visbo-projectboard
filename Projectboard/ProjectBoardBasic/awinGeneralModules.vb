@@ -20735,8 +20735,8 @@ Public Module awinGeneralModules
                                                         .Validation.Delete()
                                                     End If
                                                     ' jetzt wird die ValidationList aufgebaut 
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal,
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
                                                                     Operator:=XlFormatConditionOperator.xlGreaterEqual,
                                                                     Formula1:="0")
 
@@ -20795,9 +20795,9 @@ Public Module awinGeneralModules
                                                     End Try
 
                                                     Try
-                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
                                                     Catch ex As Exception
 
@@ -20921,9 +20921,9 @@ Public Module awinGeneralModules
                                                         .Validation.Delete()
                                                     End If
                                                     ' jetzt wird die ValidationList aufgebaut 
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal,
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
 
                                                     '' '' jetzt wird der Kommentar bei Kosten hinzugefügt
@@ -20979,9 +20979,9 @@ Public Module awinGeneralModules
                                                         If Not IsNothing(.Validation) Then
                                                             .Validation.Delete()
                                                         End If
-                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
                                                     Catch ex As Exception
 
@@ -21103,9 +21103,9 @@ Public Module awinGeneralModules
                                                         .Validation.Delete()
                                                     End If
                                                     ' jetzt wird die ValidationList aufgebaut 
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal,
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
                                                 Catch ex As Exception
 
@@ -21142,9 +21142,9 @@ Public Module awinGeneralModules
                                                     End If
 
                                                     Try
-                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
                                                                     Formula1:="0")
                                                     Catch ex As Exception
 

@@ -2029,7 +2029,8 @@ Module oneClickGeneralModules
 
     ' '' ''End Sub
 
-    Public Sub speichereProjektToDB(ByVal hproj As clsProjekt)
+    Public Sub speichereProjektToDB(ByVal hproj As clsProjekt, _
+                                    Optional ByVal messageZeigen As Boolean = False)
 
         Dim hprojVariante As String = ""
 
@@ -2067,10 +2068,12 @@ Module oneClickGeneralModules
                             End If
 
                             If speichernInDBOk Then
-                                If Not identical Then
-                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
-                                Else
-                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                If messageZeigen Then
+                                    If Not identical Then
+                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                    Else
+                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                    End If
                                 End If
                             Else
                                 Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
@@ -2095,11 +2098,15 @@ Module oneClickGeneralModules
 
                             End If
                             If speichernInDBOk Then
-                                If Not identical Then
-                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
-                                Else
-                                    Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+
+                                If messageZeigen Then
+                                    If Not identical Then
+                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                    Else
+                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                    End If
                                 End If
+
                             Else
                                 Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
                             End If

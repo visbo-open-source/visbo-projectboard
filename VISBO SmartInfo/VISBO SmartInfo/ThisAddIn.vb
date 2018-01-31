@@ -31,6 +31,9 @@ Public Class ThisAddIn
         ' muss hier noch auf andere Art und Weise bestimmt werden 
         englishLanguage = True
 
+        ' im Powerpoint soll das pwd immer gemerkt werden ..
+
+
 
     End Sub
 

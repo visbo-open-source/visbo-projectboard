@@ -40,49 +40,44 @@ Partial Class frmAuthentication
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(312, 91)
-        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label1.Location = New System.Drawing.Point(234, 74)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(0, 29)
+        Me.Label1.Size = New System.Drawing.Size(0, 24)
         Me.Label1.TabIndex = 0
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(17, 139)
-        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label2.Location = New System.Drawing.Point(13, 125)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(73, 17)
+        Me.Label2.Size = New System.Drawing.Size(55, 13)
         Me.Label2.TabIndex = 1
         Me.Label2.Text = "Username"
         '
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(17, 199)
-        Me.Label3.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label3.Location = New System.Drawing.Point(13, 165)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(65, 17)
+        Me.Label3.Size = New System.Drawing.Size(50, 13)
         Me.Label3.TabIndex = 2
         Me.Label3.Text = "Passwort"
         '
         'benutzer
         '
         Me.benutzer.BackColor = System.Drawing.Color.WhiteSmoke
-        Me.benutzer.Location = New System.Drawing.Point(121, 136)
-        Me.benutzer.Margin = New System.Windows.Forms.Padding(4)
+        Me.benutzer.Location = New System.Drawing.Point(91, 122)
         Me.benutzer.Name = "benutzer"
-        Me.benutzer.Size = New System.Drawing.Size(345, 22)
+        Me.benutzer.Size = New System.Drawing.Size(260, 20)
         Me.benutzer.TabIndex = 4
         '
         'maskedPwd
         '
         Me.maskedPwd.BackColor = System.Drawing.Color.WhiteSmoke
-        Me.maskedPwd.Location = New System.Drawing.Point(121, 194)
-        Me.maskedPwd.Margin = New System.Windows.Forms.Padding(4)
+        Me.maskedPwd.Location = New System.Drawing.Point(91, 161)
         Me.maskedPwd.Name = "maskedPwd"
         Me.maskedPwd.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
-        Me.maskedPwd.Size = New System.Drawing.Size(345, 22)
+        Me.maskedPwd.Size = New System.Drawing.Size(260, 20)
         Me.maskedPwd.TabIndex = 5
         '
         'messageBox
@@ -91,19 +86,17 @@ Partial Class frmAuthentication
         Me.messageBox.BackColor = System.Drawing.SystemColors.ButtonHighlight
         Me.messageBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.messageBox.ForeColor = System.Drawing.Color.Red
-        Me.messageBox.Location = New System.Drawing.Point(16, 11)
-        Me.messageBox.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.messageBox.Location = New System.Drawing.Point(12, 9)
         Me.messageBox.Name = "messageBox"
-        Me.messageBox.Size = New System.Drawing.Size(0, 20)
+        Me.messageBox.Size = New System.Drawing.Size(0, 16)
         Me.messageBox.TabIndex = 7
         '
         'abbrButton
         '
         Me.abbrButton.DialogResult = System.Windows.Forms.DialogResult.Abort
-        Me.abbrButton.Location = New System.Drawing.Point(338, 289)
-        Me.abbrButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.abbrButton.Location = New System.Drawing.Point(254, 235)
         Me.abbrButton.Name = "abbrButton"
-        Me.abbrButton.Size = New System.Drawing.Size(128, 28)
+        Me.abbrButton.Size = New System.Drawing.Size(96, 23)
         Me.abbrButton.TabIndex = 8
         Me.abbrButton.Text = "Abbrechen"
         Me.abbrButton.UseVisualStyleBackColor = True
@@ -112,20 +105,18 @@ Partial Class frmAuthentication
         '
         Me.PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), System.Drawing.Image)
         Me.PictureBox1.InitialImage = Nothing
-        Me.PictureBox1.Location = New System.Drawing.Point(0, 13)
-        Me.PictureBox1.Margin = New System.Windows.Forms.Padding(4)
+        Me.PictureBox1.Location = New System.Drawing.Point(15, 27)
         Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(257, 90)
+        Me.PictureBox1.Size = New System.Drawing.Size(193, 73)
         Me.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.PictureBox1.TabIndex = 9
         Me.PictureBox1.TabStop = False
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(121, 289)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.OKButton.Location = New System.Drawing.Point(91, 235)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(136, 28)
+        Me.OKButton.Size = New System.Drawing.Size(102, 23)
         Me.OKButton.TabIndex = 10
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -133,19 +124,20 @@ Partial Class frmAuthentication
         'chbx_remember
         '
         Me.chbx_remember.AutoSize = True
-        Me.chbx_remember.Location = New System.Drawing.Point(19, 243)
+        Me.chbx_remember.Location = New System.Drawing.Point(14, 200)
+        Me.chbx_remember.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.chbx_remember.Name = "chbx_remember"
-        Me.chbx_remember.Size = New System.Drawing.Size(142, 21)
+        Me.chbx_remember.Size = New System.Drawing.Size(110, 17)
         Me.chbx_remember.TabIndex = 11
         Me.chbx_remember.Text = "Remember Me     "
         Me.chbx_remember.UseVisualStyleBackColor = True
         '
         'frmAuthentication
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(520, 327)
+        Me.ClientSize = New System.Drawing.Size(390, 266)
         Me.ControlBox = False
         Me.Controls.Add(Me.chbx_remember)
         Me.Controls.Add(Me.OKButton)
@@ -158,7 +150,6 @@ Partial Class frmAuthentication
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
         Me.ForeColor = System.Drawing.SystemColors.ControlText
-        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmAuthentication"
         Me.Text = "LOGIN"
         Me.TopMost = True

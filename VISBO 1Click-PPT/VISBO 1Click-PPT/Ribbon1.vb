@@ -162,7 +162,7 @@ Public Class Ribbon1
                     If Not IsNothing(mapProj) Then
                         If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
                             Try
-                                Call speichereProjektToDB(mapProj)
+                                Call speichereProjektToDB(mapProj, True)
                             Catch ex As Exception
                                 Call MsgBox("Fehler beim Speichern des MappedProjekt in DB")
                             End Try

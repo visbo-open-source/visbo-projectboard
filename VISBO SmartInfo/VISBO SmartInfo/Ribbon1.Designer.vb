@@ -92,7 +92,10 @@
         Me.btnUpdate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.refresh
         Me.btnUpdate.Label = "Current"
         Me.btnUpdate.Name = "btnUpdate"
+        Me.btnUpdate.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnUpdate.ShowImage = True
+        Me.btnUpdate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+    "and tables  are synchronized with the the latest version in the database; "
         '
         'Group3
         '
@@ -110,7 +113,10 @@
         Me.btnStart.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_beginning2
         Me.btnStart.Label = "First"
         Me.btnStart.Name = "btnStart"
+        Me.btnStart.ScreenTip = "VISBO Time-Machine: synchronize with first version"
         Me.btnStart.ShowImage = True
+        Me.btnStart.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+    "and tables  are synchronized with the the first version in the database; "
         '
         'btnFastBack
         '
@@ -118,7 +124,11 @@
         Me.btnFastBack.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_left1
         Me.btnFastBack.Label = "Previous"
         Me.btnFastBack.Name = "btnFastBack"
+        Me.btnFastBack.ScreenTip = "VISBO Time-Machine: synchronize with version 1 month earlier"
         Me.btnFastBack.ShowImage = True
+        Me.btnFastBack.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+    "and tables  are synchronized with the the version 1 month earlier in the databas" & _
+    "e; "
         '
         'btnShowChanges
         '
@@ -126,7 +136,10 @@
         Me.btnShowChanges.Image = Global.VISBO_SmartInfo.My.Resources.Resources.shape_triangle
         Me.btnShowChanges.Label = "Difference"
         Me.btnShowChanges.Name = "btnShowChanges"
+        Me.btnShowChanges.ScreenTip = "VISBO Time-Machine: show differences"
         Me.btnShowChanges.ShowImage = True
+        Me.btnShowChanges.SuperTip = "shows differences in milestone and task dates between currant version and last ac" & _
+    "tive version. "
         '
         'btnFastForward
         '
@@ -134,7 +147,11 @@
         Me.btnFastForward.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_right1
         Me.btnFastForward.Label = "Next"
         Me.btnFastForward.Name = "btnFastForward"
+        Me.btnFastForward.ScreenTip = "VISBO Time-Machine: synchronize with version 1 month later"
         Me.btnFastForward.ShowImage = True
+        Me.btnFastForward.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+    "and tables  are synchronized with the the version 1 month later in the database;" & _
+    " "
         '
         'btnEnd2
         '
@@ -142,7 +159,10 @@
         Me.btnEnd2.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_end1
         Me.btnEnd2.Label = "Last"
         Me.btnEnd2.Name = "btnEnd2"
+        Me.btnEnd2.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnEnd2.ShowImage = True
+        Me.btnEnd2.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+    "and tables  are synchronized with the the latest version in the database; "
         '
         'Group4
         '
@@ -158,7 +178,10 @@
         Me.activateSearch.Image = Global.VISBO_SmartInfo.My.Resources.Resources.find1
         Me.activateSearch.Label = "Search"
         Me.activateSearch.Name = "activateSearch"
+        Me.activateSearch.ScreenTip = "show Search Pane for various information categories"
         Me.activateSearch.ShowImage = True
+        Me.activateSearch.SuperTip = "user may search for different categories such as certain name, all elements with " & _
+    "certain traffic light, elements where a certain person is responsible, etc. "
         '
         'activateInfo
         '
@@ -166,7 +189,11 @@
         Me.activateInfo.Image = Global.VISBO_SmartInfo.My.Resources.Resources.about
         Me.activateInfo.Label = "Properties"
         Me.activateInfo.Name = "activateInfo"
+        Me.activateInfo.ScreenTip = "show Properties Pane of 1 selected plan-element"
         Me.activateInfo.ShowImage = True
+        Me.activateInfo.SuperTip = "shows for the selected milestone or phase properties such as name, traffic light " & _
+    "and according explanation, deliverables and person responsible for the milestone" & _
+    " / tasks"
         '
         'activateTab
         '
@@ -174,8 +201,9 @@
         Me.activateTab.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue1
         Me.activateTab.Label = "Annotate"
         Me.activateTab.Name = "activateTab"
+        Me.activateTab.ScreenTip = "annotate milestones and phases with name and/or date "
         Me.activateTab.ShowImage = True
-        Me.activateTab.SuperTip = "Search nach altem Muster"
+        Me.activateTab.SuperTip = "annotates all selected milestones and tasks with name and/or date"
         '
         'SmartInfo
         '
@@ -185,11 +213,13 @@
         '
         'settingsTab
         '
+        Me.settingsTab.Enabled = False
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
         'varianten_Tab
         '
+        Me.varianten_Tab.Enabled = False
         Me.varianten_Tab.Label = "Variants"
         Me.varianten_Tab.Name = "varianten_Tab"
         '

@@ -67,7 +67,12 @@ Public Class frmAuthentication
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
                 Dim ok As Boolean = request.createIndicesOnce()
                 If Not ok Then
-                    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                    If awinSettings.englishLanguage Then
+                        messageBox.Text = "Wrong username or password!"
+                    Else
+                        messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                    End If
+
                     benutzer.Text = ""
                     maskedPwd.Text = ""
                     dbUsername = benutzer.Text
@@ -122,9 +127,14 @@ Public Class frmAuthentication
 
         Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+            'Dim ok As Boolean = request.loginSucessful(awinSettings.databaseName, user, pwd)
             Dim ok As Boolean = request.createIndicesOnce()
             If Not ok Then
-                messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                If awinSettings.englishLanguage Then
+                    messageBox.Text = "Wrong username or password!"
+                Else
+                    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+                End If
                 benutzer.Text = ""
                 maskedPwd.Text = ""
                 dbUsername = benutzer.Text
@@ -132,6 +142,7 @@ Public Class frmAuthentication
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
+                'ok = request.createIndicesOnce()
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
                 messageBox.Text = ""

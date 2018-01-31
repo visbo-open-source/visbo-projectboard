@@ -55,7 +55,6 @@ Module Module1
     ' gibt an, ob das Breadcrumb Feld gezeigt werden soll 
     Friend showBreadCrumbField As Boolean = False
     ' gibt die MArker-Höhe und Breite an 
-    Friend useUniqueNames As Boolean = False
     Friend markerHeight As Double = 19
     Friend markerWidth As Double = 13
 
@@ -65,8 +64,10 @@ Module Module1
 
     ' globale Variable, die angibt, ob ShortName gezeichnet werden soll 
     Friend showShortName As Boolean = False
-    ' globlaela Variable, die anzeigt, ob Orginal Name gezeigt werden soll 
+    ' globale Variable, die anzeigt, ob Orginal Name gezeigt werden soll 
     Friend showOrigName As Boolean = False
+    ' globale Varianle, die angibt, ob der Best-Name, also der eindeutige Name gezeigt werden soll 
+    Friend showBestName As Boolean = False
 
     Friend protectType As Integer
     Friend protectFeld1 As String = ""
@@ -2045,6 +2046,13 @@ Module Module1
 
                                                                 Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
 
+                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or _
+                                                            chartTyp = PTprdk.SollIstPersonalkostenC Or _
+                                                            chartTyp = PTprdk.SollIstSonstKostenC Or _
+                                                            chartTyp = PTprdk.SollIstRolleC Or _
+                                                            chartTyp = PTprdk.SollIstKostenartC Then
+                                                                ' Aktualisieren der Strategie-Charts
+                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, "", True)
                                                             End If
 
                                                         ElseIf prpfTyp = ptPRPFType.portfolio Then
@@ -2441,7 +2449,7 @@ Module Module1
         Next
 
         ' jetzt muss die todolist noch extra abgearbeitet werden , wenn Charts drin waren, dürfen die nicht in der oberen Schleife behandelt werden, weil 
-        ' bei de rchart Behandlung Charts gelöscht udn kopiert werden 
+        ' bei der chart Behandlung Charts gelöscht und kopiert werden 
         For Each tmpShpName As String In toDoList
             Try
                 Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
@@ -3083,7 +3091,7 @@ Module Module1
 
                             Call .setDTPicture(pptShapeIsMilestone(tmpShape))
 
-                            .elemName.Text = bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked)
+                            .elemName.Text = bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked, .uniqueNameRequired.Checked)
                             'If showBreadCrumbField Then
                             '    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
                             'End If
@@ -3118,7 +3126,7 @@ Module Module1
 
                             Call .setDTPicture(Nothing)
 
-                            If .elemName.Text <> bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked) Then
+                            If .elemName.Text <> bestimmeElemText(tmpShape, .showAbbrev.Checked, .showOrginalName.Checked, .uniqueNameRequired.Checked) Then
                                 .elemName.Text = " ... "
                             End If
                             If .elemDate.Text <> bestimmeElemDateText(tmpShape, False) Then
@@ -3753,7 +3761,7 @@ Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function bestimmeElemText(ByVal curShape As PowerPoint.Shape, _
-                                          ByVal showShortName As Boolean, ByVal showOriginalName As Boolean) As String
+                                          ByVal showShortName As Boolean, ByVal showOriginalName As Boolean, ByVal useUniqueNames As Boolean) As String
 
         Dim tmpText As String = ""
         Dim translationNecessary As Boolean = False
@@ -4302,7 +4310,7 @@ Module Module1
         ' handelt es sich um den Lang-/Kurz-Namen oder um das Datum ? 
 
         If descriptionType = pptAnnotationType.text Then
-            descriptionText = bestimmeElemText(selectedPlanShape, showShortName, showOrigName)
+            descriptionText = bestimmeElemText(selectedPlanShape, showShortName, showOrigName, showBestName)
 
         ElseIf descriptionType = pptAnnotationType.datum Then
             descriptionText = bestimmeElemDateText(selectedPlanShape, showShortName)
@@ -4616,8 +4624,8 @@ Module Module1
                                 Dim curText As String = txtShape.TextFrame2.TextRange.Text
                                 ' wenn der Text jetzt weder dem ShortName noch dem Original Name entspricht, dann soll er ersetzt werden ... 
 
-                                Dim shortText As String = bestimmeElemText(tmpShape, True, False)
-                                Dim origText As String = bestimmeElemText(tmpShape, False, True)
+                                Dim shortText As String = bestimmeElemText(tmpShape, True, False, showBestName)
+                                Dim origText As String = bestimmeElemText(tmpShape, False, True, showBestName)
 
                                 If ((curText <> shortText) And (curText <> origText)) Then
                                     ' dann ist es kein ShortName oder ein Original-Name , eine Unterscheidung in Meilenstein / Phase ist hier nicht notwendig, da asis gewählt wurde
@@ -5531,7 +5539,7 @@ Module Module1
                         ' ''    .labelRespons.Text = "Verantwortlich:"
                         ' ''End If
 
-                        .eleName.Text = bestimmeElemText(tmpShape, False, True)
+                        .eleName.Text = bestimmeElemText(tmpShape, False, True, showBestName)
 
                         .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
 
@@ -5568,7 +5576,7 @@ Module Module1
 
                     With ucPropertiesView
 
-                        If .eleName.Text <> bestimmeElemText(tmpShape, False, True) Then
+                        If .eleName.Text <> bestimmeElemText(tmpShape, False, True, showBestName) Then
                             .eleName.Text = " ... "
                         End If
                         If .eleDatum.Text <> bestimmeElemDateText(tmpShape, False) Then

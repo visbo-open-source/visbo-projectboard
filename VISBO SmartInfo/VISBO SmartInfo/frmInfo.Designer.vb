@@ -35,6 +35,7 @@ Partial Class frmInfo
         Me.elemName = New System.Windows.Forms.TextBox()
         Me.showAbbrev = New System.Windows.Forms.CheckBox()
         Me.writeText = New System.Windows.Forms.Button()
+        Me.uniqueNameRequired = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'positionDateButton
@@ -95,7 +96,7 @@ Partial Class frmInfo
         'showOrginalName
         '
         Me.showOrginalName.AutoSize = True
-        Me.showOrginalName.Location = New System.Drawing.Point(108, 10)
+        Me.showOrginalName.Location = New System.Drawing.Point(250, 10)
         Me.showOrginalName.Name = "showOrginalName"
         Me.showOrginalName.Size = New System.Drawing.Size(92, 17)
         Me.showOrginalName.TabIndex = 52
@@ -133,12 +134,23 @@ Partial Class frmInfo
         Me.writeText.TabIndex = 50
         Me.writeText.UseVisualStyleBackColor = True
         '
+        'uniqueNameRequired
+        '
+        Me.uniqueNameRequired.AutoSize = True
+        Me.uniqueNameRequired.Location = New System.Drawing.Point(112, 10)
+        Me.uniqueNameRequired.Name = "uniqueNameRequired"
+        Me.uniqueNameRequired.Size = New System.Drawing.Size(109, 17)
+        Me.uniqueNameRequired.TabIndex = 59
+        Me.uniqueNameRequired.Text = "eindeutiger Name"
+        Me.uniqueNameRequired.UseVisualStyleBackColor = True
+        '
         'frmInfo
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(532, 101)
+        Me.Controls.Add(Me.uniqueNameRequired)
         Me.Controls.Add(Me.positionDateButton)
         Me.Controls.Add(Me.deleteDate)
         Me.Controls.Add(Me.writeDate)
@@ -168,4 +180,5 @@ Partial Class frmInfo
     Friend WithEvents elemName As System.Windows.Forms.TextBox
     Friend WithEvents showAbbrev As System.Windows.Forms.CheckBox
     Friend WithEvents writeText As System.Windows.Forms.Button
+    Friend WithEvents uniqueNameRequired As System.Windows.Forms.CheckBox
 End Class

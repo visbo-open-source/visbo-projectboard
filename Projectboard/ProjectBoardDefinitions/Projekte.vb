@@ -2528,7 +2528,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Sub createSollIstOfProject(ByVal hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean, _
                                    ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double, ByVal calledFromReporting As Boolean)
-        Dim chtobj As Excel.ChartObject
+        'Dim chtobj As Excel.ChartObject
         Dim anzDiagrams As Integer
         Dim i As Integer, ix As Integer = 0
         Dim found As Boolean
@@ -3107,16 +3107,16 @@ Public Module Projekte
 
                 End With
 
-                chtobj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
-                chtobj.Name = kennung
+                'chtobj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+                newChtObj.Name = kennung
 
 
             End If
 
-            With chtobj.Chart
+            With newChtObj.Chart
 
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + _
-                                                                   titelTeilLaengen(1) + 1, titelTeilLaengen(2)).Font.Size = awinSettings.fontsizeLegend
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + _
+                '                                                   titelTeilLaengen(1) + 1, titelTeilLaengen(2)).Font.Size = awinSettings.fontsizeLegend
 
                 'series
 
@@ -3300,7 +3300,7 @@ Public Module Projekte
         'End With
 
         appInstance.EnableEvents = formerEE
-        reportObj = chtobj
+        reportObj = newChtObj
 
     End Sub
 
@@ -4011,7 +4011,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Sub createSollIstCurveOfProject(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean, _
                                            ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
-        Dim chtobj As Excel.ChartObject
+        'Dim chtobj As Excel.ChartObject
         Dim anzDiagrams As Integer
         Dim i As Integer, ix As Integer = 0
         Dim found As Boolean
@@ -4025,10 +4025,30 @@ Public Module Projekte
         Dim titelTeilLaengen(2) As Integer
         Dim sumB As Double, sumL As Double, sumC As Double
         Dim isMinMax As Boolean = False
+        ' zaehleinheit ist T€ oder PT ...
+        Dim zaehlEinheit As String = ""
 
         Dim beauftragung As clsProjekt
         Dim lastPlan As clsProjekt
         Dim anzSnapshots As Integer = projekthistorie.Count
+
+        Dim currentSheetName As String = ""
+        Dim maxlenTitle1 As Integer = 20
+        Dim newChtObj As Excel.ChartObject = Nothing
+
+        ' aktuell wird es nur von Report Generation aufgerufen ...
+        Dim calledFromReporting As Boolean = True
+
+        If visboZustaende.projectBoardMode = ptModus.graficboard Then
+            If calledfromReporting Then
+                currentSheetName = arrWsNames(ptTables.repCharts)
+            Else
+                currentSheetName = arrWsNames(ptTables.mptPrCharts)
+            End If
+
+        Else
+            currentSheetName = arrWsNames(ptTables.meCharts)
+        End If
 
         If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
             ' Soll-Ist Vergleich
@@ -4211,11 +4231,6 @@ Public Module Projekte
 
         End If
 
-
-
-
-
-
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
@@ -4228,40 +4243,69 @@ Public Module Projekte
         Dim werteC(hproj.anzahlRasterElemente - 1) As Double
 
         Dim Xdatenreihe() As String
-        Dim tdatenreiheB() As Double
-        Dim tdatenreiheL() As Double
-        Dim tdatenreiheC() As Double
+        ' die folgenden müssen die gleiche Dimension haben ihre Pendants oben ...
+        Dim tdatenreiheB(beauftragung.anzahlRasterElemente - 1) As Double
+        Dim tdatenreiheL(lastPlan.anzahlRasterElemente - 1) As Double
+        Dim tdatenreiheC(hproj.anzahlRasterElemente - 1) As Double
 
         Dim gesterndatenreihe() As Double
         Dim Xgestern() As String
 
+        Dim tmpCollection As New Collection
+        tmpCollection.Add(hproj.name & "#" & auswahl.ToString & "#" & qualifier & "#" & CInt(vglBaseline).ToString)
         ' Bestimmen der Werte 
+
+        ' wird benötigt, weil xml-texte aktuell noch nicht in DB sind - und sonst kann das nicht aktualisiert werden 
+        Dim repMSg(2, 1) As String
+        repMSg(0, 0) = "kumulierte Personalkosten"
+        repMSg(0, 1) = "cumulated Personnel Cost"
+
+        repMSg(1, 0) = "kumulierte Sonstige Kosten"
+        repMSg(1, 1) = "cumulated Other Cost"
+
+        repMSg(2, 0) = "kumulierte Gesamtkosten"
+        repMSg(2, 1) = "cumulated Total Cost"
+
         Select Case auswahl
             Case 1
                 ' Personalkosten
                 If isMinMax Then
                     'titelTeile(0) = "Min/Max Personalkosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(187) & vbLf
+                    titelTeile(0) = repMessages.getmsg(187)
+                    
                 Else
                     'titelTeile(0) = "Soll/Ist Personalkosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(188) & vbLf
-                End If
+                    If awinSettings.englishLanguage Then
+                        titelTeile(0) = repMSg(0, 1)
+                    Else
+                        titelTeile(0) = repMSg(0, 0)
+                    End If
 
-                kennung = "Soll/Ist Kurve Personalkosten"
+                End If
+                zaehlEinheit = "T€"
+                kennung = calcChartKennung("pr", PTprdk.SollIstPersonalkostenC, tmpCollection)
+                'kennung = "Soll/Ist Kurve Personalkosten"
                 werteB = beauftragung.getAllPersonalKosten
                 werteL = lastPlan.getAllPersonalKosten
                 werteC = hproj.getAllPersonalKosten
+
             Case 2
                 ' Sonstige Kosten
                 If isMinMax Then
-                    'titelTeile(0) = "Min/Max Sonstige Kosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(189) & vbLf
+                    'titelTeile(0) = "Min/Max Sonstige Kosten" 
+                    titelTeile(0) = repMessages.getmsg(189)
                 Else
-                    'titelTeile(0) = "Soll/Ist Sonstige Kosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(190) & vbLf
-                End If
+                    'titelTeile(0) = "Soll/Ist Sonstige Kosten" 
+                    If awinSettings.englishLanguage Then
+                        titelTeile(0) = repMSg(1, 1)
+                    Else
+                        titelTeile(0) = repMSg(1, 0)
+                    End If
 
-                kennung = "Soll/Ist Kurve Sonstige Kosten"
+                End If
+                zaehlEinheit = "T€"
+                kennung = calcChartKennung("pr", PTprdk.SollIstSonstKostenC, tmpCollection)
+                'kennung = "Soll/Ist Kurve Sonstige Kosten"
                 werteB = beauftragung.getGesamtAndereKosten
                 werteL = lastPlan.getGesamtAndereKosten
                 werteC = hproj.getGesamtAndereKosten
@@ -4269,22 +4313,30 @@ Public Module Projekte
             Case 3
                 ' Gesamt Kosten
                 If isMinMax Then
-                    'titelTeile(0) = "Min/Max Gesamtkosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(191) & vbLf
+                    'titelTeile(0) = "Min/Max Gesamtkosten"
+                    titelTeile(0) = repMessages.getmsg(191)
                 Else
-                    'titelTeile(0) = "Soll/Ist Gesamtkosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(192) & vbLf
+                    'titelTeile(0) = "Soll/Ist Gesamtkosten"
+                    If awinSettings.englishLanguage Then
+                        titelTeile(0) = repMSg(2, 1)
+                    Else
+                        titelTeile(0) = repMSg(2, 0)
+                    End If
                 End If
-
-                kennung = "Soll/Ist Kurve Gesamtkosten"
+                zaehlEinheit = "T€"
+                'kennung = "Soll/Ist Kurve Gesamtkosten"
+                kennung = calcChartKennung("pr", PTprdk.SollIstGesamtkostenC, tmpCollection)
                 werteB = beauftragung.getGesamtKostenBedarf
                 werteL = lastPlan.getGesamtKostenBedarf
                 werteC = hproj.getGesamtKostenBedarf
 
             Case 4
                 ' Rollen mit Qualifier
-                titelTeile(0) = qualifier & "(" & awinSettings.kapaEinheit & ")" & vbLf
-                kennung = "Rolle " & qualifier
+                titelTeile(0) = qualifier
+                zaehlEinheit = awinSettings.kapaEinheit
+
+                'kennung = "Rolle " & qualifier
+                kennung = calcChartKennung("pr", PTprdk.SollIstRolleC, tmpCollection)
                 Try
                     werteB = beauftragung.getPersonalKosten(qualifier)
                     werteL = lastPlan.getPersonalKosten(qualifier)
@@ -4296,8 +4348,10 @@ Public Module Projekte
 
             Case 5
                 ' Kostenart mit Qualifier
-                titelTeile(0) = qualifier & " (T€)" & vbLf
-                kennung = "Kostenart " & qualifier
+                titelTeile(0) = qualifier
+                zaehlEinheit = "T€"
+                'kennung = "Kostenart " & qualifier
+                kennung = calcChartKennung("pr", PTprdk.SollIstKostenartC, tmpCollection)
                 Try
                     werteB = beauftragung.getKostenBedarf(qualifier)
                     werteL = lastPlan.getKostenBedarf(qualifier)
@@ -4310,15 +4364,20 @@ Public Module Projekte
             Case Else
                 ' Gesamt Kosten
                 If isMinMax Then
-                    'titelTeile(0) = "Min/Max Gesamtkosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(191) & vbLf
+                    'titelTeile(0) = "Min/Max Gesamtkosten"
+                    titelTeile(0) = repMessages.getmsg(191)
                 Else
-                    'titelTeile(0) = "Soll/Ist Gesamtkosten (T€)" & vbLf
-                    titelTeile(0) = repMessages.getmsg(192) & vbLf
+                    'titelTeile(0) = "Soll/Ist Gesamtkosten"
+                    If awinSettings.englishLanguage Then
+                        titelTeile(0) = repMSg(2, 1)
+                    Else
+                        titelTeile(0) = repMSg(2, 0)
+                    End If
                 End If
 
-
-                kennung = "Soll/Ist Kurve Gesamtkosten"
+                zaehlEinheit = "T€"
+                'kennung = "Soll/Ist Kurve Gesamtkosten"
+                kennung = calcChartKennung("pr", PTprdk.SollIstGesamtkostenC, tmpCollection)
                 werteB = beauftragung.getGesamtKostenBedarf
                 werteL = lastPlan.getGesamtKostenBedarf
                 werteC = hproj.getGesamtKostenBedarf
@@ -4326,12 +4385,27 @@ Public Module Projekte
 
         End Select
 
+        ' tk, 25.1.18 
+        Dim tmpSum As String
+        If vglBaseline Then
+            'tmpSum = " (" & werteB.Sum.ToString("####0.") & " / " & werteC.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+            tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+        Else
+            'tmpSum = " (" & werteL.Sum.ToString("####0.") & " / " & werteC.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+            tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteL.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+        End If
+
+
+
+        titelTeile(0) = titelTeile(0) & tmpSum
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = fullname & vbLf
-        titelTeilLaengen(1) = titelTeile(1).Length
-        titelTeile(2) = " (" & hproj.timeStamp.ToString & ") "
-        titelTeilLaengen(2) = titelTeile(2).Length
-        diagramTitle = titelTeile(0) & titelTeile(1) & titelTeile(2)
+        'titelTeile(1) = fullname & vbLf
+        'titelTeile(1) = ""
+        'titelTeilLaengen(1) = titelTeile(1).Length
+        'titelTeile(2) = ""
+        'titelTeilLaengen(2) = titelTeile(2).Length
+        'diagramTitle = titelTeile(0) & titelTeile(1)
+        diagramTitle = titelTeile(0)
 
 
         minColumn = 10000
@@ -4350,25 +4424,24 @@ Public Module Projekte
 
         With hproj
             maxColumn = .Start + .anzahlRasterElemente - 1
+            ReDim tdatenreiheC(maxColumn - minColumn)
         End With
 
         With beauftragung
             If maxColumn < .Start + .anzahlRasterElemente - 1 Then
                 maxColumn = .Start + .anzahlRasterElemente - 1
             End If
+            ReDim tdatenreiheB(.Start + .anzahlRasterElemente - 1 - minColumn)
         End With
 
         With lastPlan
             If maxColumn < .Start + .anzahlRasterElemente - 1 Then
                 maxColumn = .Start + .anzahlRasterElemente - 1
             End If
+            ReDim tdatenreiheL(.Start + .anzahlRasterElemente - 1 - minColumn)
         End With
 
         ReDim Xdatenreihe(maxColumn - minColumn)
-        ReDim tdatenreiheB(maxColumn - minColumn)
-        ReDim tdatenreiheL(maxColumn - minColumn)
-        ReDim tdatenreiheC(maxColumn - minColumn)
-
 
         sumB = 0.0
         sumL = 0.0
@@ -4380,7 +4453,8 @@ Public Module Projekte
                     tdatenreiheB(i - minColumn) = sumB + werteB(i - .Start)
                     sumB = tdatenreiheB(i - minColumn)
                 Else
-                    tdatenreiheB(i - minColumn) = sumB
+                    ' tk 25.1.18 nichts machen ..
+                    'tdatenreiheB(i - minColumn) = sumB
                 End If
             End With
 
@@ -4389,7 +4463,8 @@ Public Module Projekte
                     tdatenreiheL(i - minColumn) = sumL + werteL(i - .Start)
                     sumL = tdatenreiheL(i - minColumn)
                 Else
-                    tdatenreiheL(i - minColumn) = sumL
+                    ' tk 25.1.18 nichts machen
+                    ' tdatenreiheL(i - minColumn) = sumL
                 End If
             End With
 
@@ -4398,7 +4473,8 @@ Public Module Projekte
                     tdatenreiheC(i - minColumn) = sumC + werteC(i - .Start)
                     sumC = tdatenreiheC(i - minColumn)
                 Else
-                    tdatenreiheC(i - minColumn) = sumC
+                    ' tk 25.1.18 nichts machen
+                    ' tdatenreiheC(i - minColumn) = sumC
                 End If
             End With
 
@@ -4425,7 +4501,7 @@ Public Module Projekte
 
         ' jetzt wird das Diagramm gezeichnet 
 
-        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+        With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
@@ -4456,7 +4532,8 @@ Public Module Projekte
                 'appInstance.ScreenUpdating = formerSU
                 Exit Sub
             Else
-                With appInstance.Charts.Add
+                newChtObj = CType(.ChartObjects, Excel.ChartObjects).Add(left, top, width, height)
+                With CType(newChtObj.Chart, Excel.Chart)
                     ' remove old series
                     Try
                         Dim anz As Integer = CInt(.SeriesCollection.count)
@@ -4494,45 +4571,28 @@ Public Module Projekte
 
                     .HasLegend = True
                     With .Legend
-                        .Position = Excel.Constants.xlTop
+                        .Position = Excel.XlLegendPosition.xlLegendPositionTop
                         .Font.Size = awinSettings.fontsizeLegend
                     End With
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
 
-                    Dim achieved As Boolean = False
-                    Dim anzahlVersuche As Integer = 0
-                    Dim errmsg As String = ""
-                    Do While Not achieved And anzahlVersuche < 10
-                        Try
-                            'Call Sleep(100)
-                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
-                            achieved = True
-                        Catch ex As Exception
-                            errmsg = ex.Message
-                            'Call Sleep(100)
-                            anzahlVersuche = anzahlVersuche + 1
-                        End Try
-                    Loop
-
-                    If Not achieved Then
-                        Throw New ArgumentException("Chart-Fehler:" & errmsg)
-                    End If
 
 
                 End With
 
-                chtobj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
-                chtobj.Name = pname & "#" & kennung & "#" & "1"
+                ' alt, tk 25.1.18
+                'newChtObj.Name = pname & "#" & kennung & "#" & "1"
+                newChtObj.Name = kennung
 
 
             End If
 
-            With chtobj.Chart
+            With newChtObj.Chart
 
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + _
-                                                                   titelTeilLaengen(1) + 1, titelTeilLaengen(2)).Font.Size = awinSettings.fontsizeLegend
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + _
+                '                                                   titelTeilLaengen(1) + 1, titelTeilLaengen(2)).Font.Size = awinSettings.fontsizeLegend
 
                 'series
 
@@ -4552,21 +4612,43 @@ Public Module Projekte
 
                 End If
 
+                ' heutiger stand 
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    '.name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
+                    .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
+                    '.Name = "Version (" & hproj.timeStamp.ToString("d") & ")"
+                    '.Interior.Color = awinSettings.SollIstFarbeC
+                    .Interior.Color = visboFarbeBlau
+                    .Values = tdatenreiheC
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlLine
+                    .Format.Line.Weight = 6
+                    .Format.Line.ForeColor.RGB = visboFarbeBlau
+                End With
+
                 If isMinMax Or vglBaseline Then
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
                             '.name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .Name = repMessages.getmsg(195) & " (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(195) & " " & beauftragung.timeStamp.ToString("d")
+
                         Else
                             '.name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .Name = repMessages.getmsg(196) & " (" & beauftragung.timeStamp.ToString("d") & ")"
-                        End If
+                            .Name = repMessages.getmsg(43) & " " & beauftragung.timeStamp.ToString("d")
 
-                        .Interior.Color = awinSettings.SollIstFarbeB
+                        End If
+                        '.Name = "Version (" & beauftragung.timeStamp.ToString("d") & ")"
+                        '.Interior.Color = awinSettings.SollIstFarbeB
+                        .Interior.Color = visboFarbeBlau
                         .Values = tdatenreiheB
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
-                        .Format.Line.Weight = 2
+                        If isMinMax Then
+                            .Format.Line.Weight = 3
+                        Else
+                            .Format.Line.Weight = 6
+                        End If
+                        .Format.Line.ForeColor.RGB = visboFarbeOrange
 
                     End With
                 End If
@@ -4575,41 +4657,31 @@ Public Module Projekte
                 If isMinMax Or Not vglBaseline Then
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
-                            '.name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .Name = repMessages.getmsg(197) & " (" & lastPlan.timeStamp.ToString("d") & ")"
+                            '.name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")
+                            .Name = repMessages.getmsg(197) & " " & lastPlan.timeStamp.ToString("d")
                         Else
                             '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .Name = repMessages.getmsg(198) & " (" & lastPlan.timeStamp.ToString("d") & ")"
+                            .Name = repMessages.getmsg(44) & " " & lastPlan.timeStamp.ToString("d")
                         End If
-
+                        '.Name = "Version (" & lastPlan.timeStamp.ToString("d") & ")"
                         .Interior.Color = awinSettings.SollIstFarbeL
                         .Values = tdatenreiheL
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
-                        .Format.Line.Weight = 2
-
+                        .Format.Line.Weight = 6
+                        .Format.Line.ForeColor.RGB = visboFarbeOrange
                     End With
                 End If
 
 
-                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    '.name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
-                    .Name = repMessages.getmsg(199) & " (" & hproj.timeStamp.ToString("d") & ")"
-                    .Interior.Color = awinSettings.SollIstFarbeC
-                    .Values = tdatenreiheC
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlLine
-                    .Format.Line.Weight = 2
-
-
-                End With
+                
 
             End With
 
 
         End With
 
-        With chtobj
+        With newChtObj
             .Top = top
             .Left = left
             .Height = height
@@ -4617,7 +4689,330 @@ Public Module Projekte
         End With
 
         appInstance.EnableEvents = formerEE
-        reportObj = chtobj
+        reportObj = newChtObj
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert im SmartInfo Powerpoint das übergebene ChartObject  
+    ''' </summary>
+    ''' <param name="chtObj"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="vProj"></param>
+    ''' <param name="auswahl"></param>
+    ''' <param name="qualifier"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePPTSollIstCurveOfProject(ByRef chtObj As Excel.ChartObject, ByVal hproj As clsProjekt, vProj As clsProjekt, _
+                                                   ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean)
+        Dim xlsChart As Excel.Chart = chtObj.Chart
+        Dim i As Integer, ix As Integer = 0
+        Dim abbruch As Boolean = False
+        Dim pname As String = hproj.name
+        Dim fullname As String = hproj.getShapeText
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
+        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim titelTeile(2) As String
+        Dim titelTeilLaengen(2) As Integer
+        Dim sumB As Double, sumC As Double
+        ' zaehleinheit ist T€ oder PT ...
+        Dim zaehlEinheit As String = ""
+
+
+        Dim maxlenTitle1 As Integer = 20
+
+        Dim heute As Date = Date.Now
+        ' aktuell wird es nur von Report Generation aufgerufen ...
+        Dim calledFromReporting As Boolean = True
+        Dim chartType As Excel.XlChartType
+        Dim curmaxScale As Double
+
+        ' die ganzen Vor-Klärungen machen ...
+        With xlsChart
+            chartType = .ChartType
+
+            'Dim refName As String = CStr(myChartData.Workbook.name)
+            'Dim refWorkbook As xlNS.Workbook = CType(myChartData.Workbook, xlNS.Workbook)
+            '.SetSourceData("C:\temp\Mappe1.xlsx")
+            'refName = CStr(myChartData.Workbook.name)
+
+
+            If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+                    curmaxScale = .MaximumScale
+                    .MaximumScaleIsAuto = False
+                End With
+
+            End If
+
+        End With
+
+
+        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(heute) - 1
+        Dim pastAndFuture As Boolean = False
+
+        Dim werteB(vProj.anzahlRasterElemente - 1) As Double
+        Dim werteC(hproj.anzahlRasterElemente - 1) As Double
+
+        Dim Xdatenreihe() As String
+        ' die folgenden müssen die gleiche Dimension haben ihre Pendants oben ...
+        Dim tdatenreiheB(vProj.anzahlRasterElemente - 1) As Double
+        Dim tdatenreiheC(hproj.anzahlRasterElemente - 1) As Double
+
+        Dim gesterndatenreihe() As Double
+        Dim Xgestern() As String
+
+
+        ' wird benötigt, weil xml-texte aktuell noch nicht in DB sind - und sonst kann das nicht aktualisiert werden 
+        Dim repMSg(6) As String
+        If awinSettings.englishLanguage Then
+            repMSg(0) = "cumulated Personnel Cost"
+            repMSg(1) = "cumulated Other Cost"
+            repMSg(2) = "cumulated Total Cost"
+            repMSg(3) = "approved version"
+            repMSg(4) = "last version"
+            repMSg(5) = "actual values"
+            repMSg(6) = "Version from"
+        Else
+            repMSg(0) = "kumulierte Personalkosten"
+            repMSg(1) = "kumulierte Sonstige Kosten"
+            repMSg(2) = "kumulierte Gesamtkosten"
+            repMSg(3) = "Beauftragung"
+            repMSg(4) = "letzter Stand"
+            repMSg(5) = "Ist-Werte"
+            repMSg(6) = "Stand vom"
+        End If
+
+
+        Select Case auswahl
+            Case 1
+                ' Personalkosten
+                titelTeile(0) = repMSg(0)
+                zaehlEinheit = "T€"
+                werteB = vProj.getAllPersonalKosten
+                werteC = hproj.getAllPersonalKosten
+
+            Case 2
+                ' Sonstige Kosten
+
+                'titelTeile(0) = "Soll/Ist Sonstige Kosten" 
+                titelTeile(0) = repMSg(1)
+
+                werteB = vProj.getGesamtAndereKosten
+                werteC = hproj.getGesamtAndereKosten
+
+            Case 3
+                ' Gesamt Kosten
+                titelTeile(0) = repMSg(2)
+
+                zaehlEinheit = "T€"
+
+                werteB = vProj.getGesamtKostenBedarf
+                werteC = hproj.getGesamtKostenBedarf
+
+            Case 4
+                ' Rollen mit Qualifier
+                titelTeile(0) = qualifier
+                zaehlEinheit = awinSettings.kapaEinheit
+
+                Try
+                    werteB = vProj.getPersonalKosten(qualifier)
+                    werteC = hproj.getPersonalKosten(qualifier)
+                Catch ex As Exception
+                    'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
+                End Try
+
+            Case 5
+                ' Kostenart mit Qualifier
+                titelTeile(0) = qualifier
+                zaehlEinheit = "T€"
+
+                Try
+                    werteB = vProj.getKostenBedarf(qualifier)
+                    werteC = hproj.getKostenBedarf(qualifier)
+                Catch ex As Exception
+                    'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
+                End Try
+
+            Case Else
+                ' Gesamt Kosten
+
+                'titelTeile(0) = "Soll/Ist Gesamtkosten"
+                titelTeile(0) = repMSg(2)
+
+                zaehlEinheit = "T€"
+                werteB = vProj.getGesamtKostenBedarf
+                werteC = hproj.getGesamtKostenBedarf
+                auswahl = 3
+
+        End Select
+
+        ' tk, 25.1.18 
+        Dim tmpSum As String
+
+        tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+
+
+
+        titelTeile(0) = titelTeile(0) & tmpSum
+        titelTeilLaengen(0) = titelTeile(0).Length
+
+        diagramTitle = titelTeile(0)
+
+
+        minColumn = 10000
+        If vProj.Start < minColumn Then
+            minColumn = vProj.Start
+        End If
+
+        If hproj.Start < minColumn Then
+            minColumn = hproj.Start
+        End If
+
+
+        With hproj
+            maxColumn = .Start + .anzahlRasterElemente - 1
+            ReDim tdatenreiheC(maxColumn - minColumn)
+        End With
+
+        With vProj
+            If maxColumn < .Start + .anzahlRasterElemente - 1 Then
+                maxColumn = .Start + .anzahlRasterElemente - 1
+            End If
+            ReDim tdatenreiheB(.Start + .anzahlRasterElemente - 1 - minColumn)
+        End With
+
+        ReDim Xdatenreihe(maxColumn - minColumn)
+
+        sumB = 0.0
+        sumC = 0.0
+
+        For i = minColumn To maxColumn
+            Xdatenreihe(i - minColumn) = StartofCalendar.AddMonths(i - 1).ToString("MMM yy", repCult)
+            With vProj
+                If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
+                    tdatenreiheB(i - minColumn) = sumB + werteB(i - .Start)
+                    sumB = tdatenreiheB(i - minColumn)
+                Else
+                    ' tk 25.1.18 nichts machen
+                    'tdatenreiheB(i - minColumn) = sumB
+                End If
+            End With
+
+
+            With hproj
+                If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
+                    tdatenreiheC(i - minColumn) = sumC + werteC(i - .Start)
+                    sumC = tdatenreiheC(i - minColumn)
+                Else
+                    ' tk 25.1.18 nichts machen
+                    ' tdatenreiheC(i - minColumn) = sumC
+                End If
+            End With
+
+        Next i
+
+
+        If gesternColumn >= minColumn And _
+            gesternColumn <= maxColumn Then
+
+            pastAndFuture = True
+            ReDim gesterndatenreihe(gesternColumn - minColumn)
+            ReDim Xgestern(gesternColumn - minColumn)
+            For i = minColumn To gesternColumn
+                gesterndatenreihe(i - minColumn) = tdatenreiheC(i - minColumn)
+                Xgestern(i - minColumn) = Xdatenreihe(i - minColumn)
+            Next
+        Else
+            ReDim gesterndatenreihe(0)
+            ReDim Xgestern(0)
+            pastAndFuture = False
+
+        End If
+
+        ' jetzt wird das Diagramm gezeichnet 
+
+        With CType(chtObj.Chart, Excel.Chart)
+            ' remove old series
+            Try
+                Dim anz As Integer = CInt(.SeriesCollection.count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+            End If
+
+        End With
+
+        With chtObj.Chart
+
+            If pastAndFuture Then
+                ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
+
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    '.name = "Istwerte"
+                    '.Name = repMessages.getmsg(194)
+                    .Name = repMSg(5)
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = gesterndatenreihe
+                    '.XValues = Xgestern
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlArea
+
+                End With
+
+            End If
+
+            ' heutiger stand 
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
+                .Name = repMSg(6) & " " & hproj.timeStamp.ToString("d")
+                '.Name = "Version (" & hproj.timeStamp.ToString("d") & ")"
+                '.Interior.Color = awinSettings.SollIstFarbeC
+                .Interior.Color = visboFarbeBlau
+                .Values = tdatenreiheC
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlLine
+                .Format.Line.Weight = 6
+                .Format.Line.ForeColor.RGB = visboFarbeBlau
+            End With
+
+
+            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+
+                If vglBaseline Then
+                    .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
+                Else
+                    .Name = repMSg(4) & " " & vProj.timeStamp.ToString("d")
+                End If
+
+                .Interior.Color = visboFarbeOrange
+                .Values = tdatenreiheB
+                .XValues = Xdatenreihe
+                .ChartType = Excel.XlChartType.xlLine
+                .Format.Line.Weight = 6
+                .Format.Line.ForeColor.RGB = visboFarbeOrange
+
+            End With
+
+
+
+
+        End With
+
+
+
 
     End Sub
 
@@ -5352,6 +5747,8 @@ Public Module Projekte
                 End If
                 gesamt_summe = tdatenreihe.Sum
 
+               
+
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
@@ -5360,7 +5757,6 @@ Public Module Projekte
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
                 End With
-
 
                 If Not IsNothing(vglproj) Then
                     If auswahl = 1 Then
@@ -5379,11 +5775,14 @@ Public Module Projekte
                         .ChartType = Excel.XlChartType.xlLine
                         With .Format.Line
                             .DashStyle = core.MsoLineDashStyle.msoLineSolid
-                            .ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                            '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                            .ForeColor.RGB = visboFarbeOrange
                             .Weight = 1.5
                         End With
                     End With
                 End If
+
+               
 
             End With
 
@@ -5391,6 +5790,7 @@ Public Module Projekte
                 ' tk 12.6.17 
                 'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
                 If Not IsNothing(vglproj) Then
+                    'titelTeile(0) = repMessages.getmsg(159) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
                     titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
                 Else
                     titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
@@ -5419,6 +5819,7 @@ Public Module Projekte
                 'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
 
                 If Not IsNothing(vglproj) Then
+                    'titelTeile(0) = repMessages.getmsg(160) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                     titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                 Else
                     titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
@@ -5513,14 +5914,14 @@ Public Module Projekte
             repmsg(0) = "Personnel Costs" '164
             repmsg(1) = "Version from" ' 273
             repmsg(2) = "other Costs" ' 165
-            repmsg(3) = "first approved version" ' 43
+            repmsg(3) = "approved version" ' 43
             repmsg(4) = "Personnel Needs" '159
             repmsg(5) = "Total Costs" ' 166
         Else
             repmsg(0) = "Personalkosten" '164
             repmsg(1) = "Stand vom" ' 273
             repmsg(2) = "sonstige Kosten" ' 165
-            repmsg(3) = "erste Beauftragung" ' 43
+            repmsg(3) = "Beauftragung" ' 43
             repmsg(4) = "Personalbedarf" '159
             repmsg(5) = "Gesamtkosten" ' 166
         End If
@@ -5529,12 +5930,6 @@ Public Module Projekte
         ' die ganzen Vor-Klärungen machen ...
         With xlsChart
             chartType = .ChartType
-
-            'Dim refName As String = CStr(myChartData.Workbook.name)
-            'Dim refWorkbook As xlNS.Workbook = CType(myChartData.Workbook, xlNS.Workbook)
-            '.SetSourceData("C:\temp\Mappe1.xlsx")
-            'refName = CStr(myChartData.Workbook.name)
-
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
@@ -5651,17 +6046,13 @@ Public Module Projekte
             gesamt_summe = tdatenreihe.Sum
             vSum = 0
 
+           
+
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                 .ChartType = Excel.XlChartType.xlColumnStacked
                 .Name = series1Name
-
-                If prcTyp = ptElementTypen.roles Then
-                    .Interior.Color = visboFarbeBlau
-                Else
-                    .Interior.Color = visboFarbeOrange
-                End If
-
+                .Interior.Color = visboFarbeBlau
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
 
@@ -5681,11 +6072,13 @@ Public Module Projekte
 
                     With .Format.Line
                         .DashStyle = core.MsoLineDashStyle.msoLineSolid
-                        .ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                        '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                        .ForeColor.RGB = visboFarbeOrange
                         .Weight = 1.5
                     End With
                 End With
             End If
+            
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
@@ -5713,6 +6106,7 @@ Public Module Projekte
                         'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
+                            'titelTeile(0) = repmsg(4) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
                             titelTeile(0) = repmsg(4) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
@@ -5724,6 +6118,7 @@ Public Module Projekte
                         'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                            'titelTeile(0) = repmsg(0) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = repmsg(0) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
@@ -5740,6 +6135,7 @@ Public Module Projekte
                     If auswahl = 1 Then
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                            'titelTeile(0) = repmsg(2) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = repmsg(2) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
@@ -5748,6 +6144,7 @@ Public Module Projekte
                     ElseIf auswahl = 2 Then
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                            'titelTeile(0) = repmsg(5) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = repmsg(5) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
@@ -5891,6 +6288,9 @@ Public Module Projekte
 
             gesamt_Summe = tdatenreihe.Sum
 
+
+           
+
             'series
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
@@ -5899,7 +6299,6 @@ Public Module Projekte
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlColumnStacked
             End With
-
 
             If Not IsNothing(vglProj) Then
                 If auswahl = 1 Then
@@ -5918,11 +6317,13 @@ Public Module Projekte
                     .ChartType = Excel.XlChartType.xlLine
                     With .Format.Line
                         .DashStyle = core.MsoLineDashStyle.msoLineSolid
-                        .ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                        '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                        .ForeColor.RGB = visboFarbeOrange
                         .Weight = 1.5
                     End With
                 End With
             End If
+            
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
@@ -5959,6 +6360,7 @@ Public Module Projekte
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
             If Not IsNothing(vglProj) Then
+                'titelTeile(0) = repMessages.getmsg(159) & " (" & vSum.ToString("####0.") & " / " & gesamt_Summe.ToString("####0.") & " " & zE & ")"
                 titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
             Else
                 titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
@@ -5974,6 +6376,7 @@ Public Module Projekte
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
             If Not IsNothing(vglProj) Then
+                'titelTeile(0) = repMessages.getmsg(160) & " (" & vSum.ToString("####0.") & " / " & gesamt_Summe.ToString("####0.") & " T€" & ")"
                 titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
             Else
                 titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
@@ -6203,11 +6606,13 @@ Public Module Projekte
 
                 gesamt_summe = tdatenreihe.Sum
 
+                
+
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     ' sonstige Kosten
                     .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                     '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                    .Interior.Color = visboFarbeOrange
+                    .Interior.Color = visboFarbeBlau
                     .Values = tdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -6230,7 +6635,8 @@ Public Module Projekte
                         .ChartType = Excel.XlChartType.xlLine
                         With .Format.Line
                             .DashStyle = core.MsoLineDashStyle.msoLineSolid
-                            .ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                            '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                            .ForeColor.RGB = visboFarbeOrange
                             .Weight = 1.5
                         End With
                     End With
@@ -6243,6 +6649,7 @@ Public Module Projekte
             If auswahl = 1 Then
                 ' tk 12.6.17 
                 If Not IsNothing(vglProj) Then
+                    'titelTeile(0) = repMessages.getmsg(165) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                     titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                 Else
                     titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
@@ -6271,6 +6678,7 @@ Public Module Projekte
                 ' tk 12.6.17
 
                 If Not IsNothing(vglProj) Then
+                    'titelTeile(0) = repMessages.getmsg(166) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                     titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                 Else
                     titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
@@ -6616,8 +7024,6 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
 
-
-
         Dim ErgebnisListeK As Collection
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -6691,11 +7097,13 @@ Public Module Projekte
 
             gesamt_summe = tdatenreihe.Sum
 
+            
+
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 ' Stand vom sonstige Kosten
                 .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                 '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                .Interior.Color = visboFarbeOrange
+                .Interior.Color = visboFarbeBlau
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -6718,7 +7126,8 @@ Public Module Projekte
                     .ChartType = Excel.XlChartType.xlLine
                     With .Format.Line
                         .DashStyle = core.MsoLineDashStyle.msoLineSolid
-                        .ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                        '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
+                        .ForeColor.RGB = visboFarbeOrange
                         .Weight = 1.5
                     End With
                 End With
@@ -6756,6 +7165,7 @@ Public Module Projekte
                 'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
 
                 If Not IsNothing(vglProj) Then
+                    'titelTeile(0) = repMessages.getmsg(165) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                     titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                 Else
                     titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
@@ -6770,6 +7180,7 @@ Public Module Projekte
             ElseIf auswahl = 2 Then
                 ' tk 12.6.17
                 If Not IsNothing(vglProj) Then
+                    'titelTeile(0) = repMessages.getmsg(166) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                     titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                 Else
                     titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"

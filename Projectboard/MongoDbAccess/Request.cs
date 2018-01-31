@@ -77,7 +77,9 @@ namespace MongoDbAccess
                 
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
-                                                
+                     
+               
+                              
             }
             
             //alt 2.x
@@ -102,6 +104,40 @@ namespace MongoDbAccess
 
         }
         
+        ////public bool loginSucessful(string databaseName, string username, string dbPasswort)
+        ////{
+        ////    try
+        ////    {
+        ////        var credential = MongoCredential.CreateCredential(databaseName, username, dbPasswort);
+
+        ////        // test tk für Authentification
+        ////        try
+        ////        {
+        ////            //var credential = MongoCredential.CreateMongoCRCredential(databaseName, "tk", "test");
+        ////            var settings = new MongoClientSettings
+        ////            {
+        ////                Credentials = new[] { credential }
+        ////            };
+
+        ////            var mongoClient = new MongoClient(settings);
+                    
+        ////        }
+        ////        catch (Exception)
+        ////        {
+
+        ////            throw;
+        ////        }
+
+        ////        int berta=0;
+        ////        int a = berta;
+                             
+        ////        return true;
+        ////    }
+        ////    catch
+        ////    {
+        ////        return false;
+        ////    }
+        ////}
         /// <summary>
         /// wichtige Indices für CollectionProjects und CollectionWriteProtections setzen
         /// </summary>

@@ -41,11 +41,11 @@ Partial Class ucProperties
         Me.eleName.AutoEllipsis = True
         Me.eleName.AutoSize = True
         Me.eleName.Enabled = False
-        Me.eleName.Font = New System.Drawing.Font("Segoe UI Emoji", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.eleName.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleName.Location = New System.Drawing.Point(5, 12)
         Me.eleName.MaximumSize = New System.Drawing.Size(0, 42)
         Me.eleName.Name = "eleName"
-        Me.eleName.Size = New System.Drawing.Size(130, 21)
+        Me.eleName.Size = New System.Drawing.Size(130, 20)
         Me.eleName.TabIndex = 1
         Me.eleName.Text = "Name:              "
         Me.eleName.UseWaitCursor = True
@@ -53,10 +53,10 @@ Partial Class ucProperties
         'labelDate
         '
         Me.labelDate.AutoSize = True
-        Me.labelDate.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.labelDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelDate.Location = New System.Drawing.Point(5, 52)
         Me.labelDate.Name = "labelDate"
-        Me.labelDate.Size = New System.Drawing.Size(41, 19)
+        Me.labelDate.Size = New System.Drawing.Size(42, 17)
         Me.labelDate.TabIndex = 2
         Me.labelDate.Text = "Date:"
         '
@@ -64,20 +64,20 @@ Partial Class ucProperties
         '
         Me.eleDatum.AutoSize = True
         Me.eleDatum.Enabled = False
-        Me.eleDatum.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!)
+        Me.eleDatum.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!)
         Me.eleDatum.Location = New System.Drawing.Point(93, 52)
         Me.eleDatum.Name = "eleDatum"
-        Me.eleDatum.Size = New System.Drawing.Size(205, 19)
+        Me.eleDatum.Size = New System.Drawing.Size(204, 17)
         Me.eleDatum.TabIndex = 3
         Me.eleDatum.Text = "                                                 "
         '
         'labelRespons
         '
         Me.labelRespons.AutoSize = True
-        Me.labelRespons.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.labelRespons.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelRespons.Location = New System.Drawing.Point(6, 86)
         Me.labelRespons.Name = "labelRespons"
-        Me.labelRespons.Size = New System.Drawing.Size(84, 19)
+        Me.labelRespons.Size = New System.Drawing.Size(90, 17)
         Me.labelRespons.TabIndex = 4
         Me.labelRespons.Text = "Responsible:"
         '
@@ -85,20 +85,20 @@ Partial Class ucProperties
         '
         Me.eleRespons.AutoSize = True
         Me.eleRespons.Enabled = False
-        Me.eleRespons.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.eleRespons.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleRespons.Location = New System.Drawing.Point(94, 88)
         Me.eleRespons.Name = "eleRespons"
-        Me.eleRespons.Size = New System.Drawing.Size(93, 19)
+        Me.eleRespons.Size = New System.Drawing.Size(92, 17)
         Me.eleRespons.TabIndex = 5
         Me.eleRespons.Text = "                     "
         '
         'labelAmpel
         '
         Me.labelAmpel.AutoSize = True
-        Me.labelAmpel.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.labelAmpel.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelAmpel.Location = New System.Drawing.Point(6, 122)
         Me.labelAmpel.Name = "labelAmpel"
-        Me.labelAmpel.Size = New System.Drawing.Size(79, 19)
+        Me.labelAmpel.Size = New System.Drawing.Size(82, 17)
         Me.labelAmpel.TabIndex = 6
         Me.labelAmpel.Text = "Traffic light:"
         '
@@ -118,20 +118,20 @@ Partial Class ucProperties
         '
         Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.percentDone.AutoSize = True
-        Me.percentDone.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.percentDone.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.percentDone.Location = New System.Drawing.Point(247, 128)
         Me.percentDone.Name = "percentDone"
-        Me.percentDone.Size = New System.Drawing.Size(0, 19)
+        Me.percentDone.Size = New System.Drawing.Size(0, 17)
         Me.percentDone.TabIndex = 13
         Me.percentDone.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
         'labelDeliver
         '
         Me.labelDeliver.AutoSize = True
-        Me.labelDeliver.Font = New System.Drawing.Font("Segoe UI Emoji", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.labelDeliver.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.labelDeliver.Location = New System.Drawing.Point(6, 296)
         Me.labelDeliver.Name = "labelDeliver"
-        Me.labelDeliver.Size = New System.Drawing.Size(85, 19)
+        Me.labelDeliver.Size = New System.Drawing.Size(90, 17)
         Me.labelDeliver.TabIndex = 9
         Me.labelDeliver.Text = "Deliverables:"
         '
@@ -166,6 +166,7 @@ Partial Class ucProperties
         Me.eleAmpelText.BackColor = System.Drawing.Color.White
         Me.eleAmpelText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.eleAmpelText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.eleAmpelText.HideSelection = False
         Me.eleAmpelText.Location = New System.Drawing.Point(10, 144)
         Me.eleAmpelText.Name = "eleAmpelText"
         Me.eleAmpelText.ReadOnly = True

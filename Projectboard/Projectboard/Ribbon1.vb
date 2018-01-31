@@ -11490,6 +11490,11 @@ Imports System.Windows
     End Sub
 
 
+    ''' <summary>
+    ''' erzeugt die Report Messages ...
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
     Public Sub PTCreateReportMessages(control As IRibbonControl)
 
         Call projektTafelInit()

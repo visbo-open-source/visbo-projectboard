@@ -54,7 +54,6 @@ Public Class frmSettings
                 .lblLanguage.Text = "Language"
                 .frmShowInfoBC.Text = "show full BreadCrumb"
                 .frmExtendedSearch.Text = "extended search"
-                .chkbxUniqueNames.Text = "use uniques names"
                 .btnChangeLanguage.Text = "Translate Annotations"
                 .rdbPWD.Text = "Password"
                 .lblProtectField1.Text = "Password:"
@@ -283,8 +282,5 @@ Public Class frmSettings
         Call MsgBox("jetzt in TabPage4")
     End Sub
 
-    
-    Private Sub chkbxUniqueNames_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxUniqueNames.CheckedChanged
-        useUniqueNames = chkbxUniqueNames.Checked
-    End Sub
+
 End Class

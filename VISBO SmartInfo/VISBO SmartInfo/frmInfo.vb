@@ -55,18 +55,16 @@ Public Class frmInfo
         If englishLanguage Then
             With Me
                 .Text = "Annotate"
-                '.TabControl1.TabPages.Item(0).Text = "Information"
-                '.TabControl1.TabPages.Item(1).Text = "Measure"
-                '.showAbbrev.Text = "Abbreviation"
-                '.lblAmpeln.Text = "Traffic-Light"
-                '.lblAmpeln.Left = 432 - 20
-                '.rdbLU.Text = "Deliverables"
-                '.rdbMV.Text = "Changed Dates"
-                '.rdbResources.Text = "Resources"
-                '.rdbCosts.Text = "Cost"
-                '.rdbAbbrev.Text = "Abbreviation"
-                '.rdbBreadcrumb.Text = "full breadcrumb"
-                '.rdbVerantwortlichkeiten.Text = "Responsibilities"
+                .showAbbrev.Text = "Abbreviation"
+                .uniqueNameRequired.Text = "unique Name"
+                .showOrginalName.Text = "original Name"
+            End With
+        Else
+            With Me
+                .Text = "Beschriften"
+                .showAbbrev.Text = "Abkürzung"
+                .uniqueNameRequired.Text = "eindeutiger Name"
+                .showOrginalName.Text = "Original Name"
             End With
         End If
 
@@ -424,77 +422,6 @@ Public Class frmInfo
     End Sub
 
 
-    Private Sub deleteText_MouseHover(sender As Object, e As EventArgs)
-        Dim tsMSG As String
-        If englishLanguage Then
-            tsMSG = "delete text annotation of element"
-        Else
-            tsMSG = "Löscht die Text Beschriftung des Elements"
-        End If
-        ToolTip1.Show(tsMSG, deleteText, 2000)
-    End Sub
-
-    Private Sub positionTextButton_MouseHover(sender As Object, e As EventArgs)
-        Dim tsMSG As String
-        If englishLanguage Then
-            tsMSG = "relative position of text annotation to plan-element"
-        Else
-            tsMSG = "relative Position der Text-Beschriftung zum Plan-Element"
-        End If
-        ToolTip1.Show(tsMSG, positionTextButton, 2000)
-    End Sub
-
-    Private Sub writeText_MouseHover(sender As Object, e As EventArgs)
-        Dim tsMSG As String
-        If englishLanguage Then
-            tsMSG = "annotate element with name"
-        Else
-            tsMSG = "erstellt die Text-Beschriftung des Elements"
-        End If
-        ToolTip1.Show(tsMSG, writeText, 2000)
-    End Sub
-
-    Private Sub deleteDate_MouseHover(sender As Object, e As EventArgs)
-        Dim tsMSG As String
-        If englishLanguage Then
-            tsMSG = "delete date annotation of element"
-        Else
-            tsMSG = "Löscht die Datum-Beschriftung des Elements"
-        End If
-        ToolTip1.Show(tsMSG, deleteDate, 2000)
-    End Sub
-
-    Private Sub positionDateButton_MouseHover(sender As Object, e As EventArgs)
-        Dim tsMSG As String
-        If englishLanguage Then
-            tsMSG = "relative position of date annotation to plan-element"
-        Else
-            tsMSG = "relative Position der Datum-Beschriftung zum Plan-Element"
-        End If
-        ToolTip1.Show(tsMSG, positionDateButton, 2000)
-    End Sub
-
-    Private Sub writeDate_MouseHover(sender As Object, e As EventArgs)
-        Dim tsMSG As String
-        If englishLanguage Then
-            tsMSG = "annotate element with date"
-        Else
-            tsMSG = "erstellt die Datum-Beschriftung des Elements"
-        End If
-        ToolTip1.Show(tsMSG, writeDate, 2000)
-    End Sub
-
-   
-    Private Sub showAbbrev_MouseHover(sender As Object, e As EventArgs)
-        Dim tsMSG As String
-        If englishLanguage Then
-            tsMSG = "use abbreviation when annotating"
-        Else
-            tsMSG = "Verwende Kurzform zur Beschriftung"
-        End If
-        ToolTip1.Show(tsMSG, showAbbrev, 2000)
-    End Sub
-
     Private Sub PictureMarker_MouseHover(sender As Object, e As EventArgs)
         'ToolTip1.Show("Element-Marker anzeigen", PictureMarker, 2000)
     End Sub
@@ -649,7 +576,7 @@ Public Class frmInfo
                 If Not IsNothing(selectedPlanShapes) Then
                     If selectedPlanShapes.Count = 1 Then
                         Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                        Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False)
+                        Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, False, showBestName)
                         ' wird im Formular immer lang dargestellt 
                         Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
                     End If
@@ -661,7 +588,7 @@ Public Class frmInfo
 
                 If selectedPlanShapes.Count = 1 Then
                     Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, showOrginalName.Checked)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, showAbbrev.Checked, showOrginalName.Checked, showBestName)
                     ' wird im Formular immer lang dargestellt 
                     Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
                 End If
@@ -694,7 +621,7 @@ Public Class frmInfo
                 If Not IsNothing(selectedPlanShapes) Then
                     If selectedPlanShapes.Count = 1 Then
                         Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                        Me.elemName.Text = bestimmeElemText(tmpShape, False, True)
+                        Me.elemName.Text = bestimmeElemText(tmpShape, False, True, False)
                     End If
                 End If
 
@@ -703,7 +630,125 @@ Public Class frmInfo
 
                 If selectedPlanShapes.Count = 1 Then
                     Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
-                    Me.elemName.Text = bestimmeElemText(tmpShape, False, False)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, showShortName, showOrigName, showBestName)
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        dontFire = False
+    End Sub
+
+    Private Sub deleteText_MouseHover1(sender As Object, e As EventArgs) Handles deleteText.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "delete text annotation of element"
+        Else
+            tsMSG = "Löscht die Text Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, deleteText, 2000)
+    End Sub
+
+    Private Sub positionTextButton_MouseHover1(sender As Object, e As EventArgs) Handles positionTextButton.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "relative position of text annotation to plan-element"
+        Else
+            tsMSG = "relative Position der Text-Beschriftung zum Plan-Element"
+        End If
+        ToolTip1.Show(tsMSG, positionTextButton, 2000)
+    End Sub
+
+    Private Sub writeText_MouseHover1(sender As Object, e As EventArgs) Handles writeText.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "annotate element with name"
+        Else
+            tsMSG = "erstellt die Text-Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, writeText, 2000)
+    End Sub
+
+    Private Sub deleteDate_MouseHover1(sender As Object, e As EventArgs) Handles deleteDate.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "delete date annotation of element"
+        Else
+            tsMSG = "Löscht die Datum-Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, deleteDate, 2000)
+    End Sub
+
+    Private Sub positionDateButton_MouseHover1(sender As Object, e As EventArgs) Handles positionDateButton.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "relative position of date annotation to plan-element"
+        Else
+            tsMSG = "relative Position der Datum-Beschriftung zum Plan-Element"
+        End If
+        ToolTip1.Show(tsMSG, positionDateButton, 2000)
+    End Sub
+
+    Private Sub writeDate_MouseHover1(sender As Object, e As EventArgs) Handles writeDate.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "annotate element with date"
+        Else
+            tsMSG = "erstellt die Datum-Beschriftung des Elements"
+        End If
+        ToolTip1.Show(tsMSG, writeDate, 2000)
+    End Sub
+
+    Private Sub showAbbrev_MouseHover1(sender As Object, e As EventArgs) Handles showAbbrev.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "use abbreviation when annotating"
+        Else
+            tsMSG = "Verwende Kurzform zur Beschriftung"
+        End If
+        ToolTip1.Show(tsMSG, showAbbrev, 2000)
+    End Sub
+
+    Private Sub showOrginalName_MouseHover(sender As Object, e As EventArgs) Handles showOrginalName.MouseHover
+        Dim tsMSG As String
+        If englishLanguage Then
+            tsMSG = "use original name of element for annotation"
+        Else
+            tsMSG = "Verwende den Original Namen zur Beschriftung"
+        End If
+        ToolTip1.Show(tsMSG, showOrginalName, 2000)
+    End Sub
+
+    Private Sub uniqueNameRequired_CheckedChanged(sender As Object, e As EventArgs) Handles uniqueNameRequired.CheckedChanged
+
+        showBestName = uniqueNameRequired.Checked
+
+        If dontFire Then
+            Exit Sub
+        End If
+
+        Try
+            If showBestName Then
+
+                dontFire = True
+                Me.showOrginalName.Checked = False
+
+                ' Text neu berechnen 
+                If Not IsNothing(selectedPlanShapes) Then
+                    If selectedPlanShapes.Count = 1 Then
+                        Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                        Me.elemName.Text = bestimmeElemText(tmpShape, showShortName, False, showBestName)
+                    End If
+                End If
+
+
+            ElseIf Not IsNothing(selectedPlanShapes) Then
+
+                If selectedPlanShapes.Count = 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    Me.elemName.Text = bestimmeElemText(tmpShape, showShortName, False, showBestName)
                 End If
 
             End If
