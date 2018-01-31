@@ -1779,6 +1779,7 @@ Public Class clsPhase
             .appearance = Me._appearance
             .farbe = Me._color
             .verantwortlich = Me._verantwortlich
+            .percentDone = Me._percentDone
 
             ' Rollen und kosten werden bei Mapping nicht übernommen
             If Not mapping Then
@@ -1839,6 +1840,13 @@ Public Class clsPhase
                 End Try
 
             Next
+
+            ' jetzt noch die Deliverables kopieren ... 
+            For i = 1 To Me.countDeliverables
+                Dim deli As String = Me.getDeliverable(i)
+                .addDeliverable(deli)
+            Next
+
 
         End With
 

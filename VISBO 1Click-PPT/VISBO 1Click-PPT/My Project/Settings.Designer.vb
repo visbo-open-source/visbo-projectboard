@@ -154,7 +154,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("% Abgeschlossen")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("% Work Complete")>  _
     Public ReadOnly Property VISBOpercentDone() As String
         Get
             Return CType(Me("VISBOpercentDone"),String)

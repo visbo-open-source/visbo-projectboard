@@ -36,7 +36,7 @@
       <Value Profile="(Default)">Kontaktperson</Value>
     </Setting>
     <Setting Name="VISBOpercentDone" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">% Abgeschlossen</Value>
+      <Value Profile="(Default)">% Work Complete</Value>
     </Setting>
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
       <Value Profile="(Default)">TMS_View_local</Value>

@@ -646,7 +646,8 @@ Public Class clsMeilenstein
             .originalName = Me._originalName
             .appearance = Me._appearance
             .farbe = Me._color
-            .verantwortlich = Me.verantwortlich
+            .verantwortlich = Me._verantwortlich
+            .percentDone = Me._percentDone
 
             For i = 1 To Me._bewertungen.Count
                 Dim newb As New clsBewertung
