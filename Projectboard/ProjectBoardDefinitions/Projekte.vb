@@ -4036,6 +4036,8 @@ Public Module Projekte
         Dim maxlenTitle1 As Integer = 20
         Dim newChtObj As Excel.ChartObject = Nothing
 
+        
+
         ' aktuell wird es nur von Report Generation aufgerufen ...
         Dim calledFromReporting As Boolean = True
 
@@ -4052,6 +4054,7 @@ Public Module Projekte
 
         If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
             ' Soll-Ist Vergleich
+            vglBaseline = projekthistorie.Count > 1
             isMinMax = False
 
             Try
@@ -4087,8 +4090,11 @@ Public Module Projekte
 
 
         Else
-            ' Min-Max Vergleich 
-            isMinMax = True
+            ' tk 31.1.18
+            ' nur wenn Projekt bereits beauftragt ist und mind ein Element in der Datenbank ist 
+            isMinMax = False
+            vglBaseline = False
+
             Dim minIndex As Integer = 0
             Dim maxIndex As Integer = 0
             Dim minValue As Double, maxValue As Double
@@ -4388,11 +4394,22 @@ Public Module Projekte
         ' tk, 25.1.18 
         Dim tmpSum As String
         If vglBaseline Then
+            If projekthistorie.Count > 1 Then
+                tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+            Else
+                tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
+            End If
             'tmpSum = " (" & werteB.Sum.ToString("####0.") & " / " & werteC.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
-            tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+
         Else
+            'If projekthistorie.Count > 1 Then
+            '    tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteL.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+            'Else
+            '    tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
+            'End If
+            tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
             'tmpSum = " (" & werteL.Sum.ToString("####0.") & " / " & werteC.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
-            tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteL.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+
         End If
 
 
@@ -4626,7 +4643,7 @@ Public Module Projekte
                     .Format.Line.ForeColor.RGB = visboFarbeBlau
                 End With
 
-                If isMinMax Or vglBaseline Then
+                If (isMinMax Or vglBaseline) And projekthistorie.Count > 1 Then
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
                             '.name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
@@ -4653,25 +4670,25 @@ Public Module Projekte
                     End With
                 End If
 
-
-                If isMinMax Or Not vglBaseline Then
-                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        If isMinMax Then
-                            '.name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")
-                            .Name = repMessages.getmsg(197) & " " & lastPlan.timeStamp.ToString("d")
-                        Else
-                            '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
-                            .Name = repMessages.getmsg(44) & " " & lastPlan.timeStamp.ToString("d")
-                        End If
-                        '.Name = "Version (" & lastPlan.timeStamp.ToString("d") & ")"
-                        .Interior.Color = awinSettings.SollIstFarbeL
-                        .Values = tdatenreiheL
-                        .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlLine
-                        .Format.Line.Weight = 6
-                        .Format.Line.ForeColor.RGB = visboFarbeOrange
-                    End With
-                End If
+                ' tk, 31.1.18 gar nicht mehr machen ..
+                ''If (isMinMax Or Not vglBaseline) And projekthistorie.Count > 1 Then
+                ''    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                ''        If isMinMax Then
+                ''            '.name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")
+                ''            .Name = repMessages.getmsg(197) & " " & lastPlan.timeStamp.ToString("d")
+                ''        Else
+                ''            '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
+                ''            .Name = repMessages.getmsg(44) & " " & lastPlan.timeStamp.ToString("d")
+                ''        End If
+                ''        '.Name = "Version (" & lastPlan.timeStamp.ToString("d") & ")"
+                ''        .Interior.Color = awinSettings.SollIstFarbeL
+                ''        .Values = tdatenreiheL
+                ''        .XValues = Xdatenreihe
+                ''        .ChartType = Excel.XlChartType.xlLine
+                ''        .Format.Line.Weight = 6
+                ''        .Format.Line.ForeColor.RGB = visboFarbeOrange
+                ''    End With
+                ''End If
 
 
                 
@@ -4726,6 +4743,10 @@ Public Module Projekte
         Dim calledFromReporting As Boolean = True
         Dim chartType As Excel.XlChartType
         Dim curmaxScale As Double
+
+        ' tk 31.1.18
+        ' nur wenn Projekt bereits beauftragt ist und mind ein Element in der Datenbank ist 
+        vglBaseline = hproj.Status <> ProjektStatus(0) And projekthistorie.Count > 1
 
         ' die ganzen Vor-Klärungen machen ...
         With xlsChart
@@ -4855,7 +4876,12 @@ Public Module Projekte
         ' tk, 25.1.18 
         Dim tmpSum As String
 
-        tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+        If vglBaseline Then
+            tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+        Else
+            tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
+        End If
+
 
 
 
@@ -4988,24 +5014,26 @@ Public Module Projekte
                 .Format.Line.ForeColor.RGB = visboFarbeBlau
             End With
 
+            If vglBaseline Then
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    If vglBaseline Then
+                        .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
+                    Else
+                        .Name = repMSg(4) & " " & vProj.timeStamp.ToString("d")
+                    End If
 
-                If vglBaseline Then
-                    .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
-                Else
-                    .Name = repMSg(4) & " " & vProj.timeStamp.ToString("d")
-                End If
+                    .Interior.Color = visboFarbeOrange
+                    .Values = tdatenreiheB
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlLine
+                    .Format.Line.Weight = 6
+                    .Format.Line.ForeColor.RGB = visboFarbeOrange
 
-                .Interior.Color = visboFarbeOrange
-                .Values = tdatenreiheB
-                .XValues = Xdatenreihe
-                .ChartType = Excel.XlChartType.xlLine
-                .Format.Line.Weight = 6
-                .Format.Line.ForeColor.RGB = visboFarbeOrange
+                End With
 
-            End With
-
+            End If
+           
 
 
 

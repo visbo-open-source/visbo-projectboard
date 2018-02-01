@@ -6512,13 +6512,15 @@ Imports System.Windows
                     vglProjekt = Nothing
                 End Try
                 ' Rollen-Balken
-                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+                'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                 auswahl = 1 ' zeige Personalbedarfe
                 Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
                 ' Kosten-Balken
-                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+                'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                 auswahl = 1 ' zeige Sonstige Kosten
                 Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
@@ -6615,7 +6617,9 @@ Imports System.Windows
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+                        'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                         Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
@@ -6716,7 +6720,8 @@ Imports System.Windows
                         vglProj = Nothing
                     End Try
 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+                    'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                     Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False)
 
