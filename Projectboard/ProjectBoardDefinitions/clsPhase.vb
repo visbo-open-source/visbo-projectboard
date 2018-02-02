@@ -2474,7 +2474,8 @@ Public Class clsPhase
 
                 'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
 
-                If gesBedarf = oldXwerte.Sum Then
+                'If gesBedarf = oldXwerte.Sum Then
+                If corrFakt = 1.0 Then
                     newXwerte = oldXwerte
                 Else
                     For i = 0 To newValues.Length - 1

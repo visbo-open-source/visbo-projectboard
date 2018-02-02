@@ -20721,8 +20721,8 @@ Public Module awinGeneralModules
 
                                     End With
 
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0  ")
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0.0")
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0")
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
 
@@ -20773,6 +20773,8 @@ Public Module awinGeneralModules
 
                                 'editRange.Value = schnittmenge
                                 editRange.Value = zeilenWerte
+                                'editRange.NumberFormat = Format("#######.#")
+
                                 atLeastOne = True
                                 ' die Zellen entsperren, die editiert werden dürfen ...
 
