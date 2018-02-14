@@ -33,6 +33,9 @@ namespace MongoDbAccess
 
               
         // neu 3.0 
+        /// <summary>
+        /// Client ist der Datenbank Access Client
+        /// </summary>
         protected  IMongoClient Client;
         protected  IMongoDatabase Database;
         protected MongoServer Server;
@@ -309,6 +312,12 @@ namespace MongoDbAccess
         }
 
     
+        /// <summary>
+        /// holt die erste beauftragte Version des Projects 
+        /// immer mit Variant-Name = ""
+        /// </summary>
+        /// <param name="projectname"></param>
+        /// <returns></returns>
         public clsProjekt retrieveFirstContractedPFromDB(string projectname)
         {
             var result = new clsProjektDB();
@@ -349,7 +358,7 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
+        /// liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName), das zum angegebenen Zeitpunkt das aktuelle war
         /// falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
         /// </summary>
         /// <param name="projectname"></param>
@@ -905,6 +914,7 @@ namespace MongoDbAccess
 
         /// <summary>
         /// speichert ein einzelnes Projekt in der Datenbank
+        /// Zeitstempel wird aus den Projekt-Infos genommen
         /// </summary>
         /// <param name="projekt"></param>
         /// <returns></returns>
@@ -1007,6 +1017,7 @@ namespace MongoDbAccess
         /// <param name="projectname"></param>
         /// <param name="variantName"></param>
         /// <param name="stored"></param>
+        /// <param name="userName"></param>
         /// <returns></returns>
         public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored, string userName)
         {
@@ -1078,7 +1089,6 @@ namespace MongoDbAccess
         /// </summary>
         /// <param name="zeitraumStart"></param>
         /// <param name="zeitraumEnde"></param>
-        /// <param name="storedEarliest"></param>
         /// <param name="storedatOrBefore"></param>
         /// <returns></returns>
         public SortedList<string, string> retrieveProjectVariantNamesFromDB(DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedatOrBefore)
@@ -1129,7 +1139,7 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// entweder alle Projekte im angegebenen Zeitraum 
+        /// liest entweder alle Projekte im angegebenen Zeitraum 
         /// oder aber alle Timestamps der übergebenen Projektvariante im angegeben Zeitfenster
         /// </summary>
         /// <param name="projectname"></param>
@@ -1480,7 +1490,7 @@ namespace MongoDbAccess
         /// wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
         /// andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
         /// </summary>
-        /// <param name="role"></param>
+        /// <param name="cost"></param>
         /// <param name="insertNewDate"></param>
         /// <param name="ts"></param>
         /// <returns></returns>
@@ -1572,7 +1582,7 @@ namespace MongoDbAccess
 
 
         /// <summary>
-        /// Speichern einen Multiprojekt-Szenarios in der Datenbank
+        /// Speichert ein Multiprojekt-Szenario in der Datenbank
         /// </summary>
         /// <param name="c"> - Constellation</param>
         /// <returns></returns>
@@ -1618,7 +1628,7 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// Speichern einen Multiprojekt-Szenarios in der Trash-Datenbank
+        /// Speichert ein Multiprojekt-Portfolio in der Trash-Datenbank
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
@@ -1658,7 +1668,7 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// Löschen der übergebenen Constellation aus der Datenbank
+        /// Löschen des Portfolios  aus der Datenbank
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
@@ -1697,11 +1707,12 @@ namespace MongoDbAccess
 
       
         /// <summary>
-        /// nennt alle Projekte mit Namen oldName um
+        /// benennt alle Projekte mit Namen oldName um
         /// aber nur, wenn der neue Name nicht schon in der Datenbank existiert 
         /// </summary>
         /// <param name="oldName"></param>
         /// <param name="newName"></param>
+        /// <param name="userName"></param>
         /// <returns></returns>
         public bool renameProjectsInDB(string oldName, String newName, string userName)
         {
@@ -1928,7 +1939,7 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// Alle MultiprojektSzenarios (Constellations) aus der Datenbank holen 
+        /// Alle Portfolios (Constellations) aus der Datenbank holen 
         /// Das Ergebnis dieser Funktion ist eine Liste (string, clsConstellation) 
         /// </summary>
         /// <returns></returns>
@@ -1952,7 +1963,7 @@ namespace MongoDbAccess
 
 
         /// <summary>
-        /// speichert Dependencies in DB 
+        /// speichert Projekt-Dependencies in DB 
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
@@ -2177,7 +2188,7 @@ namespace MongoDbAccess
 
 
         /// <summary>
-        /// Uploads a document from the local file system to the database. See also the asynchronous method <seealso cref="StoreDocumentToDBAsync(string, string, string[], string)"/>.
+        /// Uploads a document from the local file system to the database. See also the asynchronous method see also StoreDocumentToDBAsync(string, string, string[], string
         /// </summary>
         /// <param name="filePath">the path where to find the document on the local file system</param>
         /// <param name="userName">the username of the currently logged in user</param>
@@ -2204,6 +2215,7 @@ namespace MongoDbAccess
         /// Asynchronous method to upload a document from the local file system to the database. See description of <see cref="StoreDocumentToDB(string, string, string[], string)"/>
         /// </summary>
         /// <param name="filePath"></param>
+        /// <param name="fileType"></param>
         /// <param name="userName"></param>
         /// <param name="entitled"></param>
         /// <param name="description"></param>
@@ -2289,20 +2301,36 @@ namespace MongoDbAccess
 
 
 
-
+        /// <summary>
+        /// ersetzt das angegebene Dokument in der Datenbank
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="timeStamp"></param>
+        /// <param name="userName"></param>
+        /// <param name="entitled"></param>
+        /// <returns></returns>
         public String replaceDocument(string filePath, DateAndTime timeStamp, string userName, string[] entitled)
         {
             //TODO: what does replace mean? replace a single version or replace all versions of the document?
             deleteDocumentFromDB(Path.GetFileName(filePath));
             return StoreDocumentToDB(filePath, userName, entitled, "desc");
         }
-
+        
+        /// <summary>
+        /// löscht das angegebene Dokument aus der Datenbank 
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public String deleteDocumentFromDB(string fileName)
         {
             //delete all documents with given filename
             return "";
         }
-
+        /// <summary>
+        /// gibt eine Liste an Version zu dem angegebenen Dokument zurück
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public List<String> FindAllRevisionsOfDocumentInDB(String fileName)
         {
             List<String> fileNames = new List<String>();
@@ -2319,7 +2347,11 @@ namespace MongoDbAccess
             }
             return fileNames;
         }
-
+        /// <summary>
+        /// holt die jeweils letzten Versionen der Dokumente aus der Datenbank 
+        /// Ergebnis ist eine List von Strings
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<String>> FindLatestRevisionOfAllDocumentsInDBAsync()
         {
             PipelineDefinition<GridFSFileInfo, BsonDocument> pipeline = new BsonDocument[]{
@@ -2339,7 +2371,9 @@ namespace MongoDbAccess
             }
             return null;
         }
-
+        /// <summary>
+        /// löscht die Dokumente 
+        /// </summary>
         public void clearDocuments()
         {
             BucketDocuments.Drop();
