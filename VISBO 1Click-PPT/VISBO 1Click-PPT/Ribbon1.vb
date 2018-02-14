@@ -152,7 +152,13 @@ Public Class Ribbon1
                     If Not IsNothing(hproj) Then
                         If hproj.name <> "" And Not IsNothing(hproj.name) Then
                             Try
-                                Call speichereProjektToDB(hproj)
+                                ' Message ob Speichern erfolgt ist nur anzeigen, wenn visboMapping nicht definiert ist
+                                If awinSettings.visboMapping <> "" Then
+                                    Call speichereProjektToDB(hproj)
+                                Else
+                                    Call speichereProjektToDB(hproj, True)
+                                End If
+
                             Catch ex As Exception
                                 Call MsgBox("Fehler beim Speichern von OriginalProjekt in DB")
                             End Try

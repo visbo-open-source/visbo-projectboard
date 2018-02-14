@@ -4322,6 +4322,10 @@ Public Module awinGeneralModules
 
                         mapProj = mappingProject(msproj, mapStruktur, hproj, visbo_mapping)
 
+                        If IsNothing(mapProj) Then
+                            Call MsgBox("Kein Mapping erfolgt")
+                        End If
+
                     End If
 
                     ' --------------------
@@ -4361,9 +4365,7 @@ Public Module awinGeneralModules
                         If msproj.CurrencyCode <> "EUR" Then
                             Call MsgBox("Vorsicht: Es wurden keine Ressourcen eingelesen, da die definierte Währung nicht EUR sondern " & msproj.CurrencyCode & " ist.")
                         End If
-                    Else
 
-                        Call MsgBox("Kein Mapping erfolgt")
 
                     End If
 
