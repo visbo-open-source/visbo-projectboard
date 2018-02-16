@@ -764,6 +764,9 @@ Public Module testModule
                         kennzeichnung = "Ampel-Text" Or _
                         kennzeichnung = "Beschreibung" Or _
                         kennzeichnung = "Business-Unit:" Or _
+                        kennzeichnung = "SymTrafficLight" Or _
+                        kennzeichnung = "SymRisks" Or _
+                        kennzeichnung = "SymGoals" Or _
                         kennzeichnung = "Stand:" Or _
                         kennzeichnung = "Laufzeit:" Or _
                         kennzeichnung = "Verantwortlich:" Then
@@ -2734,6 +2737,23 @@ Public Module testModule
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
                                                           bigType, compID)
 
+                            Case "SymTrafficLight"
+
+                                ' hier wird das entsprechende Licht gesetzt ...
+                                Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prSymTrafficLight
+                                qualifier2 = ""
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
+                                                          bigType, compID)
+
+                            Case "SymRisks"
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+
+                            Case "SymGoals"
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                
 
                             Case "Stand:"
 

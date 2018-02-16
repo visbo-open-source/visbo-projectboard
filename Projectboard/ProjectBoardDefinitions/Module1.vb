@@ -239,7 +239,11 @@ Public Module Module1
         prBusinessUnit = 6
         prLaufzeit = 7
         prVerantwortlich = 8
+        prRisks = 9
         pfStand = 11
+        prSymRisks = 12
+        prSymTrafficLight = 13
+        prSymDescription = 14
     End Enum
 
     Public Enum ptPRPFType
@@ -4025,6 +4029,90 @@ Public Module Module1
 
     End Sub
 
+    
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="pptShape">repräsentiert das Powerpoint Shape, wird per Ref übergeben </param>
+    ''' <param name="ampelfarbID">gibt die Kennung für die Ampel an: 
+    ''' 0 - none
+    ''' 1 - green
+    ''' 2 - yellow 
+    ''' 3 - red</param>
+    ''' <remarks></remarks>
+    Public Sub switchOnTrafficLightColor(ByRef pptShape As PowerPoint.Shape, ByVal ampelfarbID As Integer)
+
+        Dim redAmpel As PowerPoint.Shape = Nothing
+        Dim yellowAmpel As PowerPoint.Shape = Nothing
+        Dim greenAmpel As PowerPoint.Shape = Nothing
+        Dim ampelGeruest As PowerPoint.Shape = Nothing
+
+        Try
+            If pptShape.GroupItems.Count > 1 Then
+
+                Dim trafficLightShape As PowerPoint.ShapeRange = pptShape.Ungroup
+
+                For Each tmpShape As PowerPoint.Shape In trafficLightShape
+                    ' Licht auf Off setzen 
+
+                    If tmpShape.Title = "VisboAmpelRed" Then
+                        redAmpel = tmpShape
+                        redAmpel.Fill.Transparency = 0.95
+                    ElseIf tmpShape.Title = "VisboAmpelYellow" Then
+                        yellowAmpel = tmpShape
+                        yellowAmpel.Fill.Transparency = 0.95
+                    ElseIf tmpShape.Title = "VisboAmpelGreen" Then
+                        greenAmpel = tmpShape
+                        greenAmpel.Fill.Transparency = 0.95
+                    Else
+                        ampelGeruest = tmpShape
+                    End If
+                Next
+
+
+                ' jetzt die richtige Ampel setzen
+                If ampelfarbID = 1 Then
+
+                    If Not IsNothing(greenAmpel) Then
+                        greenAmpel.Fill.Transparency = 0.0
+                    End If
+
+                ElseIf ampelfarbID = 2 Then
+
+                    If Not IsNothing(yellowAmpel) Then
+                        yellowAmpel.Fill.Transparency = 0.0
+                    End If
+
+                ElseIf ampelfarbID = 3 Then
+
+                    If Not IsNothing(redAmpel) Then
+                        redAmpel.Fill.Transparency = 0.0
+                    End If
+
+                End If
+
+                Try
+                    If Not IsNothing(ampelGeruest) Then
+                        ' nach vorne holen 
+                        ampelGeruest.ZOrder(MsoZOrderCmd.msoBringToFront)
+                    End If
+                Catch ex As Exception
+
+                End Try
+                
+
+                ' jetzt wieder gruppieren 
+                pptShape = trafficLightShape.Group
+                pptShape.Title = "SymTrafficLight"
+
+            End If
+        Catch ex As Exception
+            ' wenn es gar kein zusammengesetztes Shape ist ... 
+        End Try
+
+
+    End Sub
+
     ''' <summary>
     ''' fügt Projekt-Charts und Reporting Komponenten die entsprechenden Smart-Infos hinzu, so dass 
     ''' der Powerpoint Add-In das Chart selbstständig aktualisieren kann 
@@ -4102,7 +4190,7 @@ Public Module Module1
 
 
                 End With
-
+                ' jetzt kommen noch die Ergänzungen, die je nach Typ notwendig sind ...
                 If bigType = ptReportBigTypes.charts Then
 
                     If pptShape.HasChart = MsoTriState.msoTrue Then
@@ -4166,9 +4254,18 @@ Public Module Module1
                     End If
 
                 ElseIf bigType = ptReportBigTypes.tables Then
-                    ' sonst keine weiteren Dinge ... das wird in der eigenen MEthode addSmartPPTTableInfo gemacht 
+                    ' sonst keine weiteren Dinge ... das wird in der eigenen Methode addSmartPPTTableInfo gemacht 
 
                 ElseIf bigType = ptReportBigTypes.components Then
+                    ' bei Symbolen muss noch was ergänzt werden 
+
+                    If detailID = ptReportComponents.prSymTrafficLight Or _
+                        detailID = ptReportComponents.prSymRisks Or _
+                        detailID = ptReportComponents.prSymDescription Then
+                        Call updateSmartPPTSymTxt(pptShape, hproj, detailID)
+                    End If
+                    
+                    
                     ' sonst keine weiteren Dinge 
 
                 Else
@@ -4181,6 +4278,36 @@ Public Module Module1
         Catch ex As Exception
             Dim a As Integer = 1
         End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert bei Symbolen den Tag TXT entsprechend der übergebenen detailID 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="detailID"></param>
+    ''' <remarks></remarks>
+    Public Sub updateSmartPPTSymTxt(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, ByVal detailID As Integer)
+        Dim tmpText As String = ""
+        If detailID = ptReportComponents.prSymTrafficLight Then
+            tmpText = hproj.Status
+
+        ElseIf detailID = ptReportComponents.prSymRisks Then
+            ' aktuell gibt es im Datenmodell noch keine Risiken
+            tmpText = ""
+
+        ElseIf detailID = ptReportComponents.prSymDescription Then
+            tmpText = hproj.fullDescription
+        End If
+
+        ' jetzt wird das unter dem Tag TXT eingetragen
+        With pptShape
+            If .Tags.Item("TXT").Length > 0 Then
+                .Tags.Delete("TXT")
+            End If
+            .Tags.Add("TXT", tmpText)
+        End With
 
     End Sub
 
@@ -5464,5 +5591,5 @@ Public Module Module1
 
     End Function
 
-    
+
 End Module

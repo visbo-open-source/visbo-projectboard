@@ -4241,7 +4241,7 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
 
-        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(heute) - 1
+        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(hproj.timeStamp) - 1
         Dim pastAndFuture As Boolean = False
 
         Dim werteB(beauftragung.anzahlRasterElemente - 1) As Double
@@ -4639,7 +4639,7 @@ Public Module Projekte
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
-                    .Format.Line.Weight = 6
+                    .Format.Line.Weight = 4
                     .Format.Line.ForeColor.RGB = visboFarbeBlau
                 End With
 
@@ -4660,12 +4660,19 @@ Public Module Projekte
                         .Values = tdatenreiheB
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
-                        If isMinMax Then
-                            .Format.Line.Weight = 3
-                        Else
-                            .Format.Line.Weight = 6
-                        End If
-                        .Format.Line.ForeColor.RGB = visboFarbeOrange
+
+                        'If isMinMax Then
+                        '    .Format.Line.Weight = 3
+                        'Else
+                        '    .Format.Line.Weight = 4
+                        'End If
+
+                        With .Format.Line
+                            .Weight = 4
+                            .ForeColor.RGB = visboFarbeOrange
+                            .DashStyle = core.MsoLineDashStyle.msoLineDash
+                        End With
+
 
                     End With
                 End If
@@ -4743,10 +4750,16 @@ Public Module Projekte
         Dim calledFromReporting As Boolean = True
         Dim chartType As Excel.XlChartType
         Dim curmaxScale As Double
+        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(hproj.timeStamp) - 1
 
         ' tk 31.1.18
         ' nur wenn Projekt bereits beauftragt ist und mind ein Element in der Datenbank ist 
-        vglBaseline = hproj.Status <> ProjektStatus(0) And projekthistorie.Count > 1
+        ' vglBaseline = hproj.Status <> ProjektStatus(0) And projekthistorie.Count > 1
+        If Not IsNothing(vProj) Then
+            vglBaseline = True
+        Else
+            vglBaseline = False
+        End If
 
         ' die ganzen Vor-Klärungen machen ...
         With xlsChart
@@ -4772,7 +4785,7 @@ Public Module Projekte
         End With
 
 
-        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(heute) - 1
+
         Dim pastAndFuture As Boolean = False
 
         Dim werteB(vProj.anzahlRasterElemente - 1) As Double
@@ -4813,7 +4826,10 @@ Public Module Projekte
                 ' Personalkosten
                 titelTeile(0) = repMSg(0)
                 zaehlEinheit = "T€"
-                werteB = vProj.getAllPersonalKosten
+                If vglBaseline Then
+                    werteB = vProj.getAllPersonalKosten
+                End If
+
                 werteC = hproj.getAllPersonalKosten
 
             Case 2
@@ -4821,8 +4837,10 @@ Public Module Projekte
 
                 'titelTeile(0) = "Soll/Ist Sonstige Kosten" 
                 titelTeile(0) = repMSg(1)
+                If vglBaseline Then
+                    werteB = vProj.getGesamtAndereKosten
+                End If
 
-                werteB = vProj.getGesamtAndereKosten
                 werteC = hproj.getGesamtAndereKosten
 
             Case 3
@@ -4830,8 +4848,10 @@ Public Module Projekte
                 titelTeile(0) = repMSg(2)
 
                 zaehlEinheit = "T€"
+                If vglBaseline Then
+                    werteB = vProj.getGesamtKostenBedarf
+                End If
 
-                werteB = vProj.getGesamtKostenBedarf
                 werteC = hproj.getGesamtKostenBedarf
 
             Case 4
@@ -4840,7 +4860,10 @@ Public Module Projekte
                 zaehlEinheit = awinSettings.kapaEinheit
 
                 Try
-                    werteB = vProj.getPersonalKosten(qualifier)
+                    If vglBaseline Then
+                        werteB = vProj.getPersonalKosten(qualifier)
+                    End If
+
                     werteC = hproj.getPersonalKosten(qualifier)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
@@ -4853,7 +4876,10 @@ Public Module Projekte
                 zaehlEinheit = "T€"
 
                 Try
-                    werteB = vProj.getKostenBedarf(qualifier)
+                    If vglBaseline Then
+                        werteB = vProj.getKostenBedarf(qualifier)
+                    End If
+
                     werteC = hproj.getKostenBedarf(qualifier)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
@@ -4867,7 +4893,10 @@ Public Module Projekte
                 titelTeile(0) = repMSg(2)
 
                 zaehlEinheit = "T€"
-                werteB = vProj.getGesamtKostenBedarf
+                If vglBaseline Then
+                    werteB = vProj.getGesamtKostenBedarf
+                End If
+
                 werteC = hproj.getGesamtKostenBedarf
                 auswahl = 3
 
@@ -5010,25 +5039,30 @@ Public Module Projekte
                 .Values = tdatenreiheC
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlLine
-                .Format.Line.Weight = 6
+                .Format.Line.Weight = 4
                 .Format.Line.ForeColor.RGB = visboFarbeBlau
             End With
 
             If vglBaseline Then
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    If vglBaseline Then
-                        .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
-                    Else
-                        .Name = repMSg(4) & " " & vProj.timeStamp.ToString("d")
-                    End If
-
+                    ''If vglBaseline Then
+                    ''    .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
+                    ''Else
+                    ''    .Name = repMSg(4) & " " & vProj.timeStamp.ToString("d")
+                    ''End If
+                    .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
                     .Interior.Color = visboFarbeOrange
                     .Values = tdatenreiheB
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
-                    .Format.Line.Weight = 6
-                    .Format.Line.ForeColor.RGB = visboFarbeOrange
+
+                    With .Format.Line
+                        .Weight = 4
+                        .DashStyle = core.MsoLineDashStyle.msoLineDash
+                        .ForeColor.RGB = visboFarbeOrange
+                    End With
+
 
                 End With
 
@@ -5802,10 +5836,10 @@ Public Module Projekte
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
                         With .Format.Line
-                            .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                            .DashStyle = core.MsoLineDashStyle.msoLineDash
                             '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
                             .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 1.5
+                            .Weight = 4
                         End With
                     End With
                 End If
@@ -6099,10 +6133,10 @@ Public Module Projekte
                     .XValues = Xdatenreihe
 
                     With .Format.Line
-                        .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                        .DashStyle = core.MsoLineDashStyle.msoLineDash
                         '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
                         .ForeColor.RGB = visboFarbeOrange
-                        .Weight = 1.5
+                        .Weight = 4
                     End With
                 End With
             End If
@@ -6344,10 +6378,10 @@ Public Module Projekte
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
                     With .Format.Line
-                        .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                        .DashStyle = core.MsoLineDashStyle.msoLineDash
                         '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
                         .ForeColor.RGB = visboFarbeOrange
-                        .Weight = 1.5
+                        .Weight = 4
                     End With
                 End With
             End If
@@ -6662,10 +6696,10 @@ Public Module Projekte
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
                         With .Format.Line
-                            .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                            .DashStyle = core.MsoLineDashStyle.msoLineDash
                             '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
                             .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 1.5
+                            .Weight = 4
                         End With
                     End With
                 End If
@@ -7153,10 +7187,10 @@ Public Module Projekte
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlLine
                     With .Format.Line
-                        .DashStyle = core.MsoLineDashStyle.msoLineSolid
+                        .DashStyle = core.MsoLineDashStyle.msoLineDash
                         '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
                         .ForeColor.RGB = visboFarbeOrange
-                        .Weight = 1.5
+                        .Weight = 4
                     End With
                 End With
             End If
@@ -10196,9 +10230,19 @@ Public Module Projekte
                         pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.leadPerson
 
                     End If
+
+                Case ptReportComponents.prSymTrafficLight
+                    If Not IsNothing(hproj) Then
+                        Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
+
+                        ' jetzt müssen an das Shape wieder die Smart-Infos angebunden werden 
+                        Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, "", "", ptReportBigTypes.components, ptReportComponents.prSymTrafficLight)
+
+                    End If
+
                 Case Else
 
-                    Call MsgBox("nicht abgedeckt: " & detailID.ToString)
+                    'Call MsgBox("nicht abgedeckt: " & detailID.ToString)
 
             End Select
         Catch ex As Exception

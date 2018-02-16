@@ -2470,7 +2470,7 @@ Module Module1
 
         Next
 
-        ' Behandlung der NAmens- und Datumsbeschriftungen 
+        ' Behandlung der Namens- und Datumsbeschriftungen 
         For Each tmpShpName As String In bigToDoList
 
             Try
@@ -2516,7 +2516,7 @@ Module Module1
                 End If
 
             Catch ex As Exception
-                Call MsgBox("Fehler : " & ex.Message)
+                'Call MsgBox("Fehler : " & ex.Message)
             End Try
 
         Next
@@ -2554,21 +2554,28 @@ Module Module1
         Call buildSmartSlideLists()
 
         ' ur: 03.07.2017: setze alle Ampelfarben, aber nur wenn das auch angezeigt werden soll 
-        If showTrafficLights(PTfarbe.none) Then
-            Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
-        End If
+        ''If showTrafficLights(PTfarbe.none) Then
+        ''    Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        ''End If
 
-        If showTrafficLights(PTfarbe.green) Then
-            Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        End If
+        ''If showTrafficLights(PTfarbe.green) Then
+        ''    Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        ''End If
 
-        If showTrafficLights(PTfarbe.yellow) Then
-            Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
-        End If
+        ''If showTrafficLights(PTfarbe.yellow) Then
+        ''    Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        ''End If
 
-        If showTrafficLights(PTfarbe.red) Then
-            Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
-        End If
+        ''If showTrafficLights(PTfarbe.red) Then
+        ''    Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+        ''End If
+
+        ' soll auf alle Fälle angezeigt werden ...
+        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+
 
 
 

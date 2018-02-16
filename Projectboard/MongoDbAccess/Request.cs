@@ -20,6 +20,9 @@ using System.IO;
 
 namespace MongoDbAccess
 {
+    /// <summary>
+    /// request , der an eine Datenbank gestellt wird
+    /// </summary>
     public class Request
     {
         // alt 2.x
@@ -37,17 +40,53 @@ namespace MongoDbAccess
         /// Client ist der Datenbank Access Client
         /// </summary>
         protected  IMongoClient Client;
+        /// <summary>
+        /// 
+        /// </summary>
         protected  IMongoDatabase Database;
+        /// <summary>
+        /// 
+        /// </summary>
         protected MongoServer Server;
+        /// <summary>
+        /// die Collection, wo alle Projekte enthalten sind 
+        /// </summary>
         protected IMongoCollection<clsProjektDB> CollectionProjects;
+        /// <summary>
+        /// die Rollen Definitionen
+        /// </summary>
         protected IMongoCollection<clsRollenDefinitionDB> CollectionRoles;
+        /// <summary>
+        /// die Kostenart Definitionen
+        /// </summary>
         protected IMongoCollection<clsKostenartDefinitionDB> CollectionCosts;
+        /// <summary>
+        /// vermerkt, welche Projekte für die laufenden Session bzw permanent von wem geschützt sind 
+        /// </summary>
         protected IMongoCollection<clsWriteProtectionItemDB> CollectionWriteProtections;
+        /// <summary>
+        /// nimmt die gelöschten Projekte auf; erst wenn Sie hier gelöscht werden, sind sie komplett veroren ..
+        /// </summary>
         protected IMongoCollection<clsProjektDB> CollectionTrashProjects;
+        /// <summary>
+        /// nimmt die Defintion der Portfolios auf 
+        /// </summary>
         protected IMongoCollection<clsConstellationDB> CollectionConstellations;
+        /// <summary>
+        /// nimmt die glöschten Portfolio definitionen auf 
+        /// </summary>
         protected IMongoCollection<clsConstellationDB> CollectionTrashConstellations; 
+        /// <summary>
+        /// enthält die Projekt-Abhängigkeiten
+        /// </summary>
         protected IMongoCollection<clsDependenciesOfPDB> CollectionDependencies;
+        /// <summary>
+        /// die gespeicherten Selektion-Filter
+        /// </summary>
         protected IMongoCollection<clsFilterDB> CollectionFilter;
+        /// <summary>
+        /// wird für das Speichern von Dokumenten benötigt 
+        /// </summary>
         protected IGridFSBucket BucketDocuments;
         private String User;
         
@@ -485,7 +524,6 @@ namespace MongoDbAccess
         /// <summary>
         /// liest die Rollendefinitionen aus der Datenbank 
         /// </summary>
-        /// <param name="roleID"></param>
         /// <param name="storedAtOrBefore"></param>
         /// <returns></returns>
         public clsRollen retrieveRolesFromDB(DateTime storedAtOrBefore)
@@ -527,7 +565,6 @@ namespace MongoDbAccess
         /// <summary>
         /// liest die Kostenartdefinitionen aus der Datenbank 
         /// </summary>
-        /// <param name="roleID"></param>
         /// <param name="storedAtOrBefore"></param>
         /// <returns></returns>
         public clsKostenarten retrieveCostsFromDB(DateTime storedAtOrBefore)
@@ -798,7 +835,6 @@ namespace MongoDbAccess
         /// überprüft, ob der User userName für das Projekt pvname vom Typ type 
         /// die Erlaubnis hat etwas zu verändern
         /// </summary>
-        /// </summary>
         /// <param name="pName"></param>
         /// <param name="vName"></param>
         /// <param name="userName"></param>
@@ -874,6 +910,7 @@ namespace MongoDbAccess
         /// </summary>
         /// <param name="pName"></param>
         /// <param name="user"></param>
+        /// <param name="set"></param>
         /// <returns></returns>
         public bool protectAllVariants(string pName, string user, bool set = true)
         {
@@ -917,6 +954,7 @@ namespace MongoDbAccess
         /// Zeitstempel wird aus den Projekt-Infos genommen
         /// </summary>
         /// <param name="projekt"></param>
+        /// <param name="userName"></param>
         /// <returns></returns>
         public bool storeProjectToDB(clsProjekt projekt, string userName)
         {
