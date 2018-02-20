@@ -13,9 +13,9 @@
         frmCoord(PTfrm.changes, PTpinfo.height) = Me.Height
 
         Call faerbeShapes(0, showTrafficLights(0))
-        Call faerbeShapes(1, showTrafficLights(0))
-        Call faerbeShapes(2, showTrafficLights(0))
-        Call faerbeShapes(3, showTrafficLights(0))
+        Call faerbeShapes(1, showTrafficLights(1))
+        Call faerbeShapes(2, showTrafficLights(2))
+        Call faerbeShapes(3, showTrafficLights(3))
 
 
 
@@ -30,16 +30,12 @@
             Me.Width = frmCoord(PTfrm.changes, PTpinfo.width)
             Me.Height = frmCoord(PTfrm.changes, PTpinfo.height)
         Else
-            Me.Top = 922
+            Me.Top = My.Computer.Screen.WorkingArea.Height - Me.Height
+            'Me.Top = 922
             Me.Left = 24
         End If
 
         Call listeAufbauen()
-
-        'If Me.Height > changeListTable.Height + 38 Then
-        '    Me.Height = changeListTable.Height + 38
-        'End If
-        
 
     End Sub
 

@@ -2750,10 +2750,20 @@ Public Module testModule
 
                             Case "SymRisks"
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prSymRisks
+                                qualifier2 = ""
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
+                                                          bigType, compID)
 
                             Case "SymGoals"
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
-                                
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prSymDescription
+                                qualifier2 = ""
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, _
+                                                          bigType, compID)
 
                             Case "Stand:"
 

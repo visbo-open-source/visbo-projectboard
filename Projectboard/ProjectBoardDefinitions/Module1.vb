@@ -4291,7 +4291,7 @@ Public Module Module1
     Public Sub updateSmartPPTSymTxt(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, ByVal detailID As Integer)
         Dim tmpText As String = ""
         If detailID = ptReportComponents.prSymTrafficLight Then
-            tmpText = hproj.Status
+            tmpText = hproj.ampelErlaeuterung
 
         ElseIf detailID = ptReportComponents.prSymRisks Then
             ' aktuell gibt es im Datenmodell noch keine Risiken

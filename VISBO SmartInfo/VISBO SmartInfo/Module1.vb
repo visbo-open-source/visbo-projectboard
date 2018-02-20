@@ -1132,6 +1132,10 @@ Module Module1
                         Next
 
                         selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+                    ElseIf isSymbolShape(shpRange(1)) Then
+
+                        selectedPlanShapes = shpRange
+                        Call aktualisiereInfoPane(shpRange(1))
                     Else
                         ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
                         Call checkHomeChangeBtnEnablement()
@@ -1145,54 +1149,58 @@ Module Module1
                     End If
                     '' Ende ...
 
+                    If Not isSymbolShape(shpRange(1)) Then
+                        If (Not IsNothing(selectedPlanShapes) And Not isSymbolShape(shpRange(1))) Then
 
-                    If Not IsNothing(selectedPlanShapes) Then
+                            Dim tmpShape As PowerPoint.Shape = Nothing
+                            Dim elemWasMoved As Boolean = False
+                            For Each tmpShape In selectedPlanShapes
+                                ' hier sind nur noch richtige Shapes  
 
-                        Dim tmpShape As PowerPoint.Shape = Nothing
-                        Dim elemWasMoved As Boolean = False
-                        For Each tmpShape In selectedPlanShapes
-                            ' hier sind nur noch richtige Shapes  
-
-                            ' sollen Home- bzw. Change-Button angezeigt werden ? 
-                            elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
-                            If elemWasMoved Then
-                                homeButtonRelevance = True
-                            Else
-                                If tmpShape.Tags.Item("MVD").Length > 0 Then
-                                    changedButtonRelevance = True
+                                ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                                elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                                If elemWasMoved Then
+                                    homeButtonRelevance = True
+                                Else
+                                    If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                        changedButtonRelevance = True
+                                    End If
                                 End If
+
+                            Next
+
+                            ' hier wird die Information zu dem selektierten Shape angezeigt 
+                            If Not IsNothing(propertiesPane) Then
+                                Call aktualisiereInfoPane(tmpShape, elemWasMoved)
+                            End If
+                            ' ur: wegen Pane
+                            If formIsShown Then
+                                Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
                             End If
 
-                        Next
 
-                        ' hier wird die Information zu dem selektierten Shape angezeigt 
-                        If Not IsNothing(propertiesPane) Then
-                            Call aktualisiereInfoPane(tmpShape, elemWasMoved)
+                            ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
+                            ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
+                            Call ensureVisibilityOfSelection(selectedPlanShapes)
+
+                            ' kann jetzt wieder aktiviert werden ...
+                            If Not IsNothing(propertiesPane) Then
+                                propertiesPane.Visible = True
+                            End If
+                        Else
+
+                            Call checkHomeChangeBtnEnablement()
+                            If propertiesPane.Visible Then
+                                Call aktualisiereInfoPane(Nothing)
+                            End If
+
+
                         End If
-                        ' ur: wegen Pane
-                        If formIsShown Then
-                            Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
-                        End If
-
-
-                        ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
-                        ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
-                        Call ensureVisibilityOfSelection(selectedPlanShapes)
-
-                        ' kann jetzt wieder aktiviert werden ...
-                        If Not IsNothing(propertiesPane) Then
-                            propertiesPane.Visible = True
-                        End If
-                    Else
-
-                        Call checkHomeChangeBtnEnablement()
-                        If propertiesPane.Visible Then
-                            Call aktualisiereInfoPane(Nothing)
-                        End If
-
 
                     End If
                 End If
+
+
 
 
 
@@ -2553,28 +2561,17 @@ Module Module1
 
         Call buildSmartSlideLists()
 
-        ' ur: 03.07.2017: setze alle Ampelfarben, aber nur wenn das auch angezeigt werden soll 
-        ''If showTrafficLights(PTfarbe.none) Then
-        ''    Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
-        ''End If
-
-        ''If showTrafficLights(PTfarbe.green) Then
-        ''    Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        ''End If
-
-        ''If showTrafficLights(PTfarbe.yellow) Then
-        ''    Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
-        ''End If
-
-        ''If showTrafficLights(PTfarbe.red) Then
-        ''    Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
-        ''End If
-
         ' soll auf alle Fälle angezeigt werden ...
+        'Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        'Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        'Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        'Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+
+        ' die gelben und roten sollten auf alle Fälle gezeigt werden , die grünen und nicht-bewerteten nur, wenn entsprechend eingestellt 
         Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
         Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
-        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+        Call faerbeShapes(PTfarbe.yellow, True)
+        Call faerbeShapes(PTfarbe.red, True)
 
 
 
@@ -3760,6 +3757,58 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' betimmt die Beschriftung, den Namen des Symbols 
+    ''' </summary>
+    ''' <param name="curshape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeSymbolName(ByVal curshape As PowerPoint.Shape) As String
+        Dim tmpText As String = ""
+
+        With curshape
+
+            If .Tags.Item("DID") = CStr(ptReportComponents.prSymTrafficLight) Then
+                If englishLanguage Then
+                    tmpText = "Explanation for project traffic Light"
+                Else
+                    tmpText = "Erläuterung zur Projekt-Ampel"
+                End If
+
+            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymRisks) Then
+                If englishLanguage Then
+                    tmpText = "Current Project Risks"
+                Else
+                    tmpText = "Aktuelle Projekt-Risiken"
+                End If
+
+            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymDescription) Then
+                If englishLanguage Then
+                    tmpText = "Project Goals"
+                Else
+                    tmpText = "Projekt-Ziele"
+                End If
+            End If
+
+        End With
+
+        bestimmeSymbolName = tmpText
+
+    End Function
+
+    ''' <summary>
+    ''' bestimmt den Text , der dem Symbol zugeordnet ist 
+    ''' </summary>
+    ''' <param name="curshape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function bestimmeSymbolText(ByVal curshape As PowerPoint.Shape) As String
+
+        bestimmeSymbolText = curshape.Tags.Item("TXT")
+
+
+    End Function
+
+    ''' <summary>
     ''' bestimmt den Text in Abhängigkeit, ob classified name, ShortName oder OriginalName gezeigt werden soll 
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -4091,6 +4140,23 @@ Module Module1
         Else
             isRelevantShape = False
         End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt true zurück, wenn es sich bei dem Shape um ein Symbol Shape handelt 
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isSymbolShape(ByVal curShape As PowerPoint.Shape) As Boolean
+        Dim bigType As String = curShape.Tags.Item("BID")
+        Dim detailID As String = curShape.Tags.Item("DID")
+
+        isSymbolShape = ((bigType = CStr(ptReportBigTypes.components)) And _
+                         (detailID = CStr(ptReportComponents.prSymDescription) Or _
+                          detailID = CStr(ptReportComponents.prSymRisks) Or _
+                          detailID = CStr(ptReportComponents.prSymTrafficLight)))
 
     End Function
 
@@ -5364,95 +5430,7 @@ Module Module1
         Next
     End Sub
 
-    ''' <summary>
-    ''' setzt die Markierung zurück, dass Elemente über Time-Machine / andere Variante  verschoben wurden 
-    ''' deprecated - wird nicht mehr aufgerufen, da die durch Variante / TimeStamp veränderten Meilensteine und Phasen nicht mehr markiert werden 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Friend Sub resetMovedGlowOfShapes()
-
-        Dim visboCollection As New Collection
-        Dim bigTodoList As New Collection
-
-        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
-            bigTodoList.Add(tmpShape.Name)
-        Next
-
-        For Each tmpShpName As String In bigTodoList
-            Try
-                Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
-                If Not IsNothing(tmpShape) Then
-                    If isRelevantMSPHShape(tmpShape) Then
-
-                        If Not visboCollection.Contains(tmpShape.Name) Then
-                            visboCollection.Add(tmpShape.Name, tmpShape.Name)
-                        End If
-
-                        With tmpShape
-                            If .Glow.Radius > 0 Then
-                                'tmpShape.Glow.Radius = 0.0
-                                ''tmpShape.Glow.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
-
-                                If .Tags.Item("MVD").Length > 0 Then
-                                    ' nichts machen 
-                                Else
-                                    If .Tags.Item("MVE").Length > 0 Then
-                                        .Tags.Delete("MVE")
-                                    End If
-                                End If
-
-                            End If
-
-                        End With
-
-                    End If
-                End If
-            Catch ex As Exception
-
-            End Try
-        Next
-
-        ' ur:4.7.2017: Code um den Glow zu eliminieren und trotzdem die Meilenstein-Ampelfarben darzustellen
-        '
-        Dim anzSelected As Integer = visboCollection.Count
-        Dim nameArray() As String
-        Dim shapesToBeReset As PowerPoint.ShapeRange
-
-        If anzSelected >= 1 Then
-            ReDim nameArray(anzSelected - 1)
-
-            For i As Integer = 0 To anzSelected - 1
-                nameArray(i) = CStr(visboCollection.Item(i + 1))
-            Next
-
-            Try
-                shapesToBeReset = currentSlide.Shapes.Range(nameArray)
-                With shapesToBeReset
-
-                    '    ' Glow wegnehmen
-                    With .Glow
-                        .Color.ObjectThemeColor = msoThemeColorAccent1
-                        .Transparency = 0
-                        .Radius = 0
-                    End With
-
-                    '   ' Schatten wegnehmen
-                    .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
-
-                End With
-            Catch ex As Exception
-
-            End Try
-
-        End If
-        ' ur: 03.07.2017: setze alle Ampelfarben
-        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
-        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
-        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
-
-
-    End Sub
+    
 
     Friend Sub closeExcelAPP()
         Try
@@ -5523,59 +5501,53 @@ Module Module1
 
                 If selectedPlanShapes.Count = 1 Then
 
-                    With ucPropertiesView
+                    If isSymbolShape(tmpShape) Then
+                        With ucPropertiesView
 
-                        ' ''Call .setDTPicture(pptShapeIsMilestone(tmpShape))
-                        ' ''If showBreadCrumbField Then
-                        ' ''    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
-                        ' ''End If
+                            ' positioniert die Darstellungs-Elemente entsprechend
+                            .symbolMode(True)
+                            .eleName.Text = bestimmeSymbolName(tmpShape)
+                            .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
 
-                        ' ''Dim rdbCode As Integer = calcRDB()
-                        ' ''Dim tmpStr() As String
-                        ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
+                        End With
+                    Else
+                        With ucPropertiesView
 
-                        ' ''If englishLanguage Then
-                        ' ''    .labelDate.Text = "Date:"
-                        ' ''    .labelAmpel.Text = "Traffic Light:"
-                        ' ''    .labelDeliver.Text = "Deliverables:"
-                        ' ''    .labelRespons.Text = "Responsible:"
-                        ' ''Else
-                        ' ''    .labelDate.Text = "Datum:"
-                        ' ''    .labelAmpel.Text = "Ampel:"
-                        ' ''    .labelDeliver.Text = "Lieferumfänge:"
-                        ' ''    .labelRespons.Text = "Verantwortlich:"
-                        ' ''End If
+                            ' positioniert die Darstellungs-Elemente entsprechend
+                            .symbolMode(False)
 
-                        .eleName.Text = bestimmeElemText(tmpShape, False, True, showBestName)
+                            .eleName.Text = bestimmeElemText(tmpShape, False, True, showBestName)
 
-                        .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
+                            .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
 
-                        'Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
+                            'Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
 
-                        Dim ampelfarbe As Integer = CInt(tmpShape.Tags.Item("AC"))
+                            Dim ampelfarbe As Integer = CInt(tmpShape.Tags.Item("AC"))
 
-                        Select Case CInt(tmpShape.Tags.Item("AC"))
+                            Select Case CInt(tmpShape.Tags.Item("AC"))
 
-                            Case PTfarbe.none
-                                .eleAmpel.BackColor = Drawing.Color.Silver
-                            Case PTfarbe.green
-                                .eleAmpel.BackColor = Drawing.Color.Green
-                            Case PTfarbe.yellow
-                                .eleAmpel.BackColor = Drawing.Color.Yellow
-                            Case PTfarbe.red
-                                .eleAmpel.BackColor = Drawing.Color.Firebrick
+                                Case PTfarbe.none
+                                    .eleAmpel.BackColor = Drawing.Color.Silver
+                                Case PTfarbe.green
+                                    .eleAmpel.BackColor = Drawing.Color.Green
+                                Case PTfarbe.yellow
+                                    .eleAmpel.BackColor = Drawing.Color.Yellow
+                                Case PTfarbe.red
+                                    .eleAmpel.BackColor = Drawing.Color.Firebrick
 
-                        End Select
+                            End Select
 
-                        .percentDone.Text = bestimmeElemPD(tmpShape)
+                            .percentDone.Text = bestimmeElemPD(tmpShape)
 
-                        .eleAmpelText.Text = bestimmeElemAE(tmpShape)
+                            .eleAmpelText.Text = bestimmeElemAE(tmpShape)
 
-                        .eleDeliverables.Text = bestimmeElemLU(tmpShape)
+                            .eleDeliverables.Text = bestimmeElemLU(tmpShape)
 
-                        .eleRespons.Text = bestimmeElemVE(tmpShape)
+                            .eleRespons.Text = bestimmeElemVE(tmpShape)
 
-                    End With
+                        End With
+                    End If
+                    
 
                 ElseIf selectedPlanShapes.Count > 1 Then
 
