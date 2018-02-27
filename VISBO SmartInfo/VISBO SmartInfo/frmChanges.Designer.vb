@@ -130,6 +130,7 @@ Partial Class frmChanges
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Location = New System.Drawing.Point(24, 922)
         Me.MaximizeBox = False
+        Me.MinimumSize = New System.Drawing.Size(100, 30)
         Me.Name = "frmChanges"
         Me.Text = "Changes"
         Me.TopMost = True
