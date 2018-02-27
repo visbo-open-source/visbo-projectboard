@@ -37,11 +37,11 @@
     </UpgradeBackupLocation>
     <OldToolsVersion>12.0</OldToolsVersion>
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
-    <BootstrapperEnabled>false</BootstrapperEnabled>
-    <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <PublishUrl>C:\Users\Koytek\Documents\Publish Folder SmartInfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.1.0.17</ApplicationVersion>
+    <ApplicationVersion>2.1.0.19</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -507,7 +507,8 @@
     <ManifestCertificateThumbprint>270B8AA88483E1EE8EF0E72D9F2C2CDEF2EDE1C8</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestTimestampUrl>http://rfc3161timestamp.globalsign.com/standard</ManifestTimestampUrl>
+    <ManifestTimestampUrl>
+    </ManifestTimestampUrl>
   </PropertyGroup>
   <!-- Include the build rules for a Visual Basic project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
