@@ -92,6 +92,9 @@
     <Compile Include="clsEventsWindows.vb" />
     <Compile Include="clsroleHrchy.vb" />
     <Compile Include="clsroleNode.vb" />
+    <Compile Include="clsTokenLogin.vb" />
+    <Compile Include="clsUser.vb" />
+    <Compile Include="clsUserProfile.vb" />
     <Compile Include="clsVisboCryptography.vb" />
     <Compile Include="clsWindowWithEvents.vb" />
     <Compile Include="clsWriteProtectionItem.vb" />

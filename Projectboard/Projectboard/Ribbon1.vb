@@ -13,6 +13,15 @@ Imports System.Drawing
 Imports System.Windows
 Imports System.Net
 Imports System.IO
+Imports System
+Imports System.Runtime.Serialization
+Imports System.Xml
+Imports System.Xml.Serialization
+Imports System.Globalization
+Imports Microsoft.VisualBasic
+Imports System.Web
+Imports System.ServiceModel.Web
+
 
 'TODO: Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
 
@@ -11659,30 +11668,50 @@ Imports System.IO
         enableOnUpdate = True
 
     End Sub
+    ''' <summary>
+    ''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /token/user/login
+    ''' </summary>
+    ''' <param name="control"></param>
     Public Sub PTWebRequest(control As IRibbonControl)
-        Dim bytearray() As Byte
-        Dim array As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
-        'Dim request As WebRequest = WebRequest.Create("http://visbo.myhome-server.de:3484/token/user/login")
-        Dim request As WebRequest = WebRequest.Create("http://localhost:3484/token/user/login")
-        request.Method = "POST"
-        request.ContentLength = array.Length
-        request.ContentType = "application/json"
 
-        ReDim bytearray(array.Length)
-        bytearray = UnicodeStringToBytes(array)
         Try
-            Dim dataStream As Stream = request.GetRequestStream()
-            dataStream.Write(bytearray, 0, bytearray.Length)
-            dataStream.Close()
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484/token/user/login")
+            Dim data As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
+            Dim Antwort1 As clsTokenLogin
+            Dim Antwort2 As String
+
+            Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+                Antwort1 = ReadResponseContentJson(httpresp)
+            End Using
+
+            '''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            '''    Antwort2 = ReadResponseContent(httpresp)
+            '''End Using
+
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
         End Try
 
-        Dim response As WebResponse = request.GetResponse()
     End Sub
+
+    Public Sub PTJsonWrite(control As IRibbonControl)
+
+        Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
+        Dim tknlgn As clsTokenLogin = New clsTokenLogin
+        Call JsonExport(tknlgn, JsonFileName)
+
+    End Sub
+    Public Sub PTJsonRead(control As IRibbonControl)
+
+        Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
+        Dim tknlgn As clsTokenLogin = JsonImport(JsonFileName)
+
+    End Sub
+
     Private Function UnicodeStringToBytes(ByVal str As String) As Byte()
         Return System.Text.Encoding.Unicode.GetBytes(str)
     End Function
+
 #End Region
 
 #Region "Hilfsprogramme"
