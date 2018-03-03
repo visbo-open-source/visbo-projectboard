@@ -1,4 +1,8 @@
-﻿Public Class clsPhaseDB
+﻿''' <summary>
+''' Klassen-Definition für eine Phase bzw Sammel-Task in MongoDB
+''' </summary>
+''' <remarks></remarks>
+Public Class clsPhaseDB
     Public AllRoles As List(Of clsRolleDB)
     Public AllCosts As List(Of clsKostenartDB)
     Public AllResults As List(Of clsResultDB)

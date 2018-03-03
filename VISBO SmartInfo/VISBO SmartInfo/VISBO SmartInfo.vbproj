@@ -41,7 +41,7 @@
     <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.1.0.17</ApplicationVersion>
+    <ApplicationVersion>2.1.0.21</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -502,7 +502,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>06A1E789552A35A634B26DD6CE7A5566D0999EB8</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>948304CA05C417C8BAE256427C4A2E3337FEFE96</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a Visual Basic project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
