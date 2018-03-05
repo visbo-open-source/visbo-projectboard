@@ -9,7 +9,7 @@
     <RootNamespace>ExcelWorkbook1</RootNamespace>
     <AssemblyName>Projectboard</AssemblyName>
     <VSTO_HostDocumentName>Projectboard.xlsx</VSTO_HostDocumentName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <OfficeApplication>Excel</OfficeApplication>
     <ProjectGuid>{3CDE9F31-6693-4AF9-AF7F-81FAC9D0A600}</ProjectGuid>
@@ -318,6 +318,10 @@
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
       <Name>ProjectBoardDefinitions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WebServerAcc\WebServerAcc.vbproj">
+      <Project>{a6876837-dd60-4e0d-bcbc-de9a0d6f8de3}</Project>
+      <Name>WebServerAcc</Name>
     </ProjectReference>
     <ProjectReference Include="..\WPFPieChart\WPFPieChart.csproj">
       <Project>{59210896-68d1-4a34-91cc-8d015eca7061}</Project>

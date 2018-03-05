@@ -1,7 +1,6 @@
 ﻿Imports Microsoft.Office.Interop.Excel
 Imports System.Globalization
-
-Public Class clsTokenLogin
+Public Class clsTokenUserLogin
     Public Property state As String
     Public Property message As String
     Public Property token As String

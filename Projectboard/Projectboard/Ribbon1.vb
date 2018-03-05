@@ -2,11 +2,10 @@
 Imports ProjectBoardBasic
 Imports ClassLibrary1
 Imports MongoDbAccess
+Imports WebServerAcc
 Imports WPFPieChart
 Imports Microsoft.Office.Core
-'Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
-'Imports MSProject = Microsoft.Office.Interop.MSProject
 Imports System.Security.Principal
 Imports System.Diagnostics
 Imports System.Drawing
@@ -11677,11 +11676,11 @@ Imports System.ServiceModel.Web
         Try
             Dim serverUri As New Uri("http://visbo.myhome-server.de:3484/token/user/login")
             Dim data As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
-            Dim Antwort1 As clsTokenLogin
-            Dim Antwort2 As String
+            Dim Antwort As clsTokenUserLogin
+            'Dim Antwort2 As String
 
             Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-                Antwort1 = ReadResponseContentJson(httpresp)
+                Antwort = ReadResponseContentJson(httpresp, "token/user/login")
             End Using
 
             '''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
@@ -11697,14 +11696,14 @@ Imports System.ServiceModel.Web
     Public Sub PTJsonWrite(control As IRibbonControl)
 
         Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
-        Dim tknlgn As clsTokenLogin = New clsTokenLogin
+        Dim tknlgn As clsTokenUserLogin = New clsTokenUserLogin
         Call JsonExport(tknlgn, JsonFileName)
 
     End Sub
     Public Sub PTJsonRead(control As IRibbonControl)
 
         Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
-        Dim tknlgn As clsTokenLogin = JsonImport(JsonFileName)
+        Dim tknlgn As clsTokenUserLogin = JsonImport(JsonFileName)
 
     End Sub
 
