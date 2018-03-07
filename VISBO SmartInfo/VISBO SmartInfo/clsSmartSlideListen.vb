@@ -812,8 +812,14 @@ Public Class clsSmartSlideListen
 
             Try
                 If Not IsNothing(_aCList) Then
-                    Dim uidsWithColor As SortedList(Of Integer, Boolean) = _aCList.Item(ampelColor)
+                    Dim uidsWithColor As SortedList(Of Integer, Boolean) = Nothing
 
+                    If _aCList.ContainsKey(ampelColor) Then
+
+                        uidsWithColor = _aCList.Item(ampelColor)
+
+                    End If
+                    
                     If Not IsNothing(uidsWithColor) Then
                         ' jetzt sind in der uidList alle ShapeUIDs aufgeführt - die müssen jetzt durch ihre ShapeNames ersetzt werden 
                         For Each kvp As KeyValuePair(Of Integer, Boolean) In uidsWithColor
@@ -885,7 +891,13 @@ Public Class clsSmartSlideListen
             Dim resultingUIDs As New SortedList(Of Integer, Boolean)
 
             If tmpCC >= 8 Then
-                Dim redUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(3)
+                Dim redUIDs As SortedList(Of Integer, Boolean) = Nothing
+                If _aCList.ContainsKey(3) Then
+                    redUIDs = _aCList.Item(3)
+                Else
+                    redUIDs = New SortedList(Of Integer, Boolean)
+                End If
+
                 For i As Integer = 1 To redUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(redUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(redUIDs.ElementAt(i - 1).Key, redUIDs.ElementAt(i - 1).Value)
@@ -895,7 +907,15 @@ Public Class clsSmartSlideListen
             End If
 
             If tmpCC >= 4 Then
-                Dim yellowUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(2)
+                Dim yellowUIDs As SortedList(Of Integer, Boolean) = Nothing
+
+                If _aCList.ContainsKey(2) Then
+                    yellowUIDs = _aCList.Item(2)
+                Else
+                    yellowUIDs = New SortedList(Of Integer, Boolean)
+                End If
+
+
                 For i As Integer = 1 To yellowUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(yellowUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(yellowUIDs.ElementAt(i - 1).Key, yellowUIDs.ElementAt(i - 1).Value)
@@ -905,7 +925,14 @@ Public Class clsSmartSlideListen
             End If
 
             If tmpCC >= 2 Then
-                Dim greenUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(1)
+
+                Dim greenUIDs As SortedList(Of Integer, Boolean) = Nothing
+                If _aCList.ContainsKey(1) Then
+                    greenUIDs = _aCList.Item(1)
+                Else
+                    greenUIDs = New SortedList(Of Integer, Boolean)
+                End If
+
                 For i As Integer = 1 To greenUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(greenUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(greenUIDs.ElementAt(i - 1).Key, greenUIDs.ElementAt(i - 1).Value)
@@ -915,7 +942,12 @@ Public Class clsSmartSlideListen
             End If
 
             If tmpCC >= 1 Then
-                Dim noColorUIDs As SortedList(Of Integer, Boolean) = _aCList.Item(0)
+                Dim noColorUIDs As SortedList(Of Integer, Boolean) = Nothing
+                If _aCList.ContainsKey(0) Then
+                    noColorUIDs = _aCList.Item(0)
+                Else
+                    noColorUIDs = New SortedList(Of Integer, Boolean)
+                End If
                 For i As Integer = 1 To noColorUIDs.Count
                     If Not alleUIDsWithCertainColor.ContainsKey(noColorUIDs.ElementAt(i - 1).Key) Then
                         alleUIDsWithCertainColor.Add(noColorUIDs.ElementAt(i - 1).Key, noColorUIDs.ElementAt(i - 1).Value)

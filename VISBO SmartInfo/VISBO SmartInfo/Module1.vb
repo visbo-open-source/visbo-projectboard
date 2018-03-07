@@ -631,9 +631,12 @@ Module Module1
 
             smartSlideLists = New clsSmartSlideListen
 
-            If searchPane.Visible Then
-                Call clearSearchPane(Nothing)
+            If Not IsNothing(searchPane) Then
+                If searchPane.Visible Then
+                    Call clearSearchPane(Nothing)
+                End If
             End If
+
 
             ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
             currentSlide = SldRange.Item(1)
@@ -730,12 +733,15 @@ Module Module1
                     ' Listen löschen
                     smartSlideLists = New clsSmartSlideListen
 
+                If Not IsNothing(searchPane) Then
                     If searchPane.Visible Then
                         Call clearSearchPane(Nothing)
                     End If
-
-
                 End If
+
+
+
+            End If
 
 
             Else
@@ -968,11 +974,11 @@ Module Module1
 
                     End Try
                 End If
-                
 
-                If ((pptAPP.Version = "14.0") And _
-                    (((Not propertiesPane.Visible) Or _
-                    (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or _
+
+                If ((pptAPP.Version = "14.0") And
+                    (((Not propertiesPane.Visible) Or
+                    (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or
                     (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
                     ' Erzeugen eines Hilfs-Elements
 
@@ -984,7 +990,7 @@ Module Module1
                             ' erzeugen und selektieren der beiden Shapes  
                             Dim oldShape As PowerPoint.Shape = shpRange(1)
 
-                            Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                            Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
                                                                                                0, 0, 50, 50)
 
 
@@ -1002,7 +1008,7 @@ Module Module1
                             ' jetzt die zweite Welle 
                             propertiesPane.Visible = True
 
-                            Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal, _
+                            Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
                                                                                                0, 0, 50, 50)
                             If Not IsNothing(helpShape2) Then
                                 helpShape2.Name = "visboCorrectError2"
@@ -1088,7 +1094,7 @@ Module Module1
                             'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
 
                             If isRelevantShape(tmpShape) Then
-                                If bekannteIDs.ContainsKey(tmpShape.Id) Or _
+                                If bekannteIDs.ContainsKey(tmpShape.Id) Or
                                     tmpShape.Name.EndsWith(shadowName) Then
 
                                     If Not relevantShapeNames.Contains(tmpShape.Name) Then
@@ -1210,9 +1216,12 @@ Module Module1
 
         Catch ex As Exception
 
-            If propertiesPane.Visible Then
-                Call aktualisiereInfoPane(Nothing)
+            If Not IsNothing(propertiesPane) Then
+                If propertiesPane.Visible Then
+                    Call aktualisiereInfoPane(Nothing)
+                End If
             End If
+
 
         End Try
 
@@ -5505,7 +5514,7 @@ Module Module1
                         With ucPropertiesView
 
                             ' positioniert die Darstellungs-Elemente entsprechend
-                            .symbolMode(True)
+                            '.symbolMode(True)
                             .eleName.Text = bestimmeSymbolName(tmpShape)
                             .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
 
@@ -5514,7 +5523,7 @@ Module Module1
                         With ucPropertiesView
 
                             ' positioniert die Darstellungs-Elemente entsprechend
-                            .symbolMode(False)
+                            '.symbolMode(False)
 
                             .eleName.Text = bestimmeElemText(tmpShape, False, True, showBestName)
 
