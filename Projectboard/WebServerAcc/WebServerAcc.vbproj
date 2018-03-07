@@ -67,9 +67,13 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsAllVC.vb" />
     <Compile Include="clsTokenUserLogin.vb" />
+    <Compile Include="clsTokenUserSignIn.vb" />
     <Compile Include="clsUser.vb" />
     <Compile Include="clsUserProfile.vb" />
+    <Compile Include="clsVC.vb" />
+    <Compile Include="clsVCuser.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>

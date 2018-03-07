@@ -2766,6 +2766,12 @@ Imports System.ServiceModel.Web
                 Else
                     tmpLabel = "Help"
                 End If
+            Case "PTWebServer"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "WebServer"
+                Else
+                    tmpLabel = "WebServer"
+                End If
             Case "PTlizenz"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Lizenzen"
@@ -2913,6 +2919,8 @@ Imports System.ServiceModel.Web
                 Case "PTeinst"
                     chckVisibility = False
                 Case "PThelp"
+                    chckVisibility = False
+                Case "PTWebServer"
                     chckVisibility = False
                 Case "PTTestfunktionen"
                     chckVisibility = False
@@ -11671,16 +11679,47 @@ Imports System.ServiceModel.Web
     ''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /token/user/login
     ''' </summary>
     ''' <param name="control"></param>
-    Public Sub PTWebRequest(control As IRibbonControl)
+    Public Sub PTWebRequestLogin(control As IRibbonControl)
 
         Try
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484/token/user/login")
+            Dim typeRequest As String = "/token/user/login"
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
             Dim data As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
             Dim Antwort As clsTokenUserLogin
             'Dim Antwort2 As String
 
             Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-                Antwort = ReadResponseContentJson(httpresp, "token/user/login")
+                Antwort = CType(ReadResponseContentJson(httpresp, typeRequest), clsTokenUserLogin)
+            End Using
+
+            token = Antwort.token
+
+            '''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            '''    Antwort2 = ReadResponseContent(httpresp)
+            '''End Using
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
+        End Try
+
+    End Sub
+    ''' <summary>
+    ''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /token/user/login
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTWebRequestGETallVC(control As IRibbonControl)
+
+        Try
+            Dim typeRequest As String = "/vc"
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+            'Dim data As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
+            Dim data As String = ""
+            Dim Antwort As clsAllVC
+
+            'Dim Antwort2 As String
+
+            Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadResponseContentJson(httpresp, typeRequest), clsAllVC)
             End Using
 
             '''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
