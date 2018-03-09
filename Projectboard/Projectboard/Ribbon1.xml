@@ -430,6 +430,7 @@
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
           <button id="_vc" label="All VisboCenter"  onAction ="PTWebRequestGETallVC" />
+          <separator id="PTXIG1s1"/>
           <button id="PTJsonWrite" label="WRITE Json"  onAction ="PTJsonWrite" />
           <button id="PTJsonRead" label="READ Json"  onAction ="PTJsonRead" />
          </group>

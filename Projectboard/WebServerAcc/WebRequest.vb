@@ -28,12 +28,9 @@ Public Module WebRequest
 
         Dim response As HttpWebResponse = Nothing
         Try
-
-
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
 
             request.Method = "POST"
-            'request.ContentType = "text/plain;charset=utf-8"
             request.ContentType = "application/json"
 
 
@@ -53,35 +50,43 @@ Public Module WebRequest
                 Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
             End Try
 
+
             Try
+                response = request.GetResponse()
 
-                request.BeginGetResponse(
-                Function(x)
-                    Try
-                        response = DirectCast(request.EndGetResponse(x), HttpWebResponse)
-                        Return response
-                    Catch ex As WebException
-                        Using Exresponse As WebResponse = ex.Response
-                            Dim httpResponse As HttpWebResponse = DirectCast(Exresponse, HttpWebResponse)
-                            System.Diagnostics.Debug.WriteLine("Error code: {0}", httpResponse.StatusCode)
-                            Using str As Stream = Exresponse.GetResponseStream()
-                                Dim sr = New StreamReader(str)
-                                Dim text As String = sr.ReadToEnd()
-                                System.Diagnostics.Debug.WriteLine(text)
-                            End Using
-                        End Using
-                        Return 0
-                    Catch ex As Exception
-                        System.Diagnostics.Debug.WriteLine("Message: " & ex.Message)
-                        Return 0
-                    End Try
-
-                End Function, request)
-
-            Catch ex As Exception
-                Call MsgBox("Fehler bei BeginGetResponse:  " & ex.Message)
-                Return Nothing
+            Catch ex As WebException
+                response = ex.Response
             End Try
+
+            ''''Try
+
+            ''''    request.BeginGetResponse(
+            ''''    Function(x)
+            ''''        Try
+            ''''            response = DirectCast(request.EndGetResponse(x), HttpWebResponse)
+            ''''            Return response
+            ''''        Catch ex As WebException
+            ''''            Using Exresponse As WebResponse = ex.Response
+            ''''                Dim httpResponse As HttpWebResponse = DirectCast(Exresponse, HttpWebResponse)
+            ''''                System.Diagnostics.Debug.WriteLine("Error code: {0}", httpResponse.StatusCode)
+            ''''                Using str As Stream = Exresponse.GetResponseStream()
+            ''''                    Dim sr = New StreamReader(str)
+            ''''                    Dim text As String = sr.ReadToEnd()
+            ''''                    System.Diagnostics.Debug.WriteLine(text)
+            ''''                End Using
+            ''''            End Using
+            ''''            Return 0
+            ''''        Catch ex As Exception
+            ''''            System.Diagnostics.Debug.WriteLine("Message: " & ex.Message)
+            ''''            Return 0
+            ''''        End Try
+
+            ''''    End Function, request)
+
+            ''''Catch ex As Exception
+            ''''    Call MsgBox("Fehler bei BeginGetResponse:  " & ex.Message)
+            ''''    Return Nothing
+            ''''End Try
 
         Catch ex1 As Exception
             Call MsgBox(ex1.Message)
@@ -103,14 +108,19 @@ Public Module WebRequest
         Dim response As HttpWebResponse = Nothing
         Try
 
-
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
 
             request.Method = "GET"
-            'request.ContentType = "text/plain;charset=utf-8"
-            request.ContentType = "application/json"
-            request.Headers.Add("access-key", "" & token & "")
+            request.Headers.Add("access-key", token)
+            request.Accept = "application/json"
+            request.UserAgent = My.User.Name & " Client: VISBO Projectboard"
 
+            'request.ContentType = "application/json"
+            'request.Headers.Add("access-key", token)
+            'request.PreAuthenticate = True
+            'request.Headers.Add("Cache-Control", "no-cache")
+
+            ' nur notwendig, wenn ein Body mit übergeben wird
 
             'Dim encoding As New System.Text.UTF8Encoding()
             'Dim bytes As Byte() = encoding.GetBytes(data)
@@ -128,41 +138,52 @@ Public Module WebRequest
             '    Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
             'End Try
 
+
             Try
+                response = request.GetResponse()
 
-                request.BeginGetResponse(
-                Function(x)
-                    Try
-                        response = DirectCast(request.EndGetResponse(x), HttpWebResponse)
-                        Return response
-                    Catch ex As WebException
-                        Using Exresponse As WebResponse = ex.Response
-                            Dim httpResponse As HttpWebResponse = DirectCast(Exresponse, HttpWebResponse)
-                            System.Diagnostics.Debug.WriteLine("Error code: {0}", httpResponse.StatusCode)
-                            Using str As Stream = Exresponse.GetResponseStream()
-                                Dim sr = New StreamReader(str)
-                                Dim text As String = sr.ReadToEnd()
-                                System.Diagnostics.Debug.WriteLine(text)
-                            End Using
-                        End Using
-                        Return 0
-                    Catch ex As Exception
-                        System.Diagnostics.Debug.WriteLine("Message: " & ex.Message)
-                        Return 0
-                    End Try
-
-                End Function, request)
-
-            Catch ex As Exception
-                Call MsgBox("Fehler bei BeginGetResponse:  " & ex.Message)
-                Return Nothing
+            Catch ex As WebException
+                response = ex.Response
             End Try
+
+            ''''Try
+
+            ''''    request.BeginGetResponse(
+            ''''    Function(gx)
+            ''''        Try
+            ''''            response = DirectCast(request.EndGetResponse(gx), HttpWebResponse)
+            ''''            Return response
+            ''''        Catch ex As WebException
+            ''''            Using Exresponse As WebResponse = ex.Response
+            ''''                Dim httpResponse As HttpWebResponse = DirectCast(Exresponse, HttpWebResponse)
+            ''''                System.Diagnostics.Debug.WriteLine("Error code: {0}", httpResponse.StatusCode)
+            ''''                Using str As Stream = Exresponse.GetResponseStream()
+            ''''                    Dim sr = New StreamReader(str)
+            ''''                    Dim text As String = sr.ReadToEnd()
+            ''''                    System.Diagnostics.Debug.WriteLine(text)
+            ''''                End Using
+            ''''            End Using
+            ''''            Return 0
+            ''''        Catch ex As Exception
+            ''''            System.Diagnostics.Debug.WriteLine("Message: " & ex.Message)
+            ''''            Return 0
+            ''''        End Try
+
+            ''''    End Function, request)
+
+            ''''Catch ex As Exception
+            ''''    Call MsgBox("Fehler bei BeginGetResponse:  " & ex.Message)
+            ''''    Return Nothing
+            ''''End Try
 
         Catch ex1 As Exception
             Call MsgBox(ex1.Message)
             Throw
         End Try
 
+        If IsNothing(response) Then
+            Throw New HttpException(HttpStatusCode.NotFound, "The requested url could not be found.")
+        End If
         Return response
 
     End Function
@@ -240,24 +261,13 @@ Public Module WebRequest
     ''' </summary>
     ''' <param name="clsJson"></param>
     ''' <param name="namefile"></param>
-    Sub JsonExport(ByVal clsJson As clsTokenUserLogin, ByVal namefile As String)
+    Sub JsonExport(ByVal clsJson As clsAllVC, ByVal namefile As String)
 
 
         Dim jsonfilename As String = awinPath & namefile
 
         Try
-            Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsTokenUserLogin))
-            ''begin
-            'Dim settings As New XmlWriterSettings
-
-            'settings.IndentChars = (ControlChars.Tab)
-            'settings.OmitXmlDeclaration = True
-
-            'Dim writer As XmlWriter = XmlWriter.Create(jsonfilename, settings)
-            'serializer.WriteObject(writer, clsJson)
-            'writer.Flush()
-            'writer.Close()
-            ''ende
+            Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsAllVC))
 
             Dim file As New FileStream(jsonfilename, FileMode.Create)
             serializer.WriteObject(file, clsJson)
@@ -276,20 +286,23 @@ Public Module WebRequest
     ''' </summary>
     ''' <param name="namefile"></param>
     ''' <returns></returns>
-    Function JsonImport(ByVal namefile As String) As clsTokenUserLogin
+    Function JsonImport(ByVal namefile As String) As clsAllVC
         Dim resp As HttpWebResponse = Nothing
 
-        Dim tokenLogin As New clsTokenUserLogin
+        Dim tokenLogin As New clsAllVC
 
-        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsTokenUserLogin))
+        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsAllVC))
         Dim jsonfilename As String = awinPath & namefile
         Try
 
             ' XML-Datei Öffnen
             ' A FileStream is needed to read the XML document.
-            'Dim file As New FileStream(jsonfilename, FileMode.Open)
+
+            Dim file As New FileStream(jsonfilename, FileMode.Open)
+            tokenLogin = serializer.ReadObject(file)
+
             'Dim file As New StreamReader(resp.GetResponseStream)
-            tokenLogin = serializer.ReadObject(resp.GetResponseStream)
+            'tokenLogin = serializer.ReadObject(resp.GetResponseStream)
 
 
             JsonImport = tokenLogin

@@ -11682,21 +11682,27 @@ Imports System.ServiceModel.Web
     Public Sub PTWebRequestLogin(control As IRibbonControl)
 
         Try
-            Dim typeRequest As String = "/token/user/login"
+            'Dim typeRequest As String = "/token/user/login"
+            Dim typeRequest As String = control.Id.Replace("_", "/")
             Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
             Dim data As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
-            Dim Antwort As clsTokenUserLogin
-            'Dim Antwort2 As String
 
+            Dim Antwort As clsTokenUserLogin
             Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
                 Antwort = CType(ReadResponseContentJson(httpresp, typeRequest), clsTokenUserLogin)
             End Using
 
-            token = Antwort.token
+            'Dim Antwort As String
+            'Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            '    Antwort = ReadResponseContent(httpresp)
+            'End Using
 
-            '''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-            '''    Antwort2 = ReadResponseContent(httpresp)
-            '''End Using
+            Call MsgBox(Antwort.message)
+
+            If Antwort.state = "success" Then
+                token = Antwort.token
+            End If
+
 
         Catch ex As Exception
             Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
@@ -11710,21 +11716,27 @@ Imports System.ServiceModel.Web
     Public Sub PTWebRequestGETallVC(control As IRibbonControl)
 
         Try
-            Dim typeRequest As String = "/vc"
+            'Dim typeRequest As String = "/vc"
+            Dim typeRequest As String = control.Id.Replace("_", "/")
             Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
-            'Dim data As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
             Dim data As String = ""
+
             Dim Antwort As clsAllVC
-
-            'Dim Antwort2 As String
-
             Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
                 Antwort = CType(ReadResponseContentJson(httpresp, typeRequest), clsAllVC)
             End Using
 
-            '''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-            '''    Antwort2 = ReadResponseContent(httpresp)
-            '''End Using
+            'Dim Antwort2 As String
+            'Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+            '    Antwort2 = ReadResponseContent(httpresp)
+            'End Using
+
+            If Antwort.state = "success" Then
+                Call MsgBox(Antwort.message & vbCrLf & "Nun folgen die Aktionen mit den VC's")
+                ' hier erfolgen nun die weiteren Aktionen mit den angeforderten Daten
+            Else
+                Call MsgBox(Antwort.message)
+            End If
 
         Catch ex As Exception
             Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
@@ -11734,15 +11746,35 @@ Imports System.ServiceModel.Web
 
     Public Sub PTJsonWrite(control As IRibbonControl)
 
-        Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
-        Dim tknlgn As clsTokenUserLogin = New clsTokenUserLogin
+        'Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
+        'Dim tknlgn As clsTokenUserLogin = New clsTokenUserLogin
+        'Call JsonExport(tknlgn, JsonFileName)
+
+        Dim JsonFileName As String = requirementsOrdner & "TestGetVCnew.js"
+        Dim tknlgn As clsAllVC = New clsAllVC
+        tknlgn.message = "neue Message"
+        tknlgn.state = "unbekannt"
+
+        Dim user As New clsVCuser
+        user.email = "ute.rittinghaus-koyte@visbo.de"
+        user._id = "aödlkfjaöskdlf"
+        user.role = "Admin"
+
+        Dim vc As New clsVC
+        vc.Name = "uteVC"
+        vc._id = "öalkdfjö"
+
+        vc.Users.Add(user)
+        tknlgn.vc.Add(vc)
+
         Call JsonExport(tknlgn, JsonFileName)
+
 
     End Sub
     Public Sub PTJsonRead(control As IRibbonControl)
 
-        Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
-        Dim tknlgn As clsTokenUserLogin = JsonImport(JsonFileName)
+        Dim JsonFileName As String = requirementsOrdner & "TestGetVC.js"
+        Dim tknlgn As clsAllVC = JsonImport(JsonFileName)
 
     End Sub
 

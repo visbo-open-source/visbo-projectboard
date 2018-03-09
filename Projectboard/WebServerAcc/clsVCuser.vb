@@ -5,8 +5,8 @@
 
 
     Sub New()
-        _id = ""
+        _id = "unbekannte ID"
         _email = "not known"
-        _role = "User"
+        _role = "User/Admin"
     End Sub
 End Class
