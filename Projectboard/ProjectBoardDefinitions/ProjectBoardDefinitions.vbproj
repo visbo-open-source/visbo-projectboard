@@ -90,6 +90,7 @@
     <Compile Include="clsAddElements.vb" />
     <Compile Include="clsFilterDB.vb" />
     <Compile Include="clsEventsWindows.vb" />
+    <Compile Include="clsProjectInfos.vb" />
     <Compile Include="clsroleHrchy.vb" />
     <Compile Include="clsroleNode.vb" />
     <Compile Include="clsVisboCryptography.vb" />

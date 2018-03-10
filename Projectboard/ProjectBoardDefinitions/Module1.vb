@@ -222,6 +222,7 @@ Public Module Module1
         charts = 0
         tables = 1
         components = 2
+        planelements = 4
     End Enum
 
     Public Enum ptReportTables
@@ -244,6 +245,7 @@ Public Module Module1
         prSymRisks = 12
         prSymTrafficLight = 13
         prSymDescription = 14
+        prCard = 15
     End Enum
 
     Public Enum ptPRPFType
@@ -3819,19 +3821,22 @@ Public Module Module1
     ''' <param name="pptSlide"></param>
     ''' <param name="projectTimeStamp"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTSlideBaseInfo(ByRef pptSlide As PowerPoint.Slide, _
-                                            ByVal projectTimeStamp As Date)
+    Public Sub addSmartPPTSlideBaseInfo(ByRef pptSlide As PowerPoint.Slide,
+                                        ByVal projectTimeStamp As Date,
+                                        ByVal type As Integer)
 
         If Not IsNothing(pptSlide) Then
             With pptSlide
 
+                If .Tags.Item("PRPF").Length > 0 Then
+                    .Tags.Delete("PRPF")
+                End If
+                .Tags.Add("PRPF", type.ToString)
 
                 If .Tags.Item("SMART").Length > 0 Then
-                    ' es muss nichts mehr gemacht werden, es ist bereits gekennzeichnet 
-                    '.Tags.Delete("SMART")
-                Else
-                    .Tags.Add("SMART", "visbo")
+                    .Tags.Delete("SMART")
                 End If
+                .Tags.Add("SMART", "visbo")
 
                 If IsNothing(projectTimeStamp) Then
 
@@ -4029,7 +4034,113 @@ Public Module Module1
 
     End Sub
 
-    
+    ''' <summary>
+    ''' das Shape wurde als Projekt-Karte identifiziert - jetzt werden an das Shape die Projekt-Karten Infos angeheftet ...
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    Public Sub addSmartPPTprCardShapeInfo(ByRef pptShape As PowerPoint.Shape,
+                                          ByVal hproj As clsProjekt)
+
+        Dim nullDate As Date = Nothing
+        Dim bigtype As Integer = ptReportBigTypes.planelements
+        Dim detailID As Integer = ptReportComponents.prCard
+        Dim tmpStr As String = ""
+        Dim kennung As String = ""
+
+        If Not IsNothing(pptShape) Then
+            With pptShape
+
+                ' hier kommt der Projekt-Name rein
+                tmpStr = hproj.getShapeText
+                kennung = "CN"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt das Startdatum des Projektes
+                tmpStr = hproj.startDate.ToString
+                kennung = "SD"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt das Ende-Datum des Projekts 
+                tmpStr = hproj.endeDate.ToString
+                kennung = "ED"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Ampel des Projektes
+                tmpStr = hproj.ampelStatus.ToString
+                kennung = "AC"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Ampel-Erläuterung des Projekts 
+                tmpStr = hproj.ampelErlaeuterung
+                kennung = "AE"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Ziele des Projektes 
+                tmpStr = hproj.fullDescription
+                kennung = "LU"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                'jetzt die Risiken des Projektes 
+                tmpStr = ""
+                kennung = "RSK"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt Verantwortlicher des Projektes 
+                tmpStr = hproj.leadPerson
+                kennung = "VE"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt PercentDone des Projektes 
+                ' aktuell noch leer lassen 
+
+                ' jetzt die BigType ID 
+                tmpStr = ptReportBigTypes.planelements.ToString
+                kennung = "BID"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Detail ID 
+                tmpStr = ptReportComponents.prCard.ToString
+                kennung = "DID"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+            End With
+        End If
+
+
+
+    End Sub
+
     ''' <summary>
     ''' 
     ''' </summary>
@@ -5590,6 +5701,46 @@ Public Module Module1
         noDuplicatesInSheet = Not found
 
     End Function
+
+    ''' <summary>
+    ''' faerbt die Projekt-Karte entsprechend der 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="colorindex"></param>
+    Public Sub faerbeProjectCard(ByRef pptShape As PowerPoint.Shape, ByVal colorindex As Integer)
+
+        If Not IsNothing(pptShape) Then
+
+            With pptShape
+                .Shadow.Type = MsoShadowType.msoShadow25
+                .Shadow.Visible = MsoTriState.msoTrue
+                .Shadow.Style = MsoShadowStyle.msoShadowStyleOuterShadow
+                .Shadow.Blur = 4
+                .Shadow.OffsetX = CInt(.Width / 7)
+                .Shadow.OffsetY = CInt(.Width / 7)
+                .Shadow.Transparency = 0
+                .Shadow.Size = 110
+                .Shadow.RotateWithShape = MsoTriState.msoFalse
+
+                If colorindex = 0 Then
+                    .Shadow.ForeColor.RGB = XlRgbColor.rgbGrey
+                    .Line.ForeColor.RGB = XlRgbColor.rgbGrey
+                ElseIf colorindex = 1 Then
+                    .Shadow.ForeColor.RGB = XlRgbColor.rgbGreen
+                    .Line.ForeColor.RGB = XlRgbColor.rgbGreen
+                ElseIf colorindex = 2 Then
+                    .Shadow.ForeColor.RGB = XlRgbColor.rgbYellow
+                    .Line.ForeColor.RGB = XlRgbColor.rgbYellow
+                ElseIf colorindex = 3 Then
+                    .Shadow.ForeColor.RGB = XlRgbColor.rgbRed
+                    .Line.ForeColor.RGB = XlRgbColor.rgbRed
+                End If
+
+            End With
+        End If
+
+
+    End Sub
 
 
 End Module

@@ -780,6 +780,7 @@ Public Class clsProjekte
         End Get
     End Property
 
+
     ''' <summary>
     ''' gibt das vollständige Projekt aus der Liste zurück, das den angegebenen Namen hat 
     ''' </summary>
@@ -1426,6 +1427,112 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt den Zusatz Text zurück: 21 P = 6+4+8+3
+    ''' wobei die erste Zahl die Gesamtsumme der Projekte in dieser Phase darstellt, 
+    ''' die zweite Zahl die Zahl der nicht bewerteten Projekte, 
+    ''' die dritte Zahl die grünen, dann gelben sowie roten PRojekte 
+    ''' Die einzelnen Ziffern sollen auch entspreched eingefärbt werden 
+    ''' der phaseName Finished darf nicht vorkommen 
+    ''' </summary>
+    ''' <param name="phaseName"></param>
+    ''' <returns></returns>
+    Public Function bestimmeAddOnTxtPfContainer(ByVal phaseName As String, ByVal timestamp As Date) As String()
+
+        Dim tmpresult(4) As String
+        ' hier muss ggf noch untersucht werden, ob der Phase-Name bereits den Breadcrum enzhält; 
+        ' dann muss der hier noch bestimmt werden 
+        ' aktuell wird davon ausgegangen, dass die Phasen-Namen eindeutig sind und es deshalb reicht, nur den Phasen NAmen anzugeben 
+
+        Dim tmpSum As Integer = 0
+        For i As Integer = 0 To 3
+            Dim tmpAnz As Integer = Me.getCountProjectsInPhaseWithColor(phaseName, i, timestamp)
+            tmpresult(i + 1) = tmpAnz.ToString
+            tmpSum = tmpSum + tmpAnz
+        Next
+
+        tmpresult(0) = tmpSum.ToString
+        bestimmeAddOnTxtPfContainer = tmpresult
+    End Function
+
+
+    ''' <summary>
+    ''' gibt für die Showprojekte die Anzahl der Projekte zurück, die sich aktuell in der angegebenen Phase befinden 
+    ''' phName enthält ggf. einen Teil des Breadcrumbs 
+    ''' </summary>
+    ''' <param name="phName"></param>
+    ''' <param name="colorCode"></param>
+    ''' <param name="timestamp"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCountProjectsInPhaseWithColor(ByVal phName As String,
+                                                              ByVal colorCode As Integer,
+                                                              ByVal timestamp As Date) As Integer
+        Get
+            Dim tmpResult As Integer = 0
+            ' Schleife über alle Projekte 
+            Dim elemName As String = ""
+            Dim breadCrumb As String = ""
+            Dim pvName As String = ""
+            Dim type As Integer = -1
+            Dim cphase As clsPhase = Nothing
+            Dim endeKennwort As String = "$finished"
+
+            Call splitHryFullnameTo2(phName, elemName, breadCrumb, type, pvName)
+
+            If phName = endeKennwort Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+
+                    If kvp.Value.endeDate < timestamp Then
+                        If kvp.Value.ampelStatus = colorCode Then
+                            tmpResult = tmpResult + 1
+                        End If
+                    End If
+
+                Next
+            Else
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                    Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(elemName, breadCrumb)
+
+                    For px As Integer = 0 To phaseIndices.Length - 1
+                        If phaseIndices(px) > 0 And phaseIndices(px) <= kvp.Value.CountPhases Then
+                            cphase = kvp.Value.getPhase(phaseIndices(px))
+                        Else
+                            cphase = Nothing
+                        End If
+                    Next
+
+                    If Not IsNothing(cphase) Then
+                        If cphase.getStartDate <= timestamp And cphase.getEndDate >= timestamp Then
+
+                            If kvp.Value.ampelStatus = colorCode Then
+                                tmpResult = tmpResult + 1
+                            End If
+
+                        End If
+                    End If
+
+                Next
+            End If
+
+            getCountProjectsInPhaseWithColor = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Infos der Projekte aus Showprojekte zurück, die aktuell in der angegebenen Phase sind
+    ''' </summary>
+    ''' <param name="phName"></param>
+    ''' <param name="breadCrumb"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getInfosOfProjectsInPhase(ByVal phName As String,
+                                                       ByVal breadCrumb As String) As Collection
+        Get
+
+            Dim tmpresult As New Collection
+            getInfosOfProjectsInPhase = tmpresult
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 

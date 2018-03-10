@@ -673,7 +673,7 @@ Public Module testModule
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
             ' jetzt muss die Slide als SmartPPTSlide gekennzeichnet werden 
-            Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp)
+            Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -3204,7 +3204,7 @@ Public Module testModule
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
             ' jetzt muss die Slide als smartSlide gekennzeichnet werden 
-            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now)
+            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now, ptPRPFType.portfolio)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -3234,51 +3234,55 @@ Public Module testModule
                         kennzeichnung = "nicht identifizierbar"
                     End Try
 
-                    If kennzeichnung = "Portfolio-Name" Or _
-                        kennzeichnung = "Szenario-Projekt-Tabelle" Or _
-                        kennzeichnung = "Legenden-Tabelle" Or _
-                        kennzeichnung = "Multiprojektsicht" Or _
-                        kennzeichnung = "Projekt-Tafel" Or _
-                        kennzeichnung = "Tabelle Projektliste" Or _
-                        kennzeichnung = "Tabelle Portfolioliste" Or _
-                        kennzeichnung = "Projekt-Tafel Phasen" Or _
-                        kennzeichnung = "Tabelle Zielerreichung" Or _
-                        kennzeichnung = "Tabelle Projektstatus" Or _
-                        kennzeichnung = "Tabelle Projektabhängigkeiten" Or _
-                        kennzeichnung = "Übersicht Besser/Schlechter" Or _
-                        kennzeichnung = "Tabelle Besser/Schlechter" Or _
-                        kennzeichnung = "Tabelle ProjekteMitMsImMonat" Or _
-                        kennzeichnung = "Tabelle ProjekteMitPhImMonat" Or _
-                        kennzeichnung = "Tabelle ProjekteMitRolleImMonat" Or _
-                        kennzeichnung = "Tabelle ProjekteMitKostenartImMonat" Or _
-                        kennzeichnung = "Plan/Forecast" Or _
-                        kennzeichnung = "Fortschritt Personalkosten" Or _
-                        kennzeichnung = "Fortschritt Sonstige Kosten" Or _
-                        kennzeichnung = "Fortschritt Gesamtkosten" Or _
-                        kennzeichnung = "Fortschritt Rolle" Or _
-                        kennzeichnung = "Fortschritt Kostenart" Or _
-                        kennzeichnung = "Übersicht Budget" Or _
-                        kennzeichnung = "Ergebnis Verbesserungspotential" Or _
-                        kennzeichnung = "Ergebnis" Or _
-                        kennzeichnung = "Strategie/Risiko/Marge" Or _
-                        kennzeichnung = "Strategie/Risiko/Volumen" Or _
-                        kennzeichnung = "Zeit/Risiko/Volumen" Or _
-                        kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or _
-                        kennzeichnung = "Übersicht Auslastung" Or _
-                        kennzeichnung = "Details Unterauslastung" Or _
-                        kennzeichnung = "Details Überauslastung" Or _
-                        kennzeichnung = "Bisherige Zielerreichung" Or _
-                        kennzeichnung = "Prognose Zielerreichung" Or _
-                        kennzeichnung = "Phase" Or _
-                        kennzeichnung = "P-Category" Or _
-                        kennzeichnung = "Rolle" Or _
-                        kennzeichnung = "Kostenart" Or _
-                        kennzeichnung = "Meilenstein" Or _
-                        kennzeichnung = "M-Category" Or _
-                        kennzeichnung = "Stand:" Or _
+                    If kennzeichnung = "Portfolio-Name" Or
+                        kennzeichnung = "ProjectCard" Or
+                        kennzeichnung = "ProjectCardContainer" Or
+                        kennzeichnung = "pfPhaseSymbol" Or
+                        kennzeichnung = "Szenario-Projekt-Tabelle" Or
+                        kennzeichnung = "Legenden-Tabelle" Or
+                        kennzeichnung = "Multiprojektsicht" Or
+                        kennzeichnung = "Projekt-Tafel" Or
+                        kennzeichnung = "Tabelle Projektliste" Or
+                        kennzeichnung = "Tabelle Portfolioliste" Or
+                        kennzeichnung = "Projekt-Tafel Phasen" Or
+                        kennzeichnung = "Tabelle Zielerreichung" Or
+                        kennzeichnung = "Tabelle Projektstatus" Or
+                        kennzeichnung = "Tabelle Projektabhängigkeiten" Or
+                        kennzeichnung = "Übersicht Besser/Schlechter" Or
+                        kennzeichnung = "Tabelle Besser/Schlechter" Or
+                        kennzeichnung = "Tabelle ProjekteMitMsImMonat" Or
+                        kennzeichnung = "Tabelle ProjekteMitPhImMonat" Or
+                        kennzeichnung = "Tabelle ProjekteMitRolleImMonat" Or
+                        kennzeichnung = "Tabelle ProjekteMitKostenartImMonat" Or
+                        kennzeichnung = "Plan/Forecast" Or
+                        kennzeichnung = "Fortschritt Personalkosten" Or
+                        kennzeichnung = "Fortschritt Sonstige Kosten" Or
+                        kennzeichnung = "Fortschritt Gesamtkosten" Or
+                        kennzeichnung = "Fortschritt Rolle" Or
+                        kennzeichnung = "Fortschritt Kostenart" Or
+                        kennzeichnung = "Übersicht Budget" Or
+                        kennzeichnung = "Ergebnis Verbesserungspotential" Or
+                        kennzeichnung = "Ergebnis" Or
+                        kennzeichnung = "Strategie/Risiko/Marge" Or
+                        kennzeichnung = "Strategie/Risiko/Volumen" Or
+                        kennzeichnung = "Zeit/Risiko/Volumen" Or
+                        kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or
+                        kennzeichnung = "Übersicht Auslastung" Or
+                        kennzeichnung = "Details Unterauslastung" Or
+                        kennzeichnung = "Details Überauslastung" Or
+                        kennzeichnung = "Bisherige Zielerreichung" Or
+                        kennzeichnung = "Prognose Zielerreichung" Or
+                        kennzeichnung = "Phase" Or
+                        kennzeichnung = "P-Category" Or
+                        kennzeichnung = "Rolle" Or
+                        kennzeichnung = "Kostenart" Or
+                        kennzeichnung = "Meilenstein" Or
+                        kennzeichnung = "M-Category" Or
+                        kennzeichnung = "Stand:" Or
                         kennzeichnung = "Zeitraum:" Then
 
                         listofShapes.Add(pptShape)
+
 
 
                     ElseIf kennzeichnung = "gleich" Then
@@ -3389,6 +3393,67 @@ Public Module testModule
 
                     Select Case kennzeichnung
 
+                        ' die drei folgenden gehören zusammen ... bzw. treten meist zusammen auf. 
+                        ' nämlich in der Portfolio Roadmap 
+                        Case "ProjectCard"
+                            ' alle auftretenden ProjectCardContainer sind bereits bestimmt ..
+
+                            ' jetzt muss herausgefunden werden, um welches Projekt es sich handelt ...
+                            Dim pname As String = qualifier
+                            Dim hproj As clsProjekt = Nothing
+                            Try
+                                hproj = ShowProjekte.getProject(pname)
+                            Catch ex As Exception
+
+                            End Try
+
+                            If Not IsNothing(hproj) Then
+                                Call addSmartPPTprCardShapeInfo(pptShape, hproj)
+
+                                ' jetzt soll die Karte noch entsprechend Ampel eingefärbt werden 
+                                Call faerbeProjectCard(pptShape, hproj.ampelStatus)
+                            Else
+                                ' Karte kennzeichnen, dass Projekt unbekannt ist ...
+                                Dim newTxt As String = ""
+                                If pptShape.TextFrame2.HasText Then
+                                    newTxt = pptShape.TextFrame2.TextRange.Text
+                                End If
+                                newTxt = newTxt & "?"
+                                pptShape.TextFrame2.TextRange.Text = newTxt
+                            End If
+
+                            ' und in welchen Container-Phasen es auftritt ... je nachdem müssen auch zwei oder mehr Karten erstellt werden ... 
+                            ' in der ersten Implementierung soll kann jedes Projekt entweder in genau einer Phase sein, oder abgeschlossen bzw. noch gar nicht gestartet sein ... 
+                            ' je nachdem wird es hier positioniert 
+
+                        Case "ProjectCardContainer"
+
+                            ' hier soll jetzt der Text ergänzt werden , dazu benötigt man die Anzahl der Projekte, die in der entsprechenden Phase sind 
+                            Dim addOnText As String = ""
+                            Dim farbzahlen() As String
+                            If PhaseDefinitions.Contains(qualifier) Or missingPhaseDefinitions.Contains(qualifier) Or qualifier = "$finished" Then
+                                farbzahlen = ShowProjekte.bestimmeAddOnTxtPfContainer(qualifier, Date.Now)
+                                If farbzahlen.Length = 5 Then
+                                    addOnText = farbzahlen(0) & " P. = " & farbzahlen(1) & "+" & farbzahlen(2) & "+" & farbzahlen(3) & "+" & farbzahlen(4)
+                                End If
+                            Else
+                                addOnText = "Name existiert nicht ..."
+                            End If
+
+                            Dim newTxt As String = ""
+                            If pptShape.TextFrame2.HasText Then
+                                newTxt = pptShape.TextFrame2.TextRange.Text & vbLf
+                            Else
+                                newTxt = qualifier & vbLf
+                            End If
+                            newTxt = newTxt & addOnText
+                            pptShape.TextFrame2.TextRange.Text = newTxt
+
+                            ' jetzt müssen die Zahlen noch eingefärbt werden 
+
+
+                        Case "pfPhaseSymbol"
+
                         Case "Legenden-Tabelle"
 
                             Try
@@ -3402,11 +3467,11 @@ Public Module testModule
 
                             Try
                                 Dim tmpProjekt As New clsProjekt
-                                Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                              objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize, _
-                                                              selectedPhases, selectedMilestones, _
-                                                              selectedRoles, selectedCosts, _
-                                                              selectedBUs, selectedTyps, _
+                                Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                                              objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
+                                                              selectedPhases, selectedMilestones,
+                                                              selectedRoles, selectedCosts,
+                                                              selectedBUs, selectedTyps,
                                                               worker, e, True, False, tmpProjekt, kennzeichnung)
                                 .TextFrame2.TextRange.Text = ""
                                 '.ZOrder(MsoZOrderCmd.msoSendToBack)
@@ -3477,7 +3542,13 @@ Public Module testModule
                             End Try
 
                         Case "Portfolio-Name"
-                            .TextFrame2.TextRange.Text = portfolioName
+
+                            If qualifier <> "Sum" Then
+                                .TextFrame2.TextRange.Text = portfolioName
+                            Else
+                                .TextFrame2.TextRange.Text = portfolioName & " (" & ShowProjekte.Count & " P.)"
+                            End If
+
 
 
                         Case "Projekt-Tafel"
@@ -3814,9 +3885,9 @@ Public Module testModule
 
                             Try
 
-                                Call zeichneTabelleProjektliste(pptSlide, pptShape, _
-                                                                gleichShape, steigendShape, fallendShape, _
-                                                                objectsToDo, objectsDone, summenArray, _
+                                Call zeichneTabelleProjektliste(pptSlide, pptShape,
+                                                                gleichShape, steigendShape, fallendShape,
+                                                                objectsToDo, objectsDone, summenArray,
                                                                 qualifier)
 
                                 ' jetzt ggf die Hilfs-Shapes löschen 
@@ -3852,8 +3923,8 @@ Public Module testModule
 
                             Try
 
-                                Call zeichneTabellePortfolioliste(pptSlide, pptShape, _
-                                                                gleichShape, steigendShape, fallendShape, _
+                                Call zeichneTabellePortfolioliste(pptSlide, pptShape,
+                                                                gleichShape, steigendShape, fallendShape,
                                                                 objectsToDo, objectsDone)
 
                                 ' jetzt ggf die Hilfs-Shapes löschen 
@@ -4043,7 +4114,7 @@ Public Module testModule
                             hheight = awinSettings.ChartHoehe1
                             obj = Nothing
 
-                            Call createSollIstOfPortfolio(obj, aktuellesDatum, auswahl, qualifier, ersterStandDate, letzterStandDate, _
+                            Call createSollIstOfPortfolio(obj, aktuellesDatum, auswahl, qualifier, ersterStandDate, letzterStandDate,
                                                            htop, hleft, hheight, hwidth)
 
                             reportObj = obj
@@ -4456,8 +4527,8 @@ Public Module testModule
 
 
                             Try
-                                Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=showAbsoluteDiff, isTimeTimeVgl:=isTimeTimeVgl, vglTyp:=vglTyp, _
-                                                charttype:=charttype, bubbleColor:=0, bubbleValueTyp:=bubbleValueTyp, showLabels:=showLabels, chartBorderVisible:=True, _
+                                Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=showAbsoluteDiff, isTimeTimeVgl:=isTimeTimeVgl, vglTyp:=vglTyp,
+                                                charttype:=charttype, bubbleColor:=0, bubbleValueTyp:=bubbleValueTyp, showLabels:=showLabels, chartBorderVisible:=True,
                                                 top:=htop, left:=hleft, width:=hwidth, height:=hheight)
 
 
@@ -4776,7 +4847,7 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(58)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Phase " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) & _
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(110) &
                                                                     splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
@@ -4843,7 +4914,7 @@ Public Module testModule
                                         .Chart.ChartTitle.Text = repMessages.getmsg(120)
                                     ElseIf myCollection.Count = 1 Then
                                         '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
-                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) & _
+                                        .Chart.ChartTitle.Text = repMessages.getmsg(121) &
                                                                     splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
@@ -4905,7 +4976,7 @@ Public Module testModule
                                         '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
                                         '.Chart.ChartTitle.Text = repMessages.getmsg(121) & _
                                         '                            splitHryFullnameTo1(CStr(myCollection.Item(1)))
-                                        .Chart.ChartTitle.Text = "Milestone Category " & _
+                                        .Chart.ChartTitle.Text = "Milestone Category " &
                                                                     splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
@@ -4967,7 +5038,7 @@ Public Module testModule
                                         '.Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1)).Replace("#", "-")
                                         '.Chart.ChartTitle.Text = repMessages.getmsg(121) & _
                                         '                            splitHryFullnameTo1(CStr(myCollection.Item(1)))
-                                        .Chart.ChartTitle.Text = "Phase Category " & _
+                                        .Chart.ChartTitle.Text = "Phase Category " &
                                                                     splitHryFullnameTo1(CStr(myCollection.Item(1)))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
