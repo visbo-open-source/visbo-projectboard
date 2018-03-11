@@ -840,8 +840,8 @@ Module Module1
                 If Not IsNothing(tmpShape) Then
                     If tmpShape.Tags.Item("BID").Length > 0 And tmpShape.Tags.Item("DID").Length > 0 Then
 
-                        Dim bigID As Integer = CInt(tmpShape.Tags.Item("BID"))
-                        Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
+                        'Dim bigID As Integer = CInt(tmpShape.Tags.Item("BID"))
+                        'Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
                         'If Not ((bigID = ptReportBigTypes.components And detailID = ptReportComponents.prStand) _
                         '        Or (bigID = ptReportBigTypes.components And detailID = ptReportComponents.pfStand)) Then
                         '    thereIsNoVersionFieldOnSlide = False
@@ -866,7 +866,7 @@ Module Module1
                     End If
 
                     If tmpShape.Tags.Count > 0 Then
-                        If isRelevantMSPHShape(tmpShape) Then
+                        If isRelevantMSPHShape(tmpShape) Or isProjectCard(tmpShape) Then
 
                             bekannteIDs.Add(tmpShape.Id, tmpShape.Name)
 
@@ -1116,20 +1116,6 @@ Module Module1
                     '' Anfang ... das war vorher innerhalb der next Schleife .. 
                     ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
                     If relevantShapeNames.Count >= 1 Then
-                        ''''???
-                        '' '' '' '' hier muss geprüft werden, ob das Info - Fenster angezeigt wird ... 
-                        ' '' '' ''If Not IsNothing(propertiesPane) And Not propertiesPane.Visible Then
-                        ' '' '' ''    propertiesPane.Visible = True
-                        ' '' '' ''End If
-
-
-
-                        ' ur: wegen Pane
-                        ' ''If IsNothing(infoFrm) And Not formIsShown Then
-                        ' ''    infoFrm = New frmInfo
-                        ' ''    formIsShown = True
-                        ' ''    infoFrm.Show()
-                        ' ''End If
 
                         ReDim arrayOfNames(relevantShapeNames.Count - 1)
 
@@ -1138,10 +1124,12 @@ Module Module1
                         Next
 
                         selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+
                     ElseIf isSymbolShape(shpRange(1)) Then
 
                         selectedPlanShapes = shpRange
                         Call aktualisiereInfoPane(shpRange(1))
+
                     Else
                         ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
                         Call checkHomeChangeBtnEnablement()
@@ -1156,24 +1144,32 @@ Module Module1
                     '' Ende ...
 
                     If Not isSymbolShape(shpRange(1)) Then
-                        If (Not IsNothing(selectedPlanShapes) And Not isSymbolShape(shpRange(1))) Then
+                        If Not IsNothing(selectedPlanShapes) Then
 
                             Dim tmpShape As PowerPoint.Shape = Nothing
                             Dim elemWasMoved As Boolean = False
-                            For Each tmpShape In selectedPlanShapes
-                                ' hier sind nur noch richtige Shapes  
 
-                                ' sollen Home- bzw. Change-Button angezeigt werden ? 
-                                elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
-                                If elemWasMoved Then
-                                    homeButtonRelevance = True
-                                Else
-                                    If tmpShape.Tags.Item("MVD").Length > 0 Then
-                                        changedButtonRelevance = True
+                            Dim isPCard As Boolean = isProjectCard(shpRange(1))
+
+                            If Not isPCard Then
+                                For Each tmpShape In selectedPlanShapes
+                                    ' hier sind nur noch richtige Shapes  
+
+                                    ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                                    elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                                    If elemWasMoved Then
+                                        homeButtonRelevance = True
+                                    Else
+                                        If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                            changedButtonRelevance = True
+                                        End If
                                     End If
-                                End If
 
-                            Next
+                                Next
+                            Else
+                                tmpShape = selectedPlanShapes(1)
+                            End If
+
 
                             ' hier wird die Information zu dem selektierten Shape angezeigt 
                             If Not IsNothing(propertiesPane) Then
@@ -1181,7 +1177,12 @@ Module Module1
                             End If
                             ' ur: wegen Pane
                             If formIsShown Then
-                                Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                                If isPCard Then
+                                    Call aktualisiereInfoFrm(Nothing)
+                                Else
+                                    Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                                End If
+
                             End If
 
 
@@ -1403,11 +1404,22 @@ Module Module1
     ''' <param name="tmpShape"></param>
     ''' <remarks></remarks>
     Private Sub aktualisiereSortedLists(ByVal tmpShape As PowerPoint.Shape)
+
         Dim shapeName As String = tmpShape.Name
         Dim checkIT As Boolean = False
         Dim isMilestone As Boolean
+        Dim pvName As String = ""
+        ' neu ergänzt wegen dem Element projectCard
+        Dim isPCard As Boolean = False
 
-        Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
+        If isProjectCard(tmpShape) Then
+            isPCard = True
+            pvName = getPVnameFromTags(tmpShape)
+        Else
+            pvName = getPVnameFromShpName(tmpShape.Name)
+        End If
+
+
         If pvName <> "" Then
             If smartSlideLists.containsProject(pvName) Then
                 ' nichts tun, ist schon drin ..
@@ -1417,12 +1429,15 @@ Module Module1
         End If
 
 
-        If tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or _
-            tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine Then
+        If (tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox Or
+            tmpShape.Type = Microsoft.Office.Core.MsoShapeType.msoLine) And Not isPCard Then
             ' nichts tun 
         Else
             ' es werden nur die aufgebaut, die Meilensteine oder Phasen sind ...  
-            If pptShapeIsMilestone(tmpShape) Then
+            If isPCard Then
+                checkIT = True
+                isMilestone = False
+            ElseIf pptShapeIsMilestone(tmpShape) Then
                 checkIT = True
                 isMilestone = True
                 ' nichts tun 
@@ -1447,25 +1462,31 @@ Module Module1
 
             Call smartSlideLists.addCN(tmpName, shapeName, isMilestone)
 
-            ' den original Name behandeln ...
-            tmpName = tmpShape.Tags.Item("ON")
-            If tmpName.Trim.Length > 0 Then
-                Call smartSlideLists.addON(tmpName, shapeName, isMilestone)
+
+            If Not isPCard Then
+                ' den original Name behandeln ...
+                tmpName = tmpShape.Tags.Item("ON")
+                If tmpName.Trim.Length > 0 Then
+                    Call smartSlideLists.addON(tmpName, shapeName, isMilestone)
+                End If
+
+
+
+                ' den Short Name behandeln ...
+                tmpName = tmpShape.Tags.Item("SN")
+                If tmpName.Trim.Length = 0 Then
+                    ' es gibt keinen Short-Name, also soll einer aufgrund der laufenden Nummer erzeugt werden ...
+                    tmpName = smartSlideLists.getUID(shapeName).ToString
+                End If
+                Call smartSlideLists.addSN(tmpName, shapeName, isMilestone)
+
+                ' den BreadCrumb behandeln 
+                tmpName = tmpShape.Tags.Item("BC")
+                If tmpName.Trim.Length > 0 Then
+                    Call smartSlideLists.addBC(tmpName, shapeName, isMilestone)
+                End If
             End If
 
-            ' den Short Name behandeln ...
-            tmpName = tmpShape.Tags.Item("SN")
-            If tmpName.Trim.Length = 0 Then
-                ' es gibt keinen Short-Name, also soll einer aufgrund der laufenden Nummer erzeugt werden ...
-                tmpName = smartSlideLists.getUID(shapeName).ToString
-            End If
-            Call smartSlideLists.addSN(tmpName, shapeName, isMilestone)
-
-            ' den BreadCrumb behandeln 
-            tmpName = tmpShape.Tags.Item("BC")
-            If tmpName.Trim.Length > 0 Then
-                Call smartSlideLists.addBC(tmpName, shapeName, isMilestone)
-            End If
 
             ' AmpelColor behandeln
             Dim ampelColor As Integer = 0
@@ -1535,7 +1556,9 @@ Module Module1
 
             ' wurde das Element verschoben ? 
             ' SmartslideLists werden auch gleich mit aktualisiert ... 
-            Call checkShpOnManualMovement(tmpShape.Name)
+            If Not isPCard Then
+                Call checkShpOnManualMovement(tmpShape.Name)
+            End If
 
             ' wenn Datenbank Zugang vorliegt und es sich um eine Phase handelt, 
             ' denn nur die können Resourcen und Kostenbedarfe haben 
@@ -3183,6 +3206,26 @@ Module Module1
     End Sub
 
     ''' <summary>
+    ''' gibt den Projekt-/Varianten-Namen in der Form pname#vname zurück 
+    ''' bildet ihn aus dem Tag PNM und VNM
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    Friend Function getPVnameFromTags(ByVal curShape As PowerPoint.Shape) As String
+
+        Dim tmpResult As String = ""
+        Dim pname As String = curShape.Tags.Item("PNM")
+        Dim vname As String = curShape.Tags.Item("VNM")
+
+        If pname.Length > 0 Then
+            tmpResult = calcProjektKey(pname, vname)
+        End If
+
+        getPVnameFromTags = tmpResult
+
+    End Function
+
+    ''' <summary>
     ''' gibt den Projekt-/Varianten Namen zurück
     ''' ShapeName ist aufgebaut (pName#variantName)ElemID  
     ''' </summary>
@@ -3836,7 +3879,10 @@ Module Module1
         Dim bestShortName As String = curShape.Tags.Item("BSN")
         Dim bestLongName As String = curShape.Tags.Item("BLN")
 
-        If isRelevantMSPHShape(curShape) Then
+        If isProjectCard(curShape) Then
+            tmpText = curShape.Tags.Item("CN")
+
+        ElseIf isRelevantMSPHShape(curShape) Then
             If showOriginalName Then
                 If curShape.Tags.Item("ON").Length = 0 Then
                     tmpText = curShape.Tags.Item("CN")
@@ -3939,7 +3985,11 @@ Module Module1
 
         Dim tmpText As String = ""
 
-        If pptShapeIsMilestone(curShape) Then
+        If isProjectCard(curShape) Then
+
+            tmpText = curShape.Tags.Item("SD") & "-" & curShape.Tags.Item("ED")
+
+        ElseIf pptShapeIsMilestone(curShape) Then
 
             Dim msDate As Date = slideCoordInfo.calcXtoDate(curShape.Left + 0.5 * curShape.Width)
             If Not showShort Then
@@ -4125,6 +4175,21 @@ Module Module1
         End If
 
         isRelevantMSPHShape = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' true, wenn es sich um eine sogenannte Projekt-Karte handelt ...
+    ''' </summary>
+    ''' <param name="curShape"></param>
+    ''' <returns></returns>
+    Public Function isProjectCard(ByVal curShape As PowerPoint.Shape) As Boolean
+
+        Dim tmpResult As Boolean = False
+        If curShape.Tags.Item("BID") = CStr(ptReportBigTypes.planelements) And curShape.Tags.Item("DID") = CStr(ptReportComponents.prCard) Then
+            tmpResult = True
+        End If
+
+        isProjectCard = tmpResult
     End Function
 
     ''' <summary>

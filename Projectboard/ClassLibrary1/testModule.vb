@@ -3209,6 +3209,11 @@ Public Module testModule
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
 
+            ' jetzt wird die Collection projectCardContainerNames definiert 
+            ' wird für die Projekt-Karten Roadmap benötigt 
+            Dim projectCardContainerNames As New Collection
+
+            Dim listOfProjectCardContainer As New SortedList(Of String, PowerPoint.Shape)
 
             ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
             ' bzw. alle Shapes, die "gemerkt" werden müssen
@@ -3219,15 +3224,25 @@ Public Module testModule
 
 
 
-                    Dim tmpStr(3) As String
+                    Dim tmpStr() As String
                     Try
 
                         If .Title <> "" Then
                             tmpStr = .Title.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
-                        Else
+                            If tmpStr.Length > 1 Then
+                                qualifier = tmpStr(1).Trim
+                            End If
+
+                        ElseIf .TextFrame2.HasText Then
+
                             tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
+                            If tmpStr.Length > 1 Then
+                                qualifier = tmpStr(1).Trim
+                            End If
+                        Else
+                            kennzeichnung = "nicht identifizierbar"
                         End If
 
                     Catch ex As Exception
@@ -3281,9 +3296,20 @@ Public Module testModule
                         kennzeichnung = "Stand:" Or
                         kennzeichnung = "Zeitraum:" Then
 
-                        listofShapes.Add(pptShape)
+                        If kennzeichnung = "ProjectCardContainer" Then
+                            ' jetzt werden alle auftretenden Qualifier, d.h Phasen Namen verzeichnet ... 
+                            If Not projectCardContainerNames.Contains(qualifier) Then
+                                projectCardContainerNames.Add(qualifier)
+                                listofShapes.Add(pptShape)
+                            End If
 
+                            If Not listOfProjectCardContainer.ContainsKey(qualifier) Then
+                                listOfProjectCardContainer.Add(qualifier, pptShape)
+                            End If
 
+                        Else
+                            listofShapes.Add(pptShape)
+                        End If
 
                     ElseIf kennzeichnung = "gleich" Then
                         gleichShape = pptShape
@@ -3396,6 +3422,7 @@ Public Module testModule
                         ' die drei folgenden gehören zusammen ... bzw. treten meist zusammen auf. 
                         ' nämlich in der Portfolio Roadmap 
                         Case "ProjectCard"
+
                             ' alle auftretenden ProjectCardContainer sind bereits bestimmt ..
 
                             ' jetzt muss herausgefunden werden, um welches Projekt es sich handelt ...
@@ -3407,11 +3434,104 @@ Public Module testModule
 
                             End Try
 
+
                             If Not IsNothing(hproj) Then
-                                Call addSmartPPTprCardShapeInfo(pptShape, hproj)
+
+                                ' jetzt muss herausgefunden werden, in welcher Phase sich das Projekt befindet
+                                Dim endeKennwort As String = "$finished"
+                                Dim found As Boolean = False
+                                Dim anzContainer As Integer = projectCardContainerNames.Count
+                                Dim laufIX As Integer = 1
+                                Dim relevantPhase As String = ""
+                                Dim lastfinishedPhase As String = ""
+
+                                If hproj.endeDate < Date.Now Then
+                                    relevantPhase = endeKennwort
+                                    found = True
+                                Else
+                                    Do While laufIX <= anzContainer And Not found
+                                        Dim cphName As String = projectCardContainerNames.Item(laufIX)
+                                        If cphName <> endeKennwort Then
+                                            Dim delta As Integer = 0
+                                            Dim minDelta As Integer = 1000000
+
+                                            If hproj.isInPhase(cphName, Date.Now, delta) Then
+                                                found = True
+                                                relevantPhase = cphName
+                                            Else
+                                                If delta > 0 Then
+                                                    If delta < minDelta Then
+                                                        minDelta = delta
+                                                        lastfinishedPhase = cphName
+                                                    End If
+                                                End If
+                                                laufIX = laufIX + 1
+                                            End If
+                                        Else
+                                            laufIX = laufIX + 1
+                                        End If
+                                    Loop
+                                End If
+
+                                If Not found Then
+                                    ' die Phase suchen, die gerade fertig geworden ist ... 
+                                    relevantPhase = lastfinishedphase
+                                End If
+
+                                ' przx bzw. -przy werte sind die Werte anhand dere bestimmt wird, wo das Shape im Container hinkommt. 
+                                Dim przX As Double
+                                Dim przY As Double
+
+                                Dim myContainer As PowerPoint.Shape = Nothing
+                                Dim posX As Double
+                                Dim posY As Double
+
+                                If relevantPhase = endeKennwort Then
+                                    Call addSmartPPTprCardShapeInfo(pptShape, hproj, "")
+
+                                    ' jetzt positionieren 
+                                    Dim zufall As New System.Random
+                                    przX = zufall.NextDouble
+                                    przY = zufall.NextDouble
+                                    myContainer = listOfProjectCardContainer.Item(endeKennwort)
+                                    posX = myContainer.Left + 5 + przX * (myContainer.Width - pptShape.Width)
+                                    posY = myContainer.Top + 0.2 * myContainer.Height + przY * (myContainer.Height * 0.8 - pptShape.Height)
+                                Else
+                                    Call addSmartPPTprCardShapeInfo(pptShape, hproj, relevantPhase)
+
+                                    ' jetzt positionieren 
+                                    Dim zufall As New System.Random
+                                    przX = hproj.przTimeSpend(relevantPhase, Date.Now)
+                                    przY = zufall.NextDouble
+                                    If listOfProjectCardContainer.ContainsKey(relevantPhase) Then
+                                        myContainer = listOfProjectCardContainer.Item(relevantPhase)
+                                        posX = myContainer.Left + 5 + przX * (myContainer.Width - pptShape.Width)
+                                        posY = myContainer.Top + 0.2 * myContainer.Height + przY * (myContainer.Height * 0.8 - pptShape.Height)
+                                    Else
+                                        ' unverändert lassen ...
+                                        posX = pptShape.Left
+                                        posY = pptShape.Top
+                                    End If
+
+                                End If
+
 
                                 ' jetzt soll die Karte noch entsprechend Ampel eingefärbt werden 
                                 Call faerbeProjectCard(pptShape, hproj.ampelStatus)
+
+                                With pptShape
+                                    .Left = posX
+                                    .Top = posY
+                                End With
+
+
+                                ' und wieviel Zeit ist zum aktuellen Zeitpunkt bereits vergangen ? 
+
+                                ' und in welchen Container-Phasen es auftritt ... je nachdem müssen auch zwei oder mehr Karten erstellt werden ... 
+                                ' in der ersten Implementierung soll kann jedes Projekt entweder in genau einer Phase sein, oder abgeschlossen bzw. noch gar nicht gestartet sein ... 
+                                ' je nachdem wird es hier positioniert 
+
+
                             Else
                                 ' Karte kennzeichnen, dass Projekt unbekannt ist ...
                                 Dim newTxt As String = ""
@@ -3422,9 +3542,6 @@ Public Module testModule
                                 pptShape.TextFrame2.TextRange.Text = newTxt
                             End If
 
-                            ' und in welchen Container-Phasen es auftritt ... je nachdem müssen auch zwei oder mehr Karten erstellt werden ... 
-                            ' in der ersten Implementierung soll kann jedes Projekt entweder in genau einer Phase sein, oder abgeschlossen bzw. noch gar nicht gestartet sein ... 
-                            ' je nachdem wird es hier positioniert 
 
                         Case "ProjectCardContainer"
 
@@ -3436,20 +3553,41 @@ Public Module testModule
                                 If farbzahlen.Length = 5 Then
                                     addOnText = farbzahlen(0) & " P. = " & farbzahlen(1) & "+" & farbzahlen(2) & "+" & farbzahlen(3) & "+" & farbzahlen(4)
                                 End If
+
+                                Dim newTxt As String = ""
+                                If pptShape.TextFrame2.HasText Then
+                                    newTxt = pptShape.TextFrame2.TextRange.Text & vbLf
+                                Else
+                                    newTxt = qualifier & vbLf
+                                End If
+                                newTxt = newTxt & addOnText
+                                pptShape.TextFrame2.TextRange.Text = newTxt
+
+                                If farbzahlen.Length = 5 Then
+                                    Dim total_length As Integer = newTxt.Length
+                                    Dim length_red As Integer = farbzahlen(4).Length
+                                    Dim length_yellow As Integer = farbzahlen(3).Length
+                                    Dim length_green As Integer = farbzahlen(2).Length
+                                    Dim length_none As Integer = farbzahlen(1).Length
+
+                                    ' jetzt werden die rote, gelbe, grüne, none Zahl eingefärbt 
+                                    Dim startPosition As Integer = total_length - length_red + 1
+                                    With CType(pptShape.TextFrame.TextRange, pptNS.TextRange)
+                                        .Characters(startPosition, length_red).Font.Color.RGB = visboFarbeRed
+                                        startPosition = startPosition - (1 + length_yellow)
+                                        .Characters(startPosition, length_yellow).Font.Color.RGB = visboFarbeYellow
+                                        startPosition = startPosition - (1 + length_green)
+                                        .Characters(startPosition, length_green).Font.Color.RGB = visboFarbeGreen
+                                        startPosition = startPosition - (1 + length_none)
+                                        .Characters(startPosition, length_none).Font.Color.RGB = visboFarbeNone
+                                    End With
+                                End If
+                                ' jetzt müssen die Zahlen noch eingefärbt werden 
+
+
                             Else
                                 addOnText = "Name existiert nicht ..."
                             End If
-
-                            Dim newTxt As String = ""
-                            If pptShape.TextFrame2.HasText Then
-                                newTxt = pptShape.TextFrame2.TextRange.Text & vbLf
-                            Else
-                                newTxt = qualifier & vbLf
-                            End If
-                            newTxt = newTxt & addOnText
-                            pptShape.TextFrame2.TextRange.Text = newTxt
-
-                            ' jetzt müssen die Zahlen noch eingefärbt werden 
 
 
                         Case "pfPhaseSymbol"

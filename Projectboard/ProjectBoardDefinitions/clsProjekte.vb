@@ -1470,14 +1470,7 @@ Public Class clsProjekte
         Get
             Dim tmpResult As Integer = 0
             ' Schleife über alle Projekte 
-            Dim elemName As String = ""
-            Dim breadCrumb As String = ""
-            Dim pvName As String = ""
-            Dim type As Integer = -1
-            Dim cphase As clsPhase = Nothing
             Dim endeKennwort As String = "$finished"
-
-            Call splitHryFullnameTo2(phName, elemName, breadCrumb, type, pvName)
 
             If phName = endeKennwort Then
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
@@ -1491,24 +1484,13 @@ Public Class clsProjekte
                 Next
             Else
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                    Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(elemName, breadCrumb)
+                    Dim delta As Integer
+                    If kvp.Value.isInPhase(phName, timestamp, delta) Then
 
-                    For px As Integer = 0 To phaseIndices.Length - 1
-                        If phaseIndices(px) > 0 And phaseIndices(px) <= kvp.Value.CountPhases Then
-                            cphase = kvp.Value.getPhase(phaseIndices(px))
-                        Else
-                            cphase = Nothing
+                        If kvp.Value.ampelStatus = colorCode Then
+                            tmpResult = tmpResult + 1
                         End If
-                    Next
 
-                    If Not IsNothing(cphase) Then
-                        If cphase.getStartDate <= timestamp And cphase.getEndDate >= timestamp Then
-
-                            If kvp.Value.ampelStatus = colorCode Then
-                                tmpResult = tmpResult + 1
-                            End If
-
-                        End If
                     End If
 
                 Next

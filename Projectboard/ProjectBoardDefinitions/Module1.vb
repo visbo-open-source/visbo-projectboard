@@ -173,6 +173,10 @@ Public Module Module1
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
+    Public visboFarbeNone As Integer = RGB(127, 127, 127)
+    Public visboFarbeGreen As Integer = RGB(0, 176, 80)
+    Public visboFarbeYellow As Integer = RGB(255, 197, 13)
+    Public visboFarbeRed As Integer = RGB(255, 0, 0)
 
     ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
@@ -4040,35 +4044,76 @@ Public Module Module1
     ''' <param name="pptShape"></param>
     ''' <param name="hproj"></param>
     Public Sub addSmartPPTprCardShapeInfo(ByRef pptShape As PowerPoint.Shape,
-                                          ByVal hproj As clsProjekt)
+                                          ByVal hproj As clsProjekt,
+                                          ByVal relevantPhase As String)
 
         Dim nullDate As Date = Nothing
         Dim bigtype As Integer = ptReportBigTypes.planelements
         Dim detailID As Integer = ptReportComponents.prCard
         Dim tmpStr As String = ""
         Dim kennung As String = ""
+        Dim cphase As clsPhase = Nothing
+
+        If relevantPhase <> "" Then
+            Dim elemName As String = ""
+            Dim breadCrumb As String = ""
+            Dim type As Integer = -1
+            Dim pvname As String = ""
+            Call splitHryFullnameTo2(relevantPhase, elemName, breadCrumb, type, pvname)
+            cphase = hproj.getPhase(elemName, breadCrumb)
+        End If
+
 
         If Not IsNothing(pptShape) Then
             With pptShape
 
-                ' hier kommt der Projekt-Name rein
-                tmpStr = hproj.getShapeText
+                ' hier kommt der Projekt-Name rein, ggf muss der Phasen-Name berücksichtigt werden 
+                If Not IsNothing(cphase) Then
+                    tmpStr = hproj.getShapeText & vbLf & cphase.name
+                Else
+                    tmpStr = hproj.getShapeText
+                End If
+
                 kennung = "CN"
                 If .Tags.Item(kennung).Length > 0 Then
                     .Tags.Delete(kennung)
                 End If
                 .Tags.Add(kennung, tmpStr)
 
-                ' jetzt das Startdatum des Projektes
-                tmpStr = hproj.startDate.ToString
+                ' hier kommt nochmal der Projekt-Name rein, das wird in smartInfo ausgewertet ..
+                tmpStr = hproj.name
+                kennung = "PNM"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' hier kommt nochmal der  Projekt-Name rein, das wird in smartInfo ausgewertet ..
+                tmpStr = hproj.variantName
+                kennung = "VNM"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt das Startdatum des Projektes bzw. der Phase
+                If Not IsNothing(cphase) Then
+                    tmpStr = cphase.getStartDate.ToShortDateString
+                Else
+                    tmpStr = hproj.startDate.ToShortDateString
+                End If
                 kennung = "SD"
                 If .Tags.Item(kennung).Length > 0 Then
                     .Tags.Delete(kennung)
                 End If
                 .Tags.Add(kennung, tmpStr)
 
-                ' jetzt das Ende-Datum des Projekts 
-                tmpStr = hproj.endeDate.ToString
+                ' jetzt das Ende-Datum des Projekts
+                If Not IsNothing(cphase) Then
+                    tmpStr = cphase.getEndDate.ToShortDateString
+                Else
+                    tmpStr = hproj.endeDate.ToShortDateString
+                End If
                 kennung = "ED"
                 If .Tags.Item(kennung).Length > 0 Then
                     .Tags.Delete(kennung)
@@ -4091,8 +4136,23 @@ Public Module Module1
                 End If
                 .Tags.Add(kennung, tmpStr)
 
-                ' jetzt die Ziele des Projektes 
-                tmpStr = hproj.fullDescription
+                ' jetzt die Ziele des Projektes bzw. der Phase
+                If Not IsNothing(cphase) Then
+                    Try
+                        If cphase.countMilestones > 0 Then
+                            Dim milestone As clsMeilenstein = cphase.getMilestone(cphase.countMilestones)
+                            If Not IsNothing(milestone) Then
+                                tmpStr = milestone.getAllDeliverables
+                            End If
+                        End If
+                    Catch ex As Exception
+                        tmpStr = "-"
+                    End Try
+
+                Else
+                    tmpStr = hproj.fullDescription
+                End If
+
                 kennung = "LU"
                 If .Tags.Item(kennung).Length > 0 Then
                     .Tags.Delete(kennung)
@@ -4119,7 +4179,7 @@ Public Module Module1
                 ' aktuell noch leer lassen 
 
                 ' jetzt die BigType ID 
-                tmpStr = ptReportBigTypes.planelements.ToString
+                tmpStr = CStr(ptReportBigTypes.planelements)
                 kennung = "BID"
                 If .Tags.Item(kennung).Length > 0 Then
                     .Tags.Delete(kennung)
@@ -4127,7 +4187,7 @@ Public Module Module1
                 .Tags.Add(kennung, tmpStr)
 
                 ' jetzt die Detail ID 
-                tmpStr = ptReportComponents.prCard.ToString
+                tmpStr = CStr(ptReportComponents.prCard)
                 kennung = "DID"
                 If .Tags.Item(kennung).Length > 0 Then
                     .Tags.Delete(kennung)
