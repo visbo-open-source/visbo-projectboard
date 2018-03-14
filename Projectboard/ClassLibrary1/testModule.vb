@@ -1126,7 +1126,7 @@ Public Module testModule
                                     ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
                                     'swimlaneMode = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = ex.Message
+                                    .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
                                 End Try
 
@@ -1153,7 +1153,7 @@ Public Module testModule
                                     'swimlaneMode = True
                                 Catch ex As Exception
                                     awinSettings.mppExtendedMode = formerSetting
-                                    .TextFrame2.TextRange.Text = ex.Message
+                                    .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
                                 End Try
 

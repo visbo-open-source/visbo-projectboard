@@ -4564,8 +4564,8 @@ Public Class clsProjekt
                     Dim pvName As String = ""
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb, type, pvName)
 
-                    If type = -1 Or _
-                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                    If type = -1 Or
+                        (type = PTProjektType.projekt And pvName = Me.name) Or
                         (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                         If namesAreMilestones Then
@@ -4677,8 +4677,10 @@ Public Class clsProjekt
 
             Next
 
+
             ' jetzt muss umkopiert werden 
             For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                iDkey = kvp.Value
                 iDCollection.Add(kvp.Value, kvp.Value)
             Next
 

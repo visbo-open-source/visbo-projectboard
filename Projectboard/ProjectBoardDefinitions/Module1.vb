@@ -16,7 +16,7 @@ Public Module Module1
     ' in Modul 1 sollten jetzt alle Konstanten und Einstellungen in einer Klasse zusammengefasst werden
     ' awinSettings: für StartOfCalendar, linker Rand, rechter Rand, ...
     ' Laufzeit Parameter;
-
+    Public iDkey As String = ""
     'login - Informationen
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
