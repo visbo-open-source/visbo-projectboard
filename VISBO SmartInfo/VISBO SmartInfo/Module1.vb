@@ -653,76 +653,76 @@ Module Module1
 
             End Try
 
-                thereIsNoVersionFieldOnSlide = True
+            thereIsNoVersionFieldOnSlide = True
 
-                If currentSlide.Tags.Count > 0 Then
+            If currentSlide.Tags.Count > 0 Then
                     Try
-                        If currentSlide.Tags.Item("SMART").Length > 0 Then
+                    If currentSlide.Tags.Item("SMART").Length > 0 Then
 
-                            ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
-                            Call getDBsettings()
+                        ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
+                        Call getDBsettings()
 
-                            Dim msg As String = ""
-                            If userIsEntitled(msg) Then
+                        Dim msg As String = ""
+                        If userIsEntitled(msg) Then
 
-                                ' die HomeButtonRelevanz setzen 
-                                homeButtonRelevance = False
-                                changedButtonRelevance = False
+                            ' die HomeButtonRelevanz setzen 
+                            homeButtonRelevance = False
+                            changedButtonRelevance = False
 
-                                slideHasSmartElements = True
+                            slideHasSmartElements = True
 
-                                Try
+                            Try
 
-                                    slideCoordInfo = New clsPPTShapes
-                                    slideCoordInfo.pptSlide = currentSlide
+                                slideCoordInfo = New clsPPTShapes
+                                slideCoordInfo.pptSlide = currentSlide
 
-                                    With currentSlide
+                                With currentSlide
 
-                                        ' currentTimeStamp setzen 
-                                        If .Tags.Item("CRD").Length > 0 Then
-                                            currentTimestamp = CDate(.Tags.Item("CRD"))
-                                        End If
-
-                                        If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-                                            Dim tmpSD As String = .Tags.Item("CALL")
-                                            Dim tmpED As String = .Tags.Item("CALR")
-                                            slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-                                        End If
-
-                                        If .Tags.Item("SOC").Length > 0 Then
-                                            StartofCalendar = CDate(.Tags.Item("SOC"))
-                                        End If
-
-
-
-                                    End With
-
-                                Catch ex As Exception
-                                    slideCoordInfo = Nothing
-                                End Try
-
-
-                                Call buildSmartSlideLists()
-
-                                ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-                                initialHomeButtonRelevance = homeButtonRelevance
-                                initialChangedButtonRelevance = changedButtonRelevance
-                                If searchPane.Visible Then
-
-                                    'Call clearSearchPane(Nothing)
-                                    If slideHasSmartElements Then
-
-                                        ucSearchView.fülltListbox()
-
+                                    ' currentTimeStamp setzen 
+                                    If .Tags.Item("CRD").Length > 0 Then
+                                        currentTimestamp = CDate(.Tags.Item("CRD"))
                                     End If
-                                End If
 
-                            Else
-                                Call MsgBox(msg)
+                                    If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
+                                        Dim tmpSD As String = .Tags.Item("CALL")
+                                        Dim tmpED As String = .Tags.Item("CALR")
+                                        slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                                    End If
+
+                                    If .Tags.Item("SOC").Length > 0 Then
+                                        StartofCalendar = CDate(.Tags.Item("SOC"))
+                                    End If
+
+
+
+                                End With
+
+                            Catch ex As Exception
+                                slideCoordInfo = Nothing
+                            End Try
+
+
+                            Call buildSmartSlideLists()
+
+                            ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                            initialHomeButtonRelevance = homeButtonRelevance
+                            initialChangedButtonRelevance = changedButtonRelevance
+                            If searchPane.Visible Then
+
+                                'Call clearSearchPane(Nothing)
+                                If slideHasSmartElements Then
+
+                                    ucSearchView.fülltListbox()
+
+                                End If
                             End If
 
+                        Else
+                            Call MsgBox(msg)
                         End If
-                    Catch ex As Exception
+
+                    End If
+                Catch ex As Exception
 
                     End Try
                 Else
