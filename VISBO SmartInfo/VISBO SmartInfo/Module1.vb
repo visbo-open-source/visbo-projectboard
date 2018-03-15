@@ -713,7 +713,6 @@ Module Module1
                             initialChangedButtonRelevance = changedButtonRelevance
                             If searchPane.Visible Then
 
-                                'Call clearSearchPane(Nothing)
                                 If slideHasSmartElements Then
 
                                     ucSearchView.fülltListbox()
@@ -729,18 +728,17 @@ Module Module1
                 Catch ex As Exception
 
                 End Try
-                Else
-                    slideHasSmartElements = False
-                    ' Listen löschen
-                    smartSlideLists = New clsSmartSlideListen
+            Else
+
+                slideHasSmartElements = False
+                ' Listen löschen
+                smartSlideLists = New clsSmartSlideListen
 
                 If Not IsNothing(searchPane) Then
                     If searchPane.Visible Then
                         Call clearSearchPane(Nothing)
                     End If
                 End If
-
-
 
             End If
 
