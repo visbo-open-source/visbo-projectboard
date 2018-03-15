@@ -1057,8 +1057,6 @@ Public Module awinGeneralModules
                 miniHeight = maxScreenHeight / 6
                 miniWidth = maxScreenWidth / 10
 
-
-
                 Dim oGrenze As Integer = UBound(frmCoord, 1)
                 ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
                 For i = 0 To oGrenze

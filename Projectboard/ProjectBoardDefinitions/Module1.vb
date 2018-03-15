@@ -250,6 +250,7 @@ Public Module Module1
         prSymTrafficLight = 13
         prSymDescription = 14
         prCard = 15
+        prCardinvisible = 16
     End Enum
 
     Public Enum ptPRPFType
@@ -4045,7 +4046,8 @@ Public Module Module1
     ''' <param name="hproj"></param>
     Public Sub addSmartPPTprCardShapeInfo(ByRef pptShape As PowerPoint.Shape,
                                           ByVal hproj As clsProjekt,
-                                          ByVal relevantPhase As String)
+                                          ByVal relevantPhase As String,
+                                          ByVal isTopProject As Boolean)
 
         Dim nullDate As Date = Nothing
         Dim bigtype As Integer = ptReportBigTypes.planelements
@@ -4069,7 +4071,7 @@ Public Module Module1
 
                 ' hier kommt der Projekt-Name rein, ggf muss der Phasen-Name berücksichtigt werden 
                 If Not IsNothing(cphase) Then
-                    tmpStr = hproj.getShapeText & vbLf & cphase.name
+                    tmpStr = hproj.getShapeText & vbLf & " - " & cphase.name
                 Else
                     tmpStr = hproj.getShapeText
                 End If
@@ -4187,7 +4189,12 @@ Public Module Module1
                 .Tags.Add(kennung, tmpStr)
 
                 ' jetzt die Detail ID 
-                tmpStr = CStr(ptReportComponents.prCard)
+                If isTopProject Then
+                    tmpStr = CStr(ptReportComponents.prCard)
+                Else
+                    tmpStr = CStr(ptReportComponents.prCardinvisible)
+                End If
+
                 kennung = "DID"
                 If .Tags.Item(kennung).Length > 0 Then
                     .Tags.Delete(kennung)
@@ -5783,17 +5790,17 @@ Public Module Module1
                 .Shadow.RotateWithShape = MsoTriState.msoFalse
 
                 If colorindex = 0 Then
-                    .Shadow.ForeColor.RGB = XlRgbColor.rgbGrey
-                    .Line.ForeColor.RGB = XlRgbColor.rgbGrey
+                    .Shadow.ForeColor.RGB = visboFarbeNone
+                    '.Line.ForeColor.RGB = visboFarbeNone
                 ElseIf colorindex = 1 Then
-                    .Shadow.ForeColor.RGB = XlRgbColor.rgbGreen
-                    .Line.ForeColor.RGB = XlRgbColor.rgbGreen
+                    .Shadow.ForeColor.RGB = visboFarbeGreen
+                    '.Line.ForeColor.RGB = visboFarbeGreen
                 ElseIf colorindex = 2 Then
-                    .Shadow.ForeColor.RGB = XlRgbColor.rgbYellow
-                    .Line.ForeColor.RGB = XlRgbColor.rgbYellow
+                    .Shadow.ForeColor.RGB = visboFarbeYellow
+                    '.Line.ForeColor.RGB = visboFarbeYellow
                 ElseIf colorindex = 3 Then
-                    .Shadow.ForeColor.RGB = XlRgbColor.rgbRed
-                    .Line.ForeColor.RGB = XlRgbColor.rgbRed
+                    .Shadow.ForeColor.RGB = visboFarbeRed
+                    '.Line.ForeColor.RGB = visboFarbeRed
                 End If
 
             End With
