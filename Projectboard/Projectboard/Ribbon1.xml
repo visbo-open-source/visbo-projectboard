@@ -433,6 +433,7 @@
           <separator id="PTXIG1s1"/>
           <button id="PTJsonWrite" label="WRITE Json"  onAction ="PTJsonWrite" />
           <button id="PTJsonRead" label="READ Json"  onAction ="PTJsonRead" />
+          <button id="PTOneVC" label="POST one VC"  onAction ="PTJsonTest" />
          </group>
       </tab>
       <!--label="Lizenzen"--><!--

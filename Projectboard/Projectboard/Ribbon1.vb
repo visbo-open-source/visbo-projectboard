@@ -11685,11 +11685,14 @@ Imports System.ServiceModel.Web
             'Dim typeRequest As String = "/token/user/login"
             Dim typeRequest As String = control.Id.Replace("_", "/")
             Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
-            Dim data As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
+            Dim datastr As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
+
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As clsTokenUserLogin
             Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-                Antwort = CType(ReadResponseContentJson(httpresp, typeRequest), clsTokenUserLogin)
+                Antwort = CType(ReadPOSTResponseContentJson(httpresp, typeRequest), clsTokenUserLogin)
             End Using
 
             'Dim Antwort As String
@@ -11721,9 +11724,9 @@ Imports System.ServiceModel.Web
             Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
             Dim data As String = ""
 
-            Dim Antwort As clsAllVC
+            Dim Antwort As clsWebAllVC
             Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
-                Antwort = CType(ReadResponseContentJson(httpresp, typeRequest), clsAllVC)
+                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebAllVC)
             End Using
 
             'Dim Antwort2 As String
@@ -11751,7 +11754,7 @@ Imports System.ServiceModel.Web
         'Call JsonExport(tknlgn, JsonFileName)
 
         Dim JsonFileName As String = requirementsOrdner & "TestGetVCnew.js"
-        Dim tknlgn As clsAllVC = New clsAllVC
+        Dim tknlgn As clsWebAllVC = New clsWebAllVC
         tknlgn.message = "neue Message"
         tknlgn.state = "unbekannt"
 
@@ -11773,14 +11776,61 @@ Imports System.ServiceModel.Web
     End Sub
     Public Sub PTJsonRead(control As IRibbonControl)
 
-        Dim JsonFileName As String = requirementsOrdner & "TestGetVC.js"
-        Dim tknlgn As clsAllVC = JsonImport(JsonFileName)
+        Dim datumStr As String = "2018-03-02T17:31:23.401Z"
+        Dim datum As Date = Convert.ToDateTime(datumStr)
+
+        'Dim JsonFileName As String = requirementsOrdner & "TestGetVC.js"
+        'Dim tknlgn As clsWebAllVC = JsonImport(JsonFileName)
 
     End Sub
 
-    Private Function UnicodeStringToBytes(ByVal str As String) As Byte()
-        Return System.Text.Encoding.Unicode.GetBytes(str)
-    End Function
+    Public Sub PTJsonTest(control As IRibbonControl)
+
+        Try
+
+
+            'Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim typeRequest As String = "/vc"
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+
+            Dim oneVC As New clsVC
+            Dim user As New clsVCuser
+
+            oneVC.Name = "Ute VC (1)"
+            user.email = "ute.rittinghaus-koytek@visbo.de"
+            user.role = "User"
+            oneVC.Users.Add(user)
+
+            Dim data() As Byte
+            data = serverInputDataJson(oneVC, typeRequest)
+
+            Dim Antwort As clsWebOneVC
+            Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadPOSTResponseContentJson(httpresp, typeRequest), clsWebOneVC)
+            End Using
+
+            'Dim Antwort As String
+            'Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            '    Antwort = ReadResponseContent(httpresp)
+            'End Using
+
+            Call MsgBox(Antwort.message)
+
+            If Antwort.state = "success" Then
+                Call MsgBox(Antwort.message & ": " & Antwort.ToString)
+            End If
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTJsonTest " & ex.Message)
+        End Try
+
+    End Sub
+
+
+    'Private Function UnicodeStringToBytes(ByVal str As String) As Byte()
+    '    Return System.Text.Encoding.Unicode.GetBytes(str)
+    'End Function
 
 #End Region
 

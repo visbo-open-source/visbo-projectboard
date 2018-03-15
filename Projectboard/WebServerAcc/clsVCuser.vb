@@ -5,7 +5,7 @@
 
 
     Sub New()
-        _id = "unbekannte ID"
+        _id = ""
         _email = "not known"
         _role = "User/Admin"
     End Sub

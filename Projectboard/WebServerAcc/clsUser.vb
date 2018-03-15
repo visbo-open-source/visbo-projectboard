@@ -4,8 +4,8 @@
     Public Property name As String
     Public Property _v As Integer
     Public Property profile As clsUserProfile
-    Public Property created_at As String
-    Public Property updated_at As String
+    Public Property created_at As Date
+    Public Property updated_at As Date
 
     Sub New()
         _id = ""
@@ -13,7 +13,7 @@
         _name = "not set"
         _v = 0
         _profile = New clsUserProfile
-        _created_at = ""
-        _updated_at = ""
+        _created_at = Convert.ToDateTime("2018-03-02T16:36:49.122Z")
+        _updated_at = Convert.ToDateTime("2018-03-16T16:36:49.122Z")
     End Sub
 End Class
