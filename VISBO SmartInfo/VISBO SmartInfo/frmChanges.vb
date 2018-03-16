@@ -30,7 +30,9 @@
             Me.Width = frmCoord(PTfrm.changes, PTpinfo.width)
             Me.Height = frmCoord(PTfrm.changes, PTpinfo.height)
         Else
-            Me.Top = 922
+            ' Fehler: bei Bildschiremn mit weniger als HDMI Auflösung wird dieses Fenster nie sicht bar ...
+            'Me.Top = 922
+            Me.Top = My.Computer.Screen.Bounds.Height - (Me.Height + 20)
             Me.Left = 24
         End If
 

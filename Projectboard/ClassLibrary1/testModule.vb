@@ -16944,8 +16944,8 @@ Public Module testModule
         Dim msShapeName As String = calcPPTShapeName(hproj, milestoneID)
         ' Es muss abgefragt werden, wie lange der NAme ist, evtl muss eine Fehlermeldung kommen .,.. 
         Dim nameLength As Integer = msShapeName.Length
-        Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
-                                                             awinSettings.mppUseAbbreviation)
+        Dim msBeschriftung As String = hproj.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames,
+                                                             awinSettings.mppUseAbbreviation, swimlaneID)
 
         ' eigentlih muss es das sein ..
         Try

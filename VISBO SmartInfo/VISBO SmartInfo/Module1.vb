@@ -631,33 +631,31 @@ Module Module1
 
             smartSlideLists = New clsSmartSlideListen
 
-            If searchPane.Visible Then
-                Call clearSearchPane(Nothing)
-            End If
+            Try
+                If Not IsNothing(searchPane) Then
+                    If searchPane.Visible Then
+                        Call clearSearchPane(Nothing)
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
+
+
 
             ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
             currentSlide = SldRange.Item(1)
 
-            Try
-                If Not IsNothing(currentSlide) Then
-                    If currentSlide.Tags.Item("SMART").Length > 0 Then
-                        ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
-                        'Call resetMovedGlowOfShapes()
-                    End If
-                End If
-
-                Call deleteMarkerShapes()
-
-
-            Catch ex As Exception
-
-            End Try
+            If Not IsNothing(currentSlide) Then
 
                 thereIsNoVersionFieldOnSlide = True
 
                 If currentSlide.Tags.Count > 0 Then
                     Try
                         If currentSlide.Tags.Item("SMART").Length > 0 Then
+
+                            '' lösche alle evtl vorhandenen MarkerShapes 
+                            Call deleteMarkerShapes()
 
                             ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
                             Call getDBsettings()
@@ -707,15 +705,16 @@ Module Module1
                                 ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
                                 initialHomeButtonRelevance = homeButtonRelevance
                                 initialChangedButtonRelevance = changedButtonRelevance
-                                If searchPane.Visible Then
-
-                                    'Call clearSearchPane(Nothing)
-                                    If slideHasSmartElements Then
-
-                                        ucSearchView.fülltListbox()
-
+                                Try
+                                    If searchPane.Visible Then
+                                        If slideHasSmartElements Then
+                                            ucSearchView.fülltListbox()
+                                        End If
                                     End If
-                                End If
+                                Catch ex As Exception
+
+                                End Try
+
 
                             Else
                                 Call MsgBox(msg)
@@ -730,17 +729,23 @@ Module Module1
                     ' Listen löschen
                     smartSlideLists = New clsSmartSlideListen
 
-                    If searchPane.Visible Then
-                        Call clearSearchPane(Nothing)
-                    End If
+                    Try
+                        If searchPane.Visible Then
+                            Call clearSearchPane(Nothing)
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
 
 
                 End If
 
-
-            Else
-                ' nichts tun, das heisst auch nichts verändern ...
             End If
+
+        Else
+            ' nichts tun, das heisst auch nichts verändern ...
+        End If
 
     End Sub
 
@@ -1202,9 +1207,12 @@ Module Module1
 
         Catch ex As Exception
 
-            If propertiesPane.Visible Then
-                Call aktualisiereInfoPane(Nothing)
+            If Not IsNothing(propertiesPane) Then
+                If propertiesPane.Visible Then
+                    Call aktualisiereInfoPane(Nothing)
+                End If
             End If
+
 
         End Try
 
@@ -2486,6 +2494,7 @@ Module Module1
                             Dim refName As String = tmpShape.Name.Substring(0, tmpShape.Name.Length - 1)
 
                             If diffMvList.ContainsKey(refName) Then
+                                ' Die difference ist der Wert, der sich aus der Verschiebung der Ende-Daten ergibt ... 
                                 Dim diff As Double = diffMvList.Item(refName)
                                 With tmpShape
                                     .Left = .Left + diff
@@ -2918,6 +2927,7 @@ Module Module1
 
     ''' <summary>
     ''' diese Methode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
+    ''' wenn eine KW im Milestone gesetzt ist, wird sie aktaulisiert .. 
     ''' auch eine HomeButtonRelevance besetht nicht mehr; das neue Home ist mit dem TimeStamp erreicht  
     ''' </summary>
     ''' <param name="tmpShape"></param>
@@ -2933,12 +2943,32 @@ Module Module1
         Dim chgExplanation As clsChangeItem
         Dim oldLeft As Double = tmpShape.Left
         Dim oldDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2).Date
+
+
         'Dim expla As String = "Version: " & timeStamp.ToShortDateString
 
         msDate = msDate.Date
 
         If msDate <> oldDate Then
             ' es hat sich was geändert ... 
+
+
+            Try
+                ' es muss festgelegt werden, ob es eine KW_in_milestone gibt 
+                If tmpShape.TextFrame2.HasText Then
+                    Dim refKW As Integer = calcKW(CDate(tmpShape.Tags.Item("ED")))
+                    Dim vglKWinMs As Integer = CInt(tmpShape.TextFrame.TextRange.Text)
+
+                    If refKW = vglKWinMs Then
+                        ' den Eintrag aktualisieren 
+                        Dim newkw As String = calcKW(msDate).ToString("0#")
+                        tmpShape.TextFrame.TextRange.Text = newkw
+                    End If
+                End If
+
+            Catch ex As Exception
+
+            End Try
 
             Call slideCoordInfo.calculatePPTx1x2(msDate, msDate, x1Pos, x2Pos)
 
@@ -5476,17 +5506,6 @@ Module Module1
 
         If IsNothing(tmpShape) Then
             With ucSearchView
-                ' eigentlich soll doch nur selListboxNames zurückgesetzt werden und die Auswahlen daraus ...
-                '.cathegoryList.SelectedItem = Nothing
-                '.shwOhneLight.Checked = False
-                '.shwGreenLight.Checked = False
-                '.shwYellowLight.Checked = False
-                '.shwRedLight.Checked = False
-                '.filterText.Text = ""
-                '.listboxNames.Items.Clear()
-                '.selListboxNames.Items.Clear()
-                '.fülltListbox()
-
                 ' tk 11.1.18
                 .listboxNames.SelectedItems.Clear()
                 .selListboxNames.Items.Clear()
