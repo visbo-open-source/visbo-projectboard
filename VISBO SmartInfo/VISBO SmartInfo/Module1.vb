@@ -2954,18 +2954,9 @@ Module Module1
 
 
             Try
-                ' es muss festgelegt werden, ob es eine KW_in_milestone gibt 
-                If tmpShape.TextFrame2.HasText Then
-                    Dim refKW As Integer = calcKW(CDate(tmpShape.Tags.Item("ED")))
-                    Dim vglKWinMs As Integer = CInt(tmpShape.TextFrame.TextRange.Text)
-
-                    If refKW = vglKWinMs Then
-                        ' den Eintrag aktualisieren 
-                        Dim newkw As String = calcKW(msDate).ToString("0#")
-                        tmpShape.TextFrame.TextRange.Text = newkw
-                    End If
+                If hasKwInMs(tmpShape) Then
+                    Call updateKwInMs(tmpShape, msDate, False)
                 End If
-
             Catch ex As Exception
 
             End Try
@@ -3017,6 +3008,50 @@ Module Module1
         mvMilestoneToTimestampPosition = diff
 
     End Function
+
+    ''' <summary>
+    ''' gibt zurück, on dieser Meilenstein die seinem Datum entsprechende KW als Text stehen hat ...
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <returns></returns>
+    Friend Function hasKwInMs(ByVal tmpShape As PowerPoint.Shape) As Boolean
+
+        Dim tmpResult As Boolean = False
+        ' es muss festgelegt werden, ob es eine KW_in_milestone gibt 
+        Try
+            If tmpShape.TextFrame2.HasText Then
+                Dim refKW As Integer = calcKW(CDate(tmpShape.Tags.Item("ED")))
+                Dim vglKWinMs As Integer = CInt(tmpShape.TextFrame.TextRange.Text)
+                If refKW = vglKWinMs Then
+                    tmpResult = True
+                End If
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        hasKwInMs = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' schreibt die dem Datum msDate entsprechende KW in den Meilenstein 
+    ''' whiteFont gibt an , dass die Schrift weiss sein soll (wenn es für den ShadowMeilenstein gezeichnet werden soll 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="msDate"></param>
+    ''' <param name="whiteFont"></param>
+    Friend Sub updateKwInMs(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal whiteFont As Boolean)
+
+        Dim newkw As String = calcKW(msDate).ToString("0#")
+        tmpShape.TextFrame.TextRange.Text = newkw
+
+        If whiteFont Then
+            tmpShape.TextFrame.TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' diese Methode verschiebt das Shadow-Shape an seine Position; es erfolgt keinerlei Setzen von Tag-Information
@@ -4976,15 +5011,22 @@ Module Module1
                         ' wenn es diesen Meilenstein in der Variante bzw. Timestamp nicht gibt wird das new'Shape wieder gelöscht ...  
                         newShape.Delete()
                     Else
+
+                        Dim shadowDate As Date = cMilestone.getDate
+                        ' muss in den Schatten des Meilensteins die kw gezeichnet werden ? 
+                        If hasKwInMs(origShape) Then
+                            Call updateKwInMs(shadowShape, shadowDate, True)
+                        End If
+
                         ' jetzt bewegen 
-                        mvDiff = mvMilestoneShadowToNewPosition(newShape(1), cMilestone.getDate, isOtherVariant)
+                        mvDiff = mvMilestoneShadowToNewPosition(shadowShape, shadowDate, isOtherVariant)
                         Dim bsn As String = origShape.Tags.Item("BSN")
                         Dim bln As String = origShape.Tags.Item("BLN")
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing, _
-                                                  cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
+                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
+                                                  shadowDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
                                                   cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone)
 
 
@@ -6079,9 +6121,9 @@ Module Module1
 
             Call setCurrentTimestampInSlide(currentTimestamp)
 
-            If thereIsNoVersionFieldOnSlide Then
-                Call showTSMessage(currentTimestamp)
-            End If
+            'If thereIsNoVersionFieldOnSlide Then
+            Call showTSMessage(currentTimestamp)
+            'End If
 
             ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
 
@@ -6093,7 +6135,20 @@ Module Module1
             End If
             'End If
 
+            Try
+                If Not IsNothing(selectedPlanShapes) Then
 
+                    If selectedPlanShapes.Count = 1 Then
+                        Dim curShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+
+                        Call aktualisiereInfoPane(curShape)
+                        Call aktualisiereInfoFrm(curShape)
+
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
 
         End If
 
