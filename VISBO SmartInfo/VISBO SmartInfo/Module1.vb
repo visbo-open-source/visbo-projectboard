@@ -631,98 +631,97 @@ Module Module1
 
             smartSlideLists = New clsSmartSlideListen
 
-            If searchPane.Visible Then
-                Call clearSearchPane(Nothing)
-            End If
-
-            ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
-            currentSlide = SldRange.Item(1)
-
             Try
-                If Not IsNothing(currentSlide) Then
-                    If currentSlide.Tags.Item("SMART").Length > 0 Then
-                        ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
-                        'Call resetMovedGlowOfShapes()
+                If Not IsNothing(searchPane) Then
+                    If searchPane.Visible Then
+                        Call clearSearchPane(Nothing)
                     End If
                 End If
-
-                Call deleteMarkerShapes()
-
-
             Catch ex As Exception
 
             End Try
 
-            thereIsNoVersionFieldOnSlide = True
 
-            If currentSlide.Tags.Count > 0 Then
+
+            ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
+            currentSlide = SldRange.Item(1)
+
+            If Not IsNothing(currentSlide) Then
+
+                thereIsNoVersionFieldOnSlide = True
+
+                If currentSlide.Tags.Count > 0 Then
                     Try
-                    If currentSlide.Tags.Item("SMART").Length > 0 Then
+                        If currentSlide.Tags.Item("SMART").Length > 0 Then
 
-                        ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
-                        Call getDBsettings()
+                            '' lösche alle evtl vorhandenen MarkerShapes 
+                            Call deleteMarkerShapes()
 
-                        Dim msg As String = ""
-                        If userIsEntitled(msg) Then
+                            ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
+                            Call getDBsettings()
 
-                            ' die HomeButtonRelevanz setzen 
-                            homeButtonRelevance = False
-                            changedButtonRelevance = False
+                            Dim msg As String = ""
+                            If userIsEntitled(msg) Then
 
-                            slideHasSmartElements = True
+                                ' die HomeButtonRelevanz setzen 
+                                homeButtonRelevance = False
+                                changedButtonRelevance = False
 
-                            Try
+                                slideHasSmartElements = True
 
-                                slideCoordInfo = New clsPPTShapes
-                                slideCoordInfo.pptSlide = currentSlide
+                                Try
 
-                                With currentSlide
+                                    slideCoordInfo = New clsPPTShapes
+                                    slideCoordInfo.pptSlide = currentSlide
 
-                                    ' currentTimeStamp setzen 
-                                    If .Tags.Item("CRD").Length > 0 Then
-                                        currentTimestamp = CDate(.Tags.Item("CRD"))
+                                    With currentSlide
+
+                                        ' currentTimeStamp setzen 
+                                        If .Tags.Item("CRD").Length > 0 Then
+                                            currentTimestamp = CDate(.Tags.Item("CRD"))
+                                        End If
+
+                                        If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
+                                            Dim tmpSD As String = .Tags.Item("CALL")
+                                            Dim tmpED As String = .Tags.Item("CALR")
+                                            slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                                        End If
+
+                                        If .Tags.Item("SOC").Length > 0 Then
+                                            StartofCalendar = CDate(.Tags.Item("SOC"))
+                                        End If
+
+
+
+                                    End With
+
+                                Catch ex As Exception
+                                    slideCoordInfo = Nothing
+                                End Try
+
+
+                                Call buildSmartSlideLists()
+
+                                ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                                initialHomeButtonRelevance = homeButtonRelevance
+                                initialChangedButtonRelevance = changedButtonRelevance
+                                Try
+                                    If searchPane.Visible Then
+                                        If slideHasSmartElements Then
+                                            ucSearchView.fülltListbox()
+                                        End If
                                     End If
+                                Catch ex As Exception
 
-                                    If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-                                        Dim tmpSD As String = .Tags.Item("CALL")
-                                        Dim tmpED As String = .Tags.Item("CALR")
-                                        slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-                                    End If
-
-                                    If .Tags.Item("SOC").Length > 0 Then
-                                        StartofCalendar = CDate(.Tags.Item("SOC"))
-                                    End If
+                                End Try
 
 
-
-                                End With
-
-                            Catch ex As Exception
-                                slideCoordInfo = Nothing
-                            End Try
-
-
-                            Call buildSmartSlideLists()
-
-                            ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-                            initialHomeButtonRelevance = homeButtonRelevance
-                            initialChangedButtonRelevance = changedButtonRelevance
-                            If searchPane.Visible Then
-
-                                'Call clearSearchPane(Nothing)
-                                If slideHasSmartElements Then
-
-                                    ucSearchView.fülltListbox()
-
-                                End If
+                            Else
+                                Call MsgBox(msg)
                             End If
 
-                        Else
-                            Call MsgBox(msg)
                         End If
-
-                    End If
-                Catch ex As Exception
+                    Catch ex As Exception
 
                     End Try
                 Else
@@ -730,17 +729,23 @@ Module Module1
                     ' Listen löschen
                     smartSlideLists = New clsSmartSlideListen
 
-                    If searchPane.Visible Then
-                        Call clearSearchPane(Nothing)
-                    End If
+                    Try
+                        If searchPane.Visible Then
+                            Call clearSearchPane(Nothing)
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
 
 
                 End If
 
-
-            Else
-                ' nichts tun, das heisst auch nichts verändern ...
             End If
+
+        Else
+            ' nichts tun, das heisst auch nichts verändern ...
+        End If
 
     End Sub
 
@@ -1132,10 +1137,6 @@ Module Module1
                         Next
 
                         selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
-                    ElseIf isSymbolShape(shpRange(1)) Then
-
-                        selectedPlanShapes = shpRange
-                        Call aktualisiereInfoPane(shpRange(1))
                     Else
                         ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
                         Call checkHomeChangeBtnEnablement()
@@ -1149,58 +1150,54 @@ Module Module1
                     End If
                     '' Ende ...
 
-                    If Not isSymbolShape(shpRange(1)) Then
-                        If (Not IsNothing(selectedPlanShapes) And Not isSymbolShape(shpRange(1))) Then
 
-                            Dim tmpShape As PowerPoint.Shape = Nothing
-                            Dim elemWasMoved As Boolean = False
-                            For Each tmpShape In selectedPlanShapes
-                                ' hier sind nur noch richtige Shapes  
+                    If Not IsNothing(selectedPlanShapes) Then
 
-                                ' sollen Home- bzw. Change-Button angezeigt werden ? 
-                                elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
-                                If elemWasMoved Then
-                                    homeButtonRelevance = True
-                                Else
-                                    If tmpShape.Tags.Item("MVD").Length > 0 Then
-                                        changedButtonRelevance = True
-                                    End If
+                        Dim tmpShape As PowerPoint.Shape = Nothing
+                        Dim elemWasMoved As Boolean = False
+                        For Each tmpShape In selectedPlanShapes
+                            ' hier sind nur noch richtige Shapes  
+
+                            ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                            elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                            If elemWasMoved Then
+                                homeButtonRelevance = True
+                            Else
+                                If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                    changedButtonRelevance = True
                                 End If
-
-                            Next
-
-                            ' hier wird die Information zu dem selektierten Shape angezeigt 
-                            If Not IsNothing(propertiesPane) Then
-                                Call aktualisiereInfoPane(tmpShape, elemWasMoved)
-                            End If
-                            ' ur: wegen Pane
-                            If formIsShown Then
-                                Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
                             End If
 
+                        Next
 
-                            ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
-                            ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
-                            Call ensureVisibilityOfSelection(selectedPlanShapes)
-
-                            ' kann jetzt wieder aktiviert werden ...
-                            If Not IsNothing(propertiesPane) Then
-                                propertiesPane.Visible = True
-                            End If
-                        Else
-
-                            Call checkHomeChangeBtnEnablement()
-                            If propertiesPane.Visible Then
-                                Call aktualisiereInfoPane(Nothing)
-                            End If
-
-
+                        ' hier wird die Information zu dem selektierten Shape angezeigt 
+                        If Not IsNothing(propertiesPane) Then
+                            Call aktualisiereInfoPane(tmpShape, elemWasMoved)
                         End If
+                        ' ur: wegen Pane
+                        If formIsShown Then
+                            Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                        End If
+
+
+                        ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
+                        ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
+                        Call ensureVisibilityOfSelection(selectedPlanShapes)
+
+                        ' kann jetzt wieder aktiviert werden ...
+                        If Not IsNothing(propertiesPane) Then
+                            propertiesPane.Visible = True
+                        End If
+                    Else
+
+                        Call checkHomeChangeBtnEnablement()
+                        If propertiesPane.Visible Then
+                            Call aktualisiereInfoPane(Nothing)
+                        End If
+
 
                     End If
                 End If
-
-
 
 
 
@@ -1210,9 +1207,12 @@ Module Module1
 
         Catch ex As Exception
 
-            If propertiesPane.Visible Then
-                Call aktualisiereInfoPane(Nothing)
+            If Not IsNothing(propertiesPane) Then
+                If propertiesPane.Visible Then
+                    Call aktualisiereInfoPane(Nothing)
+                End If
             End If
+
 
         End Try
 
@@ -2478,7 +2478,7 @@ Module Module1
 
         Next
 
-        ' Behandlung der Namens- und Datumsbeschriftungen 
+        ' Behandlung der NAmens- und Datumsbeschriftungen 
         For Each tmpShpName As String In bigToDoList
 
             Try
@@ -2494,6 +2494,7 @@ Module Module1
                             Dim refName As String = tmpShape.Name.Substring(0, tmpShape.Name.Length - 1)
 
                             If diffMvList.ContainsKey(refName) Then
+                                ' Die difference ist der Wert, der sich aus der Verschiebung der Ende-Daten ergibt ... 
                                 Dim diff As Double = diffMvList.Item(refName)
                                 With tmpShape
                                     .Left = .Left + diff
@@ -2524,7 +2525,7 @@ Module Module1
                 End If
 
             Catch ex As Exception
-                'Call MsgBox("Fehler : " & ex.Message)
+                Call MsgBox("Fehler : " & ex.Message)
             End Try
 
         Next
@@ -2561,18 +2562,22 @@ Module Module1
 
         Call buildSmartSlideLists()
 
-        ' soll auf alle Fälle angezeigt werden ...
-        'Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
-        'Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        'Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
-        'Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+        ' ur: 03.07.2017: setze alle Ampelfarben, aber nur wenn das auch angezeigt werden soll 
+        If showTrafficLights(PTfarbe.none) Then
+            Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        End If
 
-        ' die gelben und roten sollten auf alle Fälle gezeigt werden , die grünen und nicht-bewerteten nur, wenn entsprechend eingestellt 
-        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
-        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
-        Call faerbeShapes(PTfarbe.yellow, True)
-        Call faerbeShapes(PTfarbe.red, True)
+        If showTrafficLights(PTfarbe.green) Then
+            Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        End If
 
+        If showTrafficLights(PTfarbe.yellow) Then
+            Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        End If
+
+        If showTrafficLights(PTfarbe.red) Then
+            Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+        End If
 
 
 
@@ -2922,6 +2927,7 @@ Module Module1
 
     ''' <summary>
     ''' diese Methode verschiebt nur das Shape; es erfolgt keinerlei Setzen von Tag-Information
+    ''' wenn eine KW im Milestone gesetzt ist, wird sie aktaulisiert .. 
     ''' auch eine HomeButtonRelevance besetht nicht mehr; das neue Home ist mit dem TimeStamp erreicht  
     ''' </summary>
     ''' <param name="tmpShape"></param>
@@ -2937,12 +2943,23 @@ Module Module1
         Dim chgExplanation As clsChangeItem
         Dim oldLeft As Double = tmpShape.Left
         Dim oldDate As Date = slideCoordInfo.calcXtoDate(tmpShape.Left + tmpShape.Width / 2).Date
+
+
         'Dim expla As String = "Version: " & timeStamp.ToShortDateString
 
         msDate = msDate.Date
 
         If msDate <> oldDate Then
             ' es hat sich was geändert ... 
+
+
+            Try
+                If hasKwInMs(tmpShape) Then
+                    Call updateKwInMs(tmpShape, msDate, False)
+                End If
+            Catch ex As Exception
+
+            End Try
 
             Call slideCoordInfo.calculatePPTx1x2(msDate, msDate, x1Pos, x2Pos)
 
@@ -2991,6 +3008,50 @@ Module Module1
         mvMilestoneToTimestampPosition = diff
 
     End Function
+
+    ''' <summary>
+    ''' gibt zurück, on dieser Meilenstein die seinem Datum entsprechende KW als Text stehen hat ...
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <returns></returns>
+    Friend Function hasKwInMs(ByVal tmpShape As PowerPoint.Shape) As Boolean
+
+        Dim tmpResult As Boolean = False
+        ' es muss festgelegt werden, ob es eine KW_in_milestone gibt 
+        Try
+            If tmpShape.TextFrame2.HasText Then
+                Dim refKW As Integer = calcKW(CDate(tmpShape.Tags.Item("ED")))
+                Dim vglKWinMs As Integer = CInt(tmpShape.TextFrame.TextRange.Text)
+                If refKW = vglKWinMs Then
+                    tmpResult = True
+                End If
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        hasKwInMs = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' schreibt die dem Datum msDate entsprechende KW in den Meilenstein 
+    ''' whiteFont gibt an , dass die Schrift weiss sein soll (wenn es für den ShadowMeilenstein gezeichnet werden soll 
+    ''' </summary>
+    ''' <param name="tmpShape"></param>
+    ''' <param name="msDate"></param>
+    ''' <param name="whiteFont"></param>
+    Friend Sub updateKwInMs(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal whiteFont As Boolean)
+
+        Dim newkw As String = calcKW(msDate).ToString("0#")
+        tmpShape.TextFrame.TextRange.Text = newkw
+
+        If whiteFont Then
+            tmpShape.TextFrame.TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' diese Methode verschiebt das Shadow-Shape an seine Position; es erfolgt keinerlei Setzen von Tag-Information
@@ -3757,58 +3818,6 @@ Module Module1
     End Function
 
     ''' <summary>
-    ''' betimmt die Beschriftung, den Namen des Symbols 
-    ''' </summary>
-    ''' <param name="curshape"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function bestimmeSymbolName(ByVal curshape As PowerPoint.Shape) As String
-        Dim tmpText As String = ""
-
-        With curshape
-
-            If .Tags.Item("DID") = CStr(ptReportComponents.prSymTrafficLight) Then
-                If englishLanguage Then
-                    tmpText = "Explanation for project traffic Light"
-                Else
-                    tmpText = "Erläuterung zur Projekt-Ampel"
-                End If
-
-            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymRisks) Then
-                If englishLanguage Then
-                    tmpText = "Current Project Risks"
-                Else
-                    tmpText = "Aktuelle Projekt-Risiken"
-                End If
-
-            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymDescription) Then
-                If englishLanguage Then
-                    tmpText = "Project Goals"
-                Else
-                    tmpText = "Projekt-Ziele"
-                End If
-            End If
-
-        End With
-
-        bestimmeSymbolName = tmpText
-
-    End Function
-
-    ''' <summary>
-    ''' bestimmt den Text , der dem Symbol zugeordnet ist 
-    ''' </summary>
-    ''' <param name="curshape"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function bestimmeSymbolText(ByVal curshape As PowerPoint.Shape) As String
-
-        bestimmeSymbolText = curshape.Tags.Item("TXT")
-
-
-    End Function
-
-    ''' <summary>
     ''' bestimmt den Text in Abhängigkeit, ob classified name, ShortName oder OriginalName gezeigt werden soll 
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -4140,23 +4149,6 @@ Module Module1
         Else
             isRelevantShape = False
         End If
-
-    End Function
-
-    ''' <summary>
-    ''' gibt true zurück, wenn es sich bei dem Shape um ein Symbol Shape handelt 
-    ''' </summary>
-    ''' <param name="curShape"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function isSymbolShape(ByVal curShape As PowerPoint.Shape) As Boolean
-        Dim bigType As String = curShape.Tags.Item("BID")
-        Dim detailID As String = curShape.Tags.Item("DID")
-
-        isSymbolShape = ((bigType = CStr(ptReportBigTypes.components)) And _
-                         (detailID = CStr(ptReportComponents.prSymDescription) Or _
-                          detailID = CStr(ptReportComponents.prSymRisks) Or _
-                          detailID = CStr(ptReportComponents.prSymTrafficLight)))
 
     End Function
 
@@ -5019,15 +5011,22 @@ Module Module1
                         ' wenn es diesen Meilenstein in der Variante bzw. Timestamp nicht gibt wird das new'Shape wieder gelöscht ...  
                         newShape.Delete()
                     Else
+
+                        Dim shadowDate As Date = cMilestone.getDate
+                        ' muss in den Schatten des Meilensteins die kw gezeichnet werden ? 
+                        If hasKwInMs(origShape) Then
+                            Call updateKwInMs(shadowShape, shadowDate, True)
+                        End If
+
                         ' jetzt bewegen 
-                        mvDiff = mvMilestoneShadowToNewPosition(newShape(1), cMilestone.getDate, isOtherVariant)
+                        mvDiff = mvMilestoneShadowToNewPosition(shadowShape, shadowDate, isOtherVariant)
                         Dim bsn As String = origShape.Tags.Item("BSN")
                         Dim bln As String = origShape.Tags.Item("BLN")
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing, _
-                                                  cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
+                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
+                                                  shadowDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
                                                   cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone)
 
 
@@ -5430,7 +5429,95 @@ Module Module1
         Next
     End Sub
 
-    
+    ''' <summary>
+    ''' setzt die Markierung zurück, dass Elemente über Time-Machine / andere Variante  verschoben wurden 
+    ''' deprecated - wird nicht mehr aufgerufen, da die durch Variante / TimeStamp veränderten Meilensteine und Phasen nicht mehr markiert werden 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub resetMovedGlowOfShapes()
+
+        Dim visboCollection As New Collection
+        Dim bigTodoList As New Collection
+
+        For Each tmpShape As PowerPoint.Shape In currentSlide.Shapes
+            bigTodoList.Add(tmpShape.Name)
+        Next
+
+        For Each tmpShpName As String In bigTodoList
+            Try
+                Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
+                If Not IsNothing(tmpShape) Then
+                    If isRelevantMSPHShape(tmpShape) Then
+
+                        If Not visboCollection.Contains(tmpShape.Name) Then
+                            visboCollection.Add(tmpShape.Name, tmpShape.Name)
+                        End If
+
+                        With tmpShape
+                            If .Glow.Radius > 0 Then
+                                'tmpShape.Glow.Radius = 0.0
+                                ''tmpShape.Glow.Color.RGB = PowerPoint.XlRgbColor.rgbWhite
+
+                                If .Tags.Item("MVD").Length > 0 Then
+                                    ' nichts machen 
+                                Else
+                                    If .Tags.Item("MVE").Length > 0 Then
+                                        .Tags.Delete("MVE")
+                                    End If
+                                End If
+
+                            End If
+
+                        End With
+
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
+        Next
+
+        ' ur:4.7.2017: Code um den Glow zu eliminieren und trotzdem die Meilenstein-Ampelfarben darzustellen
+        '
+        Dim anzSelected As Integer = visboCollection.Count
+        Dim nameArray() As String
+        Dim shapesToBeReset As PowerPoint.ShapeRange
+
+        If anzSelected >= 1 Then
+            ReDim nameArray(anzSelected - 1)
+
+            For i As Integer = 0 To anzSelected - 1
+                nameArray(i) = CStr(visboCollection.Item(i + 1))
+            Next
+
+            Try
+                shapesToBeReset = currentSlide.Shapes.Range(nameArray)
+                With shapesToBeReset
+
+                    '    ' Glow wegnehmen
+                    With .Glow
+                        .Color.ObjectThemeColor = msoThemeColorAccent1
+                        .Transparency = 0
+                        .Radius = 0
+                    End With
+
+                    '   ' Schatten wegnehmen
+                    .Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+        End If
+        ' ur: 03.07.2017: setze alle Ampelfarben
+        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        Call faerbeShapes(PTfarbe.yellow, showTrafficLights(PTfarbe.yellow))
+        Call faerbeShapes(PTfarbe.red, showTrafficLights(PTfarbe.red))
+
+
+    End Sub
 
     Friend Sub closeExcelAPP()
         Try
@@ -5461,17 +5548,6 @@ Module Module1
 
         If IsNothing(tmpShape) Then
             With ucSearchView
-                ' eigentlich soll doch nur selListboxNames zurückgesetzt werden und die Auswahlen daraus ...
-                '.cathegoryList.SelectedItem = Nothing
-                '.shwOhneLight.Checked = False
-                '.shwGreenLight.Checked = False
-                '.shwYellowLight.Checked = False
-                '.shwRedLight.Checked = False
-                '.filterText.Text = ""
-                '.listboxNames.Items.Clear()
-                '.selListboxNames.Items.Clear()
-                '.fülltListbox()
-
                 ' tk 11.1.18
                 .listboxNames.SelectedItems.Clear()
                 .selListboxNames.Items.Clear()
@@ -5501,53 +5577,59 @@ Module Module1
 
                 If selectedPlanShapes.Count = 1 Then
 
-                    If isSymbolShape(tmpShape) Then
-                        With ucPropertiesView
+                    With ucPropertiesView
 
-                            ' positioniert die Darstellungs-Elemente entsprechend
-                            .symbolMode(True)
-                            .eleName.Text = bestimmeSymbolName(tmpShape)
-                            .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
+                        ' ''Call .setDTPicture(pptShapeIsMilestone(tmpShape))
+                        ' ''If showBreadCrumbField Then
+                        ' ''    .fullBreadCrumb.Text = bestimmeElemBC(tmpShape)
+                        ' ''End If
 
-                        End With
-                    Else
-                        With ucPropertiesView
+                        ' ''Dim rdbCode As Integer = calcRDB()
+                        ' ''Dim tmpStr() As String
+                        ' ''tmpStr = bestimmeElemALuTvText(tmpShape, rdbCode).Split(New Char() {CType(vbLf, Char), CType(vbCr, Char)})
 
-                            ' positioniert die Darstellungs-Elemente entsprechend
-                            .symbolMode(False)
+                        ' ''If englishLanguage Then
+                        ' ''    .labelDate.Text = "Date:"
+                        ' ''    .labelAmpel.Text = "Traffic Light:"
+                        ' ''    .labelDeliver.Text = "Deliverables:"
+                        ' ''    .labelRespons.Text = "Responsible:"
+                        ' ''Else
+                        ' ''    .labelDate.Text = "Datum:"
+                        ' ''    .labelAmpel.Text = "Ampel:"
+                        ' ''    .labelDeliver.Text = "Lieferumfänge:"
+                        ' ''    .labelRespons.Text = "Verantwortlich:"
+                        ' ''End If
 
-                            .eleName.Text = bestimmeElemText(tmpShape, False, True, showBestName)
+                        .eleName.Text = bestimmeElemText(tmpShape, False, True, showBestName)
 
-                            .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
+                        .eleDatum.Text = bestimmeElemDateText(tmpShape, False)
 
-                            'Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
+                        'Dim rgbFarbe As Drawing.Color = Drawing.Color.FromArgb(CType(trafficLightColors(CInt(tmpShape.Tags.Item("AC"))), Integer))
 
-                            Dim ampelfarbe As Integer = CInt(tmpShape.Tags.Item("AC"))
+                        Dim ampelfarbe As Integer = CInt(tmpShape.Tags.Item("AC"))
 
-                            Select Case CInt(tmpShape.Tags.Item("AC"))
+                        Select Case CInt(tmpShape.Tags.Item("AC"))
 
-                                Case PTfarbe.none
-                                    .eleAmpel.BackColor = Drawing.Color.Silver
-                                Case PTfarbe.green
-                                    .eleAmpel.BackColor = Drawing.Color.Green
-                                Case PTfarbe.yellow
-                                    .eleAmpel.BackColor = Drawing.Color.Yellow
-                                Case PTfarbe.red
-                                    .eleAmpel.BackColor = Drawing.Color.Firebrick
+                            Case PTfarbe.none
+                                .eleAmpel.BackColor = Drawing.Color.Silver
+                            Case PTfarbe.green
+                                .eleAmpel.BackColor = Drawing.Color.Green
+                            Case PTfarbe.yellow
+                                .eleAmpel.BackColor = Drawing.Color.Yellow
+                            Case PTfarbe.red
+                                .eleAmpel.BackColor = Drawing.Color.Firebrick
 
-                            End Select
+                        End Select
 
-                            .percentDone.Text = bestimmeElemPD(tmpShape)
+                        .percentDone.Text = bestimmeElemPD(tmpShape)
 
-                            .eleAmpelText.Text = bestimmeElemAE(tmpShape)
+                        .eleAmpelText.Text = bestimmeElemAE(tmpShape)
 
-                            .eleDeliverables.Text = bestimmeElemLU(tmpShape)
+                        .eleDeliverables.Text = bestimmeElemLU(tmpShape)
 
-                            .eleRespons.Text = bestimmeElemVE(tmpShape)
+                        .eleRespons.Text = bestimmeElemVE(tmpShape)
 
-                        End With
-                    End If
-                    
+                    End With
 
                 ElseIf selectedPlanShapes.Count > 1 Then
 
@@ -6039,9 +6121,9 @@ Module Module1
 
             Call setCurrentTimestampInSlide(currentTimestamp)
 
-            If thereIsNoVersionFieldOnSlide Then
-                Call showTSMessage(currentTimestamp)
-            End If
+            'If thereIsNoVersionFieldOnSlide Then
+            Call showTSMessage(currentTimestamp)
+            'End If
 
             ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
 
@@ -6053,7 +6135,20 @@ Module Module1
             End If
             'End If
 
+            Try
+                If Not IsNothing(selectedPlanShapes) Then
 
+                    If selectedPlanShapes.Count = 1 Then
+                        Dim curShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+
+                        Call aktualisiereInfoPane(curShape)
+                        Call aktualisiereInfoFrm(curShape)
+
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
 
         End If
 
