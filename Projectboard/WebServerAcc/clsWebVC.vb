@@ -1,4 +1,4 @@
-﻿Public Class clsWebAllVC
+﻿Public Class clsWebVC
 
     Public Property state As String
     Public Property message As String

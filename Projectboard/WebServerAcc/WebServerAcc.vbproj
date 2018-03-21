@@ -67,16 +67,17 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="clsWebAllVC.vb" />
+    <Compile Include="clsInputSigninLogin.vb" />
+    <Compile Include="clsWebVC.vb" />
     <Compile Include="clsTokenUserLogin.vb" />
     <Compile Include="clsTokenUserSignIn.vb" />
     <Compile Include="clsUser.vb" />
     <Compile Include="clsUserProfile.vb" />
     <Compile Include="clsVC.vb" />
-    <Compile Include="clsVCplus.vb" />
     <Compile Include="clsVCuser.vb" />
     <Compile Include="clsWebOneVC.vb" />
     <Compile Include="clsWebOutput.vb" />
+    <Compile Include="clsWebUser.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>

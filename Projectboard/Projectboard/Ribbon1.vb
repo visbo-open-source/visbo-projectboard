@@ -11681,34 +11681,142 @@ Imports System.ServiceModel.Web
     ''' <param name="control"></param>
     Public Sub PTWebRequestLogin(control As IRibbonControl)
 
-        Try
-            'Dim typeRequest As String = "/token/user/login"
-            Dim typeRequest As String = control.Id.Replace("_", "/")
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
-            Dim datastr As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
+        'Dim typeRequest As String = "/token/user/login"
+        'Dim typeRequest As String = "/token/user/signup"
+        Dim typeRequest As String = control.Id.Replace("_", "/")
+        Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
 
-            Dim encoding As New System.Text.UTF8Encoding()
-            Dim data As Byte() = encoding.GetBytes(datastr)
+        Try
+
+            'Dim datastr As String = "{""email"": ""Ute.Rittinghaus-Koytek@visbo.de"",  ""password"": ""visbo123""}"
+            'Dim datastr As String = "{""email"": ""rittinghaus-koytek@t-online.de"",  ""password"": ""visbo123""}"
+            'Dim datastr As String = "{""email"": ""markus.seyfried@visbo.de"",  ""password"": ""visbo123""}"
+
+            'Dim encoding As New System.Text.UTF8Encoding()
+            'Dim data As Byte() = encoding.GetBytes(datastr)
+
+            ''Dim user As New clsInputSignupLogin
+            ''user.name = "Markus Seyfried"
+            ''user.email = "markus.seyfried@visbo.de"
+            ''user.password = "visbo123"
+            ''user.phone = "08024-xxxxx"
+            ''user.company = "keine AG"
+
+            Dim user As New clsInputSignupLogin
+            user.name = "Ute Rittinghaus-Koytek"
+            user.email = "ute.rittinghaus-koytek@visbo.de"
+            user.password = "visbo123"
+            user.phone = "08024-92403"
+            user.company = "VISBO GmbH"
+
+            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+            Dim data() As Byte
+            data = serverInputDataJson(user, typeRequest)
 
             Dim Antwort As clsTokenUserLogin
             Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
                 Antwort = CType(ReadPOSTResponseContentJson(httpresp, typeRequest), clsTokenUserLogin)
             End Using
-
-            'Dim Antwort As String
-            'Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-            '    Antwort = ReadResponseContent(httpresp)
-            'End Using
-
             Call MsgBox(Antwort.message)
-
             If Antwort.state = "success" Then
                 token = Antwort.token
             End If
 
+            ''Dim Antwort2 As String
+            ''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            ''    Antwort2 = ReadResponseContent(httpresp)
+            ''End Using
 
         Catch ex As Exception
-            Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
+            Call MsgBox("Fehler in PTWebRequest" & typeRequest & ": " & ex.Message)
+        End Try
+
+    End Sub
+
+    Public Sub PTWebRequestPUTUserProfile(control As IRibbonControl)
+
+        Dim typeRequest As String = control.Id.Replace("_", "/")
+        Dim hstr() As String = Split(typeRequest, "PUT")
+        typeRequest = hstr(hstr.Length - 1)
+        'Dim typeRequest As String = "/user/profile"
+
+        Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+
+        Try
+            ''Dim user As New clsInputSignupLogin
+            ''user.name = "Markus Seyfried"
+            ''user.email = "markus.seyfried@visbo.de"
+            ''user.password = "visbo123"
+            ''user.phone = "08024-xxxxx"
+            ''user.company = "keine AG"
+
+            Dim user As New clsUser
+            user.name = "Ute's neuer Name"
+            user.email = "ute.rittinghaus-koytek@visbo.de"
+            user.profile.phone = "08024-92403"
+            user.profile.company = "VISBO GmbH"
+            user.profile.address = "Munich, BY"
+
+            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+            Dim data() As Byte
+            data = serverInputDataJson(user, typeRequest)
+
+            Dim Antwort As clsWebUser
+            Using httpresp As HttpWebResponse = GetPUTResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadPUTResponseContentJson(httpresp, typeRequest), clsWebUser)
+            End Using
+
+            If Antwort.state = "success" Then
+                Dim newName As String = Antwort.user.name
+                Call MsgBox(Antwort.message & ": " & newName)
+            Else
+                Throw New ArgumentException(Antwort.state & ": " & Antwort.message)
+            End If
+
+            ''Dim Antwort2 As String
+            ''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            ''    Antwort2 = ReadResponseContent(httpresp)
+            ''End Using
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTWebPUTRequest" & typeRequest & ": " & ex.Message)
+        End Try
+
+    End Sub
+
+    Public Sub PTWebRequestGETUserProfile(control As IRibbonControl)
+
+        Dim typeRequest As String = control.Id.Replace("_", "/")
+        Dim hstr() As String = Split(typeRequest, "GET")
+        typeRequest = hstr(hstr.Length - 1)
+        'Dim typeRequest As String = "/user/profile"
+
+        Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+
+        Try
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As clsWebUser
+            Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebUser)
+            End Using
+
+            If Antwort.state = "success" Then
+                Dim aktName As String = Antwort.user.name
+                Call MsgBox(Antwort.message & ": " & aktName)
+            Else
+                Throw New ArgumentException(Antwort.state & ": " & Antwort.message)
+            End If
+
+            ''Dim Antwort2 As String
+            ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+            ''    Antwort2 = ReadResponseContent(httpresp)
+            ''End Using
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTWebPUTRequest" & typeRequest & ": " & ex.Message)
         End Try
 
     End Sub
@@ -11722,11 +11830,14 @@ Imports System.ServiceModel.Web
             'Dim typeRequest As String = "/vc"
             Dim typeRequest As String = control.Id.Replace("_", "/")
             Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
-            Dim data As String = ""
 
-            Dim Antwort As clsWebAllVC
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As clsWebVC
             Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
-                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebAllVC)
+                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebVC)
             End Using
 
             'Dim Antwort2 As String
@@ -11735,8 +11846,9 @@ Imports System.ServiceModel.Web
             'End Using
 
             If Antwort.state = "success" Then
-                Call MsgBox(Antwort.message & vbCrLf & "Nun folgen die Aktionen mit den VC's")
+                Call MsgBox(Antwort.message & vbCrLf & "aktueller User hat " & Antwort.vc.Count & "Visbo Centers")
                 ' hier erfolgen nun die weiteren Aktionen mit den angeforderten Daten
+                webVCs = Antwort
             Else
                 Call MsgBox(Antwort.message)
             End If
@@ -11747,6 +11859,208 @@ Imports System.ServiceModel.Web
 
     End Sub
 
+
+
+    Public Sub PTPOSTOneVC(control As IRibbonControl)
+
+        Try
+            'Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim typeRequest As String = "/vc"
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+
+            Dim oneVC As New clsVC
+            Dim user As New clsVCuser
+
+            oneVC.name = "Fifth VC (Ute)"
+            user.email = "ute.rittinghaus-koytek@visbo.de"
+            user.role = "Admin"
+            oneVC.users.Add(user)
+
+            Dim user1 As New clsVCuser
+            user1.email = "ute.rittinghaus-koytek@visbo.de"
+            user1.role = "User"
+            oneVC.users.Add(user1)
+
+            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+            Dim data() As Byte
+            data = serverInputDataJson(oneVC, typeRequest)
+
+            Dim Antwort As clsWebVC
+            Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadPOSTResponseContentJson(httpresp, typeRequest), clsWebVC)
+            End Using
+
+
+
+            If Antwort.state = "success" Then
+                aktVC = Antwort
+                Call MsgBox(Antwort.message & ": " & "neues und aktuelles VC ist nun: " & aktVC.vc.ElementAt(0).name)
+            Else
+                Throw New ArgumentException(Antwort.message)
+            End If
+
+
+            ''Dim Antwort As String
+            ''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            ''    Antwort = ReadResponseContent(httpresp)
+            ''End Using
+
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTPOSTOneVC " & ex.Message)
+        End Try
+
+    End Sub
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTGETOneVC(control As IRibbonControl)
+
+        Try
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim hstr() As String = Split(typeRequest, "GET")
+            typeRequest = hstr(hstr.Length - 1)
+            'Dim typeRequest As String = "/vc/"
+
+
+            Dim vcID As String = webVCs.vc.ElementAt(1)._id
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vcID)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+            Dim Antwort As clsWebVC
+            Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebVC)
+            End Using
+
+            If Antwort.state = "success" Then
+                aktVC = Antwort
+                Call MsgBox(Antwort.message & ": " & "aktuelles VC ist: " & aktVC.vc.ElementAt(0).name)
+            Else
+                Throw New ArgumentException(Antwort.message)
+            End If
+
+
+            ''Dim Antwort2 As String
+            ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+            ''    Antwort2 = ReadResponseContent(httpresp)
+            ''End Using
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTOneVC " & ex.Message)
+        End Try
+
+    End Sub
+
+    Public Sub PTPUTOneVC(control As IRibbonControl)
+
+        Try
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim hstr() As String = Split(typeRequest, "PUT")
+            typeRequest = hstr(hstr.Length - 1)
+            'Dim typeRequest As String = "/vc/"
+
+            'Dim typeRequest As String = "/vc/"
+
+            Dim vc As clsVC = webVCs.vc.ElementAt(1)
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vc._id)
+
+            vc.name = "my first Visbo Center Renamed"
+            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+            Dim data() As Byte
+            data = serverInputDataJson(vc, typeRequest)
+
+            'Dim datastr As String = ""
+            'Dim encoding As New System.Text.UTF8Encoding()
+            'Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+            Dim Antwort As clsWebVC
+            Using httpresp As HttpWebResponse = GetPUTResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadPUTResponseContentJson(httpresp, typeRequest), clsWebVC)
+            End Using
+
+
+            If Antwort.state = "success" Then
+                aktVC = Antwort
+                Call MsgBox(Antwort.message & ": " & "neuer Name für aktuelle vcid: " & vbCrLf &
+                            aktVC.vc.ElementAt(0).name & " für " & aktVC.vc.ElementAt(0)._id)
+            Else
+                Throw New ArgumentException(Antwort.message)
+            End If
+
+            ''Dim Antwort2 As String
+            ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+            ''    Antwort2 = ReadResponseContent(httpresp)
+            ''End Using
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTupdateOneVC " & ex.Message)
+        End Try
+    End Sub
+
+
+    Public Sub PTDELETEOneVC(control As IRibbonControl)
+
+        Try
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim hstr() As String = Split(typeRequest, "DEL")
+            typeRequest = hstr(hstr.Length - 1)
+            'Dim typeRequest As String = "/vc/"
+
+            ' zu löschende VC bestimmen aus Liste aller meiner VCs (webVCs)
+            Dim vc As clsVC = Nothing
+            Dim i As Integer
+            For i = 0 To webVCs.vc.Count - 1
+                If webVCs.vc.ElementAt(i).name = "Fifth VC (Ute)" Then
+                    vc = webVCs.vc.ElementAt(i)
+                    Exit For
+                End If
+            Next i
+
+            If Not IsNothing(vc) Then
+
+                Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vc._id)
+
+                ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+                Dim data() As Byte
+                data = serverInputDataJson(vc, typeRequest)
+
+                'Dim datastr As String = ""
+                'Dim encoding As New System.Text.UTF8Encoding()
+                'Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+                Dim Antwort As clsWebOutput
+                Using httpresp As HttpWebResponse = GetDELResponse(serverUri, data, Nothing)
+                    Antwort = CType(ReadDELResponseContentJson(httpresp, typeRequest), clsWebOutput)
+                End Using
+
+                If Antwort.state = "success" Then
+                    Call MsgBox(Antwort.state & ": " & Antwort.message & ": " & vc._id & ":" & vc.name)
+                Else
+                    Throw New ArgumentException(Antwort.message)
+                End If
+
+
+                ''Dim Antwort2 As String
+                ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                ''    Antwort2 = ReadResponseContent(httpresp)
+                ''End Using
+            Else
+                Throw New ArgumentException("zu löschendes VC existiert nicht!")
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTDELETEOneVC: " & ex.Message)
+        End Try
+    End Sub
+
     Public Sub PTJsonWrite(control As IRibbonControl)
 
         'Dim JsonFileName As String = requirementsOrdner & "Testlic.js"
@@ -11754,7 +12068,7 @@ Imports System.ServiceModel.Web
         'Call JsonExport(tknlgn, JsonFileName)
 
         Dim JsonFileName As String = requirementsOrdner & "TestGetVCnew.js"
-        Dim tknlgn As clsWebAllVC = New clsWebAllVC
+        Dim tknlgn As clsWebVC = New clsWebVC
         tknlgn.message = "neue Message"
         tknlgn.state = "unbekannt"
 
@@ -11783,54 +12097,6 @@ Imports System.ServiceModel.Web
         'Dim tknlgn As clsWebAllVC = JsonImport(JsonFileName)
 
     End Sub
-
-    Public Sub PTJsonTest(control As IRibbonControl)
-
-        Try
-
-
-            'Dim typeRequest As String = control.Id.Replace("_", "/")
-            Dim typeRequest As String = "/vc"
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
-
-            Dim oneVC As New clsVC
-            Dim user As New clsVCuser
-
-            oneVC.Name = "Ute VC (1)"
-            user.email = "ute.rittinghaus-koytek@visbo.de"
-            user.role = "User"
-            oneVC.Users.Add(user)
-
-            Dim data() As Byte
-            data = serverInputDataJson(oneVC, typeRequest)
-
-            Dim Antwort As clsWebOneVC
-            Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-                Antwort = CType(ReadPOSTResponseContentJson(httpresp, typeRequest), clsWebOneVC)
-            End Using
-
-            'Dim Antwort As String
-            'Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
-            '    Antwort = ReadResponseContent(httpresp)
-            'End Using
-
-            Call MsgBox(Antwort.message)
-
-            If Antwort.state = "success" Then
-                Call MsgBox(Antwort.message & ": " & Antwort.ToString)
-            End If
-
-
-        Catch ex As Exception
-            Call MsgBox("Fehler in PTJsonTest " & ex.Message)
-        End Try
-
-    End Sub
-
-
-    'Private Function UnicodeStringToBytes(ByVal str As String) As Byte()
-    '    Return System.Text.Encoding.Unicode.GetBytes(str)
-    'End Function
 
 #End Region
 

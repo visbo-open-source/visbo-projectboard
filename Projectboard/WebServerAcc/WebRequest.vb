@@ -18,6 +18,10 @@ Imports System.Text
 Public Module WebRequest
 
     Public token As String = ""
+    Public webVCs As clsWebVC = Nothing
+    Public aktVC As clsWebVC = Nothing
+
+
     ''' <summary>
     ''' Sendet einen Request an den Server. Außerdem wird hier auch die Antwort empfangen und an die aufrufenden Routine zurückgegeben
     ''' </summary>
@@ -101,7 +105,7 @@ Public Module WebRequest
     ''' <param name="uri"></param>
     ''' <param name="data"></param>
     ''' <param name="callback"></param>
-    Function GetGETResponse(uri As Uri, data As String, callback As Action(Of HttpWebResponse)) As HttpWebResponse
+    Function GetGETResponse(uri As Uri, data As Byte(), callback As Action(Of HttpWebResponse)) As HttpWebResponse
 
         Dim response As HttpWebResponse = Nothing
         Try
@@ -187,6 +191,153 @@ Public Module WebRequest
         Return response
 
     End Function
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="uri"></param>
+    ''' <param name="data"></param>
+    ''' <param name="callback"></param>
+    ''' <returns></returns>
+    Function GetPUTResponse(uri As Uri, data As Byte(), callback As Action(Of HttpWebResponse)) As HttpWebResponse
+
+        Dim response As HttpWebResponse = Nothing
+        Try
+            Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+
+            request.Method = "PUT"
+            request.ContentType = "application/json"
+            request.Headers.Add("access-key", token)
+            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+
+            request.ContentLength = data.Length
+            Try
+                Using requestStream As Stream = request.GetRequestStream()
+                    ' Send the data.
+                    requestStream.Write(data, 0, data.Length)
+                    requestStream.Close()
+                    requestStream.Dispose()
+                End Using
+            Catch ex As Exception
+                Call MsgBox("Fehler bei GetRequestStream:  " & ex.Message)
+                Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+            End Try
+
+
+            Try
+                response = request.GetResponse()
+
+            Catch ex As WebException
+                response = ex.Response
+            End Try
+
+            ''''Try
+
+            ''''    request.BeginGetResponse(
+            ''''    Function(x)
+            ''''        Try
+            ''''            response = DirectCast(request.EndGetResponse(x), HttpWebResponse)
+            ''''            Return response
+            ''''        Catch ex As WebException
+            ''''            Using Exresponse As WebResponse = ex.Response
+            ''''                Dim httpResponse As HttpWebResponse = DirectCast(Exresponse, HttpWebResponse)
+            ''''                System.Diagnostics.Debug.WriteLine("Error code: {0}", httpResponse.StatusCode)
+            ''''                Using str As Stream = Exresponse.GetResponseStream()
+            ''''                    Dim sr = New StreamReader(str)
+            ''''                    Dim text As String = sr.ReadToEnd()
+            ''''                    System.Diagnostics.Debug.WriteLine(text)
+            ''''                End Using
+            ''''            End Using
+            ''''            Return 0
+            ''''        Catch ex As Exception
+            ''''            System.Diagnostics.Debug.WriteLine("Message: " & ex.Message)
+            ''''            Return 0
+            ''''        End Try
+
+            ''''    End Function, request)
+
+            ''''Catch ex As Exception
+            ''''    Call MsgBox("Fehler bei BeginGetResponse:  " & ex.Message)
+            ''''    Return Nothing
+            ''''End Try
+
+        Catch ex1 As Exception
+            Call MsgBox(ex1.Message)
+            Throw
+        End Try
+
+        Return response
+
+    End Function
+    Function GetDELResponse(uri As Uri, data As Byte(), callback As Action(Of HttpWebResponse)) As HttpWebResponse
+
+        Dim response As HttpWebResponse = Nothing
+        Try
+            Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+
+            request.Method = "DELETE"
+            request.ContentType = "application/json"
+            request.Headers.Add("access-key", token)
+            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+
+            request.ContentLength = data.Length
+            Try
+                Using requestStream As Stream = request.GetRequestStream()
+                    ' Send the data.
+                    requestStream.Write(data, 0, data.Length)
+                    requestStream.Close()
+                    requestStream.Dispose()
+                End Using
+            Catch ex As Exception
+                Call MsgBox("Fehler bei GetRequestStream:  " & ex.Message)
+                Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+            End Try
+
+
+            Try
+                response = request.GetResponse()
+
+            Catch ex As WebException
+                response = ex.Response
+            End Try
+
+            ''''Try
+
+            ''''    request.BeginGetResponse(
+            ''''    Function(x)
+            ''''        Try
+            ''''            response = DirectCast(request.EndGetResponse(x), HttpWebResponse)
+            ''''            Return response
+            ''''        Catch ex As WebException
+            ''''            Using Exresponse As WebResponse = ex.Response
+            ''''                Dim httpResponse As HttpWebResponse = DirectCast(Exresponse, HttpWebResponse)
+            ''''                System.Diagnostics.Debug.WriteLine("Error code: {0}", httpResponse.StatusCode)
+            ''''                Using str As Stream = Exresponse.GetResponseStream()
+            ''''                    Dim sr = New StreamReader(str)
+            ''''                    Dim text As String = sr.ReadToEnd()
+            ''''                    System.Diagnostics.Debug.WriteLine(text)
+            ''''                End Using
+            ''''            End Using
+            ''''            Return 0
+            ''''        Catch ex As Exception
+            ''''            System.Diagnostics.Debug.WriteLine("Message: " & ex.Message)
+            ''''            Return 0
+            ''''        End Try
+
+            ''''    End Function, request)
+
+            ''''Catch ex As Exception
+            ''''    Call MsgBox("Fehler bei BeginGetResponse:  " & ex.Message)
+            ''''    Return Nothing
+            ''''End Try
+
+        Catch ex1 As Exception
+            Call MsgBox(ex1.Message)
+            Throw
+        End Try
+
+        Return response
+
+    End Function
 
     Function ReadResponseContent(ByRef resp As HttpWebResponse) As String
         If IsNothing(resp) Then
@@ -219,9 +370,8 @@ Public Module WebRequest
         Else
             Select Case type
 
-                Case "/token/user/signin"
-
-                Case "/token/user/login"
+                Case "/token/user/login",
+                     "/token/user/signup"
 
                     Dim tokenUserLogin As clsTokenUserLogin
                     Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsTokenUserLogin))
@@ -229,7 +379,18 @@ Public Module WebRequest
                         tokenUserLogin = serializer.ReadObject(resp.GetResponseStream)
                         ReadGETResponseContentJson = tokenUserLogin
                     Catch ex As Exception
-                        Call MsgBox("Fehler in ReadResponseContent /token/user/login: " & ex.Message)
+                        Call MsgBox("Fehler in ReadGETResponseContentJson " & type & ": " & ex.Message)
+                    End Try
+
+                Case "/user/profile"
+
+                    Dim userProfile As clsWebUser
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebUser))
+                    Try
+                        userProfile = serializer.ReadObject(resp.GetResponseStream)
+                        ReadGETResponseContentJson = userProfile
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadGETResponseContentJson " & type & ": " & ex.Message)
                     End Try
 
                 Case "/user/changepw"
@@ -238,11 +399,22 @@ Public Module WebRequest
 
                 Case "/vc"
 
-                    Dim allVC As clsWebAllVC
-                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebAllVC))
+                    Dim vc As clsWebVC
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
                     Try
-                        allVC = serializer.ReadObject(resp.GetResponseStream)
-                        ReadGETResponseContentJson = allVC
+                        vc = serializer.ReadObject(resp.GetResponseStream)
+                        ReadGETResponseContentJson = vc
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadGETResponseContent /vc: " & ex.Message)
+                    End Try
+
+                Case "/vc/"
+
+                    Dim vc As clsWebVC
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
+                    Try
+                        vc = serializer.ReadObject(resp.GetResponseStream)
+                        ReadGETResponseContentJson = vc
                     Catch ex As Exception
                         Call MsgBox("Fehler in ReadGETResponseContent /vc: " & ex.Message)
                     End Try
@@ -274,9 +446,9 @@ Public Module WebRequest
         Else
             Select Case type
 
-                Case "/token/user/signin"
 
-                Case "/token/user/login"
+                Case "/token/user/login",
+                     "/token/user/signup"
 
                     Dim tokenUserLogin As clsTokenUserLogin
                     Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsTokenUserLogin))
@@ -284,8 +456,9 @@ Public Module WebRequest
                         tokenUserLogin = serializer.ReadObject(resp.GetResponseStream)
                         ReadPOSTResponseContentJson = tokenUserLogin
                     Catch ex As Exception
-                        Call MsgBox("Fehler in ReadPOSTResponseContent /token/user/login: " & ex.Message)
+                        Call MsgBox("Fehler in ReadPOSTResponseContent" & type & ": " & ex.Message)
                     End Try
+
 
                 Case "/user/changepw"
 
@@ -293,13 +466,84 @@ Public Module WebRequest
 
                 Case "/vc"
 
-                    Dim oneVC As clsWebOneVC
-                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebOneVC))
+                    Dim vc As clsWebVC
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
                     Try
-                        oneVC = serializer.ReadObject(resp.GetResponseStream)
-                        ReadPOSTResponseContentJson = oneVC
+                        vc = serializer.ReadObject(resp.GetResponseStream)
+                        ReadPOSTResponseContentJson = vc
                     Catch ex As Exception
                         Call MsgBox("Fehler in ReadPOSTResponseContent /vc: " & ex.Message)
+                    End Try
+
+
+            End Select
+
+
+        End If
+    End Function
+    Function ReadPUTResponseContentJson(ByRef resp As HttpWebResponse, ByVal type As String) As Object
+
+
+        ReadPUTResponseContentJson = Nothing
+
+        If IsNothing(resp) Then
+            Throw New ArgumentNullException("resp")
+        Else
+            Select Case type
+
+
+                Case "/user/profile"
+
+                    Dim userProfile As clsWebUser
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebUser))
+                    Try
+                        userProfile = serializer.ReadObject(resp.GetResponseStream)
+                        ReadPUTResponseContentJson = userProfile
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadPUTResponseContentJson " & type & ": " & ex.Message)
+                    End Try
+
+
+                Case "/vc/"
+
+                    Dim vc As clsWebVC
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
+                    Try
+                        vc = serializer.ReadObject(resp.GetResponseStream)
+                        ReadPUTResponseContentJson = vc
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadPUTResponseContentJson /vc/ : " & ex.Message)
+                    End Try
+
+
+            End Select
+
+
+        End If
+    End Function
+    Function ReadDELResponseContentJson(ByRef resp As HttpWebResponse, ByVal type As String) As Object
+
+
+        ReadDELResponseContentJson = Nothing
+
+        If IsNothing(resp) Then
+            Throw New ArgumentNullException("resp")
+        Else
+            Select Case type
+
+
+                Case "/user/profile"
+
+
+                Case "/vc/"
+
+                    Dim out As New clsWebOutput
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebOutput))
+                    Try
+                        out = serializer.ReadObject(resp.GetResponseStream)
+                        ReadDELResponseContentJson = out
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadDELResponseContentJson /vc/ : " & ex.Message)
                     End Try
 
 
@@ -323,50 +567,55 @@ Public Module WebRequest
 
 
         serverInputDataJson = Nothing
+        Dim bytes() As Byte = Nothing
+        Dim bufferlge As Int32 = 256
+        Dim ms As New MemoryStream(bufferlge)
+        Dim ok As Boolean = True
 
         If IsNothing(dataClass) Then
             Throw New ArgumentNullException("dataClass")
         Else
-            Select Case type
+            Try
+                Select Case type
 
-                Case "/token/user/login"
+                    Case "/token/user/login",
+                         "/token/user/signup"
 
-                    Dim tokenUserLogin As clsTokenUserLogin
-                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsTokenUserLogin))
-                    Try
-
-                    Catch ex As Exception
-                        Call MsgBox("Fehler in WriteJson /token/user/login: " & ex.Message)
-                    End Try
-
-                Case "/vc"
-
-                    Dim teststring As String = ""
-                    Dim bytes() As Byte = Nothing
-                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsVC))
-                    Dim bufferlge As Int32 = 256
-                    Dim ms As New MemoryStream(bufferlge)
-
-                    Try
+                        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsInputSignupLogin))
                         serializer.WriteObject(ms, dataClass)
-                        ReDim bytes(ms.Length)
-                        bytes = ms.GetBuffer()
 
-                        Dim encoding As New System.Text.UTF8Encoding()
-                        Dim hstr As String = encoding.GetString(bytes)
-                        Call MsgBox(hstr)
+                    Case "/user/profile"
 
-                        ms.Close()
-                    Catch ex As Exception
-                        Call MsgBox("Fehler in writeJson /vc: " & ex.Message)
-                    End Try
+                        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsUser))
+                        serializer.WriteObject(ms, dataClass)
 
+                    Case "/vc",
+                         "/vc/"
+
+                        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsVC))
+                        serializer.WriteObject(ms, dataClass)
+
+                    Case Else
+                        Call MsgBox("WebRequest Typ: " & type & " existiert nicht")
+                        ok = False
+
+                End Select
+
+                If ok Then
+
+                    bytes = ms.GetBuffer()
+                    ReDim Preserve bytes(ms.Length - 1)
+                    ''Dim encoding As New System.Text.UTF8Encoding()
+                    ''Dim hstr As String = encoding.GetString(bytes)
+                    ''Call MsgBox(hstr)
+                    ms.Close()
                     serverInputDataJson = bytes
 
-                Case Else
-                    Call MsgBox("Es ist wohl ein Fehler aufgetreten")
-            End Select
+                End If
 
+            Catch ex As Exception
+                Call MsgBox("Fehler in serverInputDataJson " & type & ": " & ex.Message)
+            End Try
 
         End If
     End Function
@@ -378,13 +627,13 @@ Public Module WebRequest
     ''' </summary>
     ''' <param name="clsJson"></param>
     ''' <param name="namefile"></param>
-    Sub JsonExport(ByVal clsJson As clsWebAllVC, ByVal namefile As String)
+    Sub JsonExport(ByVal clsJson As clsWebVC, ByVal namefile As String)
 
 
         Dim jsonfilename As String = awinPath & namefile
 
         Try
-            Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebAllVC))
+            Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
 
             Dim file As New FileStream(jsonfilename, FileMode.Create)
             serializer.WriteObject(file, clsJson)
@@ -403,12 +652,12 @@ Public Module WebRequest
     ''' </summary>
     ''' <param name="namefile"></param>
     ''' <returns></returns>
-    Function JsonImport(ByVal namefile As String) As clsWebAllVC
+    Function JsonImport(ByVal namefile As String) As clsWebVC
         Dim resp As HttpWebResponse = Nothing
 
-        Dim tokenLogin As New clsWebAllVC
+        Dim tokenLogin As New clsWebVC
 
-        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebAllVC))
+        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
         Dim jsonfilename As String = awinPath & namefile
         Try
 

@@ -429,11 +429,20 @@
       <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
+          <button id="_token_user_signup" label="SignUp"  onAction ="PTWebRequestLogin" />
+          <separator id="PTXIG1s1"/> 
+          <button id="PUT_user_profile" label="Update User Profile"  onAction ="PTWebRequestPUTUserProfile"/>
+          <button id="GET_user_profile" label="Get own Profile"  onAction ="PTWebRequestGETUserProfile"/>
+          <separator id="PTXIG1s2"/> 
           <button id="_vc" label="All VisboCenter"  onAction ="PTWebRequestGETallVC" />
-          <separator id="PTXIG1s1"/>
+          <button id="PTPOSTOneVC" label="POST one VC"  onAction ="PTPOSTOneVC" />
+          <button id="GET_vc_" label="GET one VC"  onAction ="PTGETOneVC" />
+          <separator id="PTXIG1s3"/> 
+          <button id="PUT_vc_" label="Update one VC"  onAction ="PTPUTOneVC" />
+          <button id="DEL_vc_" label="Delete one VC"  onAction ="PTDELETEOneVC" />
+          <separator id="PTXIG1s4"/>          
           <button id="PTJsonWrite" label="WRITE Json"  onAction ="PTJsonWrite" />
           <button id="PTJsonRead" label="READ Json"  onAction ="PTJsonRead" />
-          <button id="PTOneVC" label="POST one VC"  onAction ="PTJsonTest" />
          </group>
       </tab>
       <!--label="Lizenzen"--><!--
