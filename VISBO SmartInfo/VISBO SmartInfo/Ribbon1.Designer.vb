@@ -58,12 +58,14 @@
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.settingsTab = Me.Factory.CreateRibbonButton
         Me.varianten_Tab = Me.Factory.CreateRibbonButton
+        Me.Button1 = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.Tab2.SuspendLayout()
         Me.Group2.SuspendLayout()
         Me.Group3.SuspendLayout()
         Me.Group4.SuspendLayout()
         Me.SmartInfo.SuspendLayout()
+        Me.SuspendLayout()
         '
         'Tab1
         '
@@ -94,7 +96,7 @@
         Me.btnUpdate.Name = "btnUpdate"
         Me.btnUpdate.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnUpdate.ShowImage = True
-        Me.btnUpdate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+        Me.btnUpdate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
     "and tables  are synchronized with the the latest version in the database; "
         '
         'Group3
@@ -115,7 +117,7 @@
         Me.btnStart.Name = "btnStart"
         Me.btnStart.ScreenTip = "VISBO Time-Machine: synchronize with first version"
         Me.btnStart.ShowImage = True
-        Me.btnStart.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+        Me.btnStart.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
     "and tables  are synchronized with the the first version in the database; "
         '
         'btnFastBack
@@ -126,8 +128,8 @@
         Me.btnFastBack.Name = "btnFastBack"
         Me.btnFastBack.ScreenTip = "VISBO Time-Machine: synchronize with version 1 month earlier"
         Me.btnFastBack.ShowImage = True
-        Me.btnFastBack.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
-    "and tables  are synchronized with the the version 1 month earlier in the databas" & _
+        Me.btnFastBack.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
+    "and tables  are synchronized with the the version 1 month earlier in the databas" &
     "e; "
         '
         'btnShowChanges
@@ -138,7 +140,7 @@
         Me.btnShowChanges.Name = "btnShowChanges"
         Me.btnShowChanges.ScreenTip = "VISBO Time-Machine: show differences"
         Me.btnShowChanges.ShowImage = True
-        Me.btnShowChanges.SuperTip = "shows differences in milestone and task dates between currant version and last ac" & _
+        Me.btnShowChanges.SuperTip = "shows differences in milestone and task dates between currant version and last ac" &
     "tive version. "
         '
         'btnFastForward
@@ -149,8 +151,8 @@
         Me.btnFastForward.Name = "btnFastForward"
         Me.btnFastForward.ScreenTip = "VISBO Time-Machine: synchronize with version 1 month later"
         Me.btnFastForward.ShowImage = True
-        Me.btnFastForward.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
-    "and tables  are synchronized with the the version 1 month later in the database;" & _
+        Me.btnFastForward.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
+    "and tables  are synchronized with the the version 1 month later in the database;" &
     " "
         '
         'btnEnd2
@@ -161,7 +163,7 @@
         Me.btnEnd2.Name = "btnEnd2"
         Me.btnEnd2.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnEnd2.ShowImage = True
-        Me.btnEnd2.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " & _
+        Me.btnEnd2.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
     "and tables  are synchronized with the the latest version in the database; "
         '
         'Group4
@@ -180,7 +182,7 @@
         Me.activateSearch.Name = "activateSearch"
         Me.activateSearch.ScreenTip = "show Search Pane for various information categories"
         Me.activateSearch.ShowImage = True
-        Me.activateSearch.SuperTip = "user may search for different categories such as certain name, all elements with " & _
+        Me.activateSearch.SuperTip = "user may search for different categories such as certain name, all elements with " &
     "certain traffic light, elements where a certain person is responsible, etc. "
         '
         'activateInfo
@@ -191,8 +193,8 @@
         Me.activateInfo.Name = "activateInfo"
         Me.activateInfo.ScreenTip = "show Properties Pane of 1 selected plan-element"
         Me.activateInfo.ShowImage = True
-        Me.activateInfo.SuperTip = "shows for the selected milestone or phase properties such as name, traffic light " & _
-    "and according explanation, deliverables and person responsible for the milestone" & _
+        Me.activateInfo.SuperTip = "shows for the selected milestone or phase properties such as name, traffic light " &
+    "and according explanation, deliverables and person responsible for the milestone" &
     " / tasks"
         '
         'activateTab
@@ -209,11 +211,11 @@
         '
         Me.SmartInfo.Items.Add(Me.settingsTab)
         Me.SmartInfo.Items.Add(Me.varianten_Tab)
+        Me.SmartInfo.Items.Add(Me.Button1)
         Me.SmartInfo.Name = "SmartInfo"
         '
         'settingsTab
         '
-        Me.settingsTab.Enabled = False
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
@@ -222,6 +224,13 @@
         Me.varianten_Tab.Enabled = False
         Me.varianten_Tab.Label = "Variants"
         Me.varianten_Tab.Name = "varianten_Tab"
+        '
+        'Button1
+        '
+        Me.Button1.Label = "Smartify Chart"
+        Me.Button1.Name = "Button1"
+        Me.Button1.ScreenTip = "embeds information about data source in Chart and uploads timestamped data source" &
+    ""
         '
         'Ribbon1
         '
@@ -241,6 +250,7 @@
         Me.Group4.PerformLayout()
         Me.SmartInfo.ResumeLayout(False)
         Me.SmartInfo.PerformLayout()
+        Me.ResumeLayout(False)
 
     End Sub
 
@@ -269,6 +279,8 @@
     Private Sub Ribbon1_Close(sender As Object, e As EventArgs) Handles Me.Close
         My.Settings.Save()
     End Sub
+
+    Friend WithEvents Button1 As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

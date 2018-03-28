@@ -50,7 +50,7 @@ Public Class Ribbon1
 
 
 
-    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
+    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click, Button1.Click
 
         Dim msg As String = ""
 
