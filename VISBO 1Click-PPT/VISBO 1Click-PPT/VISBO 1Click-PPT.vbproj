@@ -35,7 +35,7 @@
     <PublishUrl>\\KOYTEK-NAS\backup\SW Auslieferungen\Visbo Publish\MS Project AddIn\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.1.0.17</ApplicationVersion>
+    <ApplicationVersion>2.1.0.18</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>

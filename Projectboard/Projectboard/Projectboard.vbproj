@@ -17,24 +17,24 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>\\KOYTEK-NAS\backup\Visbo Publish Ordner\VISBO Projekt-Tafel Install\</PublishUrl>
+    <PublishUrl>\\KOYTEK-NAS\backup\SW Auslieferungen\Visbo Publish\Visual Board\</PublishUrl>
     <InstallUrl />
-    <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.5.0.9</ApplicationVersion>
+    <TargetCulture>de</TargetCulture>
+    <ApplicationVersion>3.5.0.16</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>Projectboard</ProductName>
-    <PublisherName />
-    <SupportUrl />
+    <PublisherName>VISBO GmbH</PublisherName>
+    <SupportUrl>https://visbo.de/contact</SupportUrl>
     <FriendlyName>Projectboard</FriendlyName>
-    <OfficeApplicationDescription />
+    <OfficeApplicationDescription>Visualisierung, Analyse und Powerpoint Report Erstellung für Projekt-Portfolios</OfficeApplicationDescription>
   </PropertyGroup>
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 und x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -47,9 +47,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+    <BootstrapperPackage Include="Microsoft.VSTORuntime.4.0">
       <Visible>False</Visible>
-      <ProductName>Windows Installer 4.5</ProductName>
+      <ProductName>Microsoft Visual Studio 2010-Tools für Office-Laufzeit %28x86 und x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>

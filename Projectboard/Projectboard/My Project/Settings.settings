@@ -21,13 +21,13 @@
       <Value Profile="(Default)">VISBO Alias</Value>
     </Setting>
     <Setting Name="VISBOAmpel" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Indikatoren</Value>
+      <Value Profile="(Default)">VISBO Ampel</Value>
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO Ampel Text</Value>
+      <Value Profile="(Default)">Indikatoren</Value>
     </Setting>
     <Setting Name="VISBOdeliverables" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Deliverables</Value>
@@ -39,7 +39,7 @@
       <Value Profile="(Default)">% Work Complete</Value>
     </Setting>
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">TMS Mapping</Value>
+      <Value Profile="(Default)">VISBO Mapping</Value>
     </Setting>
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

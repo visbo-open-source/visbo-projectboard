@@ -109,7 +109,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Indikatoren")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel")>  _
     Public ReadOnly Property VISBOAmpel() As String
         Get
             Return CType(Me("VISBOAmpel"),String)
@@ -127,7 +127,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel Text")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Indikatoren")>  _
     Public ReadOnly Property VISBOAmpelText() As String
         Get
             Return CType(Me("VISBOAmpelText"),String)
@@ -163,7 +163,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("TMS Mapping")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Mapping")>  _
     Public ReadOnly Property VISBOMapping() As String
         Get
             Return CType(Me("VISBOMapping"),String)

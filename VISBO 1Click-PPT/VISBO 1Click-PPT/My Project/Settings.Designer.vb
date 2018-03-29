@@ -73,7 +73,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Task Class")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Task Class")>  _
     Public ReadOnly Property TaskClass() As String
         Get
             Return CType(Me("TaskClass"),String)
@@ -82,7 +82,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Alias")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Alias")>  _
     Public ReadOnly Property VISBOAbbreviation() As String
         Get
             Return CType(Me("VISBOAbbreviation"),String)
@@ -163,7 +163,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("TMS Mapping")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Mapping")>  _
     Public ReadOnly Property VISBOMapping() As String
         Get
             Return CType(Me("VISBOMapping"),String)
