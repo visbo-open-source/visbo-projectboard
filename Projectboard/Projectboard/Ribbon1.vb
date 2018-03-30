@@ -2205,25 +2205,32 @@ Imports System.Windows
                     tmpLabel = "Edit"
                 End If
 
-            Case "PT2G1M2B1" ' Ressourcen und Kosten
+            Case "PT2G1M2B1" ' Massen-Edit Ressourcen und Kosten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Ändern von Ressourcen und Kosten"
                 Else
                     tmpLabel = "Modify monthly Resource and Cost Needs"
                 End If
 
-            Case "PT2G1M2B2" ' Phasen Meilensteine ändern
+            Case "PT2G1M2B2" ' Massen-Edit Phasen Meilensteine ändern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Ändern von Terminen"
                 Else
-                    tmpLabel = "Modify monthly Phases and Milestones"
+                    tmpLabel = "Modify schedules"
                 End If
 
-            Case "PT2G1M2B3" ' Modify Attributes
+            Case "PT2G1M2B4" ' Modify Attributes
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Budget und Attribute"
                 Else
                     tmpLabel = "Budget and attributes"
+                End If
+
+            Case "PT2G1M2B8" ' Massen Edit Attributes
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ändern von Attributen"
+                Else
+                    tmpLabel = "Modify Attributes"
                 End If
 
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
@@ -3001,9 +3008,6 @@ Imports System.Windows
     End Function
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
-        ' für alte Methode notwendig ... 
-        'Dim singleShp As Excel.Shape
-        'Dim awinSelection As Excel.ShapeRange
         Dim todoListe As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
@@ -3035,7 +3039,7 @@ Imports System.Windows
                 End If
             End If
 
-            
+
 
             If todoListe.Count > 0 Then
 
@@ -3150,26 +3154,37 @@ Imports System.Windows
             End If
 
 
-            Else
-                enableOnUpdate = True
-                If appInstance.EnableEvents = False Then
-                    appInstance.EnableEvents = True
-                End If
-
-                If awinSettings.englishLanguage Then
-                    Call MsgBox("no active projects ...")
-                Else
-                    Call MsgBox("Es gibt keine aktiven Projekte ...")
-                End If
-
+        Else
+            enableOnUpdate = True
+            If appInstance.EnableEvents = False Then
+                appInstance.EnableEvents = True
             End If
 
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no active projects ...")
+            Else
+                Call MsgBox("Es gibt keine aktiven Projekte ...")
+            End If
 
-            'Call MsgBox("ok, zurück ...")
+        End If
 
-            ' das läuft neben dem Activate Befehl, deshalb soll das hier auskommentiert werden ... 
-            'enableOnUpdate = True
-            'appInstance.EnableEvents = True
+
+
+    End Sub
+
+    ''' <summary>
+    ''' Online Massen-Edit von Terminen im Visual Board
+    ''' </summary>
+    ''' <param name="control"></param>
+    Sub Tom2G2MassEditTe(control As IRibbonControl)
+
+    End Sub
+
+    ''' <summary>
+    ''' Online Massen-Edit von Attributen im Visual Board
+    ''' </summary>
+    ''' <param name="control"></param>
+    Sub Tom2G2MassEditAttr(control As IRibbonControl)
 
     End Sub
 
