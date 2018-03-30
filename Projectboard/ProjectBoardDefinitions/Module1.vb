@@ -167,6 +167,9 @@ Public Module Module1
     Public miniWidth As Double = 126 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
     Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
+    ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
+    Public massColFontValues(2, 5) As Double
+
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
@@ -5568,13 +5571,14 @@ Public Module Module1
             If Not awinSettings.meEnableSorting Then
                 ' es muss der Blattschutz wieder aktiviert werden ... 
                 With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                    .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
+                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                             AllowFormattingCells:=True,
+                             AllowFormattingColumns:=True,
                              AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
+                             AllowInsertingRows:=True,
+                             AllowDeletingColumns:=False,
+                             AllowDeletingRows:=True,
+                             AllowSorting:=True,
                              AllowFiltering:=True)
                     .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
                     .EnableAutoFilter = True

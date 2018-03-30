@@ -20465,7 +20465,6 @@ Public Module awinGeneralModules
                 ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
                 ressCostColumn = 5
                 ' jetzt wird die Zeile 1 geschrieben 
-                Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
 
                 ' jetzt wird der Mahle Range definiert ...
                 mahleRange = CType(.Columns(startSpalteDaten - 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn
@@ -20514,35 +20513,6 @@ Public Module awinGeneralModules
                 currentWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
                 currentWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
                 currentWB.Names.Add(Name:="RoleCost", RefersToR1C1:=tmpRange3)
-
-                ' jetzt werden die Überschriften des Datenbereichs geschrieben 
-                For m As Integer = 0 To bis - von
-                    With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
-                        .Value = startMonat.AddMonths(m)
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                        .NumberFormat = "[$-409]mmm yy;@"
-                        .WrapText = False
-                        .Orientation = 90
-                        .ShrinkToFit = False
-                        .AddIndent = False
-                        .IndentLevel = 0
-                        .ReadingOrder = Excel.Constants.xlContext
-                    End With
-
-                    With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
-                        .Value = ""
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                        .Orientation = 0
-                        .ShrinkToFit = False
-                        .AddIndent = False
-                        .IndentLevel = 0
-                        .ReadingOrder = Excel.Constants.xlContext
-                    End With
-
-                Next
-
 
             End With
 
@@ -21205,7 +21175,55 @@ Public Module awinGeneralModules
                 infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 3)), Excel.Range)
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                infoBlock.AutoFit()
+
+                ' hier prüfen, ob es bereits Werte für massColValues gibt ..
+                If massColFontValues(0, 0) > 4 Then
+                    ' diese Werte übernehmen 
+                    infoBlock.Font.Size = CInt(massColFontValues(0, 0))
+                    For ik As Integer = 1 To 5
+                        CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(0, ik)
+                    Next
+
+
+                Else
+                    ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
+                    infoBlock.AutoFit()
+
+                    Try
+                        Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                        If infoBlock.Width > 0.4 * availableScreenWidth Then
+
+                            infoBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
+                            ' BU bekommt 5%
+                            'CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
+                            ' pName bekomt 30%
+                            'CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 16
+                            ' vName bekomt 5%
+                            'CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 3
+                            ' phaseName bekomt 30%
+                            'CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 16
+                            ' RoleCost Name bekomt 30%
+                            'CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 16
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    ' Werte setzen ...
+                    massColFontValues(0, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
+                    For ik As Integer = 1 To 5
+                        massColFontValues(0, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
+                    Next
+
+                End If
+
+
+
             End With
 
             ' Summe und Frei / Proz. 
@@ -21213,6 +21231,7 @@ Public Module awinGeneralModules
                 infoBlock = CType(.Range(.Columns(startSpalteDaten - 2), .Columns(startSpalteDaten - 1)), Excel.Range)
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                infoBlock.Font.Size = CInt(massColFontValues(0, 0))
                 infoBlock.AutoFit()
             End With
 
@@ -21224,7 +21243,13 @@ Public Module awinGeneralModules
                     tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
                     If isPrz Then
                         tmpRange.Columns.ColumnWidth = 4
-                        tmpRange.Font.Size = 8
+                        'tmpRange.Font.Size = 8
+                        If CInt(massColFontValues(0, 0)) > 3 Then
+                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0) - 2)
+                        Else
+                            CType(tmpRange.Font, Excel.Font).Size = 8
+                        End If
+
                         If awinSettings.mePrzAuslastung Then
                             tmpRange.NumberFormat = "0%"
                         Else
@@ -21234,12 +21259,20 @@ Public Module awinGeneralModules
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     Else
                         tmpRange.Columns.ColumnWidth = 5
-                        tmpRange.Font.Size = 10
+                        'tmpRange.Font.Size = 10
+                        If CInt(massColFontValues(0, 0)) > 3 Then
+                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0))
+                        Else
+                            CType(tmpRange.Font, Excel.Font).Size = 10
+                        End If
+
                         tmpRange.NumberFormat = "######0.0"
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     End If
                     isPrz = Not isPrz
                 Next
+
+
 
                 ' jetzt muss noch ggf die Spaltenbreite angepasst werden ...
                 If maxRCLengthVorkommen < maxRCLengthAbsolut Then
@@ -21249,6 +21282,45 @@ Public Module awinGeneralModules
                     End If
                 End If
 
+                Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+                ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+                For m As Integer = 0 To bis - von
+                    With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
+                        .Value = startMonat.AddMonths(m)
+                        If massColFontValues(0, 0) > 4 Then
+                            .Font.Size = CInt(massColFontValues(0, 0))
+                        Else
+                            .Font.Size = 10
+                        End If
+
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                        .NumberFormat = "[$-409]mmm yy;@"
+                        .WrapText = False
+                        .Orientation = 90
+                        .ShrinkToFit = False
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ReadingOrder = Excel.Constants.xlContext
+                    End With
+
+                    With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
+                        .Value = ""
+                        If massColFontValues(0, 0) > 4 Then
+                            .Font.Size = CInt(massColFontValues(0, 0))
+                        Else
+                            .Font.Size = 10
+                        End If
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        .Orientation = 0
+                        .ShrinkToFit = False
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ReadingOrder = Excel.Constants.xlContext
+                    End With
+
+                Next
 
             End With
 

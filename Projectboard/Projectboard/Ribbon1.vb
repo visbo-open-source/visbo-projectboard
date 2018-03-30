@@ -38,6 +38,7 @@ Imports System.Windows
     Private ribbon As Microsoft.Office.Core.IRibbonUI
 
     Private tempSkipChanges As Boolean = False
+    Private tempShowHeaders As Boolean = False
 
     Public Sub New()
     End Sub
@@ -2259,6 +2260,13 @@ Imports System.Windows
                     tmpLabel = "Enable sorting"
                 End If
 
+            Case "PT6G2B7" ' Header anzeigen
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Header anzeigen"
+                Else
+                    tmpLabel = "Show Header"
+                End If
+
             Case "PTfreezeB1" ' Fixieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Fixieren"
@@ -2878,6 +2886,8 @@ Imports System.Windows
                 Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
                     chckVisibility = False
                 Case "PT6G2B5" ' Sortierung ermöglichen
+                    chckVisibility = False
+                Case "PT6G2B7" ' Header anzeigen
                     chckVisibility = False
                 Case Else
                     ' alle anderen werden sichtbar gemacht
@@ -6082,6 +6092,25 @@ Imports System.Windows
         tempSkipChanges = pressed
     End Sub
 
+    Public Function PTshowHeader(control As IRibbonControl) As Boolean
+        PTshowHeader = tempShowHeaders
+    End Function
+
+    ''' <summary>
+    ''' wenn Header gezeigt werden , können Spaltenbreiten verändert werden ..
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <param name="pressed"></param>
+    Public Sub awinPTshowHeader(control As IRibbonControl, ByRef pressed As Boolean)
+        tempShowHeaders = pressed
+
+        If tempShowHeaders Then
+            appInstance.ActiveWindow.DisplayHeadings = True
+        Else
+            appInstance.ActiveWindow.DisplayHeadings = False
+        End If
+    End Sub
+
     Public Function PTenableSorting(control As IRibbonControl) As Boolean
         PTenableSorting = awinSettings.meEnableSorting
     End Function
@@ -6096,13 +6125,14 @@ Imports System.Windows
             End With
         Else
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                .Protect(Password:="x", UserInterfaceOnly:=True, _
-                         AllowFormattingCells:=True, _
+                .Protect(Password:="x", UserInterfaceOnly:=True,
+                         AllowFormattingCells:=True,
+                         AllowFormattingColumns:=True,
                          AllowInsertingColumns:=False,
-                         AllowInsertingRows:=True, _
-                         AllowDeletingColumns:=False, _
-                         AllowDeletingRows:=True, _
-                         AllowSorting:=True, _
+                         AllowInsertingRows:=True,
+                         AllowDeletingColumns:=False,
+                         AllowDeletingRows:=True,
+                         AllowSorting:=True,
                          AllowFiltering:=True)
                 .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
                 .EnableAutoFilter = True
