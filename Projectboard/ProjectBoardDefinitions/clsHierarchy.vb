@@ -1,6 +1,17 @@
 ﻿Public Class clsHierarchy
     Private _allNodes As SortedList(Of String, clsHierarchyNode)
 
+
+    ''' <summary>
+    ''' gibt die Hierarchie-Liste zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property hryListe() As SortedList(Of String, clsHierarchyNode)
+        Get
+            hryListe = _allNodes
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt die eindeutigen Element-Namen oder Element-IDs der Kinder zurück , abhängig von Kennung werden 
     ''' Meilenstein-, Phasen- oder alle Kinder zurückgegeben  
@@ -58,6 +69,61 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zu dem gegebenenen Element das in der Hierarchie nächst folgende an
+    ''' ist Meilenstein: 
+    '''    erst Geschwister Element = nächste Kind-Element des Vaters
+    '''    dann Geschwister Element des Vater Knotens, ..Vater/Vater-Knotens, ...
+    ''' ist Phase
+    '''    erst Kind-Element
+    '''    dann Geschwister Element 
+    '''    dann Geschwister Element des Vaters, Vater-Vaters ....
+    ''' wenn das Ende der Hierachie erreicht ist, dann wird der leere String zurückgegeben   
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    Public Function getNextIdOfId(ByVal elemID As String, ByRef indent As Integer) As String
+
+        Dim tmpResult As String = ""
+        If elemIDIstMeilenstein(elemID) Then
+            Dim parentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+            ' indentLevel bleibt gleich ...
+            tmpResult = parentNode.getNextSibling(elemID)
+            If tmpResult = "" Then
+                Dim parentElemId As String = Me.getParentIDOfID(elemID)
+                If indent > 0 Then
+                    ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
+                    indent = indent - 1
+                End If
+                tmpResult = Me.getNextIdOfId(parentElemId, indent)
+            End If
+        Else
+            ' Phasen Behandlung 
+            Dim phaseNode As clsHierarchyNode = Me.nodeItem(elemID)
+            If phaseNode.childCount > 0 Then
+                ' es geht eins runter in der Hierarchie , also indentLevel eins hochzählen
+                indent = indent + 1
+                tmpResult = phaseNode.getChild(1)
+            Else
+                ' gleiche Behandlung wie bei Meilenstein 
+                Dim parentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+                ' indentLevel bleibt gleich ... 
+                tmpResult = parentNode.getNextSibling(elemID)
+                If tmpResult = "" Then
+                    Dim parentElemId As String = Me.getParentIDOfID(elemID)
+                    If indent > 0 Then
+                        ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
+                        indent = indent - 1
+                    End If
+                    tmpResult = Me.getNextIdOfId(parentElemId, indent)
+                End If
+            End If
+        End If
+
+        getNextIdOfId = tmpResult
+
+    End Function
 
     ''' <summary>
     ''' gibt eine Liste der IDs der Kinder des Elements zurück , die Phasen bzw. Meilensteine sind

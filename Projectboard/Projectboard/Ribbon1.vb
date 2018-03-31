@@ -3006,8 +3006,8 @@ Imports System.Windows
 
         End If
     End Function
-    Sub Tom2G2MassEdit(control As IRibbonControl)
 
+    Private Sub massEditRcTeAt(ByVal meModus As Integer)
         Dim todoListe As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
@@ -3060,7 +3060,7 @@ Imports System.Windows
                 End If
 
 
-                Call enableControls(ptModus.massEditRessCost)
+                Call enableControls(meModus)
 
                 ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
                 ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
@@ -3075,11 +3075,20 @@ Imports System.Windows
                 Try
                     enableOnUpdate = False
 
-                    Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+                    If meModus = ptModus.massEditRessCost Then
+                        Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+                    ElseIf meModus = ptModus.massEditTermine Then
+                        Call MsgBox("Termine editieren")
+                    ElseIf meModus = ptModus.massEditAttribute Then
+                        Call MsgBox("Attribute editieren")
+                    Else
+                        Exit Sub
+                    End If
 
                     appInstance.EnableEvents = True
 
                     Try
+
                         If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
                             projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
                         Else
@@ -3098,7 +3107,16 @@ Imports System.Windows
                     With projectboardWindows(PTwindows.massEdit)
                         .WindowState = Excel.XlWindowState.xlMaximized
                         .SplitRow = 1
-                        .SplitColumn = 6
+                        If meModus = ptModus.massEditRessCost Then
+                            .SplitColumn = 6
+                        ElseIf meModus = ptModus.massEditTermine Then
+                            .SplitColumn = 3
+                        ElseIf meModus = ptModus.massEditAttribute Then
+                            .SplitColumn = 3
+                        Else
+                            Exit Sub
+                        End If
+
                         .FreezePanes = True
                         .DisplayFormulas = False
                         .DisplayHeadings = False
@@ -3171,13 +3189,180 @@ Imports System.Windows
 
 
     End Sub
+    Sub Tom2G2MassEdit(control As IRibbonControl)
+
+        Call massEditRcTeAt(ptModus.massEditRessCost)
+        ' das unten stehende wird jetzt durch den Aufruf oben gemacht 
+        'Dim todoListe As New Collection
+        'Dim outputFenster As New frmOutputWindow
+        'Dim outputCollection As New Collection
+        'Dim outPutLine As String = ""
+
+        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        '' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
+        '' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
+
+        'Call projektTafelInit()
+
+        'enableOnUpdate = False
+        '' jetzt auf alle Fälle wieder das MPT Window aktivieren ...
+        'projectboardWindows(PTwindows.mpt).Activate()
+
+        'If ShowProjekte.Count > 0 Then
+
+        '    ' neue Methode 
+        '    todoListe = getProjectSelectionList(True)
+
+        '    ' check, ob wirklich alle Projekte editiert werden sollen ... 
+        '    If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
+        '        Dim yesNo As Integer
+        '        yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
+        '        If yesNo = MsgBoxResult.No Then
+        '            enableOnUpdate = True
+        '            Exit Sub
+        '        End If
+        '    End If
+
+
+
+        '    If todoListe.Count > 0 Then
+
+        '        ' jetzt aufbauen der dbCacheProjekte
+        '        Call buildCacheProjekte(todoListe)
+
+
+        '        ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
+        '        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        '            ' alles ok , bereits gesetzt 
+
+        '        Else
+
+        '            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
+        '            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
+
+        '            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+        '        End If
+
+
+        '        Call enableControls(ptModus.massEditRessCost)
+
+        '        ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
+        '        ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
+        '        'Call saveProjectsToBackup(todoListe)
+
+        '        ' hier wird die aktuelle Zusammenstellung an Windows gespeichert ...
+        '        'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
+
+        '        ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
+        '        appInstance.ScreenUpdating = False
+
+        '        Try
+        '            enableOnUpdate = False
+
+        '            Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+
+        '            appInstance.EnableEvents = True
+
+        '            Try
+        '                If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
+        '                    projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
+        '                Else
+        '                    projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
+        '                End If
+
+        '            Catch ex As Exception
+        '                projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
+        '            End Try
+
+        '            ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
+        '            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        '                .Activate()
+        '            End With
+
+        '            With projectboardWindows(PTwindows.massEdit)
+        '                .WindowState = Excel.XlWindowState.xlMaximized
+        '                .SplitRow = 1
+        '                .SplitColumn = 6
+        '                .FreezePanes = True
+        '                .DisplayFormulas = False
+        '                .DisplayHeadings = False
+        '                .DisplayGridlines = True
+        '                .GridlineColor = RGB(220, 220, 220)
+        '                .DisplayWorkbookTabs = False
+        '                .Caption = bestimmeWindowCaption(PTwindows.massEdit)
+        '            End With
+
+
+        '            ' jetzt das Multiprojekt Window ausblenden ...
+        '            projectboardWindows(PTwindows.mpt).Visible = False
+
+        '            ' jetzt auch alle anderen ggf offenen pr und pf Windows unsichtbar machen ... 
+        '            Try
+        '                If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+        '                    projectboardWindows(PTwindows.mptpf).Visible = False
+        '                End If
+        '            Catch ex As Exception
+
+        '            End Try
+
+        '            Try
+        '                If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
+        '                    projectboardWindows(PTwindows.mptpr).Visible = False
+        '                End If
+        '            Catch ex As Exception
+
+        '            End Try
+
+
+
+        '        Catch ex As Exception
+        '            Call MsgBox("Fehler: " & ex.Message)
+        '            If appInstance.EnableEvents = False Then
+        '                appInstance.EnableEvents = True
+        '            End If
+        '            If appInstance.ScreenUpdating = False Then
+        '                appInstance.ScreenUpdating = True
+        '            End If
+        '        End Try
+
+        '    Else
+        '        enableOnUpdate = True
+        '        If appInstance.EnableEvents = False Then
+        '            appInstance.EnableEvents = True
+        '        End If
+        '        If awinSettings.englishLanguage Then
+        '            Call MsgBox("no projects apply to criterias ...")
+        '        Else
+        '            Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
+        '        End If
+        '    End If
+
+
+        'Else
+        '    enableOnUpdate = True
+        '    If appInstance.EnableEvents = False Then
+        '        appInstance.EnableEvents = True
+        '    End If
+
+        '    If awinSettings.englishLanguage Then
+        '        Call MsgBox("no active projects ...")
+        '    Else
+        '        Call MsgBox("Es gibt keine aktiven Projekte ...")
+        '    End If
+
+        'End If
+
+
+
+    End Sub
 
     ''' <summary>
     ''' Online Massen-Edit von Terminen im Visual Board
     ''' </summary>
     ''' <param name="control"></param>
     Sub Tom2G2MassEditTe(control As IRibbonControl)
-
+        Call massEditRcTeAt(ptModus.massEditTermine)
     End Sub
 
     ''' <summary>
@@ -3185,7 +3370,7 @@ Imports System.Windows
     ''' </summary>
     ''' <param name="control"></param>
     Sub Tom2G2MassEditAttr(control As IRibbonControl)
-
+        Call massEditRcTeAt(ptModus.massEditAttribute)
     End Sub
 
     Sub PTbackToProjectBoard(control As IRibbonControl)

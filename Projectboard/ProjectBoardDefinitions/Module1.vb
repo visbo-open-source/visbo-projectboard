@@ -168,7 +168,7 @@ Public Module Module1
     Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
     ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
-    Public massColFontValues(2, 5) As Double
+    Public massColFontValues(2, 12) As Double
 
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
@@ -332,6 +332,8 @@ Public Module Module1
     Public Enum ptModus
         graficboard = 0
         massEditRessCost = 1
+        massEditTermine = 2
+        massEditAttribute = 3
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
