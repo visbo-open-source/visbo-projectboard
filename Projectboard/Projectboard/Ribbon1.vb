@@ -1594,7 +1594,7 @@ Imports System.Windows
             Call visboZustaende.clearAuslastungsArray()
 
 
-        ElseIf modus = ptModus.massEditRessCost Then
+        Else
             visboZustaende.projectBoardMode = modus
 
         End If
@@ -3078,7 +3078,7 @@ Imports System.Windows
                     If meModus = ptModus.massEditRessCost Then
                         Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
                     ElseIf meModus = ptModus.massEditTermine Then
-                        Call MsgBox("Termine editieren")
+                        Call writeOnlineMassEditTermine(todoListe)
                     ElseIf meModus = ptModus.massEditAttribute Then
                         Call MsgBox("Attribute editieren")
                     Else
@@ -3100,9 +3100,23 @@ Imports System.Windows
                     End Try
 
                     ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
-                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+                    Dim tableTyp As Integer = ptTables.meRC
+
+                    If meModus = ptModus.massEditRessCost Then
+                        tableTyp = ptTables.meRC
+                    ElseIf meModus = ptModus.massEditTermine Then
+                        tableTyp = ptTables.meTE
+                    ElseIf meModus = ptModus.massEditAttribute Then
+                        tableTyp = ptTables.meAT
+                    Else
+                        tableTyp = ptTables.meRC
+                    End If
+
+                    With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
                         .Activate()
                     End With
+
+
 
                     With projectboardWindows(PTwindows.massEdit)
                         .WindowState = Excel.XlWindowState.xlMaximized
@@ -3110,7 +3124,7 @@ Imports System.Windows
                         If meModus = ptModus.massEditRessCost Then
                             .SplitColumn = 6
                         ElseIf meModus = ptModus.massEditTermine Then
-                            .SplitColumn = 3
+                            .SplitColumn = 4
                         ElseIf meModus = ptModus.massEditAttribute Then
                             .SplitColumn = 3
                         Else
@@ -3186,6 +3200,9 @@ Imports System.Windows
 
         End If
 
+        If appInstance.ScreenUpdating = False Then
+            appInstance.ScreenUpdating = True
+        End If
 
 
     End Sub

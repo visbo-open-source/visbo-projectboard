@@ -21425,7 +21425,6 @@ Public Module awinGeneralModules
                     .Unprotect(Password:="x")
                 End If
 
-                ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 11)), Excel.Range)
 
                 If awinSettings.englishLanguage Then
                     CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
@@ -21454,13 +21453,15 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
                 End If
 
+                ersteZeile = CType(.Rows(1), Excel.Range)
+                With ersteZeile
+                    .RowHeight = .RowHeight * 1.5
+                    .Interior.Color = visboFarbeBlau
+                    .Font.Size = .Font.Size + 2
+                    .Font.Color = XlRgbColor.rgbWhite
+                End With
 
 
-                ' jetzt wird der Name hinzugefügt
-                Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
-
-
-                
             End With
 
 
@@ -21517,8 +21518,9 @@ Public Module awinGeneralModules
                                 CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
                                 ' Varianten-Name
                                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
-                                ' Element-Name Meilenstein bzw. Phase
+                                ' Element-Name Meilenstein bzw. Phase inkl Indentlevel schreiben 
                                 CType(.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
+                                CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
                                 ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
                                 CType(.Cells(zeile, 5), Excel.Range).Value = ""
                                 CType(.Cells(zeile, 5), Excel.Range).Locked = True
@@ -21547,6 +21549,7 @@ Public Module awinGeneralModules
                                 CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
                                 ' Element-Name Meilenstein bzw. Phase
                                 CType(.Cells(zeile, 4), Excel.Range).Value = cPhase.name
+                                CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
                                 ' Startdatum 
                                 CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
                                 ' Ende-Datum 
@@ -21575,14 +21578,6 @@ Public Module awinGeneralModules
             Next
 
 
-            ' tk 7.12.16 kommt immer auf Fehler, weil nur 1 Zeile und eine Auswahl von Spalten .... 
-            '' jetzt die erste Zeile so groß wie nötig machen 
-            'Try
-            '    ersteZeile.AutoFit()
-            'Catch ex As Exception
-
-            'End Try
-
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
             With CType(currentWS, Excel.Worksheet)
@@ -21591,7 +21586,7 @@ Public Module awinGeneralModules
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
-                If massColFontValues(0, 0) > 4 Then
+                If massColFontValues(1, 0) > 4 Then
                     ' diese Werte übernehmen 
                     infoBlock.Font.Size = CInt(massColFontValues(1, 0))
                     For ik As Integer = 1 To 11
@@ -21608,30 +21603,52 @@ Public Module awinGeneralModules
                         If infoBlock.Width > 0.4 * availableScreenWidth Then
 
                             infoBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
-                            ' BU bekommt 5%
-                            'CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                            ' BU 
                             CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
-                            ' pName bekomt 30%
-                            'CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                            ' pName 
                             CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 16
-                            ' vName bekomt 5%
-                            'CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                            ' vName 
                             CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 3
-                            ' phaseName bekomt 30%
-                            'CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                            CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 16
-                            ' RoleCost Name bekomt 30%
-                            'CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                            CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 16
+                            ' Phase- bzw Meilenstein-Name
+                            With CType(infoBlock.Columns(4), Excel.Range)
+                                .ColumnWidth = 16
+                                .WrapText = True
+                            End With
+                            ' Startdatum 
+                            CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 10
+                            ' Ende-Datum 
+                            CType(infoBlock.Columns(6), Excel.Range).ColumnWidth = 10
+                            ' Ampel-Farbe 
+                            CType(infoBlock.Columns(7), Excel.Range).ColumnWidth = 2
+                            ' Erläuterung
+                            With CType(infoBlock.Columns(8), Excel.Range)
+                                .ColumnWidth = 20
+                                .WrapText = True
+                            End With
+                            ' Lieferumfänge
+                            With CType(infoBlock.Columns(9), Excel.Range)
+                                .ColumnWidth = 20
+                                .WrapText = True
+                            End With
+                            ' verantwortlich
+                            With CType(infoBlock.Columns(10), Excel.Range)
+                                .ColumnWidth = 10
+                            End With
+                            ' percent Done 
+                            With CType(infoBlock.Columns(11), Excel.Range)
+                                .ColumnWidth = 4
+                                .NumberFormat = "0#%"
+                            End With
+
                         End If
                     Catch ex As Exception
 
                     End Try
 
                     ' Werte setzen ...
-                    massColFontValues(0, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
-                    For ik As Integer = 1 To 5
-                        massColFontValues(0, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
+                    massColFontValues(1, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
+                    For ik As Integer = 1 To 11
+                        massColFontValues(1, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
                     Next
 
                 End If

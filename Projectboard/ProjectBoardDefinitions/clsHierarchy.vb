@@ -91,12 +91,16 @@
             ' indentLevel bleibt gleich ...
             tmpResult = parentNode.getNextSibling(elemID)
             If tmpResult = "" Then
-                Dim parentElemId As String = Me.getParentIDOfID(elemID)
-                If indent > 0 Then
-                    ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
-                    indent = indent - 1
-                End If
-                tmpResult = Me.getNextIdOfId(parentElemId, indent)
+                While tmpResult = "" And indent > 0
+                    Dim parentElemId As String = Me.getParentIDOfID(elemID)
+                    If indent > 0 Then
+                        ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
+                        indent = indent - 1
+                    End If
+                    Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(parentElemId)
+                    'tmpResult = Me.getNextIdOfId(parentElemId, indent)
+                    tmpResult = grandparentNode.getNextSibling(parentElemId)
+                End While
             End If
         Else
             ' Phasen Behandlung 
@@ -111,12 +115,16 @@
                 ' indentLevel bleibt gleich ... 
                 tmpResult = parentNode.getNextSibling(elemID)
                 If tmpResult = "" Then
-                    Dim parentElemId As String = Me.getParentIDOfID(elemID)
-                    If indent > 0 Then
-                        ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
-                        indent = indent - 1
-                    End If
-                    tmpResult = Me.getNextIdOfId(parentElemId, indent)
+                    While tmpResult = "" And indent > 0
+                        Dim parentElemId As String = Me.getParentIDOfID(elemID)
+                        If indent > 0 Then
+                            ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
+                            indent = indent - 1
+                        End If
+                        Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(parentElemId)
+                        'tmpResult = Me.getNextIdOfId(parentElemId, indent)
+                        tmpResult = grandparentNode.getNextSibling(parentElemId)
+                    End While
                 End If
             End If
         End If
