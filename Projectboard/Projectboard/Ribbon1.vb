@@ -3390,10 +3390,25 @@ Imports System.Windows
         Call massEditRcTeAt(ptModus.massEditAttribute)
     End Sub
 
+    Private Sub performDeactivateActionsFor(ByVal tableTyp As Integer)
+
+    End Sub
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
         ' hier wieder auf false setzen , in der Multiprojekt-Tafel soll das nicht angezeigt werden ...
         awinSettings.showValuesOfSelected = False
+
+        ' jetzt müssen die Merk- & ggf Rücksetz-Aktionen gemacht werden, die mit dem entsprechenden massEdit Table verbunden sind
+        Dim tableTyp As Integer = ptTables.meRC
+        If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+            tableTyp = ptTables.meRC
+        ElseIf visboZustaende.projectBoardMode = ptModus.massEditTermine Then
+            tableTyp = ptTables.meTE
+        ElseIf visboZustaende.projectBoardMode = ptModus.massEditAttribute Then
+            tableTyp = ptTables.meAT
+        End If
+
+        Call performDeactivateActionsFor(tableTyp)
 
         ' jetzt muss gecheckt werden, welche dbCache Projekte immer noch identisch zum ShowProjekte Pendant sind
         ' deren temp Schutz muss dann wieder aufgehoben werden ... 
@@ -3448,7 +3463,7 @@ Imports System.Windows
 
         Call enableControls(ptModus.graficboard)
 
-        appInstance.EnableEvents = False
+        'appInstance.EnableEvents = False
         ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
         'enableOnUpdate = False
 
@@ -3511,10 +3526,11 @@ Imports System.Windows
                     Try
                         If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
                             projectboardWindows(PTwindows.mptpf).Visible = True
+
                             With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
                                 .Activate()
                             End With
-                            'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
+
                         End If
                     Catch ex As Exception
                         projectboardWindows(PTwindows.mptpf) = Nothing
@@ -3522,10 +3538,11 @@ Imports System.Windows
                     Try
                         If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
                             projectboardWindows(PTwindows.mptpr).Visible = True
+
                             With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
                                 .Activate()
                             End With
-                            'Dim name As String = CType(projectboardWindows(PTwindows.mptpf).ActiveSheet, Excel.Worksheet).Name
+
                         End If
                     Catch ex As Exception
                         projectboardWindows(PTwindows.mptpr) = Nothing
@@ -3541,11 +3558,18 @@ Imports System.Windows
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
+        ' mit diesem Befehl wird das dem Window zugeordnete Sheet aktiviert, allerdings ohne die entsprechenden .activate bzw. .deactivate Routinen zu durchlaufen ...
         projectboardWindows(PTwindows.mpt).Activate()
 
+
+        ''Dim isOn As Boolean = appInstance.EnableEvents
+        ''Dim testname As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
+        ' 
         With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
             .Activate()
         End With
+
+
 
         appInstance.ScreenUpdating = True
 

@@ -21191,7 +21191,7 @@ Public Module awinGeneralModules
 
                     Try
                         Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
-                        If infoBlock.Width > 0.4 * availableScreenWidth Then
+                        If infoBlock.Width > 0.5 * availableScreenWidth Then
 
                             infoBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
                             ' BU bekommt 5%
@@ -21507,8 +21507,9 @@ Public Module awinGeneralModules
 
                         Dim cPhase As clsPhase = Nothing
                         Dim cMilestone As clsMeilenstein = Nothing
+                        Dim isMilestone As Boolean = elemIDIstMeilenstein(curElemID)
 
-                        If elemIDIstMeilenstein(curElemID) Then
+                        If isMilestone Then
                             cMilestone = hproj.getMilestoneByID(curElemID)
                             ' schreibe den Meilenstein
                             With CType(currentWS, Excel.Worksheet)
@@ -21523,7 +21524,6 @@ Public Module awinGeneralModules
                                 CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
                                 ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
                                 CType(.Cells(zeile, 5), Excel.Range).Value = ""
-                                CType(.Cells(zeile, 5), Excel.Range).Locked = True
                                 ' Ende-Datum 
                                 CType(.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
                                 ' Ampel-Farbe
@@ -21567,6 +21567,44 @@ Public Module awinGeneralModules
                             End With
                         End If
 
+                        ' jetzt müssen die locked Attribute gesetzt werden entsprechend der isProtectedbyOthers ...
+
+                        ' jetzt muss geprüft werden, ob es durch jdn anders geschützt wurde ... 
+                        If isProtectedbyOthers Then
+
+                            Dim kompletteZeile As Excel.Range = CType(currentWS.Rows(zeile), Excel.Range)
+
+                            With CType(currentWS, Excel.Worksheet)
+                                CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                ' Kommentar einfügen 
+                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                If Not IsNothing(cellComment) Then
+                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                End If
+                                CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                            End With
+
+                            kompletteZeile.Locked = True
+
+                        Else
+                            Dim protectArea As Excel.Range = Nothing
+                            Dim editArea As Excel.Range = Nothing
+                            If isMilestone Then
+                                With currentWS
+                                    protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 5)), Excel.Range)
+                                    editArea = CType(.Range(.Cells(zeile, 6), .Cells(zeile, 11)), Excel.Range)
+                                End With
+                            Else
+                                With currentWS
+                                    protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 4)), Excel.Range)
+                                    editArea = CType(.Range(.Cells(zeile, 5), .Cells(zeile, 11)), Excel.Range)
+                                End With
+                            End If
+                            protectArea.Locked = True
+                            editArea.Locked = False
+                        End If
+
                         ' Zeile eins weiter ... 
                         zeile = zeile + 1
                         curElemID = hproj.hierarchy.getNextIdOfId(curElemID, indentLevel)
@@ -21600,7 +21638,7 @@ Public Module awinGeneralModules
 
                     Try
                         Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
-                        If infoBlock.Width > 0.4 * availableScreenWidth Then
+                        If infoBlock.Width > 0.5 * availableScreenWidth Then
 
                             infoBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
                             ' BU 
