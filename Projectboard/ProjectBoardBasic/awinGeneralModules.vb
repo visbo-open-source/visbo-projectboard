@@ -20334,7 +20334,6 @@ Public Module awinGeneralModules
 
             Dim currentWS As Excel.Worksheet
             Dim currentWB As Excel.Workbook
-            Dim ersteZeile As Excel.Range
             Dim ressCostColumn As Integer
             Dim tmpName As String
 
@@ -20428,8 +20427,6 @@ Public Module awinGeneralModules
                     .Unprotect(Password:="x")
                 End If
 
-                ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
-
                 If awinSettings.englishLanguage Then
                     CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
                     CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
@@ -20460,6 +20457,8 @@ Public Module awinGeneralModules
                     End If
                 End If
 
+                ' das Erscheinungsbild der Zeile 1 bestimmen  
+                Call massEditZeile1Appearance(ptTables.meRC)
 
 
                 ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
@@ -21171,15 +21170,17 @@ Public Module awinGeneralModules
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
+            Dim infoDatablock As Excel.Range
             With CType(currentWS, Excel.Worksheet)
                 infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 3)), Excel.Range)
+                infoDatablock = CType(.Range(.Cells(2, 1), .Cells(zeile, startSpalteDaten - 3)), Excel.Range)
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
                 If massColFontValues(0, 0) > 4 Then
                     ' diese Werte übernehmen 
-                    infoBlock.Font.Size = CInt(massColFontValues(0, 0))
+                    infoDatablock.Font.Size = CInt(massColFontValues(0, 0))
                     For ik As Integer = 1 To 5
                         CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(0, ik)
                     Next
@@ -21193,7 +21194,7 @@ Public Module awinGeneralModules
                         Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
                         If infoBlock.Width > 0.5 * availableScreenWidth Then
 
-                            infoBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
+                            infoDatablock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
                             ' BU bekommt 5%
                             'CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
                             CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
@@ -21333,6 +21334,44 @@ Public Module awinGeneralModules
 
                 End Try
 
+            Else
+                ' die bedingte Farb-Codierung einschalten 
+                If awinSettings.mePrzAuslastung Then
+                    With mahleRange
+                        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = 0
+                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 1.1
+                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 1.5
+                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                    End With
+                Else
+                    With mahleRange
+                        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = -5
+                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 0
+                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 5
+                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                    End With
+                End If
+
             End If
 
 
@@ -21346,7 +21385,24 @@ Public Module awinGeneralModules
 
 
     End Sub
+    ''' <summary>
+    ''' bestimmt das Erscheinungsbild der ersten Zeile in einem Mass-Edit Fenster Ressourcen, Termine, Attribute
+    ''' </summary>
+    ''' <param name="tableTyp"></param>
+    Private Sub massEditZeile1Appearance(ByVal tableTyp As Integer)
 
+        Dim currentWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
+        Dim ersteZeile As Excel.Range = CType(currentWS.Rows(1), Excel.Range)
+
+        With ersteZeile
+            .RowHeight = awinSettings.zeilenhoehe1
+            .Interior.Color = visboFarbeBlau
+            .Font.Size = 12
+            .Font.Bold = True
+            .Font.Color = XlRgbColor.rgbWhite
+        End With
+
+    End Sub
     ''' <summary>
     ''' 
     ''' </summary>
@@ -21372,7 +21428,6 @@ Public Module awinGeneralModules
 
             Dim currentWS As Excel.Worksheet
             Dim currentWB As Excel.Workbook
-            Dim ersteZeile As Excel.Range
             Dim startDateColumn As Integer = 5
             Dim tmpName As String
 
@@ -21453,13 +21508,8 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
                 End If
 
-                ersteZeile = CType(.Rows(1), Excel.Range)
-                With ersteZeile
-                    .RowHeight = .RowHeight * 1.5
-                    .Interior.Color = visboFarbeBlau
-                    .Font.Size = .Font.Size + 2
-                    .Font.Color = XlRgbColor.rgbWhite
-                End With
+                ' das Erscheinungsbild der Zeile 1 bestimmen  
+                Call massEditZeile1Appearance(ptTables.meTE)
 
 
             End With
@@ -21498,8 +21548,10 @@ Public Module awinGeneralModules
 
                     ' jetzt wird für jedes Element in der Hierarchy eine Zeile rausgeschrieben 
                     ' das ist jetzt die rootphase-NameID
-                    Dim curElemID As String = hproj.hierarchy.getIDAtIndex(1)
+                    Dim curElemID As String = rootPhaseName
                     Dim indentLevel As Integer = 0
+                    ' abbruchlevel gibt, wo die Funktion getNextIdOfId aufhört: erst an der Rootphase(=0) oder beim Element 
+                    Dim abbruchLevel As Integer = 0
                     Dim indentOffset As Integer = 1
 
                     ' jetzt wird die Hierarchy abgeklappert .. beginnend mit dem ersten Element, der RootPhase
@@ -21607,7 +21659,7 @@ Public Module awinGeneralModules
 
                         ' Zeile eins weiter ... 
                         zeile = zeile + 1
-                        curElemID = hproj.hierarchy.getNextIdOfId(curElemID, indentLevel)
+                        curElemID = hproj.hierarchy.getNextIdOfId(curElemID, indentLevel, abbruchLevel)
 
                     Loop
 
@@ -21618,65 +21670,63 @@ Public Module awinGeneralModules
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
+            Dim infoDataBlock As Excel.Range
             With CType(currentWS, Excel.Worksheet)
                 infoBlock = CType(.Range(.Columns(1), .Columns(11)), Excel.Range)
+                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, 11)), Excel.Range)
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+
+
+                ' die Besonderheiten abbilden 
+
+                ' Phasen bzw. Meilenstein Name
+                With CType(infoDataBlock.Columns(4), Excel.Range)
+                    .WrapText = True
+                End With
+
+                ' Erläuterung
+                With CType(infoDataBlock.Columns(8), Excel.Range)
+                    .WrapText = True
+                End With
+
+                ' Lieferumfänge 
+                With CType(infoDataBlock.Columns(9), Excel.Range)
+                    .WrapText = True
+                End With
+
+                ' percent Done 
+                With CType(infoBlock.Columns(11), Excel.Range)
+                    .NumberFormat = "0#%"
+                End With
 
                 ' hier prüfen, ob es bereits Werte für massColValues gibt ..
                 If massColFontValues(1, 0) > 4 Then
                     ' diese Werte übernehmen 
-                    infoBlock.Font.Size = CInt(massColFontValues(1, 0))
+                    infoDataBlock.Font.Size = CInt(massColFontValues(1, 0))
                     For ik As Integer = 1 To 11
-                        CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
+                        If massColFontValues(1, ik) > 0 Then
+                            CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
+                        End If
+
                     Next
 
 
                 Else
                     ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
-                    infoBlock.AutoFit()
+                    Try
+                        infoDataBlock.AutoFit()
+                    Catch ex As Exception
+
+                    End Try
+
 
                     Try
                         Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
-                        If infoBlock.Width > 0.5 * availableScreenWidth Then
+                        If infoDataBlock.Width > availableScreenWidth Then
 
-                            infoBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
-                            ' BU 
-                            CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
-                            ' pName 
-                            CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 16
-                            ' vName 
-                            CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 3
-                            ' Phase- bzw Meilenstein-Name
-                            With CType(infoBlock.Columns(4), Excel.Range)
-                                .ColumnWidth = 16
-                                .WrapText = True
-                            End With
-                            ' Startdatum 
-                            CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 10
-                            ' Ende-Datum 
-                            CType(infoBlock.Columns(6), Excel.Range).ColumnWidth = 10
-                            ' Ampel-Farbe 
-                            CType(infoBlock.Columns(7), Excel.Range).ColumnWidth = 2
-                            ' Erläuterung
-                            With CType(infoBlock.Columns(8), Excel.Range)
-                                .ColumnWidth = 20
-                                .WrapText = True
-                            End With
-                            ' Lieferumfänge
-                            With CType(infoBlock.Columns(9), Excel.Range)
-                                .ColumnWidth = 20
-                                .WrapText = True
-                            End With
-                            ' verantwortlich
-                            With CType(infoBlock.Columns(10), Excel.Range)
-                                .ColumnWidth = 10
-                            End With
-                            ' percent Done 
-                            With CType(infoBlock.Columns(11), Excel.Range)
-                                .ColumnWidth = 4
-                                .NumberFormat = "0#%"
-                            End With
+                            infoDataBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
+                            infoDataBlock.AutoFit()
 
                         End If
                     Catch ex As Exception
@@ -21691,11 +21741,33 @@ Public Module awinGeneralModules
 
                 End If
 
+                ' jetzt noch die Spalte 7 bedingt formatieren .. 
+                Dim trafficLightRange As Excel.Range = CType(.Range(.Cells(2, 7), .Cells(zeile, 7)), Excel.Range)
+                With trafficLightRange
+                    .Interior.Color = visboFarbeNone
+
+                    Dim trafficLightColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = "1"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = "2"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = "3"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                End With
+
             End With
 
             appInstance.EnableEvents = True
 
         Catch ex As Exception
+            Call MsgBox("Fehler in Aufbereitung Termine" & vbLf & ex.Message)
             appInstance.EnableEvents = True
         End Try
 
@@ -21769,6 +21841,107 @@ Public Module awinGeneralModules
         tryToprotectProjectforMe = Not isProtectedbyOthers
 
     End Function
+    ''' <summary>
+    ''' löscht die bedingte Farb-Codierung 
+    ''' </summary>
+    Public Sub deleteColorFormatMassEdit()
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
+
+            Try
+                Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+                                                        .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+                Dim mahleRange As Excel.Range = meWS.Range("MahleInfo")
+
+                If Not IsNothing(mahleRange) Then
+
+                    ' die bedingte Farb-Codierung ausschalten 
+                    With mahleRange
+                        Do While .FormatConditions.Count > 0
+                            .FormatConditions.Item(1).delete
+                        Loop
+                    End With
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' einfach nichts machen ..
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' stellt sicher, dass die Prozent- bzw. Frei-Tage Werte im Falle meExtendedView = true mit einer entsprechenden Color-Codierung dargestellt werden 
+    ''' 
+    ''' </summary>
+    Public Sub colorFormatMassEditRC()
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
+
+            Try
+                Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+                                                        .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+                Dim mahleRange As Excel.Range = meWS.Range("MahleInfo")
+
+                If Not IsNothing(mahleRange) Then
+                    ' die bedingte Farb-Codierung einschalten 
+                    If awinSettings.mePrzAuslastung Then
+                        With mahleRange
+
+                            Do While .FormatConditions.Count > 0
+                                .FormatConditions.Item(1).delete
+                            Loop
+
+                            Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = 0
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 1.1
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 1.5
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                        End With
+                    Else
+                        With mahleRange
+
+                            Do While .FormatConditions.Count > 0
+                                .FormatConditions.Item(1).delete
+                            Loop
+
+                            Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = -5
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 0
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 5
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                        End With
+                    End If
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' einfach nichts machen ..
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' aktualisiert in Tabelle2 die Auslastungs-Values 

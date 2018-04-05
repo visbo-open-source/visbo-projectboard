@@ -3390,199 +3390,276 @@ Imports System.Windows
         Call massEditRcTeAt(ptModus.massEditAttribute)
     End Sub
 
+    ''' <summary>
+    ''' führt in backToProjectBoard die Aktionen durch, die eigentlich in einem deactivate_Event gemacht werden sollten. 
+    ''' Da das aber mit den Windows.activate in backtoprojectboard nicht passiert, ist das die Abhilfe  
+    ''' </summary>
+    ''' <param name="tableTyp">gibt an , ob es sich um Mass-Edit Ressourcen, Termine oder Attribute handelt </param>
     Private Sub performDeactivateActionsFor(ByVal tableTyp As Integer)
 
+        Dim anzahlMassColSpalten As Integer
+        Dim mIX As Integer
+
+        If tableTyp = ptTables.meRC Then
+            anzahlMassColSpalten = 5
+            mIX = 0
+
+            If Not IsNothing(formProjectInfo1) Then
+                formProjectInfo1.Close()
+            End If
+
+        ElseIf tableTyp = ptTables.meTE Then
+            mIX = 1
+            anzahlMassColSpalten = 11
+
+        ElseIf tableTyp = ptTables.meAT Then
+            mIX = 2
+            anzahlMassColSpalten = 11
+
+        End If
+
+
+        Dim meWS As Excel.Worksheet =
+            CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
+
+        appInstance.EnableEvents = False
+
+        ' jetzt den Schutz aufheben , falls einer definiert ist 
+        If meWS.ProtectContents Then
+            meWS.Unprotect(Password:="x")
+        End If
+
+        Try
+
+            ' jetzt die Spalten Werte merken 
+            Try
+                massColFontValues(mIX, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
+                For ik As Integer = 1 To anzahlMassColSpalten
+                    massColFontValues(mIX, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
+                Next
+            Catch ex As Exception
+
+            End Try
+
+
+            ' jetzt die Autofilter de-aktivieren ... 
+            If CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
+                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            ' jetzt alles löschen 
+            Try
+                meWS.UsedRange.Clear()
+            Catch ex As Exception
+
+            End Try
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Filter zurücksetzen " & vbLf & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
     End Sub
+    ''' <summary>
+    ''' wird aus Mass-Edit Ressourcen, Termine oder Attibute aufgerufen 
+    ''' stellt sicher, dass wieder der Projekt-Tafel Zustand hergestellt wird. 
+    ''' der aufruf performDeactivateActions ist notwendig, weil ein table.Deactivate mit Window.Activate  nicht mehr stattfindet 
+    ''' </summary>
+    ''' <param name="control"></param>
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
-        ' hier wieder auf false setzen , in der Multiprojekt-Tafel soll das nicht angezeigt werden ...
-        awinSettings.showValuesOfSelected = False
-
-        ' jetzt müssen die Merk- & ggf Rücksetz-Aktionen gemacht werden, die mit dem entsprechenden massEdit Table verbunden sind
-        Dim tableTyp As Integer = ptTables.meRC
-        If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-            tableTyp = ptTables.meRC
-        ElseIf visboZustaende.projectBoardMode = ptModus.massEditTermine Then
-            tableTyp = ptTables.meTE
-        ElseIf visboZustaende.projectBoardMode = ptModus.massEditAttribute Then
-            tableTyp = ptTables.meAT
+        ' Bildschirm einfrieren ...
+        If appInstance.ScreenUpdating = True Then
+            appInstance.ScreenUpdating = False
         End If
 
-        Call performDeactivateActionsFor(tableTyp)
 
-        ' jetzt muss gecheckt werden, welche dbCache Projekte immer noch identisch zum ShowProjekte Pendant sind
-        ' deren temp Schutz muss dann wieder aufgehoben werden ... 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In dbCacheProjekte.liste
+        Try
+            ' hier wieder auf false setzen , in der Multiprojekt-Tafel soll das nicht angezeigt werden ...
+            awinSettings.showValuesOfSelected = False
 
-            If ShowProjekte.contains(kvp.Value.name) Then
-                Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.name)
-                Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
+            ' jetzt müssen die Merk- & ggf Rücksetz-Aktionen gemacht werden, die mit dem entsprechenden massEdit Table verbunden sind
+            Dim tableTyp As Integer = ptTables.meRC
+            If visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
+                tableTyp = ptTables.meRC
+            ElseIf visboZustaende.projectBoardMode = ptModus.massEditTermine Then
+                tableTyp = ptTables.meTE
+            ElseIf visboZustaende.projectBoardMode = ptModus.massEditAttribute Then
+                tableTyp = ptTables.meAT
+            End If
 
-                If hproj.isIdenticalTo(kvp.Value) Then
-                    ' temp Schutz aufheben 
-                    If writeProtections.isProtected(pvName, dbUsername) Then
-                        ' nichts tun , es ist von jdn anderem geschützt 
-                        '
-                    ElseIf writeProtections.isPermanentProtected(pvName) Then
-                        ' nichts tun, es ist permanent protected 
-                        '
-                    Else
-                        ' den temporären Schutz von mir zurücknehmen 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
-                                                   dbUsername, dbPasswort)
-                        Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project, _
-                                                                  dbUsername, False, False)
-                        If request.setWriteProtection(wpItem) Then
-                            ' erfolgreich
-                            writeProtections.upsert(wpItem)
+            Call performDeactivateActionsFor(tableTyp)
+
+            ' jetzt muss gecheckt werden, welche dbCache Projekte immer noch identisch zum ShowProjekte Pendant sind
+            ' deren temp Schutz muss dann wieder aufgehoben werden ... 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In dbCacheProjekte.liste
+
+                If ShowProjekte.contains(kvp.Value.name) Then
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(kvp.Value.name)
+                    Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                    If hproj.isIdenticalTo(kvp.Value) Then
+                        ' temp Schutz aufheben 
+                        If writeProtections.isProtected(pvName, dbUsername) Then
+                            ' nichts tun , es ist von jdn anderem geschützt 
+                            '
+                        ElseIf writeProtections.isPermanentProtected(pvName) Then
+                            ' nichts tun, es ist permanent protected 
+                            '
                         Else
-                            ' nicht erfolgreich
-                            wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
-                            writeProtections.upsert(wpItem)
+                            ' den temporären Schutz von mir zurücknehmen 
+                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
+                                                       dbUsername, dbPasswort)
+                            Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
+                                                                      dbUsername, False, False)
+                            If request.setWriteProtection(wpItem) Then
+                                ' erfolgreich
+                                writeProtections.upsert(wpItem)
+                            Else
+                                ' nicht erfolgreich
+                                wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                writeProtections.upsert(wpItem)
+                            End If
                         End If
+                    Else
+                        ' temporär geschützt lassen ...
                     End If
-                Else
-                    ' temporär geschützt lassen ...
                 End If
-            End If
-        Next
+            Next
 
-        ' zurücksetzen , aber nicht zurücksetzen der currentSessionConstellation
-        dbCacheProjekte.Clear(False)
+            ' zurücksetzen , aber nicht zurücksetzen der currentSessionConstellation
+            dbCacheProjekte.Clear(False)
 
-        ' zurücksetzen der Selektierten Projekte, aber nicht zurücksetzen der currentSessionConstellation
-        selectedProjekte.Clear(False)
+            ' zurücksetzen der Selektierten Projekte, aber nicht zurücksetzen der currentSessionConstellation
+            selectedProjekte.Clear(False)
 
-        Call projektTafelInit()
+            'Call projektTafelInit()
 
-        If tempSkipChanges Then
-            'Call restoreProjectsFromBackup()
-            Call MsgBox("restored ...")
-            tempSkipChanges = False
-        End If
-
-        Call enableControls(ptModus.graficboard)
-
-        'appInstance.EnableEvents = False
-        ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
-        'enableOnUpdate = False
-
-        appInstance.ScreenUpdating = False
-        Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
-
-
-        ' die zuvor aktive View oder das eigentliche, ursprüngliche Windows wird wieder angezeigt ...
-        'If Not IsNothing(projectboardViews(PTview.mpt)) Then
-        '    projectboardViews(PTview.mpt).Show()
-        '    projectboardViews(PTview.mpt) = Nothing
-        'End If
-
-        ' tk 12.6.17
-        ' wenn nur ein Window gezeigt wird ; das ist hier notwendig, um zu verhindern, dass nachher die mpt, mptpf, mptpr Charts alle im 
-        ' xlMaximized Mode dargestellt werden; das scheint eine Unschönheit von Microsoft zu sein ... 
-
-
-        ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
-        appInstance.EnableEvents = True
-        If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
-            appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
-        End If
-
-        Try
-
-            ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
-            If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
-                Try
-                    projectboardWindows(PTwindows.massEdit).Close()
-                Catch ex As Exception
-
-                End Try
-
-                projectboardWindows(PTwindows.massEdit) = Nothing
+            If tempSkipChanges Then
+                'Call restoreProjectsFromBackup()
+                Call MsgBox("restored ...")
+                tempSkipChanges = False
             End If
 
-            If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
-                Try
-                    projectboardWindows(PTwindows.meChart).Close()
-                Catch ex As Exception
+            Call enableControls(ptModus.graficboard)
 
-                End Try
+            'appInstance.EnableEvents = False
+            ' wird ohnehin zu Beginn des MassenEdits ausgeschaltet  
+            'enableOnUpdate = False
 
-                projectboardWindows(PTwindows.meChart) = Nothing
+
+            Call deleteChartsInSheet(arrWsNames(ptTables.meCharts))
+
+
+            ' tk, 16.8.17 Versuch, um das Fenster PRoblem in den Griff zu bekommen 
+            appInstance.EnableEvents = True
+            If appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized Then
+                appInstance.ActiveWindow.WindowState = Excel.XlWindowState.xlNormal
             End If
 
-        Catch ex As Exception
+            Try
 
-        End Try
-
-
-        ' jetzt müssen ggf drei Windows wieder angezeigt werden 
-        Try
-            With projectboardWindows(PTwindows.mpt)
-                .Visible = True
-                If CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count = 1 Then
-                    .WindowState = Excel.XlWindowState.xlMaximized
-                Else
+                ' jetzt werden die Windows gelöscht, falls sie überhaupt existieren  ...
+                If Not IsNothing(projectboardWindows(PTwindows.massEdit)) Then
                     Try
-                        If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-                            projectboardWindows(PTwindows.mptpf).Visible = True
-
-                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
-                                .Activate()
-                            End With
-
-                        End If
+                        projectboardWindows(PTwindows.massEdit).Close()
                     Catch ex As Exception
-                        projectboardWindows(PTwindows.mptpf) = Nothing
-                    End Try
-                    Try
-                        If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-                            projectboardWindows(PTwindows.mptpr).Visible = True
 
-                            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
-                                .Activate()
-                            End With
-
-                        End If
-                    Catch ex As Exception
-                        projectboardWindows(PTwindows.mptpr) = Nothing
                     End Try
+
+                    projectboardWindows(PTwindows.massEdit) = Nothing
                 End If
 
+                If Not IsNothing(projectboardWindows(PTwindows.meChart)) Then
+                    Try
+                        projectboardWindows(PTwindows.meChart).Close()
+                    Catch ex As Exception
+
+                    End Try
+
+                    projectboardWindows(PTwindows.meChart) = Nothing
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+
+            ' jetzt müssen ggf drei Windows wieder angezeigt werden 
+            Try
+                With projectboardWindows(PTwindows.mpt)
+                    .Visible = True
+                    If CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Windows.Count = 1 Then
+                        .WindowState = Excel.XlWindowState.xlMaximized
+                    Else
+                        Try
+                            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                                projectboardWindows(PTwindows.mptpf).Visible = True
+
+                                With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPfCharts)), Excel.Worksheet)
+                                    .Activate()
+                                End With
+
+                            End If
+                        Catch ex As Exception
+                            projectboardWindows(PTwindows.mptpf) = Nothing
+                        End Try
+                        Try
+                            If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
+                                projectboardWindows(PTwindows.mptpr).Visible = True
+
+                                With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.mptPrCharts)), Excel.Worksheet)
+                                    .Activate()
+                                End With
+
+                            End If
+                        Catch ex As Exception
+                            projectboardWindows(PTwindows.mptpr) = Nothing
+                        End Try
+                    End If
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+
+            ' mit diesem Befehl wird das dem Window zugeordnete Sheet aktiviert, allerdings ohne die entsprechenden .activate bzw. .deactivate Routinen zu durchlaufen ...
+            projectboardWindows(PTwindows.mpt).Activate()
+
+
+            ''Dim isOn As Boolean = appInstance.EnableEvents
+            ''Dim testname As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
+            ' 
+            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+                .Activate()
             End With
-        Catch ex As Exception
-
-        End Try
-
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-
-        ' mit diesem Befehl wird das dem Window zugeordnete Sheet aktiviert, allerdings ohne die entsprechenden .activate bzw. .deactivate Routinen zu durchlaufen ...
-        projectboardWindows(PTwindows.mpt).Activate()
-
-
-        ''Dim isOn As Boolean = appInstance.EnableEvents
-        ''Dim testname As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
-        ' 
-        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
-            .Activate()
-        End With
 
 
 
-        appInstance.ScreenUpdating = True
+            appInstance.ScreenUpdating = True
 
-        ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
-        Try
-            If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-                If projectboardWindows(PTwindows.mptpf).Visible = True Then
-                    Call awinNeuZeichnenDiagramme(2)
+            ' jetzt müssen ggf noch die Portfolio Charts neu gezeichnet werden 
+            Try
+                If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
+                    If projectboardWindows(PTwindows.mptpf).Visible = True Then
+                        Call awinNeuZeichnenDiagramme(2)
+                    End If
                 End If
-            End If
+            Catch ex As Exception
+                projectboardWindows(PTwindows.mptpr) = Nothing
+            End Try
         Catch ex As Exception
-            projectboardWindows(PTwindows.mptpr) = Nothing
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
         End Try
+
 
     End Sub
 
@@ -6010,11 +6087,11 @@ Imports System.Windows
     End Sub
 
     ' tk 21.8.2017 wird nicht mehr verwendet 
-    ''' <summary>
-    ''' erstellt die Summary Zuordnungs-Datei 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
+    '''' <summary>
+    '''' erstellt die Summary Zuordnungs-Datei 
+    '''' </summary>
+    '''' <param name="control"></param>
+    '''' <remarks></remarks>
     'Sub Tom2G4M2B1ZuordnungRP(control As IRibbonControl)
 
 
@@ -6076,11 +6153,11 @@ Imports System.Windows
     'End Sub
 
     ' tk 21.8.17 wird nicht mehr verwendet 
-    ''' <summary>
-    ''' erstellt die Zuordnungs-Datei Ressourcen -> Projekt
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
+    '''' <summary>
+    '''' erstellt die Zuordnungs-Datei Ressourcen -> Projekt
+    '''' </summary>
+    '''' <param name="control"></param>
+    '''' <remarks></remarks>
     'Sub Tom2G4M2B2ZuordnungRP(control As IRibbonControl)
 
     '    Dim initialeVorlageName As String, kapaFileName As String
@@ -6314,12 +6391,16 @@ Imports System.Windows
     End Function
 
     Sub awinPTProzAuslastung(control As IRibbonControl, ByRef pressed As Boolean)
+
         awinSettings.mePrzAuslastung = pressed
 
         ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
         visboZustaende.clearAuslastungsArray()
+
         If awinSettings.meExtendedColumnsView Then
+            Call deleteColorFormatMassEdit()
             Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+            Call colorFormatMassEditRC()
         End If
 
 

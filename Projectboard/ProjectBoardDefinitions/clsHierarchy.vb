@@ -83,25 +83,29 @@
     ''' </summary>
     ''' <param name="elemID"></param>
     ''' <returns></returns>
-    Public Function getNextIdOfId(ByVal elemID As String, ByRef indent As Integer) As String
+    Public Function getNextIdOfId(ByVal elemID As String, ByRef indent As Integer, ByVal abbruchLevel As Integer) As String
 
         Dim tmpResult As String = ""
         If elemIDIstMeilenstein(elemID) Then
             Dim parentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
             ' indentLevel bleibt gleich ...
-            tmpResult = parentNode.getNextSibling(elemID)
-            If tmpResult = "" Then
-                While tmpResult = "" And indent > 0
-                    Dim parentElemId As String = Me.getParentIDOfID(elemID)
-                    If indent > 0 Then
+            If Not IsNothing(parentNode) Then
+                tmpResult = parentNode.getNextSibling(elemID)
+                If tmpResult = "" Then
+                    While tmpResult = "" And indent > abbruchLevel
+                        elemID = Me.getParentIDOfID(elemID)
                         ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
                         indent = indent - 1
-                    End If
-                    Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(parentElemId)
-                    'tmpResult = Me.getNextIdOfId(parentElemId, indent)
-                    tmpResult = grandparentNode.getNextSibling(parentElemId)
-                End While
+                        If indent > abbruchLevel Then
+                            Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+                            If Not IsNothing(grandparentNode) Then
+                                tmpResult = grandparentNode.getNextSibling(elemID)
+                            End If
+                        End If
+                    End While
+                End If
             End If
+
         Else
             ' Phasen Behandlung 
             Dim phaseNode As clsHierarchyNode = Me.nodeItem(elemID)
@@ -110,22 +114,27 @@
                 indent = indent + 1
                 tmpResult = phaseNode.getChild(1)
             Else
-                ' gleiche Behandlung wie bei Meilenstein 
+                ' gleiche Behandlung wie bei Meilenstein , allerdings kann nur hier gleich der erste Parent gleich Null sein, 
+                ' ein Meilenstein hat immer wenigstens einen Vater ...
                 Dim parentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
                 ' indentLevel bleibt gleich ... 
-                tmpResult = parentNode.getNextSibling(elemID)
-                If tmpResult = "" Then
-                    While tmpResult = "" And indent > 0
-                        Dim parentElemId As String = Me.getParentIDOfID(elemID)
-                        If indent > 0 Then
+                If Not IsNothing(parentNode) Then
+                    tmpResult = parentNode.getNextSibling(elemID)
+                    If tmpResult = "" Then
+                        While tmpResult = "" And indent > abbruchLevel
+                            elemID = Me.getParentIDOfID(elemID)
                             ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
                             indent = indent - 1
-                        End If
-                        Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(parentElemId)
-                        'tmpResult = Me.getNextIdOfId(parentElemId, indent)
-                        tmpResult = grandparentNode.getNextSibling(parentElemId)
-                    End While
+                            If indent > abbruchLevel Then
+                                Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+                                If Not IsNothing(grandparentNode) Then
+                                    tmpResult = grandparentNode.getNextSibling(elemID)
+                                End If
+                            End If
+                        End While
+                    End If
                 End If
+
             End If
         End If
 
@@ -1526,7 +1535,7 @@
     ''' gibt den Hierarchie Level der elemID zurück 
     ''' 0: es handelt sich um den RootKnoten
     ''' x: Element ist auf der x-Ten Hierarchie Stufe 
-    ''' -1: elemID oder eiens der Vater Elemente existieren nicht in der Hierarchie
+    ''' -1: elemID oder eines der Vater Elemente existieren nicht in der Hierarchie
     ''' </summary>
     ''' <param name="elemID"></param>
     ''' <value></value>

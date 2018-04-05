@@ -3,10 +3,7 @@ Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports Microsoft.Office.Interop.Excel
 
-''' <summary>
-''' zur Behandlung der MAss-Edit Ressourcen 
-''' </summary>
-''' <remarks></remarks>
+
 Public Class Tabelle2
 
     Private columnStartData As Integer = 8
@@ -26,7 +23,7 @@ Public Class Tabelle2
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
-        Dim meWS As Excel.Worksheet = _
+        Dim meWS As Excel.Worksheet =
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
@@ -133,9 +130,10 @@ Public Class Tabelle2
         '    Call MsgBox("Fehler bei Activate Sheet Massen-Edit" & vbLf & ex.Message)
         'End Try
 
-        With meWS
-            CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-        End With
+        ' tk 3.4.18 das wird jetzt im writeOnlineMassEditRC gemacht 
+        'With meWS
+        '    CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
+        'End With
 
         If Not IsNothing(appInstance.ActiveCell) Then
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
@@ -173,8 +171,9 @@ Public Class Tabelle2
                 End With
             Else
                 CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Locked = False
-                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
             End If
+
+            CType(CType(meWS, Excel.Worksheet).Cells(cz, columnRC), Excel.Range).Select()
 
         Catch ex As Exception
 
@@ -720,7 +719,7 @@ Public Class Tabelle2
                                                     cRole.RollenTyp = newRoleID
                                                     hproj.rcLists.addRP(newRoleID, cPhase.nameID)
                                                 End If
-                                                
+
                                             Catch ex As Exception
                                                 visboZustaende.oldValue = ""
                                                 ' in diesem Fall wurde nur von einer noch nicht belegten Rolle auf eine 
@@ -758,7 +757,7 @@ Public Class Tabelle2
 
                                                 ' wenn es sich um die Projekt-Phase handelt
                                                 If phaseNameID = rootPhaseName Then
-                                                    tmpVal = tmpVal & ";" & _
+                                                    tmpVal = tmpVal & ";" &
                                                                 validationStrings.Item(rcValidation(0))
                                                     Call updateEmptyRcCellValidations(pName, tmpVal)
                                                 End If
@@ -845,8 +844,8 @@ Public Class Tabelle2
                                 Target.ClearComments()
 
                             End If
-                         
-                           
+
+
                         End If
 
 
@@ -914,7 +913,7 @@ Public Class Tabelle2
                                         xEndDate = cPhase.getEndDate
                                     End If
 
-                                    Dim xValues() As Double = cPhase.berechneBedarfeNew(xStartDate, _
+                                    Dim xValues() As Double = cPhase.berechneBedarfeNew(xStartDate,
                                                                                         xEndDate, vSum, 1)
 
                                     If isRole Then
@@ -922,12 +921,12 @@ Public Class Tabelle2
                                         ' erstmal überprüfen, ob awinsettings.autoreduce = true 
                                         Dim parentRoleSum As Double = -1
                                         If awinSettings.meAutoReduce Then
-                                            Call autoReduceRowOfParentRole(Target.Row, Target.Column, newDblValue, difference, _
+                                            Call autoReduceRowOfParentRole(Target.Row, Target.Column, newDblValue, difference,
                                                                            hproj, cPhase, rcName)
 
                                             ' durch autoReduce kann der newDblValue verändert sein
                                             vSum(0) = newDblValue
-                                            xValues = cPhase.berechneBedarfeNew(xStartDate, _
+                                            xValues = cPhase.berechneBedarfeNew(xStartDate,
                                                                                        xEndDate, vSum, 1)
 
                                         End If
@@ -959,8 +958,8 @@ Public Class Tabelle2
                                         auslastungChanged = True
 
                                         ' jetzt muss die Excel Zeile geschreiben werden - dort wird auch der auslastungs-Array aktualisiert 
-                                        Call aktualisiereRoleCostInSheet(Target.Row, rcName, isRole, _
-                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight, _
+                                        Call aktualisiereRoleCostInSheet(Target.Row, rcName, isRole,
+                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight,
                                                                      phStart, phEnde, xValues)
 
 
@@ -991,8 +990,8 @@ Public Class Tabelle2
 
                                         kostenChanged = True
                                         ' jetzt muss die Excel Zeile geschreiben werden 
-                                        Call aktualisiereRoleCostInSheet(Target.Row, rcName, isRole, _
-                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight, _
+                                        Call aktualisiereRoleCostInSheet(Target.Row, rcName, isRole,
+                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight,
                                                                      phStart, phEnde, xValues)
 
                                     End If
@@ -1236,12 +1235,12 @@ Public Class Tabelle2
     ''' <param name="difference"></param>
     ''' <param name="summenChanged"></param>
     ''' <remarks></remarks>
-    Private Sub autoReduceCellOfParentRole(ByVal targetRow As Integer, ByVal targetColumn As Integer, ByRef newValue As Double, _
-                                         ByVal hproj As clsProjekt, ByVal cPhase As clsPhase, ByVal roleName As String, _
-                                         ByVal xWerteIndex As Integer, ByRef difference As Double, _
+    Private Sub autoReduceCellOfParentRole(ByVal targetRow As Integer, ByVal targetColumn As Integer, ByRef newValue As Double,
+                                         ByVal hproj As clsProjekt, ByVal cPhase As clsPhase, ByVal roleName As String,
+                                         ByVal xWerteIndex As Integer, ByRef difference As Double,
                                          ByRef summenChanged As Boolean)
 
-        Dim meWS As Excel.Worksheet = _
+        Dim meWS As Excel.Worksheet =
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
@@ -1304,7 +1303,7 @@ Public Class Tabelle2
 
                     If sumRoleSum >= difference Then
                         ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
-                        If phaseWithinTimeFrame(hproj.Start, cPhase.relStart, cPhase.relEnde, _
+                        If phaseWithinTimeFrame(hproj.Start, cPhase.relStart, cPhase.relEnde,
                                                  showRangeLeft, showRangeRight, True) Then
 
                             verteilungMöglich = True
@@ -1331,9 +1330,9 @@ Public Class Tabelle2
 
                             ' jetzt muss eine Meldung erfolgen ... 
 
-                            Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf & _
-                                        "oder die Phase wird nicht vollständig dargestellt" & vbLf & _
-                                        "Der Wert wird deshalb von " & CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value & _
+                            Call MsgBox("AutoReduce kann die zugehörige Sammelrolle nicht auf negative Werte reduzieren" & vbLf &
+                                        "oder die Phase wird nicht vollständig dargestellt" & vbLf &
+                                        "Der Wert wird deshalb von " & CType(meWS.Cells(targetRow, targetColumn), Excel.Range).Value &
                                         " auf " & newValue & " korrigiert.")
 
                             difference = -xWerte(xWerteIndex + offset)
@@ -1477,7 +1476,7 @@ Public Class Tabelle2
                         End If
 
 
-                End If
+                    End If
 
                     ' das wird nachher über updateSummen gemacht 
                     'tmpSum = CDbl(CType(meWS.Cells(zeileOFSummaryRole, columnRC + 1), Excel.Range).Value)
@@ -1506,16 +1505,16 @@ Public Class Tabelle2
     ''' <param name="hproj"></param>
     ''' <param name="cPhase"></param>
     ''' <param name="roleName"></param>
-    ''' <param name="summenChanged"></param>
+    ''' <param name="difference"></param>
     ''' <remarks></remarks>
-    Private Sub autoReduceRowOfParentRole(ByVal targetRow As Integer, ByVal targetColumn As Integer, ByRef newSumValue As Double, ByVal difference As Double, _
+    Private Sub autoReduceRowOfParentRole(ByVal targetRow As Integer, ByVal targetColumn As Integer, ByRef newSumValue As Double, ByVal difference As Double,
                                              ByVal hproj As clsProjekt, ByVal cPhase As clsPhase, ByVal roleName As String)
 
         Dim pName As String = hproj.name
         Dim phaseNameID As String = cPhase.nameID
 
         Dim zeileOFSummaryRole As Integer = findeSammelRollenZeile(pName, phaseNameID, roleName)
-        Dim meWS As Excel.Worksheet = _
+        Dim meWS As Excel.Worksheet =
             CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
@@ -1600,7 +1599,7 @@ Public Class Tabelle2
                     xEndDate = cParentPhase.getEndDate
                 End If
 
-                Dim xValues() As Double = cParentPhase.berechneBedarfeNew(xStartDate, _
+                Dim xValues() As Double = cParentPhase.berechneBedarfeNew(xStartDate,
                                                                     xEndDate, vSum, 1)
 
                 If parentRole.Xwerte.Length <> xValues.Length Then
@@ -1614,7 +1613,7 @@ Public Class Tabelle2
                 End If
 
                 ' in der Zeile aktualisieren
-                Call aktualisiereRoleCostInSheet(zeileOFSummaryRole, parentRoleName, True, visboZustaende.meColSD, showRangeLeft, showRangeRight, _
+                Call aktualisiereRoleCostInSheet(zeileOFSummaryRole, parentRoleName, True, visboZustaende.meColSD, showRangeLeft, showRangeRight,
                                                  parentPhStart, parentPhEnde, xValues)
 
             End If
@@ -1627,51 +1626,54 @@ Public Class Tabelle2
         ' Achtung: durch das Wechseln der Windows werden auch die ActiveSheets gewechselt; allerdings werden in diesem Fall dann die 
         ' Deactivate Events nicht aufgerufen. Deswegen sollte diese Aktionen alle in separaten Methoden sein  ... 
         ' das ProjInfo Formular löschen, sofern es angezeigt wird 
-        If Not IsNothing(formProjectInfo1) Then
-            formProjectInfo1.Close()
-        End If
 
-        Dim meWS As Excel.Worksheet = _
-            CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
-            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        ' tk, 3.4.18 wird ohnehin nicht mehr aufgerufen ....
+        ' wird jetzt in backtoProjectBoard , performDeactivateActionsFor.. gemacht 
+        ''If Not IsNothing(formProjectInfo1) Then
+        ''    formProjectInfo1.Close()
+        ''End If
 
-        appInstance.EnableEvents = False
+        ''Dim meWS As Excel.Worksheet = _
+        ''    CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+        ''    .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
-        ' jetzt den Schutz aufheben , falls einer definiert ist 
-        If meWS.ProtectContents Then
-            meWS.Unprotect(Password:="x")
-        End If
+        ''appInstance.EnableEvents = False
 
-        Try
+        '' jetzt den Schutz aufheben , falls einer definiert ist 
+        ''If meWS.ProtectContents Then
+        ''    meWS.Unprotect(Password:="x")
+        ''End If
 
-            ' jetzt die Spalten Werte merken 
-            Try
-                massColFontValues(0, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
-                For ik As Integer = 1 To 5
-                    massColFontValues(0, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
-                Next
-            Catch ex As Exception
+        ''Try
 
-            End Try
+        ''    ' jetzt die Spalten Werte merken 
+        ''    Try
+        ''        massColFontValues(0, 0) = CDbl(CType(meWS.Cells(2, 2), Excel.Range).Font.Size)
+        ''        For ik As Integer = 1 To 5
+        ''            massColFontValues(0, ik) = CDbl(CType(meWS.Columns(ik), Excel.Range).ColumnWidth)
+        ''        Next
+        ''    Catch ex As Exception
+
+        ''    End Try
 
 
-            ' jetzt die Autofilter de-aktivieren ... 
-            If CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-                CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-            End If
+        ''    ' jetzt die Autofilter de-aktivieren ... 
+        ''    If CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
+        ''        CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+        ''    End If
 
-            ' jetzt alles löschen 
-            Try
-                meWS.UsedRange.Clear()
-            Catch ex As Exception
+        ''    ' jetzt alles löschen 
+        ''    Try
+        ''        meWS.UsedRange.Clear()
+        ''    Catch ex As Exception
 
-            End Try
+        ''    End Try
 
-        Catch ex As Exception
-            Call MsgBox("Fehler beim Filter zurücksetzen " & vbLf & ex.Message)
-        End Try
+        ''Catch ex As Exception
+        ''    Call MsgBox("Fehler beim Filter zurücksetzen " & vbLf & ex.Message)
+        ''End Try
 
-        appInstance.EnableEvents = True
+        ''appInstance.EnableEvents = True
 
     End Sub
 
@@ -1816,7 +1818,7 @@ Public Class Tabelle2
 
         End With
 
-        
+
 
         appInstance.EnableEvents = True
 
@@ -1900,7 +1902,7 @@ Public Class Tabelle2
                         result = False
                     End If
                 End If
-                
+
             End If
         Catch ex As Exception
 
@@ -1922,10 +1924,10 @@ Public Class Tabelle2
     ''' <param name="phEnd">ist pStart+relende -1</param>
     ''' <param name="xWerte"></param>
     ''' <remarks></remarks>
-    Private Sub aktualisiereRoleCostInSheet(ByVal zeile As Integer, ByVal rcName As String, ByVal isRole As Boolean, _
-                                      ByVal startSpalteDaten As Integer, _
-                                      ByVal von As Integer, ByVal bis As Integer, _
-                                      ByVal phStart As Integer, ByVal phEnd As Integer, _
+    Private Sub aktualisiereRoleCostInSheet(ByVal zeile As Integer, ByVal rcName As String, ByVal isRole As Boolean,
+                                      ByVal startSpalteDaten As Integer,
+                                      ByVal von As Integer, ByVal bis As Integer,
+                                      ByVal phStart As Integer, ByVal phEnd As Integer,
                                       ByVal xWerte() As Double)
         Dim schnittmenge() As Double
         Dim zeilenWerte() As Double
@@ -1982,7 +1984,7 @@ Public Class Tabelle2
                 Else
                     CType(.Cells(zeile, 7), Excel.Range).Value = ""
                 End If
-                
+
             Else
                 CType(.Cells(zeile, 7), Excel.Range).Value = ""
             End If
@@ -2054,8 +2056,8 @@ Public Class Tabelle2
     ''' <param name="difference"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function inputIsAcknowledged(ByVal target As Excel.Range, _
-                                                ByRef newDblValue As Double, _
+    Private Function inputIsAcknowledged(ByVal target As Excel.Range,
+                                                ByRef newDblValue As Double,
                                                 ByRef difference As Double) As Boolean
 
         Dim ok As Boolean = False

@@ -2,9 +2,7 @@
 Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports Microsoft.Office.Interop.Excel
-''' <summary>
-''' 
-''' </summary>
+
 Public Class Tabelle3
 
     Private columnStartData As Integer = 5
@@ -51,29 +49,12 @@ Public Class Tabelle3
 
         ' jetzt den AutoFilter setzen 
         Try
-            ' der wird jetzt erst am Ende  gemacht 
-            '' einen Select machen ...
-            ''Try
-            ''    'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-            ''    CType(CType(meWS, Excel.Worksheet).Cells(2, columnRC), Excel.Range).Select()
-            ''Catch ex As Exception
-
-            ''End Try
-
-
-            'With meWS
-            '    filterRange = CType(.Range(.Cells(1, 1), .Cells(1, 11)), Excel.Range)
-            'End With
 
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
                 'CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
                 CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
 
-                '' jetzt überprüfen, ob nur eine bestimmte Rolle/Kostenart angezeigt, d.h gefiltert werden soll  
-                'If Not IsNothing(rcName) Then
-                '    CType(CType(meWS, Excel.Worksheet).Rows(1), Excel.Range).AutoFilter(Field:=visboZustaende.meColRC, Criteria1:=rcName)
-                'End If
 
             End If
 
@@ -110,28 +91,6 @@ Public Class Tabelle3
 
         End Try
 
-        ' jetzt soll geprüft werden, ob es sich um einen vglweise kleinen Bildschirm handelt - dann sollen 
-        ' bestimmte Spaltengrößen verkleinert werden oder aber auch ausgeblendet werden .. oder Schriftgrößen verkleinert werden  
-
-        ' das wird ja jetzt in der Defition der Windows gemacht ...
-        'Try
-        '    With Application.ActiveWindow
-        '        .SplitColumn = columnRC + 2
-        '        .SplitRow = 1
-        '        .DisplayWorkbookTabs = False
-        '        .GridlineColor = RGB(220, 220, 220)
-        '        .FreezePanes = True
-        '        '.DisplayHeadings = True
-        '        .DisplayHeadings = False
-        '    End With
-
-        'Catch ex As Exception
-        '    Call MsgBox("Fehler bei Activate Sheet Massen-Edit" & vbLf & ex.Message)
-        'End Try
-
-        With meWS
-            CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-        End With
 
         If Not IsNothing(appInstance.ActiveCell) Then
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
@@ -169,8 +128,9 @@ Public Class Tabelle3
                 End With
             Else
                 CType(CType(meWS, Excel.Worksheet).Cells(cz, columnTE), Excel.Range).Locked = False
-                CType(CType(meWS, Excel.Worksheet).Cells(cz, columnTE), Excel.Range).Select()
             End If
+
+            CType(CType(meWS, Excel.Worksheet).Cells(cz, columnTE), Excel.Range).Select()
 
         Catch ex As Exception
 
