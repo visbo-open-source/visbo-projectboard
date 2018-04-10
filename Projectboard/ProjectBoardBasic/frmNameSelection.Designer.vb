@@ -184,7 +184,7 @@ Partial Class frmNameSelection
         '
         'pictureMilestones
         '
-        Me.pictureMilestones.Image = CType(resources.GetObject("pictureMilestones.Image"), System.Drawing.Image)
+        Me.pictureMilestones.Image = Global.ProjectBoardBasic.My.Resources.Resources.milestones_icon1
         Me.pictureMilestones.Location = New System.Drawing.Point(140, 21)
         Me.pictureMilestones.Name = "pictureMilestones"
         Me.pictureMilestones.Size = New System.Drawing.Size(33, 33)

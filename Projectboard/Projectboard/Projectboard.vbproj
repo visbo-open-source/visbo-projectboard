@@ -310,7 +310,6 @@
     <None Include="Resources\zoom_in.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\milestones_icon1.png" />
     <None Include="Tabelle8.Designer.xml">
       <DependentUpon>Tabelle8.vb</DependentUpon>
     </None>
