@@ -68,16 +68,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="clsInputSigninLogin.vb" />
+    <Compile Include="clsVP.vb" />
     <Compile Include="clsWebVC.vb" />
     <Compile Include="clsTokenUserLogin.vb" />
     <Compile Include="clsTokenUserSignIn.vb" />
-    <Compile Include="clsUser.vb" />
+    <Compile Include="clsUserReg.vb" />
     <Compile Include="clsUserProfile.vb" />
     <Compile Include="clsVC.vb" />
-    <Compile Include="clsVCuser.vb" />
+    <Compile Include="clsUser.vb" />
     <Compile Include="clsWebOneVC.vb" />
     <Compile Include="clsWebOutput.vb" />
     <Compile Include="clsWebUser.vb" />
+    <Compile Include="clsWebVP.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>

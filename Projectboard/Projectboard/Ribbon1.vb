@@ -11750,7 +11750,7 @@ Imports System.ServiceModel.Web
             ''user.phone = "08024-xxxxx"
             ''user.company = "keine AG"
 
-            Dim user As New clsUser
+            Dim user As New clsUserReg
             user.name = "Ute's neuer Name"
             user.email = "ute.rittinghaus-koytek@visbo.de"
             user.profile.phone = "08024-92403"
@@ -11861,6 +11861,10 @@ Imports System.ServiceModel.Web
 
 
 
+    ''' <summary>
+    ''' Per WebServer ein VisboCenter erzeugen
+    ''' </summary>
+    ''' <param name="control"></param>
     Public Sub PTPOSTOneVC(control As IRibbonControl)
 
         Try
@@ -11869,14 +11873,14 @@ Imports System.ServiceModel.Web
             Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
 
             Dim oneVC As New clsVC
-            Dim user As New clsVCuser
+            Dim user As New clsUser
 
             oneVC.name = "Fifth VC (Ute)"
             user.email = "ute.rittinghaus-koytek@visbo.de"
             user.role = "Admin"
             oneVC.users.Add(user)
 
-            Dim user1 As New clsVCuser
+            Dim user1 As New clsUser
             user1.email = "ute.rittinghaus-koytek@visbo.de"
             user1.role = "User"
             oneVC.users.Add(user1)
@@ -11913,7 +11917,7 @@ Imports System.ServiceModel.Web
 
     End Sub
     ''' <summary>
-    ''' 
+    ''' Per Server ein VisboCenter vom Server holen
     ''' </summary>
     ''' <param name="control"></param>
     Public Sub PTGETOneVC(control As IRibbonControl)
@@ -11957,6 +11961,10 @@ Imports System.ServiceModel.Web
 
     End Sub
 
+    ''' <summary>
+    ''' Ändern eines VisboCenters über PUT am Server
+    ''' </summary>
+    ''' <param name="control"></param>
     Public Sub PTPUTOneVC(control As IRibbonControl)
 
         Try
@@ -12005,7 +12013,11 @@ Imports System.ServiceModel.Web
     End Sub
 
 
-    Public Sub PTDELETEOneVC(control As IRibbonControl)
+    ''' <summary>
+    ''' Es wird ein Request an den Server gesendet zum Löschen eines VisboCenters
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTDELETEOneVP(control As IRibbonControl)
 
         Try
             Dim typeRequest As String = control.Id.Replace("_", "/")
@@ -12053,11 +12065,265 @@ Imports System.ServiceModel.Web
                 ''    Antwort2 = ReadResponseContent(httpresp)
                 ''End Using
             Else
-                Throw New ArgumentException("zu löschendes VC existiert nicht!")
+                Throw New ArgumentException("zu löschendes VP existiert nicht!")
             End If
 
         Catch ex As Exception
-            Call MsgBox("Fehler in PTDELETEOneVC: " & ex.Message)
+            Call MsgBox("Fehler in PTDELETEOneVP: " & ex.Message)
+        End Try
+    End Sub
+
+
+
+
+    ''' <summary>
+    ''' Per WebServer ein VisboProjekt erzeugen
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTPOSTOneVP(control As IRibbonControl)
+
+        Try
+            'Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim typeRequest As String = "/vp"
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+
+            Dim oneVP As New clsVP
+            Dim user As New clsUser
+
+            oneVP.name = "Neu 18_002"
+            oneVP.vcid = aktVC.vc.ElementAt(0)._id
+            user.email = "ute.rittinghaus-koytek@visbo.de"
+            user.role = "Admin"
+            oneVP.users.Add(user)
+
+            Dim user1 As New clsUser
+            user1.email = "ute.rittinghaus-koytek@visbo.de"
+            user1.role = "User"
+            oneVP.users.Add(user1)
+
+            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+            Dim data() As Byte
+            data = serverInputDataJson(oneVP, typeRequest)
+
+            Dim Antwort As clsWebVP
+            Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadPOSTResponseContentJson(httpresp, typeRequest), clsWebVP)
+            End Using
+
+
+
+            If Antwort.state = "success" Then
+                aktVP = Antwort
+                Call MsgBox(Antwort.message & ": " & "neues und aktuelles VisboProject ist nun: " & aktVP.vp.ElementAt(0).name)
+            Else
+                Throw New ArgumentException(Antwort.message)
+            End If
+
+
+            ''Dim Antwort As String
+            ''Using httpresp As HttpWebResponse = GetPOSTResponse(serverUri, data, Nothing)
+            ''    Antwort = ReadResponseContent(httpresp)
+            ''End Using
+
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTPOSTOneVP " & ex.Message)
+        End Try
+
+    End Sub
+    ''' <summary>
+    ''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /vp
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTWebRequestGETallVP(control As IRibbonControl)
+
+        Try
+            'Dim typeRequest As String = "/vp"
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim vcid As String = webVCs.vc.ElementAt(1)._id
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & "?vcid=vc" & vcid)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As clsWebVP
+            Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebVP)
+            End Using
+
+            'Dim Antwort2 As String
+            'Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+            '    Antwort2 = ReadResponseContent(httpresp)
+            'End Using
+
+            If Antwort.state = "success" Then
+                Call MsgBox(Antwort.message & vbCrLf & "aktueller User hat " & Antwort.vp.Count & "VisboProjects")
+                ' hier erfolgen nun die weiteren Aktionen mit den angeforderten Daten
+                webVPs = Antwort
+            Else
+                Call MsgBox(Antwort.message)
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
+        End Try
+
+    End Sub
+    ''' <summary>
+    ''' Per Server ein VisboProject vom Server holen
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTGETOneVP(control As IRibbonControl)
+
+        Try
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim hstr() As String = Split(typeRequest, "GET")
+            typeRequest = hstr(hstr.Length - 1)
+            'Dim typeRequest As String = "/vp/"
+
+
+            Dim vpID As String = webVPs.vp.ElementAt(0)._id
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vpID)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+            Dim Antwort As clsWebVP
+            Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebVP)
+            End Using
+
+            If Antwort.state = "success" Then
+                aktVP = Antwort
+                Call MsgBox(Antwort.message & ": " & "aktuelles VP ist: " & aktVP.vp.ElementAt(0).name)
+            Else
+                Throw New ArgumentException(Antwort.message)
+            End If
+
+
+            ''Dim Antwort2 As String
+            ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+            ''    Antwort2 = ReadResponseContent(httpresp)
+            ''End Using
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTOneVC " & ex.Message)
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' Ändern eines VisboProjects über PUT am Server
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTPUTOneVP(control As IRibbonControl)
+
+        Try
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim hstr() As String = Split(typeRequest, "PUT")
+            typeRequest = hstr(hstr.Length - 1)
+            'Dim typeRequest As String = "/vp/"
+
+
+            Dim vp As clsVP = webVPs.vp.ElementAt(0)
+            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vp._id)
+
+            vp.name = "my first VisboProject Renamed"
+            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+            Dim data() As Byte
+            data = serverInputDataJson(vp, typeRequest)
+
+            'Dim datastr As String = ""
+            'Dim encoding As New System.Text.UTF8Encoding()
+            'Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+            Dim Antwort As clsWebVP
+            Using httpresp As HttpWebResponse = GetPUTResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadPUTResponseContentJson(httpresp, typeRequest), clsWebVP)
+            End Using
+
+
+            If Antwort.state = "success" Then
+                aktVP = Antwort
+                Call MsgBox(Antwort.message & ": " & "neuer Name für aktuelle vpid: " & vbCrLf &
+                            aktVP.vp.ElementAt(0).name & " für " & aktVP.vp.ElementAt(0)._id)
+            Else
+                Throw New ArgumentException(Antwort.message)
+            End If
+
+            ''Dim Antwort2 As String
+            ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+            ''    Antwort2 = ReadResponseContent(httpresp)
+            ''End Using
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTupdateOneVP " & ex.Message)
+        End Try
+    End Sub
+
+
+    ''' <summary>
+    ''' Es wird ein Request an den Server gesendet zum Löschen eines VisboCenters
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTDELETEOneVC(control As IRibbonControl)
+
+        Try
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim hstr() As String = Split(typeRequest, "DEL")
+            typeRequest = hstr(hstr.Length - 1)
+            'Dim typeRequest As String = "/vp/"
+
+            ' zu löschende VP bestimmen aus Liste aller meiner VPs (webVPs)
+            Dim vp As clsVP = Nothing
+            Dim i As Integer
+            For i = 0 To webVPs.vp.Count - 1
+                If webVPs.vp.ElementAt(i).name = "Neu 18_001" Then
+                    vp = webVPs.vp.ElementAt(i)
+                    Exit For
+                End If
+            Next i
+
+            If Not IsNothing(vp) Then
+
+                Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vp._id)
+
+                ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
+                Dim data() As Byte
+                data = serverInputDataJson(vp, typeRequest)
+
+                'Dim datastr As String = ""
+                'Dim encoding As New System.Text.UTF8Encoding()
+                'Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+                Dim Antwort As clsWebOutput
+                Using httpresp As HttpWebResponse = GetDELResponse(serverUri, data, Nothing)
+                    Antwort = CType(ReadDELResponseContentJson(httpresp, typeRequest), clsWebOutput)
+                End Using
+
+                If Antwort.state = "success" Then
+                    Call MsgBox(Antwort.state & ": " & Antwort.message & ": " & vp._id & ":" & vp.name)
+                Else
+                    Throw New ArgumentException(Antwort.message)
+                End If
+
+
+                ''Dim Antwort2 As String
+                ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                ''    Antwort2 = ReadResponseContent(httpresp)
+                ''End Using
+            Else
+                Throw New ArgumentException("zu löschendes VP existiert nicht!")
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTDELETEOneVP: " & ex.Message)
         End Try
     End Sub
 
@@ -12072,7 +12338,7 @@ Imports System.ServiceModel.Web
         tknlgn.message = "neue Message"
         tknlgn.state = "unbekannt"
 
-        Dim user As New clsVCuser
+        Dim user As New clsUser
         user.email = "ute.rittinghaus-koyte@visbo.de"
         user._id = "aödlkfjaöskdlf"
         user.role = "Admin"

@@ -10,7 +10,7 @@ Imports System.IO
 Imports System.Drawing
 Imports System.Globalization
 Imports System.Web
-Imports System.ServiceModel.Web
+'Imports System.ServiceModel.Web
 Imports Microsoft.VisualBasic
 Imports System.Security.Principal
 Imports System.Net
@@ -20,6 +20,8 @@ Public Module WebRequest
     Public token As String = ""
     Public webVCs As clsWebVC = Nothing
     Public aktVC As clsWebVC = Nothing
+    Public webVPs As clsWebVP = Nothing
+    Public aktVP As clsWebVP = Nothing
 
 
     ''' <summary>
@@ -397,7 +399,8 @@ Public Module WebRequest
 
                 Case "/user/forgotpw"
 
-                Case "/vc"
+                Case "/vc",
+                     "/vc/"
 
                     Dim vc As clsWebVC
                     Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
@@ -408,15 +411,16 @@ Public Module WebRequest
                         Call MsgBox("Fehler in ReadGETResponseContent /vc: " & ex.Message)
                     End Try
 
-                Case "/vc/"
+                Case "/vp",
+                     "/vp/"
 
-                    Dim vc As clsWebVC
-                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVC))
+                    Dim vp As clsWebVP
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVP))
                     Try
-                        vc = serializer.ReadObject(resp.GetResponseStream)
-                        ReadGETResponseContentJson = vc
+                        vp = serializer.ReadObject(resp.GetResponseStream)
+                        ReadGETResponseContentJson = vp
                     Catch ex As Exception
-                        Call MsgBox("Fehler in ReadGETResponseContent /vc: " & ex.Message)
+                        Call MsgBox("Fehler in ReadGETResponseContent /vp: " & ex.Message)
                     End Try
 
 
@@ -475,6 +479,16 @@ Public Module WebRequest
                         Call MsgBox("Fehler in ReadPOSTResponseContent /vc: " & ex.Message)
                     End Try
 
+                Case "/vp"
+
+                    Dim vp As clsWebVP
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVP))
+                    Try
+                        vp = serializer.ReadObject(resp.GetResponseStream)
+                        ReadPOSTResponseContentJson = vp
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadPOSTResponseContent /vp: " & ex.Message)
+                    End Try
 
             End Select
 
@@ -515,6 +529,16 @@ Public Module WebRequest
                         Call MsgBox("Fehler in ReadPUTResponseContentJson /vc/ : " & ex.Message)
                     End Try
 
+                Case "/vp/"
+
+                    Dim vp As clsWebVP
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebVP))
+                    Try
+                        vp = serializer.ReadObject(resp.GetResponseStream)
+                        ReadPUTResponseContentJson = vp
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadPUTResponseContentJson /vp/ : " & ex.Message)
+                    End Try
 
             End Select
 
@@ -546,7 +570,16 @@ Public Module WebRequest
                         Call MsgBox("Fehler in ReadDELResponseContentJson /vc/ : " & ex.Message)
                     End Try
 
+                Case "/vp/"
 
+                    Dim out As New clsWebOutput
+                    Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsWebOutput))
+                    Try
+                        out = serializer.ReadObject(resp.GetResponseStream)
+                        ReadDELResponseContentJson = out
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in ReadDELResponseContentJson /vp/ : " & ex.Message)
+                    End Try
             End Select
 
 
@@ -586,13 +619,19 @@ Public Module WebRequest
 
                     Case "/user/profile"
 
-                        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsUser))
+                        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsUserReg))
                         serializer.WriteObject(ms, dataClass)
 
                     Case "/vc",
                          "/vc/"
 
                         Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsVC))
+                        serializer.WriteObject(ms, dataClass)
+
+                    Case "/vp",
+                         "/vp/"
+
+                        Dim serializer = New System.Runtime.Serialization.Json.DataContractJsonSerializer(GetType(clsVP))
                         serializer.WriteObject(ms, dataClass)
 
                     Case Else

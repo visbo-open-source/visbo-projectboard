@@ -1,13 +1,12 @@
-﻿Public Class clsWebUser
+﻿Public Class clsWebVP
 
     Public Property state As String
     Public Property message As String
-    Public Property user As clsUserReg
+    Public Property vp As List(Of clsVP)
 
     Sub New()
         _state = "unknown"
         _message = "not yet any response"
-        _user = New clsUserReg
+        _vp = New List(Of clsVP)
     End Sub
-
 End Class

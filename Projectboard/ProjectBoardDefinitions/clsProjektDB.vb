@@ -1,6 +1,9 @@
 ﻿Public Class clsProjektDB
 
     Public name As String
+    ' Änderung ur: vpid wird für VisualBoard als Web-Anwendung benötigt. 
+    '              Im vc sind VisboProjekte enthalten, die über vpid eindeutig vorhandene Projekte referenziert sind.
+    Public vpid As Object
     Public variantName As String
     Public variantDescription As String
     Public Risiko As Double

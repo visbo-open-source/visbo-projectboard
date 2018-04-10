@@ -441,6 +441,13 @@
           <button id="PUT_vc_" label="Update one VC"  onAction ="PTPUTOneVC" />
           <button id="DEL_vc_" label="Delete one VC"  onAction ="PTDELETEOneVC" />
           <separator id="PTXIG1s4"/>          
+          <button id="_vp" label="All VisboProjects"  onAction ="PTWebRequestGETallVP" />
+          <button id="PTPOSTOneVP" label="POST one VP"  onAction ="PTPOSTOneVP" />
+          <button id="GET_vp_" label="GET one VP"  onAction ="PTGETOneVP" />
+          <separator id="PTXIG1s5"/>         
+          <button id="PUT_vp_" label="Update one VP"  onAction ="PTPUTOneVP" />
+          <button id="DEL_vp_" label="Delete one VP"  onAction ="PTDELETEOneVP" />
+           <separator id="PTXIG1s6"/> 
           <button id="PTJsonWrite" label="WRITE Json"  onAction ="PTJsonWrite" />
           <button id="PTJsonRead" label="READ Json"  onAction ="PTJsonRead" />
          </group>
