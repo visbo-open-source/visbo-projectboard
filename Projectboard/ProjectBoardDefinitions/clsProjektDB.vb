@@ -1,4 +1,9 @@
-﻿Public Class clsProjektDB
+﻿''' <summary>
+''' Klassen-Definition für ein Projekt-Dokument in MongoDB
+''' benötigt Klassen-Definitionen clsPhaseDB, clsRolleDB, clsKostenartDB, clsHierarchyDB, clsHierarchyNodeDB, clsResultDB
+''' </summary>
+''' <remarks></remarks>
+Public Class clsProjektDB
 
     Public name As String
     Public variantName As String
@@ -167,7 +172,7 @@
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
             .Status = Me.status
-            
+
             .farbe = Me.farbe
             .Schrift = Me.Schrift
 
@@ -227,7 +232,7 @@
                     projekt.customBoolFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
-            
+
 
         End With
 

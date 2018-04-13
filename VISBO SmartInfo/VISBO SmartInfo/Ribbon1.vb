@@ -212,26 +212,32 @@ Public Class Ribbon1
 
     Private Sub activateSearch_Click(sender As Object, e As RibbonControlEventArgs) Handles activateSearch.Click
 
-        If searchPane.Visible Then
-            searchPane.Visible = False
-        Else
-            searchPane.Visible = True
-            'If slideHasSmartElements Then
-            '    ucSearchView.cathegoryList.SelectedItem = "Name"
-            'End If
+        Try
+            If searchPane.Visible Then
+                searchPane.Visible = False
+            Else
+                searchPane.Visible = True
+            End If
+        Catch ex As Exception
 
-        End If
+        End Try
+
 
 
     End Sub
 
     Private Sub activateInfo_Click(sender As Object, e As RibbonControlEventArgs) Handles activateInfo.Click
 
-        If propertiesPane.Visible Then
-            propertiesPane.Visible = False
-        Else
-            propertiesPane.Visible = True
-        End If
+        Try
+            If propertiesPane.Visible Then
+                propertiesPane.Visible = False
+            Else
+                propertiesPane.Visible = True
+            End If
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 

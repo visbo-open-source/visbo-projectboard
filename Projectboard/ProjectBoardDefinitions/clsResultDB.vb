@@ -1,4 +1,8 @@
-﻿Public Class clsResultDB
+﻿''' <summary>
+''' Klassen Definition für einen Meilenstein  
+''' </summary>
+''' <remarks></remarks>
+Public Class clsResultDB
 
     Public bewertungen As SortedList(Of String, clsBewertungDB)
 
@@ -137,7 +141,7 @@
             Me.alternativeColor = .individualColor
 
             Me.percentDone = .percentDone
-           
+
             For i = 1 To .countDeliverables
                 Dim tmpDeliverable As String = .getDeliverable(i)
                 Me.deliverables.Add(tmpDeliverable)
