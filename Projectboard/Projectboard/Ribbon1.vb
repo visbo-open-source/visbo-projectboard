@@ -3122,7 +3122,11 @@ Imports System.Windows
                         .WindowState = Excel.XlWindowState.xlMaximized
                         .SplitRow = 1
                         If meModus = ptModus.massEditRessCost Then
-                            .SplitColumn = 6
+                            If awinSettings.meExtendedColumnsView = True Then
+                                .SplitColumn = 6
+                            Else
+                                .SplitColumn = 5
+                            End If
                             .DisplayHeadings = False
                         ElseIf meModus = ptModus.massEditTermine Then
                             .SplitColumn = 4

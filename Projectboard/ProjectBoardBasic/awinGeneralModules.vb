@@ -5758,10 +5758,10 @@ Public Module awinGeneralModules
 
                         End Try
 
-                    ElseIf Not isValidProjectName(pName) And Not pName.Contains("#") Then
+                    ElseIf Not isValidProjectName(pName) Then
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine ( oder ) Zeichen enthalten ..")
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine #, (, ), Zeilenumbrüche enthalten ..")
                         Catch ex As Exception
 
                         End Try
@@ -5938,6 +5938,7 @@ Public Module awinGeneralModules
                                                 End If
                                             Catch ex As Exception
                                                 CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
                                             End Try
 
                                         Next
@@ -21192,7 +21193,7 @@ Public Module awinGeneralModules
 
                     Try
                         Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
-                        If infoBlock.Width > 0.5 * availableScreenWidth Then
+                        If infoBlock.Width > 0.6 * availableScreenWidth Then
 
                             infoDatablock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
                             ' BU bekommt 5%
@@ -21336,41 +21337,41 @@ Public Module awinGeneralModules
 
             Else
                 ' die bedingte Farb-Codierung einschalten 
-                If awinSettings.mePrzAuslastung Then
-                    With mahleRange
-                        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+                'If awinSettings.mePrzAuslastung Then
+                '    With mahleRange
+                '        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
 
-                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = 0
-                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = 0
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
 
-                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 1.1
-                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 1.1
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
 
-                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 1.5
-                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 1.5
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
 
-                    End With
-                Else
-                    With mahleRange
-                        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+                '    End With
+                'Else
+                '    With mahleRange
+                '        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
 
-                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = -5
-                        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = -5
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
 
-                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 0
-                        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 0
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
 
-                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
-                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 5
-                        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 5
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
 
-                    End With
-                End If
+                '    End With
+                'End If
 
             End If
 
@@ -21397,7 +21398,7 @@ Public Module awinGeneralModules
         With ersteZeile
             .RowHeight = awinSettings.zeilenhoehe1
             .Interior.Color = visboFarbeBlau
-            .Font.Size = 12
+            .Font.Size = 11
             .Font.Bold = True
             .Font.Color = XlRgbColor.rgbWhite
         End With
