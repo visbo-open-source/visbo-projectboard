@@ -3080,7 +3080,7 @@ Imports System.Windows
                     ElseIf meModus = ptModus.massEditTermine Then
                         Call writeOnlineMassEditTermine(todoListe)
                     ElseIf meModus = ptModus.massEditAttribute Then
-                        Call MsgBox("Attribute editieren")
+                        Call writeOnlineMassEditAttribute(todoListe)
                     Else
                         Exit Sub
                     End If
@@ -3123,21 +3123,23 @@ Imports System.Windows
                         .SplitRow = 1
                         If meModus = ptModus.massEditRessCost Then
                             .SplitColumn = 6
+                            .DisplayHeadings = False
                         ElseIf meModus = ptModus.massEditTermine Then
                             .SplitColumn = 4
+                            .DisplayHeadings = True
                         ElseIf meModus = ptModus.massEditAttribute Then
-                            .SplitColumn = 3
+                            .SplitColumn = 5
+                            .DisplayHeadings = True
                         Else
                             Exit Sub
                         End If
 
                         .FreezePanes = True
                         .DisplayFormulas = False
-                        .DisplayHeadings = False
                         .DisplayGridlines = True
                         .GridlineColor = RGB(220, 220, 220)
                         .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.massEdit)
+                        .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
                     End With
 
 
@@ -4008,10 +4010,10 @@ Imports System.Windows
                     Else
                         ' das Projekt darf vom Nutzer nicht verändert werden , weil von anderem Nutzer geschützt 
                         If awinSettings.englishLanguage Then
-                            Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                            Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
                                         "and cannot be modified. You could instead create a variant.")
                         Else
-                            Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                            Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
                                         "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
                         End If
                     End If
@@ -4235,7 +4237,7 @@ Imports System.Windows
 
                     projectConstellations.Add(currentSortConstellation)
 
-                    Call showConstellations(constellationsToShow:=tmpConstellation, _
+                    Call showConstellations(constellationsToShow:=tmpConstellation,
                                             clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
 
                     ''If sortType = ptSortCriteria.customListe Then
@@ -4279,7 +4281,7 @@ Imports System.Windows
 
 
         ' jetzt muss die Behandlung rein, dass ggf das Portfolio oder Project Window angezeigt werden ... 
-        If control.Id = "PTXG1B6" Or _
+        If control.Id = "PTXG1B6" Or
             control.Id = "PTXG1B7" Then
             ' Portfolio Charts Ressource/Cost/Phases/Milestones, Auswahl über Namen oder Hierarchie 
 
@@ -4352,17 +4354,17 @@ Imports System.Windows
 
                                 Else
                                     If awinSettings.englishLanguage Then
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
                                                     "and cannot be modified. You could instead create a variant.")
                                     Else
-                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                        Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
                                                     "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
                                     End If
                                 End If
                             Catch ex As Exception
                                 Call MsgBox(ex.Message)
                             End Try
-                            
+
                         End If
 
                     End If
@@ -4425,7 +4427,7 @@ Imports System.Windows
                                     Dim tmpCollection As New Collection
                                     Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
                                 End If
-                                
+
 
 
                             Catch ex As Exception
@@ -4441,7 +4443,7 @@ Imports System.Windows
         Else
 
             Call markAllProjects(atleastOne)
-            
+
         End If
 
         If atleastOne Then
@@ -4451,7 +4453,7 @@ Imports System.Windows
             ' und jetzt muss noch ggf das BubbleDiagramm neu, d.h ohne Markierungen gezeichnet werden 
             Call awinNeuZeichnenDiagramme(99)
         End If
-        
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -4531,7 +4533,7 @@ Imports System.Windows
             ' und jetzt muss noch ggf das BubbleDiagramm neu, d.h ohne Markierungen gezeichnet werden 
             Call awinNeuZeichnenDiagramme(99)
         End If
-        
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -4581,8 +4583,8 @@ Imports System.Windows
                             Try
                                 Dim hproj As clsProjekt = ShowProjekte.getProject(.Name)
 
-                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or _
-                                    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And _
+                                If hproj.Status = ProjektStatus(PTProjektStati.geplant) Or
+                                    (hproj.variantName <> "" And Not hproj.Status = ProjektStatus(PTProjektStati.abgebrochen) And
                                      Not hproj.Status = ProjektStatus(PTProjektStati.abgeschlossen)) Then
 
                                     If tryToprotectProjectforMe(hproj.name, hproj.variantName) Then
@@ -4593,10 +4595,10 @@ Imports System.Windows
 
                                     Else
                                         If awinSettings.englishLanguage Then
-                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
                                                         "and cannot be modified. You could instead create a variant.")
                                         Else
-                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                            Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
                                                         "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
                                         End If
                                     End If
@@ -4610,7 +4612,7 @@ Imports System.Windows
                                     End If
                                 End If
 
-                                
+
                             Catch ex As Exception
                                 Call MsgBox(ex.Message)
                             End Try
@@ -4680,10 +4682,10 @@ Imports System.Windows
 
                             Else
                                 If awinSettings.englishLanguage Then
-                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf & _
+                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " is protected " & vbLf &
                                                 "and cannot be modified. You could instead create a variant.")
                                 Else
-                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf & _
+                                    Call MsgBox(hproj.name & ", " & hproj.variantName & " ist geschützt " & vbLf &
                                                 "und kann nicht verändert werden. Sie können jedoch eine Variante anlegen.")
                                 End If
                             End If
@@ -4920,10 +4922,10 @@ Imports System.Windows
         ' wenn noch etwas in der session ist , warnen ! 
         If AlleProjekte.Count > 0 Then
             If awinSettings.englishLanguage Then
-                Call MsgBox("this function is only available with an empty session" & vbLf & _
+                Call MsgBox("this function is only available with an empty session" & vbLf &
                             "please store and clear your session first")
             Else
-                Call MsgBox("diese Funktionalität ist nur möglich mit einer leeren Session" & vbLf & _
+                Call MsgBox("diese Funktionalität ist nur möglich mit einer leeren Session" & vbLf &
                             "bitte speichern Sie ggf. ihre Projekte und setzen die Session zurück.")
             End If
         Else
@@ -5862,7 +5864,7 @@ Imports System.Windows
                         Call planExportProject(hproj, zeile)
                         outputString = outputString & hproj.name & " erfolgreich .." & vbLf
                     Catch ex As Exception
-                        outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
+                        outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf &
                                         ex.Message & vbLf & vbLf
                     End Try
 
@@ -5880,7 +5882,7 @@ Imports System.Windows
                 ' Schließen der Export Datei unter neuem Namen, original Zustand bleibt erhalten
                 'appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=awinPath & exportFilesOrdner & "\" & _
                 '                                 exportFileName)
-                appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=exportOrdnerNames(PTImpExp.rplan) & "\" & _
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=exportOrdnerNames(PTImpExp.rplan) & "\" &
                                                  exportFileName)
                 Call MsgBox(outputString & "exportiert !")
             Catch ex As Exception
@@ -6065,9 +6067,9 @@ Imports System.Windows
             Next
 
             If outPutCollection.Count > 0 Then
-                Call showOutPut(outPutCollection, _
-                                 "Exportieren Steckbriefe", _
-                                 "erfolgreich exportierte Dateien liegen in " & vbLf & _
+                Call showOutPut(outPutCollection,
+                                 "Exportieren Steckbriefe",
+                                 "erfolgreich exportierte Dateien liegen in " & vbLf &
                                  exportOrdnerNames(PTImpExp.visbo))
             End If
 
@@ -6848,14 +6850,14 @@ Imports System.Windows
             Catch ex As Exception
 
             End Try
-            
+
 
 
             Try
                 ' Projekt-Ergebnis
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
 
-                Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current, _
+                Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current,
                                                          top, left, width, height, False)
 
                 Try
@@ -7067,7 +7069,7 @@ Imports System.Windows
 
                 Try
                     Try
-                        vglProj = Request.retrieveFirstContractedPFromDB(hproj.name)
+                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
                     Catch ex As Exception
                         vglProj = Nothing
                     End Try
@@ -7636,7 +7638,7 @@ Imports System.Windows
                 If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="", _
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -7792,7 +7794,7 @@ Imports System.Windows
 
 
                 Dim tmpObj As Excel.ChartObject = Nothing
-                Call awinCreateStatusDiagram1(projektliste, tmpObj, compareTyp, auswahl, qualifier, True, True, _
+                Call awinCreateStatusDiagram1(projektliste, tmpObj, compareTyp, auswahl, qualifier, True, True,
                                                top, left, width, height)
 
                 reportObj = CType(tmpObj, Excel.ChartObject)
@@ -8603,7 +8605,7 @@ Imports System.Windows
                             Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
                         End If
                     Else
-                        Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                        Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                                     "gibt es keine Projekte ")
                     End If
                 End If
@@ -8697,7 +8699,7 @@ Imports System.Windows
                             Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
                         End If
                     Else
-                        Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                        Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                                     "gibt es keine Projekte ")
                     End If
                 End If
@@ -9073,7 +9075,7 @@ Imports System.Windows
                     Call MsgBox("es sind keine Projekte angezeigt")
 
                 Else
-                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                                 "gibt es keine Projekte")
                 End If
 
@@ -9151,7 +9153,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte")
             End If
 
@@ -9215,7 +9217,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte")
             End If
 
@@ -9394,7 +9396,7 @@ Imports System.Windows
 
             If ShowProjekte.contains(pName) Then
                 hproj = ShowProjekte.getProject(pName)
-                Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, _
+                Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
                                                                      chTop, chLeft, chWidth, chHeight, False)
             End If
 
@@ -9516,7 +9518,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte")
             End If
         End If
@@ -9584,8 +9586,8 @@ Imports System.Windows
                 If myCollection.Count > 0 Then
 
                     Try
-                        Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
-                                                        charttype:=PTpfdk.betterWorseL, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
+                        Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1,
+                                                        charttype:=PTpfdk.betterWorseL, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True,
                                                         top:=top, left:=left, width:=width, height:=height)
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
@@ -9606,7 +9608,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte")
             End If
 
@@ -9667,8 +9669,8 @@ Imports System.Windows
                 If myCollection.Count > 0 Then
 
                     Try
-                        Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
-                                                        charttype:=PTpfdk.betterWorseB, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
+                        Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1,
+                                                        charttype:=PTpfdk.betterWorseB, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True,
                                                         top:=top, left:=left, width:=width, height:=height)
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
@@ -9689,7 +9691,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte")
             End If
 
@@ -9754,7 +9756,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte")
             End If
 
@@ -9818,7 +9820,7 @@ Imports System.Windows
                 Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte")
             End If
 
@@ -9929,7 +9931,7 @@ Imports System.Windows
                         If awinSettings.englishLanguage Then
                             Call MsgBox("there are no projects in Timeframe " & textZeitraum(showRangeLeft, showRangeRight))
                         Else
-                            Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                                     "gibt es keine Projekte ")
                         End If
 
@@ -10002,7 +10004,7 @@ Imports System.Windows
                 If awinSettings.englishLanguage Then
                     Call MsgBox("there are no projects in Timeframe " & textZeitraum(showRangeLeft, showRangeRight))
                 Else
-                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                             "gibt es keine Projekte ")
                 End If
 
@@ -10017,7 +10019,7 @@ Imports System.Windows
             If awinSettings.englishLanguage Then
                 Call MsgBox("there are no projects in Timeframe " & textZeitraum(showRangeLeft, showRangeRight))
             Else
-                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf &
                         "gibt es keine Projekte ")
             End If
         End If
@@ -10108,7 +10110,7 @@ Imports System.Windows
 
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
-                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current, _
+                        Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current,
                                                                  top, left, width, height, False)
 
                         If thereAreAnyCharts(PTwindows.mptpr) Then
@@ -10438,7 +10440,7 @@ Imports System.Windows
 
             End If
         Else
-            Call MsgBox("ein Projekt selektieren, um mit Vorlage zu vergleichen" & vbLf & _
+            Call MsgBox("ein Projekt selektieren, um mit Vorlage zu vergleichen" & vbLf &
                         " oder zwei Projekte für den Vergleich untereinander")
         End If
 
@@ -10509,7 +10511,7 @@ Imports System.Windows
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, hproj)
                             lastElem = projekthistorie.Count - 1
@@ -10651,7 +10653,7 @@ Imports System.Windows
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                         lastElem = projekthistorie.Count - 1
@@ -10842,7 +10844,7 @@ Imports System.Windows
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
 
@@ -10948,7 +10950,7 @@ Imports System.Windows
                 If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -11214,7 +11216,7 @@ Imports System.Windows
     Sub PTShowVersions(control As IRibbonControl)
 
         'Ermittlung der installierten Windows- und der Excelversion
-        Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+        Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) &
         "Excel-Version: " & appInstance.Version, vbInformation, "Info")
         'Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
         '"Excel-Version: " & My.Settings.ExcelVersion, vbInformation, "Info")
@@ -11234,7 +11236,7 @@ Imports System.Windows
 
     End Sub
 
-  
+
     Sub PTTestFunktion1(control As IRibbonControl)
 
         Call MsgBox("Enable Events ist " & appInstance.EnableEvents.ToString)
@@ -11529,7 +11531,7 @@ Imports System.Windows
                     curID = cMilestone.nameID
                     curNode = hproj.hierarchy.nodeItem(curID)
                     If curNode.indexOfElem <> mx Then
-                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Meilenstein-Zugriff über mx: " & ix & vbLf & _
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Meilenstein-Zugriff über mx: " & ix & vbLf &
                                      curNode.indexOfElem & " <> " & mx
                     End If
 
@@ -11537,12 +11539,12 @@ Imports System.Windows
                     parentNode = hproj.hierarchy.nodeItem(parentID)
                     If Not IsNothing(parentNode) Then
                         If parentNode.indexOfElem <> ix Then
-                            logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Phasen-Zugriff über ix: " & ix & vbLf & _
+                            logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Phasen-Zugriff über ix: " & ix & vbLf &
                                          parentNode.indexOfElem & " <> " & mx
                         End If
                     Else
                         If parentID <> "" Then
-                            logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Phasen-Zugriff über ix: " & ix & vbLf & _
+                            logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Phasen-Zugriff über ix: " & ix & vbLf &
                                          curID & " hat keinen Parent " & parentID
                         End If
                     End If
