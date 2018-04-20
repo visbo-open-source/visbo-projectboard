@@ -17,24 +17,24 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>\\KOYTEK-NAS\backup\SW Auslieferungen\Visbo Publish\Visual Board\</PublishUrl>
+    <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
     <InstallUrl />
-    <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.5.0.16</ApplicationVersion>
+    <TargetCulture>en</TargetCulture>
+    <ApplicationVersion>3.5.0.8</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>Projectboard</ProductName>
-    <PublisherName>VISBO GmbH</PublisherName>
-    <SupportUrl>https://visbo.de/contact</SupportUrl>
+    <PublisherName />
+    <SupportUrl />
     <FriendlyName>Projectboard</FriendlyName>
-    <OfficeApplicationDescription>Visualisierung, Analyse und Powerpoint Report Erstellung für Projekt-Portfolios</OfficeApplicationDescription>
+    <OfficeApplicationDescription />
   </PropertyGroup>
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 und x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -47,9 +47,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.VSTORuntime.4.0">
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
       <Visible>False</Visible>
-      <ProductName>Microsoft Visual Studio 2010-Tools für Office-Laufzeit %28x86 und x64%29</ProductName>
+      <ProductName>Windows Installer 4.5</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
@@ -64,8 +64,7 @@
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42017,42018,42019,42032,42036</NoWarn>
@@ -81,8 +80,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42017,42018,42019,42032,42036</NoWarn>
@@ -312,7 +310,6 @@
     <None Include="Resources\zoom_in.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\milestones_icon1.png" />
     <None Include="Tabelle8.Designer.xml">
       <DependentUpon>Tabelle8.vb</DependentUpon>
     </None>

@@ -213,19 +213,6 @@
         YawDBn7CATD82wMqJj6DcQGXAV3BCWTBw1cjQRB+G6WejBExx13kK3YAAAAASUVORK5CYII=
 </value>
   </data>
-  <data name="pictureMilestones.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAX
-        EQAAFxEByibzPwAAAAd0SU1FB94KCQcYKGG5pvIAAAGdSURBVFhH7ZS9SkNBEIVXiBrRgKUvpVwLsbGx
-        EAxiIVoINpYigiFgUBAsREQQfALfIPiTZxCxUCSoCSGJ8cxmRsdl708asdgPDtG7s/OdYKIJBAKBf0mv
-        n9ynMdtd/n0QyncRpYCsV2oz/DQjIkcaSA8ltuR5Flg+jrSRHlKs3GcsoeR1kktQYlPOk1DyJssly4e1
-        abNTneNJD7QcGUaeSeoGJTZkzgckIn9jqZslmvOWoKUIyZ9IFheUWJN5DZaL/JVlcVmk+V8laBkygjyQ
-        JC0osSr3CCwV+QtL0rJA975L4FOex7JHLcmQYv+2LTCBpL1zN/N8vQ/e1b5HEhvMT/FVCxaeOoKktEq3
-        UYGvYhu/YmnZFXnSxdwkX7HsVWftKxafOSJfmrvVKGcvaLDYguUHjlCng/Of5gpV4twR6jRWrqMhO+gD
-        AgskR46Y0sZnZYxHvKgSF46Y8m4P04DIghLHSt7qGDPKR4moEpeuHH93e5aKKnFC8jb+P/CjTKgSV8gH
-        /ZxZLkgJ+oqiyMBIidJNlB9YHggEAn+LMV8DD/apmIWf2wAAAABJRU5ErkJggg==
-</value>
-  </data>
   <metadata name="BackgroundWorker1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>

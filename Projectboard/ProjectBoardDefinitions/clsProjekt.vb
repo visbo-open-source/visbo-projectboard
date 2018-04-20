@@ -1914,6 +1914,79 @@ Public Class clsProjekt
         End Set
     End Property
 
+    ''' <summary>
+    ''' gibt true zurück, wenn das Projekt zum angegebenen Zeitpunkt in dieser Phase ist 
+    ''' pHname kann der Elem-Name oder der Name mit (Tel-)Breadcrumb sein
+    ''' wenn nicht eindeutig, dann wird die erste Phase verwendet 
+    ''' </summary>
+    ''' <param name="phName"></param>
+    ''' <returns></returns>
+    Public Function isInPhase(ByVal phName As String, ByVal timestamp As Date, ByRef difference As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Dim elemName As String = ""
+        Dim breadCrumb As String = ""
+        Dim type As Integer = -1
+        Dim pvname As String = ""
+
+        Call splitHryFullnameTo2(phName, elemName, breadCrumb, type, pvname)
+        Dim cphase As clsPhase = Me.getPhase(elemName, breadCrumb)
+
+        If Not IsNothing(cphase) Then
+            If cphase.getStartDate <= timestamp And cphase.getEndDate >= timestamp Then
+                tmpResult = True
+                difference = 0
+            Else
+                ' wird benötigt, um die Phase zu bestimmen die gerade eben fertig geworden ist, wenn keine einzige passt ...
+                difference = CInt(DateDiff(DateInterval.Day, cphase.getEndDate, timestamp))
+            End If
+        End If
+
+        isInPhase = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' gibt an, wieviel Prozent der Phase zum angegebenen Zeitpunkt verstrichen ist 
+    ''' </summary>
+    ''' <param name="phName"></param>
+    ''' <param name="timestamp"></param>
+    ''' <returns></returns>
+    Public Function przTimeSpend(ByVal phName As String, ByVal timestamp As Date) As Double
+        Dim tmpResult As Double = 0.0
+
+        Dim elemName As String = ""
+        Dim breadCrumb As String = ""
+        Dim type As Integer = -1
+        Dim pvname As String = ""
+
+        Call splitHryFullnameTo2(phName, elemName, breadCrumb, type, pvname)
+        Dim cphase As clsPhase = Me.getPhase(elemName, breadCrumb)
+
+        If Not IsNothing(cphase) Then
+
+            If cphase.getStartDate >= timestamp Then
+                tmpResult = 0.0
+            ElseIf cphase.getEndDate <= timestamp Then
+                tmpResult = 1.0
+            Else
+                Dim gesamtdauer As Long = DateDiff(DateInterval.Day,
+                                                      cphase.getStartDate.Date,
+                                                      cphase.getEndDate.Date) + 1
+                Dim goneTime As Long = DateDiff(DateInterval.Day,
+                                                   cphase.getStartDate,
+                                                   timestamp) + 1
+                If gesamtdauer > 0 And goneTime > 0 Then
+                    tmpResult = CDbl(goneTime / gesamtdauer)
+                Else
+                    tmpResult = 0.0
+                End If
+            End If
+
+        End If
+
+        przTimeSpend = tmpResult
+    End Function
 
     Public Property earliestStartDate As Date
         Get

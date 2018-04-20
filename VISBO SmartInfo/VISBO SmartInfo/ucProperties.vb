@@ -63,7 +63,7 @@
                 .Location = tmpLocation
                 .BorderStyle = Windows.Forms.BorderStyle.None
                 tmpSize.Height = 400
-                tmpSize.Width = 276
+                'tmpSize.Width = 276
                 .Size = tmpSize
             End With
 
@@ -103,7 +103,7 @@
                 .Location = tmpLocation
                 .BorderStyle = Windows.Forms.BorderStyle.FixedSingle
                 tmpSize.Height = 139
-                tmpSize.Width = 276
+                'tmpSize.Width = 276
                 .Size = tmpSize
             End With
 

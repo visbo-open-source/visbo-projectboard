@@ -21838,7 +21838,25 @@ Public Module Projekte
 
 
             ' Blattschutz aktivieren 
-            .Protect(Password:=pwd, UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            .Protect(Password:="x", UserInterfaceOnly:=True,
+                                AllowFormattingCells:=True,
+                                AllowFormattingColumns:=True,
+                                AllowInsertingColumns:=False,
+                                AllowInsertingRows:=True,
+                                AllowDeletingColumns:=False,
+                                AllowDeletingRows:=True,
+                                AllowSorting:=True,
+                                AllowFiltering:=True)
+            .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+            .EnableAutoFilter = True
+
+            '.Protect(Password:=pwd,
+            '         AllowFormattingCells:=True,
+            '         AllowFormattingColumns:=True,
+            '         UserInterfaceOnly:=True,
+            '         DrawingObjects:=True,
+            '         Contents:=True,
+            '         Scenarios:=True)
 
             ' jetzt noch die ersten beiden Spalten so dimensionieren, daß die Texte zu lesen sind
             CType(.Columns(1), Global.Microsoft.Office.Interop.Excel.Range).AutoFit()

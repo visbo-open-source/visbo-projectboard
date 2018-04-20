@@ -5795,7 +5795,7 @@ Public Module awinDiagrams
             Try
                 If visboWindowExists(PTwindows.mpt) Then
                     Dim tmpmsg As String = ""
-                    projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt, tmpmsg)
+                    projectboardWindows(PTwindows.mpt).Caption = bestimmeWindowCaption(PTwindows.mpt, addOnMsg:=tmpmsg)
                 End If
             Catch ex As Exception
 
