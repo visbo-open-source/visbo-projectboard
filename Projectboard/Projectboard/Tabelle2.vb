@@ -14,12 +14,11 @@ Public Class Tabelle2
     Private columnName As Integer = 2
 
 
-    Private Sub Tabelle2_ActivateEvent(Optional ByVal rcName As String = Nothing) Handles Me.ActivateEvent
+    Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
 
 
         Application.DisplayFormulaBar = False
 
-        Dim filterRange As Excel.Range
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
@@ -36,10 +35,10 @@ Public Class Tabelle2
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
             With visboZustaende
-                .meMaxZeile = CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange.Rows.Count
-                .meColRC = CType(appInstance.ActiveSheet.Range("RoleCost"), Excel.Range).Column
-                .meColSD = CType(appInstance.ActiveSheet.Range("StartData"), Excel.Range).Column
-                .meColED = CType(appInstance.ActiveSheet.Range("EndData"), Excel.Range).Column
+                .meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
+                .meColRC = CType(meWS.Range("RoleCost"), Excel.Range).Column
+                .meColSD = CType(meWS.Range("StartData"), Excel.Range).Column
+                .meColED = CType(meWS.Range("EndData"), Excel.Range).Column
                 .meColpName = 2
                 columnRC = .meColRC
                 columnStartData = .meColSD
@@ -52,29 +51,11 @@ Public Class Tabelle2
 
         ' jetzt den AutoFilter setzen 
         Try
-            ' der wird jetzt erst am Ende  gemacht 
-            '' einen Select machen ...
-            ''Try
-            ''    'CType(CType(meWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-            ''    CType(CType(meWS, Excel.Worksheet).Cells(2, columnRC), Excel.Range).Select()
-            ''Catch ex As Exception
-
-            ''End Try
-
-
-            With meWS
-                filterRange = CType(.Range(.Cells(1, 1), .Cells(1, 6)), Excel.Range)
-            End With
 
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-                'CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
 
-                ' jetzt überprüfen, ob nur eine bestimmte Rolle/Kostenart angezeigt, d.h gefiltert werden soll  
-                If Not IsNothing(rcName) Then
-                    CType(CType(meWS, Excel.Worksheet).Rows(1), Excel.Range).AutoFilter(Field:=visboZustaende.meColRC, Criteria1:=rcName)
-                End If
+                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
 
             End If
 
@@ -85,7 +66,7 @@ Public Class Tabelle2
         Try
             If awinSettings.meEnableSorting Then
 
-                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                With CType(meWS, Excel.Worksheet)
                     ' braucht man nicht mehr - ist schon gemacht 
                     '.Unprotect("x")
                     .EnableSelection = XlEnableSelection.xlNoRestrictions
@@ -111,29 +92,6 @@ Public Class Tabelle2
 
         End Try
 
-        ' jetzt soll geprüft werden, ob es sich um einen vglweise kleinen Bildschirm handelt - dann sollen 
-        ' bestimmte Spaltengrößen verkleinert werden oder aber auch ausgeblendet werden .. oder Schriftgrößen verkleinert werden  
-
-        ' das wird ja jetzt in der Defition der Windows gemacht ...
-        'Try
-        '    With Application.ActiveWindow
-        '        .SplitColumn = columnRC + 2
-        '        .SplitRow = 1
-        '        .DisplayWorkbookTabs = False
-        '        .GridlineColor = RGB(220, 220, 220)
-        '        .FreezePanes = True
-        '        '.DisplayHeadings = True
-        '        .DisplayHeadings = False
-        '    End With
-
-        'Catch ex As Exception
-        '    Call MsgBox("Fehler bei Activate Sheet Massen-Edit" & vbLf & ex.Message)
-        'End Try
-
-        ' tk 3.4.18 das wird jetzt im writeOnlineMassEditRC gemacht 
-        'With meWS
-        '    CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-        'End With
 
         If Not IsNothing(appInstance.ActiveCell) Then
             visboZustaende.oldValue = CStr(CType(appInstance.ActiveCell, Excel.Range).Value)
@@ -162,7 +120,7 @@ Public Class Tabelle2
 
                 With visboZustaende
 
-                    pName = CStr(CType(appInstance.ActiveSheet.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
+                    pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
                     If ShowProjekte.contains(pName) Then
                         .lastProject = ShowProjekte.getProject(pName)
                         .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))

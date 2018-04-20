@@ -21192,7 +21192,9 @@ Public Module awinGeneralModules
                     infoBlock.AutoFit()
 
                     Try
-                        Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                        'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                        'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
+                        Dim availableScreenWidth As Double = maxScreenWidth
                         If infoBlock.Width > 0.6 * availableScreenWidth Then
 
                             infoDatablock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
@@ -21723,7 +21725,9 @@ Public Module awinGeneralModules
 
 
                     Try
-                        Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                        'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                        'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
+                        Dim availableScreenWidth As Double = maxScreenWidth
                         If infoDataBlock.Width > availableScreenWidth Then
 
                             infoDataBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2

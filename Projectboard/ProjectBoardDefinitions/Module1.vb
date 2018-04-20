@@ -5412,7 +5412,7 @@ Public Module Module1
                         .DisplayRuler = False
                         .DisplayOutline = False
                         .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
+                        .Caption = bestimmeWindowCaption(PTwindows.mptpr, addOnMsg:=tmpmsg)
                     End With
 
                     If Not prWindowAlreadyExisting Then
