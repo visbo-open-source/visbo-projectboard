@@ -2896,6 +2896,8 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PT6G2B7" ' Header anzeigen
                     chckVisibility = False
+                Case "PThelp" ' Help anzeigen
+                    chckVisibility = False
                 Case Else
                     ' alle anderen werden sichtbar gemacht
                     chckVisibility = True
@@ -3127,23 +3129,32 @@ Imports System.Windows
                         If meModus = ptModus.massEditRessCost Then
 
                             If awinSettings.meExtendedColumnsView = True Then
-                                .SplitColumn = 6
+                                .SplitRow = 1
+                                .SplitColumn = 7
+                                .FreezePanes = True
                             Else
+                                .SplitRow = 1
                                 .SplitColumn = 6
+                                .FreezePanes = True
                             End If
                             .DisplayHeadings = False
+
                         ElseIf meModus = ptModus.massEditTermine Then
+                            .SplitRow = 1
                             .SplitColumn = 6
+                            .FreezePanes = True
                             .DisplayHeadings = True
+
                         ElseIf meModus = ptModus.massEditAttribute Then
+                            .SplitRow = 1
                             .SplitColumn = 5
+                            .FreezePanes = True
                             .DisplayHeadings = True
+
                         Else
                             Exit Sub
                         End If
 
-                        '.SplitRow = 1
-                        .FreezePanes = True
                         .DisplayFormulas = False
                         .DisplayGridlines = True
                         .GridlineColor = RGB(220, 220, 220)
