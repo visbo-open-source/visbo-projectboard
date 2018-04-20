@@ -2896,6 +2896,8 @@ Imports System.Windows
                     chckVisibility = False
                 Case "PT6G2B7" ' Header anzeigen
                     chckVisibility = False
+                Case "PThelp" ' Help anzeigen
+                    chckVisibility = False
                 Case Else
                     ' alle anderen werden sichtbar gemacht
                     chckVisibility = True
