@@ -422,10 +422,10 @@
         </group>
       </tab>
       <!--label="Help"-->
-      <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 
         </group>
-      </tab>
+      </tab>-->
       <!--label="Lizenzen"-->
       <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
