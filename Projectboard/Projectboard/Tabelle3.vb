@@ -33,7 +33,7 @@ Public Class Tabelle3
         Try
             ' die Anzahl maximaler Zeilen bestimmen 
             With visboZustaende
-                .meMaxZeile = CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange.Rows.Count
+                .meMaxZeile = CType(meWS, Excel.Worksheet).UsedRange.Rows.Count
                 .meColRC = 5
                 .meColSD = 5
                 .meColED = 11
@@ -51,9 +51,8 @@ Public Class Tabelle3
 
             ' jetzt die Autofilter aktivieren ... 
             If Not CType(meWS, Excel.Worksheet).AutoFilterMode = True Then
-                'CType(meWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
-                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
 
+                CType(meWS, Excel.Worksheet).Rows(1).AutoFilter()
 
             End If
 
@@ -64,7 +63,7 @@ Public Class Tabelle3
         Try
             If awinSettings.meEnableSorting Then
 
-                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                With CType(meWS, Excel.Worksheet)
                     ' braucht man nicht mehr - ist schon gemacht 
                     '.Unprotect("x")
                     .EnableSelection = XlEnableSelection.xlNoRestrictions
@@ -118,7 +117,7 @@ Public Class Tabelle3
 
                 With visboZustaende
 
-                    pName = CStr(CType(appInstance.ActiveSheet.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
+                    pName = CStr(CType(meWS.Cells(cz, visboZustaende.meColpName), Excel.Range).Value)
                     If ShowProjekte.contains(pName) Then
                         .lastProject = ShowProjekte.getProject(pName)
                         .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pName, .lastProject.variantName))

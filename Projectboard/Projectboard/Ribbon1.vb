@@ -3121,17 +3121,21 @@ Imports System.Windows
 
 
                     With projectboardWindows(PTwindows.massEdit)
-                        .WindowState = Excel.XlWindowState.xlMaximized
-                        .SplitRow = 1
+                        'With appInstance.ActiveWindow
+
+                        .FreezePanes = False
+                        .Split = False
+
                         If meModus = ptModus.massEditRessCost Then
+
                             If awinSettings.meExtendedColumnsView = True Then
                                 .SplitColumn = 6
                             Else
-                                .SplitColumn = 5
+                                .SplitColumn = 6
                             End If
                             .DisplayHeadings = False
                         ElseIf meModus = ptModus.massEditTermine Then
-                            .SplitColumn = 4
+                            .SplitColumn = 6
                             .DisplayHeadings = True
                         ElseIf meModus = ptModus.massEditAttribute Then
                             .SplitColumn = 5
@@ -3140,12 +3144,15 @@ Imports System.Windows
                             Exit Sub
                         End If
 
+                        '.SplitRow = 1
                         .FreezePanes = True
                         .DisplayFormulas = False
                         .DisplayGridlines = True
                         .GridlineColor = RGB(220, 220, 220)
                         .DisplayWorkbookTabs = False
                         .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
+                        .WindowState = Excel.XlWindowState.xlMaximized
+
                     End With
 
 
@@ -6406,9 +6413,9 @@ Imports System.Windows
         visboZustaende.clearAuslastungsArray()
 
         If awinSettings.meExtendedColumnsView Then
-            Call deleteColorFormatMassEdit()
+            'Call deleteColorFormatMassEdit()
             Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
-            Call colorFormatMassEditRC()
+            'Call colorFormatMassEditRC()
         End If
 
 
