@@ -1581,6 +1581,9 @@ Public Class Tabelle2
         End If
     End Sub
     Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
+
+        appInstance.ActiveWindow.SplitColumn = 0
+        appInstance.ActiveWindow.SplitRow = 0
         ' Achtung: durch das Wechseln der Windows werden auch die ActiveSheets gewechselt; allerdings werden in diesem Fall dann die 
         ' Deactivate Events nicht aufgerufen. Deswegen sollte diese Aktionen alle in separaten Methoden sein  ... 
         ' das ProjInfo Formular löschen, sofern es angezeigt wird 

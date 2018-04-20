@@ -21338,6 +21338,13 @@ Public Module awinGeneralModules
                 End Try
 
             Else
+
+                ''Try
+                ''    mahleRange.Interior.Color = currentWS.Cells(2, 2).interior.color
+                ''Catch ex As Exception
+
+                ''End Try
+
                 ' die bedingte Farb-Codierung einschalten 
                 'If awinSettings.mePrzAuslastung Then
                 '    With mahleRange
