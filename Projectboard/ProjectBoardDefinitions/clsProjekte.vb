@@ -2,7 +2,7 @@
 Imports xlNS = Microsoft.Office.Interop.Excel
 
 Public Class clsProjekte
-
+    ' in dieser Klasse ist der Key immer nur der ProjektName pname (andere Variante kann nicht in ShowProjekte enthalten sein)
     Private _allProjects As SortedList(Of String, clsProjekt)
     Private _allShapes As SortedList(Of String, String)
     Private _allCoord As SortedList(Of String, Double())

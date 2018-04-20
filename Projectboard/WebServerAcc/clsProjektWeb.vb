@@ -1,4 +1,8 @@
-﻿Public Class clsProjektDB
+﻿Imports System
+Imports System.Globalization
+Imports ProjectBoardDefinitions
+Public Class clsProjektWeb
+
 
     Public name As String
     ' Änderung ur: vpid wird für VisualBoard als Web-Anwendung benötigt. 
@@ -18,12 +22,16 @@
     Public leadPerson As String
     Public tfSpalte As Integer
     Public tfZeile As Integer
-    Public startDate As Date
-    Public endDate As Date
+    'Public startDate As date
+    Public startDate As String
+    'Public endDate As Date
+    Public endDate As String
     Public earliestStart As Integer
-    Public earliestStartDate As Date
+    'Public earliestStartDate As Date
+    Public earliestStartDate As String
     Public latestStart As Integer
-    Public latestStartDate As Date
+    'Public latestStartDate As Date
+    Public latestStartDate As String
     Public status As String
     Public ampelStatus As Integer
     Public ampelErlaeuterung As String
@@ -35,7 +43,8 @@
     Public AllPhases As List(Of clsPhaseDB)
     Public hierarchy As clsHierarchyDB
     Public Id As String
-    Public timestamp As Date
+    'Public timestamp As Date
+    Public timestamp As String
     ' ergänzt am 16.11.13
     Public volumen As Double
     Public complexity As Double
@@ -94,7 +103,7 @@
             Me.volumen = .volume
             Me.complexity = .complexity
             Me.description = .description
-            Me.businessUnit = .businessUnit
+            'Me.businessUnit = .businessUnit
 
             Me.hierarchy.copyFrom(projekt.hierarchy)
 
@@ -125,10 +134,14 @@
     Public Sub copyto(ByRef projekt As clsProjekt)
         Dim i As Integer
         Dim tmpstr(5) As String
-
+        Dim provider As CultureInfo = CultureInfo.CurrentCulture
 
         With projekt
-            .timeStamp = Me.timestamp.ToLocalTime
+            'Dim ok As Boolean = DateTime.TryParseExact(Me.timestamp, "yyyy-MM-ddThh:mm:ss.fffZ",
+            '                                               provider, style:=DateTimeStyles.AssumeUniversal, result:= .timeStamp)
+            'projekt.timeStamp = projekt.timeStamp.ToLocalTime
+            .timeStamp = DateTime.ParseExact(Me.timestamp, "yyyy-MM-ddThh:mm:ss.fffZ",
+                                             provider, style:=DateTimeStyles.AssumeUniversal)
             .Id = Me.Id
 
             ' jetzt muss der Datenbank Name aufgesplittet werden in name und variant-Name
@@ -164,20 +177,23 @@
             ' tfzeile wird jetzt ausschließlich durch die Konstellation bestimmt; 
             ' es darf hier nicht mehr gesetzt werden, weil tfzeile die currentConstellation updated ...
             '.tfZeile = Me.tfZeile
-            .startDate = Me.startDate.ToLocalTime
-            .earliestStartDate = Me.earliestStartDate.ToLocalTime
-            .latestStartDate = Me.latestStartDate.ToLocalTime
+            .startDate = DateTime.ParseExact(Me.timestamp, "yyyy-MM-ddThh:mm:ss.fffZ",
+                                                           provider, style:=DateTimeStyles.AssumeUniversal)
+            .earliestStartDate = DateTime.ParseExact(Me.timestamp, "yyyy-MM-ddThh:mm:ss.fffZ",
+                                                           provider, style:=DateTimeStyles.AssumeUniversal)
+            .latestStartDate = DateTime.ParseExact(Me.timestamp, "yyyy-MM-ddThh:mm:ss.fffZ",
+                                                           provider, style:=DateTimeStyles.AssumeUniversal)
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
             .Status = Me.status
-            
+
             .farbe = Me.farbe
             .Schrift = Me.Schrift
 
             .volume = Me.volumen
             .complexity = Me.complexity
             .description = Me.description
-            .businessUnit = Me.businessUnit
+            '.businessUnit = Me.businessUnit
 
             ' Änderung notwendig, weil mal in der Datenbank Schrift mit -10 stand
             If .Schrift < 0 Then
@@ -230,7 +246,7 @@
                     projekt.customBoolFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
             End If
-            
+
 
         End With
 

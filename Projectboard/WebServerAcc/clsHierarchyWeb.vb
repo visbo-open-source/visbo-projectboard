@@ -1,6 +1,6 @@
-﻿Public Class clsHierarchyDB
-    'Public allNodes As SortedList(Of String, clsHierarchyNodeDB)
-    Public allNodes As Dictionary(Of String, clsHierarchyNodeDB)
+﻿Imports ProjectBoardDefinitions
+Public Class clsHierarchyWeb
+    Public allNodes As List(Of clsHrchyNodeWeb)
 
     ''' <summary>
     ''' kopiert aus einem HSP-Element in ein DB-Element
@@ -26,8 +26,10 @@
             End If
             hryNode = hry.nodeItem(i)
             hryNodeDB.copyFrom(hryNode)
-
-            Me.allNodes.Add(elemID, hryNodeDB)
+            Dim hnodeWeb As New clsHrchyNodeWeb
+            hnodeWeb.elemId = elemID
+            hnodeWeb.node = hryNodeDB
+            Me.allNodes.Add(hnodeWeb)
 
         Next
 
@@ -44,21 +46,18 @@
         Dim elemID As String
         Dim hryNodeDB As clsHierarchyNodeDB
 
-        'For i = 1 To Me.allNodes.Count
-        For Each kvp As KeyValuePair(Of String, clsHierarchyNodeDB) In Me.allNodes
+        For i = 1 To Me.allNodes.Count
 
             hryNode = New clsHierarchyNode
 
-            'elemID = Me.allNodes.ElementAt(i - 1).Key
-            elemID = kvp.Key
+            elemID = Me.allNodes.ElementAt(i - 1).elemId
             If elemID = rootPhaseNameDB Then
                 elemID = rootPhaseName
             End If
             If elemID.Contains(punktNameDB) Then
                 elemID = elemID.Replace(punktNameDB, punktName)
             End If
-            'hryNodeDB = Me.allNodes.ElementAt(i - 1).Value
-            hryNodeDB = kvp.Value
+            hryNodeDB = Me.allNodes.ElementAt(i - 1).node
             hryNodeDB.copyTo(hryNode)
 
             hry.copyNode(hryNode, elemID)
@@ -68,6 +67,9 @@
     End Sub
 
     Sub New()
-        allNodes = New Dictionary(Of String, clsHierarchyNodeDB)
+        allNodes = New List(Of clsHrchyNodeWeb)
     End Sub
+    Public Property count As Integer
+
+
 End Class

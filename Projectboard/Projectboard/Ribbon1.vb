@@ -22,6 +22,7 @@ Imports System.Web
 Imports System.ServiceModel.Web
 
 
+
 'TODO: Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
 
 '1: Kopieren Sie folgenden Codeblock in die ThisAddin-, ThisWorkbook- oder ThisDocument-Klasse.
@@ -11684,7 +11685,7 @@ Imports System.ServiceModel.Web
         'Dim typeRequest As String = "/token/user/login"
         'Dim typeRequest As String = "/token/user/signup"
         Dim typeRequest As String = control.Id.Replace("_", "/")
-        Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+        Dim serverUri As New Uri(serverUriName & typeRequest)
 
         Try
 
@@ -11695,19 +11696,19 @@ Imports System.ServiceModel.Web
             'Dim encoding As New System.Text.UTF8Encoding()
             'Dim data As Byte() = encoding.GetBytes(datastr)
 
-            ''Dim user As New clsInputSignupLogin
-            ''user.name = "Markus Seyfried"
-            ''user.email = "markus.seyfried@visbo.de"
-            ''user.password = "visbo123"
-            ''user.phone = "08024-xxxxx"
-            ''user.company = "keine AG"
-
             Dim user As New clsInputSignupLogin
-            user.name = "Ute Rittinghaus-Koytek"
-            user.email = "ute.rittinghaus-koytek@visbo.de"
+            user.name = "Markus Seyfried"
+            user.email = "markus.seyfried@visbo.de"
             user.password = "visbo123"
-            user.phone = "08024-92403"
-            user.company = "VISBO GmbH"
+            user.phone = "08024-xxxxx"
+            user.company = "keine AG"
+
+            'Dim user As New clsInputSignupLogin
+            'user.name = "Ute Rittinghaus-Koytek"
+            'user.email = "ute.rittinghaus-koytek@visbo.de"
+            'user.password = "visbo123"
+            'user.phone = "08024-92403"
+            'user.company = "VISBO GmbH"
 
             ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
             Dim data() As Byte
@@ -11740,7 +11741,7 @@ Imports System.ServiceModel.Web
         typeRequest = hstr(hstr.Length - 1)
         'Dim typeRequest As String = "/user/profile"
 
-        Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+        Dim serverUri As New Uri(serverUriName & typeRequest)
 
         Try
             ''Dim user As New clsInputSignupLogin
@@ -11791,7 +11792,7 @@ Imports System.ServiceModel.Web
         typeRequest = hstr(hstr.Length - 1)
         'Dim typeRequest As String = "/user/profile"
 
-        Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+        Dim serverUri As New Uri(serverUriName & typeRequest)
 
         Try
             Dim datastr As String = ""
@@ -11829,7 +11830,7 @@ Imports System.ServiceModel.Web
         Try
             'Dim typeRequest As String = "/vc"
             Dim typeRequest As String = control.Id.Replace("_", "/")
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+            Dim serverUri As New Uri(serverUriName & typeRequest)
 
             Dim datastr As String = ""
             Dim encoding As New System.Text.UTF8Encoding()
@@ -11843,6 +11844,7 @@ Imports System.ServiceModel.Web
             'Dim Antwort2 As String
             'Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
             '    Antwort2 = ReadResponseContent(httpresp)
+            '    Antwort = CType(DeserializeJson(Antwort2, typeRequest), clsWebVC)
             'End Using
 
             If Antwort.state = "success" Then
@@ -11870,7 +11872,7 @@ Imports System.ServiceModel.Web
         Try
             'Dim typeRequest As String = control.Id.Replace("_", "/")
             Dim typeRequest As String = "/vc"
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+            Dim serverUri As New Uri(serverUriName & typeRequest)
 
             Dim oneVC As New clsVC
             Dim user As New clsUser
@@ -11930,12 +11932,13 @@ Imports System.ServiceModel.Web
 
 
             Dim vcID As String = webVCs.vc.ElementAt(1)._id
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vcID)
+            Dim serverUri As New Uri(serverUriName & typeRequest & vcID)
 
             Dim datastr As String = ""
             Dim encoding As New System.Text.UTF8Encoding()
             Dim data As Byte() = encoding.GetBytes(datastr)
 
+            Dim provider As CultureInfo = CultureInfo.InvariantCulture
 
             Dim Antwort As clsWebVC
             Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
@@ -11945,6 +11948,9 @@ Imports System.ServiceModel.Web
             If Antwort.state = "success" Then
                 aktVC = Antwort
                 Call MsgBox(Antwort.message & ": " & "aktuelles VC ist: " & aktVC.vc.ElementAt(0).name)
+                Dim result As Date
+                Dim ok As Boolean = DateTime.TryParseExact(aktVC.vc.ElementAt(0).createdAt, "yyyy-MM-ddThh:mm:ss.fffZ",
+                                                           provider, style:=DateTimeStyles.AssumeUniversal, result:=result)
             Else
                 Throw New ArgumentException(Antwort.message)
             End If
@@ -11976,7 +11982,7 @@ Imports System.ServiceModel.Web
             'Dim typeRequest As String = "/vc/"
 
             Dim vc As clsVC = webVCs.vc.ElementAt(1)
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vc._id)
+            Dim serverUri As New Uri(serverUriName & typeRequest & vc._id)
 
             vc.name = "my first Visbo Center Renamed"
             ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
@@ -12037,7 +12043,7 @@ Imports System.ServiceModel.Web
 
             If Not IsNothing(vc) Then
 
-                Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vc._id)
+                Dim serverUri As New Uri(serverUriName & typeRequest & vc._id)
 
                 ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
                 Dim data() As Byte
@@ -12085,7 +12091,7 @@ Imports System.ServiceModel.Web
         Try
             'Dim typeRequest As String = control.Id.Replace("_", "/")
             Dim typeRequest As String = "/vp"
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest)
+            Dim serverUri As New Uri(serverUriName & typeRequest)
 
             Dim oneVP As New clsVP
             Dim user As New clsUser
@@ -12141,8 +12147,8 @@ Imports System.ServiceModel.Web
         Try
             'Dim typeRequest As String = "/vp"
             Dim typeRequest As String = control.Id.Replace("_", "/")
-            Dim vcid As String = webVCs.vc.ElementAt(1)._id
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & "?vcid=vc" & vcid)
+            Dim vcid As String = webVCs.vc.ElementAt(4)._id
+            Dim serverUri As New Uri(serverUriName & typeRequest & "?vcid=" & vcid)
 
             Dim datastr As String = ""
             Dim encoding As New System.Text.UTF8Encoding()
@@ -12185,7 +12191,7 @@ Imports System.ServiceModel.Web
 
 
             Dim vpID As String = webVPs.vp.ElementAt(0)._id
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vpID)
+            Dim serverUri As New Uri(serverUriName & typeRequest & vpID)
 
             Dim datastr As String = ""
             Dim encoding As New System.Text.UTF8Encoding()
@@ -12230,7 +12236,7 @@ Imports System.ServiceModel.Web
 
 
             Dim vp As clsVP = webVPs.vp.ElementAt(0)
-            Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vp._id)
+            Dim serverUri As New Uri(serverUriName & typeRequest & vp._id)
 
             vp.name = "my first VisboProject Renamed"
             ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
@@ -12291,7 +12297,7 @@ Imports System.ServiceModel.Web
 
             If Not IsNothing(vp) Then
 
-                Dim serverUri As New Uri("http://visbo.myhome-server.de:3484" & typeRequest & vp._id)
+                Dim serverUri As New Uri(serverUriName & typeRequest & vp._id)
 
                 ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
                 Dim data() As Byte
@@ -12325,6 +12331,67 @@ Imports System.ServiceModel.Web
         Catch ex As Exception
             Call MsgBox("Fehler in PTDELETEOneVP: " & ex.Message)
         End Try
+    End Sub
+
+    ''' <summary>
+    ''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /vp
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTWebRequestGETallVPv(control As IRibbonControl)
+
+        Try
+            'Dim typeRequest As String = "/vpv"
+            Dim typeRequest As String = control.Id.Replace("_", "/")
+            Dim vpid As String = webVPs.vp.ElementAt(0)._id
+            Dim serverUri As New Uri(serverUriName & typeRequest & "?vpid=" & vpid)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As clsWebVPv
+            Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                Antwort = CType(ReadGETResponseContentJson(httpresp, typeRequest), clsWebVPv)
+
+            End Using
+
+            Dim Antwort2 As String
+            Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
+                Antwort2 = ReadResponseContent(httpresp)
+            End Using
+
+            If Antwort.state = "success" Then
+                Call MsgBox(Antwort.message & vbCrLf & "aktueller User hat " & Antwort.vpv.Count & " VisboProjectsVersions")
+                ' hier erfolgen nun die weiteren Aktionen mit den angeforderten Daten
+                webVPvs = Antwort
+
+                Dim vp As clsProjektWeb = Nothing
+                Dim vpOrig As clsProjekt = Nothing
+                Dim hproj As clsProjekt = Nothing
+
+                projekthistorie.clear()
+
+                For Each vp In webVPvs.vpv
+                    vpOrig = New clsProjekt
+                    vp.copyto(vpOrig)
+                    projekthistorie.Add(vpOrig.timeStamp, vpOrig)
+                    If Not ShowProjekte.contains(vpOrig.name) Then
+                        ShowProjekte.Add(vpOrig)
+                        hproj = vpOrig
+                    End If
+
+                Next
+
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+            Else
+                Call MsgBox(Antwort.message)
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
+        End Try
+
     End Sub
 
     Public Sub PTJsonWrite(control As IRibbonControl)

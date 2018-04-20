@@ -49,6 +49,7 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -63,11 +64,14 @@
     <Import Include="System.Data" />
     <Import Include="System.Diagnostics" />
     <Import Include="System.Linq" />
-    <Import Include="System.Xml.Linq" />
-    <Import Include="System.Threading.Tasks" />
+    <Import Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsHierarchyWeb.vb" />
+    <Compile Include="clsHrchyNodeWeb.vb" />
+    <Compile Include="clsWebVPv.vb" />
     <Compile Include="clsInputSigninLogin.vb" />
+    <Compile Include="clsProjektWeb.vb" />
     <Compile Include="clsVP.vb" />
     <Compile Include="clsWebVC.vb" />
     <Compile Include="clsTokenUserLogin.vb" />

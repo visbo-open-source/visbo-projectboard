@@ -3,6 +3,8 @@
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsProjekteAlle
+
+    ' in dieser Klasse ist der Key zusammengesetzt aus ProjektName und VariantName mit calcProjektKey(hproj)
     Private _allProjects As SortedList(Of String, clsProjekt)
 
     Public Sub New()
@@ -47,8 +49,8 @@ Public Class clsProjekteAlle
     ''' <param name="project"></param>
     ''' <param name="updateCurrentConstellation">soll die currentConstellation aktualisiert werden; nur bei AlleProjekte</param>
     ''' <remarks></remarks>
-    Public Sub Add(ByVal project As clsProjekt, _
-                   Optional ByVal updateCurrentConstellation As Boolean = True, _
+    Public Sub Add(ByVal project As clsProjekt,
+                   Optional ByVal updateCurrentConstellation As Boolean = True,
                    Optional ByVal sortkey As Integer = -1)
 
         Dim keyReal As String = calcProjektKey(project.name, project.variantName)
@@ -141,7 +143,7 @@ Public Class clsProjekteAlle
         End Get
     End Property
 
-   
+
 
     ''' <summary>
     ''' gibt die Anzahl Listenelemente der Sorted Liste zurück 
@@ -155,7 +157,7 @@ Public Class clsProjekteAlle
         End Get
     End Property
 
-    
+
 
     ''' <summary>
     ''' gibt das erste Element der Liste zurück 
