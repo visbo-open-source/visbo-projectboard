@@ -495,7 +495,15 @@ Public Class ucSearch
 
             Try
                 selectedPlanShapes = currentSlide.Shapes.Range(nameArrayO)
-                selectedPlanShapes.Select()
+
+                For Each tmpshape As PowerPoint.Shape In selectedPlanShapes
+                    If isProjectCardInvisible(tmpshape) Then
+                        tmpshape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                    End If
+                Next
+
+                ' wird ganz am Ende gemacht ...
+                'selectedPlanShapes.Select()
 
                 ' die WindowsSelection Change Routine gleich wieder verlassen ... damit die MArkerShapes nicht gleich wieder gelöscht werden 
 
@@ -511,6 +519,7 @@ Public Class ucSearch
                     End If
                 End If
 
+
                 ' löschen der Liste an Elemente, die zur Selection gehören
                 selListboxNames.Items.Clear()
                 shpNameSav.Clear()
@@ -524,7 +533,13 @@ Public Class ucSearch
 
                     'Dim bln As String = curShape.Tags.Item("BLN")
                     Dim bln As String = bestimmeElemText(curShape, False, False, showBestName)
-                    Dim pname As String = getPVnameFromShpName(selEleShpName)
+                    Dim pname As String = ""
+                    If isProjectCard(curShape) Then
+                        pname = getPVnameFromTags(selEleShpName)
+                    Else
+                        pname = getPVnameFromShpName(selEleShpName)
+                    End If
+
                     selListboxEle = pname & "  -  " & bln
                     ' merken der Zuordnung zwischen angezeigtem Namen und ShapeNamen
 
@@ -540,9 +555,13 @@ Public Class ucSearch
 
                 Next
 
+
+
             Catch ex As Exception
 
             End Try
+
+            selectedPlanShapes.Select()
 
         Else
             ' nichts tun ...

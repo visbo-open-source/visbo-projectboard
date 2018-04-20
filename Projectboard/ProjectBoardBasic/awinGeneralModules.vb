@@ -1057,8 +1057,6 @@ Public Module awinGeneralModules
                 miniHeight = maxScreenHeight / 6
                 miniWidth = maxScreenWidth / 10
 
-
-
                 Dim oGrenze As Integer = UBound(frmCoord, 1)
                 ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
                 For i = 0 To oGrenze
@@ -5781,10 +5779,10 @@ Public Module awinGeneralModules
 
                         End Try
 
-                    ElseIf Not isValidProjectName(pName) And Not pName.Contains("#") Then
+                    ElseIf Not isValidProjectName(pName) Then
                         Try
                             CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine ( oder ) Zeichen enthalten ..")
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name darf keine #, (, ), Zeilenumbrüche enthalten ..")
                         Catch ex As Exception
 
                         End Try
@@ -5961,6 +5959,7 @@ Public Module awinGeneralModules
                                                 End If
                                             Catch ex As Exception
                                                 CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
                                             End Try
 
                                         Next
@@ -20357,7 +20356,6 @@ Public Module awinGeneralModules
 
             Dim currentWS As Excel.Worksheet
             Dim currentWB As Excel.Workbook
-            Dim ersteZeile As Excel.Range
             Dim ressCostColumn As Integer
             Dim tmpName As String
 
@@ -20451,8 +20449,6 @@ Public Module awinGeneralModules
                     .Unprotect(Password:="x")
                 End If
 
-                ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
-
                 If awinSettings.englishLanguage Then
                     CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
                     CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
@@ -20483,12 +20479,13 @@ Public Module awinGeneralModules
                     End If
                 End If
 
+                ' das Erscheinungsbild der Zeile 1 bestimmen  
+                Call massEditZeile1Appearance(ptTables.meRC)
 
 
                 ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
                 ressCostColumn = 5
                 ' jetzt wird die Zeile 1 geschrieben 
-                Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
 
                 ' jetzt wird der Mahle Range definiert ...
                 mahleRange = CType(.Columns(startSpalteDaten - 1), Global.Microsoft.Office.Interop.Excel.Range).EntireColumn
@@ -20537,35 +20534,6 @@ Public Module awinGeneralModules
                 currentWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
                 currentWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
                 currentWB.Names.Add(Name:="RoleCost", RefersToR1C1:=tmpRange3)
-
-                ' jetzt werden die Überschriften des Datenbereichs geschrieben 
-                For m As Integer = 0 To bis - von
-                    With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
-                        .Value = startMonat.AddMonths(m)
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                        .NumberFormat = "[$-409]mmm yy;@"
-                        .WrapText = False
-                        .Orientation = 90
-                        .ShrinkToFit = False
-                        .AddIndent = False
-                        .IndentLevel = 0
-                        .ReadingOrder = Excel.Constants.xlContext
-                    End With
-
-                    With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
-                        .Value = ""
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                        .Orientation = 0
-                        .ShrinkToFit = False
-                        .AddIndent = False
-                        .IndentLevel = 0
-                        .ReadingOrder = Excel.Constants.xlContext
-                    End With
-
-                Next
-
 
             End With
 
@@ -21224,11 +21192,63 @@ Public Module awinGeneralModules
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
             Dim infoBlock As Excel.Range
+            Dim infoDatablock As Excel.Range
             With CType(currentWS, Excel.Worksheet)
                 infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 3)), Excel.Range)
+                infoDatablock = CType(.Range(.Cells(2, 1), .Cells(zeile, startSpalteDaten - 3)), Excel.Range)
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                infoBlock.AutoFit()
+
+                ' hier prüfen, ob es bereits Werte für massColValues gibt ..
+                If massColFontValues(0, 0) > 4 Then
+                    ' diese Werte übernehmen 
+                    infoDatablock.Font.Size = CInt(massColFontValues(0, 0))
+                    For ik As Integer = 1 To 5
+                        CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(0, ik)
+                    Next
+
+
+                Else
+                    ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
+                    infoBlock.AutoFit()
+
+                    Try
+                        'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                        'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
+                        Dim availableScreenWidth As Double = maxScreenWidth
+                        If infoBlock.Width > 0.6 * availableScreenWidth Then
+
+                            infoDatablock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
+                            ' BU bekommt 5%
+                            'CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
+                            ' pName bekomt 30%
+                            'CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 16
+                            ' vName bekomt 5%
+                            'CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 3
+                            ' phaseName bekomt 30%
+                            'CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 16
+                            ' RoleCost Name bekomt 30%
+                            'CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                            CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 16
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    ' Werte setzen ...
+                    massColFontValues(0, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
+                    For ik As Integer = 1 To 5
+                        massColFontValues(0, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
+                    Next
+
+                End If
+
+
+
             End With
 
             ' Summe und Frei / Proz. 
@@ -21236,6 +21256,7 @@ Public Module awinGeneralModules
                 infoBlock = CType(.Range(.Columns(startSpalteDaten - 2), .Columns(startSpalteDaten - 1)), Excel.Range)
                 infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                 infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                infoBlock.Font.Size = CInt(massColFontValues(0, 0))
                 infoBlock.AutoFit()
             End With
 
@@ -21247,7 +21268,13 @@ Public Module awinGeneralModules
                     tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
                     If isPrz Then
                         tmpRange.Columns.ColumnWidth = 4
-                        tmpRange.Font.Size = 8
+                        'tmpRange.Font.Size = 8
+                        If CInt(massColFontValues(0, 0)) > 3 Then
+                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0) - 2)
+                        Else
+                            CType(tmpRange.Font, Excel.Font).Size = 8
+                        End If
+
                         If awinSettings.mePrzAuslastung Then
                             tmpRange.NumberFormat = "0%"
                         Else
@@ -21257,12 +21284,20 @@ Public Module awinGeneralModules
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     Else
                         tmpRange.Columns.ColumnWidth = 5
-                        tmpRange.Font.Size = 10
+                        'tmpRange.Font.Size = 10
+                        If CInt(massColFontValues(0, 0)) > 3 Then
+                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0))
+                        Else
+                            CType(tmpRange.Font, Excel.Font).Size = 10
+                        End If
+
                         tmpRange.NumberFormat = "######0.0"
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     End If
                     isPrz = Not isPrz
                 Next
+
+
 
                 ' jetzt muss noch ggf die Spaltenbreite angepasst werden ...
                 If maxRCLengthVorkommen < maxRCLengthAbsolut Then
@@ -21272,6 +21307,45 @@ Public Module awinGeneralModules
                     End If
                 End If
 
+                Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+                ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+                For m As Integer = 0 To bis - von
+                    With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
+                        .Value = startMonat.AddMonths(m)
+                        If massColFontValues(0, 0) > 4 Then
+                            .Font.Size = CInt(massColFontValues(0, 0))
+                        Else
+                            .Font.Size = 10
+                        End If
+
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                        .NumberFormat = "[$-409]mmm yy;@"
+                        .WrapText = False
+                        .Orientation = 90
+                        .ShrinkToFit = False
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ReadingOrder = Excel.Constants.xlContext
+                    End With
+
+                    With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
+                        .Value = ""
+                        If massColFontValues(0, 0) > 4 Then
+                            .Font.Size = CInt(massColFontValues(0, 0))
+                        Else
+                            .Font.Size = 10
+                        End If
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        .Orientation = 0
+                        .ShrinkToFit = False
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ReadingOrder = Excel.Constants.xlContext
+                    End With
+
+                Next
 
             End With
 
@@ -21284,15 +21358,857 @@ Public Module awinGeneralModules
 
                 End Try
 
+            Else
+
+                ''Try
+                ''    mahleRange.Interior.Color = currentWS.Cells(2, 2).interior.color
+                ''Catch ex As Exception
+
+                ''End Try
+
+                ' die bedingte Farb-Codierung einschalten 
+                'If awinSettings.mePrzAuslastung Then
+                '    With mahleRange
+                '        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = 0
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 1.1
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 1.5
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                '    End With
+                'Else
+                '    With mahleRange
+                '        Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = -5
+                '        CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 0
+                '        CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 5
+                '        CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                '    End With
+                'End If
+
             End If
 
 
             appInstance.EnableEvents = True
 
         Catch ex As Exception
-            Dim a As Integer = 0
+            appInstance.EnableEvents = True
         End Try
 
+
+
+
+    End Sub
+    ''' <summary>
+    ''' bestimmt das Erscheinungsbild der ersten Zeile in einem Mass-Edit Fenster Ressourcen, Termine, Attribute
+    ''' </summary>
+    ''' <param name="tableTyp"></param>
+    Private Sub massEditZeile1Appearance(ByVal tableTyp As Integer)
+
+        Dim currentWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(tableTyp)), Excel.Worksheet)
+        Dim ersteZeile As Excel.Range = CType(currentWS.Rows(1), Excel.Range)
+
+        With ersteZeile
+            .RowHeight = awinSettings.zeilenhoehe1
+            .Interior.Color = visboFarbeBlau
+            .Font.Size = 11
+            .Font.Bold = True
+            .Font.Color = XlRgbColor.rgbWhite
+        End With
+
+    End Sub
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="todoListe"></param>
+    Public Sub writeOnlineMassEditTermine(ByVal todoListe As Collection)
+
+        If todoListe.Count = 0 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no projects for mass-edit available ..")
+            Else
+                Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
+            End If
+
+            Exit Sub
+        End If
+
+        Try
+
+            appInstance.EnableEvents = False
+
+            ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
+            selectedProjekte.Clear(False)
+
+            Dim currentWS As Excel.Worksheet
+            Dim currentWB As Excel.Workbook
+            Dim startDateColumn As Integer = 5
+            Dim tmpName As String
+
+
+            ' hier muss jetzt das entsprechende File aufgemacht werden ...
+            ' das File 
+            Try
+                currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+                currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meTE)), Excel.Worksheet)
+
+                Try
+                    ' off setzen des AutoFilter Modus ... 
+                    If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+                        'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                        CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                Try
+                    currentWS.UsedRange.Clear()
+                Catch ex As Exception
+
+                End Try
+
+
+            Catch ex As Exception
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                appInstance.EnableEvents = True
+                Exit Sub
+            End Try
+
+
+            ' jetzt schreiben der ersten Zeile 
+            Dim zeile As Integer = 1
+            Dim spalte As Integer = 1
+
+            Dim startSpalteDaten As Integer = 4
+            'Dim roleCostNames As Excel.Range = Nothing
+            Dim datesInput As Excel.Range = Nothing
+
+            tmpName = ""
+
+            ' Schreiben der Überschriften
+            With CType(currentWS, Excel.Worksheet)
+
+                If .ProtectContents Then
+                    .Unprotect(Password:="x")
+                End If
+
+
+                If awinSettings.englishLanguage Then
+                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
+                    CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
+                    CType(.Cells(1, 4), Excel.Range).Value = "Element-Name"
+                    CType(.Cells(1, 5), Excel.Range).Value = "Start-Date"
+                    CType(.Cells(1, 6), Excel.Range).Value = "End-Date"
+                    CType(.Cells(1, 7), Excel.Range).Value = "Trafficlight"
+                    CType(.Cells(1, 8), Excel.Range).Value = "Explanation"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Deliverables"
+                    CType(.Cells(1, 10), Excel.Range).Value = "Responsible"
+                    CType(.Cells(1, 11), Excel.Range).Value = "% Done"
+
+                Else
+                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+                    CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+                    CType(.Cells(1, 4), Excel.Range).Value = "Element-Name"
+                    CType(.Cells(1, 5), Excel.Range).Value = "Start-Datum"
+                    CType(.Cells(1, 6), Excel.Range).Value = "End-Datum"
+                    CType(.Cells(1, 7), Excel.Range).Value = "Ampel"
+                    CType(.Cells(1, 8), Excel.Range).Value = "Erläuterung"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Lieferumfänge"
+                    CType(.Cells(1, 10), Excel.Range).Value = "Verantwortlich"
+                    CType(.Cells(1, 11), Excel.Range).Value = "% abgeschlossen"
+                End If
+
+                ' das Erscheinungsbild der Zeile 1 bestimmen  
+                Call massEditZeile1Appearance(ptTables.meTE)
+
+
+            End With
+
+
+            zeile = 2
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+
+            For Each projektName As String In todoListe
+
+                Dim hproj As clsProjekt = Nothing
+                If ShowProjekte.contains(projektName) Then
+                    hproj = ShowProjekte.getProject(projektName)
+                End If
+
+                If Not IsNothing(hproj) Then
+
+                    ' ist das Projekt geschützt ? 
+                    ' wenn nein, dann temporär schützen 
+                    Dim protectionText As String = ""
+                    Dim wpItem As clsWriteProtectionItem
+                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+
+                    If isProtectedbyOthers Then
+
+                        ' nicht erfolgreich, weil durch anderen geschützt ... 
+                        ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
+                        wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem)
+
+                        protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+
+                    End If
+
+                    ' jetzt wird für jedes Element in der Hierarchy eine Zeile rausgeschrieben 
+                    ' das ist jetzt die rootphase-NameID
+                    Dim curElemID As String = rootPhaseName
+                    Dim indentLevel As Integer = 0
+                    ' abbruchlevel gibt, wo die Funktion getNextIdOfId aufhört: erst an der Rootphase(=0) oder beim Element 
+                    Dim abbruchLevel As Integer = 0
+                    Dim indentOffset As Integer = 1
+
+                    ' jetzt wird die Hierarchy abgeklappert .. beginnend mit dem ersten Element, der RootPhase
+                    Do While curElemID <> ""
+
+                        Dim cPhase As clsPhase = Nothing
+                        Dim cMilestone As clsMeilenstein = Nothing
+                        Dim isMilestone As Boolean = elemIDIstMeilenstein(curElemID)
+
+                        If isMilestone Then
+                            cMilestone = hproj.getMilestoneByID(curElemID)
+                            ' schreibe den Meilenstein
+                            With CType(currentWS, Excel.Worksheet)
+                                ' Business-Unit
+                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                                ' Projekt-Name
+                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                ' Varianten-Name
+                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                ' Element-Name Meilenstein bzw. Phase inkl Indentlevel schreiben 
+                                CType(.Cells(zeile, 4), Excel.Range).Value = cMilestone.name
+                                CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
+                                ' Startdatum, gibt es bei Meilensteinen nicht, deswegen sperren  
+                                CType(.Cells(zeile, 5), Excel.Range).Value = ""
+                                ' Ende-Datum 
+                                CType(.Cells(zeile, 6), Excel.Range).Value = cMilestone.getDate.ToShortDateString
+                                ' Ampel-Farbe
+                                CType(.Cells(zeile, 7), Excel.Range).Value = cMilestone.ampelStatus
+                                ' Ampel-Erläuterung
+                                CType(.Cells(zeile, 8), Excel.Range).Value = cMilestone.ampelErlaeuterung
+                                ' Lieferumfänge
+                                CType(.Cells(zeile, 9), Excel.Range).Value = cMilestone.getAllDeliverables
+                                ' wer ist verantwortlich
+                                CType(.Cells(zeile, 10), Excel.Range).Value = cMilestone.verantwortlich
+                                ' wieviel ist erledigt ? 
+                                CType(.Cells(zeile, 11), Excel.Range).Value = cMilestone.percentDone.ToString("0#%")
+                            End With
+                        Else
+                            cPhase = hproj.getPhaseByID(curElemID)
+                            ' schreibe die Phase
+                            With CType(currentWS, Excel.Worksheet)
+                                ' Business-Unit
+                                CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                                ' Projekt-Name
+                                CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                                ' Varianten-Name
+                                CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                                ' Element-Name Meilenstein bzw. Phase
+                                CType(.Cells(zeile, 4), Excel.Range).Value = cPhase.name
+                                CType(.Cells(zeile, 4), Excel.Range).IndentLevel = indentLevel
+                                ' Startdatum 
+                                CType(.Cells(zeile, 5), Excel.Range).Value = cPhase.getStartDate.ToShortDateString
+                                ' Ende-Datum 
+                                CType(.Cells(zeile, 6), Excel.Range).Value = cPhase.getEndDate.ToShortDateString
+                                ' Ampel-Farbe
+                                CType(.Cells(zeile, 7), Excel.Range).Value = cPhase.ampelStatus
+                                ' Ampel-Erläuterung
+                                CType(.Cells(zeile, 8), Excel.Range).Value = cPhase.ampelErlaeuterung
+                                ' Lieferumfänge
+                                CType(.Cells(zeile, 9), Excel.Range).Value = cPhase.getAllDeliverables
+                                ' wer ist verantwortlich
+                                CType(.Cells(zeile, 10), Excel.Range).Value = cPhase.verantwortlich
+                                ' wieviel ist erledigt ? 
+                                CType(.Cells(zeile, 11), Excel.Range).Value = cPhase.percentDone.ToString("0#%")
+                            End With
+                        End If
+
+                        ' jetzt müssen die locked Attribute gesetzt werden entsprechend der isProtectedbyOthers ...
+
+                        ' jetzt muss geprüft werden, ob es durch jdn anders geschützt wurde ... 
+                        If isProtectedbyOthers Then
+
+                            Dim kompletteZeile As Excel.Range = CType(currentWS.Rows(zeile), Excel.Range)
+
+                            With CType(currentWS, Excel.Worksheet)
+                                CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                ' Kommentar einfügen 
+                                Dim cellComment As Excel.Comment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                                If Not IsNothing(cellComment) Then
+                                    CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                                End If
+                                CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                                CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                            End With
+
+                            kompletteZeile.Locked = True
+
+                        Else
+                            Dim protectArea As Excel.Range = Nothing
+                            Dim editArea As Excel.Range = Nothing
+                            If isMilestone Then
+                                With currentWS
+                                    protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 5)), Excel.Range)
+                                    editArea = CType(.Range(.Cells(zeile, 6), .Cells(zeile, 11)), Excel.Range)
+                                End With
+                            Else
+                                With currentWS
+                                    protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 4)), Excel.Range)
+                                    editArea = CType(.Range(.Cells(zeile, 5), .Cells(zeile, 11)), Excel.Range)
+                                End With
+                            End If
+                            protectArea.Locked = True
+                            editArea.Locked = False
+                        End If
+
+                        ' Zeile eins weiter ... 
+                        zeile = zeile + 1
+                        curElemID = hproj.hierarchy.getNextIdOfId(curElemID, indentLevel, abbruchLevel)
+
+                    Loop
+
+                End If
+
+            Next
+
+
+            ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
+            Dim infoBlock As Excel.Range
+            Dim infoDataBlock As Excel.Range
+            With CType(currentWS, Excel.Worksheet)
+                infoBlock = CType(.Range(.Columns(1), .Columns(11)), Excel.Range)
+                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, 11)), Excel.Range)
+                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+
+
+                ' die Besonderheiten abbilden 
+
+                ' Phasen bzw. Meilenstein Name
+                With CType(infoDataBlock.Columns(4), Excel.Range)
+                    .WrapText = True
+                End With
+
+                ' Erläuterung
+                With CType(infoDataBlock.Columns(8), Excel.Range)
+                    .WrapText = True
+                End With
+
+                ' Lieferumfänge 
+                With CType(infoDataBlock.Columns(9), Excel.Range)
+                    .WrapText = True
+                End With
+
+                ' percent Done 
+                With CType(infoBlock.Columns(11), Excel.Range)
+                    .NumberFormat = "0#%"
+                End With
+
+                ' hier prüfen, ob es bereits Werte für massColValues gibt ..
+                If massColFontValues(1, 0) > 4 Then
+                    ' diese Werte übernehmen 
+                    infoDataBlock.Font.Size = CInt(massColFontValues(1, 0))
+                    For ik As Integer = 1 To 11
+                        If massColFontValues(1, ik) > 0 Then
+                            CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
+                        End If
+
+                    Next
+
+
+                Else
+                    ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
+                    Try
+                        infoDataBlock.AutoFit()
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    Try
+                        'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                        'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
+                        Dim availableScreenWidth As Double = maxScreenWidth
+                        If infoDataBlock.Width > availableScreenWidth Then
+
+                            infoDataBlock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
+                            infoDataBlock.AutoFit()
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    ' Werte setzen ...
+                    massColFontValues(1, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
+                    For ik As Integer = 1 To 11
+                        massColFontValues(1, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
+                    Next
+
+                End If
+
+                ' jetzt noch die Spalte 7 bedingt formatieren .. 
+                Dim trafficLightRange As Excel.Range = CType(.Range(.Cells(2, 7), .Cells(zeile, 7)), Excel.Range)
+                With trafficLightRange
+                    .Interior.Color = visboFarbeNone
+
+                    Dim trafficLightColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = "1"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = "2"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = "3"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                End With
+
+            End With
+
+            appInstance.EnableEvents = True
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in Aufbereitung Termine" & vbLf & ex.Message)
+            appInstance.EnableEvents = True
+        End Try
+
+
+    End Sub
+
+    ''' <summary>
+    ''' massen-Editieren von Projekt-Attributen
+    ''' </summary>
+    ''' <param name="todoListe"></param>
+    Public Sub writeOnlineMassEditAttribute(ByVal todoListe As Collection)
+
+        If todoListe.Count = 0 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no projects for mass-edit available ..")
+            Else
+                Call MsgBox("keine Projekte für den Massen-Edit vorhanden ..")
+            End If
+
+            Exit Sub
+        End If
+
+        Try
+
+            appInstance.EnableEvents = False
+
+            ' jetzt die selectedProjekte Liste zurücksetzen ... ohne die currentConstellation zu verändern ...
+            selectedProjekte.Clear(False)
+
+            Dim currentWS As Excel.Worksheet
+            Dim currentWB As Excel.Workbook
+            Dim startDateColumn As Integer = 5
+
+            Dim anzahlSpalten As Integer = 13 + customFieldDefinitions.count
+
+            ' hier muss jetzt das entsprechende File aufgemacht werden ...
+            ' das File 
+            Try
+                currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
+                currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meAT)), Excel.Worksheet)
+
+                Try
+                    ' off setzen des AutoFilter Modus ... 
+                    If CType(currentWS, Excel.Worksheet).AutoFilterMode = True Then
+                        'CType(CType(currentWS, Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+                        CType(currentWS, Excel.Worksheet).Cells(1, 1).AutoFilter()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                ' braucht man eigentlich nicht mehr, aber sicher ist sicher ...
+                Try
+                    currentWS.UsedRange.Clear()
+                Catch ex As Exception
+
+                End Try
+
+
+            Catch ex As Exception
+                Call MsgBox("es gibt Probleme mit dem Mass-Edit Worksheet ...")
+                appInstance.EnableEvents = True
+                Exit Sub
+            End Try
+
+
+            ' jetzt schreiben der ersten Zeile 
+            Dim zeile As Integer = 1
+            Dim spalte As Integer = 1
+
+
+            ' Schreiben der Überschriften
+            With CType(currentWS, Excel.Worksheet)
+
+                If .ProtectContents Then
+                    .Unprotect(Password:="x")
+                End If
+
+
+                If awinSettings.englishLanguage Then
+                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 2), Excel.Range).Value = "Project-Name"
+                    CType(.Cells(1, 3), Excel.Range).Value = "Variant-Name"
+                    CType(.Cells(1, 4), Excel.Range).Value = "Start"
+                    CType(.Cells(1, 5), Excel.Range).Value = "End"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Goals"
+                    CType(.Cells(1, 7), Excel.Range).Value = "Description Variant"
+                    CType(.Cells(1, 8), Excel.Range).Value = "Responsible"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Traffic-Light"
+                    CType(.Cells(1, 10), Excel.Range).Value = "Explanation"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Strategic Fit"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Risk"
+                    CType(.Cells(1, 13), Excel.Range).Value = "Risk Description"
+
+
+                Else
+                    CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
+                    CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
+                    CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
+                    CType(.Cells(1, 4), Excel.Range).Value = "Start"
+                    CType(.Cells(1, 5), Excel.Range).Value = "Ende"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Ziele"
+                    CType(.Cells(1, 7), Excel.Range).Value = "Beschreibung (Variante)"
+                    CType(.Cells(1, 8), Excel.Range).Value = "Verantwortlich"
+                    CType(.Cells(1, 9), Excel.Range).Value = "Projekt-Ampel"
+                    CType(.Cells(1, 10), Excel.Range).Value = "Erläuterung"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Strategischer Fit"
+                    CType(.Cells(1, 12), Excel.Range).Value = "Risiko"
+                    CType(.Cells(1, 13), Excel.Range).Value = "Risiko-Beschreibung"
+
+
+                End If
+
+                ' jetzt noch die CustomFields
+                For i As Integer = 1 To customFieldDefinitions.count
+
+                    Dim cfType As Integer = customFieldDefinitions.getDef(i).type
+                    Dim tmpName As String = customFieldDefinitions.getDef(i).name
+
+                    Try
+                        If cfType = 0 Then
+                            ' String
+                            CType(.Cells(1, 13 + i), Excel.Range).Value = tmpName & " (S)"
+                        ElseIf cfType = 1 Then
+                            ' Double
+                            CType(.Cells(1, 13 + i), Excel.Range).Value = tmpName & " (D)"
+                        ElseIf cfType = 2 Then
+                            ' boolean 
+                            CType(.Cells(1, 13 + i), Excel.Range).Value = tmpName & " (B)"
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+
+                ' das Erscheinungsbild der Zeile 1 bestimmen  
+                Call massEditZeile1Appearance(ptTables.meAT)
+
+
+            End With
+
+
+            zeile = 2
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+
+            For Each projektName As String In todoListe
+
+                Dim hproj As clsProjekt = Nothing
+                If ShowProjekte.contains(projektName) Then
+                    hproj = ShowProjekte.getProject(projektName)
+                End If
+
+                If Not IsNothing(hproj) Then
+
+                    ' ist das Projekt geschützt ? 
+                    ' wenn nein, dann temporär schützen 
+                    Dim protectionText As String = ""
+                    Dim wpItem As clsWriteProtectionItem
+                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+
+                    If isProtectedbyOthers Then
+
+                        ' nicht erfolgreich, weil durch anderen geschützt ... 
+                        ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
+                        wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        writeProtections.upsert(wpItem)
+
+                        protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
+
+                    End If
+
+                    ' jetzt wird für jedes Projekt genau eine Zeile geschrieben 
+                    With CType(currentWS, Excel.Worksheet)
+                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
+                        CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
+                        CType(.Cells(zeile, 3), Excel.Range).Value = hproj.variantName
+                        CType(.Cells(zeile, 4), Excel.Range).Value = hproj.startDate.ToShortDateString
+                        CType(.Cells(zeile, 5), Excel.Range).Value = hproj.endeDate.ToShortDateString
+                        CType(.Cells(zeile, 6), Excel.Range).Value = hproj.description
+                        CType(.Cells(zeile, 7), Excel.Range).Value = hproj.variantDescription
+                        CType(.Cells(zeile, 8), Excel.Range).Value = hproj.leadPerson
+                        CType(.Cells(zeile, 9), Excel.Range).Value = hproj.ampelStatus
+                        CType(.Cells(zeile, 10), Excel.Range).Value = hproj.ampelErlaeuterung
+                        CType(.Cells(zeile, 11), Excel.Range).Value = hproj.StrategicFit
+                        CType(.Cells(zeile, 12), Excel.Range).Value = hproj.Risiko
+                        CType(.Cells(zeile, 13), Excel.Range).Value = ""
+
+                        For i As Integer = 1 To customFieldDefinitions.count
+                            Dim cfType As Integer = customFieldDefinitions.getDef(i).type
+                            Dim uid As Integer = customFieldDefinitions.getDef(i).uid
+
+                            Try
+                                If cfType = 0 Then
+                                    ' String
+                                    CType(.Cells(zeile, 13 + i), Excel.Range).Value = CStr(hproj.getCustomSField(uid))
+                                ElseIf cfType = 1 Then
+                                    ' Double
+                                    CType(.Cells(zeile, 13 + i), Excel.Range).Value = CDbl(hproj.getCustomDField(uid))
+                                ElseIf cfType = 2 Then
+                                    ' boolean 
+                                    CType(.Cells(zeile, 13 + i), Excel.Range).Value = CBool(hproj.getCustomBField(uid))
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+                        Next
+                    End With
+
+
+
+                    ' jetzt müssen die locked Attribute gesetzt werden entsprechend der isProtectedbyOthers ...
+
+                    ' jetzt muss geprüft werden, ob es durch jdn anders geschützt wurde ... 
+                    If isProtectedbyOthers Then
+
+                        Dim kompletteZeile As Excel.Range = CType(currentWS.Rows(zeile), Excel.Range)
+
+                        With CType(currentWS, Excel.Worksheet)
+                            CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                            ' Kommentar einfügen 
+                            Dim cellComment As Excel.Comment = CType(.Cells(zeile, 2), Excel.Range).Comment
+                            If Not IsNothing(cellComment) Then
+                                CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
+                            End If
+                            CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
+                            CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
+                        End With
+
+                        kompletteZeile.Locked = True
+
+                    Else
+                        Dim protectArea As Excel.Range = Nothing
+                        Dim editArea As Excel.Range = Nothing
+
+                        With currentWS
+                            protectArea = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 5)), Excel.Range)
+                            editArea = CType(.Range(.Cells(zeile, 6), .Cells(zeile, anzahlSpalten)), Excel.Range)
+                        End With
+
+                        protectArea.Locked = True
+                        editArea.Locked = False
+                    End If
+
+                    ' Zeile eins weiter ... 
+                    zeile = zeile + 1
+
+                End If
+
+            Next
+
+
+            ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
+            Dim infoBlock As Excel.Range
+            Dim infoDataBlock As Excel.Range
+            With CType(currentWS, Excel.Worksheet)
+
+                infoBlock = CType(.Range(.Columns(1), .Columns(anzahlSpalten)), Excel.Range)
+                infoDataBlock = CType(.Range(.Cells(2, 1), .Cells(zeile + 100, anzahlSpalten)), Excel.Range)
+                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+
+
+                ' hier prüfen, ob es bereits Werte für massColValues gibt ..
+                If massColFontValues(1, 0) > 4 Then
+                    ' diese Werte übernehmen 
+                    infoDataBlock.Font.Size = CInt(massColFontValues(2, 0))
+                    For ik As Integer = 1 To anzahlSpalten
+                        If massColFontValues(1, ik) > 0 Then
+                            CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(1, ik)
+                        End If
+
+                    Next
+
+
+                Else
+
+                    'Dim ersteZeile As Excel.Range = CType(currentWS.Rows(1), Excel.Range)
+                    'Try
+                    '    ersteZeile.AutoFit()
+                    'Catch ex As Exception
+
+                    'End Try
+
+                    ' die Besonderheiten abbilden 
+                    ' BU
+                    ' Description
+
+                    Try
+                        With CType(infoDataBlock.Columns(1), Excel.Range)
+                            .ColumnWidth = 13
+                        End With
+
+                        '' Projekt-Name
+                        With CType(infoDataBlock.Columns(2), Excel.Range)
+                            .ColumnWidth = 15
+                        End With
+
+                        '' Varianten-Name
+                        With CType(infoDataBlock.Columns(3), Excel.Range)
+                            .ColumnWidth = 5
+                        End With
+
+                        '' Start
+                        With CType(infoDataBlock.Columns(4), Excel.Range)
+                            .ColumnWidth = 10
+                        End With
+
+                        '' Ende
+                        With CType(infoDataBlock.Columns(5), Excel.Range)
+                            .ColumnWidth = 10
+                        End With
+
+                        '' Description
+                        With CType(infoDataBlock.Columns(6), Excel.Range)
+                            .WrapText = True
+                            .ColumnWidth = 20
+                        End With
+
+                        '' Variant Description
+                        With CType(infoDataBlock.Columns(7), Excel.Range)
+                            .WrapText = True
+                            .ColumnWidth = 20
+                        End With
+
+                        '' Verantwortlich 
+                        With CType(infoDataBlock.Columns(8), Excel.Range)
+                            .ColumnWidth = 10
+                        End With
+
+                        '' Ampel-Farbe
+                        With CType(infoDataBlock.Columns(9), Excel.Range)
+                            .ColumnWidth = 2
+                        End With
+
+                        '' Ampel-Erläuterung
+                        With CType(infoDataBlock.Columns(10), Excel.Range)
+                            .ColumnWidth = 20
+                            .WrapText = True
+                        End With
+
+                        ' Strategic Fit 
+                        With CType(infoDataBlock.Columns(11), Excel.Range)
+                            .ColumnWidth = 14
+                            .HorizontalAlignment = HorizontalAlignment.Center
+                        End With
+
+                        ' Risiko  
+                        With CType(infoDataBlock.Columns(12), Excel.Range)
+                            .ColumnWidth = 42
+                            .HorizontalAlignment = HorizontalAlignment.Center
+                        End With
+
+                        ' Risiko-Beschreibung  
+                        With CType(infoDataBlock.Columns(13), Excel.Range)
+                            .ColumnWidth = 20
+                        End With
+
+                        For i As Integer = 1 To customFieldDefinitions.count
+
+                            With CType(infoDataBlock.Columns(13 + i), Excel.Range)
+                                .ColumnWidth = 12
+                            End With
+
+                        Next
+
+                    Catch ex As Exception
+
+                    End Try
+
+
+                End If
+
+                ' jetzt noch die Spalte 9 bedingt formatieren .. 
+                Dim trafficLightRange As Excel.Range = CType(.Range(.Cells(2, 9), .Cells(zeile, 9)), Excel.Range)
+                With trafficLightRange
+                    .Interior.Color = visboFarbeNone
+
+                    Dim trafficLightColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = "1"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = "2"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = "3"
+                    CType(trafficLightColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                End With
+
+            End With
+
+            appInstance.EnableEvents = True
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in Aufbereitung Termine" & vbLf & ex.Message)
+            appInstance.EnableEvents = True
+        End Try
 
 
 
@@ -21365,6 +22281,107 @@ Public Module awinGeneralModules
         tryToprotectProjectforMe = Not isProtectedbyOthers
 
     End Function
+    ''' <summary>
+    ''' löscht die bedingte Farb-Codierung 
+    ''' </summary>
+    Public Sub deleteColorFormatMassEdit()
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
+
+            Try
+                Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+                                                        .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+                Dim mahleRange As Excel.Range = meWS.Range("MahleInfo")
+
+                If Not IsNothing(mahleRange) Then
+
+                    ' die bedingte Farb-Codierung ausschalten 
+                    With mahleRange
+                        Do While .FormatConditions.Count > 0
+                            .FormatConditions.Item(1).delete
+                        Loop
+                    End With
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' einfach nichts machen ..
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' stellt sicher, dass die Prozent- bzw. Frei-Tage Werte im Falle meExtendedView = true mit einer entsprechenden Color-Codierung dargestellt werden 
+    ''' 
+    ''' </summary>
+    Public Sub colorFormatMassEditRC()
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
+
+            Try
+                Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+                                                        .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+                Dim mahleRange As Excel.Range = meWS.Range("MahleInfo")
+
+                If Not IsNothing(mahleRange) Then
+                    ' die bedingte Farb-Codierung einschalten 
+                    If awinSettings.mePrzAuslastung Then
+                        With mahleRange
+
+                            Do While .FormatConditions.Count > 0
+                                .FormatConditions.Item(1).delete
+                            Loop
+
+                            Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = 0
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 1.1
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 1.5
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                        End With
+                    Else
+                        With mahleRange
+
+                            Do While .FormatConditions.Count > 0
+                                .FormatConditions.Item(1).delete
+                            Loop
+
+                            Dim przColorScale As Excel.ColorScale = .FormatConditions.AddColorScale(3)
+
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).Value = -5
+                            CType(przColorScale.ColorScaleCriteria.Item(1), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeRed
+
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).Value = 0
+                            CType(przColorScale.ColorScaleCriteria.Item(2), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeYellow
+
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Type = XlConditionValueTypes.xlConditionValueNumber
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).Value = 5
+                            CType(przColorScale.ColorScaleCriteria.Item(3), Excel.ColorScaleCriterion).FormatColor.Color = visboFarbeGreen
+
+                        End With
+                    End If
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            ' einfach nichts machen ..
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' aktualisiert in Tabelle2 die Auslastungs-Values 
@@ -22406,7 +23423,7 @@ Public Module awinGeneralModules
         Try
             If visboWindowExists(PTwindows.mptpr) Then
                 Dim tmpmsg As String = hproj.getShapeText & " (" & hproj.timeStamp.ToString & ")"
-                projectboardWindows(PTwindows.mptpr).Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
+                projectboardWindows(PTwindows.mptpr).Caption = bestimmeWindowCaption(PTwindows.mptpr, addOnMsg:=tmpmsg)
             End If
         Catch ex As Exception
 

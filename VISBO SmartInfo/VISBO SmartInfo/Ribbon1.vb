@@ -50,7 +50,7 @@ Public Class Ribbon1
 
 
 
-    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
+    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click, Button1.Click
 
         Dim msg As String = ""
 
@@ -213,10 +213,12 @@ Public Class Ribbon1
     Private Sub activateSearch_Click(sender As Object, e As RibbonControlEventArgs) Handles activateSearch.Click
 
         Try
-            If searchPane.Visible Then
-                searchPane.Visible = False
-            Else
-                searchPane.Visible = True
+            If Not IsNothing(searchPane) Then
+                If searchPane.Visible Then
+                    searchPane.Visible = False
+                Else
+                    searchPane.Visible = True
+                End If
             End If
         Catch ex As Exception
 
@@ -228,16 +230,11 @@ Public Class Ribbon1
 
     Private Sub activateInfo_Click(sender As Object, e As RibbonControlEventArgs) Handles activateInfo.Click
 
-        Try
-            If propertiesPane.Visible Then
-                propertiesPane.Visible = False
-            Else
-                propertiesPane.Visible = True
-            End If
-        Catch ex As Exception
-
-        End Try
-
+        If propertiesPane.Visible Then
+            propertiesPane.Visible = False
+        Else
+            propertiesPane.Visible = True
+        End If
 
     End Sub
 

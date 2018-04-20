@@ -174,14 +174,15 @@
           <button id="PT2G2B4" imageMso="EditFileGallery" size="large" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="im Portfolio dargestellte/nicht dargestellt Projekte der Session können ausgeblendet/eingeblendet werden und ein neues Portfolio kann definiert werden."/>
           <splitButton id="PT2G2split" size ="large">
             <!--label="Modify Ressourcen und Kosten"-->
-            <button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
+            <button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
             <menu id="PT2G2M" getVisible="chckVisibility">
               <!--label="Modify Ressourcen und Kosten"-->
-              <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
+              <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Dates of Phases & Milestones"-->
-              <button id="PT2G1M2B2" getLabel="bestimmeLabel" enabled="false" />
+              <button id="PT2G1M2B2" getLabel="bestimmeLabel" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Attributes"-->
-              <button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Business Unit, Budget, strateg. Fit und Risiko Einschätzung."/>
+              <!--<button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung und Custom Fields"/>-->
+              <button id="PT2G1M2B8" getLabel ="bestimmeLabel" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
               <menuSeparator id="separator1" />
               <!--label=" Projekt Umbenennen"-->
               <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
@@ -422,10 +423,10 @@
         </group>
       </tab>
       <!--label="Help"-->
-      <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--<tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 
         </group>
-      </tab>
+      </tab>-->
       <!--label="Lizenzen"-->
       <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
@@ -473,6 +474,8 @@
           <separator id="PT6G2s1"></separator>
           <!--label="Sortierung ermöglichen"-->
           <checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
+          <!--label="Header anzeigen"-->
+          <checkBox id="PT6G2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTshowHeader" onAction ="awinPTshowHeader" supertip ="wenn gesetzt, können die Spaltenbreiten verändert werden."/>
         </group>
       </tab>  
      </tabs>

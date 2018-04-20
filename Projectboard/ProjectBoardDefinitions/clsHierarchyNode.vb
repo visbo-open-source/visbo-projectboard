@@ -62,6 +62,35 @@
     End Sub
 
     ''' <summary>
+    ''' parentNode.getNextSibling(childID) gibt das nächste Geschwister zurück, falls es denn existiert 
+    ''' leerer String, wenn keins existiert 
+    ''' </summary>
+    ''' <param name="childID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getNextSibling(ByVal childID As String) As String
+        Get
+            Dim tmpResult As String = ""
+            Dim found As Boolean = False
+
+            Dim i As Integer = 1
+
+            Do While Not found And i <= Me.childCount
+                If Me.getChild(i) = childID Then
+                    found = True
+                Else
+                    i = i + 1
+                End If
+            Loop
+            ' es gibt nur einen Nachfolger, wenn i noch einen einen weiteren hat, also kleiner als count ist 
+            If found And i < Me.childCount Then
+                tmpResult = Me.getChild(i + 1)
+            End If
+
+            getNextSibling = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liest die ParentNode-ID
     ''' </summary>
     ''' <value></value>
