@@ -61,12 +61,12 @@ Public Class frmCreateNewVariant
         key = calcProjektKey(Me.projektName.Text, Me.newVariant.Text)
 
         If Not noDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            If request.pingMongoDb() Then
+            If CType(mongoDBAcc, Request).pingMongoDb() Then
 
                 If Not _
-                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or _
+                    (CType(mongoDBAcc, Request).projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or
                      AlleProjekte.Containskey(key)) Then
 
                     ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
@@ -74,10 +74,10 @@ Public Class frmCreateNewVariant
                 Else
                     Dim msgTxt As String
                     If awinSettings.englishLanguage Then
-                        msgTxt = "Projekt (Variante) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                        msgTxt = "Projekt (Variante) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " &
                                 "existiert bereits in DB!"
                     Else
-                        msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
+                        msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " &
                                 "does already exist in DB!"
                     End If
                     Call MsgBox(msgTxt)

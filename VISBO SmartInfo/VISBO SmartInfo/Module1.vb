@@ -904,8 +904,8 @@ Module Module1
                 Dim pName As String = getPnameFromKey(tmpName)
                 Dim vName As String = getVariantnameFromKey(tmpName)
                 Dim pvName As String = calcProjektKeyDB(pName, vName)
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
                 smartSlideLists.addToListOfTS(tsCollection)
             Next
 
@@ -1382,11 +1382,11 @@ Module Module1
                     Call MsgBox(msg)
                 Else
                     ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                     'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                    RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
-                    CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                    RoleDefinitions = CType(mongoDBAcc, Request).retrieveRolesFromDB(Date.Now)
+                    CostDefinitions = CType(mongoDBAcc, Request).retrieveCostsFromDB(Date.Now)
                 End If
             Else
                 If englishLanguage Then
@@ -1984,7 +1984,7 @@ Module Module1
         Dim chtObjName As String = ""
         Dim bigType As Integer = -1
         Dim detailID As Integer = -1
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim bProj As clsProjekt = Nothing ' nimmt das erste beauftragte Projekt auf ..
 
 
@@ -2045,7 +2045,7 @@ Module Module1
 
                                     ' jetzt das bProj (Beauftragung) holen
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
+                                        bProj = CType(mongoDBAcc, Request).retrieveFirstContractedPFromDB(tsProj.name)
                                     Catch ex As Exception
                                         bProj = Nothing
                                     End Try
@@ -4917,12 +4917,12 @@ Module Module1
 
             If Not noDBAccessInPPT Then
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If request.pingMongoDb() Then
+                If CType(mongoDBAcc, Request).pingMongoDb() Then
                     Try
 
-                        pHistory.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                        pHistory.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                     Catch ex As Exception
                         pHistory = Nothing
@@ -6014,8 +6014,8 @@ Module Module1
                             Dim pName As String = getPnameFromKey(tmpName)
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
-                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
+                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                            Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 

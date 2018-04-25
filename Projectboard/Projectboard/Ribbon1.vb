@@ -104,7 +104,7 @@ Imports System.Windows
     Sub PTStoreKonstellationsToDB(control As IRibbonControl)
 
         Dim storeConstellationFrm As New frmLoadConstellation
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim DBtimeStamp As Date = Date.Now
 
         Dim outPutCollection As New Collection
@@ -156,7 +156,8 @@ Imports System.Windows
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -164,12 +165,12 @@ Imports System.Windows
 
         If (ControlID = load1FromDatenbank Or ControlID = load2FromDatenbank) And Not noDB Then
 
-            If request.pingMongoDb() Then
+            If CType(mongoDBAcc, Request).pingMongoDb() Then
 
-                dbConstellations = request.retrieveConstellationsFromDB()
+                dbConstellations = CType(mongoDBAcc, Request).retrieveConstellationsFromDB()
 
                 Try
-                    timeStampsCollection = request.retrieveZeitstempelFromDB()
+                    timeStampsCollection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB()
                     'Dim heute As String = Date.Now.ToString
                     If timeStampsCollection.Count > 0 Then
                         With loadConstellationFrm
@@ -255,7 +256,7 @@ Imports System.Windows
 
             ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
             If Not noDB Then
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(mongoDBAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             appInstance.ScreenUpdating = True
@@ -293,9 +294,9 @@ Imports System.Windows
             removeConstFilterFrm.frmOption = "ProjConstellation"
             removeFromDB = True
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If request.pingMongoDb() Then
-                projectConstellations = request.retrieveConstellationsFromDB()
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If CType(mongoDBAcc, Request).pingMongoDb() Then
+                projectConstellations = CType(mongoDBAcc, Request).retrieveConstellationsFromDB()
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -309,9 +310,9 @@ Imports System.Windows
             removeConstFilterFrm.frmOption = "DBFilter"
             removeFromDB = True
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If request.pingMongoDb() Then
-                filterDefinitions.filterListe = request.retrieveAllFilterFromDB(False)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If CType(mongoDBAcc, Request).pingMongoDb() Then
+                filterDefinitions.filterListe = CType(mongoDBAcc, Request).retrieveAllFilterFromDB(False)
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -354,12 +355,12 @@ Imports System.Windows
 
                 filter = filterDefinitions.retrieveFilter(constFilterName)
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If request.pingMongoDb() Then
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If CType(mongoDBAcc, Request).pingMongoDb() Then
 
                     ' Filter muss aus der Datenbank gelöscht werden.
 
-                    removeOK = request.removeFilterFromDB(filter)
+                    removeOK = CType(mongoDBAcc, Request).removeFilterFromDB(filter)
                     If removeOK = False Then
                         Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
                     Else
@@ -893,7 +894,7 @@ Imports System.Windows
 
 
         Try
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
             Call projektTafelInit()
 
@@ -937,10 +938,10 @@ Imports System.Windows
 
                                 ' jetzt wird in der Datenbank umbenannt 
                                 Try
-                                    If request.projectNameAlreadyExists(pName, "", Date.Now) Or _
-                                        request.projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
+                                    If CType(mongoDBAcc, Request).projectNameAlreadyExists(pName, "", Date.Now) Or
+                                        CType(mongoDBAcc, Request).projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
 
-                                        ok = request.renameProjectsInDB(pName, newName, dbUsername)
+                                        ok = CType(mongoDBAcc, Request).renameProjectsInDB(pName, newName, dbUsername)
                                         If Not ok Then
                                             If awinSettings.englishLanguage Then
                                                 Call MsgBox("rename cancelled: there is at least one write-protected variant for Project " & pName)
@@ -948,7 +949,7 @@ Imports System.Windows
                                                 Call MsgBox("Rename nicht durchgeführt: es gibt mindestens eine schreibgeschützte Variante im Projekt " & pName)
                                             End If
                                         Else
-                                            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                                            writeProtections.adjustListe = CType(mongoDBAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
                                         End If
                                     End If
                                 Catch ex As Exception
@@ -1075,8 +1076,7 @@ Imports System.Windows
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Call projektTafelInit()
 
         enableOnUpdate = False
@@ -1096,17 +1096,17 @@ Imports System.Windows
 
                 If Not noDB Then
 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    If request.pingMongoDb() Then
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If CType(mongoDBAcc, Request).pingMongoDb() Then
 
-                        If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
+                        If Not CType(mongoDBAcc, Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
 
                             ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
 
-                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor, _
+                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor,
                                                CStr(""), buName)
                         Else
                             Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
@@ -3534,16 +3534,16 @@ Imports System.Windows
                             '
                         Else
                             ' den temporären Schutz von mir zurücknehmen 
-                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
-                                                       dbUsername, dbPasswort)
+                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
+                            'dbUsername, dbPasswort)
                             Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
                                                                       dbUsername, False, False)
-                            If request.setWriteProtection(wpItem) Then
+                            If CType(mongoDBAcc, Request).setWriteProtection(wpItem) Then
                                 ' erfolgreich
                                 writeProtections.upsert(wpItem)
                             Else
                                 ' nicht erfolgreich
-                                wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                wpItem = CType(mongoDBAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
                                 writeProtections.upsert(wpItem)
                             End If
                         End If
@@ -5052,7 +5052,7 @@ Imports System.Windows
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' Aktion durchführen ...
         getScenarioImport.menueAswhl = PTImpExp.scenariodefs
@@ -5116,7 +5116,7 @@ Imports System.Windows
 
                         ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
                         If Not noDB Then
-                            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                            writeProtections.adjustListe = CType(mongoDBAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
                         End If
 
                     Else
@@ -5544,7 +5544,7 @@ Imports System.Windows
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
         If Not noDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
@@ -5674,7 +5674,7 @@ Imports System.Windows
     Public Sub Tom2G4M2ImportMSProject(control As IRibbonControl)
 
         If Not noDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
@@ -6805,7 +6805,7 @@ Imports System.Windows
         Call projektTafelInit()
 
         ' wird für das LEsen des Vergleichs-Projekts gebraucht ... 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim vglProjekt As clsProjekt = Nothing
         enableOnUpdate = False
 
@@ -6883,7 +6883,7 @@ Imports System.Windows
                                                          top, left, width, height, False)
 
                 Try
-                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                    vglProjekt = CType(mongoDBAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
@@ -6940,7 +6940,7 @@ Imports System.Windows
         Dim top As Double, left As Double, width As Double, height As Double
 
         ' wird für das LEsen des Vergleichs-Projekts gebraucht ... 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim vglProjekt As clsProjekt = Nothing
 
         Call projektTafelInit()
@@ -6989,7 +6989,7 @@ Imports System.Windows
                     Try
 
                         Try
-                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                            vglProjekt = CType(mongoDBAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
@@ -7049,7 +7049,7 @@ Imports System.Windows
         Dim auswahl As Integer = 1 ' das steuert , dass die sonstigen Kosten angezeigt werden  
         Dim top As Double, left As Double, width As Double, height As Double
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -7091,7 +7091,7 @@ Imports System.Windows
 
                 Try
                     Try
-                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                        vglProj = CType(mongoDBAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
                     Catch ex As Exception
                         vglProj = Nothing
                     End Try
@@ -7607,7 +7607,7 @@ Imports System.Windows
     ''' <param name="typ"></param>
     ''' <remarks></remarks>
     Private Sub awinSollIstVergleich(ByVal auswahl As Integer, ByVal typ As String, ByVal vglBaseline As Boolean)
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -7658,9 +7658,9 @@ Imports System.Windows
                 End With
 
                 If vglName <> hproj.getShapeText Then
-                    If request.pingMongoDb() Then
+                    If CType(mongoDBAcc, Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
+                        projekthistorie.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -7737,7 +7737,7 @@ Imports System.Windows
     ''' </param>
     ''' <remarks></remarks>
     Private Sub awinStatusAnzeige(ByVal compareTyp As Integer, ByVal auswahl As Integer, ByVal qualifier As String)
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -7860,302 +7860,6 @@ Imports System.Windows
 
 
     End Sub
-    '' '' '' '' '' '' ''' ur: 13.09.2016: wurde durch  ersetzt
-    ' '' '' '' '' '' ''' <summary>
-    ' '' '' '' '' '' ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
-    ' '' '' '' '' '' ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
-    ' '' '' '' '' '' ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
-    ' '' '' '' '' '' ''' wenn nichts selektiert ist: Fehler MEldung 
-    ' '' '' '' '' '' ''' </summary>
-    ' '' '' '' '' '' ''' <param name="control"></param>
-    ' '' '' '' '' '' ''' <remarks></remarks>
-    ' '' '' '' '' ''Sub PTShowMilestonesByName(control As IRibbonControl)
-
-
-
-    ' '' '' '' '' ''    Dim listOfItems As New Collection
-    ' '' '' '' '' ''    Dim nameList As New Collection
-    ' '' '' '' '' ''    Dim title As String = "Meilensteine visualisieren"
-
-    ' '' '' '' '' ''    Dim repObj As Object = Nothing
-
-    ' '' '' '' '' ''    Dim singleShp As Excel.Shape
-    ' '' '' '' '' ''    Dim myCollection As New Collection
-    ' '' '' '' '' ''    Dim hproj As clsProjekt
-    ' '' '' '' '' ''    Dim awinSelection As Excel.ShapeRange
-    ' '' '' '' '' ''    Dim selektierteProjekte As New clsProjekte
-
-    ' '' '' '' '' ''    Call projektTafelInit()
-
-    ' '' '' '' '' ''    Try
-    ' '' '' '' '' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-    ' '' '' '' '' ''    Catch ex As Exception
-    ' '' '' '' '' ''        awinSelection = Nothing
-    ' '' '' '' '' ''    End Try
-
-    ' '' '' '' '' ''    If Not awinSelection Is Nothing Then
-
-    ' '' '' '' '' ''        ' jetzt die Aktion durchführen ...
-
-    ' '' '' '' '' ''        For Each singleShp In awinSelection
-
-    ' '' '' '' '' ''            Try
-    ' '' '' '' '' ''                hproj = ShowProjekte.getProject(singleShp.Name, True)
-    ' '' '' '' '' ''                selektierteProjekte.Add(hproj)
-    ' '' '' '' '' ''            Catch ex As Exception
-    ' '' '' '' '' ''                Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-    ' '' '' '' '' ''            End Try
-
-    ' '' '' '' '' ''        Next
-
-    ' '' '' '' '' ''        nameList = selektierteProjekte.getMilestoneNames
-
-    ' '' '' '' '' ''        If nameList.Count > 0 Then
-
-    ' '' '' '' '' ''            For Each tmpName As String In nameList
-    ' '' '' '' '' ''                listOfItems.Add(tmpName)
-    ' '' '' '' '' ''            Next
-
-    ' '' '' '' '' ''            ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-    ' '' '' '' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
-
-
-    ' '' '' '' '' ''            With auswahlFenster
-
-    ' '' '' '' '' ''                .chTyp = DiagrammTypen(5)
-
-    ' '' '' '' '' ''            End With
-    ' '' '' '' '' ''            auswahlFenster.Show()
-
-    ' '' '' '' '' ''        Else
-    ' '' '' '' '' ''            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-    ' '' '' '' '' ''        End If
-
-
-    ' '' '' '' '' ''    Else
-    ' '' '' '' '' ''        Call MsgBox("Bitte mindestens ein Projekt selektieren ... ")
-    ' '' '' '' '' ''        Exit Sub
-    ' '' '' '' '' ''    End If
-
-
-
-
-
-
-
-    ' '' '' '' '' ''End Sub
-    '' '' '' '' '' '' ''' ur: 13.09.2016: wurde durch ersetzt
-    ' '' '' '' '' '' ''' <summary>
-    ' '' '' '' '' '' ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
-    ' '' '' '' '' '' ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
-    ' '' '' '' '' '' ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
-    ' '' '' '' '' '' ''' wenn nichts selektiert ist: zeige die Namen der Meilensteine aus allen Projekten  
-    ' '' '' '' '' '' ''' </summary>
-    ' '' '' '' '' '' ''' <param name="control"></param>
-    ' '' '' '' '' '' ''' <remarks></remarks>
-    ' '' '' '' '' ''Public Sub PTShowAllMilestonesByName(Control As IRibbonControl)
-
-    ' '' '' '' '' ''    Dim listOfItems As New Collection
-    ' '' '' '' '' ''    Dim nameList As New Collection
-    ' '' '' '' '' ''    Dim title As String = "Meilensteine visualisieren"
-
-    ' '' '' '' '' ''    Dim repObj As Object = Nothing
-
-    ' '' '' '' '' ''    Call projektTafelInit()
-    ' '' '' '' '' ''    Call awinDeSelect()
-
-    ' '' '' '' '' ''    If ShowProjekte.Count > 0 Then
-    ' '' '' '' '' ''        If showRangeRight - showRangeLeft > 5 Then
-
-    ' '' '' '' '' ''            nameList = ShowProjekte.getMilestoneNames
-
-    ' '' '' '' '' ''            If nameList.Count > 0 Then
-
-    ' '' '' '' '' ''                For Each tmpName As String In nameList
-    ' '' '' '' '' ''                    listOfItems.Add(tmpName)
-    ' '' '' '' '' ''                Next
-
-    ' '' '' '' '' ''                ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-    ' '' '' '' '' ''                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
-
-
-    ' '' '' '' '' ''                With auswahlFenster
-
-    ' '' '' '' '' ''                    .chTyp = DiagrammTypen(5)
-
-    ' '' '' '' '' ''                End With
-    ' '' '' '' '' ''                auswahlFenster.Show()
-
-    ' '' '' '' '' ''            Else
-    ' '' '' '' '' ''                Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-    ' '' '' '' '' ''            End If
-    ' '' '' '' '' ''        Else
-    ' '' '' '' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-    ' '' '' '' '' ''        End If
-    ' '' '' '' '' ''    Else
-    ' '' '' '' '' ''        Call MsgBox("Es sind keine Projekte geladen!")
-    ' '' '' '' '' ''    End If
-
-
-
-    ' '' '' '' '' ''End Sub
-
-    '' '' '' '' '' '' ''' ur: 10.7.2015: wurde durch awinShowMilestoneTrend ersetzt
-    '' '' '' '' '' '' ''' <summary>
-    '' '' '' '' '' '' ''' zeigt zu dem ausgewählten Projekt die Meilenstein Trendanalyse an 
-    '' '' '' '' '' '' ''' dazu wird erst ein Fenster aufgeschaltet, aus dem der oder die Namen des betreffenden Meilensteins ausgewählt werden können 
-    '' '' '' '' '' '' ''' </summary>
-    '' '' '' '' '' '' ''' <param name="control"></param>
-    '' '' '' '' '' '' ''' <remarks></remarks>
-    '' '' '' '' '' ''Sub PTShowMilestoneTrend(control As IRibbonControl)
-
-    '' '' '' '' '' ''    Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-    '' '' '' '' '' ''    Dim singleShp As Excel.Shape
-    '' '' '' '' '' ''    Dim listOfItems As New Collection
-    '' '' '' '' '' ''    Dim listOfMSNames As New Collection
-    '' '' '' '' '' ''    Dim nameList As New SortedList(Of Date, String)
-    '' '' '' '' '' ''    Dim title As String = "Meilensteine auswählen"
-    '' '' '' '' '' ''    Dim hproj As clsProjekt
-    '' '' '' '' '' ''    Dim awinSelection As Excel.ShapeRange
-    '' '' '' '' '' ''    Dim selektierteProjekte As New clsProjekte
-    '' '' '' '' '' ''    Dim top As Double, left As Double, height As Double, width As Double
-    '' '' '' '' '' ''    Dim repObj As Excel.ChartObject = Nothing
-
-    '' '' '' '' '' ''    Dim pName As String, vglName As String = " "
-    '' '' '' '' '' ''    Dim variantName As String
-
-    '' '' '' '' '' ''    Call projektTafelInit()
-
-    '' '' '' '' '' ''    Try
-    '' '' '' '' '' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-    '' '' '' '' '' ''    Catch ex As Exception
-    '' '' '' '' '' ''        awinSelection = Nothing
-    '' '' '' '' '' ''    End Try
-    '' '' '' '' '' ''    If request.pingMongoDb() Then
-
-    '' '' '' '' '' ''        If Not awinSelection Is Nothing Then
-
-    '' '' '' '' '' ''            ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
-    '' '' '' '' '' ''            If awinSelection.Count = 1 Then
-
-    '' '' '' '' '' ''                ' Aktion durchführen ...
-
-    '' '' '' '' '' ''                singleShp = awinSelection.Item(1)
-
-    '' '' '' '' '' ''                Try
-    '' '' '' '' '' ''                    hproj = ShowProjekte.getProject(singleShp.Name)
-    '' '' '' '' '' ''                    nameList = hproj.getMilestones
-
-    '' '' '' '' '' ''                    ' jetzt muss die ProjektHistorie aufgebaut werden 
-    '' '' '' '' '' ''                    With hproj
-    '' '' '' '' '' ''                        pName = .name
-    '' '' '' '' '' ''                        variantName = .variantName
-    '' '' '' '' '' ''                    End With
-
-    '' '' '' '' '' ''                    If Not projekthistorie Is Nothing Then
-    '' '' '' '' '' ''                        If projekthistorie.Count > 0 Then
-    '' '' '' '' '' ''                            vglName = projekthistorie.First.getShapeText
-    '' '' '' '' '' ''                        End If
-    '' '' '' '' '' ''                    Else
-    '' '' '' '' '' ''                        projekthistorie = New clsProjektHistorie
-    '' '' '' '' '' ''                    End If
-
-    '' '' '' '' '' ''                    If vglName <> hproj.getShapeText Then
-
-    '' '' '' '' '' ''                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-    '' '' '' '' '' ''                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-    '' '' '' '' '' ''                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-    '' '' '' '' '' ''                        projekthistorie.Add(Date.Now, hproj)
-
-
-    '' '' '' '' '' ''                    Else
-    '' '' '' '' '' ''                        ' der aktuelle Stand hproj muss hinzugefügt werden 
-    '' '' '' '' '' ''                        Dim lastElem As Integer = projekthistorie.Count - 1
-    '' '' '' '' '' ''                        projekthistorie.RemoveAt(lastElem)
-    '' '' '' '' '' ''                        projekthistorie.Add(Date.Now, hproj)
-    '' '' '' '' '' ''                    End If
-
-    '' '' '' '' '' ''                    If nameList.Count > 0 Then
-
-
-    '' '' '' '' '' ''                        appInstance.EnableEvents = False
-    '' '' '' '' '' ''                        enableOnUpdate = False
-
-    '' '' '' '' '' ''                        repObj = Nothing
-
-
-
-    '' '' '' '' '' ''                        For Each kvp As KeyValuePair(Of Date, String) In nameList
-
-    '' '' '' '' '' ''                            Dim msname As String = ""
-    '' '' '' '' '' ''                            msname = elemNameOfElemID(kvp.Value)
-    '' '' '' '' '' ''                            listOfMSNames.Add(msname)
-    '' '' '' '' '' ''                            listOfItems.Add(kvp.Value)
-    '' '' '' '' '' ''                        Next
-
-    '' '' '' '' '' ''                        With singleShp
-    '' '' '' '' '' ''                            top = .Top + boxHeight + 5
-    '' '' '' '' '' ''                            left = .Left - 5
-    '' '' '' '' '' ''                        End With
-
-    '' '' '' '' '' ''                        height = 2 * ((nameList.Count - 1) * 20 + 110)
-    '' '' '' '' '' ''                        width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
-
-    '' '' '' '' '' ''                        'Try
-
-    '' '' '' '' '' ''                        '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
-
-    '' '' '' '' '' ''                        'Catch ex As Exception
-
-    '' '' '' '' '' ''                        '    Call MsgBox(ex.Message)
-
-    '' '' '' '' '' ''                        'End Try
-
-
-
-    '' '' '' '' '' ''                        ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-    '' '' '' '' '' ''                        Dim auswahlFenster As New ListSelectionWindow(listOfMSNames, title)
-
-
-    '' '' '' '' '' ''                        With auswahlFenster
-
-    '' '' '' '' '' ''                            .kennung = " "
-    '' '' '' '' '' ''                            .chTyp = DiagrammTypen(6)
-    '' '' '' '' '' ''                            .chTop = top
-    '' '' '' '' '' ''                            .chLeft = left
-    '' '' '' '' '' ''                            .chWidth = width
-    '' '' '' '' '' ''                            .chHeight = height
-
-    '' '' '' '' '' ''                        End With
-    '' '' '' '' '' ''                        auswahlFenster.Show()
-
-    '' '' '' '' '' ''                    Else
-    '' '' '' '' '' ''                        Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-    '' '' '' '' '' ''                    End If
-
-    '' '' '' '' '' ''                Catch ex As Exception
-    '' '' '' '' '' ''                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-    '' '' '' '' '' ''                End Try
-
-    '' '' '' '' '' ''            Else
-    '' '' '' '' '' ''                Call MsgBox("bitte nur ein Projekt selektieren ...")
-    '' '' '' '' '' ''            End If
-    '' '' '' '' '' ''        Else
-    '' '' '' '' '' ''            Call MsgBox("vorher ein Projekt selektieren ...")
-    '' '' '' '' '' ''        End If
-
-    '' '' '' '' '' ''    Else
-    '' '' '' '' '' ''        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
-    '' '' '' '' '' ''        'projekthistorie.clear()
-    '' '' '' '' '' ''    End If
-    '' '' '' '' '' ''    enableOnUpdate = True
-    '' '' '' '' '' ''    appInstance.EnableEvents = True
-
-
-
-
-
-    '' '' '' '' '' ''End Sub
 
     Sub PT0ShowProjektStatus(control As IRibbonControl)
 
@@ -10473,7 +10177,7 @@ Imports System.Windows
 
     Sub PT3G1B2PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10494,7 +10198,7 @@ Imports System.Windows
         End Try
 
 
-        If request.pingMongoDb() Then
+        If CType(mongoDBAcc, Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10533,7 +10237,7 @@ Imports System.Windows
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, hproj)
                             lastElem = projekthistorie.Count - 1
@@ -10616,7 +10320,7 @@ Imports System.Windows
     ''' <remarks></remarks>
     Sub PT3G1B3PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10637,7 +10341,7 @@ Imports System.Windows
             awinSelection = Nothing
         End Try
 
-        If request.pingMongoDb() Then
+        If CType(mongoDBAcc, Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10675,7 +10379,7 @@ Imports System.Windows
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                         lastElem = projekthistorie.Count - 1
@@ -10820,7 +10524,7 @@ Imports System.Windows
 
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -10840,7 +10544,7 @@ Imports System.Windows
             awinSelection = Nothing
         End Try
 
-        If request.pingMongoDb() Then
+        If CType(mongoDBAcc, Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10866,7 +10570,7 @@ Imports System.Windows
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
 
@@ -10927,7 +10631,7 @@ Imports System.Windows
     Sub awinShowTrendKPI(control As IRibbonControl)
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -10970,9 +10674,9 @@ Imports System.Windows
                 End If
 
                 If vglName <> hproj.getShapeText Then
-                    If request.pingMongoDb() Then
+                    If CType(mongoDBAcc, Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -11028,153 +10732,7 @@ Imports System.Windows
 
     Sub awinShowTimeMachine(control As IRibbonControl)
 
-
         Call PBBShowTimeMachine(control)
-
-        ' ''Dim hproj As clsProjekt
-        ' ''Dim pName As String, variantName As String
-        ' ''Dim vglName As String = " "
-        ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        ' ''Dim singleShp As Excel.Shape
-        ' ''Dim showCharacteristics As New frmShowProjCharacteristics
-        '' ''Dim returnValue As DialogResult
-        ' ''Dim awinSelection As Excel.ShapeRange
-        ' ''Dim grueneAmpel As String = awinPath & "gruen.gif"
-        ' ''Dim gelbeAmpel As String = awinPath & "gelb.gif"
-        ' ''Dim roteAmpel As String = awinPath & "rot.gif"
-        ' ''Dim graueAmpel As String = awinPath & "grau.gif"
-
-        ' ''If timeMachineIsOn Then
-        ' ''    Call MsgBox("bitte erst Time Machine beenden ...")
-        ' ''    Exit Sub
-        ' ''End If
-
-        ' ''Call projektTafelInit()
-
-        ' ''enableOnUpdate = False
-        ' ''appInstance.EnableEvents = True
-
-
-        ' ''Try
-        ' ''    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        ' ''Catch ex As Exception
-        ' ''    awinSelection = Nothing
-        ' ''End Try
-
-        ' ''If Not awinSelection Is Nothing Then
-
-
-        ' ''    If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
-        ' ''        ' jetzt die Aktion durchführen ...
-        ' ''        singleShp = awinSelection.Item(1)
-        ' ''        hproj = ShowProjekte.getProject(singleShp.Name)
-        ' ''        With hproj
-        ' ''            pName = .name
-        ' ''            variantName = .variantName
-        ' ''            'Try
-        ' ''            '    variantName = .variantName.Trim
-        ' ''            'Catch ex As Exception
-        ' ''            '    variantName = ""
-        ' ''            'End Try
-
-        ' ''        End With
-
-        ' ''        If Not projekthistorie Is Nothing Then
-        ' ''            If projekthistorie.Count > 0 Then
-        ' ''                vglName = projekthistorie.First.getShapeText
-        ' ''            End If
-
-        ' ''        Else
-        ' ''            projekthistorie = New clsProjektHistorie
-        ' ''        End If
-
-        ' ''        If vglName <> hproj.getShapeText Then
-
-        ' ''            If request.pingMongoDb() Then
-        ' ''                ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-        ' ''                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-        ' ''                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-        ' ''                If projekthistorie.Count <> 0 Then
-
-        ' ''                    projekthistorie.Add(Date.Now, hproj)
-
-        ' ''                End If
-
-        ' ''            Else
-        ' ''                Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-        ' ''                projekthistorie.clear()
-        ' ''            End If
-
-        ' ''        Else
-        ' ''            ' der aktuelle Stand hproj muss hinzugefügt werden 
-        ' ''            Dim lastElem As Integer = projekthistorie.Count - 1
-        ' ''            projekthistorie.RemoveAt(lastElem)
-        ' ''            projekthistorie.Add(Date.Now, hproj)
-        ' ''        End If
-
-
-        ' ''        Dim nrSnapshots As Integer = projekthistorie.Count
-
-        ' ''        If nrSnapshots > 0 Then
-
-        ' ''            With showCharacteristics
-
-        ' ''                .Text = "Historie für Projekt " & pName.Trim & vbLf & _
-        ' ''                        "( " & projekthistorie.getZeitraum & " )"
-        ' ''                .timeSlider.Minimum = 0
-        ' ''                .timeSlider.Maximum = nrSnapshots - 1
-
-        ' ''                '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
-
-        ' ''                'If kvp.Value.ampelStatus = 1 Then
-        ' ''                '    .ampelPicture.LoadAsync(grueneAmpel)
-        ' ''                'ElseIf kvp.Value.ampelStatus = 2 Then
-        ' ''                '    .ampelPicture.LoadAsync(gelbeAmpel)
-        ' ''                'ElseIf kvp.Value.ampelStatus = 3 Then
-        ' ''                '    .ampelPicture.LoadAsync(roteAmpel)
-        ' ''                'Else
-        ' ''                '    .ampelPicture.LoadAsync(graueAmpel)
-        ' ''                'End If
-
-        ' ''                '.snapshotDate.Text = kvp.Value.timeStamp.ToString
-        ' ''                ' das ist ja der aktuelle Stand ..
-        ' ''                .snapshotDate.Text = "Aktueller Stand"
-        ' ''                ' Designer 
-        ' ''                'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
-        ' ''                '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
-        ' ''                '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
-        ' ''                '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
-
-
-        ' ''            End With
-
-
-        ' ''            ' jetzt wird das Form aufgerufen ... 
-
-        ' ''            'returnValue = showCharacteristics.ShowDialog
-        ' ''            showCharacteristics.Show()
-
-        ' ''        Else
-        ' ''            Call MsgBox("es gibt noch keine Planungs-Historie")
-        ' ''        End If
-
-        ' ''    Else
-        ' ''        Call MsgBox("bitte nur ein Projekt selektieren")
-        ' ''        'For Each singleShp In awinSelection
-        ' ''        '    With singleShp
-        ' ''        '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-        ' ''        '            nrSelPshp = nrSelPshp + 1
-        ' ''        '            SID = .ID.ToString
-        ' ''        '        End If
-        ' ''        '    End With
-        ' ''        'Next
-        ' ''    End If
-        ' ''Else
-        ' ''    Call MsgBox("vorher Projekt selektieren ...")
-        ' ''End If
-
-        ' ''enableOnUpdate = True
-
 
     End Sub
 
@@ -11272,7 +10830,7 @@ Imports System.Windows
     Sub PTTestFunktion2(control As IRibbonControl)
 
         Dim hproj As clsProjekt
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         ''Dim tstCollection As SortedList(Of Date, String)
         Dim anzElements As Integer
@@ -11341,42 +10899,10 @@ Imports System.Windows
                         Call MsgBox(vglProj.name & ": identisch ...")
                     End If
 
-
-                    'If i = 1 Then
-                    '    schluessel = calcProjektKey(hproj)
-                    'End If
-
-                    ''If request.pingMongoDb() Then
-                    ''    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    ''    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                    ''                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    ''Else
-                    ''    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                    ''    projekthistorie.clear()
-                    ''End If
-
-                    ''If projekthistorie.Count > 0 Then
-                    ''    ' Aufbau der Listen 
-                    ''    projektHistorien.Add(projekthistorie)
-
-
-                    ''End If
-
                 Next
             End If
         End If
 
-
-
-
-        ''tstCollection = projektHistorien.getTimeStamps(schluessel)
-        ''anzElements = tstCollection.Count
-
-        ''For i = 1 To anzElements
-        ''    ts = tstCollection.ElementAt(0).Key
-        ''    projektHistorien.Remove(schluessel, ts)
-        ''    todoListe.Add(schluessel, ts)
-        ''Next
 
 
         enableOnUpdate = True
@@ -11763,34 +11289,9 @@ Imports System.Windows
         enableOnUpdate = False
         appInstance.EnableEvents = True
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        Dim ok2 As Boolean = request.cancelWriteProtections(dbUsername)
-
-        ' ''Dim wpItem As clsWriteProtectionItem
-
-        ' ''For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
-
-        ' ''    wpItem = New clsWriteProtectionItem(kvp.Key, dbUsername, True)
-        ' ''    ' ''wpItem = New clsWriteProtectionItem(kvp.Key, dbUsername, False)
-        ' ''    ' ''wpItem.isProtected = False
-        ' ''    Dim ok As Boolean = request.setWriteProtection(wpItem)
-        ' ''    If ok Then
-        ' ''        'Call MsgBox("Projekt " & wpItem.pvName & " wurde von User " & wpItem.userName & _
-        ' ''        '            "nicht permanent geschützt: Date: " & wpItem.lastDateSet.ToShortDateString)
-        ' ''    Else
-
-        ' ''        Dim writeProtections As SortedList(Of String, clsWriteProtectionItem) = request.retrieveWriteProtectionsFromDB(AlleProjekte)
-        ' ''        Dim resultstr As String = ""
-        ' ''        For Each elem As KeyValuePair(Of String, clsWriteProtectionItem) In writeProtections
-        ' ''            resultstr = resultstr & vbLf & elem.Key & elem.Value.userName
-        ' ''        Next
-        ' ''        Call MsgBox("Projekt " & wpItem.pvName & " konnte nicht für User " & wpItem.userName & _
-        ' ''                    " geschützt werden: Date: " & wpItem.lastDateSet.ToShortDateString & vbLf & _
-        ' ''                    "writeProtections: " & resultstr)
-        ' ''    End If
-
-        ' ''Next
+        Dim ok2 As Boolean = CType(mongoDBAcc, Request).cancelWriteProtections(dbUsername)
 
         enableOnUpdate = True
 

@@ -8,20 +8,20 @@ Public Class frmSelectVariant
 
         If Not noDBAccessInPPT Then
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
             ' existiert der Projekt-Name
-            If request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+            If CType(mongoDBAcc, Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
                 If vName = "" Then
                     ' zeigen nur an, was nicht bereits aktiv ist 
                     ' also hier nichts tun ...
                 Else
-                    If request.projectNameAlreadyExists(pName, "", Date.Now) Then
+                    If CType(mongoDBAcc, Request).projectNameAlreadyExists(pName, "", Date.Now) Then
                         variantNamesListBox.Items.Add("Base-Variant")
                     End If
 
                 End If
 
-                Dim namesCollection As Collection = request.retrieveVariantNamesFromDB(pName)
+                Dim namesCollection As Collection = CType(mongoDBAcc, Request).retrieveVariantNamesFromDB(pName)
                 If namesCollection.Count > 0 Then
                     For Each tmpStr As String In namesCollection
                         Try
