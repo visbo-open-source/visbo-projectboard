@@ -457,6 +457,7 @@
            <separator id="PTXIG1s8"/> 
           <button id="PTJsonWrite" label="WRITE Json"  onAction ="PTJsonWrite" />
           <button id="PTJsonRead" label="READ Json"  onAction ="PTJsonRead" />
+          <button id="hierarchy" label="Hierarchy"  onAction ="PTJsonReadHierarchy" />
          </group>
       </tab>
       <!--label="Lizenzen"--><!--

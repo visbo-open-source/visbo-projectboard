@@ -217,6 +217,11 @@ Public Class ThisWorkbook
 
 
                     End If
+                    If awinSettings.userNamePWD <> "" Then
+                        My.Settings.userNamePWD = awinSettings.userNamePWD
+                        My.Settings.Save()
+                    End If
+
 
                     If Not cancelAbbruch Then
                         ' die temporären Schutz

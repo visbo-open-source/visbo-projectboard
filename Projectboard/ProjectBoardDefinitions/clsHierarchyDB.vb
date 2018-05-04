@@ -1,6 +1,15 @@
 ﻿Public Class clsHierarchyDB
-    'Public allNodes As SortedList(Of String, clsHierarchyNodeDB)
-    Public allNodes As Dictionary(Of String, clsHierarchyNodeDB)
+    Public allNodes As SortedList(Of String, clsHierarchyNodeDB)
+    'Public Property allNodes As Dictionary(Of String, clsHierarchyNodeDB)
+    '    Get
+
+    '    End Get
+    '    Set(value As Dictionary(Of String, clsHierarchyNodeDB))
+
+    '    End Set
+    'End Property
+
+
 
     ''' <summary>
     ''' kopiert aus einem HSP-Element in ein DB-Element
@@ -68,6 +77,7 @@
     End Sub
 
     Sub New()
-        allNodes = New Dictionary(Of String, clsHierarchyNodeDB)
+        'allNodes = New Dictionary(Of String, clsHierarchyNodeDB)
+        allNodes = New SortedList(Of String, clsHierarchyNodeDB)
     End Sub
 End Class

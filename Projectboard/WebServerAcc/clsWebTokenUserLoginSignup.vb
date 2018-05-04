@@ -1,11 +1,13 @@
 ﻿Imports System.Globalization
-Public Class clsTokenUserSignIn
+Public Class clsWebTokenUserLoginSignup
     Public Property state As String
     Public Property message As String
+    Public Property token As String
     Public Property user As clsUserReg
     Sub New()
         _state = "failure"
         _message = "not successfully logged in"
-        _user = New clsUserReg()
+        _token = ""
+        user = New clsUserReg()
     End Sub
 End Class

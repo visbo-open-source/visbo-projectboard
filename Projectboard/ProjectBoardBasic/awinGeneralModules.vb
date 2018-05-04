@@ -13655,7 +13655,8 @@ Public Module awinGeneralModules
 
     ''' <summary>
     ''' es wird der LoginProzess angestoßen. Bei erfolgreichem Login wird in den Settings verschlüsselt
-    ''' userNamePWD gemerkt. Damit ist es möglich den nächsten Login zu automatisieren
+    ''' userNamePWD gemerkt, sofern awinSettings.rememberUserPwd = true gesetzt ist.
+    ''' Damit ist es möglich den nächsten Login zu automatisieren
     ''' </summary>
     ''' <param name="noDBAccess"></param>
     ''' <returns>true = erfolgreich</returns>
@@ -13671,9 +13672,11 @@ Public Module awinGeneralModules
                     ' tk: 17.11.16: Einloggen in Datenbank 
                     noDBAccess = Not loginProzedur()
                     If Not noDBAccess Then
-                        ' in diesem Fall das mySettings setzen 
-                        Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                        awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                        If awinSettings.rememberUserPwd Then
+                            ' in diesem Fall das mySettings setzen 
+                            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                            awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                        End If
                     End If
                 Else
                     If awinSettings.userNamePWD = "" Then
@@ -13681,9 +13684,11 @@ Public Module awinGeneralModules
                         noDBAccess = Not loginProzedur()
 
                         If Not noDBAccess Then
-                            ' in diesem Fall das mySettings setzen 
-                            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                            awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                            If awinSettings.rememberUserPwd Then
+                                ' in diesem Fall das mySettings setzen 
+                                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                                awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                            End If
                         End If
 
                     Else
@@ -13695,9 +13700,11 @@ Public Module awinGeneralModules
                             noDBAccess = Not loginProzedur()
 
                             If Not noDBAccess Then
-                                ' in diesem Fall das mySettings setzen 
-                                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                                awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                                If awinSettings.rememberUserPwd Then
+                                    ' in diesem Fall das mySettings setzen 
+                                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                                    awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                                End If
                             End If
 
                         End If
