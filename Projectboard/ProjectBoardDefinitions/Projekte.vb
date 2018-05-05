@@ -21838,7 +21838,25 @@ Public Module Projekte
 
 
             ' Blattschutz aktivieren 
-            .Protect(Password:=pwd, UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            .Protect(Password:="x", UserInterfaceOnly:=True,
+                                AllowFormattingCells:=True,
+                                AllowFormattingColumns:=True,
+                                AllowInsertingColumns:=False,
+                                AllowInsertingRows:=True,
+                                AllowDeletingColumns:=False,
+                                AllowDeletingRows:=True,
+                                AllowSorting:=True,
+                                AllowFiltering:=True)
+            .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+            .EnableAutoFilter = True
+
+            '.Protect(Password:=pwd,
+            '         AllowFormattingCells:=True,
+            '         AllowFormattingColumns:=True,
+            '         UserInterfaceOnly:=True,
+            '         DrawingObjects:=True,
+            '         Contents:=True,
+            '         Scenarios:=True)
 
             ' jetzt noch die ersten beiden Spalten so dimensionieren, daß die Texte zu lesen sind
             CType(.Columns(1), Global.Microsoft.Office.Interop.Excel.Range).AutoFit()
@@ -24539,62 +24557,7 @@ Public Module Projekte
         End If
 
     End Sub
-    ' ''' <summary>
-    ' ''' 
-    ' ''' </summary>
-    ' ''' <param name="constellationName"></param>
-    ' ''' <remarks></remarks>
-    'Public Sub awinStoreConstellation(ByVal constellationName As String)
 
-    '    '        Dim request As New Request(awinSettings.databaseName)
-    '    ' prüfen, ob diese Constellation bereits existiert ..
-    '    If projectConstellations.Contains(constellationName) Then
-
-    '        Try
-    '            projectConstellations.Remove(constellationName)
-    '        Catch ex As Exception
-
-    '        End Try
-
-    '    End If
-
-    '    Dim newC As New clsConstellation
-    '    With newC
-    '        .constellationName = constellationName
-    '    End With
-
-    '    Dim newConstellationItem As clsConstellationItem
-    '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-    '        newConstellationItem = New clsConstellationItem
-    '        With newConstellationItem
-    '            .projectName = kvp.Key
-    '            .show = True
-    '            .Start = kvp.Value.startDate
-    '            .variantName = kvp.Value.variantName
-    '            .zeile = kvp.Value.tfZeile
-    '        End With
-    '        newC.Add(newConstellationItem)
-    '    Next
-
-
-    '    Try
-    '        projectConstellations.Add(newC)
-
-    '    Catch ex As Exception
-    '        Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-    '    End Try
-
-    '    '' Portfolio in die Datenbank speichern
-    '    'If request.pingMongoDb() Then
-    '    '    If Not request.storeConstellationToDB(newC) Then
-    '    '        Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
-    '    '    End If
-    '    'Else
-    '    '    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
-    '    'End If
-
-
-    'End Sub
     ''' <summary>
     ''' bestimmt die Art des Shapes, ob es ein Projekt, Phasen, Meilenstein, Status oder
     ''' Dependency Shape ist 
@@ -25820,7 +25783,7 @@ Public Module Projekte
         End If
 
     End Function
- 
+
 
 
 End Module

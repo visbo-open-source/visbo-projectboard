@@ -1,4 +1,8 @@
-﻿Public Class clsRolleDB
+﻿''' <summary>
+''' Klassen-Definition für Rolle mit Ressourcenbedarf 
+''' </summary>
+''' <remarks></remarks>
+Public Class clsRolleDB
 
     Public RollenTyp As Integer
     Public name As String

@@ -37,47 +37,47 @@ Partial Class frmHierarchySelection
         Me.filterDropbox = New System.Windows.Forms.ComboBox()
         Me.filterLabel = New System.Windows.Forms.Label()
         Me.auswSpeichern = New System.Windows.Forms.Button()
-        Me.SelectionSet = New System.Windows.Forms.PictureBox()
-        Me.collapseCompletely = New System.Windows.Forms.PictureBox()
-        Me.expandCompletely = New System.Windows.Forms.PictureBox()
-        Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.BackgroundWorker3 = New System.ComponentModel.BackgroundWorker()
         Me.rdbPhases = New System.Windows.Forms.RadioButton()
         Me.headerLine = New System.Windows.Forms.Label()
         Me.filterBox = New System.Windows.Forms.TextBox()
-        Me.picturePhasen = New System.Windows.Forms.PictureBox()
         Me.rdbMilestones = New System.Windows.Forms.RadioButton()
-        Me.pictureMilestones = New System.Windows.Forms.PictureBox()
         Me.rdbRoles = New System.Windows.Forms.RadioButton()
-        Me.pictureRoles = New System.Windows.Forms.PictureBox()
         Me.rdbCosts = New System.Windows.Forms.RadioButton()
-        Me.pictureCosts = New System.Windows.Forms.PictureBox()
         Me.rdbBU = New System.Windows.Forms.RadioButton()
-        Me.pictureBU = New System.Windows.Forms.PictureBox()
         Me.rdbTyp = New System.Windows.Forms.RadioButton()
-        Me.pictureTyp = New System.Windows.Forms.PictureBox()
         Me.rdbNameList = New System.Windows.Forms.RadioButton()
         Me.rdbProjStruktProj = New System.Windows.Forms.RadioButton()
         Me.rdbProjStruktTyp = New System.Windows.Forms.RadioButton()
         Me.Panel1 = New System.Windows.Forms.Panel()
         Me.rdbPhaseMilest = New System.Windows.Forms.RadioButton()
-        Me.picturePhaseMilest = New System.Windows.Forms.PictureBox()
         Me.Panel2 = New System.Windows.Forms.Panel()
         Me.auswLaden = New System.Windows.Forms.Button()
+        Me.picturePhaseMilest = New System.Windows.Forms.PictureBox()
+        Me.picturePhasen = New System.Windows.Forms.PictureBox()
+        Me.pictureTyp = New System.Windows.Forms.PictureBox()
+        Me.pictureMilestones = New System.Windows.Forms.PictureBox()
+        Me.pictureBU = New System.Windows.Forms.PictureBox()
+        Me.pictureRoles = New System.Windows.Forms.PictureBox()
+        Me.pictureCosts = New System.Windows.Forms.PictureBox()
+        Me.SelectionSet = New System.Windows.Forms.PictureBox()
+        Me.collapseCompletely = New System.Windows.Forms.PictureBox()
+        Me.expandCompletely = New System.Windows.Forms.PictureBox()
+        Me.SelectionReset = New System.Windows.Forms.PictureBox()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.Panel1.SuspendLayout()
+        Me.Panel2.SuspendLayout()
+        CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureMilestones, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.pictureMilestones, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.Panel1.SuspendLayout()
-        CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.Panel2.SuspendLayout()
         Me.SuspendLayout()
         '
         'hryTreeView
@@ -216,53 +216,6 @@ Partial Class frmHierarchySelection
         Me.auswSpeichern.Text = "Speichern"
         Me.auswSpeichern.UseVisualStyleBackColor = True
         '
-        'SelectionSet
-        '
-        Me.SelectionSet.BackColor = System.Drawing.SystemColors.Control
-        Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
-        Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
-        Me.SelectionSet.InitialImage = Nothing
-        Me.SelectionSet.Location = New System.Drawing.Point(12, 455)
-        Me.SelectionSet.Name = "SelectionSet"
-        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
-        Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.SelectionSet.TabIndex = 51
-        Me.SelectionSet.TabStop = False
-        '
-        'collapseCompletely
-        '
-        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
-        Me.collapseCompletely.Location = New System.Drawing.Point(67, 455)
-        Me.collapseCompletely.Name = "collapseCompletely"
-        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
-        Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.collapseCompletely.TabIndex = 47
-        Me.collapseCompletely.TabStop = False
-        '
-        'expandCompletely
-        '
-        Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
-        Me.expandCompletely.Location = New System.Drawing.Point(89, 455)
-        Me.expandCompletely.Name = "expandCompletely"
-        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
-        Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.expandCompletely.TabIndex = 46
-        Me.expandCompletely.TabStop = False
-        '
-        'SelectionReset
-        '
-        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
-        Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
-        Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(34, 455)
-        Me.SelectionReset.Name = "SelectionReset"
-        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
-        Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.SelectionReset.TabIndex = 45
-        Me.SelectionReset.TabStop = False
-        '
         'BackgroundWorker3
         '
         Me.BackgroundWorker3.WorkerReportsProgress = True
@@ -300,15 +253,6 @@ Partial Class frmHierarchySelection
         Me.filterBox.TabIndex = 54
         Me.filterBox.Visible = False
         '
-        'picturePhasen
-        '
-        Me.picturePhasen.Image = CType(resources.GetObject("picturePhasen.Image"), System.Drawing.Image)
-        Me.picturePhasen.Location = New System.Drawing.Point(26, 3)
-        Me.picturePhasen.Name = "picturePhasen"
-        Me.picturePhasen.Size = New System.Drawing.Size(33, 33)
-        Me.picturePhasen.TabIndex = 55
-        Me.picturePhasen.TabStop = False
-        '
         'rdbMilestones
         '
         Me.rdbMilestones.AutoSize = True
@@ -317,15 +261,6 @@ Partial Class frmHierarchySelection
         Me.rdbMilestones.Size = New System.Drawing.Size(14, 13)
         Me.rdbMilestones.TabIndex = 56
         Me.rdbMilestones.UseVisualStyleBackColor = True
-        '
-        'pictureMilestones
-        '
-        Me.pictureMilestones.Image = CType(resources.GetObject("pictureMilestones.Image"), System.Drawing.Image)
-        Me.pictureMilestones.Location = New System.Drawing.Point(113, 3)
-        Me.pictureMilestones.Name = "pictureMilestones"
-        Me.pictureMilestones.Size = New System.Drawing.Size(33, 33)
-        Me.pictureMilestones.TabIndex = 57
-        Me.pictureMilestones.TabStop = False
         '
         'rdbRoles
         '
@@ -336,15 +271,6 @@ Partial Class frmHierarchySelection
         Me.rdbRoles.TabIndex = 58
         Me.rdbRoles.UseVisualStyleBackColor = True
         '
-        'pictureRoles
-        '
-        Me.pictureRoles.Image = CType(resources.GetObject("pictureRoles.Image"), System.Drawing.Image)
-        Me.pictureRoles.Location = New System.Drawing.Point(208, 3)
-        Me.pictureRoles.Name = "pictureRoles"
-        Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
-        Me.pictureRoles.TabIndex = 59
-        Me.pictureRoles.TabStop = False
-        '
         'rdbCosts
         '
         Me.rdbCosts.AutoSize = True
@@ -353,15 +279,6 @@ Partial Class frmHierarchySelection
         Me.rdbCosts.Size = New System.Drawing.Size(14, 13)
         Me.rdbCosts.TabIndex = 60
         Me.rdbCosts.UseVisualStyleBackColor = True
-        '
-        'pictureCosts
-        '
-        Me.pictureCosts.Image = CType(resources.GetObject("pictureCosts.Image"), System.Drawing.Image)
-        Me.pictureCosts.Location = New System.Drawing.Point(310, 3)
-        Me.pictureCosts.Name = "pictureCosts"
-        Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
-        Me.pictureCosts.TabIndex = 61
-        Me.pictureCosts.TabStop = False
         '
         'rdbBU
         '
@@ -373,16 +290,6 @@ Partial Class frmHierarchySelection
         Me.rdbBU.UseVisualStyleBackColor = True
         Me.rdbBU.Visible = False
         '
-        'pictureBU
-        '
-        Me.pictureBU.Image = Global.ProjectBoardBasic.My.Resources.Resources.branch
-        Me.pictureBU.Location = New System.Drawing.Point(405, 5)
-        Me.pictureBU.Name = "pictureBU"
-        Me.pictureBU.Size = New System.Drawing.Size(33, 33)
-        Me.pictureBU.TabIndex = 63
-        Me.pictureBU.TabStop = False
-        Me.pictureBU.Visible = False
-        '
         'rdbTyp
         '
         Me.rdbTyp.AutoSize = True
@@ -392,16 +299,6 @@ Partial Class frmHierarchySelection
         Me.rdbTyp.TabIndex = 64
         Me.rdbTyp.UseVisualStyleBackColor = True
         Me.rdbTyp.Visible = False
-        '
-        'pictureTyp
-        '
-        Me.pictureTyp.Image = CType(resources.GetObject("pictureTyp.Image"), System.Drawing.Image)
-        Me.pictureTyp.Location = New System.Drawing.Point(501, 3)
-        Me.pictureTyp.Name = "pictureTyp"
-        Me.pictureTyp.Size = New System.Drawing.Size(33, 33)
-        Me.pictureTyp.TabIndex = 65
-        Me.pictureTyp.TabStop = False
-        Me.pictureTyp.Visible = False
         '
         'rdbNameList
         '
@@ -466,17 +363,6 @@ Partial Class frmHierarchySelection
         Me.rdbPhaseMilest.UseVisualStyleBackColor = True
         Me.rdbPhaseMilest.Visible = False
         '
-        'picturePhaseMilest
-        '
-        Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.phases_und_milestones_248x248
-        Me.picturePhaseMilest.Location = New System.Drawing.Point(26, 3)
-        Me.picturePhaseMilest.Name = "picturePhaseMilest"
-        Me.picturePhaseMilest.Size = New System.Drawing.Size(33, 33)
-        Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-        Me.picturePhaseMilest.TabIndex = 66
-        Me.picturePhaseMilest.TabStop = False
-        Me.picturePhaseMilest.Visible = False
-        '
         'Panel2
         '
         Me.Panel2.Controls.Add(Me.rdbProjStruktTyp)
@@ -495,6 +381,120 @@ Partial Class frmHierarchySelection
         Me.auswLaden.TabIndex = 72
         Me.auswLaden.Text = "Laden"
         Me.auswLaden.UseVisualStyleBackColor = True
+        '
+        'picturePhaseMilest
+        '
+        Me.picturePhaseMilest.Image = Global.ProjectBoardBasic.My.Resources.Resources.phases_und_milestones_248x248
+        Me.picturePhaseMilest.Location = New System.Drawing.Point(26, 3)
+        Me.picturePhaseMilest.Name = "picturePhaseMilest"
+        Me.picturePhaseMilest.Size = New System.Drawing.Size(33, 33)
+        Me.picturePhaseMilest.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.picturePhaseMilest.TabIndex = 66
+        Me.picturePhaseMilest.TabStop = False
+        Me.picturePhaseMilest.Visible = False
+        '
+        'picturePhasen
+        '
+        Me.picturePhasen.Image = CType(resources.GetObject("picturePhasen.Image"), System.Drawing.Image)
+        Me.picturePhasen.Location = New System.Drawing.Point(26, 3)
+        Me.picturePhasen.Name = "picturePhasen"
+        Me.picturePhasen.Size = New System.Drawing.Size(33, 33)
+        Me.picturePhasen.TabIndex = 55
+        Me.picturePhasen.TabStop = False
+        '
+        'pictureTyp
+        '
+        Me.pictureTyp.Image = CType(resources.GetObject("pictureTyp.Image"), System.Drawing.Image)
+        Me.pictureTyp.Location = New System.Drawing.Point(501, 3)
+        Me.pictureTyp.Name = "pictureTyp"
+        Me.pictureTyp.Size = New System.Drawing.Size(33, 33)
+        Me.pictureTyp.TabIndex = 65
+        Me.pictureTyp.TabStop = False
+        Me.pictureTyp.Visible = False
+        '
+        'pictureMilestones
+        '
+        Me.pictureMilestones.Image = Global.ProjectBoardBasic.My.Resources.Resources.milestones_icon1
+        Me.pictureMilestones.Location = New System.Drawing.Point(113, 3)
+        Me.pictureMilestones.Name = "pictureMilestones"
+        Me.pictureMilestones.Size = New System.Drawing.Size(33, 33)
+        Me.pictureMilestones.TabIndex = 57
+        Me.pictureMilestones.TabStop = False
+        '
+        'pictureBU
+        '
+        Me.pictureBU.Image = Global.ProjectBoardBasic.My.Resources.Resources.branch
+        Me.pictureBU.Location = New System.Drawing.Point(405, 5)
+        Me.pictureBU.Name = "pictureBU"
+        Me.pictureBU.Size = New System.Drawing.Size(33, 33)
+        Me.pictureBU.TabIndex = 63
+        Me.pictureBU.TabStop = False
+        Me.pictureBU.Visible = False
+        '
+        'pictureRoles
+        '
+        Me.pictureRoles.Image = CType(resources.GetObject("pictureRoles.Image"), System.Drawing.Image)
+        Me.pictureRoles.Location = New System.Drawing.Point(208, 3)
+        Me.pictureRoles.Name = "pictureRoles"
+        Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
+        Me.pictureRoles.TabIndex = 59
+        Me.pictureRoles.TabStop = False
+        '
+        'pictureCosts
+        '
+        Me.pictureCosts.Image = CType(resources.GetObject("pictureCosts.Image"), System.Drawing.Image)
+        Me.pictureCosts.Location = New System.Drawing.Point(310, 3)
+        Me.pictureCosts.Name = "pictureCosts"
+        Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
+        Me.pictureCosts.TabIndex = 61
+        Me.pictureCosts.TabStop = False
+        '
+        'SelectionSet
+        '
+        Me.SelectionSet.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
+        Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
+        Me.SelectionSet.InitialImage = Nothing
+        Me.SelectionSet.Location = New System.Drawing.Point(12, 455)
+        Me.SelectionSet.Name = "SelectionSet"
+        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.SelectionSet.TabIndex = 51
+        Me.SelectionSet.TabStop = False
+        '
+        'collapseCompletely
+        '
+        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
+        Me.collapseCompletely.Location = New System.Drawing.Point(67, 455)
+        Me.collapseCompletely.Name = "collapseCompletely"
+        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.collapseCompletely.TabIndex = 47
+        Me.collapseCompletely.TabStop = False
+        '
+        'expandCompletely
+        '
+        Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
+        Me.expandCompletely.Location = New System.Drawing.Point(89, 455)
+        Me.expandCompletely.Name = "expandCompletely"
+        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.expandCompletely.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.expandCompletely.TabIndex = 46
+        Me.expandCompletely.TabStop = False
+        '
+        'SelectionReset
+        '
+        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
+        Me.SelectionReset.InitialImage = Nothing
+        Me.SelectionReset.Location = New System.Drawing.Point(34, 455)
+        Me.SelectionReset.Name = "SelectionReset"
+        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.SelectionReset.TabIndex = 45
+        Me.SelectionReset.TabStop = False
         '
         'frmHierarchySelection
         '
@@ -528,21 +528,21 @@ Partial Class frmHierarchySelection
         Me.Text = "Auswahl von Plan-Objekten"
         Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.Panel1.ResumeLayout(False)
+        Me.Panel1.PerformLayout()
+        Me.Panel2.ResumeLayout(False)
+        Me.Panel2.PerformLayout()
+        CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureMilestones, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.pictureMilestones, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.pictureTyp, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.Panel1.ResumeLayout(False)
-        Me.Panel1.PerformLayout()
-        CType(Me.picturePhaseMilest, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.Panel2.ResumeLayout(False)
-        Me.Panel2.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

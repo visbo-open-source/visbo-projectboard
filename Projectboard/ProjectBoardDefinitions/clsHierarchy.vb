@@ -1,6 +1,17 @@
 ﻿Public Class clsHierarchy
     Private _allNodes As SortedList(Of String, clsHierarchyNode)
 
+
+    ''' <summary>
+    ''' gibt die Hierarchie-Liste zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property hryListe() As SortedList(Of String, clsHierarchyNode)
+        Get
+            hryListe = _allNodes
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt die eindeutigen Element-Namen oder Element-IDs der Kinder zurück , abhängig von Kennung werden 
     ''' Meilenstein-, Phasen- oder alle Kinder zurückgegeben  
@@ -58,6 +69,78 @@
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt zu dem gegebenenen Element das in der Hierarchie nächst folgende an
+    ''' ist Meilenstein: 
+    '''    erst Geschwister Element = nächste Kind-Element des Vaters
+    '''    dann Geschwister Element des Vater Knotens, ..Vater/Vater-Knotens, ...
+    ''' ist Phase
+    '''    erst Kind-Element
+    '''    dann Geschwister Element 
+    '''    dann Geschwister Element des Vaters, Vater-Vaters ....
+    ''' wenn das Ende der Hierachie erreicht ist, dann wird der leere String zurückgegeben   
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    Public Function getNextIdOfId(ByVal elemID As String, ByRef indent As Integer, ByVal abbruchLevel As Integer) As String
+
+        Dim tmpResult As String = ""
+        If elemIDIstMeilenstein(elemID) Then
+            Dim parentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+            ' indentLevel bleibt gleich ...
+            If Not IsNothing(parentNode) Then
+                tmpResult = parentNode.getNextSibling(elemID)
+                If tmpResult = "" Then
+                    While tmpResult = "" And indent > abbruchLevel
+                        elemID = Me.getParentIDOfID(elemID)
+                        ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
+                        indent = indent - 1
+                        If indent > abbruchLevel Then
+                            Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+                            If Not IsNothing(grandparentNode) Then
+                                tmpResult = grandparentNode.getNextSibling(elemID)
+                            End If
+                        End If
+                    End While
+                End If
+            End If
+
+        Else
+            ' Phasen Behandlung 
+            Dim phaseNode As clsHierarchyNode = Me.nodeItem(elemID)
+            If phaseNode.childCount > 0 Then
+                ' es geht eins runter in der Hierarchie , also indentLevel eins hochzählen
+                indent = indent + 1
+                tmpResult = phaseNode.getChild(1)
+            Else
+                ' gleiche Behandlung wie bei Meilenstein , allerdings kann nur hier gleich der erste Parent gleich Null sein, 
+                ' ein Meilenstein hat immer wenigstens einen Vater ...
+                Dim parentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+                ' indentLevel bleibt gleich ... 
+                If Not IsNothing(parentNode) Then
+                    tmpResult = parentNode.getNextSibling(elemID)
+                    If tmpResult = "" Then
+                        While tmpResult = "" And indent > abbruchLevel
+                            elemID = Me.getParentIDOfID(elemID)
+                            ' es geht eins höher in der Hierarchie, also indent-Level erniedrigen
+                            indent = indent - 1
+                            If indent > abbruchLevel Then
+                                Dim grandparentNode As clsHierarchyNode = Me.parentNodeItem(elemID)
+                                If Not IsNothing(grandparentNode) Then
+                                    tmpResult = grandparentNode.getNextSibling(elemID)
+                                End If
+                            End If
+                        End While
+                    End If
+                End If
+
+            End If
+        End If
+
+        getNextIdOfId = tmpResult
+
+    End Function
 
     ''' <summary>
     ''' gibt eine Liste der IDs der Kinder des Elements zurück , die Phasen bzw. Meilensteine sind
@@ -1452,7 +1535,7 @@
     ''' gibt den Hierarchie Level der elemID zurück 
     ''' 0: es handelt sich um den RootKnoten
     ''' x: Element ist auf der x-Ten Hierarchie Stufe 
-    ''' -1: elemID oder eiens der Vater Elemente existieren nicht in der Hierarchie
+    ''' -1: elemID oder eines der Vater Elemente existieren nicht in der Hierarchie
     ''' </summary>
     ''' <param name="elemID"></param>
     ''' <value></value>

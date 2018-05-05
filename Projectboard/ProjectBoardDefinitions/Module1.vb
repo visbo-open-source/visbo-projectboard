@@ -17,6 +17,9 @@ Public Module Module1
     ' awinSettings: für StartOfCalendar, linker Rand, rechter Rand, ...
     ' Laufzeit Parameter;
 
+    ' das Objekt, das später die Instanz-Variable Request aufnimmt 
+    Public mongoDBAcc As Object = Nothing
+
     'login - Informationen
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
@@ -167,12 +170,19 @@ Public Module Module1
     Public miniWidth As Double = 126 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
     Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
+    ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
+    Public massColFontValues(2, 100) As Double
+
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
+    Public visboFarbeNone As Integer = RGB(127, 127, 127)
+    Public visboFarbeGreen As Integer = RGB(0, 176, 80)
+    Public visboFarbeYellow As Integer = RGB(255, 197, 13)
+    Public visboFarbeRed As Integer = RGB(255, 0, 0)
 
     ' ur:04.05.2016: da "0§.§" kann in MOngoDB 3.0 nicht in einer sortierten Liste verarbeitet werden (ergibt BsonSerializationException)
     ' also wir rootPhaseName in rootPhaseNameDB geändert nur zum Speichern in DB. Beim Lesen umgekehrt.
@@ -222,6 +232,7 @@ Public Module Module1
         charts = 0
         tables = 1
         components = 2
+        planelements = 4
     End Enum
 
     Public Enum ptReportTables
@@ -244,6 +255,8 @@ Public Module Module1
         prSymRisks = 12
         prSymTrafficLight = 13
         prSymDescription = 14
+        prCard = 15
+        prCardinvisible = 16
     End Enum
 
     Public Enum ptPRPFType
@@ -322,6 +335,8 @@ Public Module Module1
     Public Enum ptModus
         graficboard = 0
         massEditRessCost = 1
+        massEditTermine = 2
+        massEditAttribute = 3
     End Enum
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
@@ -725,9 +740,9 @@ Public Module Module1
     '   französisch
     '   spanisch
     '
-    Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"), _
-                                         New CultureInfo("en-US"), _
-                                         New CultureInfo("fr-FR"), _
+    Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"),
+                                         New CultureInfo("en-US"),
+                                         New CultureInfo("fr-FR"),
                                          New CultureInfo("es-ES")}
     ' aktuell verwendete Sprache für reports
     '
@@ -1134,34 +1149,34 @@ Public Module Module1
         If found Then
             Dim weitermachen As Boolean = False
             If istRollenDiagramm(chtObj) Then
-                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
                                                                 myCollection, Nothing)
                 weitermachen = True
 
 
             ElseIf istKostenartDiagramm(chtObj) Then
-                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
                                                                 Nothing, myCollection)
                 weitermachen = True
 
             ElseIf istPhasenDiagramm(chtObj) Then
-                currentFilter = New clsFilter("temp", Nothing, Nothing, myCollection, Nothing, _
+                currentFilter = New clsFilter("temp", Nothing, Nothing, myCollection, Nothing,
                                                                Nothing, Nothing)
                 weitermachen = True
                 showPhasesMilestones = True
 
             ElseIf istMileStoneDiagramm(chtObj) Then
-                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, myCollection, _
+                currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, myCollection,
                                                                Nothing, Nothing)
                 weitermachen = True
                 showPhasesMilestones = True
 
             ElseIf istErgebnisDiagramm(chtObj, index) Then
 
-                If index = PTpfdk.UeberAuslastung Or _
+                If index = PTpfdk.UeberAuslastung Or
                     index = PTpfdk.Unterauslastung Then
 
-                    currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing, _
+                    currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
                                                                     myCollection, Nothing)
                     weitermachen = True
                 End If
@@ -1180,12 +1195,12 @@ Public Module Module1
                                 Dim phNames As New Collection
 
                                 If showPhasesMilestones Then
-                                    If diagrammType = PTpfdk.Meilenstein Or _
+                                    If diagrammType = PTpfdk.Meilenstein Or
                                         diagrammType = PTpfdk.MilestoneCategories Then
 
                                         msNames = myCollection
 
-                                    ElseIf diagrammType = PTpfdk.Phasen Or _
+                                    ElseIf diagrammType = PTpfdk.Phasen Or
                                         diagrammType = PTpfdk.PhaseCategories Then
 
                                         phNames = myCollection
@@ -1214,7 +1229,7 @@ Public Module Module1
 
     End Sub
 
-    
+
     ''' <summary>
     ''' markiert alle Projekte, wenn die bereits markiert waren, wird atleastOne = false zurückgegeben 
     ''' </summary>
@@ -1359,7 +1374,7 @@ Public Module Module1
 
 
                 vglValue = CInt(tmpStr(1))
-                If (vglValue >= 3 And vglValue <= 11) Or _
+                If (vglValue >= 3 And vglValue <= 11) Or
                     (vglValue >= 15 And vglValue <= 19) Then
                     found = True
                     rwert = vglValue
@@ -1431,7 +1446,7 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Phasen Or _
+                If CInt(tmpStr(1)) = PTpfdk.Phasen Or
                     CInt(tmpStr(1)) = PTpfdk.PhaseCategories Then
 
                     found = True
@@ -1468,7 +1483,7 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Or _
+                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Or
                     CInt(tmpStr(1)) = PTpfdk.MilestoneCategories Then
 
                     found = True
@@ -1985,7 +2000,7 @@ Public Module Module1
     ''' <param name="ix">gibt an, in welchem Monat des durch Anfang / Ende definierten Zeitraums die Überdeckung anfängt</param>
     ''' <param name="anzahl">enthält die Breite der Überdeckung</param>
     ''' <remarks></remarks>
-    Sub awinIntersectZeitraum(anfang As Integer, ende As Integer, _
+    Sub awinIntersectZeitraum(anfang As Integer, ende As Integer,
                                     ByRef ixZeitraum As Integer, ByRef ix As Integer, ByRef anzahl As Integer)
 
 
@@ -2071,8 +2086,8 @@ Public Module Module1
                     i = 1
                     While i <= DiagramList.Count And Not found
                         'If (chtTitle Like (DiagramList.getDiagramm(i).DiagrammTitel & "*")) And _
-                        If (chtTitle = DiagramList.getDiagramm(i).DiagrammTitel) And _
-                                        (DiagramList.getDiagramm(i).isCockpitChart = True) And _
+                        If (chtTitle = DiagramList.getDiagramm(i).DiagrammTitel) And
+                                        (DiagramList.getDiagramm(i).isCockpitChart = True) And
                                         (DiagramList.getDiagramm(i).diagrammTyp = DiagrammTypen(prctyp)) Then
                             DiagramList.Remove(i)
                             chtobj.Delete()
@@ -2144,7 +2159,7 @@ Public Module Module1
         i = 1
         While i <= DiagramList.Count And Not found
             'If (chtTitle Like (DiagramList.getDiagramm(i).DiagrammTitel & "*")) And _
-            If (chtTitle = DiagramList.getDiagramm(i).DiagrammTitel) And _
+            If (chtTitle = DiagramList.getDiagramm(i).DiagrammTitel) And
                             (DiagramList.getDiagramm(i).isCockpitChart) Then
                 With DiagramList.getDiagramm(i)
                     Select Case .diagrammTyp
@@ -2295,7 +2310,7 @@ Public Module Module1
 
 
 
-    Public Function magicBoardIstFrei(ByVal mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
+    Public Function magicBoardIstFrei(ByVal mycollection As Collection, ByVal pname As String, ByVal zeile As Integer,
                                       ByVal startDate As Date, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
         Dim istfrei = True
         Dim ix As Integer = 1
@@ -2740,7 +2755,7 @@ Public Module Module1
 
         Dim bereich As Integer
         Dim i As Integer
-        Dim minvorne As Boolean = False, minhinten As Boolean = False, _
+        Dim minvorne As Boolean = False, minhinten As Boolean = False,
             maxvorne As Boolean = False, maxhinten As Boolean = False
 
 
@@ -2911,7 +2926,7 @@ Public Module Module1
     ''' <param name="breadcrumb"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String, _
+    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String,
                                     Optional ByVal pvKennung As String = "") As String
 
         If pvKennung = "" Then
@@ -2940,7 +2955,7 @@ Public Module Module1
     ''' <param name="isMilestone">gibt an ob es sich um einen Meilenstein oder eine Phase handelt</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function calcHryCategoryName(ByVal category As String, ByVal isMilestone As boolean) As String
+    Public Function calcHryCategoryName(ByVal category As String, ByVal isMilestone As Boolean) As String
 
         If isMilestone Then
             calcHryCategoryName = "[C:" & category & "]M"
@@ -2987,15 +3002,15 @@ Public Module Module1
     ''' <param name="elemName"></param>
     ''' <param name="breadcrumb"></param>
     ''' <remarks></remarks>
-    Public Sub splitHryFullnameTo2(ByVal fullname As String, _
-                                   ByRef elemName As String, ByRef breadcrumb As String, _
+    Public Sub splitHryFullnameTo2(ByVal fullname As String,
+                                   ByRef elemName As String, ByRef breadcrumb As String,
                                    ByRef type As Integer, ByRef pvName As String)
         Dim tmpstr() As String
         Dim tmpBC As String = ""
         Dim anzahl As Integer
 
         ' enthält der pvName die Kennung für Vorlage oder Projekt ? 
-        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Or _
+        If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Or
             fullname.StartsWith("[C:") Then
             If fullname.StartsWith("[P:") Then
                 type = PTProjektType.projekt
@@ -3062,7 +3077,7 @@ Public Module Module1
                 tmpResult = breadCrumb.Replace("#", "-") & "-" & elemName
             End If
         End If
-        
+
 
         splitHryFullnameTo1 = tmpResult
 
@@ -3076,7 +3091,7 @@ Public Module Module1
     ''' <param name="breadcrumb"></param>
     ''' <param name="lfdNr"></param>
     ''' <remarks></remarks>
-    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer, _
+    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer,
                                           ByRef type As Integer, ByRef pvName As String)
         Dim tmpstr() As String
         Dim tmpBC As String = ""
@@ -3156,8 +3171,8 @@ Public Module Module1
         Else
             pName = pName.Trim
             If pName.Length >= 1 Then
-                If pName.Contains("#") Or _
-                    pName.Contains("(") Or pName.Contains(")") Or _
+                If pName.Contains("#") Or
+                    pName.Contains("(") Or pName.Contains(")") Or
                     pName.Contains(vbLf) Or pName.Contains(vbCr) Then
                     isValidProjectName = False
                 Else
@@ -3418,7 +3433,7 @@ Public Module Module1
     ''' <param name="enddate2">Ende Datum Phase 2</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function calcPhaseUeberdeckung(ByVal startDate1 As Date, endDate1 As Date, _
+    Public Function calcPhaseUeberdeckung(ByVal startDate1 As Date, endDate1 As Date,
                                               ByVal startDate2 As Date, ByVal enddate2 As Date) As Double
 
         Dim duration1 As Long = DateDiff(DateInterval.Day, startDate1, endDate1) + 1
@@ -3428,7 +3443,7 @@ Public Module Module1
         Dim ergebnis As Double
 
 
-        If DateDiff(DateInterval.Day, endDate1, startDate2) > 0 Or _
+        If DateDiff(DateInterval.Day, endDate1, startDate2) > 0 Or
             DateDiff(DateInterval.Day, enddate2, startDate1) > 0 Then
             ' es gibt gar keine Überdeckung ...
             ergebnis = 0.0
@@ -3464,19 +3479,13 @@ Public Module Module1
         Dim found As Boolean = False
         Dim foundinDatabase As Boolean = False
         Dim key As String = calcProjektKey(strName, "")
-        'Dim request As New Request(awinSettings.databaseName)
 
         If Len(strName) < 2 Then
             ' ProjektName soll mehr als 1 Zeichen haben
             found = True
         ElseIf AlleProjekte.Containskey(key) Then
             found = True
-            'ElseIf request.pingMongoDb() Then
 
-            '    found = request.projectNameAlreadyExists(strName, "", Date.Now)
-            'Else
-            '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-            '    found = False
         End If
 
         inProjektliste = found
@@ -3499,7 +3508,7 @@ Public Module Module1
 
         Do While Not found And index <= anzElements - 1
 
-            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And _
+            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And
                     isMilestone = appearanceDefinitions.ElementAt(index).Value.isMilestone Then
                 found = True
                 ergebnis = appearanceDefinitions.ElementAt(index).Key
@@ -3513,53 +3522,6 @@ Public Module Module1
 
     End Function
 
-    '' '' ''' <summary>
-    '' '' ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
-    '' '' ''' </summary>
-    '' '' ''' <remarks></remarks>
-    '' ''Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
-    '' ''                                          ByVal fBU As Collection, ByVal fTyp As Collection, _
-    '' ''                                          ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-    '' ''                                          ByVal fRole As Collection, ByVal fCost As Collection, _
-    '' ''                                          ByVal calledFromHry As Boolean)
-
-    '' ''    Dim lastFilter As clsFilter
-
-
-    '' ''    If calledFromHry Then
-    '' ''        Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
-
-    '' ''        If Not IsNothing(nameLastFilter) Then
-    '' ''            With nameLastFilter
-    '' ''                lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-    '' ''            End With
-    '' ''        Else
-    '' ''            lastFilter = New clsFilter(fName, fBU, fTyp, _
-    '' ''                              fPhase, fMilestone, _
-    '' ''                             fRole, fCost)
-    '' ''        End If
-
-
-    '' ''    Else
-    '' ''        lastFilter = New clsFilter(fName, fBU, fTyp, _
-    '' ''                              fPhase, fMilestone, _
-    '' ''                             fRole, fCost)
-    '' ''    End If
-
-    '' ''    If menuOption = PTmenue.filterdefinieren Then
-
-    '' ''        filterDefinitions.storeFilter(fName, lastFilter)
-    '' ''        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-
-
-    '' ''    Else
-    '' ''        selFilterDefinitions.storeFilter(fName, lastFilter)
-    '' ''    End If
-
-
-    '' ''End Sub
-
-
 
     ''' <summary>
     ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName
@@ -3572,15 +3534,15 @@ Public Module Module1
     ''' <param name="selectedRoles"></param>
     ''' <param name="selectedCosts"></param>
     ''' <remarks></remarks>
-    Public Sub retrieveSelections(ByVal fName As String, ByVal menuOption As Integer, _
-                                       ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
-                                       ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+    Public Sub retrieveSelections(ByVal fName As String, ByVal menuOption As Integer,
+                                       ByRef selectedBUs As Collection, ByRef selectedTyps As Collection,
+                                       ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection,
                                        ByRef selectedRoles As Collection, ByRef selectedCosts As Collection)
 
         Dim lastFilter As clsFilter
 
-        If menuOption = PTmenue.filterdefinieren Or _
-            menuOption = PTmenue.sessionFilterDefinieren Or _
+        If menuOption = PTmenue.filterdefinieren Or
+            menuOption = PTmenue.sessionFilterDefinieren Or
             menuOption = PTmenue.filterAuswahl Then
             lastFilter = filterDefinitions.retrieveFilter(fName)
         Else
@@ -3616,7 +3578,7 @@ Public Module Module1
     End Sub
 
 
-   
+
     ''' <summary>
     ''' Gibt zurück Selectiontyp der aktuell selektierten Elemente
     ''' 0 = Projekt-Struktur (Vorlage)
@@ -3632,8 +3594,8 @@ Public Module Module1
     ''' <param name="selectedCosts"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function selectionTyp(ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
-                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+    Public Function selectionTyp(ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
+                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
                                            ByVal selectedRoles As Collection, ByVal selectedCosts As Collection) As Integer
 
         Dim element As String = ""
@@ -3684,13 +3646,13 @@ Public Module Module1
         Loop
 
 
-                ' gleiches noch todo für Milensteine, rollen, kosten, ...
+        ' gleiches noch todo für Milensteine, rollen, kosten, ...
 
         selectionTyp = tmpresult
 
     End Function
 
-   
+
     ' ''' <summary>
     ' ''' 
     ' ''' </summary>
@@ -3775,9 +3737,9 @@ Public Module Module1
     ''' </summary>
     ''' <param name="pptSlide"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTSlideCalInfo(ByRef pptSlide As PowerPoint.Slide, _
-                                       ByVal calendarLeft As Date, _
-                                       ByVal calendarRight As Date, _
+    Public Sub addSmartPPTSlideCalInfo(ByRef pptSlide As PowerPoint.Slide,
+                                       ByVal calendarLeft As Date,
+                                       ByVal calendarRight As Date,
                                        Optional ByVal projectTimeStamp As Date = Nothing)
 
         If Not IsNothing(pptSlide) Then
@@ -3819,19 +3781,22 @@ Public Module Module1
     ''' <param name="pptSlide"></param>
     ''' <param name="projectTimeStamp"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTSlideBaseInfo(ByRef pptSlide As PowerPoint.Slide, _
-                                            ByVal projectTimeStamp As Date)
+    Public Sub addSmartPPTSlideBaseInfo(ByRef pptSlide As PowerPoint.Slide,
+                                        ByVal projectTimeStamp As Date,
+                                        ByVal type As Integer)
 
         If Not IsNothing(pptSlide) Then
             With pptSlide
 
+                If .Tags.Item("PRPF").Length > 0 Then
+                    .Tags.Delete("PRPF")
+                End If
+                .Tags.Add("PRPF", type.ToString)
 
                 If .Tags.Item("SMART").Length > 0 Then
-                    ' es muss nichts mehr gemacht werden, es ist bereits gekennzeichnet 
-                    '.Tags.Delete("SMART")
-                Else
-                    .Tags.Add("SMART", "visbo")
+                    .Tags.Delete("SMART")
                 End If
+                .Tags.Add("SMART", "visbo")
 
                 If IsNothing(projectTimeStamp) Then
 
@@ -3885,13 +3850,13 @@ Public Module Module1
     ''' <param name="ampelColor"></param>
     ''' <param name="ampelErlaeuterung"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
-                                          ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
-                                          ByVal bestShortName As String, ByVal bestLongName As String, _
-                                          ByVal startDate As Date, ByVal endDate As Date, _
-                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String, _
-                                          ByVal lieferumfaenge As String, _
-                                          ByVal verantwortlich As String, _
+    Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape,
+                                          ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String,
+                                          ByVal bestShortName As String, ByVal bestLongName As String,
+                                          ByVal startDate As Date, ByVal endDate As Date,
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String,
+                                          ByVal lieferumfaenge As String,
+                                          ByVal verantwortlich As String,
                                           ByVal percentDone As Double)
 
         Dim nullDate As Date = Nothing
@@ -4029,7 +3994,175 @@ Public Module Module1
 
     End Sub
 
-    
+    ''' <summary>
+    ''' das Shape wurde als Projekt-Karte identifiziert - jetzt werden an das Shape die Projekt-Karten Infos angeheftet ...
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    Public Sub addSmartPPTprCardShapeInfo(ByRef pptShape As PowerPoint.Shape,
+                                          ByVal hproj As clsProjekt,
+                                          ByVal relevantPhase As String,
+                                          ByVal isTopProject As Boolean)
+
+        Dim nullDate As Date = Nothing
+        Dim bigtype As Integer = ptReportBigTypes.planelements
+        Dim detailID As Integer = ptReportComponents.prCard
+        Dim tmpStr As String = ""
+        Dim kennung As String = ""
+        Dim cphase As clsPhase = Nothing
+
+        If relevantPhase <> "" Then
+            Dim elemName As String = ""
+            Dim breadCrumb As String = ""
+            Dim type As Integer = -1
+            Dim pvname As String = ""
+            Call splitHryFullnameTo2(relevantPhase, elemName, breadCrumb, type, pvname)
+            cphase = hproj.getPhase(elemName, breadCrumb)
+        End If
+
+
+        If Not IsNothing(pptShape) Then
+            With pptShape
+
+                ' hier kommt der Projekt-Name rein, ggf muss der Phasen-Name berücksichtigt werden 
+                If Not IsNothing(cphase) Then
+                    tmpStr = hproj.getShapeText & vbLf & " - " & cphase.name
+                Else
+                    tmpStr = hproj.getShapeText
+                End If
+
+                kennung = "CN"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' hier kommt nochmal der Projekt-Name rein, das wird in smartInfo ausgewertet ..
+                tmpStr = hproj.name
+                kennung = "PNM"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' hier kommt nochmal der  Projekt-Name rein, das wird in smartInfo ausgewertet ..
+                tmpStr = hproj.variantName
+                kennung = "VNM"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt das Startdatum des Projektes bzw. der Phase
+                If Not IsNothing(cphase) Then
+                    tmpStr = cphase.getStartDate.ToShortDateString
+                Else
+                    tmpStr = hproj.startDate.ToShortDateString
+                End If
+                kennung = "SD"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt das Ende-Datum des Projekts
+                If Not IsNothing(cphase) Then
+                    tmpStr = cphase.getEndDate.ToShortDateString
+                Else
+                    tmpStr = hproj.endeDate.ToShortDateString
+                End If
+                kennung = "ED"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Ampel des Projektes
+                tmpStr = hproj.ampelStatus.ToString
+                kennung = "AC"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Ampel-Erläuterung des Projekts 
+                tmpStr = hproj.ampelErlaeuterung
+                kennung = "AE"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Ziele des Projektes bzw. der Phase
+                If Not IsNothing(cphase) Then
+                    Try
+                        If cphase.countMilestones > 0 Then
+                            Dim milestone As clsMeilenstein = cphase.getMilestone(cphase.countMilestones)
+                            If Not IsNothing(milestone) Then
+                                tmpStr = milestone.getAllDeliverables
+                            End If
+                        End If
+                    Catch ex As Exception
+                        tmpStr = "-"
+                    End Try
+
+                Else
+                    tmpStr = hproj.fullDescription
+                End If
+
+                kennung = "LU"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                'jetzt die Risiken des Projektes 
+                tmpStr = ""
+                kennung = "RSK"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt Verantwortlicher des Projektes 
+                tmpStr = hproj.leadPerson
+                kennung = "VE"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt PercentDone des Projektes 
+                ' aktuell noch leer lassen 
+
+                ' jetzt die BigType ID 
+                tmpStr = CStr(ptReportBigTypes.planelements)
+                kennung = "BID"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+                ' jetzt die Detail ID 
+                If isTopProject Then
+                    tmpStr = CStr(ptReportComponents.prCard)
+                Else
+                    tmpStr = CStr(ptReportComponents.prCardinvisible)
+                End If
+
+                kennung = "DID"
+                If .Tags.Item(kennung).Length > 0 Then
+                    .Tags.Delete(kennung)
+                End If
+                .Tags.Add(kennung, tmpStr)
+
+            End With
+        End If
+
+
+
+    End Sub
+
     ''' <summary>
     ''' 
     ''' </summary>
@@ -4099,7 +4232,7 @@ Public Module Module1
                 Catch ex As Exception
 
                 End Try
-                
+
 
                 ' jetzt wieder gruppieren 
                 pptShape = trafficLightShape.Group
@@ -4121,8 +4254,8 @@ Public Module Module1
     ''' <param name="prpf"></param>
     ''' <param name="qualifier"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, _
-                                     ByVal prpf As Integer, ByVal qualifier As String, ByVal qualifier2 As String, _
+    Public Sub addSmartPPTShapeInfo2(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt,
+                                     ByVal prpf As Integer, ByVal qualifier As String, ByVal qualifier2 As String,
                                      ByVal bigType As Integer, ByVal detailID As Integer)
 
         If IsNothing(hproj) Then
@@ -4259,13 +4392,13 @@ Public Module Module1
                 ElseIf bigType = ptReportBigTypes.components Then
                     ' bei Symbolen muss noch was ergänzt werden 
 
-                    If detailID = ptReportComponents.prSymTrafficLight Or _
-                        detailID = ptReportComponents.prSymRisks Or _
+                    If detailID = ptReportComponents.prSymTrafficLight Or
+                        detailID = ptReportComponents.prSymRisks Or
                         detailID = ptReportComponents.prSymDescription Then
                         Call updateSmartPPTSymTxt(pptShape, hproj, detailID)
                     End If
-                    
-                    
+
+
                     ' sonst keine weiteren Dinge 
 
                 Else
@@ -4324,10 +4457,10 @@ Public Module Module1
     ''' <param name="detailID"></param>
     ''' <param name="nameIDS"></param>
     ''' <remarks></remarks>
-    Public Sub addSmartPPTTableInfo(ByRef pptShape As PowerPoint.Shape, _
-                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String, _
-                                        ByVal q1 As String, ByVal q2 As String, _
-                                        ByVal bigtype As Integer, ByVal detailID As Integer, _
+    Public Sub addSmartPPTTableInfo(ByRef pptShape As PowerPoint.Shape,
+                                        ByVal prpf As Integer, ByVal pnm As String, ByVal vnm As String,
+                                        ByVal q1 As String, ByVal q2 As String,
+                                        ByVal bigtype As Integer, ByVal detailID As Integer,
                                         ByVal nameIDS As Collection)
 
         If nameIDS.Count = 0 Then
@@ -4425,12 +4558,12 @@ Public Module Module1
     ''' <param name="chartTyp"></param>
     ''' <param name="auswahl"></param>
     ''' <remarks></remarks>
-    Public Sub bestimmeChartInfosFromName(ByVal chtObjName As String, _
-                                              ByRef prpfTyp As Integer, _
-                                              ByRef prcTyp As Integer, _
-                                              ByRef pName As String, _
-                                              ByRef vName As String, _
-                                              ByRef chartTyp As Integer, _
+    Public Sub bestimmeChartInfosFromName(ByVal chtObjName As String,
+                                              ByRef prpfTyp As Integer,
+                                              ByRef prcTyp As Integer,
+                                              ByRef pName As String,
+                                              ByRef vName As String,
+                                              ByRef chartTyp As Integer,
                                               ByRef auswahl As Integer)
 
 
@@ -4444,10 +4577,10 @@ Public Module Module1
 
             chartTyp = CInt(tmpStr(1))
 
-            If chartTyp = PTprdk.KostenBalken Or _
+            If chartTyp = PTprdk.KostenBalken Or
                 chartTyp = PTprdk.KostenPie Then
                 prcTyp = ptElementTypen.costs
-            ElseIf chartTyp = PTprdk.PersonalBalken Or _
+            ElseIf chartTyp = PTprdk.PersonalBalken Or
                 chartTyp = PTprdk.PersonalPie Then
                 prcTyp = ptElementTypen.roles
             Else
@@ -4563,7 +4696,7 @@ Public Module Module1
                 myLogfile = appInstance.ActiveWorkbook.Name
             Catch ex As Exception
 
-                logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf & _
+                logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf &
                                                 "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
                 'Call logfileSchreiben(logMessage, " ")
                 Throw New ArgumentException(logmessage)
@@ -4706,7 +4839,8 @@ Public Module Module1
     ''' <param name="visboWindowTyp"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function bestimmeWindowCaption(ByVal visboWindowTyp As Integer, _
+    Public Function bestimmeWindowCaption(ByVal visboWindowTyp As Integer,
+                                          Optional ByVal tableTyp As Integer = ptTables.meRC,
                                           Optional ByVal addOnMsg As String = "") As String
         Dim tmpResult As String = ""
 
@@ -4747,11 +4881,28 @@ Public Module Module1
                 End If
 
             Case PTwindows.massEdit
-                If awinSettings.englishLanguage Then
-                    tmpResult = "Modify Resource and Cost Needs"
-                Else
-                    tmpResult = "Personal- und Kostenbedarfe ändern"
-                End If
+
+                Select Case tableTyp
+                    Case ptTables.meRC
+                        If awinSettings.englishLanguage Then
+                            tmpResult = "Modify Resource and Cost Needs"
+                        Else
+                            tmpResult = "Personal- und Kostenbedarfe ändern"
+                        End If
+                    Case ptTables.meTE
+                        If awinSettings.englishLanguage Then
+                            tmpResult = "Modify Tasks and Milestones"
+                        Else
+                            tmpResult = "Meilensteine und Vorgänge ändern"
+                        End If
+                    Case ptTables.meAT
+                        If awinSettings.englishLanguage Then
+                            tmpResult = "Modify Attributes"
+                        Else
+                            tmpResult = "Attribute ändern"
+                        End If
+                End Select
+
 
         End Select
 
@@ -5211,7 +5362,7 @@ Public Module Module1
                         .DisplayRuler = False
                         .DisplayOutline = False
                         .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.mptpr, tmpmsg)
+                        .Caption = bestimmeWindowCaption(PTwindows.mptpr, addOnMsg:=tmpmsg)
                     End With
 
                     If Not prWindowAlreadyExisting Then
@@ -5390,13 +5541,14 @@ Public Module Module1
             If Not awinSettings.meEnableSorting Then
                 ' es muss der Blattschutz wieder aktiviert werden ... 
                 With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                    .Protect(Password:="x", UserInterfaceOnly:=True, _
-                             AllowFormattingCells:=True, _
+                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                             AllowFormattingCells:=True,
+                             AllowFormattingColumns:=True,
                              AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True, _
-                             AllowDeletingColumns:=False, _
-                             AllowDeletingRows:=True, _
-                             AllowSorting:=True, _
+                             AllowInsertingRows:=True,
+                             AllowDeletingColumns:=False,
+                             AllowDeletingRows:=True,
+                             AllowSorting:=True,
                              AllowFiltering:=True)
                     .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
                     .EnableAutoFilter = True
@@ -5590,6 +5742,46 @@ Public Module Module1
         noDuplicatesInSheet = Not found
 
     End Function
+
+    ''' <summary>
+    ''' faerbt die Projekt-Karte entsprechend der 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="colorindex"></param>
+    Public Sub faerbeProjectCard(ByRef pptShape As PowerPoint.Shape, ByVal colorindex As Integer)
+
+        If Not IsNothing(pptShape) Then
+
+            With pptShape
+                .Shadow.Type = MsoShadowType.msoShadow25
+                .Shadow.Visible = MsoTriState.msoTrue
+                .Shadow.Style = MsoShadowStyle.msoShadowStyleOuterShadow
+                .Shadow.Blur = 4
+                .Shadow.OffsetX = CInt(.Width / 7)
+                .Shadow.OffsetY = CInt(.Width / 7)
+                .Shadow.Transparency = 0
+                .Shadow.Size = 110
+                .Shadow.RotateWithShape = MsoTriState.msoFalse
+
+                If colorindex = 0 Then
+                    .Shadow.ForeColor.RGB = visboFarbeNone
+                    '.Line.ForeColor.RGB = visboFarbeNone
+                ElseIf colorindex = 1 Then
+                    .Shadow.ForeColor.RGB = visboFarbeGreen
+                    '.Line.ForeColor.RGB = visboFarbeGreen
+                ElseIf colorindex = 2 Then
+                    .Shadow.ForeColor.RGB = visboFarbeYellow
+                    '.Line.ForeColor.RGB = visboFarbeYellow
+                ElseIf colorindex = 3 Then
+                    .Shadow.ForeColor.RGB = visboFarbeRed
+                    '.Line.ForeColor.RGB = visboFarbeRed
+                End If
+
+            End With
+        End If
+
+
+    End Sub
 
 
 End Module

@@ -86,7 +86,7 @@
               <!--label="Import Excel"-->
               <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Folder 'Import\RPLAN-Excel' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
               <!--label="Import MS Project"-->
-              <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
+              <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="false" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
               <!--label="Import RPLAN RXF"-->
               <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
               <menuSeparator id="menuSeparator1"/>
@@ -111,7 +111,7 @@
               <!--label="Export VISBO-Steckbriefe"-->
               <button id="PT4G1M1B3" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
               <!--label="Export VISBO Open XML"-->
-              <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
+              <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" enabled ="false" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
               <!--label="Export Excel"-->
               <button id="PT4G1M1B1" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="planExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
               <!--label="exportieren in MSProject Projekte-->
@@ -174,14 +174,15 @@
           <button id="PT2G2B4" imageMso="EditFileGallery" size="large" getLabel ="bestimmeLabel" onAction="PTAendernKonstellation" supertip ="im Portfolio dargestellte/nicht dargestellt Projekte der Session können ausgeblendet/eingeblendet werden und ein neues Portfolio kann definiert werden."/>
           <splitButton id="PT2G2split" size ="large">
             <!--label="Modify Ressourcen und Kosten"-->
-            <button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
+            <button id="PT2G2" getLabel ="bestimmeLabel"  imageMso="EditDocument" onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
             <menu id="PT2G2M" getVisible="chckVisibility">
               <!--label="Modify Ressourcen und Kosten"-->
-              <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den selektierten Projekten bearbeitet werden"/>
+              <button id="PT2G1M2B1" getLabel ="bestimmeLabel"  onAction="Tom2G2MassEdit" supertip ="hier können die Ressourcen und Kosten-Bedarfe zu allen bzw. den ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Dates of Phases & Milestones"-->
-              <button id="PT2G1M2B2" getLabel="bestimmeLabel" enabled="false" />
+              <button id="PT2G1M2B2" getLabel="bestimmeLabel" enabled ="false" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Attributes"-->
-              <button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Business Unit, Budget, strateg. Fit und Risiko Einschätzung."/>
+              <!--<button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung und Custom Fields"/>-->
+              <button id="PT2G1M2B8" getLabel ="bestimmeLabel" enabled ="false" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
               <menuSeparator id="separator1" />
               <!--label=" Projekt Umbenennen"-->
               <button id="PT2G1B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="Tom2G1Rename" supertip ="Ein Projekt wird umbenannt. Das betrifft auch alle Varianten des Projektes und timestamps des Projektes. Ist auch nur eine Variante von einer anderen Person geschützt, kann das Projekt nicht umbenannt werden"/>
@@ -329,7 +330,7 @@
               <!--label="Budget/Kosten/Auslastung"--><!--
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Meilenstein-Ampeln"-->
-              <button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="true" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
+              <button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
               <!--label="Custom"-->
               <button id="PTcustom" label ="Custom" enabled="false"/>
               <menuSeparator id="PTXG1s4"/>
@@ -414,7 +415,7 @@
           <!--label="Report Sprache"-->
           <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
           <!--label="Report Sprache"-->
-          <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
+          <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>-->
           <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
           <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
@@ -425,7 +426,7 @@
         <group id ="PTXG1" > 
         </group>
       </tab>
-        <!--label="WEBServer-Funktionen"-->
+      <!--label="WEBServer-Funktionen"-->
       <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
@@ -460,8 +461,8 @@
           <button id="hierarchy" label="Hierarchy"  onAction ="PTJsonReadHierarchy" />
          </group>
       </tab>
-      <!--label="Lizenzen"--><!--
-      <tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <!--label="Lizenzen"-->
+      <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">
             <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
             <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
@@ -507,6 +508,8 @@
           <separator id="PT6G2s1"></separator>
           <!--label="Sortierung ermöglichen"-->
           <checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
+          <!--label="Header anzeigen"-->
+          <checkBox id="PT6G2B7" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTshowHeader" onAction ="awinPTshowHeader" supertip ="wenn gesetzt, können die Spaltenbreiten verändert werden."/>
         </group>
       </tab>  
      </tabs>

@@ -50,7 +50,7 @@ Public Class Ribbon1
 
 
 
-    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click
+    Private Sub settingsTab_Click(sender As Object, e As RibbonControlEventArgs) Handles settingsTab.Click, Button1.Click
 
         Dim msg As String = ""
 
@@ -96,8 +96,8 @@ Public Class Ribbon1
                             Dim pName As String = getPnameFromKey(tmpName)
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
-                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            Dim tsCollection As Collection = request.retrieveZeitstempelFromDB(pvName)
+                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                            Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 
@@ -212,15 +212,18 @@ Public Class Ribbon1
 
     Private Sub activateSearch_Click(sender As Object, e As RibbonControlEventArgs) Handles activateSearch.Click
 
-        If searchPane.Visible Then
-            searchPane.Visible = False
-        Else
-            searchPane.Visible = True
-            'If slideHasSmartElements Then
-            '    ucSearchView.cathegoryList.SelectedItem = "Name"
-            'End If
+        Try
+            If Not IsNothing(searchPane) Then
+                If searchPane.Visible Then
+                    searchPane.Visible = False
+                Else
+                    searchPane.Visible = True
+                End If
+            End If
+        Catch ex As Exception
 
-        End If
+        End Try
+
 
 
     End Sub

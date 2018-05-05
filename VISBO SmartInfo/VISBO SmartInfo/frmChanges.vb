@@ -13,9 +13,9 @@
         frmCoord(PTfrm.changes, PTpinfo.height) = Me.Height
 
         Call faerbeShapes(0, showTrafficLights(0))
-        Call faerbeShapes(1, showTrafficLights(1))
-        Call faerbeShapes(2, showTrafficLights(2))
-        Call faerbeShapes(3, showTrafficLights(3))
+        Call faerbeShapes(1, showTrafficLights(0))
+        Call faerbeShapes(2, showTrafficLights(0))
+        Call faerbeShapes(3, showTrafficLights(0))
 
 
 
@@ -30,12 +30,18 @@
             Me.Width = frmCoord(PTfrm.changes, PTpinfo.width)
             Me.Height = frmCoord(PTfrm.changes, PTpinfo.height)
         Else
-            Me.Top = My.Computer.Screen.WorkingArea.Height - Me.Height
+            ' Fehler: bei Bildschiremn mit weniger als HDMI Auflösung wird dieses Fenster nie sicht bar ...
             'Me.Top = 922
+            Me.Top = My.Computer.Screen.Bounds.Height - (Me.Height + 20)
             Me.Left = 24
         End If
 
         Call listeAufbauen()
+
+        'If Me.Height > changeListTable.Height + 38 Then
+        '    Me.Height = changeListTable.Height + 38
+        'End If
+        
 
     End Sub
 

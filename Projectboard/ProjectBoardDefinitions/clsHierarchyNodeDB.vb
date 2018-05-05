@@ -1,4 +1,8 @@
-﻿Public Class clsHierarchyNodeDB
+﻿''' <summary>
+''' Klassen-Definition für Hierarchie-Knoten
+''' </summary>
+''' <remarks></remarks>
+Public Class clsHierarchyNodeDB
     Public elemName As String
     Public origName As String
     Public indexOfElem As Integer

@@ -36,6 +36,7 @@ Public Class frmEinstellungen
 
         statusLabel.Enabled = False
         statusLabel.Visible = True
+        statusLabel.Text = ""
     End Sub
 
     Private Sub chkboxMassEdit_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxMassEdit.CheckedChanged
@@ -88,7 +89,7 @@ Public Class frmEinstellungen
 
         Call setLanguageMessages()
 
-        statusLabel.Text = "Spracheinstellung aktuell auf " & repCult.DisplayName & " gesetzt!!"
+        'statusLabel.Text = "Spracheinstellung aktuell auf " & repCult.DisplayName & " gesetzt!!"
 
         'Me.Close()
 

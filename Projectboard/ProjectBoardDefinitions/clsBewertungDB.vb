@@ -1,5 +1,10 @@
-﻿Public Class clsBewertungDB
-    ' Änderung tk: 2.11 deliverables / Ergebnisse hinzugefügt 
+﻿''' <summary>
+''' Klasse für Bewertungen: Ampel-Farbe, Bewerter-Name, Datum
+''' Deliverables ist aktuell nicht verwendet ... immer Blank
+''' </summary>
+''' <remarks></remarks>
+Public Class clsBewertungDB
+
 
     Public color As Integer
     Public description As String

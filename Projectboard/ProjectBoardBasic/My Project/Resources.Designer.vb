@@ -113,6 +113,16 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
+        Friend ReadOnly Property milestones_icon1() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("milestones_icon1", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
         Friend ReadOnly Property navigate_beginning() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("navigate_beginning", resourceCulture)
@@ -186,36 +196,6 @@ Namespace My.Resources
         Friend ReadOnly Property nur_ungecheckte_Projekte() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("nur-ungecheckte Projekte", resourceCulture)
-                Return CType(obj,System.Drawing.Bitmap)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        '''</summary>
-        Friend ReadOnly Property nur_ungecheckte_Projekte_finish() As System.Drawing.Bitmap
-            Get
-                Dim obj As Object = ResourceManager.GetObject("nur-ungecheckte Projekte_finish", resourceCulture)
-                Return CType(obj,System.Drawing.Bitmap)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        '''</summary>
-        Friend ReadOnly Property nur_ungecheckte_Projekte_finish1() As System.Drawing.Bitmap
-            Get
-                Dim obj As Object = ResourceManager.GetObject("nur-ungecheckte Projekte_finish1", resourceCulture)
-                Return CType(obj,System.Drawing.Bitmap)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        '''</summary>
-        Friend ReadOnly Property nur_ungecheckte_Projekte_finish2() As System.Drawing.Bitmap
-            Get
-                Dim obj As Object = ResourceManager.GetObject("nur-ungecheckte Projekte_finish2", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
