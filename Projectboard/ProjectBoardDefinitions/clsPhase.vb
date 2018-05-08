@@ -1484,10 +1484,71 @@ Public Class clsPhase
         End Get
     End Property
 
+    ''' <summary>
+    ''' erstellt eine neue Rolle, weist der Rolle monatliche Ressourcenbedarfe zu, deren Summe dem Wert der Variable summe entspricht  
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="summe"></param>
+    ''' <param name="addToExisting"></param>
+    Public Sub AddRole(ByVal roleName As String, ByVal summe As Double, ByVal addToExisting As Boolean)
+
+        Dim rSum As Double()
+        ReDim rSum(0)
+        rSum(0) = summe
+
+        Dim tmpRole As clsRolle = Me.getRole(roleName)
+        Dim xWerte As Double() = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, rSum, 1.0)
+
+        If IsNothing(tmpRole) Then
+            ' die Rolle hat bisher noch nicht existiert ...
+            Dim dimension As Integer = Me.relEnde - Me.relStart
+            tmpRole = New clsRolle(dimension)
+
+            With tmpRole
+                .RollenTyp = RoleDefinitions.getRoledef(roleName).UID
+                .Xwerte = xWerte
+            End With
+
+            ' jetzt muss die Rolle ergänzt werden 
+            _allRoles.Add(tmpRole)
+
+        Else
+            ' die Rolle hat bereits existiert 
+            If addToExisting Then
+                If tmpRole.Xwerte.Length = xWerte.Length Then
+                    ' hier dann aufsummieren 
+                    Dim oldXwerte As Double() = tmpRole.Xwerte
+                    For i As Integer = 0 To oldXwerte.Length - 1
+                        xWerte(i) = xWerte(i) + oldXwerte(i)
+                    Next
+
+                Else
+                    ' darf eigentlich nicht sein 
+                    ' Test: 
+                    'Call MsgBox("Fehler in Rollen-Zuordnung")
+                    ' es wird dann einfach gar nichts gemacht 
+                End If
+            Else
+                ' nichts weiter tun 
+            End If
+
+            tmpRole.Xwerte() = xWerte
+        End If
+
+
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Try
+            Me.parentProject.rcLists.addRP(tmpRole.RollenTyp, Me.nameID)
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
 
     ''' <summary>
     ''' addRole fügt die Rollen Instanz hinzu, wenn sie nicht schon existiert
-    ''' summiert die Werte zu der shon existierenden ...
+    ''' wenn sie schon existiert, dann werden die Werte zu den schon existierenden Werten addiert ...
     ''' </summary>
     ''' <param name="role"></param>
     ''' <remarks></remarks>
@@ -1532,7 +1593,12 @@ Public Class clsPhase
         End If
 
         ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        Me.parentProject.rcLists.addRP(role.RollenTyp, Me.nameID)
+        Try
+            Me.parentProject.rcLists.addRP(role.RollenTyp, Me.nameID)
+        Catch ex As Exception
+
+        End Try
+
 
         ' '' Code vor dem 8.7.16
         ''If Not _allRoles.Contains(role) Then
