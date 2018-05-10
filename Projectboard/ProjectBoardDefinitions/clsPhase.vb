@@ -21,6 +21,12 @@ Public Class clsPhase
     Private _appearance As String
     Private _color As Integer
 
+    ' die Dokumenten Url für den Meilenstein
+    Private _docURL As String
+
+    ' die Applikations-ID mit der die Dok-Url geöffnet werden kann / soll
+    Private _docUrlAppID As String
+
     ' wer ist für die Phase, die Ergebnisse und Einhaltung der Ressourcen verantwortlich? 
     Private _verantwortlich As String
     ' wird benötigt, um bei Optimierungs-Läufen einen Tryout Wert zu haben ..
@@ -67,6 +73,39 @@ Public Class clsPhase
         End Set
     End Property
 
+    ''' <summary>
+    ''' liest schreibt den String, der eine Dokumenten URL darstellt, wo Dokumente abgelegt sind, die zum Meilenstein gehören 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property DocURL() As String
+        Get
+            DocURL = _docURL
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _docURL = value
+            Else
+                _docURL = ""
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liest schreibt den String, der die ID der Appliaktion darstellt, mit der auf die Dokumenten Url zugegriffen werden kann 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property DocUrlAppID() As String
+        Get
+            DocUrlAppID = _docUrlAppID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _docUrlAppID = value
+            Else
+                _docUrlAppID = ""
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' summiert die tValues ab dem Start-Element in die Phasen-Xvalues 
@@ -152,24 +191,26 @@ Public Class clsPhase
                         If Me.dauerInDays = .dauerInDays And _
                             Me.startOffsetinDays = .startOffsetinDays Then
 
-                            If Me.countCosts = .countCosts And _
-                                Me.countRoles = .countRoles And _
-                                Me.countDeliverables = .countDeliverables And _
-                                Me.countMilestones = .countMilestones And _
+                            If Me.countCosts = .countCosts And
+                                Me.countRoles = .countRoles And
+                                Me.countDeliverables = .countDeliverables And
+                                Me.countMilestones = .countMilestones And
+                                Me.DocURL = .DocURL And
+                                Me.DocUrlAppID = .DocUrlAppID And
                                 Me.percentDone = .percentDone Then
                                 'ur: 20180110 Me.bewertungsCount = .bewertungsCount Then
 
-                                If Me.ampelErlaeuterung = .ampelErlaeuterung And _
+                                If Me.ampelErlaeuterung = .ampelErlaeuterung And
                                     Me.ampelStatus = .ampelStatus Then
 
-                                    If Me.shortName = .shortName And _
-                                        Me.originalName = .originalName And _
+                                    If Me.shortName = .shortName And
+                                        Me.originalName = .originalName And
                                         Me.verantwortlich = .verantwortlich Then
 
-                                        If Me.appearance = .appearance And _
-                                            Me.individualColor = .individualColor And _
-                                            Me.earliestStart = .earliestStart And _
-                                            Me.latestStart = .latestStart And _
+                                        If Me.appearance = .appearance And
+                                            Me.individualColor = .individualColor And
+                                            Me.earliestStart = .earliestStart And
+                                            Me.latestStart = .latestStart And
                                             Me.offset = .offset Then
 
                                             stillOK = True
@@ -2317,6 +2358,10 @@ Public Class clsPhase
         _parentProject = parent
         _vorlagenParent = Nothing
 
+        ' Vorbesetzen der Dokumenten-URL und App-ID , mit der die Dokumente bearbeitet werden können 
+        _docURL = ""
+        _docUrlAppID = ""
+
         _percentDone = 0.0
         _deliverables = New List(Of String)
 
@@ -2369,6 +2414,10 @@ Public Class clsPhase
         _nameID = ""
         _parentProject = Nothing
         _vorlagenParent = parent
+
+        ' Vorbesetzen der Dokumenten-URL und App-ID , mit der die Dokumente bearbeitet werden können 
+        _docURL = ""
+        _docUrlAppID = ""
 
         _percentDone = 0.0
         _deliverables = New List(Of String)
