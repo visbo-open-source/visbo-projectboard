@@ -8448,6 +8448,9 @@ Public Module awinGeneralModules
                                 Dim duration As Long
                                 Dim offset As Long
 
+                                ' 10.5.18 document URL String ergänzt 
+                                Dim docURL As String = ""
+
 
                                 Try
                                     ' String aus erster Spalte der Tabelle lesen
@@ -8492,6 +8495,30 @@ Public Module awinGeneralModules
                                             endeDate = Date.MinValue
                                         End Try
 
+                                        ' das Feld %Done wird hier ausgelesen ...
+                                        Try
+                                            ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
+                                            percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double)
+                                            If IsNothing(percentDone) Then
+                                                percentDone = 0.0
+                                            End If
+                                        Catch ex As Exception
+                                            percentDone = 0.0
+                                        End Try
+
+                                        ' das Feld document-Url wird hier ausgelesen ...
+                                        Try
+                                            ' Ergänzung tk: 10.05.2018 document-URL  ergänzt 
+                                            docURL = CType(CType(.Cells(zeile, columnOffset + 9), Excel.Range).Value, String)
+                                            If IsNothing(docURL) Then
+                                                docURL = ""
+                                            End If
+                                        Catch ex As Exception
+                                            docURL = ""
+                                        End Try
+
+
+
                                         ' ProjektPhase wird erzeugt
                                         cphase = New clsPhase(parent:=hproj)
 
@@ -8499,6 +8526,8 @@ Public Module awinGeneralModules
                                         ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
                                         With cphase
                                             .nameID = rootPhaseName
+                                            .percentDone = percentDone
+                                            .DocURL = docURL
 
                                             duration = calcDauerIndays(startDate, endeDate)
                                             offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
@@ -8535,6 +8564,7 @@ Public Module awinGeneralModules
                                             End If
 
                                         End With
+
 
                                         ' ProjektPhase wird hinzugefügt
                                         Dim hrchynode As New clsHierarchyNode
@@ -8669,12 +8699,22 @@ Public Module awinGeneralModules
                                                 percentDone = 0.0
                                             End Try
 
-
+                                            ' das Feld document-Url wird hier ausgelesen ...
+                                            Try
+                                                ' Ergänzung tk: 10.05.2018 document-URL  ergänzt 
+                                                docURL = CType(CType(.Cells(zeile, columnOffset + 9), Excel.Range).Value, String)
+                                                If IsNothing(docURL) Then
+                                                    docURL = ""
+                                                End If
+                                            Catch ex As Exception
+                                                docURL = ""
+                                            End Try
 
 
                                             With cphase
                                                 .percentDone = percentDone
                                                 .verantwortlich = responsible
+                                                .DocURL = docURL
                                                 If Not IsNothing(cBewertung) Then
                                                     .addBewertung(cBewertung)
                                                 End If
@@ -8859,12 +8899,34 @@ Public Module awinGeneralModules
                                                 responsible = ""
                                             End Try
 
-                                            ' das Feld %Done wird hier nicht ausgelesen ...
+                                            ' das Feld %Done wird hier ausgelesen ...
+                                            Try
+                                                ' Ergänzung ur: 09.11.2017 %Done  ergänzt 
+                                                percentDone = CType(CType(.Cells(zeile, columnOffset + 8), Excel.Range).Value, Double)
+                                                If IsNothing(percentDone) Then
+                                                    percentDone = 0.0
+                                                End If
+                                            Catch ex As Exception
+                                                percentDone = 0.0
+                                            End Try
+
+                                            ' das Feld document-Url wird hier ausgelesen ...
+                                            Try
+                                                ' Ergänzung tk: 10.05.2018 document-URL  ergänzt 
+                                                docURL = CType(CType(.Cells(zeile, columnOffset + 9), Excel.Range).Value, String)
+                                                If IsNothing(docURL) Then
+                                                    docURL = ""
+                                                End If
+                                            Catch ex As Exception
+                                                docURL = ""
+                                            End Try
 
                                             With cMilestone
                                                 .setDate = milestoneDate
                                                 .verantwortlich = responsible
                                                 .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
+                                                .percentDone = percentDone
+                                                .DocURL = docURL
                                                 If Not cBewertung Is Nothing Then
                                                     .addBewertung(cBewertung)
                                                 End If
@@ -15795,13 +15857,14 @@ Public Module awinGeneralModules
         Dim colPercentDone As Integer = -1
         Dim colTrafficLight As Integer = -1
         Dim colTLExplanation As Integer = -1
+        Dim colDocUrl As Integer = -1
 
         Dim pDescription As String = ""
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(12) As String
+        Dim suchstr(13) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -15815,6 +15878,7 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.percentDone) = "%-Done"
         suchstr(ptPlanNamen.TrafficLight) = "traffic light"
         suchstr(ptPlanNamen.TLExplanation) = "Explanation"
+        suchstr(ptPlanNamen.DocUrl) = "Document-Link"
 
         zeile = 2
         spalte = 5
@@ -15917,6 +15981,12 @@ Public Module awinGeneralModules
 
         End Try
 
+        Try
+            colDocUrl = firstZeile.Find(What:=suchstr(ptPlanNamen.DocUrl), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
         With aktivesSheet
 
             lastRow = System.Math.Max(CType(.Cells(40000, colName), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlUp).Row,
@@ -15983,6 +16053,7 @@ Public Module awinGeneralModules
                 CType(.Cells(1, colProtocol + 11), Excel.Range).Value = "%-Done"
                 CType(.Cells(1, colProtocol + 12), Excel.Range).Value = "Ampel"
                 CType(.Cells(1, colProtocol + 13), Excel.Range).Value = "Explanation"
+                CType(.Cells(1, colProtocol + 14), Excel.Range).Value = "Document-Link"
             End If
 
             ' wird immer geschrieben 
@@ -16191,6 +16262,26 @@ Public Module awinGeneralModules
                         duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                         cphase.changeStartandDauer(startoffset, duration)
 
+                        ' jetzt wird noch percentDone und Doument Link eingefügt 
+                        If colPercentDone > 0 Then
+                            Try
+                                Dim tmpPD As Double = CDbl(CType(.Cells(zeile, colPercentDone), Excel.Range).Value)
+                                cphase.percentDone = tmpPD
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+                        If colDocUrl > 0 Then
+                            Try
+                                Dim tmpDU As String = CStr(CType(.Cells(zeile, colDocUrl), Excel.Range).Value)
+                                cphase.DocURL = tmpDU
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+
+
                         hproj.AddPhase(cphase)
 
                         Try
@@ -16235,6 +16326,7 @@ Public Module awinGeneralModules
                         Dim txtAbbrev As String
                         Dim verantwortlich As String = ""
                         Dim percentDone As Double = 0.0
+                        Dim docURL As String = ""
                         ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
                         Dim origItem As String = ""
 
@@ -16303,8 +16395,6 @@ Public Module awinGeneralModules
                                             CType(aktivesSheet.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
                                         End If
-
-
 
 
 
@@ -16457,6 +16547,15 @@ Public Module awinGeneralModules
                                     End Try
                                 End If
 
+                                ' jetzt Document Link auslesen 
+                                If colDocUrl > 0 Then
+                                    Try
+                                        docURL = CStr(CType(.Cells(zeile, colDocUrl), Excel.Range).Value)
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
+
                                 '
                                 ' jetzt muss protokolliert werden 
                                 Dim oLevel As Integer
@@ -16478,6 +16577,8 @@ Public Module awinGeneralModules
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 12), Excel.Range).Value = ampel.ToString
                                     ' Erläuterung 
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 13), Excel.Range).Value = ampelExplanation
+                                    ' Dokumenten Link 
+                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 14), Excel.Range).Value = docURL
                                 End If
 
 
@@ -16650,6 +16751,10 @@ Public Module awinGeneralModules
                                             cphase.ampelErlaeuterung = ampelExplanation
                                         End If
 
+                                        If docURL <> "" Then
+                                            cphase.DocURL = docURL
+                                        End If
+
 
                                         ' der Aufbau der Hierarchie erfolgt in addphase
                                         hproj.AddPhase(cphase, origName:=origItem.Trim,
@@ -16818,6 +16923,7 @@ Public Module awinGeneralModules
                                                 .verantwortlich = verantwortlich
                                                 .appearance = txtVorgangsKlasse
                                                 .percentDone = percentDone
+                                                .DocURL = docURL
 
                                                 If Not cbewertung Is Nothing Then
                                                     .addBewertung(cbewertung)
@@ -17242,7 +17348,7 @@ Public Module awinGeneralModules
         ' bestimme die Farbe - sie steht im Excel Ausgabe File in der Zeile 2, Spalte 1 
         ws = CType(appInstance.ActiveWorkbook.Worksheets("Export VISBO Projekttafel"), Excel.Worksheet)
 
-        Dim suchstr(12) As String
+        Dim suchstr(13) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -17256,6 +17362,7 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.percentDone) = "%-Done"
         suchstr(ptPlanNamen.TrafficLight) = "traffic light"
         suchstr(ptPlanNamen.TLExplanation) = "Explanation"
+        suchstr(ptPlanNamen.DocUrl) = "Document-Link"
 
         ' jetzt werden die Spaltenüberschriften geschrieben 
         Dim üColor As Long = CLng(CType(ws.Cells(1, 1), Excel.Range).Interior.Color)
@@ -17296,6 +17403,8 @@ Public Module awinGeneralModules
         CType(ws.Cells(1, colAmpel), Excel.Range).Value = suchstr(ptPlanNamen.TrafficLight)
         Dim colExplan As Integer = 11
         CType(ws.Cells(1, colExplan), Excel.Range).Value = suchstr(ptPlanNamen.TLExplanation)
+        Dim colDocUrl As Integer = 12
+        CType(ws.Cells(1, colDocUrl), Excel.Range).Value = suchstr(ptPlanNamen.DocUrl)
 
 
 
@@ -17310,11 +17419,30 @@ Public Module awinGeneralModules
         CType(ws.Cells(zeile, colDescription), Excel.Range).Value = hproj.description
         CType(ws.Rows(zeile), Excel.Range).Interior.Color = color
 
+
         Dim indentPhase As String = "   "
         'Dim indentMS As String = "      "
 
         ' die erste Phase kann auch Meilensteine haben !
         cphase = hproj.getPhase(1)
+
+        ' percentDone eintragen 
+        Try
+            Dim tmpPercentDone As String = (cphase.percentDone * 100).ToString & " %"
+            CType(ws.Cells(zeile, colPercent), Excel.Range).Value = tmpPercentDone
+        Catch ex As Exception
+
+        End Try
+
+        ' Document Link eintragen
+        Try
+            Dim docUrl As String = cphase.DocURL
+            CType(ws.Cells(zeile, colDocUrl), Excel.Range).Value = docUrl
+        Catch ex As Exception
+
+        End Try
+
+
         indentlevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
 
         For im = 1 To cphase.countMilestones
@@ -17358,6 +17486,13 @@ Public Module awinGeneralModules
             ' Explanation eintragen 
             Dim tmpExplan As String = cmilestone.ampelErlaeuterung
             CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
+            ' Document Link eintragen
+            Try
+                CType(ws.Cells(zeile, colDocUrl), Excel.Range).Value = cmilestone.DocURL
+            Catch ex As Exception
+
+            End Try
 
 
         Next
@@ -17409,7 +17544,12 @@ Public Module awinGeneralModules
             Dim tmpExplan As String = cphase.ampelErlaeuterung
             CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
 
+            ' Document Link eintragen
+            Try
+                CType(ws.Cells(zeile, colDocUrl), Excel.Range).Value = cphase.DocURL
+            Catch ex As Exception
 
+            End Try
 
             For im = 1 To cphase.countMilestones
                 zeile = zeile + 1
@@ -17452,6 +17592,13 @@ Public Module awinGeneralModules
                 ' Explanation eintragen 
                 tmpExplan = cmilestone.ampelErlaeuterung
                 CType(ws.Cells(zeile, colExplan), Excel.Range).Value = tmpExplan
+
+                ' Document Link eintragen
+                Try
+                    CType(ws.Cells(zeile, colDocUrl), Excel.Range).Value = cmilestone.DocURL
+                Catch ex As Exception
+
+                End Try
 
             Next
 

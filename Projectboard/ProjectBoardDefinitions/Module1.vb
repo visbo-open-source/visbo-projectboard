@@ -351,6 +351,7 @@ Public Module Module1
         percentDone = 10
         TrafficLight = 11
         TLExplanation = 12
+        DocUrl = 13
     End Enum
 
 
@@ -3907,7 +3908,8 @@ Public Module Module1
                                           ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String,
                                           ByVal lieferumfaenge As String,
                                           ByVal verantwortlich As String,
-                                          ByVal percentDone As Double)
+                                          ByVal percentDone As Double,
+                                          ByVal docUrl As String)
 
         Dim nullDate As Date = Nothing
 
@@ -4033,6 +4035,17 @@ Public Module Module1
                         End If
                         Dim tmpValue As Double = 100 * percentDone
                         .Tags.Add("PD", tmpValue.ToString("0#."))
+                    End If
+
+                End If
+
+                ' central document link ..
+                If Not IsNothing(docUrl) Then
+                    If docUrl.Length > 0 Then
+                        If .Tags.Item("DUC").Length > 0 Then
+                            .Tags.Delete("DUC")
+                        End If
+                        .Tags.Add("DUC", docUrl)
                     End If
 
                 End If

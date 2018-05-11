@@ -1,9 +1,39 @@
 ﻿Public Class ucProperties
 
-    Private Sub ucProperties_Leave(sender As Object, e As EventArgs) Handles Me.Leave
+    ' nimmt den aktuell gültigen docLink auf 
+    Private _documentsLink As String
+    Private _myDocumentsLink As String
 
-    End Sub
+    ''' <summary>
+    ''' leist schreibt den general_documents link
+    ''' </summary>
+    ''' <returns></returns>
+    Friend Property documentsLink As String
+        Get
+            documentsLink = _documentsLink
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _documentsLink = value
+            End If
+        End Set
+    End Property
 
+    ''' <summary>
+    ''' liest, schreibt den myDocuments link 
+    ''' kann vom Powerpoint Empfänger selber gesetzt werden 
+    ''' </summary>
+    ''' <returns></returns>
+    Friend Property myDocumentsLink As String
+        Get
+            myDocumentsLink = _myDocumentsLink
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _myDocumentsLink = value
+            End If
+        End Set
+    End Property
 
     Private Sub ucProperties_SizeChanged(sender As Object, e As EventArgs) Handles Me.SizeChanged
         ' label resize
@@ -123,6 +153,14 @@
 
 
     Private Sub eleAmpelText_TextChanged(sender As Object, e As EventArgs) Handles eleAmpelText.TextChanged
+
+    End Sub
+
+    Private Sub myDocLink_Click(sender As Object, e As EventArgs)
+
+    End Sub
+
+    Private Sub docLink_Click(sender As Object, e As EventArgs)
 
     End Sub
 End Class

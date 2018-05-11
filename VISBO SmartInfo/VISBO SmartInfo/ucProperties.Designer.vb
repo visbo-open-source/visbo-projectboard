@@ -34,6 +34,8 @@ Partial Class ucProperties
         Me.Panel1 = New System.Windows.Forms.Panel()
         Me.eleDeliverables = New System.Windows.Forms.RichTextBox()
         Me.eleAmpelText = New System.Windows.Forms.RichTextBox()
+        Me.docLink = New System.Windows.Forms.Button()
+        Me.myDocLink = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'eleName
@@ -174,12 +176,30 @@ Partial Class ucProperties
         Me.eleAmpelText.TabIndex = 15
         Me.eleAmpelText.Text = ""
         '
+        'docLink
+        '
+        Me.docLink.Location = New System.Drawing.Point(10, 489)
+        Me.docLink.Name = "docLink"
+        Me.docLink.Size = New System.Drawing.Size(35, 35)
+        Me.docLink.TabIndex = 16
+        Me.docLink.UseVisualStyleBackColor = True
+        '
+        'myDocLink
+        '
+        Me.myDocLink.Location = New System.Drawing.Point(72, 489)
+        Me.myDocLink.Name = "myDocLink"
+        Me.myDocLink.Size = New System.Drawing.Size(35, 35)
+        Me.myDocLink.TabIndex = 17
+        Me.myDocLink.UseVisualStyleBackColor = True
+        '
         'ucProperties
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.AutoScroll = True
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.Controls.Add(Me.myDocLink)
+        Me.Controls.Add(Me.docLink)
         Me.Controls.Add(Me.eleAmpelText)
         Me.Controls.Add(Me.eleDeliverables)
         Me.Controls.Add(Me.labelDeliver)
@@ -210,4 +230,6 @@ Partial Class ucProperties
     Friend WithEvents Panel1 As System.Windows.Forms.Panel
     Friend WithEvents eleDeliverables As Windows.Forms.RichTextBox
     Friend WithEvents eleAmpelText As Windows.Forms.RichTextBox
+    Friend WithEvents docLink As Windows.Forms.Button
+    Friend WithEvents myDocLink As Windows.Forms.Button
 End Class

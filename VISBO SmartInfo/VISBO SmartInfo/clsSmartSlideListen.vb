@@ -43,13 +43,16 @@ Public Class clsSmartSlideListen
     ' tk, ovdList enthält die Liste aller Overdue Elemente, also alle Elemente deren Ende in der Vergangenheit liegt, aber noch nicht mit 100% bewertet sind 
     Private _ovdList As SortedList(Of String, SortedList(Of Integer, Boolean))
 
+    ' 11.5.18 tk enthält die Liste aller Elemente, die einen central document Link haben
+    Private _lnkList As SortedList(Of String, SortedList(Of Integer, Boolean))
+
     Private _creationDate As Date
 
     Private _slideDBUrl As String
     Private _slideDBName As String
 
 
-    
+
     ''' <summary>
     ''' entfernt die Moved Information aus 
     ''' </summary>
@@ -541,7 +544,7 @@ Public Class clsSmartSlideListen
 
         Dim uid As Integer = Me.getUID(shapeName)
 
-        Dim fullbCrumb As String = "(" & getPVnameFromShpName(shapeName) & ")" & _
+        Dim fullbCrumb As String = "(" & getPVnameFromShpName(shapeName) & ")" &
             bCrumb.Replace("#", " - ") & " - " & getElemNameFromShpName(shapeName)
 
 
@@ -601,6 +604,40 @@ Public Class clsSmartSlideListen
 
     End Sub
 
+    ''' <summary>
+    ''' fügt der Liste an document Url einen weiteren Eintrag hinzu 
+    ''' String muss ein gültiger URL String sein - aktuell wird sich darauf verlassen ...
+    ''' später muss hier eine Prüfung rein ..
+    ''' </summary>
+    ''' <param name="linkType"></param>
+    ''' <param name="shapeName"></param>
+    ''' <param name="isMilestone"></param>
+    Public Sub addLink(ByVal linkType As String, ByVal shapeName As String, ByVal isMilestone As Boolean)
+
+        Dim uid As Integer = Me.getUID(shapeName)
+
+        Dim listOfShapeNames As SortedList(Of Integer, Boolean)
+
+        ' konsistent machen ... wenn die Farbe nicht erkannt werden kann, wird sie wie <nicht gesetzt> behandelt 
+        If linkType.Trim.Length > 0 Then
+
+            If _lnkList.ContainsKey(linkType) Then
+                listOfShapeNames = _lnkList.Item(linkType)
+                If listOfShapeNames.ContainsKey(uid) Then
+                    ' nichts tun , ist schon drin ...
+                Else
+                    ' aufnehmen ; der bool'sche Value ist die Angabe, ob Milestone doer nicht  
+                    listOfShapeNames.Add(uid, isMilestone)
+                End If
+            Else
+                ' dann muss das erste aufgenommen werden 
+                listOfShapeNames = New SortedList(Of Integer, Boolean)
+                listOfShapeNames.Add(uid, isMilestone)
+                _lnkList.Add(linkType, listOfShapeNames)
+            End If
+        End If
+    End Sub
+
     'Private _resourceList As SortedList(Of String, SortedList(Of Integer, Double))
     '' enthält die Liste der Kosten -> ShapeID, Summe; erfordert Datenbank Access
     'Private _costList As SortedList(Of String, SortedList(Of Integer, Double))
@@ -613,9 +650,9 @@ Public Class clsSmartSlideListen
     ''' <param name="costInfos"></param>
     ''' <param name="shapeName"></param>
     ''' <remarks></remarks>
-    Public Sub addRoleAndCostInfos(ByVal roleInfos As SortedList(Of String, Double), _
-                                       ByVal costInfos As SortedList(Of String, Double), _
-                                       ByVal shapeName As String, _
+    Public Sub addRoleAndCostInfos(ByVal roleInfos As SortedList(Of String, Double),
+                                       ByVal costInfos As SortedList(Of String, Double),
+                                       ByVal shapeName As String,
                                        ByVal isMilestone As Boolean)
 
         Dim uid As Integer = Me.getUID(shapeName)
@@ -726,7 +763,7 @@ Public Class clsSmartSlideListen
 
         ' konsistent machen ... wenn die Farbe nicht erkannt werden kann, wird sie wie <nicht gesetzt> behandelt 
         If verantwortlich.Trim.Length > 0 Then
-            
+
             If _vEList.ContainsKey(verantwortlich) Then
                 listOfShapeNames = _vEList.Item(verantwortlich)
                 If listOfShapeNames.ContainsKey(uid) Then
@@ -819,7 +856,7 @@ Public Class clsSmartSlideListen
                         uidsWithColor = _aCList.Item(ampelColor)
 
                     End If
-                    
+
                     If Not IsNothing(uidsWithColor) Then
                         ' jetzt sind in der uidList alle ShapeUIDs aufgeführt - die müssen jetzt durch ihre ShapeNames ersetzt werden 
                         For Each kvp As KeyValuePair(Of Integer, Boolean) In uidsWithColor
@@ -878,7 +915,7 @@ Public Class clsSmartSlideListen
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getShapesNames(ByVal nameArray() As String, _
+    Public ReadOnly Property getShapesNames(ByVal nameArray() As String,
                                                 ByVal type As Integer, colorCode As Integer) As Collection
         Get
             Dim tmpCollection As New Collection
@@ -1046,8 +1083,8 @@ Public Class clsSmartSlideListen
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getNCollection(ByVal colorCode As Integer, _
-                                         ByVal suchStr As String, _
+    Public ReadOnly Property getNCollection(ByVal colorCode As Integer,
+                                         ByVal suchStr As String,
                                          ByVal type As Integer) As Collection
         Get
             Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean))
@@ -1270,7 +1307,7 @@ Public Class clsSmartSlideListen
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getTNCollection(ByVal colorCode As Integer, _
+    Public ReadOnly Property getTNCollection(ByVal colorCode As Integer,
                                              ByVal nameCollection As Collection) As Collection
         Get
             Dim NList As SortedList(Of String, SortedList(Of Integer, Boolean)) = _cNList
@@ -1395,6 +1432,8 @@ Public Class clsSmartSlideListen
         _mVList = New SortedList(Of Integer, Boolean)
         _vEList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _ovdList = New SortedList(Of String, SortedList(Of Integer, Boolean))
+
+        _lnkList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 
         _projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
         _listOfTimeStamps = New SortedList(Of Date, Boolean)
