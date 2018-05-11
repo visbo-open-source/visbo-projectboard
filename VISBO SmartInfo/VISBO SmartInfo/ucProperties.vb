@@ -1,4 +1,5 @@
-﻿Public Class ucProperties
+﻿Imports System.Diagnostics
+Public Class ucProperties
 
     ' nimmt den aktuell gültigen docLink auf 
     Private _documentsLink As String
@@ -156,11 +157,11 @@
 
     End Sub
 
-    Private Sub myDocLink_Click(sender As Object, e As EventArgs)
+    Private Sub myDocLink_Click(sender As Object, e As EventArgs) Handles myDocLink.Click
 
     End Sub
 
-    Private Sub docLink_Click(sender As Object, e As EventArgs)
-
+    Private Sub docLink_Click(sender As Object, e As EventArgs) Handles docLink.Click
+        Process.Start(documentsLink)
     End Sub
 End Class

@@ -183,6 +183,7 @@ Partial Class ucProperties
         Me.docLink.Size = New System.Drawing.Size(35, 35)
         Me.docLink.TabIndex = 16
         Me.docLink.UseVisualStyleBackColor = True
+        Me.docLink.Visible = False
         '
         'myDocLink
         '
@@ -191,6 +192,7 @@ Partial Class ucProperties
         Me.myDocLink.Size = New System.Drawing.Size(35, 35)
         Me.myDocLink.TabIndex = 17
         Me.myDocLink.UseVisualStyleBackColor = True
+        Me.myDocLink.Visible = False
         '
         'ucProperties
         '

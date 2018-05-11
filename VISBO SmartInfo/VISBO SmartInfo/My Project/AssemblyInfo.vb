@@ -10,8 +10,8 @@ Imports System.Security
 ' Die Werte der Assemblyattribute überprüfen
 
 <Assembly: AssemblyTitle("VISBO SmartInfo")> 
-<Assembly: AssemblyDescription("")> 
-<Assembly: AssemblyCompany("")> 
+<Assembly: AssemblyDescription("")>
+<Assembly: AssemblyCompany("VISBO GmbH")>
 <Assembly: AssemblyProduct("VISBO SmartInfo")> 
 <Assembly: AssemblyCopyright("Copyright ©  2016")> 
 <Assembly: AssemblyTrademark("")> 

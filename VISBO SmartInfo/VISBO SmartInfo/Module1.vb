@@ -5670,8 +5670,8 @@ Module Module1
 
                             ' sollen die docLinks Buttons angezeigt werden ? 
                             If tmpShape.Tags.Item("DUC").Length > 0 Then
-                                .documentsLink = tmpShape.Tags.Item("DUC").Length
-                                .docLink.Visible = False
+                                .documentsLink = tmpShape.Tags.Item("DUC")
+                                .docLink.Visible = True
                             Else
                                 .documentsLink = ""
                                 .docLink.Visible = False
@@ -5679,8 +5679,8 @@ Module Module1
 
                             ' sollen die docLinks Buttons angezeigt werden ? 
                             If tmpShape.Tags.Item("DUM").Length > 0 Then
-                                .myDocumentsLink = tmpShape.Tags.Item("DUM").Length
-                                .myDocLink.Visible = False
+                                .myDocumentsLink = tmpShape.Tags.Item("DUM")
+                                .myDocLink.Visible = True
                             Else
                                 .myDocumentsLink = ""
                                 .myDocLink.Visible = False
