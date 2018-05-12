@@ -5,6 +5,33 @@ Public Class ucProperties
     Private _documentsLink As String
     Private _myDocumentsLink As String
 
+    Private _mediaLink As String
+    Private _myMedialink As String
+
+    Private _survLink As String
+    Private _mySurvLink As String
+
+    Private _3DLink As String
+    Private _my3DLink As String
+
+    Public Sub New()
+
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        InitializeComponent()
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
+        _documentsLink = ""
+        _myDocumentsLink = ""
+        _mediaLink = ""
+        _myMedialink = ""
+        _survLink = ""
+        _mySurvLink = ""
+        _3DLink = ""
+        _my3DLink = ""
+
+
+    End Sub
+
     ''' <summary>
     ''' leist schreibt den general_documents link
     ''' </summary>
@@ -58,6 +85,9 @@ Public Class ucProperties
                 .labelRespons.Text = "Verantwortlich:"
             End With
         End If
+
+
+
     End Sub
 
     ''' <summary>
@@ -157,11 +187,12 @@ Public Class ucProperties
 
     End Sub
 
-    Private Sub myDocLink_Click(sender As Object, e As EventArgs) Handles myDocLink.Click
 
+    Private Sub doclnk_Click(sender As Object, e As EventArgs) Handles doclnk.Click
+        Process.Start(documentsLink)
     End Sub
 
-    Private Sub docLink_Click(sender As Object, e As EventArgs) Handles docLink.Click
-        Process.Start(documentsLink)
+    Private Sub mydoclnk_Click(sender As Object, e As EventArgs) Handles mydoclnk.Click
+
     End Sub
 End Class

@@ -5630,8 +5630,9 @@ Module Module1
                             ' Dokumenten Links ausblenden 
                             .documentsLink = ""
                             .myDocumentsLink = ""
-                            .docLink.Visible = False
-                            .myDocLink.Visible = False
+
+
+
                         End With
                     Else
                         With ucPropertiesView
@@ -5671,19 +5672,19 @@ Module Module1
                             ' sollen die docLinks Buttons angezeigt werden ? 
                             If tmpShape.Tags.Item("DUC").Length > 0 Then
                                 .documentsLink = tmpShape.Tags.Item("DUC")
-                                .docLink.Visible = True
+
                             Else
                                 .documentsLink = ""
-                                .docLink.Visible = False
+
                             End If
 
                             ' sollen die docLinks Buttons angezeigt werden ? 
                             If tmpShape.Tags.Item("DUM").Length > 0 Then
                                 .myDocumentsLink = tmpShape.Tags.Item("DUM")
-                                .myDocLink.Visible = True
+
                             Else
                                 .myDocumentsLink = ""
-                                .myDocLink.Visible = False
+
                             End If
 
                         End With
@@ -5712,8 +5713,8 @@ Module Module1
 
                         .documentsLink = ""
                         .myDocumentsLink = ""
-                        .docLink.Visible = False
-                        .myDocLink.Visible = False
+
+
                     End With
 
                 End If
@@ -5730,8 +5731,7 @@ Module Module1
 
                     .documentsLink = ""
                     .myDocumentsLink = ""
-                    .docLink.Visible = False
-                    .myDocLink.Visible = False
+
                 End With
 
             End If
