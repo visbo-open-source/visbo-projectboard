@@ -5846,5 +5846,21 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' liefert true, wenn diese URL erreichbar ist, false andernfalls
+    ''' </summary>
+    ''' <param name="URL"></param>
+    ''' <returns></returns>
+    Public Function isValidURL(ByVal URL As String) As Boolean
+        Try
+            Dim Response As Net.WebResponse = Nothing
+            Dim WebReq As Net.HttpWebRequest = CType(Net.HttpWebRequest.Create(URL), Net.HttpWebRequest)
+            Response = WebReq.GetResponse
+            Response.Close()
+            Return True
+        Catch ex As Exception
+            Return False
+        End Try
+    End Function
 
 End Module

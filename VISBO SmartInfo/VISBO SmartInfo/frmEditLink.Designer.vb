@@ -29,6 +29,7 @@ Partial Class frmEditLink
         '
         'okBtn
         '
+        Me.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.okBtn.Location = New System.Drawing.Point(89, 62)
         Me.okBtn.Name = "okBtn"
         Me.okBtn.Size = New System.Drawing.Size(75, 23)
@@ -38,6 +39,7 @@ Partial Class frmEditLink
         '
         'clearBtn
         '
+        Me.clearBtn.DialogResult = System.Windows.Forms.DialogResult.No
         Me.clearBtn.Location = New System.Drawing.Point(252, 62)
         Me.clearBtn.Name = "clearBtn"
         Me.clearBtn.Size = New System.Drawing.Size(75, 23)

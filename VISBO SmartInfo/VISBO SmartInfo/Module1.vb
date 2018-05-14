@@ -5628,10 +5628,8 @@ Module Module1
                             .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
 
                             ' Dokumenten Links ausblenden 
-                            .documentsLink = ""
-                            .myDocumentsLink = ""
-
-
+                            .setLinksToVisible(False)
+                            .setLinkValues(tmpShape)
 
                         End With
                     Else
@@ -5669,23 +5667,10 @@ Module Module1
 
                             .eleRespons.Text = bestimmeElemVE(tmpShape)
 
-                            ' sollen die docLinks Buttons angezeigt werden ? 
-                            If tmpShape.Tags.Item("DUC").Length > 0 Then
-                                .documentsLink = tmpShape.Tags.Item("DUC")
+                            ' die Link Buttons grundsätzlich einblenden 
+                            .setLinksToVisible(True)
+                            .setLinkValues(tmpShape)
 
-                            Else
-                                .documentsLink = ""
-
-                            End If
-
-                            ' sollen die docLinks Buttons angezeigt werden ? 
-                            If tmpShape.Tags.Item("DUM").Length > 0 Then
-                                .myDocumentsLink = tmpShape.Tags.Item("DUM")
-
-                            Else
-                                .myDocumentsLink = ""
-
-                            End If
 
                         End With
                     End If
@@ -5714,6 +5699,9 @@ Module Module1
                         .documentsLink = ""
                         .myDocumentsLink = ""
 
+                        ' Dokumenten Links ausblenden 
+                        .setLinksToVisible(False)
+                        .setLinkValues(Nothing)
 
                     End With
 

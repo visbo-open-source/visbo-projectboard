@@ -22,6 +22,7 @@ Partial Class ucProperties
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.eleName = New System.Windows.Forms.Label()
         Me.labelDate = New System.Windows.Forms.Label()
         Me.eleDatum = New System.Windows.Forms.Label()
@@ -35,21 +36,22 @@ Partial Class ucProperties
         Me.eleDeliverables = New System.Windows.Forms.RichTextBox()
         Me.eleAmpelText = New System.Windows.Forms.RichTextBox()
         Me.stdLinks = New System.Windows.Forms.GroupBox()
-        Me.myLinks = New System.Windows.Forms.GroupBox()
         Me.dreiDlnk = New System.Windows.Forms.PictureBox()
         Me.survlnk = New System.Windows.Forms.PictureBox()
         Me.medialnk = New System.Windows.Forms.PictureBox()
         Me.doclnk = New System.Windows.Forms.PictureBox()
+        Me.myLinks = New System.Windows.Forms.GroupBox()
         Me.mydreiDlnk = New System.Windows.Forms.PictureBox()
         Me.mysurvlnk = New System.Windows.Forms.PictureBox()
         Me.mymedialnk = New System.Windows.Forms.PictureBox()
         Me.mydoclnk = New System.Windows.Forms.PictureBox()
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.stdLinks.SuspendLayout()
-        Me.myLinks.SuspendLayout()
         CType(Me.dreiDlnk, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.survlnk, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.medialnk, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.doclnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.myLinks.SuspendLayout()
         CType(Me.mydreiDlnk, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.mysurvlnk, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.mymedialnk, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -207,19 +209,6 @@ Partial Class ucProperties
         Me.stdLinks.TabStop = False
         Me.stdLinks.Text = "standard Connections"
         '
-        'myLinks
-        '
-        Me.myLinks.Controls.Add(Me.mydreiDlnk)
-        Me.myLinks.Controls.Add(Me.mysurvlnk)
-        Me.myLinks.Controls.Add(Me.mymedialnk)
-        Me.myLinks.Controls.Add(Me.mydoclnk)
-        Me.myLinks.Location = New System.Drawing.Point(10, 533)
-        Me.myLinks.Name = "myLinks"
-        Me.myLinks.Size = New System.Drawing.Size(276, 53)
-        Me.myLinks.TabIndex = 22
-        Me.myLinks.TabStop = False
-        Me.myLinks.Text = "my Connections"
-        '
         'dreiDlnk
         '
         Me.dreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources._3d
@@ -255,6 +244,19 @@ Partial Class ucProperties
         Me.doclnk.Size = New System.Drawing.Size(26, 26)
         Me.doclnk.TabIndex = 0
         Me.doclnk.TabStop = False
+        '
+        'myLinks
+        '
+        Me.myLinks.Controls.Add(Me.mydreiDlnk)
+        Me.myLinks.Controls.Add(Me.mysurvlnk)
+        Me.myLinks.Controls.Add(Me.mymedialnk)
+        Me.myLinks.Controls.Add(Me.mydoclnk)
+        Me.myLinks.Location = New System.Drawing.Point(10, 533)
+        Me.myLinks.Name = "myLinks"
+        Me.myLinks.Size = New System.Drawing.Size(276, 53)
+        Me.myLinks.TabIndex = 22
+        Me.myLinks.TabStop = False
+        Me.myLinks.Text = "my Connections"
         '
         'mydreiDlnk
         '
@@ -315,11 +317,11 @@ Partial Class ucProperties
         Me.Name = "ucProperties"
         Me.Size = New System.Drawing.Size(299, 839)
         Me.stdLinks.ResumeLayout(False)
-        Me.myLinks.ResumeLayout(False)
         CType(Me.dreiDlnk, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.survlnk, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.medialnk, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.doclnk, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.myLinks.ResumeLayout(False)
         CType(Me.mydreiDlnk, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.mysurvlnk, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.mymedialnk, System.ComponentModel.ISupportInitialize).EndInit()
@@ -350,4 +352,5 @@ Partial Class ucProperties
     Friend WithEvents mymedialnk As Windows.Forms.PictureBox
     Friend WithEvents mysurvlnk As Windows.Forms.PictureBox
     Friend WithEvents mydreiDlnk As Windows.Forms.PictureBox
+    Friend WithEvents ToolTip1 As Windows.Forms.ToolTip
 End Class
