@@ -2744,63 +2744,67 @@ Public Class frmHierarchySelection
 
         Dim initialNode As TreeNode = hryTreeView.SelectedNode
         Dim newMode As Boolean
+        Try
+            If e.KeyChar = "a" Or e.KeyChar = "A" Then
+                ' Selektiere alle Unter-Knoten 
+                With hryTreeView.SelectedNode
+                    .Expand()
+                    newMode = Not .Nodes.Item(0).Checked
+                    For i As Integer = 1 To .Nodes.Count
+                        .Nodes.Item(i - 1).Checked = newMode
+                    Next
+                End With
 
-        If e.KeyChar = "a" Or e.KeyChar = "A" Then
-            ' Selektiere alle Unter-Knoten 
-            With hryTreeView.SelectedNode
-                .Expand()
-                newMode = Not .Nodes.Item(0).Checked
-                For i As Integer = 1 To .Nodes.Count
-                    .Nodes.Item(i - 1).Checked = newMode
-                Next
-            End With
+                'hryTreeView.SelectedNode = initialNode
 
-            'hryTreeView.SelectedNode = initialNode
+            ElseIf e.KeyChar = "m" Or e.KeyChar = "M" Then
+                ' selektiere/de-selektiere Meilensteine  
+                With hryTreeView.SelectedNode
+                    .Expand()
+                    Dim ix As Integer = 1
+                    Dim fertig As Boolean = False
+                    While ix <= .Nodes.Count And Not fertig
+                        If elemIDIstMeilenstein(.Nodes.Item(ix - 1).Name) Then
+                            newMode = Not .Nodes.Item(ix - 1).Checked
+                            For i As Integer = ix To .Nodes.Count
+                                If elemIDIstMeilenstein(.Nodes.Item(i - 1).Name) Then
+                                    .Nodes.Item(i - 1).Checked = newMode
+                                End If
+                            Next
+                            fertig = True
+                        Else
+                            ix = ix + 1
+                        End If
+                    End While
+                End With
 
-        ElseIf e.KeyChar = "m" Or e.KeyChar = "M" Then
-            ' selektiere/de-selektiere Meilensteine  
-            With hryTreeView.SelectedNode
-                .Expand()
-                Dim ix As Integer = 1
-                Dim fertig As Boolean = False
-                While ix <= .Nodes.Count And Not fertig
-                    If elemIDIstMeilenstein(.Nodes.Item(ix - 1).Name) Then
-                        newMode = Not .Nodes.Item(ix - 1).Checked
-                        For i As Integer = ix To .Nodes.Count
-                            If elemIDIstMeilenstein(.Nodes.Item(i - 1).Name) Then
-                                .Nodes.Item(i - 1).Checked = newMode
-                            End If
-                        Next
-                        fertig = True
-                    Else
-                        ix = ix + 1
-                    End If
-                End While
-            End With
+                'hryTreeView.SelectedNode = initialNode
 
-            'hryTreeView.SelectedNode = initialNode
+            ElseIf e.KeyChar = "p" Or e.KeyChar = "P" Then
+                ' selektiere/de-selektiere Phasen
+                With hryTreeView.SelectedNode
+                    .Expand()
+                    Dim ix As Integer = 1
+                    Dim fertig As Boolean = False
+                    While ix <= .Nodes.Count And Not fertig
+                        If Not elemIDIstMeilenstein(.Nodes.Item(ix - 1).Name) Then
+                            newMode = Not .Nodes.Item(ix - 1).Checked
+                            For i As Integer = ix To .Nodes.Count
+                                If Not elemIDIstMeilenstein(.Nodes.Item(i - 1).Name) Then
+                                    .Nodes.Item(i - 1).Checked = newMode
+                                End If
+                            Next
+                            fertig = True
+                        Else
+                            ix = ix + 1
+                        End If
+                    End While
+                End With
+            End If
+        Catch ex As Exception
 
-        ElseIf e.KeyChar = "p" Or e.KeyChar = "P" Then
-            ' selektiere/de-selektiere Phasen
-            With hryTreeView.SelectedNode
-                .Expand()
-                Dim ix As Integer = 1
-                Dim fertig As Boolean = False
-                While ix <= .Nodes.Count And Not fertig
-                    If Not elemIDIstMeilenstein(.Nodes.Item(ix - 1).Name) Then
-                        newMode = Not .Nodes.Item(ix - 1).Checked
-                        For i As Integer = ix To .Nodes.Count
-                            If Not elemIDIstMeilenstein(.Nodes.Item(i - 1).Name) Then
-                                .Nodes.Item(i - 1).Checked = newMode
-                            End If
-                        Next
-                        fertig = True
-                    Else
-                        ix = ix + 1
-                    End If
-                End While
-            End With
-        End If
+        End Try
+
 
         ' kennzeichnen, daß keine weitere Behandlung , insbesondere nicht die Standard-Behandlung notwendig ist 
         e.Handled = True
