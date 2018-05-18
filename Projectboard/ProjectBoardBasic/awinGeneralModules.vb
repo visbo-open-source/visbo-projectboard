@@ -40,6 +40,15 @@ Public Module awinGeneralModules
         KostenExtern = 13
     End Enum
 
+    Private Enum allianzSpalten
+        Name = 0
+        AmpelText = 1
+        BusinessUnit = 3
+
+
+
+    End Enum
+
     Private Enum ptModuleSpalten
         produktlinie = 0
         name = 1
@@ -2569,96 +2578,99 @@ Public Module awinGeneralModules
             For i As Integer = 1 To listOfFiles.Count
 
                 dateiName = listOfFiles.Item(i - 1)
-                If dateiName.Contains(".xls") Or dateiName.Contains(".xlsx") Then
-                    Try
+                Dim fInf As FileInfo = My.Computer.FileSystem.GetFileInfo(dateiName)
+                If fInf.Attributes = FileAttributes.Archive Or fInf.Attributes = FileAttributes.Normal Then
+                    ' dann was machen, sonst nicht - dann geht das auch mit Tilde$.. Dateien 
+                    If dateiName.Contains(".xls") Or dateiName.Contains(".xlsx") Then
+                        Try
 
-                        appInstance.Workbooks.Open(dateiName)
+                            appInstance.Workbooks.Open(dateiName)
 
 
-                        If awinSettings.importTyp = 1 Then
-
-
-
-                            Dim projVorlage As New clsProjektvorlage
-
-                            ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
-                            ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
-
-                            Call awinImportProjectmitHrchy(Nothing, projVorlage, True, Date.Now)
-
-                            ' ur: 21.05.2015: Vorlagen nun neues Format, mit Hierarchie
-                            ' Call awinImportProject(Nothing, projVorlage, True, Date.Now)
-
-                            If isModulVorlage Then
-                                ModulVorlagen.Add(projVorlage)
-                            Else
-                                Projektvorlagen.Add(projVorlage)
-                            End If
+                            If awinSettings.importTyp = 1 Then
 
 
 
-                        ElseIf awinSettings.importTyp = 2 Then
+                                Dim projVorlage As New clsProjektvorlage
 
-                            ' hier muss die Datei ausgelesen werden
-                            Dim myCollection As New Collection
-                            Dim ok As Boolean
-                            Dim hproj As clsProjekt = Nothing
+                                ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
+                                ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
 
-                            Call bmwImportProjekteITO15(myCollection, True)
+                                Call awinImportProjectmitHrchy(Nothing, projVorlage, True, Date.Now)
 
-                            ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
-                            For Each pName As String In myCollection
+                                ' ur: 21.05.2015: Vorlagen nun neues Format, mit Hierarchie
+                                ' Call awinImportProject(Nothing, projVorlage, True, Date.Now)
 
-                                ok = True
-
-                                Try
-
-                                    hproj = ImportProjekte.getProject(pName)
-
-                                Catch ex As Exception
-                                    Call MsgBox("Projekt " & pName & " ist kein gültiges Projekt ... es wird ignoriert ...")
-                                    ok = False
-                                End Try
-
-                                If ok Then
-
-                                    ' hier müssen die Werte für die Vorlage übergeben werden.
-                                    ' Änderung tk 19.4.15 Übernehmen der Hierarchie 
-                                    Dim projVorlage As New clsProjektvorlage
-                                    projVorlage.VorlagenName = hproj.name
-                                    projVorlage.Schrift = hproj.Schrift
-                                    projVorlage.Schriftfarbe = hproj.Schriftfarbe
-                                    projVorlage.farbe = hproj.farbe
-                                    projVorlage.earliestStart = -6
-                                    projVorlage.latestStart = 6
-                                    projVorlage.AllPhases = hproj.AllPhases
-
-                                    projVorlage.hierarchy = hproj.hierarchy
-
-                                    If isModulVorlage Then
-                                        ModulVorlagen.Add(projVorlage)
-                                    Else
-                                        Projektvorlagen.Add(projVorlage)
-                                    End If
-
+                                If isModulVorlage Then
+                                    ModulVorlagen.Add(projVorlage)
+                                Else
+                                    Projektvorlagen.Add(projVorlage)
                                 End If
 
-                            Next
 
 
-                        End If
-                        ' ur: Test
-                        Dim anzphase As Integer = PhaseDefinitions.Count
+                            ElseIf awinSettings.importTyp = 2 Then
 
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                                ' hier muss die Datei ausgelesen werden
+                                Dim myCollection As New Collection
+                                Dim ok As Boolean
+                                Dim hproj As clsProjekt = Nothing
+
+                                Call bmwImportProjekteITO15(myCollection, True)
+
+                                ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
+                                For Each pName As String In myCollection
+
+                                    ok = True
+
+                                    Try
+
+                                        hproj = ImportProjekte.getProject(pName)
+
+                                    Catch ex As Exception
+                                        Call MsgBox("Projekt " & pName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                                        ok = False
+                                    End Try
+
+                                    If ok Then
+
+                                        ' hier müssen die Werte für die Vorlage übergeben werden.
+                                        ' Änderung tk 19.4.15 Übernehmen der Hierarchie 
+                                        Dim projVorlage As New clsProjektvorlage
+                                        projVorlage.VorlagenName = hproj.name
+                                        projVorlage.Schrift = hproj.Schrift
+                                        projVorlage.Schriftfarbe = hproj.Schriftfarbe
+                                        projVorlage.farbe = hproj.farbe
+                                        projVorlage.earliestStart = -6
+                                        projVorlage.latestStart = 6
+                                        projVorlage.AllPhases = hproj.AllPhases
+
+                                        projVorlage.hierarchy = hproj.hierarchy
+
+                                        If isModulVorlage Then
+                                            ModulVorlagen.Add(projVorlage)
+                                        Else
+                                            Projektvorlagen.Add(projVorlage)
+                                        End If
+
+                                    End If
+
+                                Next
 
 
-                    Catch ex As Exception
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                        Call MsgBox(ex.Message)
-                    End Try
+                            End If
+                            ' ur: Test
+                            Dim anzphase As Integer = PhaseDefinitions.Count
+
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+
+                        Catch ex As Exception
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                            Call MsgBox(ex.Message)
+                        End Try
+                    End If
                 End If
-
 
             Next
 
@@ -5901,47 +5913,18 @@ Public Module awinGeneralModules
                                     lastSpaltenValue = spalte + 14
                                     description = CStr(CType(.Cells(zeile, spalte + 14), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
+
                                     If lastColumn > nrOfStdColumns Then
                                         ' es gibt evtl Custom fields 
+                                        Dim arrayOfSpalten() As Integer
+                                        ReDim arrayOfSpalten(lastColumn - 1 - nrOfStdColumns)
+
                                         For i As Integer = nrOfStdColumns To lastColumn - 1
-
-                                            Try
-                                                Dim cfName As String = CStr(CType(.Cells(1, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
-
-                                                If uniqueID > 0 Then
-                                                    ' es ist eine Custom Field
-
-                                                    Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
-                                                    Dim cfValue As Object = Nothing
-                                                    Dim tstStr As String
-
-                                                    Select Case cfType
-                                                        Case ptCustomFields.Str
-                                                            lastSpaltenValue = spalte + i
-                                                            cfValue = CStr(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                        Case ptCustomFields.Dbl
-                                                            lastSpaltenValue = spalte + i
-                                                            cfValue = CDbl(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                        Case ptCustomFields.bool
-                                                            lastSpaltenValue = spalte + i
-                                                            cfValue = CBool(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                                                    End Select
-
-                                                    Dim cfObj As New clsCustomField
-                                                    With cfObj
-                                                        .uid = uniqueID
-                                                        .wert = cfValue
-                                                        tstStr = CStr(.wert)
-                                                    End With
-                                                    custFields.Add(cfObj)
-                                                End If
-                                            Catch ex As Exception
-                                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                                CType(.Cells(zeile, lastSpaltenValue), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
-                                            End Try
-
+                                            arrayOfSpalten(i - nrOfStdColumns) = i + spalte ' spalte = immer 1
                                         Next
+
+                                        Call readCustomFieldsFromExcel(arrayOfSpalten, 1, zeile, activeWSListe)
+
                                     End If
 
                                     vglName = calcProjektKey(pName.Trim, variantName)
@@ -6170,6 +6153,508 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' liest aus einer Excel-Tabelle die ggf vorhandenen CustomFields, der arrayOfSpalten gibt an, welche Spalten ausgelesen werden müssen 
+    ''' </summary>
+    ''' <param name="arrayOfSpalten">Indices der Spalten, müssen nicht zusammenhängend sein</param>
+    ''' <param name="Headerzeile"><include file='welcher Zeile steht die Überschrift ' path='[@name=""]'/></param>
+    ''' <param name="curZeile">welche Zeile der Tabelle soll gerade ausgelesen werden </param>
+    ''' <param name="currentWS">das Excel.Worksheet, das die Tabelle enthält</param>
+    ''' <returns></returns>
+    Private Function readCustomFieldsFromExcel(ByVal arrayOfSpalten() As Integer,
+                                               ByVal Headerzeile As Integer, ByVal curzeile As Integer,
+                                               ByVal currentWS As Excel.Worksheet) As Collection
+
+        Dim custFields As New Collection
+
+        If Not IsNothing(arrayOfSpalten) Then
+
+            For i As Integer = 0 To arrayOfSpalten.Length - 1
+
+                Dim spalte As Integer = arrayOfSpalten(i)
+
+                With currentWS
+                    Try
+                        Dim cfName As String = CStr(CType(.Cells(Headerzeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
+
+                        If uniqueID > 0 Then
+                            ' es ist eine Custom Field
+
+                            Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+                            Dim cfValue As Object = Nothing
+                            Dim tstStr As String
+
+                            Select Case cfType
+                                Case ptCustomFields.Str
+
+                                    cfValue = CStr(CType(.Cells(curzeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Case ptCustomFields.Dbl
+
+                                    cfValue = CDbl(CType(.Cells(curzeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                Case ptCustomFields.bool
+
+                                    cfValue = CBool(CType(.Cells(curzeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            End Select
+
+                            Dim cfObj As New clsCustomField
+                            With cfObj
+                                .uid = uniqueID
+                                .wert = cfValue
+                                tstStr = CStr(.wert)
+                            End With
+                            custFields.Add(cfObj)
+                        End If
+                    Catch ex As Exception
+                        CType(.Cells(curzeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        CType(.Cells(curzeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                    End Try
+                End With
+
+
+            Next
+
+        End If
+
+        readCustomFieldsFromExcel = custFields
+
+    End Function
+
+
+    ''' <summary>
+    ''' setzt die für den Allianz 1 Import Type notwendigen Felder
+    ''' </summary>
+    ''' <param name="roleNamesToConsider"></param>
+    ''' <param name="colRoleNamesToConsider"></param>
+    ''' <param name="costNamesToConsider"></param>
+    ''' <param name="colCostNamesToConsider"></param>
+    ''' <param name="currentWS"></param>
+    Private Sub setAllianzImportArrays(ByRef roleNamesToConsider() As String,
+                                       ByRef colRoleNamesToConsider() As Integer,
+                                       ByRef costNamesToConsider() As String,
+                                       ByRef colCostNamesToConsider() As Integer,
+                                       ByVal currentWS As Excel.Worksheet)
+
+        Dim tmpRoleNames(16) As String
+        Dim tmpColBz(16) As String
+        Dim tmpCols(16) As Integer
+        Dim errRoles As String = ""
+        Dim ok As Boolean = True
+
+
+        tmpRoleNames = {"BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
+                        "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
+        tmpColBz = {"DC1", "DD1", "DE1", "DG1", "DH1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
+
+        If tmpRoleNames.Length <> tmpColBz.Length Then
+            Throw New ArgumentException("ungleiche Anzahl Namen und Spalten-Ids")
+        Else
+            Dim tmpAnzahl As Integer = tmpRoleNames.Length
+
+            ' Plausibilitätsprüfung: nur weitermachen, wenn auch alle Rollen in der RollenDefinition drin sind 
+
+            For Each tmpRoleName As String In tmpRoleNames
+                If RoleDefinitions.containsName(tmpRoleName) Then
+                    ' ok 
+                Else
+                    errRoles = errRoles & tmpRoleName & "; "
+                End If
+            Next
+
+            If errRoles.Length = 0 Then
+                ' jetzt weiter machen .. die col
+                With currentWS
+                    For i As Integer = 1 To tmpAnzahl
+                        tmpCols(i - 1) = CType(.Range(tmpColBz(i - 1)), Excel.Range).Column
+                        ok = ok & CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1))
+
+                        If Not ok Then
+                            Call MsgBox("Fehler? " & tmpRoleNames(i - 1))
+                        End If
+                    Next
+                End With
+
+            Else
+                Throw New ArgumentException("nicht bekannte Rolle(n: " & errRoles)
+            End If
+        End If
+
+        roleNamesToConsider = tmpRoleNames
+        colRoleNamesToConsider = tmpCols
+
+        costNamesToConsider = Nothing
+        colCostNamesToConsider = Nothing
+
+    End Sub
+
+    ''' <summary>
+    ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
+    ''' stellt sie in ImportProjekte 
+    ''' erstellt ein Szenario mit Namen der Batch-Datei; die Sortierung erfolgt über die Reihenfolge in der Batch-Datei 
+    ''' das wird sichergestellt über Eintrag der tfzeile in hproj ... 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub importAllianzType1(ByVal startdate As Date, ByVal endDate As Date)
+
+        Dim zeile As Integer, spalte As Integer
+
+        Dim tfZeile As Integer = 2
+
+        Dim pName As String = ""
+        Dim variantName As String = ""
+        Dim custFields As New Collection
+        Dim description As String = ""
+        Dim responsiblePerson As String = ""
+        Dim sFit As Double = 5.0
+        Dim risk As Double = 5.0
+        Dim budget As Double = 0.0
+        Dim businessUnit As String = ""
+        Dim allianzProjektNummer As String = ""
+        Dim allianzStatus As String = ""
+        Dim ampelBeschreibung As String
+
+        Dim createdProjects As Integer = 0
+
+
+        Dim vorlageName As String = "Rel"
+        Dim lastRow As Integer
+        Dim lastColumn As Integer
+        Dim geleseneProjekte As Integer
+        Dim ok As Boolean = False
+
+        ' Standard-Definition
+        Dim anzReleases As Integer = 5
+
+        Try
+            anzReleases = Projektvorlagen.getProject("Rel").CountPhases - 1
+        Catch ex As Exception
+
+        End Try
+
+
+        ' enthält die prozentualen Anteile in den Releases 
+        Dim relPrz() As Double
+        ReDim relPrz(anzReleases - 1)
+
+        ' enthält die Phasen Namen
+        Dim phNames() As String
+        ReDim phNames(anzReleases - 1)
+
+        ' enthält die Spalten-Nummer, ab der die Release Phasen Anteile stehen 
+        Dim colRelPrzStart As Integer
+
+        ' enthält die Info, welche Rollen-Namen berücksichtigt werden sollen 
+        Dim roleNamesToConsider() As String = Nothing
+
+        ' enthält die Spalten-Nummern, wo die einzelnen Rollen-Namen zu finden sind
+        Dim colRoleNamesToConsider() As Integer = Nothing
+
+        ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
+        Dim roleNeeds() As Double = Nothing
+
+        ' enthält die Info, welche Rollen-Namen berücksichtigt werden sollen 
+        Dim costNamesToConsider() As String = Nothing
+
+        ' enthält die Spalten-Nummern, wo die einzelnen Rollen-Namen zu finden sind
+        Dim colCostNamesToConsider() As Integer = Nothing
+
+        ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
+        Dim costNeeds() As Double = Nothing
+
+
+        Dim firstZeile As Excel.Range
+
+        zeile = 3
+        spalte = 1
+        geleseneProjekte = 0
+
+        ' jetzt werden die Phase-Names besetzt
+        Try
+            For i = 1 To anzReleases
+                phNames(i - 1) = Projektvorlagen.getProject(vorlageName).getPhase(i + 1).name
+            Next
+        Catch ex As Exception
+            Call MsgBox("Probleme mit Vorlage " & vorlageName)
+            Exit Sub
+        End Try
+
+
+        Try
+
+            Dim found As Boolean = False
+            Dim wsi As Integer = 1
+            Dim wsCount As Integer = appInstance.ActiveWorkbook.Worksheets.Count
+
+
+            While Not found And wsi <= wsCount
+                If CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet).Name.StartsWith("Detailplanung") Then
+                    found = True
+                Else
+                    wsi = wsi + 1
+                End If
+            End While
+
+            If Not found Then
+                Call MsgBox("keine Detailplanungs-Tabelle gefunden ...")
+                Exit Sub
+            End If
+
+            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            With currentWS
+
+
+                firstZeile = CType(.Rows(2), Excel.Range)
+
+                ' jetzt wird festgelegt, ab wo die relativen Verteilungs-Werte für die Releases stehen 
+                colRelPrzStart = .Range("AI1").Column
+
+                ' damit werden die Arrays besetzt, welche Rollen gesucht sind und in welchen Spalten die Angaben dazu zu finden sind ... 
+                Call setAllianzImportArrays(roleNamesToConsider, colRoleNamesToConsider,
+                                            costNamesToConsider, colCostNamesToConsider,
+                                            currentWS)
+
+                'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
+                lastColumn = firstZeile.Columns.Count
+                lastColumn = CType(firstZeile, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+                lastColumn = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+                lastRow = CType(.Cells(2000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                ' um die CustomFields lesen zu können ... 
+                Dim arrayOfSpalten(3) As Integer
+
+                ' T-BWLA
+                arrayOfSpalten(0) = CInt(CType(.Range("A1"), Excel.Range).Column)
+                ' PGML
+                arrayOfSpalten(1) = CInt(CType(.Range("B1"), Excel.Range).Column)
+                ' POB
+                arrayOfSpalten(2) = CInt(CType(.Range("C1"), Excel.Range).Column)
+                ' Key Cluster
+                arrayOfSpalten(3) = CInt(CType(.Range("D1"), Excel.Range).Column)
+
+                While zeile <= lastRow
+
+                    ok = False
+
+                    ' Kommentare zurücksetzen ...
+                    Try
+                        CType(.Range(.Cells(zeile, 1), .Cells(zeile, lastColumn)), Global.Microsoft.Office.Interop.Excel.Range).ClearComments()
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    ' lese den Projekt-Namen
+                    Try
+                        Dim tmpCol As Integer = CType(.Range("H1"), Excel.Range).Column
+                        pName = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                        ok = True
+                    Catch ex As Exception
+                        pName = "?"
+                    End Try
+
+
+                    If IsNothing(pName) Then
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
+
+                    ElseIf pName.Trim.Length < 2 Then
+
+                        Try
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
+                        Catch ex As Exception
+
+                        End Try
+
+                    Else
+
+                        Dim itemType As Integer
+
+                        custFields.Clear()
+                        description = pName
+
+                        If Not isValidProjectName(pName) Then
+                            pName = makeValidProjectName(pName)
+                        End If
+
+                        Try
+                            ' weitere Informationen auslesen 
+
+                            Try
+                                Dim tmpCol As Integer = CType(.Range("G1"), Excel.Range).Column
+                                itemType = CInt(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                            Catch ex As Exception
+                                itemType = 0
+                            End Try
+
+                            If itemType = 4 Then
+                                ' ok weitermachen
+                                ok = True
+                            Else
+                                ok = False
+                            End If
+
+
+                            If ok Then
+                                Try
+
+                                    custFields = readCustomFieldsFromExcel(arrayOfSpalten, 2, zeile, currentWS)
+
+                                    ' lese , wieviel Prozent der Gesamtsumme jeweils auf die Release verteilt werden soll 
+                                    For i As Integer = 0 To anzReleases - 1
+                                        relPrz(i) = CDbl(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value)
+                                    Next
+
+                                    ' Plausibilitäts-Check - wenn es sich nicht auf 100% summiert, dann lieber alles auf die rootPhase verteilen und nichts auf die Release Phasen
+                                    If relPrz.Sum < 1.0 Then
+                                        ReDim relPrz(anzReleases - 1)
+                                    End If
+
+                                    ' was ist der Gesamtbedarf dieser Rolle in dem besagten Vorhaben ? 
+                                    For i As Integer = 1 To colRoleNamesToConsider.Length
+                                        Dim currentCol As Integer = colRoleNamesToConsider(i)
+                                        roleNeeds(i - 1) = CDbl(CType(.Cells(zeile, currentCol), Excel.Range).Value) * nrOfDaysMonth
+                                    Next
+
+                                Catch ex As Exception
+                                    ok = False
+                                End Try
+
+                                ' lese einen Kosten Array von KeyValues: Phase, Kostenart, Summe
+                                ' ist in diesem Fall, Allianz Type 1 nicht notwendig ...
+                            End If
+
+                            ' jetzt werden noch weitere Infos eingelesen ..
+                            Try ' Ampelbeschreibung
+                                Dim tmpCol As Integer = CType(.Range("U1"), Excel.Range).Column
+                                ampelBeschreibung = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                            Catch ex As Exception
+                                ampelBeschreibung = ""
+                            End Try
+
+                            Try ' Business Unit
+                                Dim tmpCol As Integer = CType(.Range("AB1"), Excel.Range).Column
+                                businessUnit = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                            Catch ex As Exception
+                                businessUnit = ""
+                            End Try
+
+                            Try ' Projektleiter
+                                Dim tmpCol As Integer = CType(.Range("AC1"), Excel.Range).Column
+                                responsiblePerson = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                            Catch ex As Exception
+                                responsiblePerson = ""
+                            End Try
+
+                            Try ' Projekt-Nummer
+                                Dim tmpCol As Integer = CType(.Range("AD1"), Excel.Range).Column
+                                allianzProjektNummer = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                            Catch ex As Exception
+                                allianzProjektNummer = ""
+                            End Try
+
+                            Try ' Status
+                                Dim tmpCol As Integer = CType(.Range("AF1"), Excel.Range).Column
+                                Dim tmpStatus As String = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                                If Not IsNothing(tmpStatus) Then
+                                    If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Then
+                                        allianzStatus = ProjektStatus(1)
+                                    Else
+                                        allianzStatus = ProjektStatus(0)
+                                    End If
+                                End If
+                            Catch ex As Exception
+                                allianzStatus = ""
+                            End Try
+
+                        Catch ex As Exception
+                            Call MsgBox("Fehler bei Informationen auslesen: Projekt " & pName)
+                            ok = False
+                        End Try
+
+                        variantName = ""
+
+                        If ok Then
+
+                            'Projekt anlegen ,Verschiebung um 
+                            Dim hproj As clsProjekt = Nothing
+
+                            ' #####################################################################
+                            ' Erstellen des Projekts nach den Angaben aus der Batch-Datei 
+                            '
+
+
+                            ' lege ein Allianz IT - Projekt an
+                            hproj = erstelleProjektausParametern(pName, variantName, vorlageName, startdate, endDate, budget, sFit, risk, allianzProjektNummer,
+                                                                 description, custFields, businessUnit, responsiblePerson, allianzStatus,
+                                                                 zeile, roleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz)
+
+                            If Not IsNothing(hproj) Then
+
+                                ' jetzt ist alles so weit ok 
+
+                            Else
+                                ok = False
+                                CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                CType(.Cells(zeile, lastColumn + 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
+                            End If
+
+
+                            If ok Then ' wenn es nicht explizit auf false gesetzt wurde, ist es an dieser Stelle immer noch true 
+                                Dim pkey As String = ""
+                                If Not IsNothing(hproj) Then
+                                    Try
+                                        pkey = calcProjektKey(hproj)
+
+                                        If ImportProjekte.Containskey(pkey) Then
+                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
+                                        Else
+
+                                            createdProjects = createdProjects + 1
+
+                                            ImportProjekte.Add(hproj, False)
+                                        End If
+
+
+                                        'myCollection.Add(calcProjektKey(hproj))
+                                    Catch ex As Exception
+                                        CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                        CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                    End Try
+
+                                End If
+
+                            End If
+
+                        End If
+
+
+                    End If
+
+
+                    geleseneProjekte = geleseneProjekte + 1
+                    zeile = zeile + 1
+
+                End While
+
+
+            End With
+        Catch ex As Exception
+
+            Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
+
+        End Try
+
+
+        Call MsgBox("gelesen: " & geleseneProjekte & vbLf &
+                    "erzeugt: " & createdProjects & vbLf &
+                    "importiert: " & ImportProjekte.Count)
+
+    End Sub
+
+    ''' <summary>
     ''' bestimmt, ob es sich um einen gültigen Kapazitäts- bzw Kosten-Input String handelt
     ''' alle Rollen- bzw Kostenart Namen bekannt, alle Werte >= 0 
     ''' </summary>
@@ -6300,13 +6785,19 @@ Public Module awinGeneralModules
     Public Function makeValidProjectName(ByVal pName As String) As String
 
         If pName.Contains("#") Then
-            pName = pName.Replace("#", "-")
+            pName = pName.Replace("#", " ")
         End If
         If pName.Contains("(") Then
-            pName = pName.Replace("(", "/")
+            pName = pName.Replace("(", "-")
         End If
         If pName.Contains(")") Then
-            pName = pName.Replace(")", "/")
+            pName = pName.Replace(")", "-")
+        End If
+        If pName.Contains(vbCr) Then
+            pName = pName.Replace(vbCr, " ")
+        End If
+        If pName.Contains(vbCr) Then
+            pName = pName.Replace(vbLf, " ")
         End If
 
         makeValidProjectName = pName

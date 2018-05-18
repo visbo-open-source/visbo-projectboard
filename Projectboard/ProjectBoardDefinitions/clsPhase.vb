@@ -43,6 +43,92 @@ Public Class clsPhase
     Private _allCosts As List(Of clsKostenart)
 
     ''' <summary>
+    ''' löscht alle Rollen der Phase
+    ''' </summary>
+    Public Sub clearRoles()
+        _allRoles.Clear()
+    End Sub
+
+    ''' <summary>
+    ''' entfernt die Rolle mit Name rolename aus der Phase
+    ''' wenn die nicht als Rollendefinition gar nicht existiert, gibt es eine Exception
+    ''' andernfalls, wenn Rolle nur nicht in der Phase vorkommt, gibt es keine Meldung 
+    ''' 
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    Public Sub deleteRole(ByVal roleName As String)
+
+        If RoleDefinitions.containsName(roleName) Then
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allRoles.Count - 1
+                If _allRoles.Item(ix).name = roleName Then
+                    found = True
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            If found Then
+                _allRoles.RemoveAt(ix)
+            End If
+        Else
+            'Fehler ...
+            Dim errmsg As String
+            If awinSettings.englishLanguage Then
+                errmsg = "role unknown: " & roleName
+            Else
+                errmsg = "unbekannte Rolle: " & roleName
+            End If
+            Throw New ArgumentException(errmsg)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt die Kostenart mit Name costname aus der Phase
+    ''' wenn die als Kostenartdefinition gar nicht existiert, gibt es eine Exception
+    ''' andernfalls, wenn Kostenart nur nicht in der Phase vorkommt, gibt es keine Meldung 
+    ''' </summary>
+    ''' <param name="costname"></param>
+    Public Sub deleteCost(ByVal costname As String)
+        If CostDefinitions.containsName(costname) Then
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allCosts.Count - 1
+                If _allCosts.Item(ix).name = costname Then
+                    found = True
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            If found Then
+                _allCosts.RemoveAt(ix)
+            End If
+        Else
+            'Fehler ...
+            Dim errmsg As String
+            If awinSettings.englishLanguage Then
+                errmsg = "role unknown: " & costname
+            Else
+                errmsg = "unbekannte Rolle: " & costname
+            End If
+            Throw New ArgumentException(errmsg)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht alle Kostenbedarfe der Phase
+    ''' </summary>
+    Public Sub clearCosts()
+        _allCosts.Clear()
+    End Sub
+
+    ''' <summary>
     ''' es wird eine PercentDone Regelung eingeführt , mit der beurteilt werden kann, wie wit die Ergebnisse bereits sind  
     ''' </summary>
     ''' <value></value>
@@ -1547,6 +1633,30 @@ Public Class clsPhase
     End Sub
 
     ''' <summary>
+    ''' fügt der aktuellen Phase eine Rolle bzw. Kostenart hinzu
+    ''' </summary>
+    ''' <param name="rcName"></param>
+    ''' <param name="summe"></param>
+    ''' <param name="isrole"></param>
+    ''' <param name="addWhenExisting"></param>
+    Public Sub addCostRole(ByVal rcName As String, ByVal summe As Double,
+                              ByVal isrole As Boolean,
+                              ByVal addWhenExisting As Boolean)
+
+
+        If isrole Then
+            ' eine Rolle wird hinzugefügt 
+            Call Me.AddRole(rcName, summe, addWhenExisting)
+
+        Else
+            ' eine Kostenart wird hinzugefügt
+            Call Me.AddCost(rcName, summe, addWhenExisting)
+        End If
+
+
+    End Sub
+
+    ''' <summary>
     ''' addRole fügt die Rollen Instanz hinzu, wenn sie nicht schon existiert
     ''' wenn sie schon existiert, dann werden die Werte zu den schon existierenden Werten addiert ...
     ''' </summary>
@@ -2287,6 +2397,68 @@ Public Class clsPhase
         ''Else
         ''    Throw New Exception("Fehler: Kostenart '" & cost.name & "' ist bereits in der Phase '" & Me.name & "' enthalten")
         ''End If
+
+    End Sub
+
+    ''' <summary>
+    ''' erstellt eine neue Kostenart, weist der Kostenart monatliche Bedarfe zu, deren Summe dem Wert der Variable summe entspricht  
+    ''' </summary>
+    ''' <param name="costName"></param>
+    ''' <param name="summe"></param>
+    ''' <param name="addToExisting"></param>
+    Public Sub AddCost(ByVal costName As String, ByVal summe As Double, ByVal addToExisting As Boolean)
+
+        Dim cSum As Double()
+        ReDim cSum(0)
+        cSum(0) = summe
+
+        Dim tmpCost As clsKostenart = Me.getCost(costName)
+        Dim xWerte As Double() = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, cSum, 1.0)
+
+        If IsNothing(tmpCost) Then
+            ' die Rolle hat bisher noch nicht existiert ...
+            Dim dimension As Integer = Me.relEnde - Me.relStart
+            tmpCost = New clsKostenart(dimension)
+
+            With tmpCost
+                .KostenTyp = CostDefinitions.getCostdef(costName).UID
+                .Xwerte = xWerte
+            End With
+
+            ' jetzt muss die Rolle ergänzt werden 
+            _allCosts.Add(tmpCost)
+
+        Else
+            ' die Rolle hat bereits existiert 
+            If addToExisting Then
+                If tmpCost.Xwerte.Length = xWerte.Length Then
+                    ' hier dann aufsummieren 
+                    Dim oldXwerte As Double() = tmpCost.Xwerte
+                    For i As Integer = 0 To oldXwerte.Length - 1
+                        xWerte(i) = xWerte(i) + oldXwerte(i)
+                    Next
+
+                Else
+                    ' darf eigentlich nicht sein 
+                    ' Test: 
+                    'Call MsgBox("Fehler in Rollen-Zuordnung")
+                    ' es wird dann einfach gar nichts gemacht 
+                End If
+            Else
+                ' nichts weiter tun 
+            End If
+
+            tmpCost.Xwerte() = xWerte
+        End If
+
+
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Try
+            Me.parentProject.rcLists.addCP(tmpCost.KostenTyp, Me.nameID)
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 

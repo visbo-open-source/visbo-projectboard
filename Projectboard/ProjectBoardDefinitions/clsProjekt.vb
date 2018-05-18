@@ -1190,6 +1190,109 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' trägt die Liste von clsCustomFields, die in der Collection sind, in das Projekt ein
+    ''' </summary>
+    ''' <param name="listOfCustomFields"></param>
+    Public Sub addListOfCustomFields(ByVal listOfCustomFields As Collection)
+        If Not IsNothing(listOfCustomFields) Then
+
+            If listOfCustomFields.Count > 0 Then
+
+                For Each cfObj As clsCustomField In listOfCustomFields
+
+                    Try
+                        Dim uniqueID As Integer = CInt(cfObj.uid)
+                        Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+
+                        Select Case cfType
+
+                            Case ptCustomFields.Str
+                                Me.addSetCustomSField(uniqueID, CStr(cfObj.wert))
+                            Case ptCustomFields.Dbl
+                                Me.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
+                            Case ptCustomFields.bool
+                                Me.addSetCustomBField(uniqueID, CBool(cfObj.wert))
+                            Case Else
+
+                        End Select
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+            End If
+
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' setzt das Budget auf den Wert, der sich aus den Ressourcen- und Kostenbedarfen ergibt
+    ''' </summary>
+    Public Sub setBudgetAsNeeded()
+
+        Try
+            Dim a As Integer = Me.dauerInDays
+            Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
+            Call Me.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
+            If tmpERG < 0 Then
+                neededBudget = -1 * tmpERG
+            End If
+            Me.Erloes = neededBudget
+        Catch ex As Exception
+
+            If awinSettings.visboDebug Then
+                Call MsgBox("Fehler in Projekt anlegen, Name: " & Me.name)
+            End If
+
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' fügt dem aktuellen Projekt Me  , der existierenden Phase nameID die Rolle bzw Kostenart zu;
+    ''' wenn addWhenexisting true, wird addiert, andernfalls replaced 
+    ''' Vorbedingung: alle Plausibilitätsbedingungen wurden im Vorfeld abgeklärt, also Phase existiert, Rolle/Kostenart existiert und Summe ist positiv 
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>(
+    ''' <param name="summe"></param>
+    ''' <param name="addWhenExisting"></param>
+    Public Sub addCostRoleToPhase(ByVal phaseNameID As String, ByVal rcName As String, ByVal summe As Double,
+                              ByVal isrole As Boolean,
+                              ByVal addWhenExisting As Boolean)
+
+        ' es werden die Plausibilitätsprüfungen gemacht 
+        Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
+
+        If Not IsNothing(cphase) Then
+            If isrole Then
+                ' eine Rolle wird hinzugefügt 
+                Call cphase.AddRole(rcName, summe, addWhenExisting)
+
+            Else
+                ' eine Kostenart wird hinzugefügt
+                Call cphase.AddCost(rcName, summe, addWhenExisting)
+            End If
+        Else
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht in allen Phasen alle vorkommenden Rollen und Kosten 
+    ''' </summary>
+    Public Sub deleteAllRolesCosts()
+
+        For ip As Integer = 1 To Me.CountPhases
+            Dim cPhase As clsPhase = Me.getPhase(ip)
+            With cPhase
+
+            End With
+        Next
+
+    End Sub
+    ''' <summary>
     ''' Methode prüft auf Identität mit einem Vergleichsprojekt 
     ''' es wird verglichen: Startdatum, Endedatum (nur type=0), Phasen, Milestones, Personalkosten, Sonstige Kosten, Ergebnis, Attribute, Projekt-Ampel, Milestone-Ampeln, 
     ''' Deliverables, CustomFields, Projekt-Typ verglichen  

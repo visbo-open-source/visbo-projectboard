@@ -11496,6 +11496,153 @@ Public Module Projekte
 
     End Function
 
+    ''' <summary>
+    ''' erstellt ein Projekt aus den angegebenen Parametern
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="vorlagenName"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="endDate"></param>
+    ''' <param name="budget"></param>
+    ''' <param name="sfit"></param>
+    ''' <param name="risk"></param>
+    ''' <param name="projectNummer"></param>
+    ''' <param name="description"></param>
+    ''' <param name="listOfCustomFields"></param>
+    ''' <param name="businessUnit"></param>
+    ''' <param name="responsible"></param>
+    ''' <param name="status"></param>
+    ''' <param name="zeile"></param>
+    ''' <param name="roleNames"></param>
+    ''' <param name="roleValues"></param>
+    ''' <param name="costNames"></param>
+    ''' <param name="costValues"></param>
+    ''' <param name="phNames"></param>
+    ''' <param name="przPhasenAnteile"></param>
+    ''' <returns></returns>
+    Public Function erstelleProjektausParametern(ByVal pName As String, ByVal vName As String, ByVal vorlagenName As String,
+                                                 ByVal startDate As Date, ByVal endDate As Date,
+                                                 ByVal budget As Double, ByVal sfit As Double, ByVal risk As Double,
+                                                 ByVal projectNummer As String, ByVal description As String, ByVal listOfCustomFields As Collection,
+                                                 ByVal businessUnit As String, ByVal responsible As String, ByVal status As String, ByVal zeile As Integer,
+                                                 ByVal roleNames() As String, ByVal roleValues() As Double,
+                                                 ByVal costNames() As String, ByVal costValues() As Double,
+                                                 ByVal phNames() As String, ByVal przPhasenAnteile() As Double)
+
+        Dim hproj As clsProjekt = New clsProjekt
+
+        Try
+            Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startDate, endDate)
+        Catch ex As Exception
+            Call MsgBox("es gibt keine entsprechende Vorlage ..")
+            erstelleProjektausParametern = Nothing
+            Exit Function
+        End Try
+
+        ' jetzt ist in hproj ein neues Projekt mit entsprechendem Name, etc. 
+        Try
+            With hproj
+                .name = pName
+                .variantName = vName
+                .Id = projectNummer
+                .getPhase(1).nameID = rootPhaseName
+                .VorlagenName = vorlagenName
+                .startDate = startDate
+                .earliestStartDate = .startDate.AddMonths(.earliestStart)
+                .latestStartDate = .startDate.AddMonths(.latestStart)
+                ' jedes Projekt zu Beginn als beauftragtes Projekt importieren
+                .Status = status
+                .StrategicFit = sfit
+                .Risiko = risk
+
+                .leadPerson = responsible
+                .businessUnit = businessUnit
+                .description = description
+                .tfZeile = zeile
+                If budget > 0 Then
+                    .Erloes = budget
+                    ' andernfalls wird es ganz am Schluss berechnet ...
+                Else
+                    .Erloes = 0
+                End If
+
+
+            End With
+        Catch ex As Exception
+            Throw New Exception("in erstelle InventurProjekte: " & ex.Message)
+        End Try
+
+        ' jetzt müssen die Rollen und Kostenarten besetzt werden  
+        Dim tmpRCvalue As Double = 0.0
+        Dim tmpRCname As String
+        If przPhasenAnteile.Sum = 1.0 Then
+            ' der Gesamt-Wert der Rollen soll auf die entsprechenden Phasen aufgeteilt werden 
+            Dim anzPhasen As Integer = phNames.Length
+
+            For p = 0 To anzPhasen - 1
+
+                Dim tmpPhName As String = phNames(p)
+                Dim cphase As clsPhase = hproj.getPhase(tmpPhName)
+
+                If Not IsNothing(cphase) Then
+                    Dim anzRoles As Integer
+                    Dim anzCosts As Integer
+
+                    If IsNothing(roleNames) Then
+                        anzRoles = 0
+                    Else
+                        anzRoles = roleNames.Length
+                    End If
+
+                    If IsNothing(costNames) Then
+                        anzCosts = 0
+                    Else
+                        anzCosts = costNames.Length
+                    End If
+
+                    For r = 0 To anzRoles - 1
+                        tmpRCvalue = przPhasenAnteile(p) * roleValues(r)
+                        tmpRCname = roleNames(r)
+                        If tmpRCvalue > 0 Then
+                            cphase.addCostRole(tmpRCname, tmpRCvalue, True, False)
+                        End If
+
+                    Next
+
+
+                    For c = 0 To anzCosts - 1
+                        tmpRCvalue = przPhasenAnteile(p) * costValues(c)
+                        tmpRCname = costNames(c)
+                        If tmpRCvalue > 0 Then
+                            cphase.addCostRole(tmpRCname, tmpRCvalue, False, False)
+                        End If
+                    Next
+
+
+                End If
+
+
+            Next
+        Else
+            ' der Gesamt-Wert der Rollen soll auf die RootPhase aufgeteilt werden
+        End If
+
+        ' jetzt ggf die Custom Fields eintragen 
+        hproj.addListOfCustomFields(listOfCustomFields)
+
+        ' jetzt das Budget so setzen, wie es benötigt wird ... 
+        If budget < 0 Then
+            hproj.setBudgetAsNeeded()
+        End If
+
+
+        ' Workaround, der nötig ist, um Fehler zu vermeiden - Fehler in Dauer ... 
+        Dim tmpValue As Integer = hproj.dauerInDays
+
+        erstelleProjektausParametern = hproj
+
+    End Function
 
     '
     ' Sub trägt ein individuelles Projekt ein
@@ -11809,56 +11956,60 @@ Public Module Projekte
 
 
         ' jetzt ggf die Custom Fields eintragen 
-        If Not IsNothing(listOfCustomFields) Then
+        newprojekt.addListOfCustomFields(listOfCustomFields)
+        ' wird jetzt in addListOfCustomFields erledigt ... 
+        'If Not IsNothing(listOfCustomFields) Then
 
-            If listOfCustomFields.Count > 0 Then
+        '    If listOfCustomFields.Count > 0 Then
 
-                For Each cfObj As clsCustomField In listOfCustomFields
+        '        For Each cfObj As clsCustomField In listOfCustomFields
 
-                    Try
-                        Dim uniqueID As Integer = CInt(cfObj.uid)
-                        Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+        '            Try
+        '                Dim uniqueID As Integer = CInt(cfObj.uid)
+        '                Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
 
-                        Select Case cfType
+        '                Select Case cfType
 
-                            Case ptCustomFields.Str
-                                newprojekt.addSetCustomSField(uniqueID, CStr(cfObj.wert))
-                            Case ptCustomFields.Dbl
-                                newprojekt.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
-                            Case ptCustomFields.bool
-                                newprojekt.addSetCustomBField(uniqueID, CBool(cfObj.wert))
-                            Case Else
+        '                    Case ptCustomFields.Str
+        '                        newprojekt.addSetCustomSField(uniqueID, CStr(cfObj.wert))
+        '                    Case ptCustomFields.Dbl
+        '                        newprojekt.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
+        '                    Case ptCustomFields.bool
+        '                        newprojekt.addSetCustomBField(uniqueID, CBool(cfObj.wert))
+        '                    Case Else
 
-                        End Select
-                    Catch ex As Exception
+        '                End Select
+        '            Catch ex As Exception
 
-                    End Try
+        '            End Try
 
-                Next
+        '        Next
 
-            End If
+        '    End If
 
-        End If
+        'End If
 
         ' jetzt muss ggf das benötigte Budget errechnet werden 
-        If erloes = -999 Then
-            Try
-                Dim a As Integer = newprojekt.dauerInDays
-                Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
-                Call newprojekt.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
-                If tmpERG < 0 Then
-                    neededBudget = -1 * tmpERG
-                End If
-                newprojekt.Erloes = neededBudget
-            Catch ex As Exception
+        newprojekt.setBudgetAsNeeded()
+        ' wird jetzt in setBudgetAsNeeded erledigt 
+        ''If erloes = -999 Then
+        ''    Try
+        ''        Dim a As Integer = newprojekt.dauerInDays
+        ''        Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
+        ''        Call newprojekt.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
+        ''        If tmpERG < 0 Then
+        ''            neededBudget = -1 * tmpERG
+        ''        End If
+        ''        newprojekt.Erloes = neededBudget
+        ''    Catch ex As Exception
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in Projekt anlegen, Name: " & newprojekt.name)
-                End If
+        ''        If awinSettings.visboDebug Then
+        ''            Call MsgBox("Fehler in Projekt anlegen, Name: " & newprojekt.name)
+        ''        End If
 
-            End Try
-            
-        End If
+        ''    End Try
+
+        ''End If
 
         ' Workaround: 
         Dim tmpValue As Integer = newprojekt.dauerInDays

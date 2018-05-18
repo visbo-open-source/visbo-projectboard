@@ -4970,6 +4970,7 @@ Imports System.Windows
                         End If
 
                         appInstance.Workbooks.Open(dateiName)
+
                         Dim scenarioName As String = appInstance.ActiveWorkbook.Name
                         Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
                         Dim tmpName As String = ""
@@ -4981,8 +4982,16 @@ Imports System.Windows
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
 
+                        If scenarioName.StartsWith("AT1") Then
+                            Dim startdate As Date = CDate("1.1.2018")
+                            Dim enddate As Date = CDate("31.12.2018")
 
-                        Call awinImportProjektInventur()
+                            Call importAllianzType1(startdate, enddate)
+                        Else
+                            Call awinImportProjektInventur()
+                        End If
+
+
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                         Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
