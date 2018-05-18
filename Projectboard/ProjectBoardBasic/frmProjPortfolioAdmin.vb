@@ -614,8 +614,8 @@ Public Class frmProjPortfolioAdmin
         Else
 
             Try
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim tCollection As Collection = request.retrieveZeitstempelFromDB()
+
+                Dim tCollection As Collection = CType(databaseAcc, Request).retrieveZeitstempelFromDB()
 
                 If tCollection.Count >= 1 Then
                     earliestDate = tCollection.Item(tCollection.Count).date.addhours(23).addminutes(59)

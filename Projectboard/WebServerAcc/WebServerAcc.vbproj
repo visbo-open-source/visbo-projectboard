@@ -76,7 +76,7 @@
     <Compile Include="clsProjektWebShort.vb" />
     <Compile Include="clsUserAddress.vb" />
     <Compile Include="clsUserLoginSignup.vb" />
-    <Compile Include="clsWebOneVPv.vb" />
+    <Compile Include="clsWebLongVPv.vb" />
     <Compile Include="clsWebVPv.vb" />
     <Compile Include="clsInputSigninLogin.vb" />
     <Compile Include="clsProjektWeb.vb" />

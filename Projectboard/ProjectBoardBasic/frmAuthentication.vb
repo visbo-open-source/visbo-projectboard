@@ -2,7 +2,8 @@
 Imports ClassLibrary1
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
-Imports MongoDbAccess
+'Imports MongoDbAccess
+Imports WebServerAcc
 Imports System.Windows.Forms
 
 
@@ -40,8 +41,11 @@ Public Class frmAuthentication
 
 
             Try
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-                Dim ok As Boolean = request.createIndicesOnce()
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+                'Dim ok As Boolean = Request.createIndicesOnce()
+
+                Dim ok As Boolean = databaseAcc.Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+
                 If Not ok Then
                     If awinSettings.englishLanguage Then
                         messageBox.Text = "Wrong username or password!"
@@ -64,7 +68,10 @@ Public Class frmAuthentication
                     DialogResult = System.Windows.Forms.DialogResult.OK
 
                     ' jett wird request public gemacht ..
-                    mongoDBAcc = request
+                    ' mongoDBAcc = Request
+
+                    ' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
+                    ' mongoDBAcc = token
                 End If
 
             Catch ex As Exception
@@ -105,9 +112,15 @@ Public Class frmAuthentication
         messageBox.Text = ""
 
         Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+            'Dim ok As Boolean = Request.createIndicesOnce()
+            Dim xxx As New WebServerAcc.Request()
+            databaseAcc = xxx
 
-            Dim ok As Boolean = request.createIndicesOnce()
+            Dim ok As Boolean = CType(databaseAcc, Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+
+            'Dim ok As Boolean = WebServerAcc.request.Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+
             If Not ok Then
                 If awinSettings.englishLanguage Then
                     messageBox.Text = "Wrong username or password!"
@@ -121,13 +134,19 @@ Public Class frmAuthentication
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
-                mongoDBAcc = request
+                ' mongoDBAcc = Request
+
+                ' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
+                ' mongoDBAcc = token
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
                 messageBox.Text = ""
                 DialogResult = System.Windows.Forms.DialogResult.OK
-                ' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
-                Dim initOK As Integer = CType(mongoDBAcc, Request).initWriteProtectionsOnce(dbUsername)
+
+
+                '' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
+                '' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
+                ' Dim initOK As Integer = CType(mongoDBAcc, MongoDbAccess.Request).initWriteProtectionsOnce(dbUsername)
 
             End If
 

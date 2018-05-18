@@ -49,6 +49,9 @@
     <Reference Include="Microsoft.Office.Interop.MSProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
@@ -405,6 +408,10 @@
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
       <Name>ProjectBoardDefinitions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WebServerAcc\WebServerAcc.vbproj">
+      <Project>{a6876837-dd60-4e0d-bcbc-de9a0d6f8de3}</Project>
+      <Name>WebServerAcc</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
