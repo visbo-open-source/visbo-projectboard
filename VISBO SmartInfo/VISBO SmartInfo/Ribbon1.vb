@@ -1,8 +1,9 @@
 ﻿Imports Microsoft.Office.Tools.Ribbon
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
-Imports MongoDbAccess
+'Imports MongoDbAccess
+Imports WebServerAcc
 Imports ProjectBoardDefinitions
-Imports ProjectBoardBasic
+'Imports ProjectBoardBasic
 
 Public Class Ribbon1
 
@@ -97,7 +98,8 @@ Public Class Ribbon1
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
                             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
+                            'Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
+                            Dim tsCollection As Collection = CType(databaseAcc, Request).retrieveZeitstempelFromDB(pvName)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 
@@ -308,16 +310,19 @@ Public Class Ribbon1
             Call initPPTTimeMachine(varPPTTM)
         End If
 
-        If Not IsNothing(varPPTTM.timeStamps) Then
+        If Not IsNothing(varPPTTM) Then
 
-            If varPPTTM.timeStamps.Count > 0 Then
+            If Not IsNothing(varPPTTM.timeStamps) Then
 
-                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+                If varPPTTM.timeStamps.Count > 0 Then
 
-                If newDate <> currentTimestamp Then
+                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
 
-                    Call performBtnAction(newDate)
+                    If newDate <> currentTimestamp Then
 
+                        Call performBtnAction(newDate)
+
+                    End If
                 End If
             End If
         End If

@@ -1483,9 +1483,9 @@ Public Module PBBModules
 
                 If vglName <> hproj.getShapeText Then
 
-                    If CType(mongoDBAcc, Request).pingMongoDb() Then
+                    If CType(databaseAcc, Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         If projekthistorie.Count <> 0 Then
 

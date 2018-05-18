@@ -18,7 +18,7 @@ Public Module Module1
     ' Laufzeit Parameter;
 
     ' das Objekt, das später die Instanz-Variable Request aufnimmt 
-    Public mongoDBAcc As Object = Nothing
+    Public databaseAcc As Object = Nothing
 
     'login - Informationen
     Public dbUsername As String = ""

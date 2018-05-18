@@ -1,5 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
-Imports MongoDbAccess
+'Imports MongoDbAccess
+Imports WebServerAcc
 ''' <summary>
 ''' baut die SmartListen für die betreffende Slide auf
 ''' dazu gehören classifiedName, OriginalNames, ShortNames, FullBreadCrumbs, ampelColr, 
@@ -135,7 +136,7 @@ Public Class clsSmartSlideListen
                     tmpProject = timeStamps.ElementAtorBefore(tsDate)
                     If IsNothing(tmpProject) Then
                         ' aus Datenbank holen 
-                        tmpProject = CType(mongoDBAcc, Request).retrieveOneProjectfromDB(pName, vName, tsDate)
+                        tmpProject = CType(databaseAcc, Request).retrieveOneProjectfromDB(pName, vName, tsDate)
 
                         If Not IsNothing(tmpProject) Then
                             timeStamps.Add(tsDate, tmpProject)
@@ -151,7 +152,7 @@ Public Class clsSmartSlideListen
                             tmpDateVon = _listOfTimeStamps.First.Key
                         End If
                     End If
-                    timeStamps.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now)
+                    timeStamps.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now)
                     _projectTimeStamps.Item(pvName) = timeStamps
 
                     tmpProject = timeStamps.ElementAtorBefore(tsDate)

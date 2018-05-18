@@ -1,5 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
-Imports MongoDbAccess
+'Imports MongoDbAccess
+Imports WebServerAcc
 Imports ProjectBoardBasic
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Core.MsoThemeColorIndex
@@ -905,7 +906,7 @@ Module Module1
                 Dim vName As String = getVariantnameFromKey(tmpName)
                 Dim pvName As String = calcProjektKeyDB(pName, vName)
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
+                Dim tsCollection As Collection = CType(databaseAcc, Request).retrieveZeitstempelFromDB(pvName)
                 smartSlideLists.addToListOfTS(tsCollection)
             Next
 
@@ -1338,6 +1339,8 @@ Module Module1
 
         If noDBAccessInPPT Then
             Dim msg As String
+            awinSettings.databaseURL = "http://localhost:3484"
+            awinSettings.databaseName = "IT Projekte 2018"
             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
                 ' jetzt prüfen , ob es bereits gespeicherte User-Credentials gibt 
@@ -1385,8 +1388,8 @@ Module Module1
                     'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                     'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                    RoleDefinitions = CType(mongoDBAcc, Request).retrieveRolesFromDB(Date.Now)
-                    CostDefinitions = CType(mongoDBAcc, Request).retrieveCostsFromDB(Date.Now)
+                    RoleDefinitions = CType(databaseAcc, Request).retrieveRolesFromDB(Date.Now)
+                    CostDefinitions = CType(databaseAcc, Request).retrieveCostsFromDB(Date.Now)
                 End If
             Else
                 If englishLanguage Then
@@ -2045,7 +2048,7 @@ Module Module1
 
                                     ' jetzt das bProj (Beauftragung) holen
                                     Try
-                                        bProj = CType(mongoDBAcc, Request).retrieveFirstContractedPFromDB(tsProj.name)
+                                        bProj = CType(databaseAcc, Request).retrieveFirstContractedPFromDB(tsProj.name)
                                     Catch ex As Exception
                                         bProj = Nothing
                                     End Try
@@ -4919,10 +4922,10 @@ Module Module1
 
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If CType(mongoDBAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, Request).pingMongoDb() Then
                     Try
 
-                        pHistory.liste = CType(mongoDBAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        pHistory.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                     Catch ex As Exception
                         pHistory = Nothing
@@ -6015,7 +6018,7 @@ Module Module1
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
                             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
+                            Dim tsCollection As Collection = CType(databaseAcc, Request).retrieveZeitstempelFromDB(pvName)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 

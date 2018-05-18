@@ -10,7 +10,8 @@
     <AssemblyName>WebServerAcc</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Windows</MyType>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -70,13 +71,17 @@
     <Import Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="clsHierarchyWeb.vb" />
-    <Compile Include="clsHrchyNodeWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
     <Compile Include="clsUserAddress.vb" />
     <Compile Include="clsUserLoginSignup.vb" />
+    <Compile Include="clsVCcost.vb" />
+    <Compile Include="clsVCrole.vb" />
+    <Compile Include="clsVPLock.vb" />
     <Compile Include="clsWebLongVPv.vb" />
+    <Compile Include="clsWebVCcost.vb" />
+    <Compile Include="clsWebVCrole.vb" />
+    <Compile Include="clsWebVPlock.vb" />
     <Compile Include="clsWebVPv.vb" />
     <Compile Include="clsInputSigninLogin.vb" />
     <Compile Include="clsProjektWeb.vb" />

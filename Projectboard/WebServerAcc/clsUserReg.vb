@@ -9,7 +9,7 @@
         _id = ""
         _email = "not set"
         _profile = New clsUserProfile
-        _created_at = Convert.ToDateTime("2018-03-02T16:36:49.122Z")
-        _updated_at = Convert.ToDateTime("2018-03-16T16:36:49.122Z")
+        _created_at = Date.MinValue
+        _updated_at = Date.MinValue
     End Sub
 End Class

@@ -43,10 +43,10 @@ Public Class frmRenameProject
             Else
                 Try
                     'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    Dim projExist As Boolean = CType(mongoDBAcc, Request).projectNameAlreadyExists(newName.Text, "", Date.Now)
+                    Dim projExist As Boolean = CType(databaseAcc, Request).projectNameAlreadyExists(newName.Text, "", Date.Now)
 
                     ' muss gemacht werden, weil es auch Projekte geben kann, die nur als Varianten existieren ...
-                    Dim listOfVariants As Collection = CType(mongoDBAcc, Request).retrieveVariantNamesFromDB(newName.Text)
+                    Dim listOfVariants As Collection = CType(databaseAcc, Request).retrieveVariantNamesFromDB(newName.Text)
 
                     If projExist Or listOfVariants.Count > 0 Then
                         ' es existiert bereits .. 

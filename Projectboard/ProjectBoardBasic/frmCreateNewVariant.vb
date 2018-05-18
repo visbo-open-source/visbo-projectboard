@@ -63,10 +63,10 @@ Public Class frmCreateNewVariant
         If Not noDB Then
             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            If CType(mongoDBAcc, Request).pingMongoDb() Then
+            If CType(databaseAcc, Request).pingMongoDb() Then
 
                 If Not _
-                    (CType(mongoDBAcc, Request).projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or
+                    (CType(databaseAcc, Request).projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or
                      AlleProjekte.Containskey(key)) Then
 
                     ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden

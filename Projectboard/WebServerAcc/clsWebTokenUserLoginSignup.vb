@@ -8,6 +8,6 @@ Public Class clsWebTokenUserLoginSignup
         _state = "failure"
         _message = "not successfully logged in"
         _token = ""
-        user = New clsUserReg()
+        _user = New clsUserReg()
     End Sub
 End Class

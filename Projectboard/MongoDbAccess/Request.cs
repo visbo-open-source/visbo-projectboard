@@ -564,6 +564,8 @@ namespace MongoDbAccess
                 
             }
 
+            result.buildTopNodes();
+
             return result;
         }
 

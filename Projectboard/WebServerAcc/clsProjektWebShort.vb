@@ -6,8 +6,10 @@
     Public Property vpid As String
     Public Property timestamp As Date
     Public Property Erloes As Integer
+    Public Property startDate As Date
     Public Property endDate As Date
     Public Property variantName As String
+    Public Property status As String
 
     Public Sub New()
         _id = ""
@@ -15,7 +17,9 @@
         vpid = ""
         timestamp = Date.MinValue
         Erloes = 0
-        endDate = Date.MinValue
+        startDate = Date.MinValue
+        endDate = Date.MaxValue
         variantName = ""
+        status = ""
     End Sub
 End Class
