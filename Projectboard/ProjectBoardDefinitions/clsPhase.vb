@@ -1633,6 +1633,54 @@ Public Class clsPhase
     End Sub
 
     ''' <summary>
+    ''' fügt der Phase die Rollen und Kosten hinzu, wie angegeben
+    ''' </summary>
+    ''' <param name="roleNames">die Namen der Rollen</param>
+    ''' <param name="roleValues">die Werte der Rollen</param>
+    ''' <param name="costNames">die Namen der Kostenarten</param>
+    ''' <param name="costValues">die Werte der Kostenarten</param>
+    ''' <param name="prozentSatz">wenn nur ein bestimmter Prozentsatz auf die Phase verteilt werden sollen; by Default 1</param>
+    Public Sub addCostsAndRoles(ByVal roleNames() As String, ByVal roleValues() As Double,
+                                ByVal costNames() As String, ByVal costValues() As Double,
+                                ByVal Optional prozentSatz As Double = 1.0)
+        Dim anzRoles As Integer
+        Dim anzCosts As Integer
+
+        Dim tmpRCvalue As Double = 0.0
+        Dim tmpRCname As String
+
+        If IsNothing(roleNames) Then
+            anzRoles = 0
+        Else
+            anzRoles = roleNames.Length
+        End If
+
+        If IsNothing(costNames) Then
+            anzCosts = 0
+        Else
+            anzCosts = costNames.Length
+        End If
+
+        For r = 0 To anzRoles - 1
+            tmpRCvalue = prozentSatz * roleValues(r)
+            tmpRCname = roleNames(r)
+            If tmpRCvalue > 0 Then
+                Me.addCostRole(tmpRCname, tmpRCvalue, True, False)
+            End If
+
+        Next
+
+        For c = 0 To anzCosts - 1
+            tmpRCvalue = prozentSatz * costValues(c)
+            tmpRCname = costNames(c)
+            If tmpRCvalue > 0 Then
+                Me.addCostRole(tmpRCname, tmpRCvalue, False, False)
+            End If
+        Next
+
+    End Sub
+
+    ''' <summary>
     ''' fügt der aktuellen Phase eine Rolle bzw. Kostenart hinzu
     ''' </summary>
     ''' <param name="rcName"></param>

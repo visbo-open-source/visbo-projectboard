@@ -43,10 +43,13 @@ Public Module awinGeneralModules
     Private Enum allianzSpalten
         Name = 0
         AmpelText = 1
-        BusinessUnit = 3
-
-
-
+        BusinessUnit = 2
+        Description = 3
+        Responsible = 4
+        Budget = 5
+        Projektnummer = 6
+        Status = 7
+        itemType = 8
     End Enum
 
     Private Enum ptModuleSpalten
@@ -6265,7 +6268,7 @@ Public Module awinGeneralModules
                 With currentWS
                     For i As Integer = 1 To tmpAnzahl
                         tmpCols(i - 1) = CType(.Range(tmpColBz(i - 1)), Excel.Range).Column
-                        ok = ok & CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1))
+                        ok = ok And CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1))
 
                         If Not ok Then
                             Call MsgBox("Fehler? " & tmpRoleNames(i - 1))
@@ -6310,7 +6313,7 @@ Public Module awinGeneralModules
         Dim businessUnit As String = ""
         Dim allianzProjektNummer As String = ""
         Dim allianzStatus As String = ""
-        Dim ampelBeschreibung As String
+        Dim ampelText As String
 
         Dim createdProjects As Integer = 0
 
@@ -6360,8 +6363,14 @@ Public Module awinGeneralModules
         ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
         Dim costNeeds() As Double = Nothing
 
+        ' enthält die Spalten, wo die einzelnen Felder stehen , korreliert mit der Enum allianzSpalten
+        Dim colFields() As Integer
 
         Dim firstZeile As Excel.Range
+
+        Dim enumAllianzCount As Integer = [Enum].GetNames(GetType(allianzSpalten)).Length
+        ReDim colFields(enumAllianzCount)
+
 
         zeile = 3
         spalte = 1
@@ -6414,6 +6423,7 @@ Public Module awinGeneralModules
                                             costNamesToConsider, colCostNamesToConsider,
                                             currentWS)
 
+
                 'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
                 lastColumn = firstZeile.Columns.Count
                 lastColumn = CType(firstZeile, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
@@ -6421,18 +6431,44 @@ Public Module awinGeneralModules
                 lastRow = CType(.Cells(2000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 ' um die CustomFields lesen zu können ... 
-                Dim arrayOfSpalten(3) As Integer
+                Dim colCustomFields(3) As Integer
 
                 ' T-BWLA
-                arrayOfSpalten(0) = CInt(CType(.Range("A1"), Excel.Range).Column)
+                colCustomFields(0) = CInt(CType(.Range("A1"), Excel.Range).Column)
                 ' PGML
-                arrayOfSpalten(1) = CInt(CType(.Range("B1"), Excel.Range).Column)
+                colCustomFields(1) = CInt(CType(.Range("B1"), Excel.Range).Column)
                 ' POB
-                arrayOfSpalten(2) = CInt(CType(.Range("C1"), Excel.Range).Column)
+                colCustomFields(2) = CInt(CType(.Range("C1"), Excel.Range).Column)
                 ' Key Cluster
-                arrayOfSpalten(3) = CInt(CType(.Range("D1"), Excel.Range).Column)
+                colCustomFields(3) = CInt(CType(.Range("D1"), Excel.Range).Column)
+
+                ' jetzt die Spalten bestimmen, wo die Werte stehen
+                Try
+                    colFields(allianzSpalten.Name) = CType(.Range("H1"), Excel.Range).Column
+                    colFields(allianzSpalten.itemType) = CType(.Range("G1"), Excel.Range).Column
+                    colFields(allianzSpalten.AmpelText) = CType(.Range("U1"), Excel.Range).Column
+                    colFields(allianzSpalten.BusinessUnit) = CType(.Range("AB1"), Excel.Range).Column
+                    colFields(allianzSpalten.Responsible) = CType(.Range("AC1"), Excel.Range).Column
+                    colFields(allianzSpalten.Projektnummer) = CType(.Range("AD1"), Excel.Range).Column
+                    colFields(allianzSpalten.Status) = CType(.Range("AF1"), Excel.Range).Column
+                Catch ex As Exception
+                    Dim errmsg As String = "fehlerhafte Range Definition ..."
+                    Throw New ArgumentException(errmsg)
+                End Try
+
 
                 While zeile <= lastRow
+
+                    ' jetzt müssen die Werte zurückgesetzt werden 
+                    If Not IsNothing(roleNamesToConsider) Then
+                        Dim tmpLen As Integer = roleNamesToConsider.Length
+                        ReDim roleNeeds(tmpLen - 1)
+                    End If
+
+                    If Not IsNothing(costNamesToConsider) Then
+                        Dim tmpLen As Integer = roleNamesToConsider.Length
+                        ReDim costNeeds(tmpLen - 1)
+                    End If
 
                     ok = False
 
@@ -6446,8 +6482,7 @@ Public Module awinGeneralModules
 
                     ' lese den Projekt-Namen
                     Try
-                        Dim tmpCol As Integer = CType(.Range("H1"), Excel.Range).Column
-                        pName = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                        pName = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Name)), Excel.Range).Value)
                         ok = True
                     Catch ex As Exception
                         pName = "?"
@@ -6482,8 +6517,7 @@ Public Module awinGeneralModules
                             ' weitere Informationen auslesen 
 
                             Try
-                                Dim tmpCol As Integer = CType(.Range("G1"), Excel.Range).Column
-                                itemType = CInt(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                                itemType = CInt(CType(.Cells(zeile, colFields(allianzSpalten.itemType)), Excel.Range).Value)
                             Catch ex As Exception
                                 itemType = 0
                             End Try
@@ -6499,11 +6533,18 @@ Public Module awinGeneralModules
                             If ok Then
                                 Try
 
-                                    custFields = readCustomFieldsFromExcel(arrayOfSpalten, 2, zeile, currentWS)
+                                    custFields = readCustomFieldsFromExcel(colCustomFields, 2, zeile, currentWS)
 
                                     ' lese , wieviel Prozent der Gesamtsumme jeweils auf die Release verteilt werden soll 
                                     For i As Integer = 0 To anzReleases - 1
-                                        relPrz(i) = CDbl(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value)
+                                        Try
+                                            relPrz(i) = CDbl(CType(.Cells(zeile, colRelPrzStart + i), Excel.Range).Value)
+                                            If IsNothing(relPrz(i)) Then
+                                                relPrz(i) = 0.0
+                                            End If
+                                        Catch ex As Exception
+                                            relPrz(i) = 0.0
+                                        End Try
                                     Next
 
                                     ' Plausibilitäts-Check - wenn es sich nicht auf 100% summiert, dann lieber alles auf die rootPhase verteilen und nichts auf die Release Phasen
@@ -6512,9 +6553,8 @@ Public Module awinGeneralModules
                                     End If
 
                                     ' was ist der Gesamtbedarf dieser Rolle in dem besagten Vorhaben ? 
-                                    For i As Integer = 1 To colRoleNamesToConsider.Length
-                                        Dim currentCol As Integer = colRoleNamesToConsider(i)
-                                        roleNeeds(i - 1) = CDbl(CType(.Cells(zeile, currentCol), Excel.Range).Value) * nrOfDaysMonth
+                                    For i As Integer = 0 To colRoleNamesToConsider.Length - 1
+                                        roleNeeds(i) = CDbl(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) * nrOfDaysMonth
                                     Next
 
                                 Catch ex As Exception
@@ -6527,36 +6567,35 @@ Public Module awinGeneralModules
 
                             ' jetzt werden noch weitere Infos eingelesen ..
                             Try ' Ampelbeschreibung
-                                Dim tmpCol As Integer = CType(.Range("U1"), Excel.Range).Column
-                                ampelBeschreibung = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+
+                                ampelText = CStr(CType(.Cells(zeile, colFields(allianzSpalten.AmpelText)), Excel.Range).Value)
                             Catch ex As Exception
-                                ampelBeschreibung = ""
+                                ampelText = ""
                             End Try
 
                             Try ' Business Unit
-                                Dim tmpCol As Integer = CType(.Range("AB1"), Excel.Range).Column
-                                businessUnit = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+
+                                businessUnit = CStr(CType(.Cells(zeile, colFields(allianzSpalten.BusinessUnit)), Excel.Range).Value)
                             Catch ex As Exception
                                 businessUnit = ""
                             End Try
 
                             Try ' Projektleiter
-                                Dim tmpCol As Integer = CType(.Range("AC1"), Excel.Range).Column
-                                responsiblePerson = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+                                responsiblePerson = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Responsible)), Excel.Range).Value)
                             Catch ex As Exception
                                 responsiblePerson = ""
                             End Try
 
                             Try ' Projekt-Nummer
-                                Dim tmpCol As Integer = CType(.Range("AD1"), Excel.Range).Column
-                                allianzProjektNummer = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+
+                                allianzProjektNummer = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Projektnummer)), Excel.Range).Value)
                             Catch ex As Exception
                                 allianzProjektNummer = ""
                             End Try
 
                             Try ' Status
-                                Dim tmpCol As Integer = CType(.Range("AF1"), Excel.Range).Column
-                                Dim tmpStatus As String = CStr(CType(.Cells(zeile, tmpCol), Excel.Range).Value)
+
+                                Dim tmpStatus As String = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Status)), Excel.Range).Value)
                                 If Not IsNothing(tmpStatus) Then
                                     If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Then
                                         allianzStatus = ProjektStatus(1)
@@ -6611,14 +6650,10 @@ Public Module awinGeneralModules
                                             CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                             CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
                                         Else
-
                                             createdProjects = createdProjects + 1
-
                                             ImportProjekte.Add(hproj, False)
                                         End If
 
-
-                                        'myCollection.Add(calcProjektKey(hproj))
                                     Catch ex As Exception
                                         CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                         CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
@@ -6643,7 +6678,7 @@ Public Module awinGeneralModules
             End With
         Catch ex As Exception
 
-            Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
+            Throw New Exception("Fehler in Import-Datei" & ex.Message)
 
         End Try
 
