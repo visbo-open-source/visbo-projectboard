@@ -6554,7 +6554,21 @@ Public Module awinGeneralModules
 
                                     ' was ist der Gesamtbedarf dieser Rolle in dem besagten Vorhaben ? 
                                     For i As Integer = 0 To colRoleNamesToConsider.Length - 1
-                                        roleNeeds(i) = CDbl(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) * nrOfDaysMonth
+                                        Try
+                                            Dim tmpValue As Double = CDbl(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) * nrOfDaysMonth
+                                            If IsNothing(tmpValue) Then
+                                                roleNeeds(i) = 0.0
+                                            Else
+                                                If tmpValue >= 0 Then
+                                                    roleNeeds(i) = tmpValue
+                                                Else
+                                                    roleNeeds(i) = 0.0
+                                                End If
+                                            End If
+                                        Catch ex As Exception
+                                            roleNeeds(i) = 0.0
+                                        End Try
+
                                     Next
 
                                 Catch ex As Exception

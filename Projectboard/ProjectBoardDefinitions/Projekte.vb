@@ -11532,6 +11532,14 @@ Public Module Projekte
 
         Dim hproj As clsProjekt = New clsProjekt
 
+        ' gibt an, ob es überhaupt eine Rolle oder Kostenart gibt mit Bedarf > 0 
+        Dim atleastOneRC As Boolean = (roleValues.Sum > 0 Or costValues.Sum > 0)
+
+        ' wenn kein Wert angegeben ist, soll was verwendet werden?
+        If status = "" Then
+            status = ProjektStatus(0)
+        End If
+
         Try
             Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startDate, endDate)
         Catch ex As Exception
@@ -11584,7 +11592,9 @@ Public Module Projekte
                 Dim cphase As clsPhase = hproj.getPhase(tmpPhName)
 
                 If Not IsNothing(cphase) Then
-                    Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues, przPhasenAnteile(p))
+                    If atleastOneRC Then
+                        Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues, przPhasenAnteile(p))
+                    End If
                 End If
 
 
@@ -11593,7 +11603,9 @@ Public Module Projekte
             ' der Gesamt-Wert der Rollen soll auf die RootPhase aufgeteilt werden
             Dim cphase As clsPhase = hproj.getPhase(1)
             If Not IsNothing(cphase) Then
-                Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues)
+                If atleastOneRC Then
+                    Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues)
+                End If
             End If
         End If
 
@@ -11601,7 +11613,7 @@ Public Module Projekte
         hproj.addListOfCustomFields(listOfCustomFields)
 
         ' jetzt das Budget so setzen, wie es benötigt wird ... 
-        If budget < 0 Then
+        If budget <= 0 And atleastOneRC Then
             hproj.setBudgetAsNeeded()
         End If
 
