@@ -1339,7 +1339,8 @@ Module Module1
 
         If noDBAccessInPPT Then
             Dim msg As String
-            awinSettings.databaseURL = "http://localhost:3484"
+            awinSettings.databaseURL = "http://visbo.myhome-server.de:3484"
+            'awinSettings.databaseURL = "http://localhost:3484"
             awinSettings.databaseName = "IT Projekte 2018"
             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
