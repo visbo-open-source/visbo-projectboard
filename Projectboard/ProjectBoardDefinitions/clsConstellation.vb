@@ -806,7 +806,7 @@
     End Sub
     ''' <summary>
     ''' fügt ein clsConstellationItem hinzu und aktualisiert auch die Sortlist entsprechend ... 
-    ''' Voraussetzung: in AlleProjekte ist das im Item beschriebene Objekt bereits enthalten 
+    ''' Voraussetzung, wenn UpdateSortlist passieren soll und Sortkey nicht alphabet und nicht Position ist  : in AlleProjekte ist das im Item beschriebene Objekt bereits enthalten 
     ''' im add muss kein Update der lastCustomlist erfolgen, nur beim Remove ... 
     ''' </summary>
     ''' <param name="cItem"></param>
@@ -1248,13 +1248,13 @@
 
     End Function
 
-    Sub New()
+    Sub New(Optional ByVal skey As Integer = -1, Optional ByVal cName As String = "")
 
         _allItems = New SortedList(Of String, clsConstellationItem)
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
-        _sortType = -1
-        Me.constellationName = "" ' damit wird der Name Last (<userName>)
+        _sortType = skey
+        Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)
 
     End Sub
 

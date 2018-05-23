@@ -11533,7 +11533,15 @@ Public Module Projekte
         Dim hproj As clsProjekt = New clsProjekt
 
         ' gibt an, ob es überhaupt eine Rolle oder Kostenart gibt mit Bedarf > 0 
-        Dim atleastOneRC As Boolean = (roleValues.Sum > 0 Or costValues.Sum > 0)
+        Dim atleastOneRC As Boolean = False
+
+        If Not IsNothing(roleValues) Then
+            atleastOneRC = roleValues.Sum > 0
+        End If
+
+        If Not IsNothing(costValues) And Not atleastOneRC Then
+            atleastOneRC = costValues.Sum > 0
+        End If
 
         ' wenn kein Wert angegeben ist, soll was verwendet werden?
         If status = "" Then
@@ -11582,32 +11590,33 @@ Public Module Projekte
         End Try
 
         ' jetzt müssen die Rollen und Kostenarten besetzt werden  
-        If przPhasenAnteile.Sum = 1.0 Then
-            ' der Gesamt-Wert der Rollen soll auf die entsprechenden Phasen aufgeteilt werden 
-            Dim anzPhasen As Integer = phNames.Length
+        If atleastOneRC Then
+            If przPhasenAnteile.Sum = 1.0 Then
+                ' der Gesamt-Wert der Rollen soll auf die entsprechenden Phasen aufgeteilt werden 
+                Dim anzPhasen As Integer = phNames.Length
 
-            For p = 0 To anzPhasen - 1
+                For p = 0 To anzPhasen - 1
 
-                Dim tmpPhName As String = phNames(p)
-                Dim cphase As clsPhase = hproj.getPhase(tmpPhName)
+                    Dim tmpPhName As String = phNames(p)
+                    Dim cphase As clsPhase = hproj.getPhase(tmpPhName)
 
-                If Not IsNothing(cphase) Then
-                    If atleastOneRC Then
-                        Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues, przPhasenAnteile(p))
+                    If Not IsNothing(cphase) Then
+                        If przPhasenAnteile(p) > 0 Then
+                            Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues, przPhasenAnteile(p))
+                        End If
                     End If
-                End If
 
 
-            Next
-        Else
-            ' der Gesamt-Wert der Rollen soll auf die RootPhase aufgeteilt werden
-            Dim cphase As clsPhase = hproj.getPhase(1)
-            If Not IsNothing(cphase) Then
-                If atleastOneRC Then
+                Next
+            Else
+                ' der Gesamt-Wert der Rollen soll auf die RootPhase aufgeteilt werden
+                Dim cphase As clsPhase = hproj.getPhase(1)
+                If Not IsNothing(cphase) Then
                     Call cphase.addCostsAndRoles(roleNames, roleValues, costNames, costValues)
                 End If
             End If
         End If
+
 
         ' jetzt ggf die Custom Fields eintragen 
         hproj.addListOfCustomFields(listOfCustomFields)

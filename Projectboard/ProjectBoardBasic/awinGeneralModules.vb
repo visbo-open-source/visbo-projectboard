@@ -6237,16 +6237,16 @@ Public Module awinGeneralModules
                                        ByRef colCostNamesToConsider() As Integer,
                                        ByVal currentWS As Excel.Worksheet)
 
-        Dim tmpRoleNames(16) As String
-        Dim tmpColBz(16) As String
-        Dim tmpCols(16) As Integer
+        Dim tmpRoleNames(17) As String
+        Dim tmpColBz(17) As String
+        Dim tmpCols(17) As Integer
         Dim errRoles As String = ""
         Dim ok As Boolean = True
 
 
-        tmpRoleNames = {"BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
+        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
                         "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
-        tmpColBz = {"DC1", "DD1", "DE1", "DG1", "DH1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
+        tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
 
         If tmpRoleNames.Length <> tmpColBz.Length Then
             Throw New ArgumentException("ungleiche Anzahl Namen und Spalten-Ids")
@@ -6315,6 +6315,10 @@ Public Module awinGeneralModules
         Dim allianzStatus As String = ""
         Dim ampelText As String
 
+        Dim programName As String = ""
+        Dim current1program As clsConstellation = Nothing
+        Dim lfdNr1program As Integer = 2
+
         Dim createdProjects As Integer = 0
 
 
@@ -6337,6 +6341,9 @@ Public Module awinGeneralModules
         ' enthält die prozentualen Anteile in den Releases 
         Dim relPrz() As Double
         ReDim relPrz(anzReleases - 1)
+
+        ' Projekt-Eintrag/Zeile, die in der Excel Datei ignoriert werden soll 
+        Dim nameTobeIgnored As String = "xxx"
 
         ' enthält die Phasen Namen
         Dim phNames() As String
@@ -6493,6 +6500,10 @@ Public Module awinGeneralModules
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
                         CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
 
+                    ElseIf pName.Trim = nameTobeIgnored Then
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="wird ignoriert ..")
+
                     ElseIf pName.Trim.Length < 2 Then
 
                         Try
@@ -6527,6 +6538,21 @@ Public Module awinGeneralModules
                                 ok = True
                             Else
                                 ok = False
+                                ' jetzt muss geschaut werden, ob es sich um eine 1-er Konstellation handelt, dann soll 
+                                ' ein neues Portfolio aufgemacht werden .. 
+                                If itemType = 1 Then
+                                    ' die bisherige Constellation wegschreiben ...
+                                    If Not IsNothing(current1program) Then
+                                        projectConstellations.Add(current1program)
+                                    End If
+
+                                    current1program = New clsConstellation(ptSortCriteria.customTF, itemType.ToString & " - " & pName)
+                                    lfdNr1program = 2
+                                    'With current1program
+                                    '    .constellationName = itemType.ToString & " - " & pName
+                                    'End With
+
+                                End If
                             End If
 
 
@@ -6575,60 +6601,63 @@ Public Module awinGeneralModules
                                     ok = False
                                 End Try
 
-                                ' lese einen Kosten Array von KeyValues: Phase, Kostenart, Summe
-                                ' ist in diesem Fall, Allianz Type 1 nicht notwendig ...
+                                ' jetzt werden noch weitere Infos eingelesen ..
+                                Try ' Ampelbeschreibung
+
+                                    ampelText = CStr(CType(.Cells(zeile, colFields(allianzSpalten.AmpelText)), Excel.Range).Value)
+                                Catch ex As Exception
+                                    ampelText = ""
+                                End Try
+
+                                Try ' Business Unit
+
+                                    businessUnit = CStr(CType(.Cells(zeile, colFields(allianzSpalten.BusinessUnit)), Excel.Range).Value)
+                                Catch ex As Exception
+                                    businessUnit = ""
+                                End Try
+
+                                Try ' Projektleiter
+                                    responsiblePerson = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Responsible)), Excel.Range).Value)
+                                Catch ex As Exception
+                                    responsiblePerson = ""
+                                End Try
+
+                                Try ' Projekt-Nummer
+
+                                    allianzProjektNummer = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Projektnummer)), Excel.Range).Value)
+                                Catch ex As Exception
+                                    allianzProjektNummer = ""
+                                End Try
+
+                                Try ' Status
+
+                                    Dim tmpStatus As String = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Status)), Excel.Range).Value)
+                                    If Not IsNothing(tmpStatus) Then
+                                        If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Then
+                                            allianzStatus = ProjektStatus(1)
+                                        Else
+                                            allianzStatus = ProjektStatus(0)
+                                        End If
+                                    End If
+                                Catch ex As Exception
+                                    allianzStatus = ""
+                                End Try
+
                             End If
 
-                            ' jetzt werden noch weitere Infos eingelesen ..
-                            Try ' Ampelbeschreibung
 
-                                ampelText = CStr(CType(.Cells(zeile, colFields(allianzSpalten.AmpelText)), Excel.Range).Value)
-                            Catch ex As Exception
-                                ampelText = ""
-                            End Try
-
-                            Try ' Business Unit
-
-                                businessUnit = CStr(CType(.Cells(zeile, colFields(allianzSpalten.BusinessUnit)), Excel.Range).Value)
-                            Catch ex As Exception
-                                businessUnit = ""
-                            End Try
-
-                            Try ' Projektleiter
-                                responsiblePerson = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Responsible)), Excel.Range).Value)
-                            Catch ex As Exception
-                                responsiblePerson = ""
-                            End Try
-
-                            Try ' Projekt-Nummer
-
-                                allianzProjektNummer = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Projektnummer)), Excel.Range).Value)
-                            Catch ex As Exception
-                                allianzProjektNummer = ""
-                            End Try
-
-                            Try ' Status
-
-                                Dim tmpStatus As String = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Status)), Excel.Range).Value)
-                                If Not IsNothing(tmpStatus) Then
-                                    If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Then
-                                        allianzStatus = ProjektStatus(1)
-                                    Else
-                                        allianzStatus = ProjektStatus(0)
-                                    End If
-                                End If
-                            Catch ex As Exception
-                                allianzStatus = ""
-                            End Try
 
                         Catch ex As Exception
                             Call MsgBox("Fehler bei Informationen auslesen: Projekt " & pName)
                             ok = False
                         End Try
 
-                        variantName = ""
+
 
                         If ok Then
+
+                            ' Varianten-Name wird hier nicht ausgelesen ..., deshalb Default Wert annehmen 
+                            variantName = ""
 
                             'Projekt anlegen ,Verschiebung um 
                             Dim hproj As clsProjekt = Nothing
@@ -6645,16 +6674,19 @@ Public Module awinGeneralModules
 
                             If Not IsNothing(hproj) Then
 
+                                ' jetzt soll das in die Constellation 
+                                Dim cItem As New clsConstellationItem
+                                With cItem
+                                    .projectName = hproj.name
+                                    .variantName = hproj.variantName
+                                    .show = True
+                                    .zeile = lfdNr1program
+                                End With
+
+                                current1program.add(cItem)
+                                lfdNr1program = lfdNr1program + 1
+
                                 ' jetzt ist alles so weit ok 
-
-                            Else
-                                ok = False
-                                CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                CType(.Cells(zeile, lastColumn + 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
-                            End If
-
-
-                            If ok Then ' wenn es nicht explizit auf false gesetzt wurde, ist es an dieser Stelle immer noch true 
                                 Dim pkey As String = ""
                                 If Not IsNothing(hproj) Then
                                     Try
@@ -6675,10 +6707,14 @@ Public Module awinGeneralModules
 
                                 End If
 
+
+                            Else
+                                ok = False
+                                CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                CType(.Cells(zeile, lastColumn + 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
                             End If
 
                         End If
-
 
                     End If
 
@@ -6697,9 +6733,9 @@ Public Module awinGeneralModules
         End Try
 
 
-        Call MsgBox("gelesen: " & geleseneProjekte & vbLf &
-                    "erzeugt: " & createdProjects & vbLf &
-                    "importiert: " & ImportProjekte.Count)
+        Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
+                    "Projekte erzeugt: " & createdProjects & vbLf &
+                    "Projekte importiert: " & ImportProjekte.Count)
 
     End Sub
 
@@ -6845,7 +6881,7 @@ Public Module awinGeneralModules
         If pName.Contains(vbCr) Then
             pName = pName.Replace(vbCr, " ")
         End If
-        If pName.Contains(vbCr) Then
+        If pName.Contains(vbLf) Then
             pName = pName.Replace(vbLf, " ")
         End If
 
@@ -6865,10 +6901,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Function verarbeiteImportProjekte(ByVal cName As String,
                                              Optional ByVal noComparison As Boolean = False) As clsConstellation
-        Dim newC As New clsConstellation
-        newC.constellationName = cName
-        ' das Folgende soll sihcerstellen, dass die Projekte in der Reihenfolge ihres Auftretens in der Excel Datei eingelesen und dargestellt werden ..
-        newC.sortCriteria = ptSortCriteria.customListe
+        ' in der Reihenfolge des Auftretens aufnehmen , Name wie übergeben 
+        Dim newC As New clsConstellation(ptSortCriteria.customTF, cName)
         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
         Dim vglProj As clsProjekt
@@ -6979,8 +7013,9 @@ Public Module awinGeneralModules
                 newCItem.show = True
             End If
             newCItem.start = impProjekt.startDate
-            newCItem.zeile = lfdZeilenNr
-            newC.add(newCItem)
+            newCItem.zeile = impProjekt.tfZeile
+            'newCItem.zeile = lfdZeilenNr
+            newC.add(newCItem, sKey:=impProjekt.tfZeile)
 
             lfdZeilenNr = lfdZeilenNr + 1
 

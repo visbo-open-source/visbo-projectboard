@@ -1184,7 +1184,7 @@ Public Module testModule
                                         Dim tmpStr(20) As String
                                         Try
 
-                                            tmpStr = qualifier.Trim.Split(New Char() {CChar("#")}, 20)
+                                            tmpStr = qualifier.Trim.Split(New Char() {CChar("%")}, 20)
                                             kennzeichnung = tmpStr(0).Trim
 
                                         Catch ex As Exception

@@ -73,6 +73,9 @@
 
         Try
             _allConstellations.Add(item.constellationName, item)
+            ' tk 23.5.18 hier muss jetzt das Berechnen des Portfolio Union Projcts erfolgen  
+
+
         Catch ex As Exception
             Throw New ArgumentException("Konstellations-Name existiert bereits")
         End Try
