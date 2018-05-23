@@ -102,7 +102,7 @@ Public Class Request
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
                 If statcode <> HttpStatusCode.OK Then
-                    Call MsgBox(statcode.ToString & ":" & httpresp.StatusDescription)
+                    Call MsgBox("( " & CType(statcode, Integer).ToString & ") : " & httpresp.StatusDescription)
                     Throw New ArgumentException(statcode.ToString & ":" & httpresp.StatusDescription)
                 Else
                     Using sr As New StreamReader(httpresp.GetResponseStream)
@@ -253,7 +253,7 @@ Public Class Request
     ''' <summary>
     ''' bringt alle in der Datenbank vorkommenden TimeStamps zurück , in absteigender Sortierung
     ''' </summary>
-    ''' <returns></returns>
+    ''' <returns>Collection, absteigend sortiert</returns>
     Public Function retrieveZeitstempelFromDB() As Collection
 
         Dim resultCollection As New Collection
@@ -271,9 +271,11 @@ Public Class Request
                     sl.Add(shortproj.timestamp, shortproj.timestamp)
                 End If
             Next
-            For Each kvp As KeyValuePair(Of DateTime, DateTime) In sl
+
+            For i As Integer = sl.Count - 1 To 0 Step -1
+                Dim kvp As KeyValuePair(Of DateTime, DateTime) = sl.ElementAt(i)
                 resultCollection.Add(kvp.Value)
-            Next
+            Next i
 
         Catch ex As Exception
 
@@ -287,7 +289,7 @@ Public Class Request
     ''' bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
     ''' </summary>
     ''' <param name="pvName"></param>
-    ''' <returns></returns>
+    ''' <returns>Collection, absteigend sortiert</returns>
     Public Function retrieveZeitstempelFromDB(ByVal pvName As String) As Collection
 
         Dim ergebnisCollection As New Collection
@@ -321,9 +323,11 @@ Public Class Request
                         sl.Add(shortproj.timestamp, shortproj.timestamp)
                     End If
                 Next
-                For Each kvp As KeyValuePair(Of DateTime, DateTime) In sl
-                    ergebnisCollection.add(kvp.value)
-                Next
+
+                For i As Integer = sl.Count - 1 To 0 Step -1
+                    Dim kvp As KeyValuePair(Of DateTime, DateTime) = sl.ElementAt(i)
+                    ergebnisCollection.Add(kvp.Value)
+                Next i
 
             End If
 
