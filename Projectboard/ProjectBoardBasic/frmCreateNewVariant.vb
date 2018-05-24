@@ -1,5 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
-Imports MongoDbAccess
+Imports DBAccLayer
 Public Class frmCreateNewVariant
 
     Public multiSelect As Boolean = False

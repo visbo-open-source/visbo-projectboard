@@ -185,9 +185,9 @@ Partial Public NotInheritable Class MySettings
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
-    Public ReadOnly Property VISBOServer() As String
+    Public ReadOnly Property VISBOServer() As Boolean
         Get
-            Return CType(Me("VISBOServer"),String)
+            Return CType(Me("VISBOServer"),Boolean)
         End Get
     End Property
 End Class

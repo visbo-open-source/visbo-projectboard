@@ -162,6 +162,10 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
+    <Reference Include="DBAccLayer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Projectboard\DBAccLayer\bin\Debug\DBAccLayer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>

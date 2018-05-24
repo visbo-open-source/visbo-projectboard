@@ -22,7 +22,7 @@ Public Class Request
     'public serverUriName ="http://visbo.myhome-server.de:3484" 
     Public serverUriName As String = "http://localhost:3484"
 
-    Public usedWebServer As Boolean = True
+    Private usedWebServer As Boolean = awinSettings.visboServer
     Public DBAcc As Object
     Public aktVCid As String = ""
 
@@ -65,7 +65,7 @@ Public Class Request
             Else  'es wird eine MongoDB direkt adressiert
 
                 Dim access As New MongoDbAccess.Request(databaseURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort)
-                loginOK = DBAcc.createIndicesOnce()
+                loginOK = access.createIndicesOnce()
                 If loginOK Then
                     DBAcc = access
                 End If

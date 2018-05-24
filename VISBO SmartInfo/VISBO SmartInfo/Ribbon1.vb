@@ -1,7 +1,6 @@
 ﻿Imports Microsoft.Office.Tools.Ribbon
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
-'Imports MongoDbAccess
-Imports WebServerAcc
+Imports DBAccLayer
 Imports ProjectBoardDefinitions
 'Imports ProjectBoardBasic
 
@@ -99,7 +98,7 @@ Public Class Ribbon1
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
                             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                             'Dim tsCollection As Collection = CType(mongoDBAcc, Request).retrieveZeitstempelFromDB(pvName)
-                            Dim tsCollection As Collection = CType(databaseAcc, Request).retrieveZeitstempelFromDB(pvName)
+                            Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB(pvName)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 

@@ -93,7 +93,7 @@ Partial Class ucInfo
         Me.TableLayoutPanel1.Controls.Add(Me.eleDeliverables, 0, 6)
         Me.TableLayoutPanel1.Controls.Add(Me.Panel1, 1, 2)
         Me.TableLayoutPanel1.Location = New System.Drawing.Point(4, 53)
-        Me.TableLayoutPanel1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TableLayoutPanel1.Margin = New System.Windows.Forms.Padding(4)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 8
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle())
@@ -162,7 +162,7 @@ Partial Class ucInfo
         Me.eleDeliverables.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.TableLayoutPanel1.SetColumnSpan(Me.eleDeliverables, 2)
         Me.eleDeliverables.Location = New System.Drawing.Point(4, 261)
-        Me.eleDeliverables.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.eleDeliverables.Margin = New System.Windows.Forms.Padding(4)
         Me.eleDeliverables.MaximumSize = New System.Drawing.Size(0, 246)
         Me.eleDeliverables.Name = "eleDeliverables"
         Me.eleDeliverables.ReadOnly = True
@@ -177,7 +177,7 @@ Partial Class ucInfo
         Me.Panel1.Controls.Add(Me.percentDone)
         Me.Panel1.Controls.Add(Me.eleAmpel)
         Me.Panel1.Location = New System.Drawing.Point(111, 58)
-        Me.Panel1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(4)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(191, 22)
         Me.Panel1.TabIndex = 13
@@ -214,7 +214,7 @@ Partial Class ucInfo
         Me.FlowLayoutPanel1.Controls.Add(Me.eleType)
         Me.FlowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown
         Me.FlowLayoutPanel1.Location = New System.Drawing.Point(4, 2)
-        Me.FlowLayoutPanel1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.FlowLayoutPanel1.Margin = New System.Windows.Forms.Padding(4)
         Me.FlowLayoutPanel1.Name = "FlowLayoutPanel1"
         Me.FlowLayoutPanel1.Size = New System.Drawing.Size(304, 48)
         Me.FlowLayoutPanel1.TabIndex = 7
@@ -246,7 +246,7 @@ Partial Class ucInfo
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.Controls.Add(Me.FlowLayoutPanel1)
         Me.Controls.Add(Me.TableLayoutPanel1)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.MinimumSize = New System.Drawing.Size(309, 0)
         Me.Name = "ucInfo"
         Me.Size = New System.Drawing.Size(309, 640)

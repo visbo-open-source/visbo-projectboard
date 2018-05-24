@@ -74,7 +74,7 @@ Public Class frmAuthentication
                 End If
 
             Catch ex As Exception
-
+                Throw New ArgumentException(ex.Message)
             End Try
 
         End If
@@ -148,7 +148,7 @@ Public Class frmAuthentication
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
     End Sub
 
