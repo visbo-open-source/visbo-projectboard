@@ -152,7 +152,7 @@ Public Class Request
     ''' <param name="databaseName">wird beim Login am Visbo-Rest-Server nicht benötigt</param>
     ''' <param name="username"></param>
     ''' <param name="dbPasswort"></param>
-    Public Function login(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String, ByVal dbPasswort As String) As String
+    Public Function login(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String, ByVal dbPasswort As String) As Boolean
 
         Dim typeRequest As String = "/token/user/login"
         'Dim typeRequest As String = "/token/user/signup"
@@ -1098,6 +1098,209 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' speichert eine Rolle in der Datenbank; 
+    ''' wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
+    ''' andernfalls wird die Rolle Replaced 
+    ''' </summary>
+    ''' <param name="role"></param>
+    ''' <param name="insertNewDate"></param>
+    ''' <param name="ts"></param>
+    ''' <returns></returns>
+    Public Function storeRoleDefinitionToDB(ByVal role As clsRollenDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
+        Dim result As Boolean = False
+        storeRoleDefinitionToDB = result
+    End Function
+
+    ''{
+    ''    bool tmpResult = True;
+    ''    Try
+    ''    {
+    ''        var roleDB = New clsRollenDefinitionDB();
+    ''        roleDB.copyFrom(role);
+
+    ''        If (insertNewDate)
+    ''        {
+    ''            roleDB.timestamp = ts;
+    ''            CollectionRoles.InsertOne(roleDB);
+    ''        }
+    ''        Else
+    ''        {
+
+    ''            var filter = Builders < clsRollenDefinitionDB > .Filter.Eq("uid", role.UID);
+    ''            var sort = Builders < clsRollenDefinitionDB > .Sort.Ascending("timestamp");
+
+    ''            Try
+    ''            {
+
+    ''                If (CollectionRoles == null)
+    ''                {
+    ''                    CollectionRoles.InsertOne(roleDB);
+    ''                }
+    ''                Else
+    ''                {
+    ''                    Try
+    ''                    {
+    ''                        clsRollenDefinitionDB tmpRole = CollectionRoles.Find(filter).Sort(sort).ToList().Last();
+    ''                        If (tmpRole == null)
+    ''                        {
+    ''                            // existiert noch nicht 
+    ''                            CollectionRoles.InsertOne(roleDB);
+    ''                        }
+    ''                        Else
+    ''                        {
+    ''                            // existiert bereits , soll also ersetzt werden , aber mit dem bisherigen TimeStamp 
+    ''                            // und das nur, wenn es nicht identisch ist mit der bereits existierenden 
+    ''                            If (!tmpRole.get_isIdenticalTo(roleDB))
+    ''                            {
+    ''                                roleDB.timestamp = tmpRole.timestamp;
+
+    ''                                var builder = Builders < clsRollenDefinitionDB > .Filter;
+    ''                                filter = builder.Eq("uid", role.UID) & builder.Eq("timestamp", tmpRole.timestamp);
+
+    ''                                var rResult = CollectionRoles.ReplaceOne(filter, roleDB);
+    ''                                tmpResult = rResult.IsAcknowledged;
+
+    ''                            }
+    ''                            Else
+    ''                            {
+    ''                                // nichts tun
+    ''                            }
+
+    ''                        }
+    ''                    }
+    ''                    Catch (Exception)
+    ''                    {
+
+    ''                         // es gibt noch überhaupt keine Elemente in der Collection 
+    ''                        CollectionRoles.InsertOne(roleDB);
+    ''                    }
+
+
+
+    ''                }
+
+
+
+    ''            }
+    ''            Catch (Exception)
+    ''            {
+
+    ''                tmpResult = false;
+    ''            }
+    ''         }       
+
+
+    ''    }
+    ''    Catch (Exception)
+    ''    {
+    ''        tmpResult =  false;
+    ''    }
+
+    ''    Return tmpResult;
+    ''}
+
+
+    ''' <summary>
+    '''  speichert eine Kostenart In der Datenbank; 
+    '''  wenn insertNewDate = True: speichere eine neue Timestamp-Instanz 
+    '''  andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
+    ''' </summary>
+    ''' <param name="cost"></param>
+    ''' <param name="insertNewDate"></param>
+    ''' <param name="ts"></param>
+    ''' <returns></returns>
+    Public Function storeCostDefinitionToDB(ByVal cost As clsKostenartDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
+
+        Dim result As Boolean = False
+
+        storeCostDefinitionToDB = result
+
+    End Function
+    ''{
+    ''    bool tmpResult = True;
+    ''    Try
+    ''    {
+    ''        var costDefDB = New clsKostenartDefinitionDB();
+    ''        costDefDB.copyFrom(cost);
+
+    ''        If (insertNewDate)
+    ''        {
+    ''            costDefDB.timestamp = ts;
+    ''            CollectionCosts.InsertOne(costDefDB);
+    ''        }
+    ''        Else
+    ''        {
+
+    ''            var filter = Builders < clsKostenartDefinitionDB > .Filter.Eq("uid", cost.UID);
+    ''            var sort = Builders < clsKostenartDefinitionDB > .Sort.Ascending("timestamp");
+
+    ''            Try
+    ''            {
+
+    ''                If (CollectionCosts == null)
+    ''                {
+    ''                    // existiert noch nicht 
+    ''                    CollectionCosts.InsertOne(costDefDB);
+    ''                }
+    ''                Else
+    ''                {
+
+    ''                    Try
+    ''                    {
+    ''                        clsKostenartDefinitionDB tmpCost = CollectionCosts.Find(filter).Sort(sort).ToList().Last();
+    ''                        If (tmpCost == null)
+    ''                        {
+    ''                            // existiert noch nicht 
+    ''                            CollectionCosts.InsertOne(costDefDB);
+    ''                        }
+    ''                        Else
+    ''                        {
+    ''                            // existiert bereits , soll also ersetzt werden , dann mit dem bisherigen TimeStamp 
+    ''                            // aber nur, wenn es nicht identisch ist mit der bereits existierenden 
+    ''                            If (!tmpCost.get_isIdenticalTo(costDefDB))
+    ''                            {
+    ''                                costDefDB.timestamp = tmpCost.timestamp;
+
+    ''                                var builder = Builders < clsKostenartDefinitionDB > .Filter;
+    ''                                filter = builder.Eq("uid", cost.UID) & builder.Eq("timestamp", tmpCost.timestamp);
+
+    ''                                var rResult = CollectionCosts.ReplaceOne(filter, costDefDB);
+    ''                                tmpResult = rResult.IsAcknowledged;
+
+    ''                            }
+    ''                            Else
+    ''                            {
+    ''                                // nichts tun
+    ''                            }
+
+    ''                        }
+    ''                    }
+    ''                    Catch (Exception)
+    ''                    {
+    ''                        // existiert noch nicht 
+    ''                        CollectionCosts.InsertOne(costDefDB);
+    ''                    }
+
+    ''                }
+
+    ''            }
+    ''            Catch (Exception)
+    ''            {
+
+    ''                tmpResult = false;
+    ''            }
+    ''        }
+
+
+    ''    }
+    ''    Catch (Exception)
+    ''    {
+    ''        tmpResult = false;
+    ''    }
+
+    ''    Return tmpResult;
+    ''}
 
 
     ''' <summary>
@@ -1133,6 +1336,60 @@ Public Class Request
         retrieveCostsFromDB = result
 
     End Function
+
+
+    ''' <summary>
+    ''' speichert Projekt-Dependencies in DB 
+    ''' </summary>
+    ''' <param name="d"></param>
+    ''' <returns></returns>
+    Public Function storeDependencyofPToDB(ByVal d As clsDependenciesOfP) As Boolean
+
+        Dim result As Boolean = False
+        storeDependencyofPToDB = result
+
+    End Function
+    ''    {
+
+    ''        Try
+    ''        {
+    ''            var depDB = New clsDependenciesOfPDB();
+    ''            depDB.copyFrom(d);
+    ''            depDB.Id = depDB.projectName;
+
+    ''            bool alreadyExisting = CollectionDependencies.AsQueryable < clsDependenciesOfPDB > ()
+    ''.Any(p >= p.projectName == d.projectName);
+
+    ''            If (alreadyExisting)
+    ''            {
+    ''                var filter = Builders < clsDependenciesOfPDB > .Filter.Eq("projectName", d.projectName);
+    ''                var rResult = CollectionDependencies.ReplaceOne(filter, depDB);
+    ''                If (rResult.ModifiedCount > 0)
+    ''                {
+    ''                    Return True;
+    ''                }
+    ''                Else
+    ''                {
+    ''                    Return False;
+    ''                }
+    ''            }
+    ''            Else
+    ''            {
+    ''                CollectionDependencies.InsertOne(depDB);
+    ''                Return True;
+    ''            }
+
+    ''        }
+    ''        Catch (Exception)
+    ''        {
+
+    ''            Return False;
+    ''        }
+
+
+    ' ------------------------------------------------------------------------------------------
+    '  Interne Funktionen für VisboRestServer - zugriff
+    ' --------------------------------------------------------------------------------------------
 
 
     ''' <summary>

@@ -181,6 +181,15 @@ Partial Public NotInheritable Class MySettings
             Me("userNamePWD") = value
         End Set
     End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public ReadOnly Property VISBOServer() As String
+        Get
+            Return CType(Me("VISBOServer"),String)
+        End Get
+    End Property
 End Class
 
 Namespace My

@@ -767,6 +767,7 @@ Module Module1
                     noDBAccessInPPT = True
                     awinSettings.databaseURL = .Tags.Item("DBURL")
                     awinSettings.databaseName = .Tags.Item("DBNAME")
+                    awinSettings.visboServer = (.Tags.Item("REST") <> "")
                 End If
                 
 

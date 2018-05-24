@@ -615,7 +615,7 @@ Public Class frmProjPortfolioAdmin
 
             Try
 
-                Dim tCollection As Collection = CType(databaseAcc, Request).retrieveZeitstempelFromDB()
+                Dim tCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
 
                 If tCollection.Count >= 1 Then
                     earliestDate = tCollection.Item(tCollection.Count).date.addhours(23).addminutes(59)
@@ -1322,8 +1322,8 @@ Public Class frmProjPortfolioAdmin
 
             If Not noDB Then
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 Select Case TreeLevel
 
@@ -1944,8 +1944,8 @@ Public Class frmProjPortfolioAdmin
 
         If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
             ' jetzt die writeProtections neu bestimmen 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         selectedNode = e.Node
@@ -2090,8 +2090,8 @@ Public Class frmProjPortfolioAdmin
 
                     If Not noDB Then
 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        If request.pingMongoDb() Then
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         Else
                             Dim msgText As String
                             If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2795,8 +2795,8 @@ Public Class frmProjPortfolioAdmin
                 ' andernfalls prüfen, ob er von mir geschützt werden kann 
                 ' wenn ja, dann schützen 
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)

@@ -235,6 +235,7 @@ Public Class clsawinSettings
     Public Property useHierarchy As Boolean
 
     Public Property visboDebug As Boolean
+    Public Property visboServer As Boolean
 
 
 
@@ -379,7 +380,7 @@ Public Class clsawinSettings
         _isChangePortfolioFrmActive = False
    
         _visboDebug = False
-
+        _visboServer = False
 
 
 

@@ -49,9 +49,6 @@
     <Reference Include="Microsoft.Office.Interop.MSProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
@@ -401,17 +398,13 @@
       <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
       <Name>ClassLibrary1</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
-      <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
-      <Name>MongoDbAccess</Name>
+    <ProjectReference Include="..\DBAccLayer\DBAccLayer.vbproj">
+      <Project>{68c4cab8-fc59-47b1-bdd7-68aa31fbb63f}</Project>
+      <Name>DBAccLayer</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
       <Name>ProjectBoardDefinitions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\WebServerAcc\WebServerAcc.vbproj">
-      <Project>{a6876837-dd60-4e0d-bcbc-de9a0d6f8de3}</Project>
-      <Name>WebServerAcc</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

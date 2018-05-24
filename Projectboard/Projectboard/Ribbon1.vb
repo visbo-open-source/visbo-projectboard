@@ -1,8 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports ClassLibrary1
-'Imports MongoDbAccess
-Imports WebServerAcc
+Imports DBAccLayer
 Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Excel = Microsoft.Office.Interop.Excel
@@ -173,12 +172,12 @@ Imports System.ServiceModel.Web
 
         If (ControlID = load1FromDatenbank Or ControlID = load2FromDatenbank) And Not noDB Then
 
-            If CType(databaseAcc, Request).pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                dbConstellations = CType(databaseAcc, Request).retrieveConstellationsFromDB()
+                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
 
                 Try
-                    timeStampsCollection = CType(databaseAcc, Request).retrieveZeitstempelFromDB()
+                    timeStampsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
                     'Dim heute As String = Date.Now.ToString
                     If timeStampsCollection.Count > 0 Then
                         With loadConstellationFrm
@@ -264,7 +263,7 @@ Imports System.ServiceModel.Web
 
             ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
             If Not noDB Then
-                writeProtections.adjustListe = CType(databaseAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             appInstance.ScreenUpdating = True
@@ -303,8 +302,8 @@ Imports System.ServiceModel.Web
             removeFromDB = True
 
             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If CType(databaseAcc, Request).pingMongoDb() Then
-                projectConstellations = CType(databaseAcc, Request).retrieveConstellationsFromDB()
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -319,8 +318,8 @@ Imports System.ServiceModel.Web
             removeFromDB = True
 
             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If CType(databaseAcc, Request).pingMongoDb() Then
-                filterDefinitions.filterListe = CType(databaseAcc, Request).retrieveAllFilterFromDB(False)
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                filterDefinitions.filterListe = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -364,11 +363,11 @@ Imports System.ServiceModel.Web
                 filter = filterDefinitions.retrieveFilter(constFilterName)
 
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     ' Filter muss aus der Datenbank gelöscht werden.
 
-                    removeOK = CType(databaseAcc, Request).removeFilterFromDB(filter)
+                    removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
                     If removeOK = False Then
                         Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
                     Else
@@ -946,10 +945,10 @@ Imports System.ServiceModel.Web
 
                                 ' jetzt wird in der Datenbank umbenannt 
                                 Try
-                                    If CType(databaseAcc, Request).projectNameAlreadyExists(pName, "", Date.Now) Or
-                                        CType(databaseAcc, Request).projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
+                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now) Or
+                                        CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
 
-                                        ok = CType(databaseAcc, Request).renameProjectsInDB(pName, newName, dbUsername)
+                                        ok = CType(databaseAcc, DBAccLayer.Request).renameProjectsInDB(pName, newName, dbUsername)
                                         If Not ok Then
                                             If awinSettings.englishLanguage Then
                                                 Call MsgBox("rename cancelled: there is at least one write-protected variant for Project " & pName)
@@ -957,7 +956,7 @@ Imports System.ServiceModel.Web
                                                 Call MsgBox("Rename nicht durchgeführt: es gibt mindestens eine schreibgeschützte Variante im Projekt " & pName)
                                             End If
                                         Else
-                                            writeProtections.adjustListe = CType(databaseAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
                                         End If
                                     End If
                                 Catch ex As Exception
@@ -1105,9 +1104,9 @@ Imports System.ServiceModel.Web
                 If Not noDB Then
 
                     'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    If CType(databaseAcc, Request).pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                        If Not CType(databaseAcc, Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
+                        If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
 
                             ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
@@ -3554,12 +3553,12 @@ Imports System.ServiceModel.Web
                             'dbUsername, dbPasswort)
                             Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
                                                                       dbUsername, False, False)
-                            If CType(databaseAcc, Request).setWriteProtection(wpItem) Then
+                            If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
                                 ' erfolgreich
                                 writeProtections.upsert(wpItem)
                             Else
                                 ' nicht erfolgreich
-                                wpItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                 writeProtections.upsert(wpItem)
                             End If
                         End If
@@ -5132,7 +5131,7 @@ Imports System.ServiceModel.Web
 
                         ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
                         If Not noDB Then
-                            writeProtections.adjustListe = CType(databaseAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
                         End If
 
                     Else
@@ -6899,7 +6898,7 @@ Imports System.ServiceModel.Web
                                                          top, left, width, height, False)
 
                 Try
-                    vglProjekt = CType(databaseAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
+                    vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name)
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
@@ -7005,7 +7004,7 @@ Imports System.ServiceModel.Web
                     Try
 
                         Try
-                            vglProjekt = CType(databaseAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
+                            vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name)
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
@@ -7107,7 +7106,7 @@ Imports System.ServiceModel.Web
 
                 Try
                     Try
-                        vglProj = CType(databaseAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
+                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name)
                     Catch ex As Exception
                         vglProj = Nothing
                     End Try
@@ -7674,9 +7673,9 @@ Imports System.ServiceModel.Web
                 End With
 
                 If vglName <> hproj.getShapeText Then
-                    If CType(databaseAcc, Request).pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -10214,7 +10213,7 @@ Imports System.ServiceModel.Web
         End Try
 
 
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10253,7 +10252,7 @@ Imports System.ServiceModel.Web
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, hproj)
                             lastElem = projekthistorie.Count - 1
@@ -10357,7 +10356,7 @@ Imports System.ServiceModel.Web
             awinSelection = Nothing
         End Try
 
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10395,7 +10394,7 @@ Imports System.ServiceModel.Web
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                         lastElem = projekthistorie.Count - 1
@@ -10560,7 +10559,7 @@ Imports System.ServiceModel.Web
             awinSelection = Nothing
         End Try
 
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10586,7 +10585,7 @@ Imports System.ServiceModel.Web
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
 
@@ -10690,9 +10689,9 @@ Imports System.ServiceModel.Web
                 End If
 
                 If vglName <> hproj.getShapeText Then
-                    If CType(databaseAcc, Request).pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -11307,7 +11306,7 @@ Imports System.ServiceModel.Web
 
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        Dim ok2 As Boolean = CType(databaseAcc, Request).cancelWriteProtections(dbUsername)
+        Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername)
 
         enableOnUpdate = True
 

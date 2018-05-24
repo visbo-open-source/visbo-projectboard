@@ -1,7 +1,6 @@
 ﻿Imports ClassLibrary1
 Imports ProjectBoardDefinitions
-
-Imports MongoDbAccess
+Imports DBAccLayer
 Imports Microsoft.Office.Core
 Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
@@ -109,9 +108,9 @@ Public Module testModule
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                 If vglName <> maxProj.getShapeText Then
-                    If CType(databaseAcc, Request).pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         Try
-                            projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, maxProj)
                         Catch ex As Exception
@@ -178,9 +177,9 @@ Public Module testModule
                         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                         If vglName <> hproj.getShapeText Then
-                            If CType(databaseAcc, Request).pingMongoDb() Then
+                            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                                 Try
-                                    projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                                    projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                                     projekthistorie.Add(Date.Now, hproj)
                                 Catch ex As Exception
@@ -353,15 +352,15 @@ Public Module testModule
             If Not noDB Then
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
 
                         If Not aktprojekthist Then
-                            projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                         End If
 
-                        bproj = CType(databaseAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
+                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name)
 
                         ' tk , 17.10.17 , das holen der Beauftragung, unabhängig von der Variante ... 
 
@@ -5511,12 +5510,12 @@ Public Module testModule
         Dim outputline As String = ""
 
         ' die aktuelle WriteProtection holen 
-        writeProtections.adjustListe = CType(databaseAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+        writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         'Call storeSessionConstellation("Last")
 
-        If CType(databaseAcc, Request).pingMongoDb() And Not noDB Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And Not noDB Then
 
             Try
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
@@ -5536,9 +5535,9 @@ Public Module testModule
                             End If
 
                             Dim storeNeeded As Boolean
-                            If CType(databaseAcc, Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
@@ -5551,7 +5550,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If CType(databaseAcc, Request).storeProjectToDB(kvp.Value, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(kvp.Value, dbUsername) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "stored: " & kvp.Value.name & ", " & kvp.Value.variantName
@@ -5564,7 +5563,7 @@ Public Module testModule
                                     anzahlStores = anzahlStores + 1
                                     ' jetzt die writeProtections aktualisieren 
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
                                     writeProtections.upsert(wpItem)
 
 
@@ -5577,7 +5576,7 @@ Public Module testModule
                                         outPutCollection.Add(outputline)
                                     End If
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -5625,7 +5624,7 @@ Public Module testModule
 
                         If kvp.Key <> "Sort Result" And kvp.Key <> "Filter Result" Then
                             Try
-                                If CType(databaseAcc, Request).storeConstellationToDB(kvp.Value) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(kvp.Value) Then
                                     If awinSettings.englishLanguage Then
                                         outputline = "Portfolio stored: " & kvp.Key
                                         outPutCollection.Add(outputline)
@@ -5664,7 +5663,7 @@ Public Module testModule
                     For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
 
                         Try
-                            If CType(databaseAcc, Request).storeDependencyofPToDB(kvp.Value) Then
+                            If CType(databaseAcc, DBAccLayer.Request).storeDependencyofPToDB(kvp.Value) Then
                                 ' nichts schreiben ...
                             Else
                                 If awinSettings.englishLanguage Then
@@ -5692,14 +5691,14 @@ Public Module testModule
                     Dim storedRoles As Integer = 0
                     For i As Integer = 1 To RoleDefinitions.Count
                         Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-                        If CType(databaseAcc, Request).storeRoleDefinitionToDB(role, False, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeRoleDefinitionToDB(role, False, Date.Now) Then
                             Dim success As String = role.name
                         End If
                     Next
 
                     For i As Integer = 1 To CostDefinitions.Count
                         Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
-                        If CType(databaseAcc, Request).storeCostDefinitionToDB(cost, False, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeCostDefinitionToDB(cost, False, Date.Now) Then
                             Dim success As String = cost.name
                         End If
                     Next
@@ -5851,7 +5850,7 @@ Public Module testModule
             awinSelection = Nothing
         End Try
 
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -5898,9 +5897,9 @@ Public Module testModule
                             End If
 
                             Dim storeNeeded As Boolean
-                            If CType(databaseAcc, Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -5913,7 +5912,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If CType(databaseAcc, Request).storeProjectToDB(hproj, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "stored: " & hproj.name & ", " & hproj.variantName
@@ -5925,7 +5924,7 @@ Public Module testModule
 
                                     anzStoredProj = anzStoredProj + 1
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                     writeProtections.upsert(wpItem)
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                                 Else
@@ -5937,7 +5936,7 @@ Public Module testModule
 
                                     outputCollection.Add(outputline)
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -6127,9 +6126,9 @@ Public Module testModule
 
 
                 If vglName <> hproj.getShapeText Then
-                    If CType(databaseAcc, Request).pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -6613,9 +6612,9 @@ Public Module testModule
 
 
         If vglName <> hproj.getShapeText Then
-            If CType(databaseAcc, Request).pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
+                projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                 If projekthistorie.Count > 0 Then
                     projekthistorie.Add(Date.Now, hproj)
@@ -9495,10 +9494,10 @@ Public Module testModule
                     'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                     If awinSettings.compareWithStandardVariant Then
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     Else
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     End If
 
@@ -10405,9 +10404,9 @@ Public Module testModule
             ersteVersion = Nothing
             letzteVersion = Nothing
 
-            If CType(databaseAcc, Request).pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' es soll mit der Standard-Variante verglichen werden ... 
-                projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:="",
+                projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:="",
                                                             storedEarliest:=StartofCalendar, storedLatest:=aktuellesDatum)
 
                 anzH = anzH + 1
@@ -11003,9 +11002,9 @@ Public Module testModule
             Try
                 hproj = ShowProjekte.getProject(pname)
                 variantName = hproj.variantName
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
+                    projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     If compareToLast Then
                         vproj = projekthistorie.Last

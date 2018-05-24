@@ -71,9 +71,9 @@ Public Module awinGeneralModules
                     If Not noDB Then
                         ' wenn es in der DB existiert, dann im Cache aufbauen 
 
-                        If CType(databaseAcc, Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
                             ' für den Datenbank Cache aufbauen 
-                            Dim dbProj As clsProjekt = CType(databaseAcc, Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                            Dim dbProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
 
                             dbCacheProjekte.upsert(dbProj)
                         End If
@@ -1364,8 +1364,8 @@ Public Module awinGeneralModules
 
                     ' Auslesen der Rollen aus der Datenbank ! 
 
-                    Dim RoleDefinitions2 As clsRollen = CType(databaseAcc, Request).retrieveRolesFromDB(Date.Now)
-                    Dim costDefinitions2 As clsKostenarten = CType(databaseAcc, Request).retrieveCostsFromDB(Date.Now)
+                    Dim RoleDefinitions2 As clsRollen = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                    Dim costDefinitions2 As clsKostenarten = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
                     If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And
                             CostDefinitions.isIdenticalTo(costDefinitions2) Then
@@ -1542,7 +1542,7 @@ Public Module awinGeneralModules
         ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
 
 
-        If CType(databaseAcc, Request).cancelWriteProtections(dbUsername) Then
+        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
 
             If awinSettings.visboDebug Then
                 Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
@@ -2861,13 +2861,13 @@ Public Module awinGeneralModules
 
 
         ' Datenbank ist gestartet
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             ' alle Konstellationen laden 
-            projectConstellations = CType(databaseAcc, Request).retrieveConstellationsFromDB()
+            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
 
             ' hier werden jetzt auch alle Abhängigkeiten geladen 
-            allDependencies = CType(databaseAcc, Request).retrieveDependenciesFromDB()
+            allDependencies = CType(databaseAcc, DBAccLayer.Request).retrieveDependenciesFromDB()
 
             Dim axt As Integer = 9
 
@@ -4652,7 +4652,7 @@ Public Module awinGeneralModules
 
         ' aus der Datenbank alle WriteProtections holen ...
         If Not noDB And AlleProjekte.Count > 0 Then
-            writeProtections.adjustListe = CType(databaseAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         If AlleProjekte.Count > 0 Then
@@ -4799,7 +4799,7 @@ Public Module awinGeneralModules
 
                                 ' nicht erfolgreich, weil durch anderen geschützt ... 
                                 ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                                wpItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                 writeProtections.upsert(wpItem)
 
                                 ' jetzt Variante anlegen 
@@ -5030,12 +5030,12 @@ Public Module awinGeneralModules
 
             If Not noDB Then
 
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    If CType(databaseAcc, Request).projectNameAlreadyExists(pName, vName, datum) Then
+                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, datum) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        tmpResult = CType(databaseAcc, Request).retrieveOneProjectfromDB(pName, vName, datum)
+                        tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, datum)
 
                     Else
                         ' nichts tun, tmpResult ist bereits Nothing 
@@ -5281,12 +5281,12 @@ Public Module awinGeneralModules
                                 '
                                 ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
 
-                                If CType(databaseAcc, Request).pingMongoDb() Then
+                                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                                    If CType(databaseAcc, Request).projectNameAlreadyExists(projectName, variantName, Date.Now) Then
+                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectName, variantName, Date.Now) Then
 
                                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                        hproj = CType(databaseAcc, Request).retrieveOneProjectfromDB(projectName, variantName, Date.Now)
+                                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projectName, variantName, Date.Now)
                                         ' jetzt in AlleProjekte eintragen ... 
                                         If Not IsNothing(hproj) Then
                                             AlleProjekte.Add(hproj)
@@ -5568,7 +5568,7 @@ Public Module awinGeneralModules
 
 
 
-                        If CType(databaseAcc, Request).projectNameAlreadyExists(pName, variantName, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now) Then
                             ' als Constellation Item aufnehmen 
                             Dim cItem As New clsConstellationItem
 
@@ -6358,12 +6358,12 @@ Public Module awinGeneralModules
                         '
                         ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
 
-                        If CType(databaseAcc, Request).pingMongoDb() Then
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                            If CType(databaseAcc, Request).projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
 
                                 ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                vglProj = CType(databaseAcc, Request).retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
+                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
 
                                 If IsNothing(vglProj) Then
                                     ' kann eigentlich nicht sein 
@@ -10532,9 +10532,9 @@ Public Module awinGeneralModules
         Dim lastConstellation As New clsConstellation
         Dim hproj As clsProjekt
 
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-            projectConstellations = CType(databaseAcc, Request).retrieveConstellationsFromDB()
+            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
 
 
             Try
@@ -10603,9 +10603,9 @@ Public Module awinGeneralModules
             End If
         End If
 
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-            projekteImZeitraum = CType(databaseAcc, Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+            projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
         Else
             Call MsgBox("Datenbank-Verbindung ist unterbrochen")
         End If
@@ -10795,12 +10795,12 @@ Public Module awinGeneralModules
 
 
             Else
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    If CType(databaseAcc, Request).projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
+                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        hproj = CType(databaseAcc, Request).retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
+                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
 
                         If Not IsNothing(hproj) Then
                             ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
@@ -10975,10 +10975,10 @@ Public Module awinGeneralModules
             Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
 
             If Not IsNothing(hproj) Then
-                If Not CType(databaseAcc, Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
                     ' speichern des Projektes 
                     hproj.timeStamp = DBtimeStamp
-                    If CType(databaseAcc, Request).storeProjectToDB(hproj, dbUsername) Then
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
                             outputLine = "stored: " & hproj.name & ", " & hproj.variantName
@@ -10990,7 +10990,7 @@ Public Module awinGeneralModules
 
                         anzahlNeue = anzahlNeue + 1
 
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                     Else
@@ -11002,17 +11002,17 @@ Public Module awinGeneralModules
                         End If
                         outPutCollection.Add(outputLine)
 
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                     End If
                 Else
                     ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
-                    Dim oldProj As clsProjekt = CType(databaseAcc, Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                    Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
                     ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
                     If Not hproj.isIdenticalTo(oldProj) Then
                         hproj.timeStamp = DBtimeStamp
-                        If CType(databaseAcc, Request).storeProjectToDB(hproj, dbUsername) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                             If awinSettings.englishLanguage Then
                                 outputLine = "stored: " & hproj.name & ", " & hproj.variantName
@@ -11025,7 +11025,7 @@ Public Module awinGeneralModules
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
 
-                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                             writeProtections.upsert(wpItem)
                         Else
                             If awinSettings.englishLanguage Then
@@ -11035,7 +11035,7 @@ Public Module awinGeneralModules
                             End If
                             outPutCollection.Add(outputLine)
 
-                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                             writeProtections.upsert(wpItem)
 
                         End If
@@ -11048,7 +11048,7 @@ Public Module awinGeneralModules
 
         ' jetzt wird die 
         Try
-            If CType(databaseAcc, Request).storeConstellationToDB(currentConstellation) Then
+            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(currentConstellation) Then
 
             Else
                 If awinSettings.englishLanguage Then
@@ -11123,10 +11123,10 @@ Public Module awinGeneralModules
 
         If deleteDB Then
 
-            If CType(databaseAcc, Request).pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                 ' Konstellation muss aus der Datenbank gelöscht werden.
-                returnValue = CType(databaseAcc, Request).removeConstellationFromDB(activeConstellation)
+                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(activeConstellation)
                 If returnValue = False Then
                     Call MsgBox("Fehler bei Löschen Portfolio : " & activeConstellation.constellationName)
                 End If
@@ -11167,7 +11167,7 @@ Public Module awinGeneralModules
         ' ab diesem Wert soll neu gezeichnet werden 
         Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
-        hproj = CType(databaseAcc, Request).retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
+        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
 
 
         If Not IsNothing(hproj) Then
@@ -11180,7 +11180,7 @@ Public Module awinGeneralModules
             AlleProjekte.Add(hproj)
 
             ' jetzt die writeProtections aktualisieren 
-            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
             writeProtections.upsert(wpItem)
 
             If show Then
@@ -11263,9 +11263,9 @@ Public Module awinGeneralModules
                             If writeProtections.isProtected(keyV, dbUsername) Then
                                 ' kann nichts machen ...
                             Else
-                                If CType(databaseAcc, Request).deleteProjectTimestampFromDB(pname, variantName, zeitStempel, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(pname, variantName, zeitStempel, dbUsername) Then
                                     ' all ok 
-                                    If CType(databaseAcc, Request).storeProjectToDB(variantProject, dbUsername) Then
+                                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(variantProject, dbUsername) Then
                                         ' alles ok; jetzt  
                                     Else
 
@@ -11302,7 +11302,7 @@ Public Module awinGeneralModules
                     For Each singleTimeStamp As Date In timeStampsToDelete
 
 
-                        If CType(databaseAcc, Request).deleteProjectTimestampFromDB(pname, variantName, singleTimeStamp, dbUsername) Then
+                        If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(pname, variantName, singleTimeStamp, dbUsername) Then
                             ' all ok 
                             anzDeleted = anzDeleted + 1
                         Else
@@ -11348,7 +11348,7 @@ Public Module awinGeneralModules
                             projekthistorie.clear() ' alte Historie löschen
                         End If
 
-                        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB _
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                                 (projectname:=pname, variantName:=variantName,
                                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
@@ -11356,7 +11356,7 @@ Public Module awinGeneralModules
                         ' jetzt über alle Elemente der Projekthistorie ..
                         For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
 
-                            If CType(databaseAcc, Request).deleteProjectTimestampFromDB(pname, variantName, kvp.Key, dbUsername) Then
+                            If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(pname, variantName, kvp.Key, dbUsername) Then
                                 ' all ok 
                                 anzDeleted = anzDeleted + 1
                             Else
@@ -11472,7 +11472,7 @@ Public Module awinGeneralModules
             projekthistorie.clear() ' alte Historie löschen
         End If
 
-        projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB _
+        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                 (projectname:=pName, variantName:=vName,
                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
@@ -11651,7 +11651,7 @@ Public Module awinGeneralModules
 
         If first Then
             projekthistorie.clear() ' alte Historie löschen
-            projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB _
+            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                    (projectname:=pname, variantName:=variantName,
                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
             first = False
@@ -11680,7 +11680,7 @@ Public Module awinGeneralModules
         Else
             ' Speichern im Papierkorb, dann löschen
             'If requestTrash.storeProjectToDB(hproj) Then
-            If CType(databaseAcc, Request).deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName,
+            If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName,
                                   stored:=timeStamp, userName:=dbUsername) Then
                 'Call MsgBox("ok, gelöscht")
             Else
@@ -12809,7 +12809,7 @@ Public Module awinGeneralModules
                 Catch ex2 As Exception
                     If fehler Then
 
-                        RoleDefinitions = CType(databaseAcc, Request).retrieveRolesFromDB(DateTime.Now)
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now)
 
                         msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
                         If awinSettings.englishLanguage Then
@@ -12871,8 +12871,8 @@ Public Module awinGeneralModules
 
             If IsNothing(baseVariantProj) Then
 
-                If CType(databaseAcc, Request).projectNameAlreadyExists(pName, "", Date.Now) Then
-                    baseVariantProj = CType(databaseAcc, Request).retrieveOneProjectfromDB(pName, "", Date.Now)
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now) Then
+                    baseVariantProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", Date.Now)
                     baseVariantStatus = baseVariantProj.Status
                 End If
             Else
@@ -12949,7 +12949,7 @@ Public Module awinGeneralModules
             zeitraumbis = getDateofColumn(showRangeRight, True)
         End If
 
-        buildPvNamesList = CType(databaseAcc, Request).retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
+        buildPvNamesList = CType(databaseAcc, DBAccLayer.Request).retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
 
     End Function
 
@@ -13316,9 +13316,10 @@ Public Module awinGeneralModules
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
                 'Dim ok As Boolean = Request.createIndicesOnce()
 
-                Dim hrequest As New WebServerAcc.Request()
+                Dim hrequest As New DBAccLayer.Request()
                 databaseAcc = hrequest
-                Dim ok As Boolean = CType(databaseAcc, Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
 
                 If Not ok Then
                     tmpResult = False
@@ -13353,8 +13354,8 @@ Public Module awinGeneralModules
     Function testLoginInfo_OK(ByVal user As String, ByVal pwd As String) As Boolean
 
 
-        'Dim ok As Boolean = CType(databaseAcc, Request).createIndicesOnce()
-        Dim ok As Boolean = CType(databaseAcc, Request).pingMongoDb()
+        'Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).createIndicesOnce()
+        Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).pingMongoDb()
 
         testLoginInfo_OK = ok
     End Function
@@ -14464,9 +14465,9 @@ Public Module awinGeneralModules
 
 
                 ' Datenbank ist gestartet
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, Request).retrieveAllFilterFromDB(False)
+                    Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
                     For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
                         If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
                             filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
@@ -14491,9 +14492,9 @@ Public Module awinGeneralModules
 
 
                     ' Datenbank ist gestartet
-                    If CType(databaseAcc, Request).pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                        Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, Request).retrieveAllFilterFromDB(True)
+                        Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(True)
                         For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
 
                             If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
@@ -14761,7 +14762,7 @@ Public Module awinGeneralModules
             awinSelection = Nothing
         End Try
 
-        If CType(databaseAcc, Request).pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -14796,7 +14797,7 @@ Public Module awinGeneralModules
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, hproj)
 
@@ -15043,10 +15044,10 @@ Public Module awinGeneralModules
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                 ' Datenbank ist gestartet
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
-                    Dim returnvalue As Boolean = CType(databaseAcc, Request).storeFilterToDB(filterToStoreInDB, False)
+                    Dim returnvalue As Boolean = CType(databaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, False)
                     If returnvalue = False Then
                         Call MsgBox("Fehler bei Schreiben Filter: " & fName)
                     End If
@@ -15087,10 +15088,10 @@ Public Module awinGeneralModules
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                 ' Datenbank ist gestartet
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
-                    Dim returnvalue As Boolean = CType(databaseAcc, Request).storeFilterToDB(filterToStoreInDB, True)
+                    Dim returnvalue As Boolean = CType(databaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, True)
                 Else
                     Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
                 End If
@@ -20174,7 +20175,7 @@ Public Module awinGeneralModules
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -21155,7 +21156,7 @@ Public Module awinGeneralModules
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -21553,7 +21554,7 @@ Public Module awinGeneralModules
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -21810,14 +21811,14 @@ Public Module awinGeneralModules
         Dim wpItem As clsWriteProtectionItem
         Dim isProtectedbyOthers As Boolean
 
-        If CType(databaseAcc, Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
+        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
 
             ' es existiert in der Datenbank ...
-            If CType(databaseAcc, Request).checkChgPermission(pName, vName, dbUsername) Then
+            If CType(databaseAcc, DBAccLayer.Request).checkChgPermission(pName, vName, dbUsername) Then
 
                 isProtectedbyOthers = False
                 ' jetzt prüfen, ob es Null ist, von mir permanent/nicht permanent geschützt wurde .. 
-                wpItem = CType(databaseAcc, Request).getWriteProtection(pName, vName)
+                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName)
 
                 Dim notYetDone As Boolean = False
 
@@ -21841,7 +21842,7 @@ Public Module awinGeneralModules
                                                               False,
                                                               True)
 
-                    If CType(databaseAcc, Request).setWriteProtection(wpItem) Then
+                    If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
                         ' erfolgreich ...
                         writeProtections.upsert(wpItem)
                     Else
@@ -22587,7 +22588,7 @@ Public Module awinGeneralModules
                         'Das gewählte Projekt reporten
 
                         Dim hproj As New clsProjekt
-                        hproj = CType(databaseAcc, Request).retrieveOneProjectfromDB(projekte, variante, timestamp)
+                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projekte, variante, timestamp)
 
                         If Not IsNothing(hproj) Then
 
@@ -22691,7 +22692,7 @@ Public Module awinGeneralModules
 
                     Dim hproj As New clsProjekt
                     Dim constellations As New clsConstellations
-                    constellations = CType(databaseAcc, Request).retrieveConstellationsFromDB()
+                    constellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
                     If Not IsNothing(constellations) Then
 
                         Dim curconstellation As clsConstellation = constellations.getConstellation(projekte)
@@ -22700,7 +22701,7 @@ Public Module awinGeneralModules
 
                             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In curconstellation.Liste
 
-                                hproj = CType(databaseAcc, Request).retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, timestamp)
+                                hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, timestamp)
 
                                 If Not IsNothing(hproj) Then
 
@@ -22955,10 +22956,10 @@ Public Module awinGeneralModules
 
             If holeHistory Then
 
-                If CType(databaseAcc, Request).pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
-                        If CType(databaseAcc, Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
-                            projekthistorie.liste = CType(databaseAcc, Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                         Else
                             projekthistorie.clear()
@@ -23053,7 +23054,7 @@ Public Module awinGeneralModules
                                         Case PTprdk.PersonalBalken
                                             Dim vglProj As clsProjekt = Nothing
                                             Try
-                                                vglProj = CType(databaseAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
@@ -23072,7 +23073,7 @@ Public Module awinGeneralModules
 
                                             Dim vglProj As clsProjekt = Nothing
                                             Try
-                                                vglProj = CType(databaseAcc, Request).retrieveFirstContractedPFromDB(hproj.name)
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
@@ -23149,12 +23150,12 @@ Public Module awinGeneralModules
         Try
 
             ' die aktuelle WriteProtection holen 
-            writeProtections.adjustListe(False) = CType(databaseAcc, Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe(False) = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
             ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
             'Call storeSessionConstellation("Last")
 
-            If CType(databaseAcc, Request).pingMongoDb() And Not noDB Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And Not noDB Then
 
                 ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
@@ -23169,9 +23170,9 @@ Public Module awinGeneralModules
                 ' ur: 20170904: Funktion hproj.isIdenticalTo hat Probleme
 
                 Dim storeNeeded As Boolean
-                If CType(databaseAcc, Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
                     ' prüfen, ob es Unterschied gibt 
-                    Dim standInDB As clsProjekt = CType(databaseAcc, Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                    Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
                     If Not IsNothing(standInDB) Then
                         ' prüfe, ob es Unterschiede gibt
                         storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -23184,7 +23185,7 @@ Public Module awinGeneralModules
                 End If
 
                 If storeNeeded Then
-                    If CType(databaseAcc, Request).storeProjectToDB(hproj, dbUsername) Then
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
                             outputline = "stored: " & hproj.name & ", " & hproj.variantName
@@ -23194,7 +23195,7 @@ Public Module awinGeneralModules
                             outPutCollection.Add(outputline)
                         End If
 
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem, False)
 
                         storeSingleProjectToDB = True
@@ -23208,7 +23209,7 @@ Public Module awinGeneralModules
 
                         outPutCollection.Add(outputline)
 
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, Request).getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem, False)
 
                         storeSingleProjectToDB = False
