@@ -2007,36 +2007,52 @@ Public Module awinGeneralModules
         Dim roleUidsDefined As Boolean = False
 
         Try
+            Dim hasHierarchy As Boolean = False
+            Dim atleastOneWithIndent As Boolean = False
+            Dim maxIndent As Integer = 0
+            Dim rolesRange As Excel.Range = wsname.Range("awin_Rollen_Definition")
 
 
-            With wsname
+            Dim anzZeilen As Integer = rolesRange.Rows.Count
+            Dim c As Excel.Range
 
-                Dim rolesRange As Excel.Range = .Range("awin_Rollen_Definition")
-                Dim anzZeilen As Integer = rolesRange.Rows.Count
-                Dim c As Excel.Range
+            ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
+            ' oder ob sie eine haben und ob keine Mehrfachnennungen vorkommen 
+            ' ausserdem wird gleich mal gecheckt ob die erste Rolle indent = 0 hat und sonstige Indent-Level vorkommen
 
-                ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
-                ' oder ob sie eine haben und ob keine Mehrfachnennungen vorkommen 
-                Dim anzWithID As Integer = 0
-                Dim anzWithoutID As Integer = 0
-                Dim IDCollection As New Collection
-                For i = 2 To anzZeilen - 1
-                    Try
-                        Dim tmpValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
-                        c = CType(rolesRange.Cells(i, 1), Excel.Range)
+            Dim anzWithID As Integer = 0
+            Dim anzWithoutID As Integer = 0
+            Dim IDCollection As New Collection
 
-                        If CStr(c.Value) <> "" Then
-                            If Not IsNothing(tmpValue) Then
-                                If tmpValue.Trim <> "" Then
-                                    If IsNumeric(tmpValue.Trim) Then
-                                        If CInt(tmpValue.Trim) > 0 Then
-                                            If Not IDCollection.Contains(tmpValue.Trim) Then
-                                                IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
-                                            Else
-                                                Throw New ArgumentException("roles with identical IDs are not allowed")
-                                            End If
+            For i = 2 To anzZeilen - 1
+                Try
+                    Dim tmpValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
+                    c = CType(rolesRange.Cells(i, 1), Excel.Range)
+
+                    ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
+                    ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
+                    If i = 2 Then
+                        If CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel = 0 Then
+                            hasHierarchy = True
+                        End If
+                    Else
+                        Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
+                        If tmpIndent > 0 Then
+                            atleastOneWithIndent = True
+                            maxIndent = System.Math.Max(maxIndent, tmpIndent)
+                        End If
+                    End If
+
+
+                    If CStr(c.Value) <> "" Then
+                        If Not IsNothing(tmpValue) Then
+                            If tmpValue.Trim <> "" Then
+                                If IsNumeric(tmpValue.Trim) Then
+                                    If CInt(tmpValue.Trim) > 0 Then
+                                        If Not IDCollection.Contains(tmpValue.Trim) Then
+                                            IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
                                         Else
-                                            anzWithoutID = anzWithoutID + 1
+                                            Throw New ArgumentException("roles with identical IDs are not allowed")
                                         End If
                                     Else
                                         anzWithoutID = anzWithoutID + 1
@@ -2047,15 +2063,18 @@ Public Module awinGeneralModules
                             Else
                                 anzWithoutID = anzWithoutID + 1
                             End If
+                        Else
+                            anzWithoutID = anzWithoutID + 1
                         End If
-                        
-                    Catch ex As Exception
-                        anzWithoutID = anzWithoutID + 1
-                    End Try
+                    End If
 
-                Next
+                Catch ex As Exception
+                    anzWithoutID = anzWithoutID + 1
+                End Try
 
-                anzWithID = IDCollection.Count
+            Next
+
+            anzWithID = IDCollection.Count
                 If anzWithID > 0 And anzWithoutID > 0 Then
                     Throw New ArgumentException("some roles do contain IDs, others not ...")
                 Else
@@ -2116,13 +2135,92 @@ Public Module awinGeneralModules
 
                 End If
 
-                
+            ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
+            ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
+            hasHierarchy = hasHierarchy And atleastOneWithIndent
 
-            End With
+            If hasHierarchy Then
+                ' Hierarchie aufbauen
 
+                Dim parents(maxIndent) As String
+
+                Dim ix As Integer
+                parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
+
+
+                Dim lastLevel As Integer = 0
+                Dim curLevel As Integer = 0
+
+                Dim curRoleName As String = ""
+
+                ix = 3
+
+                Do While ix <= anzZeilen - 1
+
+                    Try
+                        curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                        curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+
+                        Do While curLevel = lastLevel And ix <= anzZeilen - 1
+
+                            If curLevel > 0 Then
+                                ' als Child aufnehmen 
+                                Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
+                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                parentRole.addSubRole(subRole.UID, curRoleName, RoleDefinitions.Count)
+                            Else
+                                ' nichts tun 
+                            End If
+
+                            ' weiterschalten ..
+                            ix = ix + 1
+
+                            ' hat sich der Indentlevel immer noch nicht geändert ? 
+                            If ix <= anzZeilen - 1 Then
+                                curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                            Else
+                                ' das Abbruch Kriterium schlägt gleich zu ... 
+                            End If
+
+                        Loop
+
+                        If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
+
+                            parents(curLevel) = curRoleName
+
+                            If curLevel < lastLevel Then
+                                ' in der Hierarchie zurück 
+                                For i As Integer = curLevel + 1 To maxIndent - 1
+                                    parents(i) = ""
+                                Next
+                            End If
+
+                            If curLevel > 0 Then
+                                ' als Child aufnehmen 
+                                Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
+                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                parentRole.addSubRole(subRole.UID, curRoleName, RoleDefinitions.Count)
+                            Else
+                                ' nichts tun 
+                            End If
+
+                            ' alle alten löschen 
+                            lastLevel = curLevel
+                            ix = ix + 1
+
+                        End If
+                    Catch ex As Exception
+                        Call MsgBox("Fehler bei " & ix & "Role: " & curRoleName)
+                    End Try
+
+
+                Loop
+
+            End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler im Customization-File: Rolle")
+            Throw New ArgumentException("Fehler im Customization-File: Rollen-Definitionen auslesen " & ex.Message)
         End Try
 
 
@@ -6319,7 +6417,12 @@ Public Module awinGeneralModules
         Dim current1program As clsConstellation = Nothing
         Dim lfdNr1program As Integer = 2
 
+        ' nimmt die vollen Namen der 
+        Dim fullNameListe1 As New SortedList(Of String, String)
+
         Dim createdProjects As Integer = 0
+        Dim createdPrograms As Integer = 0
+        Dim emptyPrograms As Integer = 0
 
 
         Dim vorlageName As String = "Rel"
@@ -6542,8 +6645,31 @@ Public Module awinGeneralModules
                                 ' ein neues Portfolio aufgemacht werden .. 
                                 If itemType = 1 Then
                                     ' die bisherige Constellation wegschreiben ...
+
                                     If Not IsNothing(current1program) Then
-                                        projectConstellations.Add(current1program)
+                                        ' ggf hier wieder rausnehmen ...
+
+                                        If current1program.count > 0 Then
+                                            If projectConstellations.Contains(current1program.constellationName) Then
+                                                projectConstellations.Remove(current1program.constellationName)
+                                            End If
+
+                                            createdPrograms = createdPrograms + 1
+                                            projectConstellations.Add(current1program)
+
+                                            ' jetzt das union-Projekt erstellen 
+                                            current1program.calcUnionProject(True)
+
+                                            ' test
+                                            Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                                            If Not everythingOK Then
+                                                Call MsgBox("nicht identisch: " & current1program.constellationName)
+                                            End If
+                                            ' ende test
+                                        Else
+                                            emptyPrograms = emptyprograms + 1
+                                        End If
+
                                     End If
 
                                     current1program = New clsConstellation(ptSortCriteria.customTF, itemType.ToString & " - " & pName)
@@ -6674,17 +6800,6 @@ Public Module awinGeneralModules
 
                             If Not IsNothing(hproj) Then
 
-                                ' jetzt soll das in die Constellation 
-                                Dim cItem As New clsConstellationItem
-                                With cItem
-                                    .projectName = hproj.name
-                                    .variantName = hproj.variantName
-                                    .show = True
-                                    .zeile = lfdNr1program
-                                End With
-
-                                current1program.add(cItem)
-                                lfdNr1program = lfdNr1program + 1
 
                                 ' jetzt ist alles so weit ok 
                                 Dim pkey As String = ""
@@ -6698,6 +6813,18 @@ Public Module awinGeneralModules
                                         Else
                                             createdProjects = createdProjects + 1
                                             ImportProjekte.Add(hproj, False)
+
+                                            ' jetzt soll das in die Constellation 
+                                            Dim cItem As New clsConstellationItem
+                                            With cItem
+                                                .projectName = hproj.name
+                                                .variantName = hproj.variantName
+                                                .show = True
+                                                .zeile = lfdNr1program
+                                            End With
+
+                                            current1program.add(cItem)
+                                            lfdNr1program = lfdNr1program + 1
                                         End If
 
                                     Catch ex As Exception
@@ -6724,6 +6851,34 @@ Public Module awinGeneralModules
 
                 End While
 
+                ' jetzt die letzte ggf vorkommende Constellation aufnehmen 
+                If Not IsNothing(current1program) Then
+
+                    If current1program.count > 0 Then
+                        ' ggf aus der Liste aller Constellations wieder rausnehmen 
+
+                        If projectConstellations.Contains(current1program.constellationName) Then
+                            projectConstellations.Remove(current1program.constellationName)
+                        End If
+
+                        createdPrograms = createdPrograms + 1
+                        projectConstellations.Add(current1program)
+
+                        ' jetzt das union-Projekt erstellen 
+                        current1program.calcUnionProject(True)
+
+                        ' test
+                        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                        If Not everythingOK Then
+                            Call MsgBox("nicht identisch: " & current1program.constellationName)
+                        End If
+                        ' ende test
+                    Else
+                        emptyPrograms = emptyPrograms + 1
+                    End If
+
+
+                End If
 
             End With
         Catch ex As Exception
@@ -6732,13 +6887,102 @@ Public Module awinGeneralModules
 
         End Try
 
-
-        Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
+        If emptyPrograms = 0 Then
+            Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
                     "Projekte erzeugt: " & createdProjects & vbLf &
-                    "Projekte importiert: " & ImportProjekte.Count)
+                    "Programme erzeugt: " & createdPrograms & vbLf &
+                    "insgesamt importiert: " & ImportProjekte.Count)
+        Else
+            Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
+                    "Projekte erzeugt: " & createdProjects & vbLf &
+                    "Programme erzeugt: " & createdPrograms & vbLf &
+                    "Programme nicht erzeugt, weil leer: " & emptyPrograms & vbLf &
+                    "insgesamt importiert: " & ImportProjekte.Count)
+        End If
+
 
     End Sub
 
+
+    ''' <summary>
+    ''' testet, ob das Summary Projekt einer constellation mit den einzelnen Werten der Projekte übereinstimmt ...
+    ''' </summary>
+    ''' <param name="current1program"></param>
+    ''' <returns></returns>
+    Public Function testUProjandSingleProjs(ByVal current1program As clsConstellation,
+                                             Optional ByVal considerImportProjekte As Boolean = True) As Boolean
+
+        Dim tmpResult As Boolean = True
+        Dim constellationName As String = current1program.constellationName
+        Dim projektliste As clsProjekteAlle
+
+        If considerImportProjekte Then
+            projektliste = ImportProjekte
+        Else
+            projektliste = AlleProjekte
+        End If
+
+        Dim uProj As clsProjekt = projektliste.getProject(calcProjektKey(constellationName, ""))
+        Dim testProjekte As New clsProjekte
+
+        If Not IsNothing(uProj) Then
+            Dim uRoles As Collection = uProj.getRoleNames
+            Dim GPRoles As Collection = Nothing
+
+            Dim listOfProjectNames As SortedList(Of String, String) = current1program.getProjectNames(considerShowAttribute:=True, showAttribute:=True, fullNameKeys:=True)
+
+            Dim dimension As Integer = listOfProjectNames.Count - 1
+
+            For Each fullName As KeyValuePair(Of String, String) In listOfProjectNames
+                Dim hproj As clsProjekt = projektliste.getProject(fullName.Key)
+                If IsNothing(GPRoles) Then
+                    GPRoles = hproj.getRoleNames
+                Else
+                    Dim tmpRoles As Collection = hproj.getRoleNames
+                    For Each tmpRoleName As String In tmpRoles
+                        If GPRoles.Contains(tmpRoleName) Then
+                            ' alles ok, schon drin 
+                        Else
+                            GPRoles.Add(tmpRoleName, tmpRoleName)
+                        End If
+                    Next
+
+                End If
+
+                If testProjekte.contains(hproj.name) Then
+                    ' darf eigentlich n icht sein 
+                    Call MsgBox("Fehler ?: " & hproj.name)
+                Else
+                    testProjekte.Add(hproj)
+                End If
+            Next
+
+            ' 1. Test sind die Collections identisch ? 
+            If collectionsAreDifferent(uRoles, GPRoles) Then
+                tmpResult = False
+            Else
+                showRangeLeft = getColumnOfDate(CDate("1.1.2018"))
+                showRangeRight = getColumnOfDate(CDate("31.12.2018"))
+
+                For Each tmpRole As String In uRoles
+                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonthNew(tmpRole)
+                    Dim myCollection As New Collection
+                    myCollection.Add(tmpRole)
+                    Dim uValues() As Double = uProj.getBedarfeInMonths(mycollection:=myCollection, type:=DiagrammTypen(1))
+
+                    If arraysAreDifferent(GPvalues, uValues) Then
+                        tmpResult = False
+                    End If
+                Next
+
+            End If
+
+        End If
+
+
+        testUProjandSingleProjs = tmpResult
+
+    End Function
     ''' <summary>
     ''' bestimmt, ob es sich um einen gültigen Kapazitäts- bzw Kosten-Input String handelt
     ''' alle Rollen- bzw Kostenart Namen bekannt, alle Werte >= 0 
@@ -6900,7 +7144,8 @@ Public Module awinGeneralModules
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function verarbeiteImportProjekte(ByVal cName As String,
-                                             Optional ByVal noComparison As Boolean = False) As clsConstellation
+                                             Optional ByVal noComparison As Boolean = False,
+                                             Optional ByVal unionProjects As Boolean = False) As clsConstellation
         ' in der Reihenfolge des Auftretens aufnehmen , Name wie übergeben 
         Dim newC As New clsConstellation(ptSortCriteria.customTF, cName)
         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
@@ -6915,109 +7160,112 @@ Public Module awinGeneralModules
 
             Dim impProjekt As clsProjekt = kvp.Value
 
-            ' jetzt das Import Datum setzen ...
-            impProjekt.timeStamp = importDate
+            If impProjekt.isUnion = unionProjects Then
+                ' jetzt das Import Datum setzen ...
+                impProjekt.timeStamp = importDate
 
-            Dim importKey As String = calcProjektKey(impProjekt)
+                Dim importKey As String = calcProjektKey(impProjekt)
 
-            vglProj = Nothing
+                vglProj = Nothing
 
-            If noComparison Then
-                ' nicht vergleichen, einfach in AlleProjekte rein machen 
-                If AlleProjekte.Containskey(importKey) Then
-                    AlleProjekte.Remove(importKey)
-                End If
-                AlleProjekte.Add(impProjekt)
-            Else
-                ' jetzt muss ggf verglichen werden 
-                If AlleProjekte.Containskey(importKey) Then
-
-                    vglProj = AlleProjekte.getProject(importKey)
-
-                Else
-                    ' nicht in der Session, aber ist es in der Datenbank ?  
-
-                    If Not noDB Then
-
-                        '
-                        ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        If request.pingMongoDb() Then
-
-                            If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
-
-                                ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
-
-                                If IsNothing(vglProj) Then
-                                    ' kann eigentlich nicht sein 
-                                    ok = False
-                                Else
-                                    ' jetzt in AlleProjekte eintragen ... 
-                                    AlleProjekte.Add(vglProj)
-
-                                End If
-                            Else
-                                ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                                AlleProjekte.Add(impProjekt)
-                            End If
-                        Else
-                            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
-                        End If
-
-
-                    Else
-                        ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                        AlleProjekte.Add(impProjekt)
-
-                    End If
-
-
-                End If
-
-            End If
-
-
-
-            ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
-            If Not IsNothing(vglProj) And Not noComparison Then
-
-                ' erstezt durch Abfrage auf Identität 
-                'Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
-
-                If Not impProjekt.isIdenticalTo(vglProj) Then
-                    ' es gibt Unterschiede, also muss eine Variante angelegt werden 
-
-                    impProjekt.variantName = cName
-                    importKey = calcProjektKey(impProjekt)
-
-                    ' wenn die Variante bereits in der Session existiert ..
-                    ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                If noComparison Then
+                    ' nicht vergleichen, einfach in AlleProjekte rein machen 
                     If AlleProjekte.Containskey(importKey) Then
                         AlleProjekte.Remove(importKey)
                     End If
-
-                    ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
                     AlleProjekte.Add(impProjekt)
+                Else
+                    ' jetzt muss ggf verglichen werden 
+                    If AlleProjekte.Containskey(importKey) Then
+
+                        vglProj = AlleProjekte.getProject(importKey)
+
+                    Else
+                        ' nicht in der Session, aber ist es in der Datenbank ?  
+
+                        If Not noDB Then
+
+                            '
+                            ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                            If request.pingMongoDb() Then
+
+                                If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
+
+                                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                    vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
+
+                                    If IsNothing(vglProj) Then
+                                        ' kann eigentlich nicht sein 
+                                        ok = False
+                                    Else
+                                        ' jetzt in AlleProjekte eintragen ... 
+                                        AlleProjekte.Add(vglProj)
+
+                                    End If
+                                Else
+                                    ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
+                                    AlleProjekte.Add(impProjekt)
+                                End If
+                            Else
+                                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
+                            End If
+
+
+                        Else
+                            ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
+                            AlleProjekte.Add(impProjekt)
+
+                        End If
+
+
+                    End If
+
                 End If
 
+
+
+                ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
+                If Not IsNothing(vglProj) And Not noComparison Then
+
+                    ' erstezt durch Abfrage auf Identität 
+                    'Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
+
+                    If Not impProjekt.isIdenticalTo(vglProj) Then
+                        ' es gibt Unterschiede, also muss eine Variante angelegt werden 
+
+                        impProjekt.variantName = cName
+                        importKey = calcProjektKey(impProjekt)
+
+                        ' wenn die Variante bereits in der Session existiert ..
+                        ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                        If AlleProjekte.Containskey(importKey) Then
+                            AlleProjekte.Remove(importKey)
+                        End If
+
+                        ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
+                        AlleProjekte.Add(impProjekt)
+                    End If
+
+                End If
+
+                ' Aufnehmen in Constellation
+                Dim newCItem As New clsConstellationItem
+                newCItem.projectName = impProjekt.name
+                newCItem.variantName = impProjekt.variantName
+                If newC.containsProject(impProjekt.name) Then
+                    newCItem.show = False
+                Else
+                    newCItem.show = True
+                End If
+                newCItem.start = impProjekt.startDate
+                newCItem.zeile = impProjekt.tfZeile
+                'newCItem.zeile = lfdZeilenNr
+                newC.add(newCItem, sKey:=impProjekt.tfZeile)
+
+                lfdZeilenNr = lfdZeilenNr + 1
             End If
 
-            ' Aufnehmen in Constellation
-            Dim newCItem As New clsConstellationItem
-            newCItem.projectName = impProjekt.name
-            newCItem.variantName = impProjekt.variantName
-            If newC.containsProject(impProjekt.name) Then
-                newCItem.show = False
-            Else
-                newCItem.show = True
-            End If
-            newCItem.start = impProjekt.startDate
-            newCItem.zeile = impProjekt.tfZeile
-            'newCItem.zeile = lfdZeilenNr
-            newC.add(newCItem, sKey:=impProjekt.tfZeile)
-
-            lfdZeilenNr = lfdZeilenNr + 1
 
         Next
 

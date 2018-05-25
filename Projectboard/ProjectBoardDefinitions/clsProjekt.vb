@@ -9,10 +9,10 @@ Public Class clsProjekt
 
 
     'Private AllPhases As List(Of clsPhase)
-    Private _relStart As Integer
+    'Private _relStart As Integer
     Private _imarge As Double
     Private _uuid As Long
-    Private _iDauer As Integer
+
     Private _StartOffset As Integer
     Private _Start As Integer
     Private _earliestStart As Integer
@@ -32,6 +32,21 @@ Public Class clsProjekt
 
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
+
+    ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
+    Private _isUnion As Boolean = False
+    Public Property isUnion As Boolean
+        Get
+            isUnion = _isUnion
+        End Get
+        Set(value As Boolean)
+            If Not IsNothing(value) Then
+                _isUnion = value
+            Else
+                _isUnion = False
+            End If
+        End Set
+    End Property
 
     ' ergänzt am 20.8.17 
     ' Marker für Projekte, um anzuzeigen, dass es zu einer bestimmten Menge gehört ; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
@@ -409,27 +424,28 @@ Public Class clsProjekt
             Try
                 With vProj
 
-                    If Me.name = .name And _
-                        Me.variantName = .variantName And _
-                        Me.variantDescription = .variantDescription And _
-                        Me.description = .description Then
+                    If Me.name = .name And
+                        Me.variantName = .variantName And
+                        Me.variantDescription = .variantDescription And
+                        Me.description = .description And
+                        Me.isUnion = .isUnion Then
 
-                        If Me.startDate.Date = .startDate.Date And _
+                        If Me.startDate.Date = .startDate.Date And
                             Me.endeDate.Date = .endeDate.Date Then
 
-                            If Me.ampelStatus = .ampelStatus And _
+                            If Me.ampelStatus = .ampelStatus And
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then
 
-                                If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And _
+                                If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
                                    Me.Erloes = .Erloes Then
 
-                                    If Me.businessUnit = .businessUnit And _
-                                        Me.complexity = .complexity And _
-                                        Me.Status = .Status And _
-                                        Me.StrategicFit = .StrategicFit And _
-                                        Me.Risiko = .Risiko And _
-                                        Me.VorlagenName = .VorlagenName And _
-                                        Me.volume = .volume And _
+                                    If Me.businessUnit = .businessUnit And
+                                        Me.complexity = .complexity And
+                                        Me.Status = .Status And
+                                        Me.StrategicFit = .StrategicFit And
+                                        Me.Risiko = .Risiko And
+                                        Me.VorlagenName = .VorlagenName And
+                                        Me.volume = .volume And
                                         Me.leadPerson = .leadPerson Then
 
                                         stillOK = True
@@ -2549,6 +2565,196 @@ Public Class clsProjekt
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' gibt ein Projekt zurück, das die Vereinigung der beiden Projekte darstellt. 
+    ''' Es werden die Ressourcenbedarfe vereinigt. Wenn die Projekte zu unterschiedlichen Zeiten beginnen und unterschiedlich lang sind, so wird das 
+    ''' auch berücksichtigt. Das neue Projekt hat keinerlei Phasen-Struktur
+    ''' </summary>
+    ''' <param name="otherProj"></param>
+    ''' <returns></returns>
+    Public Function unionizeWith(ByVal otherProj As clsProjekt) As clsProjekt
+
+        Dim newStartdate As Date
+        Dim newEndeDate As Date
+
+
+        If Me.startDate <= otherProj.startDate Then
+            newStartdate = Me.startDate
+        Else
+            newStartdate = otherProj.startDate
+        End If
+
+        If Me.endeDate >= otherProj.endeDate Then
+            newEndeDate = Me.endeDate
+        Else
+            newEndeDate = otherProj.endeDate
+        End If
+
+        Dim newProj As New clsProjekt(Me.name, True, newStartdate, newEndeDate)
+
+        ' jetzt werden die Attribute neu gesetzt ...
+        With newProj
+
+            .farbe = Me.farbe
+            .Schrift = Me.Schrift
+            .Schriftfarbe = Me.Schriftfarbe
+            .VorlagenName = "$Union$"
+            .Risiko = Me.Risiko
+            .StrategicFit = Me.StrategicFit
+            .Erloes = Me.Erloes + otherProj.Erloes
+            .description = Me.description
+            .variantName = Me.variantName
+            .variantDescription = Me.variantDescription
+
+            .businessUnit = Me.businessUnit
+
+            .startDate = newStartdate
+            '.earliestStartDate = _earliestStartDate
+            '.latestStartDate = _latestStartDate
+            '.earliestStart = _earliestStart
+            '.latestStart = _latestStart
+            .leadPerson = Me.leadPerson
+            .Status = Me.Status
+            .extendedView = Me.extendedView
+            .movable = Me.movable
+
+
+        End With
+
+        ' ------------------------------------------------------------------------------------------------------
+        ' Holen der Rootphase - die wurde ja bereits mit dem New oben angelegt ... 
+        ' ------------------------------------------------------------------------------------------------------
+        Dim cPhase As clsPhase = newProj.getPhase(1)
+
+        Dim myLength As Integer = Me.anzahlRasterElemente
+        Dim otherLength As Integer = otherProj.anzahlRasterElemente
+        Dim newLength As Integer = newProj.anzahlRasterElemente
+
+        Dim myStartColumn As Integer = getColumnOfDate(Me.startDate)
+        Dim otherStartColumn As Integer = getColumnOfDate(otherProj.startDate)
+        Dim myIndexStart As Integer, otherIndexStart As Integer
+
+        If myStartColumn <= otherStartColumn Then
+            myIndexStart = 0
+            otherIndexStart = otherStartColumn - myStartColumn
+        Else
+            otherIndexStart = 0
+            myIndexStart = myStartColumn - otherStartColumn
+        End If
+
+        ' jetzt werden die Role-Values von me übertragen , an dieser stelle gibt es noch keine Rollen im neuen Projekt!
+        Dim tmpRoles As Collection = Me.getRoleNames
+        Dim newValues() As Double
+
+        For Each tmpRole As String In tmpRoles
+            ' zurücksetzen 
+            ReDim newValues(newLength - 1)
+
+            Dim myValues() As Double = Me.getRessourcenBedarfNew(tmpRole)
+            Dim newRole As New clsRolle(newLength - 1)
+
+            With newRole
+                .RollenTyp = RoleDefinitions.getRoledef(tmpRole).UID
+                For ix As Integer = myIndexStart To myIndexStart + myLength - 1
+                    newValues(ix) = myValues(ix - myIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            cPhase.addRole(newRole)
+
+        Next
+
+        ' jetzt werden die Cost-Values von me übertragen , an dieser stelle gibt es noch keine Kosten im neuen Projekt!
+        Dim tmpCosts As Collection = Me.getCostNames
+
+        For Each tmpCost As String In tmpCosts
+            ' zurücksetzen 
+            ReDim newValues(newLength - 1)
+
+            Dim myValues() As Double = Me.getKostenBedarfNew(tmpCost)
+            Dim newCost As New clsKostenart(newLength - 1)
+
+            With newCost
+                .KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
+                For ix As Integer = myIndexStart To myIndexStart + myLength - 1
+                    newValues(ix) = myValues(ix - myIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            cPhase.AddCost(newCost)
+
+        Next
+
+        ' jetzt werden die Role-Values von otherProj übertragen , an dieser stelle gibt es evtl bereits diese Rolle im neuen Projekt!
+        tmpRoles = otherProj.getRoleNames
+
+        For Each tmpRole As String In tmpRoles
+            ' zurücksetzen 
+            Dim newRole As clsRolle = newProj.getPhase(1).getRole(tmpRole)
+            Dim roleDidExist As Boolean = True
+
+            If IsNothing(newRole) Then
+                roleDidExist = False
+                newRole = New clsRolle(newLength - 1)
+                newRole.RollenTyp = RoleDefinitions.getRoledef(tmpRole).UID
+            End If
+
+            newValues = newRole.Xwerte
+
+            Dim otherValues() As Double = otherProj.getRessourcenBedarfNew(tmpRole)
+
+
+            With newRole
+                For ix As Integer = otherIndexStart To otherIndexStart + otherLength - 1
+                    newValues(ix) = newValues(ix) + otherValues(ix - otherIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            If Not roleDidExist Then
+                cPhase.addRole(newRole)
+            End If
+
+        Next
+
+        ' jetzt werden die Cost-Values von me übertragen , an dieser stelle gibt es noch keine Kosten im neuen Projekt!
+        tmpCosts = otherProj.getCostNames
+
+        For Each tmpCost As String In tmpCosts
+            ' zurücksetzen
+            Dim newCost As clsKostenart = newProj.getPhase(1).getCost(tmpCost)
+            Dim costDidExist As Boolean = True
+
+            If IsNothing(newCost) Then
+                costDidExist = False
+                newCost = New clsKostenart(newLength - 1)
+                newCost.KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
+            End If
+
+            newValues = newCost.Xwerte
+
+            Dim otherValues() As Double = otherProj.getKostenBedarfNew(tmpCost)
+
+            With newCost
+                .KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
+                For ix As Integer = otherIndexStart To otherIndexStart + otherLength - 1
+                    newValues(ix) = newValues(ix) + otherValues(ix - otherIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            If Not costDidExist Then
+                cPhase.AddCost(newCost)
+            End If
+
+
+        Next
+
+        unionizeWith = newProj
+    End Function
 
     ''' <summary>
     ''' gibt die Bedarfe (Phasen / Rollen / Kostenarten / Ergebnis pro Monat zurück 
@@ -5140,9 +5346,9 @@ Public Class clsProjekt
 
         AllPhases = New List(Of clsPhase)
         _extendedView = False
-        _relStart = 1
+        '_relStart = 1
         _leadPerson = ""
-        _iDauer = 0
+
         _StartOffset = 0
         _Start = 0
         _startDate = NullDatum
@@ -5151,6 +5357,7 @@ Public Class clsProjekt
         _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
+        _isUnion = False
 
         _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing istshow 
         _variantDescription = ""
@@ -5165,13 +5372,69 @@ Public Class clsProjekt
 
     End Sub
 
+    ''' <summary>
+    ''' legt ein initiales Projekt mit rootphase con startDate bis EndeDate an, ggf als Union PRojekt ..
+    ''' </summary>
+    ''' <param name="unionizedP"></param>
+    ''' <param name="startDatum"></param>
+    ''' <param name="endeDatum"></param>
+    Public Sub New(ByVal pName As String,
+                   ByVal unionizedP As Boolean,
+                   startDatum As Date, endeDatum As Date)
+
+        _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, startDatum) + 1)
+        _startDate = startDatum
+
+        AllPhases = New List(Of clsPhase)
+        Dim cphase As New clsPhase(parent:=Me)
+        Dim projektdauer As Integer = calcDauerIndays(startDatum, endeDatum)
+
+        With cphase
+            .nameID = rootPhaseName
+            .changeStartandDauerPhase1(0, projektdauer)
+        End With
+
+        Me.AddPhase(cphase)
+
+        _isUnion = unionizedP
+        _extendedView = False
+        '_relStart = 1
+
+        _StartOffset = 0
+
+        _earliestStart = 0
+        _latestStart = 0
+
+        _earliestStartDate = _startDate.AddMonths(_earliestStart)
+        _latestStartDate = _startDate.AddMonths(_latestStart)
+
+        _Status = ProjektStatus(PTProjektStati.geplant)
+        _shpUID = ""
+        _timeStamp = Date.Now
+
+        _name = pName
+        _variantName = ""
+        _variantDescription = ""
+
+        If _isUnion Then
+            _description = "Summary Project of Program / Portfolio"
+        Else
+            _description = ""
+        End If
+
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
+
+    End Sub
+
     Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
 
         AllPhases = New List(Of clsPhase)
         _extendedView = False
-        _relStart = 1
+        '_relStart = 1
         _leadPerson = ""
-        _iDauer = 0
+
         _StartOffset = 0
 
         _Start = projektStart
@@ -5185,6 +5448,7 @@ Public Class clsProjekt
         _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
+        _isUnion = False
 
         _variantName = ""
         _variantDescription = ""
@@ -5201,9 +5465,9 @@ Public Class clsProjekt
 
         AllPhases = New List(Of clsPhase)
         extendedView = False
-        _relStart = 1
+        '_relStart = 1
         _leadPerson = ""
-        _iDauer = 0
+
         _StartOffset = 0
 
         _startDate = startDate
@@ -5216,6 +5480,7 @@ Public Class clsProjekt
 
         _Status = ProjektStatus(PTProjektStati.geplant)
         _timeStamp = Date.Now
+        _isUnion = False
 
         _variantName = ""
         _variantDescription = ""

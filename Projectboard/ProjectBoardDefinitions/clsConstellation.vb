@@ -581,28 +581,34 @@
     ''' when considerShowAttr = true , only names with show-attribute = showvalue are in the output list 
     ''' </summary>
     ''' <value></value>
-    ''' <returns></returns>
+    ''' <returns>sortierte Liste mit Projekt-Namen bzw. Projektvarianten-Namen</returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getProjectNames(Optional ByVal fromCItemList As Boolean = True, _
-                                             Optional ByVal considerShowAttribute As Boolean = False, _
-                                             Optional ByVal showAttribute As Boolean = True) As SortedList(Of String, String)
+    Public ReadOnly Property getProjectNames(Optional ByVal fromCItemList As Boolean = True,
+                                             Optional ByVal considerShowAttribute As Boolean = False,
+                                             Optional ByVal showAttribute As Boolean = True,
+                                             Optional ByVal fullNameKeys As Boolean = False) As SortedList(Of String, String)
         Get
             Dim tmpList As New SortedList(Of String, String)
-            Dim pName As String
+            Dim returnName As String
 
             If fromCItemList Then
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                    pName = kvp.Value.projectName
+                    If fullNameKeys Then
+                        returnName = calcProjektKey(kvp.Value.projectName, kvp.Value.variantName)
+                    Else
+                        returnName = kvp.Value.projectName
+                    End If
+
 
                     If considerShowAttribute Then
                         If kvp.Value.show = showAttribute Then
-                            If Not tmpList.ContainsKey(pName) Then
-                                tmpList.Add(key:=pName, value:=pName)
+                            If Not tmpList.ContainsKey(returnName) Then
+                                tmpList.Add(key:=returnName, value:=returnName)
                             End If
                         End If
                     Else
-                        If Not tmpList.ContainsKey(pName) Then
-                            tmpList.Add(key:=pName, value:=pName)
+                        If Not tmpList.ContainsKey(returnName) Then
+                            tmpList.Add(key:=returnName, value:=returnName)
                         End If
                     End If
 
@@ -738,6 +744,46 @@
 
     End Sub
 
+    ''' <summary>
+    ''' erzeugt das Union Projekt für die Konstellation und trägt es in die AlleProjekte bzw. ImportProjekte ein
+    ''' </summary>
+    ''' <param name="considerImportProjekte"></param>
+    Public Sub calcUnionProject(ByVal considerImportProjekte As Boolean)
+
+        Dim unionProj As clsProjekt = Nothing
+        Dim projektListe As clsProjekteAlle = AlleProjekte
+
+        ' jetzt die Union bilden ... das erste als Default besetzen 
+        Dim listOfProjectNames As SortedList(Of String, String) = Me.getProjectNames(considerShowAttribute:=True,
+                                                                                       showAttribute:=True,
+                                                                                       fullNameKeys:=True)
+        If considerImportProjekte Then
+            projektListe = ImportProjekte
+        End If
+
+        Try
+            If projektListe.Count > 0 And listOfProjectNames.Count > 0 Then
+                ' nur, wenn überhaupt Projekte angezeigt würden, muss eine Union gemacht werden 
+                Dim startDatum As Date = projektListe.liste.First.Value.startDate
+                Dim endeDatum As Date = projektListe.liste.First.Value.endeDate
+                unionProj = New clsProjekt(Me.constellationName, True, startDatum, endeDatum)
+
+                ' jetzt mit allen anderen aufsummieren ..
+                For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
+                    Dim hproj As clsProjekt = projektListe.getProject(kvp.Key)
+                    unionProj = unionProj.unionizeWith(hproj)
+                Next
+
+                If projektListe.Containskey(calcProjektKey(unionProj)) Then
+                    projektListe.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                End If
+
+                projektListe.Add(unionProj, updateCurrentConstellation:=False)
+            End If
+        Catch ex As Exception
+
+        End Try
+    End Sub
 
     ''' <summary>
     ''' kopiert eine Constellation, d.h jetzt müssen auch sortType und sortList kopiert werden
@@ -1254,6 +1300,7 @@
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
         _sortType = skey
+
         Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)
 
     End Sub

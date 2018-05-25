@@ -44,6 +44,9 @@ Public Class clsProjektDB
     Public description As String
     Public businessUnit As String
 
+    ' ergänzt am 23.5.18 
+    Public isUnion As Boolean = False
+
     Public Sub copyfrom(ByVal projekt As clsProjekt)
         Dim i As Integer
 
@@ -64,8 +67,17 @@ Public Class clsProjektDB
                 Me.Id = .Id
             End If
 
+            If Not IsNothing(.isUnion) Then
+                Me.isUnion = .isUnion
+            Else
+                Me.isUnion = False
+            End If
+
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
+
+            ' ist es ein Summary Projekt ? 
+
 
             Me.name = calcProjektKeyDB(projekt.name, projekt.variantName)
 
@@ -150,6 +162,10 @@ Public Class clsProjektDB
             End If
 
             .variantName = Me.variantName
+
+            ' tk 24.5.18 , wenn Nothing wird das in der Setting Property abgefangen 
+            .isUnion = Me.isUnion
+
 
             If IsNothing(Me.variantDescription) Then
                 .variantDescription = ""

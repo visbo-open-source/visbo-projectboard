@@ -4971,18 +4971,19 @@ Imports System.Windows
 
                         appInstance.Workbooks.Open(dateiName)
 
-                        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
-                        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+                        Dim scenarioNameP As String = appInstance.ActiveWorkbook.Name
+                        Dim scenarioNameS As String = scenarioNameP & " (programs)"
+                        Dim positionIX As Integer = scenarioNameP.IndexOf(".xls") - 1
                         Dim tmpName As String = ""
                         For ih As Integer = 0 To positionIX
-                            tmpName = tmpName & scenarioName.Chars(ih)
+                            tmpName = tmpName & scenarioNameP.Chars(ih)
                         Next
-                        scenarioName = tmpName.Trim
+                        scenarioNameP = tmpName.Trim
 
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
 
-                        If scenarioName.StartsWith("AT1") Then
+                        If scenarioNameP.StartsWith("AT1") Then
                             Dim startdate As Date = CDate("1.1.2018")
                             Dim enddate As Date = CDate("31.12.2018")
 
@@ -4994,8 +4995,29 @@ Imports System.Windows
 
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                        Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
+                        'sessionConstellationP enthält alle Projekte aus dem Import 
+                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=True, unionProjects:=False)
+                        Call sessionConstellationP.calcUnionProject(False)
 
+                        ' Testen ..
+                        ' test
+                        Dim everythingOK As Boolean = testUProjandSingleProjs(sessionConstellationP, False)
+                        If Not everythingOK Then
+                            Call MsgBox("nicht identisch: " & sessionConstellationP.constellationName)
+                        End If
+                        ' ende test
+
+
+                        ' sessionConstellationS enthält alle Programme / Szenarien aus dem Import 
+                        Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, unionProjects:=True)
+                        Call sessionConstellationS.calcUnionProject(False)
+
+                        ' test
+                        everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
+                        If Not everythingOK Then
+                            Call MsgBox("nicht identisch: " & sessionConstellationS.constellationName)
+                        End If
+                        ' ende test
                         ' ''If wasNotEmpty Then
                         ' ''    Call awinClearPlanTafel()
                         ' ''End If
@@ -5004,17 +5026,32 @@ Imports System.Windows
                         ' ''Call awinZeichnePlanTafel(False)
                         ' ''Call awinNeuZeichnenDiagramme(2)
 
-                        If sessionConstellation.count > 0 Then
+                        If sessionConstellationP.count > 0 Then
 
-                            If projectConstellations.Contains(scenarioName) Then
-                                projectConstellations.Remove(scenarioName)
+                            If projectConstellations.Contains(scenarioNameP) Then
+                                projectConstellations.Remove(scenarioNameP)
                             End If
 
-                            projectConstellations.Add(sessionConstellation)
-                            Call loadSessionConstellation(scenarioName, False, False, True)
+                            projectConstellations.Add(sessionConstellationP)
+
                         Else
-                            Call MsgBox("keine PRojekte importiert ...")
+                            Call MsgBox("keine Projekte importiert ...")
                         End If
+
+                        If sessionConstellationS.count > 0 Then
+
+                            If projectConstellations.Contains(scenarioNameS) Then
+                                projectConstellations.Remove(scenarioNameS)
+                            End If
+
+                            projectConstellations.Add(sessionConstellationS)
+
+                        Else
+                            Call MsgBox("keine Programme importiert ...")
+                        End If
+
+                        ' ketzt auf Projekttafel anzeigen 
+                        Call loadSessionConstellation(scenarioNameS, False, False, True)
 
                         'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
                         'Call importProjekteEintragen(importDate, ProjektStatus(1))

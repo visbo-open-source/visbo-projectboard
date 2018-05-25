@@ -13824,7 +13824,7 @@ Public Module Projekte
                 istIdentisch = False
             End If
 
-            
+
 
         Catch ex As Exception
             Call MsgBox(ex.Message & " in arraysAreDifferent")
@@ -13833,6 +13833,29 @@ Public Module Projekte
         arraysAreDifferent = Not istIdentisch
 
 
+    End Function
+
+    ''' <summary>
+    ''' prüft ob zwei Collections of string identisch sind 
+    ''' </summary>
+    ''' <param name="Collection1"></param>
+    ''' <param name="Collection2"></param>
+    ''' <returns></returns>
+    Public Function collectionsAreDifferent(ByVal Collection1 As Collection, ByVal Collection2 As Collection) As Boolean
+
+        Dim isDifferent As Boolean = False
+
+        If Collection1.Count <> Collection2.Count Then
+            isDifferent = True
+        Else
+            For Each item As String In Collection1
+                If Not Collection2.Contains(item) Then
+                    isDifferent = True
+                End If
+            Next
+        End If
+
+        collectionsAreDifferent = isDifferent
     End Function
 
     ''' <summary>
