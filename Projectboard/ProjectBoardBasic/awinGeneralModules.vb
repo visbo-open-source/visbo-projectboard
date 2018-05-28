@@ -13640,10 +13640,10 @@ Public Module awinGeneralModules
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
 
-            For i = 1 To listOfImportfiles.Count
+            For i = 0 To listOfImportfiles.Count - 1
 
-                Dim dateiName As String = kapaFolder & "\" & Dir(listOfImportfiles.Item(i - 1))
-                dateiName = My.Computer.FileSystem.CombinePath(kapaFolder, dateiName)
+                Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+
                 If Not IsNothing(dateiName) Then
 
                     If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") Then
@@ -13738,7 +13738,7 @@ Public Module awinGeneralModules
 
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                         Catch ex As Exception
-
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                         End Try
 
                     End If
