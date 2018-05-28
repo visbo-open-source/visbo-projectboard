@@ -1334,20 +1334,31 @@ Public Module awinGeneralModules
                     Call MsgBox("readMilestoneDefinitions")
                 End If
 
-
-                ' Auslesen der Rollen Definitionen 
-                Call readRoleDefinitions(wsName4)
+                ' auslesen der anderen Informationen 
+                Call readOtherDefinitions(wsName4)
 
                 If awinSettings.visboDebug Then
-                    Call MsgBox("readRoleDefinitions")
+                    Call MsgBox("readOtherDefinitions")
                 End If
 
+                ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
+                ' sonst von der DB
+                If Not awinSettings.readCostRolesFromDB Then
 
-                ' Auslesen der Kosten Definitionen 
-                Call readCostDefinitions(wsName4)
+                    ' Auslesen der Rollen Definitionen 
+                    Call readRoleDefinitions(wsName4)
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readCostDefinitions")
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("readRoleDefinitions")
+                    End If
+
+                    ' Auslesen der Kosten Definitionen 
+                    Call readCostDefinitions(wsName4)
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("readCostDefinitions")
+                    End If
+
                 End If
 
 
@@ -1478,34 +1489,52 @@ Public Module awinGeneralModules
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
+                    If Not awinSettings.readCostRolesFromDB Then
 
-                    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                    Call readRessourcenDetails()
+                        ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
+                        Call readRessourcenDetails()
 
-                    ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
-                    Call readRessourcenDetails2()
+                        ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
+                        Call readRessourcenDetails2()
 
-                    ' Auslesen der Rollen aus der Datenbank ! 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
-                    Dim costDefinitions2 As clsKostenarten = request.retrieveCostsFromDB(Date.Now)
+                        ' Auslesen der Rollen aus der Datenbank ! 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
+                        Dim costDefinitions2 As clsKostenarten = request.retrieveCostsFromDB(Date.Now)
 
-                    If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And _
-                            CostDefinitions.isIdenticalTo(costDefinitions2) Then
-                        If awinSettings.visboDebug Then
-                            Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
+                        If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And
+                                CostDefinitions.isIdenticalTo(costDefinitions2) Then
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
+                            End If
+
+                            'RoleDefinitions = RoleDefinitions2
+                            'CostDefinitions = costDefinitions2
+                        Else
+                            If awinSettings.visboDebug Then
+                                Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
+                            End If
+
                         End If
 
-                        'RoleDefinitions = RoleDefinitions2
-                        'CostDefinitions = costDefinitions2
+                        RoleDefinitions.buildTopNodes()
+
                     Else
+
+                        ' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+
+                        RoleDefinitions.buildTopNodes()
+
                         If awinSettings.visboDebug Then
-                            Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
+                            Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
+                            Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
                         End If
 
                     End If
 
-                    RoleDefinitions.buildTopNodes()
 
                     ' jetzt werden die Modul-Vorlagen ausgelesen 
                     Call readVorlagen(True)
@@ -2638,6 +2667,15 @@ Public Module awinGeneralModules
             Catch ex As Exception
                 awinSettings.meDontAskWhenAutoReduce = True
             End Try
+
+            ' Einstellung, um zu signalisieren, dass Rollen und Kosten ausschließlich von der DB gelesen werden sollen ; 
+            Try
+                awinSettings.readCostRolesFromDB = CBool(.Range("Cost_Roles_fromDB").Value)
+            Catch ex As Exception
+                awinSettings.readCostRolesFromDB = True
+            End Try
+
+
 
 
             StartofCalendar = awinSettings.kalenderStart

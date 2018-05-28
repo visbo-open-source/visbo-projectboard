@@ -119,6 +119,8 @@ Public Class clsawinSettings
     ' für gleichlautende Geschwisternamen generiert werden  
     Public Property createUniqueSiblingNames As Boolean
 
+    Public Property readCostRolesFromDB As Boolean
+
     Public Property readWriteMissingDefinitions As Boolean = False
 
     ' Settings für ToleranzKorridor TimeCost
@@ -301,6 +303,9 @@ Public Class clsawinSettings
         _eliminateDuplicates = True
         _importUnknownNames = True
         _createUniqueSiblingNames = True
+
+        ' Rollen und Kosten aus DB lesen
+        _readCostRolesFromDB = False
 
         ' sollen die MissingDefinitions rausgeschrieben werden ...
         _readWriteMissingDefinitions = False
