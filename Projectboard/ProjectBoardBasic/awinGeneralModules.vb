@@ -2708,21 +2708,25 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Private Sub readRessourcenDetails()
 
-        ' jetzt werden  für die einzelnen Rollen in dem Directory Ressource Manager Dateien 
-        ' die evtl vorhandenen Dateien für die genaue Bestimmung der Kapazität ausgelesen  
-        Dim tmpRole As clsRollenDefinition
-        Dim tmpRoleDefinitions As New clsRollen
-        Dim ix As Integer
-        For ix = 1 To RoleDefinitions.Count
-            tmpRole = RoleDefinitions.getRoledef(ix)
-            ' hier werden die betreffenden Dateien geöffnet und auch wieder geschlossen
-            ' wenn es zu Problemen kommen sollte, bleiben die Kapa Werte unverändert ...
-            Call readKapaOfRole(tmpRole)
-            tmpRoleDefinitions.Add(tmpRole)
-        Next
+        ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
+        Call readMonthlyKapasOfRole()
 
-        RoleDefinitions = New clsRollen
-        RoleDefinitions = tmpRoleDefinitions
+        '' tk 28.5.18 alte Version - nicht mehr benötigt ....
+        '' jetzt werden  für die einzelnen Rollen in dem Directory Ressource Manager Dateien 
+        '' die evtl vorhandenen Dateien für die genaue Bestimmung der Kapazität ausgelesen  
+        'Dim tmpRole As clsRollenDefinition
+        'Dim tmpRoleDefinitions As New clsRollen
+        'Dim ix As Integer
+        'For ix = 1 To RoleDefinitions.Count
+        '    tmpRole = RoleDefinitions.getRoledef(ix)
+        '    ' hier werden die betreffenden Dateien geöffnet und auch wieder geschlossen
+        '    ' wenn es zu Problemen kommen sollte, bleiben die Kapa Werte unverändert ...
+        '    Call readKapaOfRole(tmpRole)
+        '    tmpRoleDefinitions.Add(tmpRole)
+        'Next
+
+        'RoleDefinitions = New clsRollen
+        'RoleDefinitions = tmpRoleDefinitions
 
     End Sub
     ''' <summary>
@@ -13411,8 +13415,6 @@ Public Module awinGeneralModules
 
     'End Sub
 
-
-
     ''' <summary>
     ''' liest die im Diretory ../ressource manager liegenden detaillierten Kapa files zu den Rollen aus
     ''' und hinterlegt es an entsprechender Stelle im hrole.kapazitaet
@@ -13583,6 +13585,172 @@ Public Module awinGeneralModules
             End Try
 
         End If
+
+
+        If formerEE Then
+            appInstance.EnableEvents = True
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = True
+        End If
+
+        enableOnUpdate = True
+
+    End Sub
+
+
+
+    ''' <summary>
+    ''' liest alle Dateien mit Kapazität und weist den Rollen die Kapa zu 
+    ''' es werden nur Personen ausgelesen ! alle anderen werden ignoriert ...
+    ''' </summary>
+    Friend Sub readMonthlyKapasOfRole()
+
+        Dim kapaFolder As String
+
+
+        Dim ok As Boolean = True
+
+        Dim summenZeile As Integer
+        Dim spalte As Integer = 2
+        Dim blattname As String = "Kapazität"
+        Dim currentWS As Excel.Worksheet
+        Dim index As Integer
+        Dim tmpDate As Date
+        Dim tmpKapa As Double
+        Dim lastSpalte As Integer
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+        kapaFolder = awinPath & projektRessOrdner
+
+        Try
+            Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
+
+            For i = 1 To listOfImportfiles.Count
+
+                Dim dateiName As String = kapaFolder & "\" & Dir(listOfImportfiles.Item(i - 1))
+                dateiName = My.Computer.FileSystem.CombinePath(kapaFolder, dateiName)
+                If Not IsNothing(dateiName) Then
+
+                    If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") Then
+
+                        Try
+                            appInstance.Workbooks.Open(dateiName)
+                            ok = True
+
+                            Try
+
+                                currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                                Try
+                                    summenZeile = currentWS.Range("intern_sum").Row
+                                Catch ex As Exception
+                                    ' wenn die Summenzeile nicht existiert, gehe ich davon aus, dass einfach jede Zeile ausgelesen werden soll 
+                                    summenZeile = 0
+                                    summenZeile = CType(currentWS.Cells(12000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row + 1
+                                End Try
+
+                                lastSpalte = CType(currentWS.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(Excel.XlDirection.xlToLeft).Column
+
+                                ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
+
+                                Dim aktzeile As Integer = 2
+                                Do While aktzeile < summenZeile
+
+                                    Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, 1), Excel.Range).Value)
+
+                                    If Not IsNothing(subRoleName) Then
+                                        subRoleName = subRoleName.Trim
+                                        If subRoleName.Length > 0 And RoleDefinitions.containsName(subRoleName) Then
+
+                                            Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(subRoleName)
+
+                                            ' nur weiter machen, wenn es keine SummenRollen ist ...
+                                            If Not subRole.isCombinedRole Then
+
+                                                Try
+                                                    spalte = 2
+                                                    tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+
+                                                    ' erstmal dahin positionieren, wo das Datum auch mit oder nach StartOfCalendar beginnt  
+
+                                                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) < 0 And spalte <= lastSpalte
+                                                        Try
+                                                            spalte = spalte + 1
+                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                        Catch ex As Exception
+
+                                                        End Try
+                                                    Loop
+
+                                                    Do While spalte < 241 And spalte <= lastSpalte
+
+                                                        Try
+                                                            index = getColumnOfDate(tmpDate)
+                                                            If index >= 1 Then
+                                                                tmpKapa = CDbl(CType(currentWS.Cells(aktzeile, spalte), Excel.Range).Value)
+
+                                                                If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                                                                    subRole.kapazitaet(index) = tmpKapa
+                                                                End If
+                                                            End If
+
+                                                            spalte = spalte + 1
+                                                            tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
+                                                        Catch ex As Exception
+
+                                                        End Try
+
+
+                                                    Loop
+
+                                                Catch ex As Exception
+
+                                                End Try
+
+                                            End If
+
+                                        End If
+
+                                    End If
+
+                                    aktzeile = aktzeile + 1
+                                    ' jetzt spalte wieder auf 2 setzen 
+                                    spalte = 2
+                                Loop
+
+                            Catch ex2 As Exception
+
+                            End Try
+
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+                End If
+
+
+            Next i
+
+        Catch ex As Exception
+
+        End Try
 
 
         If formerEE Then
