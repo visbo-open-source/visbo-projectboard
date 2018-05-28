@@ -2582,6 +2582,7 @@ Public Class clsProjekt
             .tfZeile = Me.tfZeile
 
         End With
+        createVariant = newproj
     End Function
 
     ''' <summary>
