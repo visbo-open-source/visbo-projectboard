@@ -20,9 +20,11 @@ Imports System.Text
 Public Class Request
 
     'public serverUriName ="http://visbo.myhome-server.de:3484" 
-    Public serverUriName As String = "http://localhost:3484"
+    'Public serverUriName As String = "http://localhost:3484"
 
-    Public aktVCid As String = ""
+    Private serverUriName As String = ""
+
+    Private aktVCid As String = ""
 
     Private token As String = ""
     Private VCs As New List(Of clsVC)
@@ -101,6 +103,9 @@ Public Class Request
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
+                Using sr As New StreamReader(httpresp.GetResponseStream)
+                    Return sr.ReadToEnd()
+                End Using
                 If statcode <> HttpStatusCode.OK Then
                     Call MsgBox("( " & CType(statcode, Integer).ToString & ") : " & httpresp.StatusDescription)
                     Throw New ArgumentException(statcode.ToString & ":" & httpresp.StatusDescription)
@@ -205,14 +210,15 @@ Public Class Request
     End Function
 
     ''' <summary>
-    ''' prüft die Verfügbarkeit der MongoDB bzw. ob ein Login bereits erfolgte, d.h. token vorhanden
+    ''' prüft die Verfügbarkeit der MongoDB bzw. ob ein Login bereits erfolgte, d.h. gültiger token vorhanden
     ''' </summary>
     ''' <returns></returns>
     Public Function pingMongoDb() As Boolean
 
         Dim result As Boolean = False
         If token <> "" Then
-            result = True
+            Dim vcid As String = GETvcid(awinSettings.databaseName)
+            result = (vcid <> "")
         End If
 
         pingMongoDb = result
@@ -545,9 +551,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Try
-            Dim typeRequest As String = "/vpv"
-            Dim serverUriString As String = serverUriName & typeRequest
-            Dim serverUri As New Uri(serverUriString)
+
             Dim webVP As New clsWebVP
             Dim data() As Byte
 
@@ -568,6 +572,11 @@ Public Class Request
             Dim storedVP As Boolean = (vpid <> "")
 
             If Not storedVP Then
+
+                Dim typeRequest As String = "/vp"
+                Dim serverUriString As String = serverUriName & typeRequest
+                Dim serverUri As New Uri(serverUriString)
+
                 Dim VP As New clsVP
                 Dim user As New clsUser
                 user.email = aktUser.email
@@ -596,6 +605,12 @@ Public Class Request
 
             ' Projekt ist bereits in VisboProjects Collection gespeichert, es existiert eine vpid
             If storedVP Then
+
+                ' jetzt muss noch VisboProjectVersion gespeichert werden
+                Dim typeRequest As String = "/vpv"
+                Dim serverUriString As String = serverUriName & typeRequest
+                Dim serverUri As New Uri(serverUriString)
+
 
                 If checkChgPermission(pname, vname, userName) Then
 

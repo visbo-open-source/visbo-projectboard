@@ -20,25 +20,25 @@ Imports WebServerAcc
 Imports MongoDbAccess
 Public Class Request
     'public serverUriName ="http://visbo.myhome-server.de:3484" 
-    Public serverUriName As String = "http://localhost:3484"
+    'Public serverUriName As String = "http://localhost:3484"
 
     Private usedWebServer As Boolean = awinSettings.visboServer
-    Public DBAcc As Object
-    Public aktVCid As String = ""
+    Private DBAcc As Object
+    'Public aktVCid As String = ""
 
-    Private token As String = ""
-    Private VCs As New List(Of clsVC)
-    Private VPs As New List(Of clsVP)
-    Private aktUser As clsUserReg = Nothing
+    Public token As String = ""
+    'Private VCs As New List(Of clsVC)
+    'Private VPs As New List(Of clsVP)
+    'Private aktUser As clsUserReg = Nothing
 
-    Private webVCs As clsWebVC = Nothing
+    'Private webVCs As clsWebVC = Nothing
 
-    Private aktVC As clsWebVC = Nothing
-    Private webVPs As clsWebVP = Nothing
+    'Private aktVC As clsWebVC = Nothing
+    'Private webVPs As clsWebVP = Nothing
 
-    Private aktVP As clsWebVP = Nothing
-    Private webVPvs As clsWebVPv = Nothing
-    Private aktVPv As clsWebLongVPv = Nothing
+    'Private aktVP As clsWebVP = Nothing
+    'Private webVPvs As clsWebVPv = Nothing
+    'Private aktVPv As clsWebLongVPv = Nothing
 
     ''' <summary>
     '''  'Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort)

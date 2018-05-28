@@ -5,6 +5,7 @@
     Public Property users As List(Of clsUser)
     Public Property updatedAt As String
     Public Property createdAt As String
+    Public Property lock As List(Of clsVPLock)
 
     Sub New()
         _id = ""
@@ -13,5 +14,6 @@
         _users = New List(Of clsUser)
         _updatedAt = Date.MinValue.ToString
         _createdAt = Date.MinValue.ToString
+        _lock = New List(Of clsVPLock)
     End Sub
 End Class

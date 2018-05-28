@@ -8,7 +8,6 @@ Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports System.Windows
 Imports System.Windows.Forms
-
 Imports System
 Imports System.Runtime.Serialization
 Imports System.Xml
@@ -17,7 +16,7 @@ Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports System.Security.Principal
-Imports WebServerAcc
+Imports DBAccLayer
 
 
 
@@ -2140,13 +2139,15 @@ Module oneClickGeneralModules
     Friend Function logInToMongoDB(ByVal noDBAccess As Boolean) As Boolean
         ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
 
+        'awinSettings.visboServer = False ' Ohne Server
+
         ' bestimmt, ob in englisch oder auf deutsch ..
         Dim englishLanguage As Boolean = awinSettings.englishLanguage
 
         Dim msg As String = ""
-        'awinSettings.databaseURL = "http://visbo.myhome-server.de:3484"
-        awinSettings.databaseURL = "http://localhost:3484"
-        awinSettings.databaseName = "IT Projekte 2018"
+        ''awinSettings.databaseURL = "http://visbo.myhome-server.de:3484"
+        'awinSettings.databaseURL = "http://localhost:3484"
+        'awinSettings.databaseName = "IT Projekte 2018"
 
         If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
@@ -2202,8 +2203,8 @@ Module oneClickGeneralModules
                             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                             'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                             'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                            RoleDefinitions = CType(databaseAcc, Request).retrieveRolesFromDB(Date.Now)
-                            CostDefinitions = CType(databaseAcc, Request).retrieveCostsFromDB(Date.Now)
+                            RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                            CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
                         End If
                     Else
                         If englishLanguage Then

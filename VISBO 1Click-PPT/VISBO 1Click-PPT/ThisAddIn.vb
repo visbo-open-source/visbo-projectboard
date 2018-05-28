@@ -5,7 +5,7 @@ Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
-Imports 
+Imports DBAccLayer
 
 
 Public Class ThisAddIn
@@ -42,6 +42,7 @@ Public Class ThisAddIn
             awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
             awinSettings.visboDebug = My.Settings.VISBODebug
             awinSettings.visboMapping = My.Settings.VISBOMapping
+            awinSettings.visboServer = My.Settings.VISBOServer
             awinSettings.userNamePWD = My.Settings.userNamePWD
 
 

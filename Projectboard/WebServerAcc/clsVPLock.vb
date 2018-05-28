@@ -5,9 +5,9 @@
     Public Property expiresAt As Date
 
     Sub New()
-        variantName = ""
-        email = "someone@visbo.de"
-        createdAt = Date.MinValue
-        expiresAt = Date.MinValue
+        _variantName = ""
+        _email = "someone@visbo.de"
+        _createdAt = Date.MinValue
+        _expiresAt = Date.MinValue
     End Sub
 End Class
