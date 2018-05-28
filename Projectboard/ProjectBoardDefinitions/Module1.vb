@@ -1003,6 +1003,8 @@ Public Module Module1
 
     End Function
 
+
+
     ''' <summary>
     ''' liefert eine Liste an Namen der Projekte zurück, die als "selektiert" gelten 
     ''' Projekte können selektiert werden durch explizites Selektieren des Project-Shapes, alle Projekte, die zu einem selektierten Chart beitragen und/oder 

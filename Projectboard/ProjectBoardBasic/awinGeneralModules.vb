@@ -66,29 +66,36 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' erstellt die CacheProjekte Liste , vorläufig erstmal die DBCache
     ''' </summary>
-    ''' <param name="todoListe"></param>
+    ''' <param name="todoListe">enthält die pvnames der Projekte</param>
     ''' <remarks></remarks>
-    Public Sub buildCacheProjekte(ByVal todoListe As Collection)
+    Public Sub buildCacheProjekte(ByVal todoListe As Collection,
+                                  Optional ByVal namesArePvNames As Boolean = False)
         Dim pName As String
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         For i As Integer = 1 To todoListe.Count
             pName = CStr(todoListe.Item(i))
             Dim hproj As clsProjekt = Nothing
-            Try
-                If ShowProjekte.contains(pName) Then
-                    hproj = ShowProjekte.getProject(pName, True)
 
+            Try
+                If namesArePvNames Then
+                    hproj = AlleProjekte.getProject(pName)
+                Else
+                    If ShowProjekte.contains(pName) Then
+                        hproj = ShowProjekte.getProject(pName, True)
+                    End If
+                End If
+
+                If Not IsNothing(hproj) Then
                     If Not noDB Then
                         ' wenn es in der DB existiert, dann im Cache aufbauen 
-                        If Request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+                        If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
                             ' für den Datenbank Cache aufbauen 
-                            Dim dbProj As clsProjekt = Request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                            Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
                             dbCacheProjekte.upsert(dbProj)
                         End If
                     End If
                 End If
-                
 
             Catch ex As Exception
 
@@ -96,6 +103,113 @@ Public Module awinGeneralModules
         Next
 
     End Sub
+
+    ''' <summary>
+    ''' prüft ob das Laden und Anzeigen eines Projektes aus der Datenbank in Showprojekte überhaupt zulässig ist ... 
+    ''' ist dann nicht zulässig, wenn pName bereits in einem Summenprojekt aus Showprojekte referenziert oder ein pname bereits in Showprojekte ist  
+    ''' Es reicht, wenn der pName identisch ist; 
+    ''' in diesem Fall wird das Projekt in seiner gewünschten Variante vname in Alleprojekte geladen ...
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="vname"></param>
+    ''' <returns></returns>
+    Public Function loadIsAllowed(ByVal pname As String, ByVal vname As String) As Boolean
+        Dim tmpResult As Boolean = True
+
+        loadIsAllowed = tmpResult
+    End Function
+    ''' <summary>
+    ''' baut eine todoliste der Projekte auf. Wenn in todoliste ein Summary Projekt enthalten ist, wird es durch seine Projekte, die im Show liegen ersetzt
+    ''' jeder Eintrag der todoListe ist der vollständige key in der Form pName#vname
+    ''' </summary>
+    ''' <param name="todoListe"></param>
+    ''' <returns></returns>
+    Public Function substitutePortfolioByProjects(ByVal todoListe As Collection,
+                                                  Optional ByVal noNeedtoBeInShowProjekte As Boolean = False) As Collection
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        Dim tmpCollection As New Collection
+        Dim key As String = ""
+
+        For Each pName As String In todoListe
+
+            If ShowProjekte.contains(pName) Then
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+
+                If Not IsNothing(hproj) Then
+                    If Not hproj.isUnion Then
+                        key = calcProjektKey(hproj)
+                        If Not tmpCollection.Contains(key) Then
+                            tmpCollection.Add(key, key)
+                        End If
+                    Else
+                        ' muss ersetzt werden 
+                        Try
+                            Dim currentPortfolio As clsConstellation = projectConstellations.getConstellation(pName)
+                            Dim projektNamen As SortedList(Of String, String) = currentPortfolio.getProjectNames(considerShowAttribute:=True,
+                                                                                                                 showAttribute:=True,
+                                                                                                                 fullNameKeys:=True)
+
+                            For Each kvp As KeyValuePair(Of String, String) In projektNamen
+                                Dim pproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
+
+                                If IsNothing(pproj) Then
+                                    ' aus Datenbank nachladen ... 
+                                    If Not noDB Then
+                                        Dim dbPName As String = getPnameFromKey(kvp.Key)
+                                        Dim dbVName As String = getVariantnameFromKey(kvp.Key)
+
+                                        ' wenn es in der DB existiert, dann im Cache aufbauen 
+                                        If request.projectNameAlreadyExists(dbPName, dbVName, Date.Now) Then
+                                            ' jetzt aus datenbank holen und in AlleProjekte eintragen 
+                                            pproj = request.retrieveOneProjectfromDB(dbPName, dbVName, Date.Now)
+                                            If Not IsNothing(pproj) Then
+                                                If Not AlleProjekte.Containskey(kvp.Key) Then
+                                                    AlleProjekte.Add(pproj, False)
+                                                End If
+                                            End If
+                                        End If
+                                    End If
+                                End If
+
+                                If Not IsNothing(pproj) Then
+                                    ' jetzt ist das Projekt in AlleProjekte nachgeladen ...
+                                    If Not pproj.isUnion Then
+                                        ' wenn kein Summary Projekt: direkt eintragen
+                                        If Not tmpCollection.Contains(kvp.Key) Then
+                                            tmpCollection.Add(kvp.Key, kvp.Key)
+                                        End If
+                                    Else
+                                        ' es handelt sich um ein Summary Projekt, dann muss weiter ersetzt werden 
+                                        Dim tmpTodoList As New Collection
+                                        tmpTodoList.Add(kvp.Key, kvp.Key)
+                                        Dim teilErgebnis As Collection = substitutePortfolioByProjects(tmpTodoList, True)
+
+                                        For Each pvname As String In teilErgebnis
+                                            If Not tmpCollection.Contains(pvname) Then
+                                                tmpCollection.Add(pvname, pvname)
+                                            End If
+                                        Next
+                                    End If
+
+                                Else
+                                    Call MsgBox("Projekt nicht gefunden: " & kvp.Key)
+                                End If
+
+                            Next
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+                End If
+            End If
+
+        Next
+
+        substitutePortfolioByProjects = tmpCollection
+    End Function
 
     ' Änderung tk: ist ersetzt worden durch writePhaseMilestoneDefinitions
 
@@ -6415,6 +6529,7 @@ Public Module awinGeneralModules
 
         Dim programName As String = ""
         Dim current1program As clsConstellation = Nothing
+        Dim last1Budget As Double = 0.0
         Dim lfdNr1program As Integer = 2
 
         ' nimmt die vollen Namen der 
@@ -6561,6 +6676,7 @@ Public Module awinGeneralModules
                     colFields(allianzSpalten.Responsible) = CType(.Range("AC1"), Excel.Range).Column
                     colFields(allianzSpalten.Projektnummer) = CType(.Range("AD1"), Excel.Range).Column
                     colFields(allianzSpalten.Status) = CType(.Range("AF1"), Excel.Range).Column
+                    colFields(allianzSpalten.Budget) = CType(.Range("M1"), Excel.Range).Column
                 Catch ex As Exception
                     Dim errmsg As String = "fehlerhafte Range Definition ..."
                     Throw New ArgumentException(errmsg)
@@ -6658,13 +6774,14 @@ Public Module awinGeneralModules
                                             projectConstellations.Add(current1program)
 
                                             ' jetzt das union-Projekt erstellen 
-                                            current1program.calcUnionProject(True)
+                                            current1program.calcUnionProject(True, budget:=last1Budget)
+
 
                                             ' test
-                                            Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                                            If Not everythingOK Then
-                                                Call MsgBox("nicht identisch: " & current1program.constellationName)
-                                            End If
+                                            ''Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                                            ''If Not everythingOK Then
+                                            ''    Call MsgBox("nicht identisch: " & current1program.constellationName)
+                                            ''End If
                                             ' ende test
                                         Else
                                             emptyPrograms = emptyprograms + 1
@@ -6674,6 +6791,13 @@ Public Module awinGeneralModules
 
                                     current1program = New clsConstellation(ptSortCriteria.customTF, itemType.ToString & " - " & pName)
                                     lfdNr1program = 2
+
+                                    Try
+                                        last1Budget = CDbl(CType(.Cells(zeile, colFields(allianzSpalten.Budget)), Excel.Range).Value)
+                                    Catch ex As Exception
+                                        last1Budget = 0.0
+                                    End Try
+
                                     'With current1program
                                     '    .constellationName = itemType.ToString & " - " & pName
                                     'End With
@@ -6747,6 +6871,13 @@ Public Module awinGeneralModules
                                 Catch ex As Exception
                                     responsiblePerson = ""
                                 End Try
+
+                                Try ' Budget
+                                    budget = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Budget)), Excel.Range).Value)
+                                Catch ex As Exception
+                                    budget = 0.0
+                                End Try
+
 
                                 Try ' Projekt-Nummer
 
@@ -6865,13 +6996,13 @@ Public Module awinGeneralModules
                         projectConstellations.Add(current1program)
 
                         ' jetzt das union-Projekt erstellen 
-                        current1program.calcUnionProject(True)
+                        current1program.calcUnionProject(True, budget:=last1Budget)
 
                         ' test
-                        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                        If Not everythingOK Then
-                            Call MsgBox("nicht identisch: " & current1program.constellationName)
-                        End If
+                        ''Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                        ''If Not everythingOK Then
+                        ''    Call MsgBox("nicht identisch: " & current1program.constellationName)
+                        ''End If
                         ' ende test
                     Else
                         emptyPrograms = emptyPrograms + 1
@@ -21129,6 +21260,7 @@ Public Module awinGeneralModules
     ''' Dabei wird überprüft, was der längste mögliche Ressourcen und Kosten-Namen überhaupt ist 
     ''' und was der längste eingetragene Namen ist ... Am Schluss wird notfalls die Spaltenbreite verlängert, damit auch der längste Namen reingeht ... 
     ''' </summary>
+    ''' <param name="todoListe">enthält die pvNames der Projekte</param>"
     ''' <param name="von"></param>
     ''' <param name="bis"></param>
     ''' <remarks></remarks>
@@ -21360,7 +21492,6 @@ Public Module awinGeneralModules
             If awinSettings.meExtendedColumnsView Then
                 Try
                     auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
-                    'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
                 Catch ex As Exception
                     ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
                 End Try
@@ -21372,11 +21503,11 @@ Public Module awinGeneralModules
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
-            For Each projektName As String In todoListe
+            For Each pvName As String In todoListe
 
                 Dim hproj As clsProjekt = Nothing
-                If ShowProjekte.contains(projektName) Then
-                    hproj = ShowProjekte.getProject(projektName)
+                If AlleProjekte.Containskey(pvName) Then
+                    hproj = AlleProjekte.getProject(pvName)
                 End If
 
                 If Not IsNothing(hproj) Then
@@ -21528,8 +21659,8 @@ Public Module awinGeneralModules
                                                         .Validation.Delete()
                                                     End If
                                                     ' jetzt wird die ValidationList aufgebaut 
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
                                                                     Operator:=XlFormatConditionOperator.xlGreaterEqual,
                                                                     Formula1:="0")
 
@@ -21590,9 +21721,9 @@ Public Module awinGeneralModules
                                                     End Try
 
                                                     Try
-                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
                                                                     Formula1:="0")
                                                     Catch ex As Exception
 
@@ -21716,9 +21847,9 @@ Public Module awinGeneralModules
                                                         .Validation.Delete()
                                                     End If
                                                     ' jetzt wird die ValidationList aufgebaut 
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
                                                                     Formula1:="0")
 
                                                     '' '' jetzt wird der Kommentar bei Kosten hinzugefügt
@@ -21774,9 +21905,9 @@ Public Module awinGeneralModules
                                                         If Not IsNothing(.Validation) Then
                                                             .Validation.Delete()
                                                         End If
-                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
                                                                     Formula1:="0")
                                                     Catch ex As Exception
 
@@ -21898,9 +22029,9 @@ Public Module awinGeneralModules
                                                         .Validation.Delete()
                                                     End If
                                                     ' jetzt wird die ValidationList aufgebaut 
-                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                    .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
                                                                     Formula1:="0")
                                                 Catch ex As Exception
 
@@ -21937,9 +22068,9 @@ Public Module awinGeneralModules
                                                     End If
 
                                                     Try
-                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, _
-                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual, _
+                                                        .Validation.Add(Type:=XlDVType.xlValidateDecimal,
+                                                                    AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+                                                                    Operator:=XlFormatConditionOperator.xlGreaterEqual,
                                                                     Formula1:="0")
                                                     Catch ex As Exception
 
@@ -22353,11 +22484,11 @@ Public Module awinGeneralModules
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
-            For Each projektName As String In todoListe
+            For Each pvName As String In todoListe
 
                 Dim hproj As clsProjekt = Nothing
-                If ShowProjekte.contains(projektName) Then
-                    hproj = ShowProjekte.getProject(projektName)
+                If AlleProjekte.Containskey(pvName) Then
+                    hproj = AlleProjekte.getProject(pvName)
                 End If
 
                 If Not IsNothing(hproj) Then
@@ -22753,11 +22884,11 @@ Public Module awinGeneralModules
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
-            For Each projektName As String In todoListe
+            For Each pvName As String In todoListe
 
                 Dim hproj As clsProjekt = Nothing
-                If ShowProjekte.contains(projektName) Then
-                    hproj = ShowProjekte.getProject(projektName)
+                If AlleProjekte.Containskey(pvName) Then
+                    hproj = AlleProjekte.getProject(pvName)
                 End If
 
                 If Not IsNothing(hproj) Then

@@ -3009,8 +3009,13 @@ Imports System.Windows
         End If
     End Function
 
+    ''' <summary>
+    ''' es werden nur Projekte an MassEdit übergeben ... sollten Summary Projekte in der Selection sein, werden die erst durch ihre Projekte, die im Show sind, ersetzt 
+    ''' </summary>
+    ''' <param name="meModus"></param>
     Private Sub massEditRcTeAt(ByVal meModus As Integer)
         Dim todoListe As New Collection
+        Dim projektTodoliste As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
@@ -3045,10 +3050,6 @@ Imports System.Windows
 
             If todoListe.Count > 0 Then
 
-                ' jetzt aufbauen der dbCacheProjekte
-                Call buildCacheProjekte(todoListe)
-
-
                 ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' alles ok , bereits gesetzt 
@@ -3078,10 +3079,22 @@ Imports System.Windows
                     enableOnUpdate = False
 
                     If meModus = ptModus.massEditRessCost Then
-                        Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
+                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
+
+                        Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight)
+
                     ElseIf meModus = ptModus.massEditTermine Then
-                        Call writeOnlineMassEditTermine(todoListe)
+                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
+                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
+
+                        Call writeOnlineMassEditTermine(projektTodoliste)
+
                     ElseIf meModus = ptModus.massEditAttribute Then
+                        ' jetzt aufbauen der dbCacheProjekte, names are pNames
+                        Call buildCacheProjekte(todoListe, namesArePvNames:=False)
                         Call writeOnlineMassEditAttribute(todoListe)
                     Else
                         Exit Sub

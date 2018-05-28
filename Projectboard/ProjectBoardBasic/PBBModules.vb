@@ -911,30 +911,37 @@ Public Module PBBModules
                     resultat = neueVariante.ShowDialog
                     If resultat = DialogResult.OK Then
 
-                        newproj = New clsProjekt
-                        hproj.copyTo(newproj)
-
-                        If newproj.dauerInDays <> hproj.dauerInDays Then
-                            'Call MsgBox("ungleich: " & newproj.dauerInDays & " versus " & hproj.dauerInDays)
-                        End If
-
                         With neueVariante
                             neuerVariantenName = .newVariant.Text
                             variantDescription = .txtDescription.Text
                         End With
 
+                        newproj = hproj.createVariant(neuerVariantenName, variantDescription)
+                        ' alt - wurde ersetzt durch obigen Aufruf ..
+                        ''newproj = New clsProjekt
+                        ''hproj.copyTo(newproj)
 
-                        With newproj
-                            .name = hproj.name
-                            .variantName = neuerVariantenName
-                            .variantDescription = variantDescription
-                            .ampelErlaeuterung = hproj.ampelErlaeuterung
-                            .ampelStatus = hproj.ampelStatus
-                            .timeStamp = Date.Now
-                            .shpUID = hproj.shpUID
-                            .tfZeile = hproj.tfZeile
+                        ''If newproj.dauerInDays <> hproj.dauerInDays Then
+                        ''    'Call MsgBox("ungleich: " & newproj.dauerInDays & " versus " & hproj.dauerInDays)
+                        ''End If
 
-                        End With
+                        ''With neueVariante
+                        ''    neuerVariantenName = .newVariant.Text
+                        ''    variantDescription = .txtDescription.Text
+                        ''End With
+
+
+                        ''With newproj
+                        ''    .name = hproj.name
+                        ''    .variantName = neuerVariantenName
+                        ''    .variantDescription = variantDescription
+                        ''    .ampelErlaeuterung = hproj.ampelErlaeuterung
+                        ''    .ampelStatus = hproj.ampelStatus
+                        ''    .timeStamp = Date.Now
+                        ''    .shpUID = hproj.shpUID
+                        ''    .tfZeile = hproj.tfZeile
+
+                        ''End With
 
                         If currentConstellationName <> calcLastSessionScenarioName() Then
                             currentConstellationName = calcLastSessionScenarioName()

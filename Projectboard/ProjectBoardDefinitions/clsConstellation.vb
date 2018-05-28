@@ -748,7 +748,13 @@
     ''' erzeugt das Union Projekt für die Konstellation und trägt es in die AlleProjekte bzw. ImportProjekte ein
     ''' </summary>
     ''' <param name="considerImportProjekte"></param>
-    Public Sub calcUnionProject(ByVal considerImportProjekte As Boolean)
+    Public Sub calcUnionProject(ByVal considerImportProjekte As Boolean,
+                                Optional ByVal budget As Double = 0.0,
+                                Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
+                                Optional ByVal ampel As Integer = 0,
+                                Optional ByVal ampelbeschreibung As String = "",
+                                Optional ByVal responsible As String = "")
+
 
         Dim unionProj As clsProjekt = Nothing
         Dim projektListe As clsProjekteAlle = AlleProjekte
@@ -777,6 +783,15 @@
                 If projektListe.Containskey(calcProjektKey(unionProj)) Then
                     projektListe.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
                 End If
+
+                ' jetzt ggf die Attribute noch ergänzen 
+                With unionProj
+                    .Erloes = budget
+                    .description = description
+                    .ampelStatus = ampel
+                    .ampelErlaeuterung = ampelbeschreibung
+                    .leadPerson = responsible
+                End With
 
                 projektListe.Add(unionProj, updateCurrentConstellation:=False)
             End If

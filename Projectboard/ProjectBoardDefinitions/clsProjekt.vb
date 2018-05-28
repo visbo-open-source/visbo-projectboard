@@ -2405,6 +2405,7 @@ Public Class clsProjekt
             .volume = Me.volume
             .complexity = Me.complexity
             .businessUnit = Me.businessUnit
+            .isUnion = Me.isUnion
             .StartOffset = _StartOffset
             .startDate = _startDate
             .earliestStartDate = _earliestStartDate
@@ -2565,11 +2566,97 @@ Public Class clsProjekt
         End Get
     End Property
 
+    Public Function createVariant(ByVal variantName As String, ByVal variantDescription As String) As clsProjekt
+
+        Dim newproj As New clsProjekt
+        Me.copyTo(newproj)
+
+        If newproj.dauerInDays <> Me.dauerInDays Then
+            Throw New ArgumentException("Variant-Creation failed ...")
+        End If
+
+        With newproj
+            .name = Me.name
+            .timeStamp = Date.Now
+            .shpUID = Me.shpUID
+            .tfZeile = Me.tfZeile
+
+        End With
+    End Function
+
+    ''' <summary>
+    ''' gibt ein Projekt zurück, das um die Ressourcen und Kostenbedarfe des otherproj reduziert wurde 
+    ''' das otherproj darf nicht vor dem Me-Projekt starten od er enden. Ein Fehler wird mit Exception beendet  
+    ''' </summary>
+    ''' <param name="otherproj"></param>
+    ''' <returns></returns>
+    Public Function subtractProject(ByVal otherproj As clsProjekt) As clsProjekt
+
+        Dim ok As Boolean = True
+        Dim myLength As Integer = Me.anzahlRasterElemente
+        Dim otherLength As Integer = otherproj.anzahlRasterElemente
+
+        Dim myStartColumn As Integer = getColumnOfDate(Me.startDate)
+        Dim otherStartColumn As Integer = getColumnOfDate(otherproj.startDate)
+        Dim otherIndexStart As Integer = 0
+
+        ' ist es überhaupt zulässig ? 
+
+        Dim newProj As clsProjekt = Me.createVariant("$Subtract$", "")
+
+        If myStartColumn <= otherStartColumn Then
+            otherIndexStart = otherStartColumn - myStartColumn
+        Else
+            ok = False
+        End If
+
+        If myStartColumn + myLength < otherStartColumn + otherLength Then
+            ok = False
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("hier kann keine Subtraktion vorgenommen werden ...")
+        Else
+            ' jetzt kann die Subtraktion beginnen ..
+
+            ' es wird nur in der cphase(1) abgezogen
+            Dim mycPhase As clsPhase = newProj.getPhase(1)
+            If IsNothing(mycPhase) Then
+                Throw New ArgumentException("es gibt keine Projekt-Phase im Projekt ...")
+            Else
+                Dim myRoleNames As Collection = newProj.getRoleNames
+                Dim otherRoleNames As Collection = otherproj.getRoleNames
+
+                For Each tmpRoleName As String In otherRoleNames
+                    If myRoleNames.Contains(tmpRoleName) Then
+                        Dim myTmpRole As clsRolle = mycPhase.getRole(tmpRoleName)
+                        Dim myValues() As Double = myTmpRole.Xwerte
+                        Dim tmpValues() As Double = otherproj.getRessourcenBedarfNew(tmpRoleName)
+                        For i As Integer = otherStartColumn To otherLength - 1
+                            myValues(otherStartColumn) = myValues(otherStartColumn) - tmpValues(i - otherStartColumn)
+                        Next
+                    Else
+                        Throw New ArgumentException("Rolle existiert nicht : " & tmpRoleName)
+                    End If
+
+                Next
+
+            End If
+
+        End If
+
+        ' jetzt wieder den Me-Variant-Name einstellen 
+        newProj.variantName = Me.variantName
+        subtractProject = newProj
+
+    End Function
+
 
     ''' <summary>
     ''' gibt ein Projekt zurück, das die Vereinigung der beiden Projekte darstellt. 
+    ''' Das Me Projekt muss ein Union Projekt sein
     ''' Es werden die Ressourcenbedarfe vereinigt. Wenn die Projekte zu unterschiedlichen Zeiten beginnen und unterschiedlich lang sind, so wird das 
-    ''' auch berücksichtigt. Das neue Projekt hat keinerlei Phasen-Struktur
+    ''' ebenfalls berücksichtigt - im Vergleich zu addProject. Das neue Projekt hat keinerlei Phasen-Struktur
     ''' </summary>
     ''' <param name="otherProj"></param>
     ''' <returns></returns>
