@@ -1359,6 +1359,9 @@ Public Module awinGeneralModules
                         Call MsgBox("readCostDefinitions")
                     End If
 
+                    ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+                    Call readRoleDefinitions(wsName4, readingGroups:=True)
+
                 End If
 
 
@@ -2236,10 +2239,11 @@ Public Module awinGeneralModules
                 Next
 
                 anzWithID = IDCollection.Count
-                If anzWithID > 0 And anzWithoutID > 0 Then
+                If anzWithID > 0 And anzWithoutID > 0 And Not readingGroups Then
                     Throw New ArgumentException("some roles do contain IDs, others not ...")
                 Else
                     ' jetzt ist sichergestellt, dass alle Rollen eine ID haben oder keine ; dann wird sie generiert .. 
+                    ' oder aber man ist im Reading Group Modus, wo ja nur die Gruppen eine ID benötigen
                     For i = 2 To anzZeilen - 1
 
                         c = CType(rolesRange.Cells(i, 1), Excel.Range)
@@ -2256,23 +2260,9 @@ Public Module awinGeneralModules
                             tmpStr = CType(c.Value, String)
 
                             If readingGroups Then
-                                Try
-                                    Dim tmpValue As String = c.Offset(0, 4).Value
-                                    If IsNothing(tmpValue) Then
-                                        przSatz = 1.0
-                                    ElseIf tmpValue.Trim.Length = 0 Then
-                                        przSatz = 1.0
-                                    ElseIf Not IsNumeric(tmpValue) Then
-                                        przSatz = 1.0
-                                    ElseIf CDbl(tmpValue) < 0 Or CDbl(tmpValue) > 1.0 Then
-                                        przSatz = 1.0
-                                    Else
-                                        przSatz = CDbl(tmpValue)
-                                    End If
-                                Catch ex As Exception
-
-                                End Try
-
+                                przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 4), Excel.Range), 1.0, 0.0, 1.0)
+                            Else
+                                przSatz = 1.0
                             End If
 
                             ' jetzt kommt die Rollen Definition 
@@ -2348,7 +2338,7 @@ Public Module awinGeneralModules
                             curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
                             If readingGroups Then
-                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 5), Excel.Range), 1.0, 0.0, 1.0)
+                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 4), Excel.Range), 1.0, 0.0, 1.0)
                             Else
                                 przSatz = 1.0
                             End If
@@ -2372,7 +2362,7 @@ Public Module awinGeneralModules
                                     curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                     curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                     If readingGroups Then
-                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 5), Excel.Range), 1.0, 0.0, 1.0)
+                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 4), Excel.Range), 1.0, 0.0, 1.0)
                                     Else
                                         przSatz = 1.0
                                     End If
