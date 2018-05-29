@@ -1369,12 +1369,12 @@ Public Module awinGeneralModules
 
                 End Try
 
-                ' auslesen der anderen Informationen 
-                Call readOtherDefinitions(wsName4)
+                '' auslesen der anderen Informationen 
+                'Call readOtherDefinitions(wsName4)
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readOtherDefinitions")
-                End If
+                'If awinSettings.visboDebug Then
+                '    Call MsgBox("readOtherDefinitions")
+                'End If
 
 
                 If special = "ProjectBoard" Then
@@ -1497,25 +1497,25 @@ Public Module awinGeneralModules
                         ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
                         Call readRessourcenDetails2()
 
-                        ' Auslesen der Rollen aus der Datenbank ! 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
-                        Dim costDefinitions2 As clsKostenarten = request.retrieveCostsFromDB(Date.Now)
+                        '' Auslesen der Rollen aus der Datenbank ! wird hier jetzt nicht mehr gemacht ..
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
+                        'Dim costDefinitions2 As clsKostenarten = request.retrieveCostsFromDB(Date.Now)
 
-                        If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And
-                                CostDefinitions.isIdenticalTo(costDefinitions2) Then
-                            If awinSettings.visboDebug Then
-                                Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
-                            End If
+                        'If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And
+                        '        CostDefinitions.isIdenticalTo(costDefinitions2) Then
+                        '    If awinSettings.visboDebug Then
+                        '        Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
+                        '    End If
 
-                            'RoleDefinitions = RoleDefinitions2
-                            'CostDefinitions = costDefinitions2
-                        Else
-                            If awinSettings.visboDebug Then
-                                Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
-                            End If
+                        '    'RoleDefinitions = RoleDefinitions2
+                        '    'CostDefinitions = costDefinitions2
+                        'Else
+                        '    If awinSettings.visboDebug Then
+                        '        Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
+                        '    End If
 
-                        End If
+                        'End If
 
                         RoleDefinitions.buildTopNodes()
 
@@ -13678,10 +13678,10 @@ Public Module awinGeneralModules
         Try
             Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(kapaFolder)
 
-            For i = 1 To listOfImportfiles.Count
+            For i = 0 To listOfImportfiles.Count - 1
 
-                Dim dateiName As String = kapaFolder & "\" & Dir(listOfImportfiles.Item(i - 1))
-                dateiName = My.Computer.FileSystem.CombinePath(kapaFolder, dateiName)
+                Dim dateiName As String = My.Computer.FileSystem.CombinePath(kapaFolder, listOfImportfiles.Item(i))
+
                 If Not IsNothing(dateiName) Then
 
                     If My.Computer.FileSystem.FileExists(dateiName) And dateiName.Contains("Kapazität") Then
@@ -13776,7 +13776,7 @@ Public Module awinGeneralModules
 
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                         Catch ex As Exception
-
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                         End Try
 
                     End If
