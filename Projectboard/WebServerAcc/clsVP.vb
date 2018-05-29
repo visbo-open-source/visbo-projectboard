@@ -6,6 +6,7 @@
     Public Property updatedAt As String
     Public Property createdAt As String
     Public Property lock As List(Of clsVPLock)
+    Public Property [Variant] As List(Of clsVPvariant)
 
     Sub New()
         _id = ""
@@ -15,5 +16,6 @@
         _updatedAt = Date.MinValue.ToString
         _createdAt = Date.MinValue.ToString
         _lock = New List(Of clsVPLock)
+        _Variant = New List(Of clsVPvariant)
     End Sub
 End Class

@@ -766,7 +766,7 @@ Module Module1
                     noDBAccessInPPT = True
                     awinSettings.databaseURL = .Tags.Item("DBURL")
                     awinSettings.databaseName = .Tags.Item("DBNAME")
-                    awinSettings.visboServer = (.Tags.Item("REST") <> "")
+                    awinSettings.visboServer = (.Tags.Item("REST") = "True")
                 End If
                 
 
@@ -805,13 +805,13 @@ Module Module1
                 smartSlideLists.creationDate = CDate(.Tags.Item("CRD"))
             End If
 
-            If .Tags.Item("DBURL").Length > 0 And _
+            If .Tags.Item("DBURL").Length > 0 And
                 .Tags.Item("DBNAME").Length > 0 Then
 
                 smartSlideLists.slideDBName = .Tags.Item("DBNAME")
                 smartSlideLists.slideDBUrl = .Tags.Item("DBURL")
 
-                If awinSettings.databaseURL <> smartSlideLists.slideDBUrl Or _
+                If awinSettings.databaseURL <> smartSlideLists.slideDBUrl Or
                     awinSettings.databaseName <> smartSlideLists.slideDBName Then
 
                     noDBAccessInPPT = True
@@ -821,7 +821,9 @@ Module Module1
                 End If
             End If
 
-            
+            If .Tags.Item("REST").Length > 0 Then
+                awinSettings.visboServer = .Tags.Item("REST") = "True"
+            End If
 
 
         End With
@@ -1336,8 +1338,11 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub logInToMongoDB()
 
-        awinSettings.visboServer = False   ' Zugriff zu DB soll über REST-Server erfolgen
-
+        'awinSettings.visboServer = False   ' Zugriff zu DB soll über REST-Server erfolgen
+        If awinSettings.visboServer Then
+            ' remembered UserNamePWD bei serverzugriff löschen
+            My.Settings.userNamePWD = Nothing
+        End If
         ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
         If noDBAccessInPPT Then
             Dim msg As String

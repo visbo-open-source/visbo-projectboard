@@ -238,7 +238,7 @@ Public Class Request
 
         Try
             Dim vpid As String = ""
-            vpid = GETvpid(projectname)
+            vpid = GETvpid(projectname)._id
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
@@ -315,7 +315,7 @@ Public Class Request
             End If
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectName)
+            vpid = GETvpid(projectName)._id
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
@@ -414,7 +414,7 @@ Public Class Request
 
             Else
                 '  Projekt angegeben: d.h. es werden alle Timestamps der übergebenen Projekt-Variante zurückgegeben
-                Dim vpid As String = GETvpid(projectname)
+                Dim vpid As String = GETvpid(projectname)._id
                 If vpid <> "" Then
                     ' gewünschten Varianten vom Server anfordern
                     Dim allVPv As New List(Of clsProjektWebLong)
@@ -464,12 +464,12 @@ Public Class Request
         Try
             Dim hproj As New clsProjekt
             Dim vpid As String = ""
-            vpid = GETvpid(projectname)
+            vpid = GETvpid(projectname)._id
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
                 Dim allVPv As New List(Of clsProjektWebLong)
-                allVPv = GETallVPvLong(vpid, variantname, storedAtOrBefore)
+                allVPv = GETallVPvLong(vpid, , variantname, storedAtOrBefore)
                 If allVPv.Count = 1 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
                     webProj.copyto(hproj)
@@ -515,7 +515,7 @@ Public Class Request
 
                 If chkOk Then
 
-                    Dim vpid As String = GETvpid(oldName)
+                    Dim vpid As String = GETvpid(oldName)._id
                     If vpid <> "" Then
                         For Each vp As clsVP In VPs
                             If vp._id = vpid And vp.name = oldName Then
@@ -555,20 +555,11 @@ Public Class Request
             Dim webVP As New clsWebVP
             Dim data() As Byte
 
-            Dim pname As String = ""
-            Dim vname As String = ""
+            Dim pname As String = projekt.name
+            Dim vname As String = projekt.variantName
 
-            Dim hstr() As String = Split(projekt.name, "#")
-            If hstr.Length > 0 Then
-                ' projektName steht im ersten Teil
-                pname = hstr(0)
-            End If
-            If hstr.Length > 1 Then
-                ' variantName steht im zeiten Teil
-                vname = hstr(1)
-            End If
-
-            Dim vpid As String = GETvpid(pname)
+            Dim aktvp As clsVP = GETvpid(pname)
+            Dim vpid As String = aktvp._id
             Dim storedVP As Boolean = (vpid <> "")
 
             If Not storedVP Then
@@ -601,6 +592,32 @@ Public Class Request
                     storedVP = (vpid <> "")
                 End If
 
+            End If
+
+            ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
+            If vname <> "" Then
+                For Each var As clsVPvariant In aktvp.Variant
+                    If var.variantName = vname Then
+                        storedVP = storedVP And True
+                    End If
+                Next
+            End If
+
+            ' wenn Variante noch nicht vorhanden, so muss sie angelegt werden
+            If Not storedVP Then
+                Dim typeRequest As String = "/vp"
+                Dim serverUriString As String = serverUriName & typeRequest & "/" & vpid & "/variant"
+                Dim serverUri As New Uri(serverUriString)
+
+                Dim var As New clsVPvariant
+
+                data = serverInputDataJson(var, typeRequest)
+
+                Dim Antwort As String
+                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                    Antwort = ReadResponseContent(httpresp)
+                    webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+                End Using
             End If
 
             ' Projekt ist bereits in VisboProjects Collection gespeichert, es existiert eine vpid
@@ -657,7 +674,7 @@ Public Class Request
             Dim vpid As String = ""
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectName)
+            vpid = GETvpid(projectName)._id
 
             If vpid <> "" Then
                 ' von allen Varianten des Projektes vpid die neueste Version holen
@@ -743,7 +760,7 @@ Public Class Request
             storedEarliest = storedEarliest.ToUniversalTime()
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectname)
+            vpid = GETvpid(projectname)._id
 
             If vpid <> "" Then
 
@@ -817,7 +834,7 @@ Public Class Request
             Dim vpid As String = ""
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectname)
+            vpid = GETvpid(projectname)._id
 
             If vpid <> "" Then
 
@@ -948,8 +965,18 @@ Public Class Request
         Try
             Dim pname As String = Projekte.getPnameFromKey(wpItem.pvName)
             Dim vname As String = Projekte.getPnameFromKey(wpItem.pvName)
-            Dim vpid As String = GETvpid(pname)
-            If vpid <> "" Then
+
+            Dim aktvp As clsVP = GETvpid(pname)
+            Dim vpid As String = aktvp._id
+            Dim variantExists As Boolean = False
+
+            For Each var As clsVPvariant In aktvp.Variant
+                If var.variantName = vname Then
+                    variantExists = True
+                    Exit For
+                End If
+            Next
+            If vpid <> "" And variantExists Then
                 result = POSTVPLock(vpid, vname)
             End If
 
@@ -1412,10 +1439,10 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Private Function GETvpid(ByVal projectName As String) As String
+    Private Function GETvpid(ByVal projectName As String) As clsVP
 
         Dim vpid As String = ""
-
+        Dim aktvp As New clsVP
 
         Try
             ' Alle VisboProjects über Server von WebServer/DB holen
@@ -1428,6 +1455,7 @@ Public Class Request
                     For Each vp As clsVP In VPs
                         If vp.name = projectName Then
                             vpid = vp._id
+                            aktVP = vp
                             Exit For
                         End If
                     Next
@@ -1443,7 +1471,7 @@ Public Class Request
 
         End Try
 
-        GETvpid = vpid
+        GETvpid = aktVP
 
     End Function
 

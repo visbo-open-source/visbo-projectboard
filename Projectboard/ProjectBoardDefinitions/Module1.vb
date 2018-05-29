@@ -3827,9 +3827,12 @@ Public Module Module1
                         .Tags.Add("DBNAME", awinSettings.databaseName)
                     End If
 
+                    If .Tags.Item("REST").Length > 0 Then
+                        .Tags.Delete("REST")
+                    End If
+                    .Tags.Add("REST", awinSettings.visboServer.ToString)
+
                 End If
-
-
 
             End With
         End If

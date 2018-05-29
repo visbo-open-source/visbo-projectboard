@@ -70,7 +70,7 @@ Public Class clsProjektWeb
             Else
                 Me.timestamp = Date.UtcNow
             End If
-
+            ' ur: 28.05.2018: mit Server wurde umgestellt: id wird von Mongo vergeben
             If Not IsNothing(.Id) Then
                 Me.Id = .Id
             End If
@@ -78,7 +78,9 @@ Public Class clsProjektWeb
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
 
-            Me.name = calcProjektKeyDB(projekt.name, projekt.variantName)
+            Me.name = .name
+            ' ur: 28.05.2018: für RestServer ist Projektname immer ohne Variante
+            ' Me.name = calcProjektKeyDB(projekt.name, projekt.variantName)
 
             Me.variantName = .variantName
             Me.variantDescription = .variantDescription
