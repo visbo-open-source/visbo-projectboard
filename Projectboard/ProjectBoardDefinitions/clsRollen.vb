@@ -1,13 +1,17 @@
 ﻿''' <summary>
 ''' Die Rollen müssen immer in der customization file in der ursprünglichen Reihenfolge aufgeführt sein; 
-''' ein Name kann umbenannt werden , aber er darf auf keinen Fall an eine andere Psoiton verschoben werden 
-''' neue Rollen müssen immer ans Ende gestellt werden - alte Rollen müssen immer mitgeschrieben werden ... 
+''' ein Name kann umbenannt werden , aber er darf auf keinen Fall mit einer anderen ID im Customization File versehen werden 
+''' 
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsRollen
 
 
     Private _allRollen As SortedList(Of Integer, clsRollenDefinition)
+    ' ist eine sortierte Liste von Namen der Rollen und ihrer zugehörigen ID 
+    ' wird benötigt, um das Ganze zu beschelunigen
+    Private _allNames As SortedList(Of String, Integer)
+
     Private _topLevelNodeIDs As List(Of Integer)
 
     Public Sub Add(roledef As clsRollenDefinition)
@@ -15,6 +19,12 @@ Public Class clsRollen
         ' Änderung tk: umgestellt auf 
         If Not _allRollen.ContainsKey(roledef.UID) Then
             _allRollen.Add(roledef.UID, roledef)
+            If Not _allNames.ContainsKey(roledef.name) Then
+                _allNames.Add(roledef.name, roledef.UID)
+            Else
+                Throw New ArgumentException(roledef.name & " existiert bereits")
+            End If
+
         Else
             Throw New ArgumentException(roledef.UID.ToString & " existiert bereits")
         End If
@@ -416,14 +426,17 @@ Public Class clsRollen
             If IsNothing(name) Then
                 ' found bleibt auf false
             Else
-                Dim ix As Integer = 0
-                Do While ix <= _allRollen.Count - 1 And Not found
-                    If _allRollen.ElementAt(ix).Value.name = name Then
-                        found = True
-                    Else
-                        ix = ix + 1
-                    End If
-                Loop
+                found = _allNames.ContainsKey(name)
+
+                ' tk geändert 29.5.18
+                'Dim ix As Integer = 0
+                'Do While ix <= _allRollen.Count - 1 And Not found
+                '    If _allRollen.ElementAt(ix).Value.name = name Then
+                '        found = True
+                '    Else
+                '        ix = ix + 1
+                '    End If
+                'Loop
             End If
 
             containsName = found
@@ -458,17 +471,21 @@ Public Class clsRollen
         Get
             Dim tmpValue As clsRollenDefinition = Nothing
 
-            Dim found As Boolean = False
-            Dim ix As Integer = 0
+            Dim found As Boolean = _allNames.ContainsKey(myitem)
 
-            Do While ix <= _allRollen.Count - 1 And Not found
-                If _allRollen.ElementAt(ix).Value.name = myitem Then
-                    found = True
-                    tmpValue = _allRollen.ElementAt(ix).Value
-                Else
-                    ix = ix + 1
-                End If
-            Loop
+            If found Then
+                tmpValue = _allRollen.Item(_allNames.Item(myitem))
+            End If
+            'Dim ix As Integer = 0
+
+            'Do While ix <= _allRollen.Count - 1 And Not found
+            '    If _allRollen.ElementAt(ix).Value.name = myitem Then
+            '        found = True
+            '        tmpValue = _allRollen.ElementAt(ix).Value
+            '    Else
+            '        ix = ix + 1
+            '    End If
+            'Loop
 
             getRoledef = tmpValue
 
@@ -520,6 +537,7 @@ Public Class clsRollen
     Public Sub New()
 
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)
+        _allNames = New SortedList(Of String, Integer)
         _topLevelNodeIDs = New List(Of Integer)
 
     End Sub

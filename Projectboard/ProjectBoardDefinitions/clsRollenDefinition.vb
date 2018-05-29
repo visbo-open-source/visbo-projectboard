@@ -29,7 +29,7 @@
             Dim myRoleName As String = Me.name
 
             For Each kvp As KeyValuePair(Of Integer, Double) In Me.getSubRoleIDs
-                Dim tmpName As String = RoleDefinitions.getRoledef(kvp.Key).name
+                Dim tmpName As String = RoleDefinitions.getRoleDefByID(kvp.Key).name
                 If tmpCollection.Contains(tmpName) Then
                     tmpCheck = True
                 Else
