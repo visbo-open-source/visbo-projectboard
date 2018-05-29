@@ -81,12 +81,18 @@ Public Class clsRollen
 
             ' jetzt die Behandlung Sammelrolle machen 
             For Each sammelRolle As String In sammelRollen
-                Dim subRoleList As Collection = Me.getSubRoleNamesOf(roleName:=sammelRolle, _
+                Dim subRoleList As SortedList(Of Integer, Double) = Me.getSubRoleIDsOf(roleName:=sammelRolle,
                                                                      type:=PTcbr.all)
-                For Each subRole As String In subRoleList
-                    If ((tmpCollection.Contains(CStr(subRole))) And (subRole <> sammelRolle)) Then
-                        tmpCollection.Remove(CStr(subRole))
+
+                For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleList
+
+                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(srKvP.Key)
+                    If Not IsNothing(subRole) Then
+                        If ((tmpCollection.Contains(CStr(subRole.name))) And (subRole.name <> sammelRolle)) Then
+                            tmpCollection.Remove(CStr(subRole.name))
+                        End If
                     End If
+
                 Next
             Next
 
@@ -141,18 +147,24 @@ Public Class clsRollen
 
             If Not IsNothing(roleName) Then
 
-                For sr As Integer = 1 To tmpCollection.Count
-                    Dim tmpRole As clsRollenDefinition = Me.getRoledef(CStr(tmpCollection.Item(sr)))
-                    Dim subRoleNames As Collection = Me.getSubRoleNamesOf(tmpRole.name, PTcbr.all)
+                Dim initialRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+                If Not IsNothing(initialRole) Then
 
-                    If Not subRoleNames.Contains(roleName) Then
-                        removeList.Add(tmpRole.name, tmpRole.name)
-                    End If
-                Next
+                    For sr As Integer = 1 To tmpCollection.Count
+                        Dim tmpRole As clsRollenDefinition = Me.getRoledef(CStr(tmpCollection.Item(sr)))
+                        Dim subRoleNames As SortedList(Of Integer, Double) = Me.getSubRoleIDsOf(tmpRole.name, PTcbr.all)
 
-                For rm As Integer = 1 To removeList.Count
-                    tmpCollection.Remove(CStr(removeList.Item(rm)))
-                Next
+                        If Not subRoleNames.ContainsKey(initialRole.UID) Then
+                            removeList.Add(tmpRole.name, tmpRole.name)
+                        End If
+                    Next
+
+                    For rm As Integer = 1 To removeList.Count
+                        tmpCollection.Remove(CStr(removeList.Item(rm)))
+                    Next
+
+                End If
+
 
             End If
 
@@ -182,7 +194,7 @@ Public Class clsRollen
 
                     Dim tmpRole As clsRollenDefinition = Me.getRoledef(CStr(sammelRollen.Item(i)))
                     If Not IsNothing(tmpRole) Then
-                        Dim subRoleIDs As SortedList(Of Integer, String) = tmpRole.getSubRoleIDs
+                        Dim subRoleIDs As SortedList(Of Integer, Double) = tmpRole.getSubRoleIDs
                         If subRoleIDs.ContainsKey(roleUID) Then
                             found = True
                             parentRole = tmpRole
@@ -206,8 +218,8 @@ Public Class clsRollen
 
 
     ''' <summary>
-    ''' gibt in einer eindeutigen Liste die Namen aller vorkommenden SubRoles in einer Collection zurück, das heisst alle Platzhalter und die realen Rollen , oder nur die Platzhalter oder nur die realen Rollen  
-    ''' es werden also alle Rollen-Namen zurückgegeben, Platzhalter und reale Rollen-Namen, oder nur eine Kategorie davon 
+    ''' gibt in einer eindeutigen Liste die Namen aller vorkommenden SubRoleIDs in einer sortierten Liste integer, double zurück, das heisst alle Platzhalter und die realen Rollen , oder nur die Platzhalter oder nur die realen Rollen  
+    ''' es werden also alle Rollen-IDs zurückgegeben, Platzhalter und Basis Rollen, oder nur eine Kategorie davon 
     ''' wenn die excludedNames angegeben sind, dann werden nur die Rollen aufgenommen, die nicht in den excluded Names drin sind. 
     ''' Das stellt sicher, dass im Falle einer Ressourcen Auswertung Rollen nicht dopplet gezählt werden, weil sie einmal als Sammerolle gewertet werden, einmal als explizit angegebene Rolle 
     ''' 
@@ -217,9 +229,9 @@ Public Class clsRollen
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSubRoleNamesOf(ByVal roleName As String, _
-                                               Optional ByVal type As Integer = PTcbr.all, _
-                                               Optional ByVal excludedNames As Collection = Nothing) As Collection
+    Public ReadOnly Property getSubRoleIDsOf(ByVal roleName As String,
+                                               Optional ByVal type As Integer = PTcbr.all,
+                                               Optional ByVal excludedNames As Collection = Nothing) As SortedList(Of Integer, Double)
 
         Get
 
@@ -227,124 +239,127 @@ Public Class clsRollen
             ' wenn ja, werden die alle solange um die enthaltenen Sammelrollen ergänzt, bis keine Sammelrolle mehr in der Collection drin ist  
             ' die Sammelrollen werden am Schluss wieder aufgenommen, weil sie ja als Platzhalter Rollen ihre Bedarfs-Werte auch mit geben müssen 
 
-            Dim sammelRollenCollection As New Collection
-            Dim realCollection As New Collection
-            Dim addToRealCollection As New Collection
+            Dim sammelRollenCollection As New SortedList(Of Integer, Double)
+            Dim realCollection As New SortedList(Of Integer, Double)
+            Dim addToRealCollection As New SortedList(Of Integer, Double)
             Dim noUntreatedCombinedRole As Boolean = False
+            Dim initialRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
 
-            ' initial besetzen, um es in Gang zu setzen
-            realCollection.Add(roleName, roleName)
-
-            Do Until noUntreatedCombinedRole
-
-                noUntreatedCombinedRole = True
-
-                For Each tmpRole As String In realCollection
-
-                    If RoleDefinitions.containsName(tmpRole) Then
+            If Not IsNothing(initialRole) Then
 
 
-                        Dim roleDef As clsRollenDefinition = Me.getRoledef(tmpRole)
+                ' initial besetzen, um es in Gang zu setzen
+                'realCollection.Add(roleName, roleName)
+                realCollection.Add(initialRole.UID, 1.0)
 
-                        If roleDef.isCombinedRole Then
+                Do Until noUntreatedCombinedRole
+
+                    noUntreatedCombinedRole = True
+
+                    For Each kvp As KeyValuePair(Of Integer, Double) In realCollection
+
+                        Dim roleDef As clsRollenDefinition = Me.getRoleDefByID(kvp.Key)
+
+                        If Not IsNothing(roleDef) Then
+
+                            If roleDef.isCombinedRole Then
+
+                                If Not sammelRollenCollection.ContainsKey(kvp.Key) Then
+
+                                    noUntreatedCombinedRole = False
+                                    ' dann wurde sie nicht schon mal ersetzt  und die Kinder müssen aufgenommen werden  
+                                    sammelRollenCollection.Add(kvp.Key, kvp.Value)
+
+                                    Dim listofSubRoles As SortedList(Of Integer, Double) = roleDef.getSubRoleIDs
+
+                                    If Not IsNothing(listofSubRoles) Then
+
+                                        For Each srkvp As KeyValuePair(Of Integer, Double) In listofSubRoles
 
 
-                            If Not sammelRollenCollection.Contains(tmpRole) Then
+                                            If Not realCollection.ContainsKey(srkvp.Key) And Not addToRealCollection.ContainsKey(srkvp.Key) Then
+                                                addToRealCollection.Add(srkvp.Key, srkvp.Value)
 
-                                noUntreatedCombinedRole = False
-                                ' dann wurde sie nicht schon mal ersetzt  und die Kinder müssen aufgenommen werden  
-                                sammelRollenCollection.Add(tmpRole, tmpRole)
-
-                                Dim listofSubRoles As SortedList(Of Integer, String) = roleDef.getSubRoleIDs
-
-                                If Not IsNothing(listofSubRoles) Then
-                                    For Each kvp As KeyValuePair(Of Integer, String) In listofSubRoles
-
-                                        Dim subRole As String
-                                        If kvp.Key >= 1 And kvp.Key <= Me.Count Then
-                                            subRole = Me.getRoledef(kvp.Key).name
-                                            If Not realCollection.Contains(subRole) And Not addToRealCollection.Contains(subRole) Then
-                                                addToRealCollection.Add(subRole, subRole)
+                                            ElseIf addToRealCollection.ContainsKey(srkvp.Key) Then
+                                                ' addieren, aber Gesamt-Summe darf nie größer 1 sein
+                                                Dim newValue As Double = addToRealCollection(srkvp.Key) + srkvp.Value
+                                                If newValue > 1.0 Then
+                                                    newValue = 1.0
+                                                End If
+                                                addToRealCollection(srkvp.Key) = newValue
                                             End If
-                                        End If
 
-                                    Next
+
+                                        Next
+
+                                    Else
+                                        ' darf eigentlich nicht sein , aber ist im Fehlerfall notwenig, um Endlos schleife zu verhindern 
+                                        noUntreatedCombinedRole = True
+                                    End If
+
                                 End If
 
                             End If
-
                         End If
-                    End If
-                Next
 
-                ' jetzt müssen die addToRealCollection Items übertragen werden 
-                For Each tmpItem As String In addToRealCollection
-                    If Not realCollection.Contains(tmpItem) Then
-                        realCollection.Add(tmpItem, tmpItem)
-                    End If
-                Next
 
-                addToRealCollection.Clear()
+                    Next
 
-            Loop
+                    ' jetzt müssen die addToRealCollection Items übertragen werden 
+                    For Each kvp As KeyValuePair(Of Integer, Double) In addToRealCollection
+                        If Not realCollection.ContainsKey(kvp.Key) Then
+                            realCollection.Add(kvp.Key, kvp.Value)
+                        Else
+                            Dim newValue As Double = realCollection(kvp.Key) + kvp.Value
+                            If newValue > 1.0 Then
+                                newValue = 1.0
+                            End If
+                            realCollection(kvp.Key) = newValue
+                        End If
+                    Next
 
-            ' jetzt müssen die realCollections ggf noch bereinigt werden: die Namen der Sammelrollen müssen raus
+                    addToRealCollection.Clear()
 
-            If type = PTcbr.all Then
-                ' nichts tun - realCollections enthält schon alles 
+                Loop
 
-            ElseIf type = PTcbr.placeholders Then
-                realCollection = sammelRollenCollection
+                ' jetzt müssen die realCollections ggf noch bereinigt werden: die Namen der Sammelrollen müssen raus
 
-            ElseIf type = PTcbr.realRoles Then
-                For Each combinedRole As String In sammelRollenCollection
-                    If realCollection.Contains(combinedRole) Then
-                        realCollection.Remove(combinedRole)
-                    End If
-                Next
+                If type = PTcbr.all Then
+                    ' nichts tun - realCollections enthält schon alles 
 
-            Else
-                ' nichts tun - realCollection enthält alles  
+                ElseIf type = PTcbr.placeholders Then
+                    realCollection = sammelRollenCollection
+
+                ElseIf type = PTcbr.realRoles Then
+                    For Each cRKvp As KeyValuePair(Of Integer, Double) In sammelRollenCollection
+                        If realCollection.ContainsKey(cRKvp.Key) Then
+                            realCollection.Remove(cRKvp.Key)
+                        End If
+                    Next
+
+                Else
+                    ' nichts tun - realCollection enthält alles  
+                End If
+
+
+                If Not IsNothing(excludedNames) Then
+                    ' jetzt müssen aus realCollection alle Namen raus, die in excludedNames drin sind ... 
+                    For Each exclName As String In excludedNames
+
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(exclName)
+                        If Not IsNothing(tmpRole) Then
+                            If realCollection.ContainsKey(tmpRole.UID) And exclName <> roleName Then
+                                realCollection.Remove(tmpRole.UID)
+                            End If
+                        End If
+
+                    Next
+                End If
             End If
 
 
-            If Not IsNothing(excludedNames) Then
-                ' jetzt müssen aus realCollection alle Namen raus, die in excludedNames drin sind ... 
-                For Each exclName As String In excludedNames
-                    If realCollection.Contains(exclName) And exclName <> roleName Then
-                        realCollection.Remove(exclName)
-                    End If
-                Next
-            End If
+            getSubRoleIDsOf = realCollection
 
-            getSubRoleNamesOf = realCollection
-
-
-            ' '' ------ alt , Änderung tk am 10.616 
-            ' ''Dim tmpCollection As New Collection
-            ' ''Dim tmpRole As clsRollenDefinition = Me.getRoledef(roleName)
-            ' ''If Not IsNothing(tmpRole) Then
-
-            ' ''    Dim listOfSubRoles As SortedList(Of Integer, String) = tmpRole.getSubRoleIDs
-
-            ' ''    If Not IsNothing(listOfSubRoles) Then
-            ' ''        Dim anzSubroles As Integer = listOfSubRoles.Count
-
-            ' ''        If anzSubroles > 0 Then
-            ' ''            For i As Integer = 1 To anzSubroles
-            ' ''                Dim subRoleName As String = listOfSubRoles.ElementAt(i - 1).Value
-            ' ''                If subRoleName <> roleName And Not tmpCollection.Contains(subRoleName) Then
-            ' ''                    tmpCollection.Add(subRoleName, subRoleName)
-            ' ''                End If
-            ' ''            Next
-            ' ''        End If
-            ' ''    Else
-            ' ''        ' nichts tun
-            ' ''    End If
-
-            ' ''End If
-
-            ' ''getSubRoleNamesOf = tmpCollection
 
         End Get
     End Property

@@ -1779,7 +1779,7 @@ Public Class frmHierarchySelection
                     ' Löschen von Platzhalter
                     node.Nodes.Clear()
 
-                    Dim nodelist As New SortedList(Of Integer, String)
+                    Dim nodelist As New SortedList(Of Integer, Double)
                     Try
                         nodelist = RoleDefinitions.getRoleDefByID(CInt(node.Name)).getSubRoleIDs
                         anzChilds = nodelist.Count
@@ -5026,7 +5026,7 @@ Public Class frmHierarchySelection
                         topLevelNode.Checked = True
                     End If
 
-                    Dim listOfChildIDs As New SortedList(Of Integer, String)
+                    Dim listOfChildIDs As New SortedList(Of Integer, Double)
                     Try
                         listOfChildIDs = role.getSubRoleIDs
                     Catch ex As Exception
@@ -5058,7 +5058,7 @@ Public Class frmHierarchySelection
 
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
-        Dim childIds As SortedList(Of Integer, String) = currentRole.getSubRoleIDs
+        Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
         Dim doItAnyWay As Boolean = False
         Dim listOfroleNames As Collection = ShowProjekte.getRoleNames()
 

@@ -154,7 +154,7 @@ Public Class frmMEhryRoleCost
                     End If
 
 
-                    Dim listOfChildIDs As New SortedList(Of Integer, String)
+                    Dim listOfChildIDs As New SortedList(Of Integer, Double)
                     Try
                         listOfChildIDs = role.getSubRoleIDs
                     Catch ex As Exception
@@ -209,7 +209,7 @@ Public Class frmMEhryRoleCost
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
         Dim hPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
-        Dim childIds As SortedList(Of Integer, String) = currentRole.getSubRoleIDs
+        Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
         Dim doItAnyWay As Boolean = False
 
         Dim newNode As TreeNode

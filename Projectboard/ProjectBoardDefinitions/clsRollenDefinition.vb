@@ -1,6 +1,7 @@
 ﻿Public Class clsRollenDefinition
 
-    Private _subRoleIDs As SortedList(Of Integer, String)
+    Private _subRoleIDs As SortedList(Of Integer, Double)
+
 
     Private _uuid As Integer
     'Private Kapa() As Double
@@ -27,8 +28,9 @@
             Dim tmpCheck As Boolean = False
             Dim myRoleName As String = Me.name
 
-            For Each kvp As KeyValuePair(Of Integer, String) In Me.getSubRoleIDs
-                If tmpCollection.Contains(kvp.Value) Then
+            For Each kvp As KeyValuePair(Of Integer, Double) In Me.getSubRoleIDs
+                Dim tmpName As String = RoleDefinitions.getRoledef(kvp.Key).name
+                If tmpCollection.Contains(tmpName) Then
                     tmpCheck = True
                 Else
                     ' 
@@ -59,7 +61,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSubRoleIDs As SortedList(Of Integer, String)
+    Public ReadOnly Property getSubRoleIDs As SortedList(Of Integer, Double)
         Get
             getSubRoleIDs = _subRoleIDs
         End Get
@@ -109,17 +111,16 @@
     ''' fügt die entsprechende uid und subrolenamen hinzu .... 
     ''' </summary>
     ''' <param name="subRoleUid"></param>
-    ''' <param name="subRoleName"></param>
+    ''' <param name="subRolePrz">enthält den PRozentsatz, den die Subrolle zur Kapa der Rolel beiträgt</param>
     ''' <remarks></remarks>
-    Public Sub addSubRole(ByVal subRoleUid As Integer, ByVal subRoleName As String, ByVal maxNr As Integer)
+    Public Sub addSubRole(ByVal subRoleUid As Integer, ByVal subRolePrz As Double)
 
         If Not _subRoleIDs.ContainsKey(subRoleUid) Then
-            If subRoleUid <= maxNr Then
-                _subRoleIDs.Add(subRoleUid, subRoleName)
+            If subRoleUid > 0 Then
+                _subRoleIDs.Add(subRoleUid, subRolePrz)
             Else
-                Throw New ArgumentException("unzulässige uid für Subrolle:" & subRoleUid.ToString & ", " & subRoleName)
+                Throw New ArgumentException("unzulässige uid für Subrolle:" & subRoleUid.ToString & ", " & subRolePrz)
             End If
-
         End If
 
     End Sub
@@ -200,7 +201,7 @@
         ReDim _kapazitaet(240)
         ReDim _externeKapazitaet(240)
 
-        _subRoleIDs = New SortedList(Of Integer, String)
+        _subRoleIDs = New SortedList(Of Integer, Double)
 
     End Sub
 
