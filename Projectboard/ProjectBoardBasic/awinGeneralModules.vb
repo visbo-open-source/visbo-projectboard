@@ -1369,12 +1369,12 @@ Public Module awinGeneralModules
 
                 End Try
 
-                ' auslesen der anderen Informationen 
-                Call readOtherDefinitions(wsName4)
+                '' auslesen der anderen Informationen 
+                'Call readOtherDefinitions(wsName4)
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("readOtherDefinitions")
-                End If
+                'If awinSettings.visboDebug Then
+                '    Call MsgBox("readOtherDefinitions")
+                'End If
 
 
                 If special = "ProjectBoard" Then
@@ -1497,25 +1497,25 @@ Public Module awinGeneralModules
                         ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
                         Call readRessourcenDetails2()
 
-                        ' Auslesen der Rollen aus der Datenbank ! 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
-                        Dim costDefinitions2 As clsKostenarten = request.retrieveCostsFromDB(Date.Now)
+                        '' Auslesen der Rollen aus der Datenbank ! wird hier jetzt nicht mehr gemacht ..
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'Dim RoleDefinitions2 As clsRollen = request.retrieveRolesFromDB(Date.Now)
+                        'Dim costDefinitions2 As clsKostenarten = request.retrieveCostsFromDB(Date.Now)
 
-                        If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And
-                                CostDefinitions.isIdenticalTo(costDefinitions2) Then
-                            If awinSettings.visboDebug Then
-                                Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
-                            End If
+                        'If RoleDefinitions.isIdenticalTo(RoleDefinitions2) And
+                        '        CostDefinitions.isIdenticalTo(costDefinitions2) Then
+                        '    If awinSettings.visboDebug Then
+                        '        Call MsgBox("es gibt keine Unterschiede in den Rollen / Kosten Definitionen")
+                        '    End If
 
-                            'RoleDefinitions = RoleDefinitions2
-                            'CostDefinitions = costDefinitions2
-                        Else
-                            If awinSettings.visboDebug Then
-                                Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
-                            End If
+                        '    'RoleDefinitions = RoleDefinitions2
+                        '    'CostDefinitions = costDefinitions2
+                        'Else
+                        '    If awinSettings.visboDebug Then
+                        '        Call MsgBox("es gibt Unterschiede in den Rollen / Kosten Definitionen")
+                        '    End If
 
-                        End If
+                        'End If
 
                         RoleDefinitions.buildTopNodes()
 
