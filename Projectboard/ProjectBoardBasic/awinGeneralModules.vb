@@ -1359,6 +1359,9 @@ Public Module awinGeneralModules
                         Call MsgBox("readCostDefinitions")
                     End If
 
+                    ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+                    Call readRoleDefinitions(wsName4, readingGroups:=True)
+
                 End If
 
 
@@ -2138,7 +2141,8 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="wsname"></param>
     ''' <remarks></remarks>
-    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet)
+    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet,
+                                    Optional ByVal readingGroups As Boolean = False)
 
         '
         ' Rollen Definitionen auslesen - im bereich awin_Rollen_Definition
@@ -2148,54 +2152,74 @@ Public Module awinGeneralModules
         Dim hrole As clsRollenDefinition
         Dim roleUID As Integer = 0
         Dim roleUidsDefined As Boolean = False
+        Dim przSatz As Double = 1.0
 
         Try
             Dim hasHierarchy As Boolean = False
             Dim atleastOneWithIndent As Boolean = False
             Dim maxIndent As Integer = 0
-            Dim rolesRange As Excel.Range = wsname.Range("awin_Rollen_Definition")
+            Dim rolesRange As Excel.Range = Nothing
 
-
-            Dim anzZeilen As Integer = rolesRange.Rows.Count
-            Dim c As Excel.Range
-
-            ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
-            ' oder ob sie eine haben und ob keine Mehrfachnennungen vorkommen 
-            ' ausserdem wird gleich mal gecheckt ob die erste Rolle indent = 0 hat und sonstige Indent-Level vorkommen
-
-            Dim anzWithID As Integer = 0
-            Dim anzWithoutID As Integer = 0
-            Dim IDCollection As New Collection
-
-            For i = 2 To anzZeilen - 1
+            If readingGroups Then
                 Try
-                    Dim tmpValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
-                    c = CType(rolesRange.Cells(i, 1), Excel.Range)
+                    rolesRange = wsname.Range("awin_Gruppen_Definition")
+                Catch ex As Exception
+                    rolesRange = Nothing
+                End Try
 
-                    ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
-                    ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
-                    If i = 2 Then
-                        If CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel = 0 Then
-                            hasHierarchy = True
+            Else
+                rolesRange = wsname.Range("awin_Rollen_Definition")
+                przSatz = 1.0
+            End If
+
+            ' Exit, wenn es keine Definitionen gibt ... 
+            If IsNothing(rolesRange) Then
+                Exit Sub
+            Else
+
+                Dim anzZeilen As Integer = rolesRange.Rows.Count
+                Dim c As Excel.Range
+
+                ' jetzt wird erst mal gecheckt, ob alle Rollen entweder keine Integer Kennzahl haben: dann wird die aus der Position errechnet 
+                ' oder ob sie eine haben und ob keine Mehrfachnennungen vorkommen 
+                ' ausserdem wird gleich mal gecheckt ob die erste Rolle indent = 0 hat und sonstige Indent-Level vorkommen
+
+                Dim anzWithID As Integer = 0
+                Dim anzWithoutID As Integer = 0
+                Dim IDCollection As New Collection
+
+                For i = 2 To anzZeilen - 1
+                    Try
+                        Dim tmpValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
+                        c = CType(rolesRange.Cells(i, 1), Excel.Range)
+
+                        ' checken, ob nachher die Rollen-Hierarchie aufgebaut werden soll .. 
+                        ' 1.Rolle muss bei Indent 0 anfangen, alle anderen dann entsprechend ihrer Hierarchie eingerückt sein 
+                        If i = 2 Then
+                            If CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel = 0 Then
+                                hasHierarchy = True
+                            End If
+                        Else
+                            Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
+                            If tmpIndent > 0 Then
+                                atleastOneWithIndent = True
+                                maxIndent = System.Math.Max(maxIndent, tmpIndent)
+                            End If
                         End If
-                    Else
-                        Dim tmpIndent As Integer = CType(rolesRange.Cells(i, 1), Excel.Range).IndentLevel
-                        If tmpIndent > 0 Then
-                            atleastOneWithIndent = True
-                            maxIndent = System.Math.Max(maxIndent, tmpIndent)
-                        End If
-                    End If
 
 
-                    If CStr(c.Value) <> "" Then
-                        If Not IsNothing(tmpValue) Then
-                            If tmpValue.Trim <> "" Then
-                                If IsNumeric(tmpValue.Trim) Then
-                                    If CInt(tmpValue.Trim) > 0 Then
-                                        If Not IDCollection.Contains(tmpValue.Trim) Then
-                                            IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
+                        If CStr(c.Value) <> "" Then
+                            If Not IsNothing(tmpValue) Then
+                                If tmpValue.Trim <> "" Then
+                                    If IsNumeric(tmpValue.Trim) Then
+                                        If CInt(tmpValue.Trim) > 0 Then
+                                            If Not IDCollection.Contains(tmpValue.Trim) Then
+                                                IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
+                                            Else
+                                                Throw New ArgumentException("roles with identical IDs are not allowed")
+                                            End If
                                         Else
-                                            Throw New ArgumentException("roles with identical IDs are not allowed")
+                                            anzWithoutID = anzWithoutID + 1
                                         End If
                                     Else
                                         anzWithoutID = anzWithoutID + 1
@@ -2206,22 +2230,20 @@ Public Module awinGeneralModules
                             Else
                                 anzWithoutID = anzWithoutID + 1
                             End If
-                        Else
-                            anzWithoutID = anzWithoutID + 1
                         End If
-                    End If
 
-                Catch ex As Exception
-                    anzWithoutID = anzWithoutID + 1
-                End Try
+                    Catch ex As Exception
+                        anzWithoutID = anzWithoutID + 1
+                    End Try
 
-            Next
+                Next
 
-            anzWithID = IDCollection.Count
-                If anzWithID > 0 And anzWithoutID > 0 Then
+                anzWithID = IDCollection.Count
+                If anzWithID > 0 And anzWithoutID > 0 And Not readingGroups Then
                     Throw New ArgumentException("some roles do contain IDs, others not ...")
                 Else
-                    ' jetzt ist sichergestellt, dass 
+                    ' jetzt ist sichergestellt, dass alle Rollen eine ID haben oder keine ; dann wird sie generiert .. 
+                    ' oder aber man ist im Reading Group Modus, wo ja nur die Gruppen eine ID benötigen
                     For i = 2 To anzZeilen - 1
 
                         c = CType(rolesRange.Cells(i, 1), Excel.Range)
@@ -2237,6 +2259,11 @@ Public Module awinGeneralModules
 
                             tmpStr = CType(c.Value, String)
 
+                            If readingGroups Then
+                                przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 4), Excel.Range), 1.0, 0.0, 1.0)
+                            Else
+                                przSatz = 1.0
+                            End If
 
                             ' jetzt kommt die Rollen Definition 
                             hrole = New clsRollenDefinition
@@ -2268,8 +2295,14 @@ Public Module awinGeneralModules
                                 .UID = roleUID
                             End With
 
-                            '
-                            RoleDefinitions.Add(hrole)
+                            ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
+                            If readingGroups And RoleDefinitions.containsName(hrole.name) Then
+                                ' nichts tun, alles gut 
+                            Else
+                                ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
+                                RoleDefinitions.Add(hrole)
+                            End If
+
                             'hrole = Nothing
 
                         End If
@@ -2278,89 +2311,105 @@ Public Module awinGeneralModules
 
                 End If
 
-            ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
-            ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
-            hasHierarchy = hasHierarchy And atleastOneWithIndent
+                ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
+                ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
+                hasHierarchy = hasHierarchy And atleastOneWithIndent
 
-            If hasHierarchy Then
-                ' Hierarchie aufbauen
+                If hasHierarchy Then
+                    ' Hierarchie aufbauen
 
-                Dim parents(maxIndent) As String
+                    Dim parents(maxIndent) As String
 
-                Dim ix As Integer
-                parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
+                    Dim ix As Integer
+                    parents(0) = CStr(CType(rolesRange.Cells(2, 1), Excel.Range).Value).Trim
 
 
-                Dim lastLevel As Integer = 0
-                Dim curLevel As Integer = 0
+                    Dim lastLevel As Integer = 0
+                    Dim curLevel As Integer = 0
 
-                Dim curRoleName As String = ""
+                    Dim curRoleName As String = ""
 
-                ix = 3
+                    ix = 3
 
-                Do While ix <= anzZeilen - 1
+                    Do While ix <= anzZeilen - 1
+                        
+                        Try
+                            curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                            curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
-                    Try
-                        curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                        curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
-
-                        Do While curLevel = lastLevel And ix <= anzZeilen - 1
-
-                            If curLevel > 0 Then
-                                ' als Child aufnehmen 
-                                Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
-                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
-                                parentRole.addSubRole(subRole.UID, curRoleName, RoleDefinitions.Count)
+                            If readingGroups Then
+                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 4), Excel.Range), 1.0, 0.0, 1.0)
                             Else
-                                ' nichts tun 
+                                przSatz = 1.0
                             End If
 
-                            ' weiterschalten ..
-                            ix = ix + 1
+                            Do While curLevel = lastLevel And ix <= anzZeilen - 1
 
-                            ' hat sich der Indentlevel immer noch nicht geändert ? 
-                            If ix <= anzZeilen - 1 Then
-                                curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
-                                curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
-                            Else
-                                ' das Abbruch Kriterium schlägt gleich zu ... 
+                                If curLevel > 0 Then
+                                    ' als Child aufnehmen 
+                                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                    parentRole.addSubRole(subRole.UID, przSatz)
+                                Else
+                                    ' nichts tun 
+                                End If
+
+                                ' weiterschalten ..
+                                ix = ix + 1
+
+                                ' hat sich der Indentlevel immer noch nicht geändert ? 
+                                If ix <= anzZeilen - 1 Then
+                                    curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
+                                    curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
+                                    If readingGroups Then
+                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 4), Excel.Range), 1.0, 0.0, 1.0)
+                                    Else
+                                        przSatz = 1.0
+                                    End If
+
+                                Else
+                                    ' das Abbruch Kriterium schlägt gleich zu ... 
+                                End If
+
+                            Loop
+
+                            If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
+
+                                parents(curLevel) = curRoleName
+
+                                If curLevel < lastLevel Then
+                                    ' in der Hierarchie zurück 
+                                    For i As Integer = curLevel + 1 To maxIndent - 1
+                                        parents(i) = ""
+                                    Next
+                                End If
+
+                                If curLevel > 0 Then
+                                    ' als Child aufnehmen 
+                                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                    parentRole.addSubRole(subRole.UID, przSatz)
+                                Else
+                                    ' nichts tun 
+                                End If
+
+                                ' alle alten löschen 
+                                lastLevel = curLevel
+                                ix = ix + 1
+
                             End If
-
-                        Loop
-
-                        If curLevel <> lastLevel And ix <= anzZeilen - 1 Then
-
-                            parents(curLevel) = curRoleName
-
-                            If curLevel < lastLevel Then
-                                ' in der Hierarchie zurück 
-                                For i As Integer = curLevel + 1 To maxIndent - 1
-                                    parents(i) = ""
-                                Next
-                            End If
-
-                            If curLevel > 0 Then
-                                ' als Child aufnehmen 
-                                Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
-                                Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
-                                parentRole.addSubRole(subRole.UID, curRoleName, RoleDefinitions.Count)
-                            Else
-                                ' nichts tun 
-                            End If
-
-                            ' alle alten löschen 
-                            lastLevel = curLevel
-                            ix = ix + 1
-
-                        End If
-                    Catch ex As Exception
-                        Call MsgBox("Fehler bei " & ix & "Role: " & curRoleName)
-                    End Try
+                        Catch ex As Exception
+                            Call MsgBox("Fehler bei " & ix & " Role: " & curRoleName)
+                        End Try
 
 
-                Loop
+                    Loop
+
+                End If
 
             End If
+
+
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Customization-File: Rollen-Definitionen auslesen " & ex.Message)
@@ -2370,6 +2419,46 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' gibt den numerischen Wert einer einzigen Excel Zelle zurück, sofern der Wert .GE. minvalue und .LE. maxValue ist 
+    ''' und sofern er überhaupt numerisch ist. 
+    ''' Bei Fehler wird der defaultValue zurückgegeben 
+    ''' </summary>
+    ''' <param name="zelle"></param>
+    ''' <param name="defaultValue"></param>
+    ''' <param name="minValue"></param>
+    ''' <param name="maxValue"></param>
+    ''' <returns></returns>
+    Private Function getNumericValueFromExcelCell(ByVal zelle As Excel.Range, ByVal defaultValue As Double,
+                                                  ByVal minValue As Double, ByVal maxValue As Double) As Double
+
+        Dim tmpResult As Double = defaultValue
+
+        Try
+            If zelle.Rows.Count > 1 Or zelle.Columns.Count > 1 Then
+                ' nichts tun , tmpResult hat schon den Default Wert 
+            Else
+                Dim tmpValue As String = zelle.Value
+                If IsNothing(tmpValue) Then
+                    ' nichts tun, tmpResult hat schon den Default Wert
+                ElseIf tmpValue.Trim.Length = 0 Then
+                    ' nichts tun, tmpResult hat schon den Default Wert
+                ElseIf Not IsNumeric(tmpValue) Then
+                    ' nichts tun, tmpResult hat schon den Default Wert
+                ElseIf CDbl(tmpValue) < minValue Or CDbl(tmpValue) > maxValue Then
+                    ' nichts tun, tmpResult hat schon den Default Wert
+                Else
+                    tmpResult = CDbl(tmpValue)
+                End If
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+        getNumericValueFromExcelCell = tmpResult
+    End Function
 
     ''' <summary>
     ''' liest die optional vorhandenen Custom Field Definitionen aus 
@@ -13523,7 +13612,7 @@ Public Module awinGeneralModules
                                     atleastOneSubRole = True
                                     ' es ist eine Sub-Rolle
 
-                                    hrole.addSubRole(subRole.UID, subRoleName, RoleDefinitions.Count)
+                                    hrole.addSubRole(subRole.UID, subRoleName)
 
                                     spalte = 2
                                     tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
@@ -21434,14 +21523,19 @@ Public Module awinGeneralModules
                 End If
             Next
 
-            Dim subRoleNames As Collection = RoleDefinitions.getSubRoleNamesOf(validationName, PTcbr.all)
+            Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(validationName, PTcbr.all)
 
-            For iz As Integer = 1 To subRoleNames.Count
-                tmpName = CStr(subRoleNames.Item(iz))
-                If Not sortedRCListe.ContainsKey(tmpName) Then
-                    sortedRCListe.Add(tmpName, tmpName)
+            For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(srKvP.Key)
+                If Not IsNothing(tmpRole) Then
+                    tmpName = tmpRole.name
+                    If Not sortedRCListe.ContainsKey(tmpName) Then
+                        sortedRCListe.Add(tmpName, tmpName)
+                    End If
                 End If
+
             Next
+
 
             For iz As Integer = 1 To sortedRCListe.Count
                 If rcDefinition.Length = 0 Then
