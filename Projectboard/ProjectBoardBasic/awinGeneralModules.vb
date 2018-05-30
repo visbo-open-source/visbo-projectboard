@@ -7521,9 +7521,9 @@ Public Module awinGeneralModules
                     newCItem.show = True
                 End If
                 newCItem.start = impProjekt.startDate
-                newCItem.zeile = impProjekt.tfZeile
+                newCItem.zeile = lfdZeilenNr
                 'newCItem.zeile = lfdZeilenNr
-                newC.add(newCItem, sKey:=impProjekt.tfZeile)
+                newC.add(newCItem, sKey:=lfdZeilenNr)
 
                 lfdZeilenNr = lfdZeilenNr + 1
             End If
