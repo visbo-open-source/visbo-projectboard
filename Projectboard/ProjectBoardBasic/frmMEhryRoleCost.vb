@@ -140,18 +140,21 @@ Public Class frmMEhryRoleCost
                     ' hier muss gecheckt werden, welche Rollen in dem Projekt und dieser Phase, in der der Doppelclick erfolgte
                     ' vergeben sind. Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
 
+                    ' tk 30.5
+                    If Not IsNothing(hphase) Then
+                        If Not IsNothing(hphase.getRole(role.name)) Then
 
-                    If Not IsNothing(hPhase.getRole(role.name)) Then
+                            ' entsprechend kennzeichnen 
+                            topLevelNode.NodeFont = existingRoleFont
+                            topLevelNode.ForeColor = existingRoleColor
 
-                        ' entsprechend kennzeichnen 
-                        topLevelNode.NodeFont = existingRoleFont
-                        topLevelNode.ForeColor = existingRoleColor
+                            If role.name = rcName Then
+                                topLevelNode.Checked = True
+                            End If
 
-                        If role.name = rcName Then
-                            topLevelNode.Checked = True
                         End If
-
                     End If
+
 
 
                     Dim listOfChildIDs As New SortedList(Of Integer, Double)
@@ -177,18 +180,20 @@ Public Class frmMEhryRoleCost
                     topLevelNode.Name = cost.UID.ToString
                     topLevelNode.Text = cost.name
 
+                    If Not IsNothing(hphase) Then
+                        If Not IsNothing(hphase.getCost(cost.name)) Then
 
-                    If Not IsNothing(hPhase.getCost(cost.name)) Then
+                            ' entsprechend kennzeichnen 
+                            topLevelNode.NodeFont = existingRoleFont
+                            topLevelNode.ForeColor = existingRoleColor
 
-                        ' entsprechend kennzeichnen 
-                        topLevelNode.NodeFont = existingRoleFont
-                        topLevelNode.ForeColor = existingRoleColor
+                            If cost.name = rcName Then
+                                topLevelNode.Checked = True
+                            End If
 
-                        If cost.name = rcName Then
-                            topLevelNode.Checked = True
                         End If
-
                     End If
+
 
                 Next
             End If
@@ -208,6 +213,8 @@ Public Class frmMEhryRoleCost
 
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
+
+
         Dim hPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
         Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
         Dim doItAnyWay As Boolean = False
@@ -221,17 +228,20 @@ Public Class frmMEhryRoleCost
             ' hier muss gecheckt werden, welche Rollen in dem Projekt und dieser Phase, in der der Doppelclick erfolgte
             ' vergeben sind. Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
 
-            If Not IsNothing(hPhase.getRole(currentRole.name)) Then
+            If Not IsNothing(hphase) Then
+                If Not IsNothing(hphase.getRole(currentRole.name)) Then
 
-                ' entsprechend kennzeichnen
-                newNode.NodeFont = existingRoleFont
-                newNode.ForeColor = existingRoleColor
+                    ' entsprechend kennzeichnen
+                    newNode.NodeFont = existingRoleFont
+                    newNode.ForeColor = existingRoleColor
 
-                If currentRole.name = rcName Then
-                    newNode.Checked = True
+                    If currentRole.name = rcName Then
+                        newNode.Checked = True
+                    End If
+
                 End If
-
             End If
+
 
         End With
 

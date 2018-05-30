@@ -1141,7 +1141,7 @@ namespace MongoDbAccess
             
                 
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore)
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.isUnion == false)
                             .Select(c => c.name)
                             .Distinct()
                             .ToList();

@@ -2400,6 +2400,8 @@ Public Class frmHierarchySelection
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
 
+
+
                 Next
             End If
 
