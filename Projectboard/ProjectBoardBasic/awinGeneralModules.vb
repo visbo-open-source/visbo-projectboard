@@ -2338,7 +2338,7 @@ Public Module awinGeneralModules
                             curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
 
                             If readingGroups Then
-                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 4), Excel.Range), 1.0, 0.0, 1.0)
+                                przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 4), 1.0, 0.0, 1.0)
                             Else
                                 przSatz = 1.0
                             End If
@@ -2362,7 +2362,7 @@ Public Module awinGeneralModules
                                     curLevel = CType(rolesRange.Cells(ix, 1), Excel.Range).IndentLevel
                                     curRoleName = CStr(CType(rolesRange.Cells(ix, 1), Excel.Range).Value).Trim
                                     If readingGroups Then
-                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 4), Excel.Range), 1.0, 0.0, 1.0)
+                                        przSatz = getNumericValueFromExcelCell(CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, 4), 1.0, 0.0, 1.0)
                                     Else
                                         przSatz = 1.0
                                     End If
@@ -6677,6 +6677,11 @@ Public Module awinGeneralModules
         Dim geleseneProjekte As Integer
         Dim ok As Boolean = False
 
+        ' für den Output 
+        Dim outputFenster As New frmOutputWindow
+        Dim outputCollection As New Collection
+        Dim outPutLine As String = ""
+
         ' Standard-Definition
         Dim anzReleases As Integer = 5
 
@@ -6781,9 +6786,8 @@ Public Module awinGeneralModules
 
 
                 'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
-                lastColumn = firstZeile.Columns.Count
-                lastColumn = CType(firstZeile, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
-                lastColumn = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+
+                lastColumn = CType(.Cells(1, 3000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
                 lastRow = CType(.Cells(2000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 ' um die CustomFields lesen zu können ... 
@@ -6847,18 +6851,18 @@ Public Module awinGeneralModules
 
 
                     If IsNothing(pName) Then
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
+                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name fehlt ..")
 
                     ElseIf pName.Trim = nameTobeIgnored Then
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                        CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="wird ignoriert ..")
+                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="wird ignoriert ..")
 
                     ElseIf pName.Trim.Length < 2 Then
 
                         Try
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                            CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
+                            CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                            CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt-Name muss mindestens 2 Buchstaben haben und eindeutig sein ..")
                         Catch ex As Exception
 
                         End Try
@@ -6955,7 +6959,14 @@ Public Module awinGeneralModules
                                     Next
 
                                     ' Plausibilitäts-Check - wenn es sich nicht auf 100% summiert, dann lieber alles auf die rootPhase verteilen und nichts auf die Release Phasen
-                                    If relPrz.Sum < 1.0 Then
+                                    Dim a As Double = relPrz.Sum
+                                    If relPrz.Sum < 0.99 And relPrz.Sum > 0.0 Then
+                                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Prz-Sätze addieren nicht auf 100% ... alles in Projektphase ")
+
+                                        outPutLine = pName & " .Prozent-Sätze > 0 , aber < 1; korrigiert .."
+                                        outputCollection.Add(outPutLine)
+
                                         ReDim relPrz(anzReleases - 1)
                                     End If
 
@@ -7021,7 +7032,7 @@ Public Module awinGeneralModules
 
                                     Dim tmpStatus As String = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Status)), Excel.Range).Value)
                                     If Not IsNothing(tmpStatus) Then
-                                        If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Then
+                                        If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Or tmpStatus.Trim = "Lfd" Then
                                             allianzStatus = ProjektStatus(1)
                                         Else
                                             allianzStatus = ProjektStatus(0)
@@ -7149,6 +7160,10 @@ Public Module awinGeneralModules
 
         End Try
 
+        If outputCollection.Count > 0 Then
+            Call showOutPut(outputCollection, "Import Type 1", "")
+        End If
+
         If emptyPrograms = 0 Then
             Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
                     "Projekte erzeugt: " & createdProjects & vbLf &
@@ -7165,6 +7180,297 @@ Public Module awinGeneralModules
 
     End Sub
 
+
+    ''' <summary>
+    ''' aktualisiert Projekte mit den für BOSV-KB angegebenen Werten 
+    ''' dabei werden die neuen Daten in das Projekt "gemerged"; d.h alle Werte zu anderen Rollen als BOSV-KB bleiben erhalten 
+    ''' Ebenso alle Attribute ; es werden also nur die Rollen-Bedarfe zu BOSV-KB ausgetauscht ...  
+    ''' </summary>
+    ''' <param name="startDate"></param>
+    ''' <param name="endDate"></param>
+    Public Sub importAllianzType2(ByVal startDate As Date, ByVal endDate As Date,
+                                  ByVal updateSummaryRole As String)
+        Dim zeile As Integer, spalte As Integer
+
+        Dim tfZeile As Integer = 2
+
+        Dim pName As String = ""
+        Dim variantName As String = ""
+
+
+        Dim upDatedProjects As Integer = 0
+        Dim errorProjects As Integer = 0
+
+        ' für den Output 
+        Dim outputFenster As New frmOutputWindow
+        Dim outputCollection As New Collection
+        Dim outPutLine As String = ""
+
+
+        Dim vorlageName As String = "Rel"
+        Dim lastRow As Integer
+        Dim lastColumn As Integer
+        Dim geleseneProjekte As Integer
+        Dim ok As Boolean = False
+
+        ' die Projekte
+        Dim oldProj As clsProjekt = Nothing
+        Dim hproj As clsProjekt = Nothing
+        Dim newProj As clsProjekt = Nothing
+
+        ' Standard-Definition
+        Dim anzReleases As Integer = 5
+
+        Try
+            anzReleases = Projektvorlagen.getProject("Rel").CountPhases - 1
+        Catch ex As Exception
+
+        End Try
+
+
+        ' enthält die eingeplanten PT für die einzelnen Releases  
+        Dim relValues() As Double
+        ReDim relValues(anzReleases - 1)
+
+        ' nimmt die Farbe auf, die steuert, dass diese Zeile nicht eingelesen wird ... 
+        Dim projectStartingColor As Integer
+
+        Dim currentColor As Integer
+
+
+        ' enthält die Phasen Namen
+        Dim phNames() As String
+        ReDim phNames(anzReleases - 1)
+
+        ' enthält die Spalten-Nummer, ab der die Release Phasen Mann-Tage stehen 
+        Dim colRelValues As Integer
+
+        ' enthät die Saplte, wo der ProjektName steht ...
+        Dim colPname As Integer
+
+        ' enthält die Info, welche Orga-Struktur inkl. Sub-Roles gelöscht werden soll, alle anderen bleiben erhalten ...  
+        Dim roleNames As SortedList(Of Integer, Double) = Nothing
+
+        ' enthält die Spalten-Nummer, wo die einzelnen Rollen-Namen zu finden sind
+        Dim colRoleName As Integer = -1
+
+
+
+
+        Dim firstZeile As Excel.Range
+
+
+        zeile = 2
+        spalte = 1
+        geleseneProjekte = 0
+
+        ' jetzt werden die Phase-Names besetzt
+        Try
+            For i = 1 To anzReleases
+                phNames(i - 1) = Projektvorlagen.getProject(vorlageName).getPhase(i + 1).name
+            Next
+        Catch ex As Exception
+            Call MsgBox("Probleme mit Vorlage " & vorlageName)
+            Exit Sub
+        End Try
+
+        ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
+        Dim rolePhaseValues As New SortedList(Of String, Double())
+
+
+        Try
+
+            Dim found As Boolean = False
+            Dim wsi As Integer = 1
+            Dim wsCount As Integer = appInstance.ActiveWorkbook.Worksheets.Count
+
+
+            While Not found And wsi <= wsCount
+                If CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet).Name.StartsWith("Projekte") Then
+                    found = True
+                Else
+                    wsi = wsi + 1
+                End If
+            End While
+
+            If Not found Then
+                Call MsgBox("keine Projekte-Tabelle gefunden ...")
+                Exit Sub
+            End If
+
+            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            With currentWS
+
+
+                firstZeile = CType(.Rows(2), Excel.Range)
+
+                ' jetzt wird festgelegt, ab wo die absoluten PT-Werte für die Releases stehen 
+                colRelValues = CType(.Range("M1"), Excel.Range).Column
+
+                colPname = CType(.Range("B1"), Excel.Range).Column
+
+                ' wo stehen die Team-Bezeichner
+                colRoleName = .Range("D1").Column
+
+                projectStartingColor = CInt(CType(.Cells(2, 2), Excel.Range).Interior.Color)
+
+
+                'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
+
+                lastColumn = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+                lastRow = CType(.Cells(2000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+
+
+                While zeile <= lastRow
+
+                    currentColor = CInt(CType(.Cells(zeile, 2), Excel.Range).Interior.Color)
+                    If currentColor = projectStartingColor Then
+                        ' jetzt kommt die Behandlung ...   
+
+                        Try
+                            pName = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value)
+                            ok = isKnownProject(pName, oldProj)
+                        Catch ex As Exception
+                            ok = False
+                        End Try
+
+                        ' startzeile muss jetzt gemerkt werden ...
+                        Dim startzeile As Integer = zeile + 1
+                        Dim endeZeile As Integer = startzeile
+
+                        ' jetzt schon zeile auf das nächste Projekt positionieren ...
+                        Do Until currentColor = projectStartingColor And Not zeile > lastRow
+                            zeile = zeile + 1
+                            currentColor = CInt(CType(.Cells(zeile, 2), Excel.Range).Interior.Color)
+                        Loop
+                        ' in zeile ist jetzt das nächste Projekt 
+
+                        If Not ok Then
+
+                            outPutLine = "Projekt nicht bekannt: " & pName
+                            outputCollection.Add(outPutLine)
+
+                        Else
+
+                            ' jetzt werden die Values ausgelesen 
+                            ' in zeile steht das nächste Projekt, in zeile-1 dann der letzte Eintrag des aktuellen Projekts
+                            endeZeile = zeile - 1
+
+                            ' jetzt kann rolePhaseValues dimensioniert werden 
+                            For iz As Integer = startzeile To endeZeile
+                                Dim phaseValues(anzReleases - 1) As Double
+                                Dim roleName As String = CStr(CType(.Cells(iz, colRoleName), Excel.Range).Value)
+                                If RoleDefinitions.containsName(roleName) Then
+                                    For ip As Integer = 0 To anzReleases - 1
+                                        phaseValues(ip) = CDbl(CType(.Cells(iz, colRelValues + ip), Excel.Range).Value)
+                                    Next
+                                End If
+
+                                If phaseValues.Sum = 0 Then
+                                    ' nichst tun
+                                Else
+                                    If rolePhaseValues.ContainsKey(roleName) Then
+                                        ' addieren ...
+                                        For px As Integer = 0 To anzReleases - 1
+                                            rolePhaseValues.Item(roleName)(px) = rolePhaseValues.Item(roleName)(px) + phaseValues(px)
+                                        Next
+                                    Else
+                                        ' neu aufnehmen 
+                                        rolePhaseValues.Add(roleName, phaseValues)
+                                    End If
+                                End If
+                            Next
+
+                            ' jetzt wird der Merge auf das Projekt gemacht 
+
+                            ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
+
+
+
+
+                            Call oldProj.copyAttrTo(newProj)
+
+                            newProj = oldProj.merge(updateSummaryRole, rolePhaseValues, phNames)
+
+
+                        End If
+
+                        ' positioniere die zeile auf das nächste Projekt 
+                        Do While currentColor <> projectStartingColor And Not zeile > lastRow
+                            zeile = zeile + 1
+                            currentColor = CInt(CType(.Cells(zeile, 2), Excel.Range).Interior.Color)
+                        Loop
+
+                    End If
+
+                End While
+
+
+            End With
+        Catch ex As Exception
+
+            Throw New Exception("Fehler in Import-Datei" & ex.Message)
+
+        End Try
+
+
+        Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
+                    "Projekte aktualisiert: " & upDatedProjects)
+
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt ob es sich um ein bekanntes Projekt handelt: entweder bereits in AlleProjekte geladen oder aber in der Datenbank vorhanden 
+    ''' wenn nur in DB, wird es geladen und in alleProjekte abgelegt
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="oldProj"></param>
+    ''' <returns></returns>
+    Private Function isKnownProject(ByRef pname As String, ByRef oldProj As clsProjekt) As Boolean
+
+        Dim fctResult As Boolean = False
+
+        If IsNothing(pname) Then
+            fctResult = False
+        ElseIf pname.Trim.Length < 2 Then
+            fctResult = False
+        Else
+            If Not isValidProjectName(pname) Then
+                pname = makeValidProjectName(pname)
+            End If
+
+            Dim key As String = calcProjektKey(pname, "")
+
+            ' jetzt muss geprüft werden, ob das Projekt bereits in alleProjekte oder in der Datenbank existiert 
+            ' wenn nein, dann wird abgebrochen ... 
+            If AlleProjekte.Containskey(key) Then
+                oldProj = AlleProjekte.getProject(key)
+                fctResult = True
+            Else
+                ' ist es in der Datenbank? wenn ja, in AlleProjekte holen ... 
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim storedAtOrBefore = Date.Now
+
+                If request.projectNameAlreadyExists(pname, "", storedAtOrBefore) Then
+                    oldProj = request.retrieveOneProjectfromDB(pname, "", storedAtOrBefore)
+                End If
+
+                If Not IsNothing(oldProj) Then
+                    AlleProjekte.Add(oldProj, False)
+                    fctResult = True = True
+                Else
+                    fctResult = False
+                End If
+            End If
+        End If
+
+        isKnownProject = fctResult
+
+    End Function
 
     ''' <summary>
     ''' testet, ob das Summary Projekt einer constellation mit den einzelnen Werten der Projekte übereinstimmt ...

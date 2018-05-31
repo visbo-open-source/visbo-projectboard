@@ -2652,6 +2652,16 @@ Public Class clsProjekt
 
     End Function
 
+    Public Function merge(ByVal summaryRole As String,
+                          ByVal rolePhaseValues As SortedList(Of String, Double()),
+                          ByVal phaseNames As String()) As clsProjekt
+
+        Dim newProj As clsProjekt = Nothing
+        Call Me.copyTo(newProj)
+
+        merge = newProj
+    End Function
+
 
     ''' <summary>
     ''' gibt ein Projekt zurück, das die Vereinigung der beiden Projekte darstellt. 
