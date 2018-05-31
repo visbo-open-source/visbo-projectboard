@@ -7188,8 +7188,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="startDate"></param>
     ''' <param name="endDate"></param>
-    Public Sub importAllianzType2(ByVal startDate As Date, ByVal endDate As Date,
-                                  ByVal updateSummaryRole As String)
+    Public Sub importAllianzType2(ByVal deleteRoles As Collection)
         Dim zeile As Integer, spalte As Integer
 
         Dim tfZeile As Integer = 2
@@ -7219,18 +7218,18 @@ Public Module awinGeneralModules
         Dim newProj As clsProjekt = Nothing
 
         ' Standard-Definition
-        Dim anzReleases As Integer = 5
+        Dim anzPhasen As Integer = 5
 
         Try
-            anzReleases = Projektvorlagen.getProject("Rel").CountPhases - 1
+            anzPhasen = Projektvorlagen.getProject("Rel").CountPhases
         Catch ex As Exception
 
         End Try
 
 
         ' enthält die eingeplanten PT für die einzelnen Releases  
-        Dim relValues() As Double
-        ReDim relValues(anzReleases - 1)
+        Dim phValues() As Double
+        ReDim phValues(anzPhasen - 1)
 
         ' nimmt die Farbe auf, die steuert, dass diese Zeile nicht eingelesen wird ... 
         Dim projectStartingColor As Integer
@@ -7239,8 +7238,8 @@ Public Module awinGeneralModules
 
 
         ' enthält die Phasen Namen
-        Dim phNames() As String
-        ReDim phNames(anzReleases - 1)
+        Dim phNameIDs() As String
+        ReDim phNameIDs(anzPhasen - 1)
 
         ' enthält die Spalten-Nummer, ab der die Release Phasen Mann-Tage stehen 
         Dim colRelValues As Integer
@@ -7255,7 +7254,8 @@ Public Module awinGeneralModules
         Dim colRoleName As Integer = -1
 
 
-
+        ' jetzt werden die ImportProjekte zurückgesetzt ...
+        ImportProjekte.Clear()
 
         Dim firstZeile As Excel.Range
 
@@ -7266,8 +7266,8 @@ Public Module awinGeneralModules
 
         ' jetzt werden die Phase-Names besetzt
         Try
-            For i = 1 To anzReleases
-                phNames(i - 1) = Projektvorlagen.getProject(vorlageName).getPhase(i + 1).name
+            For i = 1 To anzPhasen
+                phNameIDs(i - 1) = Projektvorlagen.getProject(vorlageName).getPhase(i).nameID
             Next
         Catch ex As Exception
             Call MsgBox("Probleme mit Vorlage " & vorlageName)
@@ -7355,54 +7355,57 @@ Public Module awinGeneralModules
 
                         Else
 
-                            ' jetzt werden die Values ausgelesen 
+                            ' jetzt werden die Values für ein Projekt ausgelsen 
+                            rolePhaseValues.Clear()
                             ' in zeile steht das nächste Projekt, in zeile-1 dann der letzte Eintrag des aktuellen Projekts
                             endeZeile = zeile - 1
 
+
                             ' jetzt kann rolePhaseValues dimensioniert werden 
                             For iz As Integer = startzeile To endeZeile
-                                Dim phaseValues(anzReleases - 1) As Double
+                                Dim phaseValues(anzPhasen - 1) As Double
                                 Dim roleName As String = CStr(CType(.Cells(iz, colRoleName), Excel.Range).Value)
+
                                 If RoleDefinitions.containsName(roleName) Then
-                                    For ip As Integer = 0 To anzReleases - 1
-                                        phaseValues(ip) = CDbl(CType(.Cells(iz, colRelValues + ip), Excel.Range).Value)
+                                    For ip As Integer = 1 To anzPhasen
+                                        phaseValues(ip) = CDbl(CType(.Cells(iz, colRelValues + ip - 1), Excel.Range).Value)
                                     Next
+
+                                    If phaseValues.Sum = 0 Then
+                                        ' nichts tun
+                                    Else
+                                        If rolePhaseValues.ContainsKey(roleName) Then
+                                            ' addieren ...
+                                            For px As Integer = 1 To anzPhasen
+                                                rolePhaseValues.Item(roleName)(px) = rolePhaseValues.Item(roleName)(px) + phaseValues(px)
+                                            Next
+                                        Else
+                                            ' neu aufnehmen 
+                                            rolePhaseValues.Add(roleName, phaseValues)
+                                        End If
+                                    End If
+                                Else
+                                    outPutLine = "Team / Rolle nicht bekannt: " & roleName
+                                    outputCollection.Add(outPutLine)
                                 End If
 
-                                If phaseValues.Sum = 0 Then
-                                    ' nichst tun
-                                Else
-                                    If rolePhaseValues.ContainsKey(roleName) Then
-                                        ' addieren ...
-                                        For px As Integer = 0 To anzReleases - 1
-                                            rolePhaseValues.Item(roleName)(px) = rolePhaseValues.Item(roleName)(px) + phaseValues(px)
-                                        Next
-                                    Else
-                                        ' neu aufnehmen 
-                                        rolePhaseValues.Add(roleName, phaseValues)
-                                    End If
-                                End If
                             Next
 
                             ' jetzt wird der Merge auf das Projekt gemacht 
+                            ' dabei wird die updateSummaryRole und alle dazu gehörenden SubRoles gelöscht 
+                            ' es müssen aber auch die Gruppe gelöscht werden ... 
 
                             ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
+                            newProj = oldProj.deleteRolesAndCosts(deleteRoles, Nothing, True)
 
+                            ' jetzt alle Rollen / Phasen Werte hinzufügen 
+                            newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
 
-
-
-                            Call oldProj.copyAttrTo(newProj)
-
-                            newProj = oldProj.merge(updateSummaryRole, rolePhaseValues, phNames)
-
+                            ' jetzt in die Import-Projekte eintragen 
+                            upDatedProjects = upDatedProjects + 1
+                            ImportProjekte.Add(newProj, False)
 
                         End If
-
-                        ' positioniere die zeile auf das nächste Projekt 
-                        Do While currentColor <> projectStartingColor And Not zeile > lastRow
-                            zeile = zeile + 1
-                            currentColor = CInt(CType(.Cells(zeile, 2), Excel.Range).Interior.Color)
-                        Loop
 
                     End If
 
@@ -7416,6 +7419,9 @@ Public Module awinGeneralModules
 
         End Try
 
+        If outputCollection.Count > 0 Then
+            Call showOutPut(outputCollection, "Import Detail-Planungs Typ 2", "")
+        End If
 
         Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
                     "Projekte aktualisiert: " & upDatedProjects)

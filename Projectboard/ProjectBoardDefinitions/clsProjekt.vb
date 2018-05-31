@@ -1296,7 +1296,8 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
-    ''' löscht in allen Phasen alle vorkommenden Rollen und Kosten 
+    ''' löscht in allen Phasen alle vorkommenden Rollen und Kosten
+    ''' 
     ''' </summary>
     Public Sub deleteAllRolesCosts()
 
@@ -1308,6 +1309,109 @@ Public Class clsProjekt
         Next
 
     End Sub
+
+    ''' <summary>
+    ''' gibt ein PRojekt zurück, wo die angegebenen Rollen , ggf. inkl Kinder, und die Kosten gelöscht werden 
+    ''' </summary>
+    ''' <param name="rolesToBeDeleted"></param>
+    ''' <param name="costsToBedeleted"></param>
+    ''' <param name="includingChilds"></param>
+    ''' <returns></returns>
+    Public Function deleteRolesAndCosts(ByVal rolesToBeDeleted As Collection,
+                                        ByVal costsToBedeleted As Collection,
+                                        ByVal includingChilds As Boolean) As clsProjekt
+        Dim newProj As clsProjekt = Me.createVariant("$delete$", "")
+
+        ' hier passiert das jetzt 
+        Dim roleIDs As New SortedList(Of Integer, Double)
+
+        If Not IsNothing(rolesToBeDeleted) Then
+            For Each roleName As String In rolesToBeDeleted
+
+                If includingChilds Then
+                    Dim tmpRoleIDS As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
+                    For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIDS
+                        If roleIDs.ContainsKey(srKvP.Key) Then
+                            ' muss nichts getan werden - ist schon in der Liste  
+                        Else
+                            ' der Value entspricht dem Anteil der Kapa der Subrole in der übergeordneten Sammelrolle, 
+                            ' das ist hier aber irrerelevant .. deswegen immer auf 1 setzen 
+                            roleIDs.Add(srKvP.Key, 1.0)
+                        End If
+                    Next
+                Else
+
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+                    If Not IsNothing(tmpRole) Then
+                        If Not roleIDs.ContainsKey(tmpRole.UID) Then
+                            roleIDs.Add(tmpRole.UID, 1.0)
+                        End If
+                    End If
+
+                End If
+
+            Next
+        End If
+
+
+        ' jetzt sind alle RoleIds, die gelöscht werden sollen in der Liste  roleIDs 
+        ' jetzt werden einfach alle Phasen durchgegangen, ob sie eine der  Rollen enthalten 
+        For ip = 1 To Me.CountPhases
+            Dim cPhase As clsPhase = Me.getPhase(ip)
+
+            If Not IsNothing(rolesToBeDeleted) Then
+                If roleIDs.Count > 0 Then
+                    Dim delCollection As New Collection
+                    For dx As Integer = 1 To cPhase.countRoles
+                        Dim tmpRole As clsRolle = cPhase.getRole(dx)
+                        If roleIDs.ContainsKey(tmpRole.RollenTyp) Then
+                            ' löschen 
+                            If Not delCollection.Contains(tmpRole.name) Then
+                                delCollection.Add(tmpRole.name, tmpRole.name)
+                            End If
+                        End If
+                    Next
+
+                    ' jetzt müssen alle delCollection Einträge gelöscht werden 
+                    For Each item As String In delCollection
+                        If item <> "" Then
+                            cPhase.removeRoleByName(item)
+                        End If
+                    Next
+
+                End If
+            End If
+
+            If Not IsNothing(costsToBedeleted) Then
+                ' jetzt kommen die Kosten dran 
+                If costsToBedeleted.Count > 0 Then
+                    Dim delCollection As New Collection
+                    For cx As Integer = 1 To cPhase.countCosts
+                        Dim tmpCost As clsKostenart = cPhase.getCost(cx)
+                        If costsToBedeleted.Contains(tmpCost.name) Then
+                            If Not delCollection.Contains(tmpCost.name) Then
+                                delCollection.Add(tmpCost.name, tmpCost.name)
+                            End If
+                        End If
+                    Next
+
+                    ' jetzt müssen alle delCollection Einträge gelöscht werden 
+                    For Each item As String In delCollection
+                        If item <> "" Then
+                            cPhase.removeCostByName(item)
+                        End If
+                    Next
+                End If
+            End If
+
+
+        Next
+
+        ' ende Aktionen
+        newProj.variantName = Me.variantName
+        deleteRolesAndCosts = newProj
+
+    End Function
     ''' <summary>
     ''' Methode prüft auf Identität mit einem Vergleichsprojekt 
     ''' es wird verglichen: Startdatum, Endedatum (nur type=0), Phasen, Milestones, Personalkosten, Sonstige Kosten, Ergebnis, Attribute, Projekt-Ampel, Milestone-Ampeln, 
@@ -2652,13 +2756,40 @@ Public Class clsProjekt
 
     End Function
 
-    Public Function merge(ByVal summaryRole As String,
-                          ByVal rolePhaseValues As SortedList(Of String, Double()),
-                          ByVal phaseNames As String()) As clsProjekt
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="rolePhaseValues"></param>
+    ''' <param name="phaseNameIDs"></param>
+    ''' <returns></returns>
+    Public Function merge(ByVal rolePhaseValues As SortedList(Of String, Double()),
+                          ByVal phaseNameIDs As String(),
+                          ByVal addWhenexisting As Boolean) As clsProjekt
 
-        Dim newProj As clsProjekt = Nothing
-        Call Me.copyTo(newProj)
+        Dim newProj As clsProjekt = Me.createVariant("$merge$", "")
+        ' hier passiert das jetzt 
+        Dim anzPhasen As Integer = phaseNameIDs.Length
 
+        For ip = 1 To anzPhasen
+
+            Dim cphase As clsPhase = newProj.getPhaseByID(phaseNameIDs(ip - 1))
+            If Not IsNothing(cphase) Then
+
+                ' jetzt dieser Phase die Rollen und entsprechenden Werte zuordnen 
+                For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+
+                    Dim roleSumme As Double = kvp.Value(ip - 1)
+                    If roleSumme > 0 Then
+                        Call cphase.addCostRole(kvp.Key, roleSumme, True, addWhenexisting)
+                    End If
+
+                Next
+
+            End If
+        Next
+
+        ' ende Aktionen
+        newProj.variantName = Me.variantName
         merge = newProj
     End Function
 

@@ -4940,6 +4940,7 @@ Imports System.Windows
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
         ' Übernahme 
 
+        Dim noScenarioCreation As Boolean = False
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
@@ -5001,6 +5002,15 @@ Imports System.Windows
                             Dim enddate As Date = CDate("31.12.2018")
 
                             Call importAllianzType1(startdate, enddate)
+
+                        ElseIf scenarioNameP.StartsWith("AT2") Then
+                            Dim deleteRoles As New Collection
+                            noScenarioCreation = True
+                            ' diese Rollen und Subroles sollen alle vorher gelöscht werden und dann mit den neuen Werten ersetzt werden 
+                            deleteRoles.Add("BOSV-KB")
+                            deleteRoles.Add("Grp-BOSV-KB")
+                            Call importAllianzType2(deleteRoles)
+
                         Else
                             Call awinImportProjektInventur()
                         End If
