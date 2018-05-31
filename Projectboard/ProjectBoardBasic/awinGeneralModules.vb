@@ -2248,7 +2248,7 @@ Public Module awinGeneralModules
 
                         c = CType(rolesRange.Cells(i, 1), Excel.Range)
 
-                        If CStr(c.Value) <> "" Then
+                        If CStr(c.Value).Trim <> "" Then
 
                             index = index + 1
                             If anzWithID > 0 Then
@@ -7186,8 +7186,6 @@ Public Module awinGeneralModules
     ''' dabei werden die neuen Daten in das Projekt "gemerged"; d.h alle Werte zu anderen Rollen als BOSV-KB bleiben erhalten 
     ''' Ebenso alle Attribute ; es werden also nur die Rollen-Bedarfe zu BOSV-KB ausgetauscht ...  
     ''' </summary>
-    ''' <param name="startDate"></param>
-    ''' <param name="endDate"></param>
     Public Sub importAllianzType2(ByVal deleteRoles As Collection)
         Dim zeile As Integer, spalte As Integer
 
@@ -7324,21 +7322,24 @@ Public Module awinGeneralModules
 
 
 
-                While zeile <= lastRow
+                While zeile < lastRow
 
                     currentColor = CInt(CType(.Cells(zeile, 2), Excel.Range).Interior.Color)
                     If currentColor = projectStartingColor Then
                         ' jetzt kommt die Behandlung ...   
 
                         Try
-                            pName = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value)
+                            pName = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                            geleseneProjekte = geleseneProjekte + 1
                             ok = isKnownProject(pName, oldProj)
                         Catch ex As Exception
                             ok = False
                         End Try
 
                         ' startzeile muss jetzt gemerkt werden ...
-                        Dim startzeile As Integer = zeile + 1
+                        zeile = zeile + 1
+                        currentColor = CInt(CType(.Cells(zeile, 2), Excel.Range).Interior.Color)
+                        Dim startzeile As Integer = zeile
                         Dim endeZeile As Integer = startzeile
 
                         ' jetzt schon zeile auf das nächste Projekt positionieren ...
@@ -7364,29 +7365,38 @@ Public Module awinGeneralModules
                             ' jetzt kann rolePhaseValues dimensioniert werden 
                             For iz As Integer = startzeile To endeZeile
                                 Dim phaseValues(anzPhasen - 1) As Double
-                                Dim roleName As String = CStr(CType(.Cells(iz, colRoleName), Excel.Range).Value)
+                                Dim roleName As String = ""
 
-                                If RoleDefinitions.containsName(roleName) Then
-                                    For ip As Integer = 1 To anzPhasen
-                                        phaseValues(ip) = CDbl(CType(.Cells(iz, colRelValues + ip - 1), Excel.Range).Value)
-                                    Next
+                                If Not IsNothing(CType(.Cells(iz, colRoleName), Excel.Range).Value) Then
+                                    roleName = CStr(CType(.Cells(iz, colRoleName), Excel.Range).Value).Trim
 
-                                    If phaseValues.Sum = 0 Then
-                                        ' nichts tun
-                                    Else
-                                        If rolePhaseValues.ContainsKey(roleName) Then
-                                            ' addieren ...
-                                            For px As Integer = 1 To anzPhasen
-                                                rolePhaseValues.Item(roleName)(px) = rolePhaseValues.Item(roleName)(px) + phaseValues(px)
+                                    If roleName <> "" Then
+
+                                        If RoleDefinitions.containsName(roleName) Then
+                                            For ip As Integer = 1 To anzPhasen - 1
+                                                phaseValues(ip) = CDbl(CType(.Cells(iz, colRelValues + ip - 1), Excel.Range).Value)
                                             Next
+
+                                            If phaseValues.Sum = 0 Then
+                                                ' nichts tun
+                                            Else
+                                                If rolePhaseValues.ContainsKey(roleName) Then
+                                                    ' addieren ...
+                                                    For px As Integer = 1 To anzPhasen - 1
+                                                        rolePhaseValues.Item(roleName)(px) = rolePhaseValues.Item(roleName)(px) + phaseValues(px)
+                                                    Next
+                                                Else
+                                                    ' neu aufnehmen 
+                                                    rolePhaseValues.Add(roleName, phaseValues)
+                                                End If
+                                            End If
                                         Else
-                                            ' neu aufnehmen 
-                                            rolePhaseValues.Add(roleName, phaseValues)
+                                            outPutLine = "Team / Rolle nicht bekannt: " & roleName
+                                            outputCollection.Add(outPutLine)
                                         End If
+
                                     End If
-                                Else
-                                    outPutLine = "Team / Rolle nicht bekannt: " & roleName
-                                    outputCollection.Add(outPutLine)
+
                                 End If
 
                             Next
@@ -7719,7 +7729,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Function verarbeiteImportProjekte(ByVal cName As String,
                                              Optional ByVal noComparison As Boolean = False,
-                                             Optional ByVal unionProjects As Boolean = False) As clsConstellation
+                                             Optional ByVal unionProjects As Boolean = False,
+                                             Optional ByVal noScenarioCreation As Boolean = False) As clsConstellation
         ' in der Reihenfolge des Auftretens aufnehmen , Name wie übergeben 
         Dim newC As New clsConstellation(ptSortCriteria.customTF, cName)
         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
@@ -7806,9 +7817,10 @@ Public Module awinGeneralModules
                     'Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
 
                     If Not impProjekt.isIdenticalTo(vglProj) Then
-                        ' es gibt Unterschiede, also muss eine Variante angelegt werden 
+                        ' es gibt Unterschiede, es wird keine Variante mehr angelegt, sondern es wird als verändert markiert
+                        impProjekt.marker = True
 
-                        impProjekt.variantName = cName
+                        'impProjekt.variantName = cName
                         importKey = calcProjektKey(impProjekt)
 
                         ' wenn die Variante bereits in der Session existiert ..
