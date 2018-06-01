@@ -55,7 +55,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("mongo01.visbo.net:27017")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("mongo01.visbo.net:443")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -118,7 +118,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
     Public ReadOnly Property VISBODebug() As Boolean
         Get
             Return CType(Me("VISBODebug"),Boolean)
@@ -170,16 +170,22 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("")>  _
-    Public Property userNamePWD() As String
+    Public ReadOnly Property userNamePWD() As String
         Get
             Return CType(Me("userNamePWD"),String)
         End Get
-        Set
-            Me("userNamePWD") = value
-        End Set
+    End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public ReadOnly Property mongoDBWithSSL() As Boolean
+        Get
+            Return CType(Me("mongoDBWithSSL"),Boolean)
+        End Get
     End Property
 End Class
 
