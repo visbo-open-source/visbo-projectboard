@@ -24469,6 +24469,8 @@ Public Module awinGeneralModules
                             awinSettings.databaseURL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "mongoDBname"
                             awinSettings.databaseName = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "mongoDBWithSSL"
+                            awinSettings.DBWithSSL = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "globalPath"
                             awinSettings.globalPath = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "awinPath"

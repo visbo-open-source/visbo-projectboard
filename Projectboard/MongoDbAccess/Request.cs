@@ -115,7 +115,17 @@ namespace MongoDbAccess
 
                 // wird nicht mehr verwendet , führt ggf zu Problemen bei zu schnellem Timeout 
                 // var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
-                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
+
+                var connectionString = "";
+                
+                if (Module1.awinSettings.DBWithSSL)
+                {
+                     connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?ssl=true";
+                }
+                else
+                {
+                     connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
+                }
                 
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
@@ -130,8 +140,7 @@ namespace MongoDbAccess
   
             // neu 3.0 
             Database = Client.GetDatabase(databaseName);
-            
-                      
+                                  
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
