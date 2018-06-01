@@ -5019,7 +5019,7 @@ Imports System.Windows
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                         'sessionConstellationP enthält alle Projekte aus dem Import 
-                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, unionProjects:=False)
+                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False)
                         'Call sessionConstellationP.calcUnionProject(False)
 
                         ' Testen ..

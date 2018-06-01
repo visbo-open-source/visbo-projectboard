@@ -11591,7 +11591,7 @@ Public Module Projekte
 
         ' jetzt müssen die Rollen und Kostenarten besetzt werden  
         If atleastOneRC Then
-            If przPhasenAnteile.Sum = 1.0 Then
+            If przPhasenAnteile.Sum >= 0.99 Then
                 ' der Gesamt-Wert der Rollen soll auf die entsprechenden Phasen aufgeteilt werden 
                 Dim anzPhasen As Integer = phNames.Length
 

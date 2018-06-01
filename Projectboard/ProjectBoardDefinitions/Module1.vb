@@ -79,6 +79,8 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
 
+    Public PortfolioProjektSummaries As New clsProjekteAlle
+
     ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
     ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
     ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 

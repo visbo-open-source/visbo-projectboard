@@ -28,7 +28,9 @@
     ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
     Private _sortType As Integer
 
+
     Private _constellationName As String = "Last"
+
 
     ''' <summary>
     ''' gibt den Projekt-Namen zurück, der an der entsprechenden Position in der Sort-Liste steht, allerdings zählen nur die PRojekte in ShowProjekte
@@ -758,13 +760,18 @@
 
         Dim unionProj As clsProjekt = Nothing
         Dim projektListe As clsProjekteAlle = AlleProjekte
+        Dim outPutListe As clsProjekteAlle = PortfolioProjektSummaries
+
+        ' Das Ergebnis wird in der PortfolioProjektSummaries abgelegt 
 
         ' jetzt die Union bilden ... das erste als Default besetzen 
         Dim listOfProjectNames As SortedList(Of String, String) = Me.getProjectNames(considerShowAttribute:=True,
                                                                                        showAttribute:=True,
                                                                                        fullNameKeys:=True)
         If considerImportProjekte Then
+            ' beim Import kommt erst mal alles in ImportPRojekte ; von dort wird es dann entsprechend weiterbehandelt 
             projektListe = ImportProjekte
+            outPutListe = ImportProjekte
         End If
 
         Try
@@ -773,16 +780,14 @@
                 Dim startDatum As Date = projektListe.liste.First.Value.startDate
                 Dim endeDatum As Date = projektListe.liste.First.Value.endeDate
                 unionProj = New clsProjekt(Me.constellationName, True, startDatum, endeDatum)
-
+                unionProj.variantName = "$Union$"
                 ' jetzt mit allen anderen aufsummieren ..
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
                     Dim hproj As clsProjekt = projektListe.getProject(kvp.Key)
                     unionProj = unionProj.unionizeWith(hproj)
                 Next
 
-                If projektListe.Containskey(calcProjektKey(unionProj)) Then
-                    projektListe.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
-                End If
+
 
                 ' jetzt ggf die Attribute noch ergänzen 
                 With unionProj
@@ -793,7 +798,11 @@
                     .leadPerson = responsible
                 End With
 
-                projektListe.Add(unionProj, updateCurrentConstellation:=False)
+                If outPutListe.Containskey(calcProjektKey(unionProj)) Then
+                    outPutListe.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                End If
+
+                outPutListe.Add(unionProj, updateCurrentConstellation:=False)
             End If
         Catch ex As Exception
 
@@ -819,9 +828,9 @@
             End If
 
 
-
             With copyResult
                 .constellationName = cName
+
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                     Dim copiedItem As clsConstellationItem = kvp.Value.copy

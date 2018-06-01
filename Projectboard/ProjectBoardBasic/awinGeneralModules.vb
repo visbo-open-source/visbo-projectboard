@@ -6908,7 +6908,7 @@ Public Module awinGeneralModules
                                             createdPrograms = createdPrograms + 1
                                             projectConstellations.Add(current1program)
 
-                                            ' jetzt das union-Projekt erstellen 
+                                            ' jetzt das union-Projekt erstellen ; wird aktuell noch nicht gemacht ...
                                             current1program.calcUnionProject(True, budget:=last1Budget)
 
 
@@ -6973,10 +6973,10 @@ Public Module awinGeneralModules
                                     ' was ist der Gesamtbedarf dieser Rolle in dem besagten Vorhaben ? 
                                     For i As Integer = 0 To colRoleNamesToConsider.Length - 1
                                         Try
-                                            Dim tmpValue As Double = CDbl(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) * nrOfDaysMonth
-                                            If IsNothing(tmpValue) Then
+                                            If IsNothing(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) Then
                                                 roleNeeds(i) = 0.0
                                             Else
+                                                Dim tmpValue As Double = CDbl(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) * nrOfDaysMonth
                                                 If tmpValue >= 0 Then
                                                     roleNeeds(i) = tmpValue
                                                 Else
@@ -7405,16 +7405,52 @@ Public Module awinGeneralModules
                             ' dabei wird die updateSummaryRole und alle dazu gehörenden SubRoles gelöscht 
                             ' es müssen aber auch die Gruppe gelöscht werden ... 
 
+                            ' test tk 
+                            Dim formerLeft As Integer = showRangeLeft
+                            Dim formerRight As Integer = showRangeRight
+                            showRangeLeft = getColumnOfDate(CDate("1.1.2018"))
+                            showRangeRight = getColumnOfDate(CDate("31.12.2018"))
+
+                            Dim testprojekte As New clsProjekte
+                            testprojekte.Add(oldProj)
+
+                            Dim gesamtVorher As Double = oldProj.getAlleRessourcen().Sum
+                            Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonthNew("Orga", True).Sum
+                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
+
+                            If gesamtVorher <> gesamtVorher2 Then
+                                Call MsgBox("Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString)
+                            End If
                             ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
                             newProj = oldProj.deleteRolesAndCosts(deleteRoles, Nothing, True)
+                            Dim gesamtNachher As Double = newProj.getAlleRessourcen().Sum
+                            Dim bosvNachher As Double = newProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
+
+                            If Not bosvNachher = 0 Then
+                                Call MsgBox("Fehler bei" & newProj.name)
+                            End If
 
                             ' jetzt alle Rollen / Phasen Werte hinzufügen 
+                            Dim addValues As Double = 0.0
+                            For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+                                addValues = addValues + kvp.Value.Sum
+                            Next
                             newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
+
+                            Dim bosvErgebnis As Double = newProj.getRessourcenBedarfNew("Grp-BOSV-KB", True).Sum
+
+                            If bosvErgebnis <> addValues Then
+                                outPutLine = "addValues ungleich ergebnis: " & addValues.ToString("#0.##") & " <> " & bosvErgebnis.ToString("#0.##")
+                                outputCollection.Add(outPutLine)
+                            End If
 
                             ' jetzt in die Import-Projekte eintragen 
                             upDatedProjects = upDatedProjects + 1
                             ImportProjekte.Add(newProj, False)
 
+                            ' wegen test 
+                            showRangeLeft = formerLeft
+                            showRangeRight = formerRight
                         End If
 
                     End If
@@ -7729,7 +7765,6 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Function verarbeiteImportProjekte(ByVal cName As String,
                                              Optional ByVal noComparison As Boolean = False,
-                                             Optional ByVal unionProjects As Boolean = False,
                                              Optional ByVal noScenarioCreation As Boolean = False) As clsConstellation
         ' in der Reihenfolge des Auftretens aufnehmen , Name wie übergeben 
         Dim newC As New clsConstellation(ptSortCriteria.customTF, cName)
@@ -7738,6 +7773,7 @@ Public Module awinGeneralModules
         Dim vglProj As clsProjekt
         Dim lfdZeilenNr As Integer = 2
         Dim ok As Boolean
+        Dim outPutListe As clsProjekteAlle
 
         Dim importDate As Date = Date.Now
 
@@ -7745,96 +7781,100 @@ Public Module awinGeneralModules
 
             Dim impProjekt As clsProjekt = kvp.Value
 
-            If impProjekt.isUnion = unionProjects Then
-                ' jetzt das Import Datum setzen ...
-                impProjekt.timeStamp = importDate
+            If impProjekt.isUnion = True Then
+                outPutListe = PortfolioProjektSummaries
+            Else
+                outPutListe = AlleProjekte
+            End If
 
-                Dim importKey As String = calcProjektKey(impProjekt)
 
-                vglProj = Nothing
+            ' jetzt das Import Datum setzen und dann in PortfolioProjektSummareis verschieben ...
+            impProjekt.timeStamp = importDate
 
-                If noComparison Then
-                    ' nicht vergleichen, einfach in AlleProjekte rein machen 
-                    If AlleProjekte.Containskey(importKey) Then
-                        AlleProjekte.Remove(importKey)
-                    End If
-                    AlleProjekte.Add(impProjekt)
+            Dim importKey As String = calcProjektKey(impProjekt)
+
+            vglProj = Nothing
+
+            If noComparison Then
+                ' nicht vergleichen, einfach in AlleProjekte rein machen 
+                If outPutListe.Containskey(importKey) Then
+                    outPutListe.Remove(importKey)
+                End If
+                outPutListe.Add(impProjekt)
+            Else
+                ' jetzt muss ggf verglichen werden 
+                If outPutListe.Containskey(importKey) Then
+
+                    vglProj = outPutListe.getProject(importKey)
+
                 Else
-                    ' jetzt muss ggf verglichen werden 
-                    If AlleProjekte.Containskey(importKey) Then
+                    ' nicht in der Session, aber ist es in der Datenbank ?  
 
-                        vglProj = AlleProjekte.getProject(importKey)
+                    If Not noDB Then
 
-                    Else
-                        ' nicht in der Session, aber ist es in der Datenbank ?  
+                        '
+                        ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If request.pingMongoDb() Then
 
-                        If Not noDB Then
+                            If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
 
-                            '
-                            ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            If request.pingMongoDb() Then
+                                ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                                vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
 
-                                If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
-
-                                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                    vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
-
-                                    If IsNothing(vglProj) Then
-                                        ' kann eigentlich nicht sein 
-                                        ok = False
-                                    Else
-                                        ' jetzt in AlleProjekte eintragen ... 
-                                        AlleProjekte.Add(vglProj)
-
-                                    End If
+                                If IsNothing(vglProj) Then
+                                    ' kann eigentlich nicht sein 
+                                    ok = False
                                 Else
-                                    ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                                    AlleProjekte.Add(impProjekt)
+                                    ' jetzt in AlleProjekte eintragen ... 
+                                    outPutListe.Add(vglProj)
+
                                 End If
                             Else
-                                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
+                                ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
+                                outPutListe.Add(impProjekt)
                             End If
-
-
                         Else
-                            ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
-                            AlleProjekte.Add(impProjekt)
-
+                            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & impProjekt.name & "'konnte nicht geladen werden")
                         End If
 
 
+                    Else
+                        ' nicht in der Session, nicht in der Datenbank : also in AlleProjekte eintragen ... 
+                        outPutListe.Add(impProjekt)
+
                     End If
+
 
                 End If
 
+            End If
 
 
-                ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
-                If Not IsNothing(vglProj) And Not noComparison Then
 
-                    ' erstezt durch Abfrage auf Identität 
-                    'Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
+            ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf markieren, wenn unterschiedlich  anlegen ...
+            If Not IsNothing(vglProj) And Not noComparison Then
 
-                    If Not impProjekt.isIdenticalTo(vglProj) Then
-                        ' es gibt Unterschiede, es wird keine Variante mehr angelegt, sondern es wird als verändert markiert
-                        impProjekt.marker = True
+                If Not impProjekt.isIdenticalTo(vglProj) Then
+                    ' es gibt Unterschiede, es wird keine Variante mehr angelegt, sondern es wird als verändert markiert
+                    impProjekt.marker = True
 
-                        'impProjekt.variantName = cName
-                        importKey = calcProjektKey(impProjekt)
+                    'impProjekt.variantName = cName
+                    importKey = calcProjektKey(impProjekt)
 
-                        ' wenn die Variante bereits in der Session existiert ..
-                        ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                        If AlleProjekte.Containskey(importKey) Then
-                            AlleProjekte.Remove(importKey)
-                        End If
-
-                        ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
-                        AlleProjekte.Add(impProjekt)
+                    ' wenn die Variante bereits in der Session existiert ..
+                    ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                    If outPutListe.Containskey(importKey) Then
+                        outPutListe.Remove(importKey)
                     End If
 
+                    ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
+                    outPutListe.Add(impProjekt)
                 End If
 
+            End If
+
+            If impProjekt.isUnion = False Then
                 ' Aufnehmen in Constellation
                 Dim newCItem As New clsConstellationItem
                 newCItem.projectName = impProjekt.name
@@ -7851,7 +7891,6 @@ Public Module awinGeneralModules
 
                 lfdZeilenNr = lfdZeilenNr + 1
             End If
-
 
         Next
 
