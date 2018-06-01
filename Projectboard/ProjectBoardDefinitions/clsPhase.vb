@@ -1572,6 +1572,7 @@ Public Class clsPhase
 
     ''' <summary>
     ''' erstellt eine neue Rolle, weist der Rolle monatliche Ressourcenbedarfe zu, deren Summe dem Wert der Variable summe entspricht  
+    ''' der RoleName muss in Roledefinitions existieren , sonst gibt es eine Fehlermeldung 
     ''' </summary>
     ''' <param name="roleName"></param>
     ''' <param name="summe"></param>
