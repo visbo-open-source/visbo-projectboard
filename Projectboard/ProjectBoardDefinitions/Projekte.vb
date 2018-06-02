@@ -16792,7 +16792,7 @@ Public Module Projekte
 
         Dim shpExists As Boolean
         Dim oldAlternativeText As String = ""
-
+        Dim isSummaryProject As Boolean
 
 
         Try
@@ -16814,11 +16814,17 @@ Public Module Projekte
                 schriftgroesse = .Schrift
                 status = .Status
                 pMarge = .ProjectMarge
+                isSummaryProject = .isUnion
             End With
         Catch ex As Exception
             Throw New ArgumentException("in zeichneProjektinBoard - Projektname existiert nicht: " & pname)
         End Try
 
+        If isSummaryProject Then
+            pcolor = visboFarbeOrange
+            drawphases = False
+            hproj.extendedView = False
+        End If
 
         ' prüfen, ob das Shape bereits existiert ...
         If shpUID <> "" Then
@@ -17169,9 +17175,10 @@ Public Module Projekte
                     .CalculateShapeCoord(top, left, width, height)
                 End With
 
+                'If awinSettings.drawProjectLine Then
                 If awinSettings.drawProjectLine Then
                     ' ????ur: hier geht es schief beim Laden von Konstellation
-                    projectShape = worksheetShapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
+                    projectShape = worksheetShapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top),
                                                                 CSng(left + width), CSng(top))
 
                 Else
@@ -17188,7 +17195,7 @@ Public Module Projekte
 
         End If
 
-        With projectShape
+            With projectShape
             If shpExists Then
                 .AlternativeText = oldAlternativeText
             Else
@@ -18966,7 +18973,12 @@ Public Module Projekte
 
         Try
             With myproject
-                pcolor = .farbe
+                If .isUnion Then
+                    pcolor = visboFarbeOrange
+                Else
+                    pcolor = .farbe
+                End If
+
                 schriftFarbe = CLng(.Schriftfarbe)
                 schriftGroesse = .Schrift
                 status = .Status
@@ -19008,7 +19020,12 @@ Public Module Projekte
                     With .Line
                         .ForeColor.RGB = CInt(pcolor)
                         .Transparency = 0
-                        .Weight = 4.0
+                        If myproject.isUnion Then
+                            .Weight = 5.5
+                        Else
+                            .Weight = 4.0
+                        End If
+
                         If status = ProjektStatus(PTProjektStati.geplant) Or _
                             status = ProjektStatus(PTProjektStati.abgebrochen) Then
                             .DashStyle = core.MsoLineDashStyle.msoLineDash

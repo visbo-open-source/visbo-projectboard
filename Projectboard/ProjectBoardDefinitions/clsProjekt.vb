@@ -1018,7 +1018,7 @@ Public Class clsProjekt
     Public ReadOnly Property getShapeText() As String
         Get
             If Not IsNothing(Me.variantName) Then
-                If Me.variantName.Length > 0 Then
+                If Me.variantName.Length > 0 And Me.variantName <> portfolioVName Then
                     getShapeText = Me.name & "[ " & Me.variantName & " ]"
                 Else
                     getShapeText = Me.name
@@ -2831,7 +2831,7 @@ Public Class clsProjekt
             .farbe = Me.farbe
             .Schrift = Me.Schrift
             .Schriftfarbe = Me.Schriftfarbe
-            .VorlagenName = "$Union$"
+            .VorlagenName = portfolioVName
             .Risiko = Me.Risiko
             .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes + otherProj.Erloes
