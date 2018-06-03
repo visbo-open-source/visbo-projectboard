@@ -12292,13 +12292,13 @@ Public Module awinGeneralModules
     Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date,
                                 Optional ByVal showOnlySummary As Boolean = False)
 
-        Dim hproj As New clsProjekt
+
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim nvErrorMessage As String = ""
+
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
         Dim outPutCollection = New Collection
         Dim outputLine As String = ""
-        Dim tryZeile As Integer
+
 
         Dim boardwasEmpty As Boolean = (ShowProjekte.Count = 0)
         ' ab diesem Wert soll neu gezeichnet werden 
@@ -12324,163 +12324,57 @@ Public Module awinGeneralModules
             Dim spName As String = activeConstellation.constellationName
             Dim svName As String = portfolioVName
             Dim skey As String = calcProjektKey(spName, svName)
-            Dim sProj As clsProjekt = AlleProjektSummaries.getProject(skey)
+            Dim sProj As clsProjekt = getProjektFromSessionOrDB(spName, svName, AlleProjekte, storedAtOrBefore)
 
-            If IsNothing(sProj) Then
-                If request.projectNameAlreadyExists(spName, svName, Date.Now) Then
-                    sProj = request.retrieveOneProjectfromDB(spName, svName, Date.Now)
-                End If
-            End If
 
             If IsNothing(sProj) Then
                 sProj = calcUnionProject(activeConstellation, False, 0, "Summen-Projekt von " & spName)
+                ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                Dim newPosition As Integer = -1
+                If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                    If boardwasEmpty Then
+                        ' den gleichen key verwenden wie in der activeConstellation
+                        newPosition = activeConstellation.getBoardZeile(sProj.name)
+                    Else
+                        newPosition = activeConstellation.getBoardZeile(sProj.name) + startOfFreeRows
+                    End If
+                End If
+                AlleProjekte.Add(sProj, True, newPosition)
             End If
 
-            ' jetzt gibt es das summary Projekt 
+
             If Not IsNothing(sProj) Then
 
-                If AlleProjekte.Containskey(skey) Then
-                    AlleProjekte.Remove(skey, False)
-                End If
-                AlleProjekte.Add(sProj, False)
+                Dim showIT As Boolean = True
 
+                Try
+                    Call putItemOnVisualBoard(skey, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
 
-                If Not ShowProjekte.contains(sProj.name) Then
-                    ShowProjekte.Add(sProj) ' damit wird es in den Auswertungen berücksichtigt ... 
-                End If
+                    If AlleProjektSummaries.Containskey(skey) Then
+                        AlleProjektSummaries.Remove(skey, False)
+                    End If
 
-                If AlleProjektSummaries.Containskey(skey) Then
-                    AlleProjektSummaries.Remove(skey, False)
-                End If
+                    AlleProjektSummaries.Add(sProj, False)
 
-                AlleProjektSummaries.Add(sProj, False)
+                    If ShowProjekteSummaries.contains(sProj.name) Then
+                        ShowProjekteSummaries.Remove(sProj.name)
+                    End If
+                    ShowProjekteSummaries.Add(sProj, False)
+                Catch ex As Exception
 
-                If ShowProjekteSummaries.contains(sProj.name) Then
-                    ShowProjekteSummaries.Remove(sProj.name)
-                End If
-                ShowProjekteSummaries.Add(sProj, False)
-
-                ' jetzt muss das Summary Projekt letztendlich gezeichnet werden ...
-                tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
-                Call replaceProjectVariant(sProj.name, sProj.variantName, False, True, tryZeile)
+                End Try
 
             End If
 
         Else
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
-
-
                 Dim showIT As Boolean = kvp.Value.show
-
-                If AlleProjekte.Containskey(kvp.Key) Then
-                    ' Projekt ist bereits im Hauptspeicher geladen
-                    hproj = AlleProjekte.getProject(kvp.Key)
-
-                    ' ist es aber auch der richtige TimeStamp ? 
-                    If hproj.timeStamp > storedAtOrBefore Then
-                        ' in einer Session dürfen keine TimeStamps aktuellen bzw. früheren TimeStamps gemischt werden ... 
-                        ' Meldung in der , und der Nutzer muss alles neu laden 
-
-                        outputLine = "es gibt Projekte mit jüngerem TimeStamp in der Session ... "
-                        outPutCollection.Add(outputLine)
-                        outputLine = "die Aktion wurde abgebrochen ... "
-                        outPutCollection.Add(outputLine)
-                        outputLine = "bitte löschen Sie die Session und laden Sie dann die Szenarien mit dem gewünschten Versions-Datum"
-                        outPutCollection.Add(outputLine)
-
-                        Exit For
-                    Else
-                        If showIT Then
-
-                            If ShowProjekte.contains(hproj.name) Then
-                                ' dann soll das Projekt da bleiben, wo es ist 
-                                Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
-                                If shownProject.variantName = hproj.variantName Then
-                                    ' es wird bereits gezeigt, nichts machen ...
-                                Else
-                                    tryZeile = shownProject.tfZeile
-                                    ' jetzt die Variante aktivieren 
-                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                                End If
-
-                            ElseIf boardwasEmpty Then
-                                'tryZeile = kvp.Value.zeile
-                                tryZeile = activeConstellation.getBoardZeile(hproj.name)
-                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                            Else
-
-                                'tryZeile = kvp.Value.zeile + startOfFreeRows - 1
-                                'tryZeile = startOfFreeRows + zeilenOffset
-                                tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
-                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                                'zeilenOffset = zeilenOffset + 1
-                            End If
-
-
-                        Else
-                            ' gar nichts machen
-                        End If
-
-                    End If
-
-
-
-
-                Else
-                    If request.pingMongoDb() Then
-
-                        If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
-
-                            ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                            hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
-
-                            If Not IsNothing(hproj) Then
-                                ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                                Dim newPosition As Integer = -1
-                                If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
-                                    If boardwasEmpty Then
-                                        ' den gleichen key verwenden wie in der activeConstellation
-                                        newPosition = activeConstellation.getBoardZeile(hproj.name)
-                                    Else
-                                        newPosition = activeConstellation.getBoardZeile(hproj.name) + startOfFreeRows
-                                    End If
-                                End If
-                                AlleProjekte.Add(hproj, True, newPosition)
-                                ' jetzt die Variante aktivieren 
-                                ' aber nur wenn es auch das Flag show hat 
-                                If showIT Then
-
-                                    If boardwasEmpty Then
-                                        'tryZeile = kvp.Value.zeile
-                                        tryZeile = activeConstellation.getBoardZeile(hproj.name)
-                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                                    Else
-                                        'tryZeile = startOfFreeRows + zeilenOffset
-                                        tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
-                                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
-                                        'zeilenOffset = zeilenOffset + 1
-                                    End If
-
-                                End If
-                            Else
-                                outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
-                                outPutCollection.Add(outputLine)
-                            End If
-
-                        Else
-                            hproj = Nothing
-
-                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
-                            outPutCollection.Add(outputLine)
-
-                            'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-                            'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-                        End If
-                    Else
-                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-                    End If
-                End If
+                Try
+                    Call putItemOnVisualBoard(kvp.Key, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
+                Catch ex As Exception
+                    Exit For
+                End Try
 
             Next
         End If
@@ -12496,6 +12390,141 @@ Public Module awinGeneralModules
 
         End If
 
+
+    End Sub
+
+    ''' <summary>
+    ''' platziert das (Summary-) Projekt auf dem Board
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <param name="showIT"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <param name="boardwasEmpty"></param>
+    ''' <param name="activeConstellation"></param>
+    ''' <param name="startOfFreeRows"></param>
+    ''' <param name="outPutCollection"></param>
+    Private Sub putItemOnVisualBoard(ByVal key As String, ByVal showIT As Boolean, ByVal storedAtOrBefore As Date,
+                                     ByVal boardwasEmpty As Boolean, ByVal activeConstellation As clsConstellation, ByVal startOfFreeRows As Integer,
+                                     ByRef outPutCollection As Collection)
+
+        Dim outputLine As String = ""
+        Dim pName As String = getPnameFromKey(key)
+        Dim vName As String = getVariantnameFromKey(key)
+        Dim hproj As clsProjekt
+        Dim tryZeile As Integer
+        Dim nvErrorMessage As String = ""
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        If AlleProjekte.Containskey(key) Then
+            ' Projekt ist bereits im Hauptspeicher geladen
+            hproj = AlleProjekte.getProject(key)
+
+            ' ist es aber auch der richtige TimeStamp ? 
+            If DateDiff(DateInterval.Day, hproj.timeStamp, storedAtOrBefore) < 0 Then
+
+                ' in einer Session dürfen keine TimeStamps aktuellen bzw. früheren TimeStamps gemischt werden ... 
+                ' Meldung in der , und der Nutzer muss alles neu laden
+
+                outputLine = "es gibt Projekte mit jüngerem TimeStamp in der Session ... "
+                outPutCollection.Add(outputLine)
+                outputLine = "die Aktion wurde abgebrochen ... "
+                outPutCollection.Add(outputLine)
+                outputLine = "bitte löschen Sie die Session und laden Sie dann die Szenarien mit dem gewünschten Versions-Datum"
+                outPutCollection.Add(outputLine)
+
+                Throw New ArgumentException("Fehler 366734")
+            Else
+                If showIT Then
+
+                    If ShowProjekte.contains(hproj.name) Then
+                        ' dann soll das Projekt da bleiben, wo es ist 
+                        Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
+                        If shownProject.variantName = hproj.variantName Then
+                            ' es wird bereits gezeigt, nichts machen ...
+                        Else
+                            tryZeile = shownProject.tfZeile
+                            ' jetzt die Variante aktivieren 
+                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        End If
+
+                    ElseIf boardwasEmpty Then
+                        'tryZeile = kvp.Value.zeile
+                        tryZeile = activeConstellation.getBoardZeile(hproj.name)
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                    Else
+
+                        'tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                        'tryZeile = startOfFreeRows + zeilenOffset
+                        tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        'zeilenOffset = zeilenOffset + 1
+                    End If
+
+
+                Else
+                    ' gar nichts machen
+                End If
+
+            End If
+
+
+
+
+        Else
+            If request.pingMongoDb() Then
+
+                If request.projectNameAlreadyExists(pName, vName, storedAtOrBefore) Then
+
+                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                    hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtOrBefore)
+
+                    If Not IsNothing(hproj) Then
+                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                        Dim newPosition As Integer = -1
+                        If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                            If boardwasEmpty Then
+                                ' den gleichen key verwenden wie in der activeConstellation
+                                newPosition = activeConstellation.getBoardZeile(hproj.name)
+                            Else
+                                newPosition = activeConstellation.getBoardZeile(hproj.name) + startOfFreeRows
+                            End If
+                        End If
+                        AlleProjekte.Add(hproj, True, newPosition)
+                        ' jetzt die Variante aktivieren 
+                        ' aber nur wenn es auch das Flag show hat 
+                        If showIT Then
+
+                            If boardwasEmpty Then
+                                'tryZeile = kvp.Value.zeile
+                                tryZeile = activeConstellation.getBoardZeile(hproj.name)
+                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                            Else
+                                'tryZeile = startOfFreeRows + zeilenOffset
+                                tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
+                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                                'zeilenOffset = zeilenOffset + 1
+                            End If
+
+                        End If
+                    Else
+                        outputLine = pName & "(" & vName & ") Code: 098 " & nvErrorMessage
+                        outPutCollection.Add(outputLine)
+                    End If
+
+                Else
+                    hproj = Nothing
+
+                    outputLine = pName & "(" & vName & ")" & nvErrorMessage
+                    outPutCollection.Add(outputLine)
+
+                    'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                    'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                End If
+            Else
+                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & pName & "'konnte nicht geladen werden")
+            End If
+        End If
 
     End Sub
 
