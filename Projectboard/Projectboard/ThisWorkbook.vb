@@ -236,25 +236,29 @@ Public Class ThisWorkbook
 
             End Try
 
-            
+
 
             If cancelAbbruch Then
                 Cancel = True
             Else
-                appInstance.ScreenUpdating = False
-                ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-                Try
-                    'Call awinWritePhaseDefinitions()
-                    Call awinWritePhaseMilestoneDefinitions()
-                Catch ex As Exception
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("Error when writing Projectboard Customization File")
-                    Else
-                        Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
-                    End If
+                ' dann wird das ProjectboardCustomization File wieder weggespeichert ... 
+                If awinSettings.readWriteMissingDefinitions Then
+                    appInstance.ScreenUpdating = False
+                    ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+                    Try
+                        'Call awinWritePhaseDefinitions()
+                        Call awinWritePhaseMilestoneDefinitions()
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error when writing Projectboard Customization File")
+                        Else
+                            Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
+                        End If
 
-                End Try
-                appInstance.ScreenUpdating = True
+                    End Try
+                    appInstance.ScreenUpdating = True
+                End If
+
             End If
 
         End If

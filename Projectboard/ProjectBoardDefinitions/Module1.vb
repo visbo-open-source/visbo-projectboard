@@ -79,6 +79,11 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
 
+    ' ist das Pendant zu AlleProjekte, nimmt nur Summary Projekte auf 
+    Public AlleProjektSummaries As New clsProjekteAlle
+    ' ist das Pendant zu ShowProjekte, gibt an welche Summary Projekte geladen sind  
+    Public ShowProjekteSummaries As New clsProjekte
+
     ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
     ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
     ' damit liesse sich die Zeit deutlich reduzieren , wenn es um den Vergleich aktueller Stand / DB Stand geht 
@@ -173,6 +178,9 @@ Public Module Module1
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
+
+    ' diese Konstante bestimmt, welchen Varianten Namen Portfolios bzw. Programme bekommen 
+    Public Const portfolioVName As String = "Portfolio/Prog."
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
@@ -4927,9 +4935,9 @@ Public Module Module1
                 End If
 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Visual Board" & outputmsg & "projects"
+                    tmpResult = "Visual Board" & outputmsg & "objects"
                 Else
-                    tmpResult = "Visual Board" & outputmsg & "Projekte"
+                    tmpResult = "Visual Board" & outputmsg & "Objekte"
                 End If
 
             Case PTwindows.massEdit

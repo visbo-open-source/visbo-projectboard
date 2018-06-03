@@ -215,6 +215,7 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
+            Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
             appInstance.ScreenUpdating = False
 
             If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
@@ -226,6 +227,9 @@ Imports System.Windows
             Dim constellationsToDo As New clsConstellations
 
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
+
+                ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Suumary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
+                ' geladen idt oder aber in einem anderen Summary Projekt referenziert wird ! 
 
                 Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
                 If Not IsNothing(constellation) Then
@@ -250,7 +254,7 @@ Imports System.Windows
             'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
-                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore)
+                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProjects)
             End If
 
             ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
@@ -892,6 +896,15 @@ Imports System.Windows
         Dim abbruch As Boolean = False
 
 
+        ' check ob auch keine Summary Projects selektiert sind ...
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
+
+
+
+        ' hier geht es los , wenn ok ... 
         Try
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -1178,6 +1191,12 @@ Imports System.Windows
 
         Call projektTafelInit()
 
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
+
         enableOnUpdate = False
 
         Try
@@ -1225,6 +1244,12 @@ Imports System.Windows
         Dim i As Integer
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         enableOnUpdate = False
 
@@ -1288,6 +1313,12 @@ Imports System.Windows
         Dim i As Integer
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         enableOnUpdate = False
 
@@ -1368,6 +1399,12 @@ Imports System.Windows
         Dim key As String
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
 
         enableOnUpdate = False
@@ -3246,168 +3283,6 @@ Imports System.Windows
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
         Call massEditRcTeAt(ptModus.massEditRessCost)
-        ' das unten stehende wird jetzt durch den Aufruf oben gemacht 
-        'Dim todoListe As New Collection
-        'Dim outputFenster As New frmOutputWindow
-        'Dim outputCollection As New Collection
-        'Dim outPutLine As String = ""
-
-        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-        '' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
-        '' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
-
-        'Call projektTafelInit()
-
-        'enableOnUpdate = False
-        '' jetzt auf alle Fälle wieder das MPT Window aktivieren ...
-        'projectboardWindows(PTwindows.mpt).Activate()
-
-        'If ShowProjekte.Count > 0 Then
-
-        '    ' neue Methode 
-        '    todoListe = getProjectSelectionList(True)
-
-        '    ' check, ob wirklich alle Projekte editiert werden sollen ... 
-        '    If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
-        '        Dim yesNo As Integer
-        '        yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
-        '        If yesNo = MsgBoxResult.No Then
-        '            enableOnUpdate = True
-        '            Exit Sub
-        '        End If
-        '    End If
-
-
-
-        '    If todoListe.Count > 0 Then
-
-        '        ' jetzt aufbauen der dbCacheProjekte
-        '        Call buildCacheProjekte(todoListe)
-
-
-        '        ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
-        '        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-        '            ' alles ok , bereits gesetzt 
-
-        '        Else
-
-        '            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-        '            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-        '            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-        '        End If
-
-
-        '        Call enableControls(ptModus.massEditRessCost)
-
-        '        ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
-        '        ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
-        '        'Call saveProjectsToBackup(todoListe)
-
-        '        ' hier wird die aktuelle Zusammenstellung an Windows gespeichert ...
-        '        'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
-
-        '        ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
-        '        appInstance.ScreenUpdating = False
-
-        '        Try
-        '            enableOnUpdate = False
-
-        '            Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
-
-        '            appInstance.EnableEvents = True
-
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
-        '                    projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
-        '                Else
-        '                    projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-        '                End If
-
-        '            Catch ex As Exception
-        '                projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-        '            End Try
-
-        '            ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
-        '            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
-        '                .Activate()
-        '            End With
-
-        '            With projectboardWindows(PTwindows.massEdit)
-        '                .WindowState = Excel.XlWindowState.xlMaximized
-        '                .SplitRow = 1
-        '                .SplitColumn = 6
-        '                .FreezePanes = True
-        '                .DisplayFormulas = False
-        '                .DisplayHeadings = False
-        '                .DisplayGridlines = True
-        '                .GridlineColor = RGB(220, 220, 220)
-        '                .DisplayWorkbookTabs = False
-        '                .Caption = bestimmeWindowCaption(PTwindows.massEdit)
-        '            End With
-
-
-        '            ' jetzt das Multiprojekt Window ausblenden ...
-        '            projectboardWindows(PTwindows.mpt).Visible = False
-
-        '            ' jetzt auch alle anderen ggf offenen pr und pf Windows unsichtbar machen ... 
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-        '                    projectboardWindows(PTwindows.mptpf).Visible = False
-        '                End If
-        '            Catch ex As Exception
-
-        '            End Try
-
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-        '                    projectboardWindows(PTwindows.mptpr).Visible = False
-        '                End If
-        '            Catch ex As Exception
-
-        '            End Try
-
-
-
-        '        Catch ex As Exception
-        '            Call MsgBox("Fehler: " & ex.Message)
-        '            If appInstance.EnableEvents = False Then
-        '                appInstance.EnableEvents = True
-        '            End If
-        '            If appInstance.ScreenUpdating = False Then
-        '                appInstance.ScreenUpdating = True
-        '            End If
-        '        End Try
-
-        '    Else
-        '        enableOnUpdate = True
-        '        If appInstance.EnableEvents = False Then
-        '            appInstance.EnableEvents = True
-        '        End If
-        '        If awinSettings.englishLanguage Then
-        '            Call MsgBox("no projects apply to criterias ...")
-        '        Else
-        '            Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
-        '        End If
-        '    End If
-
-
-        'Else
-        '    enableOnUpdate = True
-        '    If appInstance.EnableEvents = False Then
-        '        appInstance.EnableEvents = True
-        '    End If
-
-        '    If awinSettings.englishLanguage Then
-        '        Call MsgBox("no active projects ...")
-        '    Else
-        '        Call MsgBox("Es gibt keine aktiven Projekte ...")
-        '    End If
-
-        'End If
-
-
 
     End Sub
 
@@ -4349,6 +4224,11 @@ Imports System.Windows
 
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Call projektTafelInit()
 
@@ -4426,6 +4306,12 @@ Imports System.Windows
         Dim atleastOne As Boolean = False
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4505,6 +4391,12 @@ Imports System.Windows
         Dim atleastOne As Boolean = False
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4588,6 +4480,12 @@ Imports System.Windows
         Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -5019,8 +4917,10 @@ Imports System.Windows
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
                         'sessionConstellationP enthält alle Projekte aus dem Import 
-                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, unionProjects:=False)
+                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+                        Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
                         'Call sessionConstellationP.calcUnionProject(False)
+                        'Call sessionConstellationS.calcUnionProject(False)
 
                         ' Testen ..
                         ' test
@@ -5031,23 +4931,13 @@ Imports System.Windows
                         ' ende test
 
 
-                        ' sessionConstellationS enthält alle Programme / Szenarien aus dem Import 
-                        'Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, unionProjects:=True)
-                        'Call sessionConstellationS.calcUnionProject(False)
-
                         ' test
                         'everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
                         'If Not everythingOK Then
                         '    Call MsgBox("nicht identisch: " & sessionConstellationS.constellationName)
                         'End If
                         ' ende test
-                        ' ''If wasNotEmpty Then
-                        ' ''    Call awinClearPlanTafel()
-                        ' ''End If
 
-                        '' ''Call awinZeichnePlanTafel(True)
-                        ' ''Call awinZeichnePlanTafel(False)
-                        ' ''Call awinNeuZeichnenDiagramme(2)
 
                         If sessionConstellationP.count > 0 Then
 
@@ -5056,28 +4946,13 @@ Imports System.Windows
                             End If
 
                             projectConstellations.Add(sessionConstellationP)
+                            ' jetzt auf Projekt-Tafel anzeigen 
+                            Call loadSessionConstellation(scenarioNameP, False, False, True)
 
                         Else
                             Call MsgBox("keine Projekte importiert ...")
                         End If
 
-                        'If sessionConstellationS.count > 0 Then
-
-                        '    If projectConstellations.Contains(scenarioNameS) Then
-                        '        projectConstellations.Remove(scenarioNameS)
-                        '    End If
-
-                        '    projectConstellations.Add(sessionConstellationS)
-
-                        'Else
-                        '    Call MsgBox("keine Programme importiert ...")
-                        'End If
-
-                        ' ketzt auf Projekttafel anzeigen 
-                        Call loadSessionConstellation(scenarioNameP, False, False, True)
-
-                        'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                        'Call importProjekteEintragen(importDate, ProjektStatus(1))
 
                         If ImportProjekte.Count > 0 Then
                             ImportProjekte.Clear(False)

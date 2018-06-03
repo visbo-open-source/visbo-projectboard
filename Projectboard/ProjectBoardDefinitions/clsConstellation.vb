@@ -28,7 +28,9 @@
     ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
     Private _sortType As Integer
 
+
     Private _constellationName As String = "Last"
+
 
     ''' <summary>
     ''' gibt den Projekt-Namen zurück, der an der entsprechenden Position in der Sort-Liste steht, allerdings zählen nur die PRojekte in ShowProjekte
@@ -744,61 +746,6 @@
 
     End Sub
 
-    ''' <summary>
-    ''' erzeugt das Union Projekt für die Konstellation und trägt es in die AlleProjekte bzw. ImportProjekte ein
-    ''' </summary>
-    ''' <param name="considerImportProjekte"></param>
-    Public Sub calcUnionProject(ByVal considerImportProjekte As Boolean,
-                                Optional ByVal budget As Double = 0.0,
-                                Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
-                                Optional ByVal ampel As Integer = 0,
-                                Optional ByVal ampelbeschreibung As String = "",
-                                Optional ByVal responsible As String = "")
-
-
-        Dim unionProj As clsProjekt = Nothing
-        Dim projektListe As clsProjekteAlle = AlleProjekte
-
-        ' jetzt die Union bilden ... das erste als Default besetzen 
-        Dim listOfProjectNames As SortedList(Of String, String) = Me.getProjectNames(considerShowAttribute:=True,
-                                                                                       showAttribute:=True,
-                                                                                       fullNameKeys:=True)
-        If considerImportProjekte Then
-            projektListe = ImportProjekte
-        End If
-
-        Try
-            If projektListe.Count > 0 And listOfProjectNames.Count > 0 Then
-                ' nur, wenn überhaupt Projekte angezeigt würden, muss eine Union gemacht werden 
-                Dim startDatum As Date = projektListe.liste.First.Value.startDate
-                Dim endeDatum As Date = projektListe.liste.First.Value.endeDate
-                unionProj = New clsProjekt(Me.constellationName, True, startDatum, endeDatum)
-
-                ' jetzt mit allen anderen aufsummieren ..
-                For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
-                    Dim hproj As clsProjekt = projektListe.getProject(kvp.Key)
-                    unionProj = unionProj.unionizeWith(hproj)
-                Next
-
-                If projektListe.Containskey(calcProjektKey(unionProj)) Then
-                    projektListe.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
-                End If
-
-                ' jetzt ggf die Attribute noch ergänzen 
-                With unionProj
-                    .Erloes = budget
-                    .description = description
-                    .ampelStatus = ampel
-                    .ampelErlaeuterung = ampelbeschreibung
-                    .leadPerson = responsible
-                End With
-
-                projektListe.Add(unionProj, updateCurrentConstellation:=False)
-            End If
-        Catch ex As Exception
-
-        End Try
-    End Sub
 
     ''' <summary>
     ''' kopiert eine Constellation, d.h jetzt müssen auch sortType und sortList kopiert werden
@@ -819,9 +766,9 @@
             End If
 
 
-
             With copyResult
                 .constellationName = cName
+
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                     Dim copiedItem As clsConstellationItem = kvp.Value.copy

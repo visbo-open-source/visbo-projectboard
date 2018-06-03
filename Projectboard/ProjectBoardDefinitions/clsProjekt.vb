@@ -1018,7 +1018,7 @@ Public Class clsProjekt
     Public ReadOnly Property getShapeText() As String
         Get
             If Not IsNothing(Me.variantName) Then
-                If Me.variantName.Length > 0 Then
+                If Me.variantName.Length > 0 And Me.variantName <> portfolioVName Then
                     getShapeText = Me.name & "[ " & Me.variantName & " ]"
                 Else
                     getShapeText = Me.name
@@ -1356,8 +1356,8 @@ Public Class clsProjekt
 
         ' jetzt sind alle RoleIds, die gelöscht werden sollen in der Liste  roleIDs 
         ' jetzt werden einfach alle Phasen durchgegangen, ob sie eine der  Rollen enthalten 
-        For ip = 1 To Me.CountPhases
-            Dim cPhase As clsPhase = Me.getPhase(ip)
+        For ip = 1 To newProj.CountPhases
+            Dim cPhase As clsPhase = newProj.getPhase(ip)
 
             If Not IsNothing(rolesToBeDeleted) Then
                 If roleIDs.Count > 0 Then
@@ -2684,9 +2684,12 @@ Public Class clsProjekt
             .timeStamp = Date.Now
             .shpUID = Me.shpUID
             .tfZeile = Me.tfZeile
-
+            .variantName = variantName
+            .variantDescription = variantDescription
         End With
+
         createVariant = newproj
+
     End Function
 
     ''' <summary>
@@ -2828,7 +2831,7 @@ Public Class clsProjekt
             .farbe = Me.farbe
             .Schrift = Me.Schrift
             .Schriftfarbe = Me.Schriftfarbe
-            .VorlagenName = "$Union$"
+            .VorlagenName = portfolioVName
             .Risiko = Me.Risiko
             .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes + otherProj.Erloes
@@ -3030,11 +3033,11 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getRessourcenBedarf(itemName)
+                            valueArray = Me.getRessourcenBedarfNew(itemName)
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getRessourcenBedarf(itemName)
+                                tempArray = Me.getRessourcenBedarfNew(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next
@@ -3044,12 +3047,12 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getKostenBedarf(itemName)
+                            valueArray = Me.getKostenBedarfNew(itemName)
 
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getKostenBedarf(itemName)
+                                tempArray = Me.getKostenBedarfNew(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next

@@ -6908,10 +6908,14 @@ Public Module awinGeneralModules
                                             createdPrograms = createdPrograms + 1
                                             projectConstellations.Add(current1program)
 
-                                            ' jetzt das union-Projekt erstellen 
-                                            current1program.calcUnionProject(True, budget:=last1Budget)
+                                            ' jetzt das union-Projekt erstellen ; wird aktuell noch nicht gemacht ...
+                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
 
+                                            If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
+                                                ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                                            End If
 
+                                            ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
                                             ' test
                                             ''Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                                             ''If Not everythingOK Then
@@ -6973,10 +6977,10 @@ Public Module awinGeneralModules
                                     ' was ist der Gesamtbedarf dieser Rolle in dem besagten Vorhaben ? 
                                     For i As Integer = 0 To colRoleNamesToConsider.Length - 1
                                         Try
-                                            Dim tmpValue As Double = CDbl(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) * nrOfDaysMonth
-                                            If IsNothing(tmpValue) Then
+                                            If IsNothing(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) Then
                                                 roleNeeds(i) = 0.0
                                             Else
+                                                Dim tmpValue As Double = CDbl(CType(.Cells(zeile, colRoleNamesToConsider(i)), Excel.Range).Value) * nrOfDaysMonth
                                                 If tmpValue >= 0 Then
                                                     roleNeeds(i) = tmpValue
                                                 Else
@@ -7138,7 +7142,13 @@ Public Module awinGeneralModules
                         projectConstellations.Add(current1program)
 
                         ' jetzt das union-Projekt erstellen 
-                        current1program.calcUnionProject(True, budget:=last1Budget)
+                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
+
+                        If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
+                            ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
+                        End If
+
+                        ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
 
                         ' test
                         ''Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
@@ -7405,16 +7415,52 @@ Public Module awinGeneralModules
                             ' dabei wird die updateSummaryRole und alle dazu gehörenden SubRoles gelöscht 
                             ' es müssen aber auch die Gruppe gelöscht werden ... 
 
+                            ' test tk 
+                            Dim formerLeft As Integer = showRangeLeft
+                            Dim formerRight As Integer = showRangeRight
+                            showRangeLeft = getColumnOfDate(CDate("1.1.2018"))
+                            showRangeRight = getColumnOfDate(CDate("31.12.2018"))
+
+                            Dim testprojekte As New clsProjekte
+                            testprojekte.Add(oldProj)
+
+                            Dim gesamtVorher As Double = oldProj.getAlleRessourcen().Sum
+                            Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonthNew("Orga", True).Sum
+                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
+
+                            If gesamtVorher <> gesamtVorher2 Then
+                                Call MsgBox("Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString)
+                            End If
                             ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
                             newProj = oldProj.deleteRolesAndCosts(deleteRoles, Nothing, True)
+                            Dim gesamtNachher As Double = newProj.getAlleRessourcen().Sum
+                            Dim bosvNachher As Double = newProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
+
+                            If Not bosvNachher = 0 Then
+                                Call MsgBox("Fehler bei" & newProj.name)
+                            End If
 
                             ' jetzt alle Rollen / Phasen Werte hinzufügen 
+                            Dim addValues As Double = 0.0
+                            For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+                                addValues = addValues + kvp.Value.Sum
+                            Next
                             newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
+
+                            Dim bosvErgebnis As Double = newProj.getRessourcenBedarfNew("Grp-BOSV-KB", True).Sum
+
+                            If bosvErgebnis <> addValues Then
+                                outPutLine = "addValues ungleich ergebnis: " & addValues.ToString("#0.##") & " <> " & bosvErgebnis.ToString("#0.##")
+                                outputCollection.Add(outPutLine)
+                            End If
 
                             ' jetzt in die Import-Projekte eintragen 
                             upDatedProjects = upDatedProjects + 1
                             ImportProjekte.Add(newProj, False)
 
+                            ' wegen test 
+                            showRangeLeft = formerLeft
+                            showRangeRight = formerRight
                         End If
 
                     End If
@@ -7729,8 +7775,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Function verarbeiteImportProjekte(ByVal cName As String,
                                              Optional ByVal noComparison As Boolean = False,
-                                             Optional ByVal unionProjects As Boolean = False,
-                                             Optional ByVal noScenarioCreation As Boolean = False) As clsConstellation
+                                             Optional ByVal noScenarioCreation As Boolean = False,
+                                             Optional ByVal considerSummaryProjects As Boolean = False) As clsConstellation
         ' in der Reihenfolge des Auftretens aufnehmen , Name wie übergeben 
         Dim newC As New clsConstellation(ptSortCriteria.customTF, cName)
         currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
@@ -7738,6 +7784,7 @@ Public Module awinGeneralModules
         Dim vglProj As clsProjekt
         Dim lfdZeilenNr As Integer = 2
         Dim ok As Boolean
+        Dim takeIntoAccount As Boolean = True
 
         Dim importDate As Date = Date.Now
 
@@ -7745,8 +7792,15 @@ Public Module awinGeneralModules
 
             Dim impProjekt As clsProjekt = kvp.Value
 
-            If impProjekt.isUnion = unionProjects Then
-                ' jetzt das Import Datum setzen ...
+            If considerSummaryProjects Then
+                takeIntoAccount = impProjekt.isUnion
+            Else
+                takeIntoAccount = Not impProjekt.isUnion
+            End If
+
+            If takeIntoAccount Then
+
+                ' jetzt das Import Datum setzen und dann in PortfolioProjektSummareis verschieben ...
                 impProjekt.timeStamp = importDate
 
                 Dim importKey As String = calcProjektKey(impProjekt)
@@ -7806,52 +7860,51 @@ Public Module awinGeneralModules
 
                     End If
 
-                End If
+                    ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf markieren, wenn unterschiedlich  anlegen ...
+                    If Not IsNothing(vglProj) Then
 
+                        If Not impProjekt.isIdenticalTo(vglProj) Then
+                            ' es gibt Unterschiede, es wird keine Variante mehr angelegt, sondern es wird als verändert markiert
+                            impProjekt.marker = True
 
+                            'impProjekt.variantName = cName
+                            importKey = calcProjektKey(impProjekt)
 
-                ' wenn jetzt vglProj <> Nothing, dann vergleichen und ggf Variante anlegen ...
-                If Not IsNothing(vglProj) And Not noComparison Then
+                            ' wenn die Variante bereits in der Session existiert ..
+                            ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
+                            If AlleProjekte.Containskey(importKey) Then
+                                AlleProjekte.Remove(importKey)
+                            End If
 
-                    ' erstezt durch Abfrage auf Identität 
-                    'Dim unterschiede As Collection = impProjekt.listOfDifferences(vglProj, True, 0)
-
-                    If Not impProjekt.isIdenticalTo(vglProj) Then
-                        ' es gibt Unterschiede, es wird keine Variante mehr angelegt, sondern es wird als verändert markiert
-                        impProjekt.marker = True
-
-                        'impProjekt.variantName = cName
-                        importKey = calcProjektKey(impProjekt)
-
-                        ' wenn die Variante bereits in der Session existiert ..
-                        ' wird die bisherige gelöscht , die neue über ImportProjekte neu aufgenommen  
-                        If AlleProjekte.Containskey(importKey) Then
-                            AlleProjekte.Remove(importKey)
+                            ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
+                            AlleProjekte.Add(impProjekt)
                         End If
 
-                        ' jetzt das Importierte PRojekt in AlleProjekte aufnehmen 
-                        AlleProjekte.Add(impProjekt)
                     End If
 
                 End If
+
 
                 ' Aufnehmen in Constellation
                 Dim newCItem As New clsConstellationItem
                 newCItem.projectName = impProjekt.name
                 newCItem.variantName = impProjekt.variantName
+
                 If newC.containsProject(impProjekt.name) Then
                     newCItem.show = False
                 Else
                     newCItem.show = True
                 End If
+
                 newCItem.start = impProjekt.startDate
                 newCItem.zeile = lfdZeilenNr
                 'newCItem.zeile = lfdZeilenNr
                 newC.add(newCItem, sKey:=lfdZeilenNr)
 
                 lfdZeilenNr = lfdZeilenNr + 1
+            Else
+                ' nichts tun ...
             End If
-
 
         Next
 
@@ -12230,21 +12283,22 @@ Public Module awinGeneralModules
     ''End Sub
 
     ''' <summary>
-    ''' fügt die in der Konstellation aufgeführten Projekte hinzu; 
+    ''' visualisiert die in der Konstellation aufgeführten Projekte hinzu; 
     ''' wenn Sie bereits geladen sind, wird nachgesehen, ob die richtige Variante aktiviert ist 
     ''' ggf. wird diese Variante dann aktiviert 
     ''' </summary>
     ''' <param name="activeConstellation"></param>
     ''' <remarks></remarks>
-    Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date)
+    Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date,
+                                Optional ByVal showOnlySummary As Boolean = False)
 
-        Dim hproj As New clsProjekt
+
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim nvErrorMessage As String = ""
+
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
         Dim outPutCollection = New Collection
         Dim outputLine As String = ""
-        Dim tryZeile As Integer
+
 
         Dim boardwasEmpty As Boolean = (ShowProjekte.Count = 0)
         ' ab diesem Wert soll neu gezeichnet werden 
@@ -12263,124 +12317,67 @@ Public Module awinGeneralModules
         End If
 
 
-        ' jetzt werden die einzelnen Projekte dazugeholt 
+        ' jetzt werden die einzelnen Projekte dazugeholt oder nur das Summary Projekt
+        If showOnlySummary Then
 
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
-
-
-
-            Dim showIT As Boolean = kvp.Value.show
-
-            If AlleProjekte.Containskey(kvp.Key) Then
-                ' Projekt ist bereits im Hauptspeicher geladen
-                hproj = AlleProjekte.getProject(kvp.Key)
-
-                ' ist es aber auch der richtige TimeStamp ? 
-                If hproj.timeStamp > storedAtOrBefore Then
-                    ' in einer Session dürfen keine TimeStamps aktuellen bzw. früheren TimeStamps gemischt werden ... 
-                    ' Meldung in der , und der Nutzer muss alles neu laden 
-
-                    outputLine = "es gibt Projekte mit jüngerem TimeStamp in der Session ... "
-                    outPutCollection.Add(outputLine)
-                    outputLine = "die Aktion wurde abgebrochen ... "
-                    outPutCollection.Add(outputLine)
-                    outputLine = "bitte löschen Sie die Session und laden Sie dann die Szenarien mit dem gewünschten Versions-Datum"
-                    outPutCollection.Add(outputLine)
-
-                    Exit For
-                Else
-                    If showIT Then
-
-                        If ShowProjekte.contains(hproj.name) Then
-                            ' dann soll das Projekt da bleiben, wo es ist 
-                            Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
-                            If shownProject.variantName = hproj.variantName Then
-                                ' es wird bereits gezeigt, nichts machen ...
-                            Else
-                                tryZeile = shownProject.tfZeile
-                                ' jetzt die Variante aktivieren 
-                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                            End If
-
-                        ElseIf boardwasEmpty Then
-                            'tryZeile = kvp.Value.zeile
-                            tryZeile = activeConstellation.getBoardZeile(hproj.name)
-                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                        Else
-
-                            'tryZeile = kvp.Value.zeile + startOfFreeRows - 1
-                            'tryZeile = startOfFreeRows + zeilenOffset
-                            tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
-                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                            'zeilenOffset = zeilenOffset + 1
-                        End If
+            ' das Summary Projekt suchen 
+            Dim spName As String = activeConstellation.constellationName
+            Dim svName As String = portfolioVName
+            Dim skey As String = calcProjektKey(spName, svName)
+            Dim sProj As clsProjekt = getProjektFromSessionOrDB(spName, svName, AlleProjekte, storedAtOrBefore)
 
 
+            If IsNothing(sProj) Then
+                sProj = calcUnionProject(activeConstellation, False, 0, "Summen-Projekt von " & spName)
+                ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                Dim newPosition As Integer = -1
+                If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                    If boardwasEmpty Then
+                        ' den gleichen key verwenden wie in der activeConstellation
+                        newPosition = activeConstellation.getBoardZeile(sProj.name)
                     Else
-                        ' gar nichts machen
+                        newPosition = activeConstellation.getBoardZeile(sProj.name) + startOfFreeRows
                     End If
-
                 End If
-
-
-
-
-            Else
-                If request.pingMongoDb() Then
-
-                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
-
-                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
-
-                        If Not IsNothing(hproj) Then
-                            ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                            Dim newPosition As Integer = -1
-                            If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
-                                If boardwasEmpty Then
-                                    ' den gleichen key verwenden wie in der activeConstellation
-                                    newPosition = activeConstellation.getBoardZeile(hproj.name)
-                                Else
-                                    newPosition = activeConstellation.getBoardZeile(hproj.name) + startOfFreeRows
-                                End If
-                            End If
-                            AlleProjekte.Add(hproj, True, newPosition)
-                            ' jetzt die Variante aktivieren 
-                            ' aber nur wenn es auch das Flag show hat 
-                            If showIT Then
-
-                                If boardwasEmpty Then
-                                    'tryZeile = kvp.Value.zeile
-                                    tryZeile = activeConstellation.getBoardZeile(hproj.name)
-                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                                Else
-                                    'tryZeile = startOfFreeRows + zeilenOffset
-                                    tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
-                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
-                                    'zeilenOffset = zeilenOffset + 1
-                                End If
-
-                            End If
-                        Else
-                            outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
-                            outPutCollection.Add(outputLine)
-                        End If
-
-                    Else
-                        hproj = Nothing
-
-                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
-                        outPutCollection.Add(outputLine)
-
-                        'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-                        'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-                    End If
-                Else
-                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-                End If
+                AlleProjekte.Add(sProj, True, newPosition)
             End If
 
-        Next
+
+            If Not IsNothing(sProj) Then
+
+                Dim showIT As Boolean = True
+
+                Try
+                    Call putItemOnVisualBoard(skey, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
+
+                    If AlleProjektSummaries.Containskey(skey) Then
+                        AlleProjektSummaries.Remove(skey, False)
+                    End If
+
+                    AlleProjektSummaries.Add(sProj, False)
+
+                    If ShowProjekteSummaries.contains(sProj.name) Then
+                        ShowProjekteSummaries.Remove(sProj.name)
+                    End If
+                    ShowProjekteSummaries.Add(sProj, False)
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+        Else
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+
+                Dim showIT As Boolean = kvp.Value.show
+                Try
+                    Call putItemOnVisualBoard(kvp.Key, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
+                Catch ex As Exception
+                    Exit For
+                End Try
+
+            Next
+        End If
 
 
         If outPutCollection.Count > 0 Then
@@ -12397,6 +12394,254 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' platziert das (Summary-) Projekt auf dem Board
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <param name="showIT"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <param name="boardwasEmpty"></param>
+    ''' <param name="activeConstellation"></param>
+    ''' <param name="startOfFreeRows"></param>
+    ''' <param name="outPutCollection"></param>
+    Private Sub putItemOnVisualBoard(ByVal key As String, ByVal showIT As Boolean, ByVal storedAtOrBefore As Date,
+                                     ByVal boardwasEmpty As Boolean, ByVal activeConstellation As clsConstellation, ByVal startOfFreeRows As Integer,
+                                     ByRef outPutCollection As Collection)
+
+        Dim outputLine As String = ""
+        Dim pName As String = getPnameFromKey(key)
+        Dim vName As String = getVariantnameFromKey(key)
+        Dim hproj As clsProjekt
+        Dim tryZeile As Integer
+        Dim nvErrorMessage As String = ""
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        If AlleProjekte.Containskey(key) Then
+            ' Projekt ist bereits im Hauptspeicher geladen
+            hproj = AlleProjekte.getProject(key)
+
+            ' ist es aber auch der richtige TimeStamp ? 
+            If DateDiff(DateInterval.Day, hproj.timeStamp, storedAtOrBefore) < 0 Then
+
+                ' in einer Session dürfen keine TimeStamps aktuellen bzw. früheren TimeStamps gemischt werden ... 
+                ' Meldung in der , und der Nutzer muss alles neu laden
+
+                outputLine = "es gibt Projekte mit jüngerem TimeStamp in der Session ... "
+                outPutCollection.Add(outputLine)
+                outputLine = "die Aktion wurde abgebrochen ... "
+                outPutCollection.Add(outputLine)
+                outputLine = "bitte löschen Sie die Session und laden Sie dann die Szenarien mit dem gewünschten Versions-Datum"
+                outPutCollection.Add(outputLine)
+
+                Throw New ArgumentException("Fehler 366734")
+            Else
+                If showIT Then
+
+                    If ShowProjekte.contains(hproj.name) Then
+                        ' dann soll das Projekt da bleiben, wo es ist 
+                        Dim shownProject As clsProjekt = ShowProjekte.getProject(hproj.name)
+                        If shownProject.variantName = hproj.variantName Then
+                            ' es wird bereits gezeigt, nichts machen ...
+                        Else
+                            tryZeile = shownProject.tfZeile
+                            ' jetzt die Variante aktivieren 
+                            Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        End If
+
+                    ElseIf boardwasEmpty Then
+                        'tryZeile = kvp.Value.zeile
+                        tryZeile = activeConstellation.getBoardZeile(hproj.name)
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                    Else
+
+                        'tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                        'tryZeile = startOfFreeRows + zeilenOffset
+                        tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                        'zeilenOffset = zeilenOffset + 1
+                    End If
+
+
+                Else
+                    ' gar nichts machen
+                End If
+
+            End If
+
+
+
+
+        Else
+            If request.pingMongoDb() Then
+
+                If request.projectNameAlreadyExists(pName, vName, storedAtOrBefore) Then
+
+                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                    hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtOrBefore)
+
+                    If Not IsNothing(hproj) Then
+                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                        Dim newPosition As Integer = -1
+                        If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+                            If boardwasEmpty Then
+                                ' den gleichen key verwenden wie in der activeConstellation
+                                newPosition = activeConstellation.getBoardZeile(hproj.name)
+                            Else
+                                newPosition = activeConstellation.getBoardZeile(hproj.name) + startOfFreeRows
+                            End If
+                        End If
+                        AlleProjekte.Add(hproj, True, newPosition)
+                        ' jetzt die Variante aktivieren 
+                        ' aber nur wenn es auch das Flag show hat 
+                        If showIT Then
+
+                            If boardwasEmpty Then
+                                'tryZeile = kvp.Value.zeile
+                                tryZeile = activeConstellation.getBoardZeile(hproj.name)
+                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                            Else
+                                'tryZeile = startOfFreeRows + zeilenOffset
+                                tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
+                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                                'zeilenOffset = zeilenOffset + 1
+                            End If
+
+                        End If
+                    Else
+                        outputLine = pName & "(" & vName & ") Code: 098 " & nvErrorMessage
+                        outPutCollection.Add(outputLine)
+                    End If
+
+                Else
+                    hproj = Nothing
+
+                    outputLine = pName & "(" & vName & ")" & nvErrorMessage
+                    outPutCollection.Add(outputLine)
+
+                    'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                    'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                End If
+            Else
+                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & pName & "'konnte nicht geladen werden")
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt das hproj zurück, zuerst wird versucht, das aus der AlleProjekte zu holen, dann aus der Datenbank 
+    ''' wenn es noch gar nicht existiert, wird nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <param name="projektliste"></param>
+    ''' <param name="storedAt"></param>
+    ''' <returns></returns>
+    Public Function getProjektFromSessionOrDB(ByVal pName As String, ByVal vName As String, ByVal projektliste As clsProjekteAlle, ByVal storedAt As Date) As clsProjekt
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim key As String = calcProjektKey(pName, vName)
+        Dim hproj As clsProjekt = Nothing
+        Try
+            hproj = projektliste.getProject(key)
+            ' wenn es noch nicht geladen ist, muss das Projekt aus der Datenbank geholt werden ..
+
+            If IsNothing(hproj) Then
+
+                If request.projectNameAlreadyExists(pName, vName, storedAt) Then
+                    hproj = request.retrieveOneProjectfromDB(pName, vName, storedAt)
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        getProjektFromSessionOrDB = hproj
+
+    End Function
+
+    ''' <summary>
+    ''' erzeugt das Union Projekt für die Konstellation ; ansonsten wird nichts gemacht 
+    ''' wenn die Projekte noch nicht geladen sind, werden sie aus der Datenbank geholt, aber nicht in AlleProjekte geladen ...
+    ''' </summary>
+    ''' <param name="considerImportProjekte"></param>
+    Public Function calcUnionProject(ByVal activeConstellation As clsConstellation,
+                                     ByVal considerImportProjekte As Boolean,
+                                Optional ByVal budget As Double = 0.0,
+                                Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
+                                Optional ByVal ampel As Integer = 0,
+                                Optional ByVal ampelbeschreibung As String = "",
+                                Optional ByVal responsible As String = "") As clsProjekt
+
+
+
+        Dim unionProj As clsProjekt = Nothing
+        Dim projektListe As clsProjekteAlle = AlleProjekte
+        'Dim outPutListe As clsProjekteAlle = AlleProjektSummaries
+
+        ' Das Ergebnis wird in der PortfolioProjektSummaries abgelegt 
+
+        ' jetzt die Union bilden ... das erste als Default besetzen 
+        Dim listOfProjectNames As SortedList(Of String, String) = activeConstellation.getProjectNames(considerShowAttribute:=True,
+                                                                                       showAttribute:=True,
+                                                                                       fullNameKeys:=True)
+        If considerImportProjekte Then
+            projektListe = ImportProjekte
+        End If
+
+        Try
+            If listOfProjectNames.Count > 0 Then
+                ' nur, wenn überhaupt Projekte angezeigt würden, muss eine Union gemacht werden 
+
+                ' jetzt mit allen anderen aufsummieren ..
+                Dim isFirstProj As Boolean = True
+
+                For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
+
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(getPnameFromKey(kvp.Key),
+                                                                        getVariantnameFromKey(kvp.Key),
+                                                                        projektListe, Date.Now)
+
+
+                    If Not IsNothing(hproj) Then
+
+                        If isFirstProj Then
+
+                            Dim startdate As Date = hproj.startDate
+                            Dim endeDate As Date = hproj.endeDate
+                            unionProj = New clsProjekt(activeConstellation.constellationName, True, startdate, endeDate)
+
+                            isFirstProj = False
+                        End If
+
+                        unionProj.variantName = portfolioVName
+                        unionProj = unionProj.unionizeWith(hproj)
+
+                    End If
+
+                Next
+
+                ' jetzt ggf die Attribute noch ergänzen 
+                With unionProj
+                    .Erloes = budget
+                    .description = description
+                    .ampelStatus = ampel
+                    .ampelErlaeuterung = ampelbeschreibung
+                    .leadPerson = responsible
+                End With
+
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        calcUnionProject = unionProj
+
+    End Function
+
+
+    ''' <summary>
     ''' zeigt die Konstellation bzw Konstellationen auf der Projekt-Tafel an 
     ''' addToSession gibt an, ob AlleProjekte und ggf ShowProjekte ergänzt wird 
     ''' </summary>
@@ -12405,7 +12650,11 @@ Public Module awinGeneralModules
     ''' <param name="clearSession">setzt alles zurück></param>
     ''' <param name="storedAtOrBefore"></param>
     ''' <remarks></remarks>
-    Public Sub showConstellations(ByVal constellationsToShow As clsConstellations, ByVal clearBoard As Boolean, ByVal clearSession As Boolean, ByVal storedAtOrBefore As Date)
+    Public Sub showConstellations(ByVal constellationsToShow As clsConstellations,
+                                  ByVal clearBoard As Boolean,
+                                  ByVal clearSession As Boolean,
+                                  ByVal storedAtOrBefore As Date,
+                                  Optional ByVal showSummaryProject As Boolean = False)
 
         Try
             Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
@@ -12420,10 +12669,11 @@ Public Module awinGeneralModules
 
             End If
 
-            Dim i As Integer = 0
+
             ' tk 28.10.17, wenn die Anzahl der Constellations < 1 ist, dann muss es immer auf CustomTF gesetzt werden ... 
             Dim anzConstellations As Integer = constellationsToShow.Liste.Count
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
+
 
                 Dim activeConstellation As clsConstellation = kvp.Value
 
@@ -12445,9 +12695,7 @@ Public Module awinGeneralModules
                 End If
                 ' jetzt den Sortier-Modus anpassen 
 
-                Call addConstellation(activeConstellation, storedAtOrBefore)
-
-                i = i + 1
+                Call addConstellation(activeConstellation, storedAtOrBefore, showSummaryProject)
 
             Next
 

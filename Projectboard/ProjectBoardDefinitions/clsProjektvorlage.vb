@@ -2691,7 +2691,7 @@
 
     End Property
 
-    Public ReadOnly Property getRessourcenBedarfNew(roleID As Object) As Double()
+    Public ReadOnly Property getRessourcenBedarfNew(ByVal roleID As Object, Optional ByVal inclSubRoles As Boolean = False) As Double()
 
         Get
             Dim roleValues() As Double
@@ -2707,6 +2707,8 @@
             Dim roleUID As Integer
             Dim roleName As String = ""
 
+            Dim roleIDs As New SortedList(Of Integer, Double)
+
 
             If _Dauer > 0 Then
 
@@ -2721,49 +2723,62 @@
                     End If
                 End If
 
+                ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
+                If inclSubRoles Then
+                    roleIDs = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
+                Else
+                    roleIDs.Add(roleUID, 1.0)
+                End If
+
+
                 ReDim roleValues(_Dauer - 1)
 
-                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
-                anzPhasen = listOfPhases.Count
+                For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
+                    roleName = RoleDefinitions.getRoledef(srkvp.Key).name
 
-                For p = 1 To anzPhasen
-                    phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
+                    anzPhasen = listOfPhases.Count
 
-                    With phase
-                        ' Off1
-                        anzRollen = .countRoles
-                        phasenStart = .relStart - 1
+                    For p = 1 To anzPhasen
+                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
 
-                        ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
-                        ' es können Unschärfen auftreten 
-                        'phasenEnde = .relEnde - 1
+                        With phase
+                            ' Off1
+                            anzRollen = .countRoles
+                            phasenStart = .relStart - 1
 
-
-                        For r = 1 To anzRollen
-                            role = .getRole(r)
-
-                            With role
-
-                                If .RollenTyp = roleUID Then
-                                    Dim dimension As Integer
-
-                                    dimension = .getDimension
-                                    ReDim tempArray(dimension)
-                                    tempArray = .Xwerte
-
-                                    For i = phasenStart To phasenStart + dimension
-                                        roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
-                                    Next i
-
-                                End If
-
-                            End With ' role
-                        Next r
-
-                    End With ' phase
+                            ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
+                            ' es können Unschärfen auftreten 
+                            'phasenEnde = .relEnde - 1
 
 
-                Next p ' Loop über alle Phasen
+                            For r = 1 To anzRollen
+                                role = .getRole(r)
+
+                                With role
+
+                                    If .RollenTyp = srkvp.Key Then
+                                        Dim dimension As Integer
+
+                                        dimension = .getDimension
+                                        ReDim tempArray(dimension)
+                                        tempArray = .Xwerte
+
+                                        For i = phasenStart To phasenStart + dimension
+                                            roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                                        Next i
+
+                                    End If
+
+                                End With ' role
+                            Next r
+
+                        End With ' phase
+
+
+                    Next p ' Loop über alle Phasen
+
+                Next ' Loop über for each srkvp
 
                 getRessourcenBedarfNew = roleValues
 
@@ -3928,9 +3943,11 @@
 
     End Property
 
-    '
-    ' übergibt in getSummeRessourcen den Ressourcen Bedarf in Mann-Monaten  die Werte der Kostenart <roleId>
-    '
+
+    ''' <summary>
+    ''' liefert einen Array der Länge dauer-1 mit den monatlichen Gesamt Ressourcenbedarfen 
+    ''' </summary>
+    ''' <returns></returns>
     Public ReadOnly Property getAlleRessourcen() As Double()
 
         Get

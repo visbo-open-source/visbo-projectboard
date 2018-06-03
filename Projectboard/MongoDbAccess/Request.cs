@@ -1146,6 +1146,7 @@ namespace MongoDbAccess
             // deshalb muss hier umgerechnet werden 
             storedatOrBefore = storedatOrBefore.ToUniversalTime();
             
+            
             int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
             
                 
@@ -1154,6 +1155,17 @@ namespace MongoDbAccess
                             .Select(c => c.name)
                             .Distinct()
                             .ToList();
+            // tk 29.5.18
+            // wurde eingeführt, weil in Datenbank wo noch kein isUnion Attribut steckt , sonst die leere Liste rauskommt ...
+            // 
+            if (prequery.Count == 0)
+                {
+                 prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore )
+                            .Select(c => c.name)
+                            .Distinct()
+                            .ToList();
+            }
 
             foreach (string name in prequery)
                 {

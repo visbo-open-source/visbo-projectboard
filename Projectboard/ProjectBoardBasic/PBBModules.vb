@@ -839,6 +839,62 @@ Public Module PBBModules
 
     End Sub
     ''' <summary>
+    ''' prüft ob auch kein Summary Projekt selektiert wurde ..
+    ''' viele aktionen sind darauf nicht definiert 
+    ''' </summary>
+    ''' <param name="nameCollection"></param>
+    ''' <returns></returns>
+    Public Function noSummaryProjectsareSelected(ByRef nameCollection As Collection) As Boolean
+
+        Dim tmpResult As Boolean = True
+        Dim awinSelection As Excel.ShapeRange
+        Dim okCollection As New Collection
+        Dim tmpCollection As New Collection
+        Dim pName As String
+
+        Dim errMsg As String = ""
+        If awinSettings.englishLanguage Then
+            errMsg = "no summary projects allowed ..."
+        Else
+            errMsg = "keine Summary Projekte zugelassen ..."
+        End If
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            For i As Integer = 1 To awinSelection.Count
+                pName = awinSelection.Item(i).Name
+
+                Try
+                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                    If hproj.isUnion Then
+                        tmpResult = False
+                        Call MsgBox(errMsg)
+                        Exit For
+                    Else
+                        okCollection.Add(pName)
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            If Not tmpResult Then
+                okCollection.Clear()
+            End If
+
+        End If
+
+        nameCollection = okCollection
+        noSummaryProjectsareSelected = tmpResult
+
+    End Function
+    ''' <summary>
     ''' eine neue Variante anlegen 
     ''' </summary>
     ''' <param name="control"></param>
@@ -846,7 +902,7 @@ Public Module PBBModules
     Sub PBBVarianteNeu(control As IRibbonControl)
 
         Dim hproj As clsProjekt
-        Dim awinSelection As Excel.ShapeRange
+
         Dim neueVariante As New frmCreateNewVariant
         Dim resultat As DialogResult
         ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -867,122 +923,119 @@ Public Module PBBModules
 
         enableOnUpdate = False
 
+
+
         If control.Id = "PT2G1M1B0" Then
             ' neue Variante anlegen 
-            Try
-                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-            Catch ex As Exception
-                awinSelection = Nothing
-            End Try
+            Dim errMsg As String = ""
 
-            If Not awinSelection Is Nothing Then
+            If noSummaryProjectsareSelected(nameCollection) Then
+                If nameCollection.Count = 0 Then
+                    If awinSettings.englishLanguage Then
+                        errMsg = "please select project(s ..."
+                    Else
+                        errMsg = "bitte mind. ein Projekt selektieren ..."
+                    End If
+                    Call MsgBox(errMsg)
+                Else
+                    While zaehler <= nameCollection.Count And Not abbruch
 
-                For i As Integer = 1 To awinSelection.Count
-                    nameCollection.Add(awinSelection.Item(i).Name)
-                Next
+                        ' jetzt die Aktion durchführen ...
+                        Dim pName As String = CStr(nameCollection.Item(zaehler))
 
-                While zaehler <= nameCollection.Count And Not abbruch
-
-                    ' jetzt die Aktion durchführen ...
-                    Dim pName As String = CStr(nameCollection.Item(zaehler))
-
-                    Try
-                        hproj = ShowProjekte.getProject(pName)
-                        pName = hproj.name
-                        phaseList = projectboardShapes.getPhaseList(hproj.name)
-                        milestoneList = projectboardShapes.getMilestoneList(hproj.name)
-                    Catch ex As Exception
-                        Call MsgBox("Projekt " & pName & " nicht gefunden ...")
-                        enableOnUpdate = True
-                        Exit Sub
-                    End Try
-
-                    ' enableevents wird hier nicht false gesetzt; wenn dann wird das im Formular gemacht 
-                    ' screenupdating wird hier ebenso nicht auf false gesetzt 
-
-                    ' jetzt wird hier das Formular aufgerufen, wo eine neue Variante eingegeben werden kann 
-                    With neueVariante
-                        .txtDescription.Text = variantDescription
-                        .projektName.Text = hproj.name
-                        .variantenName.Text = hproj.variantName
-                        .newVariant.Text = neuerVariantenName
-                    End With
-
-                    resultat = neueVariante.ShowDialog
-                    If resultat = DialogResult.OK Then
-
-                        With neueVariante
-                            neuerVariantenName = .newVariant.Text
-                            variantDescription = .txtDescription.Text
-                        End With
-
-                        newproj = hproj.createVariant(neuerVariantenName, variantDescription)
-                        ' alt - wurde ersetzt durch obigen Aufruf ..
-                        ''newproj = New clsProjekt
-                        ''hproj.copyTo(newproj)
-
-                        ''If newproj.dauerInDays <> hproj.dauerInDays Then
-                        ''    'Call MsgBox("ungleich: " & newproj.dauerInDays & " versus " & hproj.dauerInDays)
-                        ''End If
-
-                        ''With neueVariante
-                        ''    neuerVariantenName = .newVariant.Text
-                        ''    variantDescription = .txtDescription.Text
-                        ''End With
-
-
-                        ''With newproj
-                        ''    .name = hproj.name
-                        ''    .variantName = neuerVariantenName
-                        ''    .variantDescription = variantDescription
-                        ''    .ampelErlaeuterung = hproj.ampelErlaeuterung
-                        ''    .ampelStatus = hproj.ampelStatus
-                        ''    .timeStamp = Date.Now
-                        ''    .shpUID = hproj.shpUID
-                        ''    .tfZeile = hproj.tfZeile
-
-                        ''End With
-
-                        If currentConstellationName <> calcLastSessionScenarioName() Then
-                            currentConstellationName = calcLastSessionScenarioName()
-                        End If
-
-                        ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
-                        ShowProjekte.Remove(hproj.name)
-
-                        ' die neue Variante wird aufgenommen
-                        'key = calcProjektKey(newproj)
-                        AlleProjekte.Add(newproj)
-                        ShowProjekte.Add(newproj)
-
-                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                         Try
-
-                            Dim tmpCollection As New Collection
-                            Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
-
+                            hproj = ShowProjekte.getProject(pName)
+                            pName = hproj.name
+                            phaseList = projectboardShapes.getPhaseList(hproj.name)
+                            milestoneList = projectboardShapes.getMilestoneList(hproj.name)
                         Catch ex As Exception
-
-                            Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
-
+                            Call MsgBox("Projekt " & pName & " nicht gefunden ...")
+                            enableOnUpdate = True
+                            Exit Sub
                         End Try
 
-                        zaehler = zaehler + 1
-                    Else
-                        abbruch = True
-                    End If
+                        ' enableevents wird hier nicht false gesetzt; wenn dann wird das im Formular gemacht 
+                        ' screenupdating wird hier ebenso nicht auf false gesetzt 
 
-                End While
+                        ' jetzt wird hier das Formular aufgerufen, wo eine neue Variante eingegeben werden kann 
+                        With neueVariante
+                            .txtDescription.Text = variantDescription
+                            .projektName.Text = hproj.name
+                            .variantenName.Text = hproj.variantName
+                            .newVariant.Text = neuerVariantenName
+                        End With
 
-            Else
-                Call MsgBox("vorher Projekt selektieren ...")
+                        resultat = neueVariante.ShowDialog
+                        If resultat = DialogResult.OK Then
+
+                            With neueVariante
+                                neuerVariantenName = .newVariant.Text
+                                variantDescription = .txtDescription.Text
+                            End With
+
+                            newproj = hproj.createVariant(neuerVariantenName, variantDescription)
+                            ' alt - wurde ersetzt durch obigen Aufruf ..
+                            ''newproj = New clsProjekt
+                            ''hproj.copyTo(newproj)
+
+                            ''If newproj.dauerInDays <> hproj.dauerInDays Then
+                            ''    'Call MsgBox("ungleich: " & newproj.dauerInDays & " versus " & hproj.dauerInDays)
+                            ''End If
+
+                            ''With neueVariante
+                            ''    neuerVariantenName = .newVariant.Text
+                            ''    variantDescription = .txtDescription.Text
+                            ''End With
+
+
+                            ''With newproj
+                            ''    .name = hproj.name
+                            ''    .variantName = neuerVariantenName
+                            ''    .variantDescription = variantDescription
+                            ''    .ampelErlaeuterung = hproj.ampelErlaeuterung
+                            ''    .ampelStatus = hproj.ampelStatus
+                            ''    .timeStamp = Date.Now
+                            ''    .shpUID = hproj.shpUID
+                            ''    .tfZeile = hproj.tfZeile
+
+                            ''End With
+
+                            If currentConstellationName <> calcLastSessionScenarioName() Then
+                                currentConstellationName = calcLastSessionScenarioName()
+                            End If
+
+                            ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+                            ShowProjekte.Remove(hproj.name)
+
+                            ' die neue Variante wird aufgenommen
+                            'key = calcProjektKey(newproj)
+                            AlleProjekte.Add(newproj)
+                            ShowProjekte.Add(newproj)
+
+                            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                            Try
+
+                                Dim tmpCollection As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
+
+                            Catch ex As Exception
+
+                                Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
+
+                            End Try
+
+                            zaehler = zaehler + 1
+                        Else
+                            abbruch = True
+                        End If
+
+                    End While
+                End If
+
             End If
-
-        Else
-            ' nur Varianten Erläuterung editieren ... 
-
         End If
+
 
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
