@@ -122,6 +122,8 @@ Imports System.Windows
             .lblStandvom.Visible = False
             .requiredDate.Visible = False
             .addToSession.Visible = False
+            .loadAsSummary.Visible = False
+
         End With
 
         Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog
@@ -215,7 +217,9 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
+            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
             Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
+
             appInstance.ScreenUpdating = False
 
             If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
@@ -226,31 +230,68 @@ Imports System.Windows
 
             Dim constellationsToDo As New clsConstellations
 
+
+            Dim firsttime As Boolean = False
+
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
-                ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Suumary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
+                ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Summary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
                 ' geladen idt oder aber in einem anderen Summary Projekt referenziert wird ! 
-
-                Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
-                If Not IsNothing(constellation) Then
-                    If Not constellationsToDo.Contains(constellation.constellationName) Then
-                        constellationsToDo.Add(constellation)
-                    End If
-                Else
-                    constellation = dbConstellations.getConstellation(tmpName)
-                    If Not IsNothing(constellation) Then
-                        If Not constellationsToDo.Contains(constellation.constellationName) Then
-                            constellationsToDo.Add(constellation)
+                Try
+                    Dim ok As Boolean = False
+                    If (Not AlleProjekte.containsAnySummaryProject _
+                        And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
+                        And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
+                        ' alles in Ordnung 
+                        ok = True
+                    Else
+                        If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            ok = True
                         End If
-                        projectConstellations.Add(constellation)
                     End If
 
-                End If
+                    If ok Then
+                        ' aufnehmen ...
+                        Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+
+                        If firsttime And clearBoard Then
+                            projectConstellations.clearLoadedPortfolios()
+                            firsttime = False
+                        End If
+
+                        If Not IsNothing(constellation) Then
+                            If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                constellationsToDo.Add(constellation)
+                            End If
+                        Else
+                            constellation = dbConstellations.getConstellation(tmpName)
+                            If Not IsNothing(constellation) Then
+                                If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                    constellationsToDo.Add(constellation)
+                                End If
+                                projectConstellations.Add(constellation)
+                            End If
+
+                        End If
+
+                        If Not IsNothing(constellation) Then
+                            projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                        End If
+
+
+                    Else
+                        ' Meldung, un dann nicht aufnehmen 
+                        Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
+                                     "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
+                    End If
+                Catch ex As Exception
+                    Dim tstmsg As String = ex.Message
+                End Try
+
+
 
             Next
 
-
-            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
             'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
@@ -3282,7 +3323,15 @@ Imports System.Windows
     End Sub
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
-        Call massEditRcTeAt(ptModus.massEditRessCost)
+        ' check ob auch keine Summary Projects selektiert sind ...
+        Dim nameCollection As New Collection
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        Else
+            Call massEditRcTeAt(ptModus.massEditRessCost)
+        End If
+
+
 
     End Sub
 
@@ -4394,9 +4443,10 @@ Imports System.Windows
 
         Dim nameCollection As New Collection
 
-        If Not noSummaryProjectsareSelected(nameCollection) Then
-            Exit Sub
-        End If
+        ' ein Unmark darf auf Summary Projekte gemacht werden 
+        'If Not noSummaryProjectsareSelected(nameCollection) Then
+        '    Exit Sub
+        'End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False

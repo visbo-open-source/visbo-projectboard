@@ -181,7 +181,7 @@
               <!--label="Modify Dates of Phases & Milestones"-->
               <button id="PT2G1M2B2" getLabel="bestimmeLabel" enabled ="false" onAction ="Tom2G2MassEditTe" supertip ="hier können die Termine von Phasen und Meilensteinen zu allen bzw. zu ausgewählten Projekten bearbeitet werden"/>
               <!--label="Modify Attributes"-->
-              <!--<button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Ändern von Attributen wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung und Custom Fields"/>-->
+              <button id="PT2G1M2B3" getLabel ="bestimmeLabel" onAction="Tom2G1Attribute" supertip ="Editieren von Budget, strategischer Fit, Risiko"/>
               <button id="PT2G1M2B8" getLabel ="bestimmeLabel" enabled ="false" onAction="Tom2G2MassEditAttr" supertip ="hier können die Attribute wie Ziele, Verantwortlicher, Ampel, Business Unit, Budget, strateg. Fit und Risiko Einschätzung sowie Custom Fields von einem oder mehreren Projekten bearbeitet werden"/>
               <menuSeparator id="separator1" />
               <!--label=" Projekt Umbenennen"-->
@@ -417,8 +417,8 @@
           <!--label="Report Sprache"-->
           <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>-->
           <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
-          <!--<button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
-          <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />-->
+          <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
+          <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
         </group>
       </tab>
       <!--label="Help"-->

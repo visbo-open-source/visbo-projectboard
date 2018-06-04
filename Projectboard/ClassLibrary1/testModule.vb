@@ -4794,7 +4794,22 @@ Public Module testModule
                             hheight = awinSettings.ChartHoehe2
                             hwidth = 340
                             obj = Nothing
-                            Call createAuslastungsDetailPie(obj, 2, htop, hleft, hheight, hwidth, True)
+                            If Not IsNothing(qualifier) Then
+                                If qualifier.Trim.Length > 0 Then
+
+                                Else
+                                    qualifier = Nothing
+                                End If
+
+                            End If
+
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
+                            If myCollection.Count = 0 Then
+                                myCollection = Nothing
+                            End If
+
+                            Call createAuslastungsDetailPie(obj, 2, htop, hleft, hheight, hwidth, True, myCollection)
 
                             reportObj = obj
 
@@ -4835,12 +4850,18 @@ Public Module testModule
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
+                            If myCollection.Count = 0 Then
+                                myCollection = Nothing
+                            End If
+
                             htop = 100
                             hleft = 100
                             hheight = awinSettings.ChartHoehe2
                             hwidth = 340
                             obj = Nothing
-                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True)
+                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True, myCollection)
 
                             reportObj = obj
 

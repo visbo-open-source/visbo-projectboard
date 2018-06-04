@@ -6917,10 +6917,10 @@ Public Module awinGeneralModules
 
                                             ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
                                             ' test
-                                            ''Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                                            ''If Not everythingOK Then
-                                            ''    Call MsgBox("nicht identisch: " & current1program.constellationName)
-                                            ''End If
+                                            Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                                            If Not everythingOK Then
+                                                Call MsgBox("nicht identisch: " & current1program.constellationName)
+                                            End If
                                             ' ende test
                                         Else
                                             emptyPrograms = emptyprograms + 1
@@ -6964,15 +6964,22 @@ Public Module awinGeneralModules
 
                                     ' Plausibilitäts-Check - wenn es sich nicht auf 100% summiert, dann lieber alles auf die rootPhase verteilen und nichts auf die Release Phasen
                                     Dim a As Double = relPrz.Sum
-                                    If relPrz.Sum < 0.99 And relPrz.Sum > 0.0 Then
-                                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                        CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Prz-Sätze addieren nicht auf 100% ... alles in Projektphase ")
+                                    If relPrz.Sum > 0 Then
+                                        If relPrz.Sum < 0.99 Or relPrz.Sum > 1.01 Then
+                                            CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            CType(.Cells(zeile, lastColumn), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Prz-Sätze addieren nicht auf 100% ... alles in Projektphase ")
+                                            If relPrz.Sum < 0.99 Then
+                                                outPutLine = pName & " .Prozent-Sätze > 0 , aber < 1; Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                            Else
+                                                outPutLine = pName & " .Prozent-Sätze > 1.0 , Gesamt-Summe auf Gesamt-Projekt verteilt  .."
+                                            End If
 
-                                        outPutLine = pName & " .Prozent-Sätze > 0 , aber < 1; korrigiert .."
-                                        outputCollection.Add(outPutLine)
+                                            outputCollection.Add(outPutLine)
 
-                                        ReDim relPrz(anzReleases - 1)
+                                            ReDim relPrz(anzReleases - 1)
+                                        End If
                                     End If
+
 
                                     ' was ist der Gesamtbedarf dieser Rolle in dem besagten Vorhaben ? 
                                     For i As Integer = 0 To colRoleNamesToConsider.Length - 1
@@ -7075,6 +7082,38 @@ Public Module awinGeneralModules
                                                                  description, custFields, businessUnit, responsiblePerson, allianzStatus,
                                                                  zeile, roleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz)
 
+                            ' Test tk 
+                            Try
+                                For ix As Integer = 1 To roleNamesToConsider.Count
+
+                                    Dim tmpRollenName As String = roleNamesToConsider(ix - 1)
+                                    Dim sollBedarf As Double = roleNeeds(ix - 1)
+                                    Dim tmpCollection As New Collection
+                                    tmpCollection.Add(tmpRollenName)
+                                    Dim istBedarf As Double = hproj.getRessourcenBedarfNew(tmpRollenName, True).Sum
+
+                                    If Math.Abs(sollBedarf - istBedarf) > 2.5 Then
+                                        outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
+                                        outputCollection.Add(outPutLine)
+                                    End If
+
+                                Next
+
+                                Dim sollBedarfGesamt As Double = roleNeeds.Sum
+                                Dim istBedarfGesamt As Double = hproj.getAlleRessourcen.Sum
+
+                                If Math.Abs(sollBedarfGesamt - istBedarfGesamt) > 0.01 * sollBedarfGesamt Then
+                                    outPutLine = "Gesamt Differenz bei " & pName & ": " & Math.Abs(sollBedarfGesamt - istBedarfGesamt).ToString("#0.##")
+                                    outputCollection.Add(outPutLine)
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+
+                            ' Ende Test tk 
+
                             If Not IsNothing(hproj) Then
 
 
@@ -7151,10 +7190,10 @@ Public Module awinGeneralModules
                         ImportProjekte.Add(unionProj, updateCurrentConstellation:=False)
 
                         ' test
-                        ''Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
-                        ''If Not everythingOK Then
-                        ''    Call MsgBox("nicht identisch: " & current1program.constellationName)
-                        ''End If
+                        Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
+                        If Not everythingOK Then
+                            Call MsgBox("nicht identisch: " & current1program.constellationName)
+                        End If
                         ' ende test
                     Else
                         emptyPrograms = emptyPrograms + 1
@@ -7428,17 +7467,26 @@ Public Module awinGeneralModules
                             Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonthNew("Orga", True).Sum
                             Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
 
-                            If gesamtVorher <> gesamtVorher2 Then
-                                Call MsgBox("Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString)
+                            ' tk test ...
+                            If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.1 Then
+                                Call MsgBox(oldProj.name & " Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString)
                             End If
+                            ' tk test ...
+
                             ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
                             newProj = oldProj.deleteRolesAndCosts(deleteRoles, Nothing, True)
                             Dim gesamtNachher As Double = newProj.getAlleRessourcen().Sum
-                            Dim bosvNachher As Double = newProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
 
-                            If Not bosvNachher = 0 Then
-                                Call MsgBox("Fehler bei" & newProj.name)
-                            End If
+                            ' tk test ...
+                            For Each tmpRoleName As String In deleteRoles
+                                Dim bosvNachher As Double = newProj.getRessourcenBedarfNew(tmpRoleName, True).Sum
+
+                                If Not bosvNachher = 0 Then
+                                    Call MsgBox(tmpRoleName & " wurde nicht gelöscht ... Fehler bei" & newProj.name)
+                                End If
+                            Next
+                            ' tk test ...
+
 
                             ' jetzt alle Rollen / Phasen Werte hinzufügen 
                             Dim addValues As Double = 0.0
@@ -7449,7 +7497,7 @@ Public Module awinGeneralModules
 
                             Dim bosvErgebnis As Double = newProj.getRessourcenBedarfNew("Grp-BOSV-KB", True).Sum
 
-                            If bosvErgebnis <> addValues Then
+                            If Math.Abs(bosvErgebnis - addValues) >= 0.1 Then
                                 outPutLine = "addValues ungleich ergebnis: " & addValues.ToString("#0.##") & " <> " & bosvErgebnis.ToString("#0.##")
                                 outputCollection.Add(outPutLine)
                             End If
@@ -12289,8 +12337,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="activeConstellation"></param>
     ''' <remarks></remarks>
-    Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date,
-                                Optional ByVal showOnlySummary As Boolean = False)
+    Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date)
 
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -12318,66 +12365,66 @@ Public Module awinGeneralModules
 
 
         ' jetzt werden die einzelnen Projekte dazugeholt oder nur das Summary Projekt
-        If showOnlySummary Then
+        'If showOnlySummary Then
 
-            ' das Summary Projekt suchen 
-            Dim spName As String = activeConstellation.constellationName
-            Dim svName As String = portfolioVName
-            Dim skey As String = calcProjektKey(spName, svName)
-            Dim sProj As clsProjekt = getProjektFromSessionOrDB(spName, svName, AlleProjekte, storedAtOrBefore)
-
-
-            If IsNothing(sProj) Then
-                sProj = calcUnionProject(activeConstellation, False, 0, "Summen-Projekt von " & spName)
-                ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                Dim newPosition As Integer = -1
-                If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
-                    If boardwasEmpty Then
-                        ' den gleichen key verwenden wie in der activeConstellation
-                        newPosition = activeConstellation.getBoardZeile(sProj.name)
-                    Else
-                        newPosition = activeConstellation.getBoardZeile(sProj.name) + startOfFreeRows
-                    End If
-                End If
-                AlleProjekte.Add(sProj, True, newPosition)
-            End If
+        '    ' das Summary Projekt suchen 
+        '    Dim spName As String = activeConstellation.constellationName
+        '    Dim svName As String = portfolioVName
+        '    Dim skey As String = calcProjektKey(spName, svName)
+        '    Dim sProj As clsProjekt = getProjektFromSessionOrDB(spName, svName, AlleProjekte, storedAtOrBefore)
 
 
-            If Not IsNothing(sProj) Then
+        '    If IsNothing(sProj) Then
+        '        sProj = calcUnionProject(activeConstellation, False, 0, "Summen-Projekt von " & spName)
+        '        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+        '        Dim newPosition As Integer = -1
+        '        If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
+        '            If boardwasEmpty Then
+        '                ' den gleichen key verwenden wie in der activeConstellation
+        '                newPosition = activeConstellation.getBoardZeile(sProj.name)
+        '            Else
+        '                newPosition = activeConstellation.getBoardZeile(sProj.name) + startOfFreeRows
+        '            End If
+        '        End If
+        '        AlleProjekte.Add(sProj, True, newPosition)
+        '    End If
 
-                Dim showIT As Boolean = True
 
-                Try
-                    Call putItemOnVisualBoard(skey, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
+        '    If Not IsNothing(sProj) Then
 
-                    If AlleProjektSummaries.Containskey(skey) Then
-                        AlleProjektSummaries.Remove(skey, False)
-                    End If
+        '        Dim showIT As Boolean = True
 
-                    AlleProjektSummaries.Add(sProj, False)
+        '        Try
+        '            Call putItemOnVisualBoard(skey, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
 
-                    If ShowProjekteSummaries.contains(sProj.name) Then
-                        ShowProjekteSummaries.Remove(sProj.name)
-                    End If
-                    ShowProjekteSummaries.Add(sProj, False)
-                Catch ex As Exception
+        '            If AlleProjektSummaries.Containskey(skey) Then
+        '                AlleProjektSummaries.Remove(skey, False)
+        '            End If
 
-                End Try
+        '            AlleProjektSummaries.Add(sProj, False)
 
-            End If
+        '            If ShowProjekteSummaries.contains(sProj.name) Then
+        '                ShowProjekteSummaries.Remove(sProj.name)
+        '            End If
+        '            ShowProjekteSummaries.Add(sProj, False)
+        '        Catch ex As Exception
 
-        Else
-            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+        '        End Try
 
-                Dim showIT As Boolean = kvp.Value.show
-                Try
-                    Call putItemOnVisualBoard(kvp.Key, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
-                Catch ex As Exception
-                    Exit For
-                End Try
+        '    End If
 
-            Next
-        End If
+        'Else
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+
+            Dim showIT As Boolean = kvp.Value.show
+            Try
+                Call putItemOnVisualBoard(kvp.Key, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
+            Catch ex As Exception
+                Exit For
+            End Try
+
+        Next
+        'End If
 
 
         If outPutCollection.Count > 0 Then
@@ -12563,6 +12610,9 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' erzeugt das Union Projekt für die Konstellation ; ansonsten wird nichts gemacht 
     ''' wenn die Projekte noch nicht geladen sind, werden sie aus der Datenbank geholt, aber nicht in AlleProjekte geladen ...
+    ''' wenn budget = 0 : es hat kein Budget 
+    ''' wenn budget = -1: berechne das Budget aus den Budgets der Projekte bzw. Summary Projekte 
+    ''' wenn budget > 0 : übernehme diesen Wert als Budget 
     ''' </summary>
     ''' <param name="considerImportProjekte"></param>
     Public Function calcUnionProject(ByVal activeConstellation As clsConstellation,
@@ -12573,13 +12623,18 @@ Public Module awinGeneralModules
                                 Optional ByVal ampelbeschreibung As String = "",
                                 Optional ByVal responsible As String = "") As clsProjekt
 
-
-
+        Dim calculateBudget As Boolean = (budget <= -0.99)
+        Dim gesamtbudget As Double = budget
         Dim unionProj As clsProjekt = Nothing
         Dim projektListe As clsProjekteAlle = AlleProjekte
         'Dim outPutListe As clsProjekteAlle = AlleProjektSummaries
 
-        ' Das Ergebnis wird in der PortfolioProjektSummaries abgelegt 
+        ' das budget 
+        If budget >= 0 Then
+            gesamtbudget = budget
+        Else
+            gesamtbudget = 0
+        End If
 
         ' jetzt die Union bilden ... das erste als Default besetzen 
         Dim listOfProjectNames As SortedList(Of String, String) = activeConstellation.getProjectNames(considerShowAttribute:=True,
@@ -12614,6 +12669,11 @@ Public Module awinGeneralModules
                             isFirstProj = False
                         End If
 
+                        If budget <= -0.99 Then
+                            ' das Gesamtbudget soll sich aus der Summe der Einzelbudgets ergeben ... 
+                            gesamtbudget = gesamtbudget + hproj.Erloes
+                        End If
+
                         unionProj.variantName = portfolioVName
                         unionProj = unionProj.unionizeWith(hproj)
 
@@ -12623,7 +12683,7 @@ Public Module awinGeneralModules
 
                 ' jetzt ggf die Attribute noch ergänzen 
                 With unionProj
-                    .Erloes = budget
+                    .Erloes = gesamtbudget
                     .description = description
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung
@@ -12640,6 +12700,22 @@ Public Module awinGeneralModules
 
     End Function
 
+    ''' <summary>
+    ''' gibt true zurück, wenn es keine Konflikte zwischen Summary Projekten und Projekten bzw Summary Projekten gibt 
+    ''' </summary>
+    ''' <param name="constellationName"></param>
+    ''' <param name="isSummaryOption"></param>
+    ''' <returns></returns>
+    Public Function thereAreNoPortfolioProjectConflicts(ByVal constellationName As String,
+                                                        ByVal isSummaryOption As Boolean) As Boolean
+        Dim tmpResult As Boolean = True
+
+        If Not isSummaryOption Then
+
+        End If
+
+        thereAreNoPortfolioProjectConflicts = tmpResult
+    End Function
 
     ''' <summary>
     ''' zeigt die Konstellation bzw Konstellationen auf der Projekt-Tafel an 
@@ -12660,6 +12736,7 @@ Public Module awinGeneralModules
             Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
             Dim sessionWasEmpty As Boolean = (AlleProjekte.Count = 0)
 
+            Dim activeSummaryConstellation As clsConstellation = Nothing
 
             If clearSession And Not sessionWasEmpty Then
                 Call clearCompleteSession()
@@ -12670,22 +12747,57 @@ Public Module awinGeneralModules
             End If
 
 
+            ' hier muss eine summaryConstellation gemacht werden 
+            If showSummaryProject Then
+                Dim fullSProjektNames As New SortedList(Of String, String)
+                activeSummaryConstellation = New clsConstellation(skey:=ptSortCriteria.customTF)
+                Dim zaehler As Integer = 1
+
+                For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
+
+                    Dim oldSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, portfolioVName, AlleProjekte, storedAtOrBefore)
+                    Dim oldBudget As Double = 0.0
+                    If Not IsNothing(oldSummaryProj) Then
+                        oldBudget = oldSummaryProj.Erloes
+                    End If
+
+                    Dim sProj As clsProjekt = calcUnionProject(kvp.Value, False, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
+
+                    If AlleProjekte.Containskey(kvp.Key) Then
+                        AlleProjekte.Remove(kvp.Key, True)
+                    End If
+
+                    AlleProjekte.Add(sProj, True)
+
+                    Dim cItem As New clsConstellationItem
+                    With cItem
+                        .projectName = kvp.Value.constellationName
+                        .variantName = portfolioVName
+                        .zeile = zaehler
+                        .show = True
+                    End With
+                    zaehler = zaehler + 1
+                    activeSummaryConstellation.add(cItem, sKey:=zaehler)
+
+                Next
+                constellationsToShow.Liste.Clear()
+                constellationsToShow.Add(activeSummaryConstellation)
+                showSummaryProject = False
+            End If
+
             ' tk 28.10.17, wenn die Anzahl der Constellations < 1 ist, dann muss es immer auf CustomTF gesetzt werden ... 
             Dim anzConstellations As Integer = constellationsToShow.Liste.Count
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
-
-                Dim activeConstellation As clsConstellation = kvp.Value
-
                 ' tk , jetzt anpassen, wenn es mehr als 1 Constellation sind 
                 If anzConstellations > 1 Then
                     currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
-                    activeConstellation.sortCriteria = ptSortCriteria.customTF
+                    kvp.Value.sortCriteria = ptSortCriteria.customTF
                 Else
-                    If activeConstellation.sortCriteria <> currentSessionConstellation.sortCriteria Then
+                    If kvp.Value.sortCriteria <> currentSessionConstellation.sortCriteria Then
 
-                        If activeConstellation.sortCriteria >= 0 Then
-                            currentSessionConstellation.sortCriteria = activeConstellation.sortCriteria
+                        If kvp.Value.sortCriteria >= 0 Then
+                            currentSessionConstellation.sortCriteria = kvp.Value.sortCriteria
                         Else
                             currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
                         End If
@@ -12695,7 +12807,7 @@ Public Module awinGeneralModules
                 End If
                 ' jetzt den Sortier-Modus anpassen 
 
-                Call addConstellation(activeConstellation, storedAtOrBefore, showSummaryProject)
+                Call addConstellation(kvp.Value, storedAtOrBefore)
 
             Next
 
@@ -12825,6 +12937,29 @@ Public Module awinGeneralModules
 
 
         Next
+
+        ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
+        Try
+            Dim budget As Double = 0.0
+            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, portfolioVName, AlleProjekte, Date.Now)
+            If Not IsNothing(oldSummaryP) Then
+                budget = oldSummaryP.budgetWerte.Sum
+            End If
+
+            Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, budget:=budget)
+
+            If Not storeSingleProjectToDB(sproj, outPutCollection) Then
+                Call MsgBox("speichern Summary Projekt mit Fehler ...")
+            Else
+                Dim a As Integer = outPutCollection.Count
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+
 
         ' jetzt wird die 
         Try
@@ -25362,13 +25497,21 @@ Public Module awinGeneralModules
 
     End Sub
 
-    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, Optional ByRef identical As Boolean = False) As Boolean
+    ''' <summary>
+    ''' speichert ein einzelnes Projekt in der Datenbank , gibt in outputCollection die Meldungen zurück 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, ByRef outputCollection As Collection) As Boolean
 
-        Dim jetzt As Date = Now
+        Dim tmpResult As Boolean = False
+
+        Dim jetzt As Date = Date.Now
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         enableOnUpdate = False
 
-        Dim outPutCollection As New Collection
+
         Dim outputline As String = ""
 
         Try
@@ -25413,16 +25556,16 @@ Public Module awinGeneralModules
 
                         If awinSettings.englishLanguage Then
                             outputline = "stored: " & hproj.name & ", " & hproj.variantName
-                            outPutCollection.Add(outputline)
+                            outputCollection.Add(outputline)
                         Else
                             outputline = "gespeichert: " & hproj.name & ", " & hproj.variantName
-                            outPutCollection.Add(outputline)
+                            outputCollection.Add(outputline)
                         End If
 
                         Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem, False)
 
-                        storeSingleProjectToDB = True
+                        tmpResult = True
                         'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                     Else
                         If awinSettings.englishLanguage Then
@@ -25431,22 +25574,21 @@ Public Module awinGeneralModules
                             outputline = "geschütztes Projekt: " & hproj.name
                         End If
 
-                        outPutCollection.Add(outputline)
+                        outputCollection.Add(outputline)
 
                         Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem, False)
 
-                        storeSingleProjectToDB = False
+                        tmpResult = False
 
                     End If
                 Else
                     ' storeNeeded ist false, Kein Speichern erforderlich
-                    identical = True
-                    storeSingleProjectToDB = True
+                    tmpResult = True
                 End If
             Else
 
-                storeSingleProjectToDB = False
+                tmpResult = False
                 If awinSettings.englishLanguage Then
                     Throw New ArgumentException("No Database reachable!")
                 Else
@@ -25456,12 +25598,15 @@ Public Module awinGeneralModules
 
         Catch ex As Exception
 
-            storeSingleProjectToDB = False
+            tmpResult = False
 
             ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
             Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
             'Exit Sub
         End Try
+
+        storeSingleProjectToDB = tmpResult
+
     End Function
 
 End Module
