@@ -5614,7 +5614,7 @@ Imports System.Windows
 
                             Try
                                 Dim keyStr As String = calcProjektKey(hproj)
-                                ImportProjekte.Add(hproj, False)
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                                 myCollection.Add(calcProjektKey(hproj))
                             Catch ex2 As Exception
                                 Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
@@ -5745,12 +5745,12 @@ Imports System.Windows
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
-                        ImportProjekte.Add(hproj, False)
+                        ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                         myCollection.Add(calcProjektKey(hproj))
 
                         If Not IsNothing(mapProj) Then
                             keyStr = calcProjektKey(mapProj)
-                            ImportProjekte.Add(mapProj, False)
+                            ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
                             myCollection.Add(calcProjektKey(mapProj))
 
                         End If

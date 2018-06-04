@@ -11382,35 +11382,42 @@ Public Module Projekte
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
 
+        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(hproj.name, hproj.variantName), False) Then
 
-        Try
-            AlleProjekte.Add(hproj)
-        Catch ex As Exception
+            Try
+                AlleProjekte.Add(hproj)
+            Catch ex As Exception
 
-        End Try
+            End Try
 
-        Try
-            ShowProjekte.Add(hproj)
-            ' hier ist im hproj das attribut shpUID gesetzt , deswegen muss nicht extra AddShape aufgerufen werden 
-        Catch ex As Exception
+            Try
+                ShowProjekte.Add(hproj)
+                ' hier ist im hproj das attribut shpUID gesetzt , deswegen muss nicht extra AddShape aufgerufen werden 
+            Catch ex As Exception
 
-        End Try
+            End Try
 
-        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-        Dim tmpCollection As New Collection
+            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+            Dim tmpCollection As New Collection
 
-        '
-        'Call awinClearPlanTafel()
-        'Call awinZeichnePlanTafel(True)
+            '
+            'Call awinClearPlanTafel()
+            'Call awinZeichnePlanTafel(True)
 
-        Dim pZeile As Integer = projectboardShapes.getMaxZeile
-        Call ZeichneProjektinPlanTafel(tmpCollection, pname, pZeile, tmpCollection, tmpCollection)
+            Dim pZeile As Integer = projectboardShapes.getMaxZeile
+            Call ZeichneProjektinPlanTafel(tmpCollection, pname, pZeile, tmpCollection, tmpCollection)
 
 
 
-        ' ein Projekt wurde eingefügt  - typus = 2
-        Call awinNeuZeichnenDiagramme(2)
+            ' ein Projekt wurde eingefügt  - typus = 2
+            Call awinNeuZeichnenDiagramme(2)
+
+        Else
+            Call MsgBox("Konflikte mit Summary Projekten")
+        End If
+
+
 
         ' Call diagramsVisible("True")
         appInstance.ScreenUpdating = formerSU
