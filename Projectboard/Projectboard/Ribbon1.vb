@@ -217,7 +217,9 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
 
+            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
             Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
+
             appInstance.ScreenUpdating = False
 
             If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
@@ -228,19 +230,22 @@ Imports System.Windows
 
             Dim constellationsToDo As New clsConstellations
 
+
+            Dim firsttime As Boolean = False
+
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
                 ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Summary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
                 ' geladen idt oder aber in einem anderen Summary Projekt referenziert wird ! 
                 Try
                     Dim ok As Boolean = False
-                    If Not AlleProjekte.containsAnySummaryProject _
+                    If (Not AlleProjekte.containsAnySummaryProject _
                         And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
-                        And Not loadConstellationFrm.loadAsSummary.Checked Then
+                        And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
                         ' alles in Ordnung 
                         ok = True
                     Else
-                        If Not AlleProjekte.containsAnyConflictsWith(tmpName, True) Then
+                        If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
                             ok = True
                         End If
                     End If
@@ -248,6 +253,11 @@ Imports System.Windows
                     If ok Then
                         ' aufnehmen ...
                         Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+
+                        If firsttime And clearBoard Then
+                            projectConstellations.clearLoadedPortfolios()
+                            firsttime = False
+                        End If
 
                         If Not IsNothing(constellation) Then
                             If Not constellationsToDo.Contains(constellation.constellationName) Then
@@ -263,6 +273,12 @@ Imports System.Windows
                             End If
 
                         End If
+
+                        If Not IsNothing(constellation) Then
+                            projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                        End If
+
+
                     Else
                         ' Meldung, un dann nicht aufnehmen 
                         Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
@@ -276,8 +292,6 @@ Imports System.Windows
 
             Next
 
-
-            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
             'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
@@ -4429,9 +4443,10 @@ Imports System.Windows
 
         Dim nameCollection As New Collection
 
-        If Not noSummaryProjectsareSelected(nameCollection) Then
-            Exit Sub
-        End If
+        ' ein Unmark darf auf Summary Projekte gemacht werden 
+        'If Not noSummaryProjectsareSelected(nameCollection) Then
+        '    Exit Sub
+        'End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False

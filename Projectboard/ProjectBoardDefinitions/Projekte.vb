@@ -6834,13 +6834,13 @@ Public Module Projekte
         End If
 
         ' es müssen jetzt alle Rollen in eine Collection geholt werden, die keine SammelRolle sind ... 
-        Dim basicRolesCollection As Collection = RoleDefinitions.getBasicRoles
+        'Dim basicRolesCollection As Collection = RoleDefinitions.getBasicRoles
 
         '
         ' hole die Anzahl Rollen
 
-        anzRollen = basicRolesCollection.Count
-
+        'anzRollen = basicRolesCollection.Count
+        anzRollen = RoleDefinitions.Count
 
         If anzRollen = 0 Then
             'Call MsgBox("keine Rollen-Bedarfe definiert")
@@ -6851,15 +6851,19 @@ Public Module Projekte
         
         Dim sortierteListe As New SortedList(Of Double, String)
         For r = 1 To anzRollen
-            'roleName = RoleDefinitions.getRoledef(r).name
-            roleName = CStr(basicRolesCollection.Item(r))
-            Dim tmpValue As Double = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
-            If tmpValue > 0 Then
-                While sortierteListe.ContainsKey(tmpValue)
-                    tmpValue = tmpValue + 0.0000001
-                End While
-                ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
-                sortierteListe.Add(tmpValue, roleName)
+            roleName = RoleDefinitions.getRoledef(r).name
+            'roleName = CStr(basicRolesCollection.Item(r))
+            Dim valueUeber As Double = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+            If valueUeber > 0 Then
+                Dim valueUnter As Double = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+                Dim sortCriteria As Double = valueUeber - valueUnter
+                If sortCriteria > 0 Then
+                    While sortierteListe.ContainsKey(sortCriteria)
+                        sortCriteria = sortCriteria + 0.0000001
+                    End While
+                    ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+                    sortierteListe.Add(sortCriteria, roleName)
+                End If
             End If
         Next r
 
@@ -7281,6 +7285,7 @@ Public Module Projekte
 
     ''' <summary>
     ''' zeigt die Zusammensetzung der Überauslastung bzw Unterauslastung an 
+    ''' wenn keine Sammelrolle angegeben ist, werden alle Rollen untersucht; anonsten nur die Sammelrolle plus Kinden
     ''' 
     ''' </summary>
     ''' <param name="repObj">Verweis auf das erzeugte Chart</param>
@@ -7293,9 +7298,9 @@ Public Module Projekte
     ''' <param name="height">Diagramm-Höhe</param>
     ''' <param name="width">Diagramm-Breite</param>
     ''' <remarks></remarks>
-    Public Sub createAuslastungsDetailPie(ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                                ByVal top As Double, left As Double, height As Double, width As Double, _
-                                                ByVal calledfromReporting As Boolean)
+    Public Sub createAuslastungsDetailPie(ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer,
+                                                ByVal top As Double, left As Double, height As Double, width As Double,
+                                                ByVal calledfromReporting As Boolean, Optional ByVal roleCollection As Collection = Nothing)
 
 
         Dim diagramTitle As String
@@ -7304,7 +7309,7 @@ Public Module Projekte
         Dim newChtObj As Excel.ChartObject = Nothing
 
         Dim farbThemaRot As System.Drawing.Color = System.Drawing.Color.Aqua
-        
+
 
 
         Dim Xdatenreihe() As String
@@ -7333,7 +7338,7 @@ Public Module Projekte
 
         Dim anzRollen As Integer
         Dim roleName As String
-
+        Dim roleIDs As New SortedList(Of Integer, Double)
 
         Dim kennung As String
         Dim zE As String = awinSettings.kapaEinheit
@@ -7369,31 +7374,55 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
         ' es müssen jetzt alle Rollen in eine Collection geholt werden, die keine SammelRolle sind ... 
-        Dim basicRolesCollection As Collection = RoleDefinitions.getBasicRoles
+        'Dim basicRolesCollection As Collection = RoleDefinitions.getBasicRoles
+
 
         '
         ' hole die Anzahl Rollen
 
-        anzRollen = basicRolesCollection.Count
+        'anzRollen = basicRolesCollection.Count
+        If IsNothing(roleCollection) Then
+            roleIDs = RoleDefinitions.getAllIDs
+        Else
 
+            For Each tmpRoleName As String In roleCollection
+                Dim tmpRoleIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(tmpRoleName, type:=PTcbr.all)
 
+                For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIds
+                    If Not roleIDs.ContainsKey(srKvP.Key) Then
+                        roleIDs.Add(srKvP.Key, srKvP.Value)
+                    End If
+                Next
+
+            Next
+
+        End If
+
+        anzRollen = roleIDs.Count
         If anzRollen = 0 Then
+
             'Call MsgBox("keine Rollen-Bedarfe definiert")
             Call MsgBox(repMessages.getmsg(96))
             Exit Sub
         End If
 
         Dim sortierteListe As New SortedList(Of Double, String)
+
         For r = 1 To anzRollen
-            'roleName = RoleDefinitions.getRoledef(r).name
-            roleName = CStr(basicRolesCollection.Item(r))
-            Dim tmpValue As Double = ShowProjekte.getAuslastungsValues(roleName, auswahl).Sum
-            If tmpValue > 0 Then
-                While sortierteListe.ContainsKey(tmpValue)
-                    tmpValue = tmpValue + 0.0000001
-                End While
-                ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
-                sortierteListe.Add(tmpValue, roleName)
+            roleName = RoleDefinitions.getRoleDefByID(roleIDs.ElementAt(r - 1).Key).name
+            'roleName = CStr(basicRolesCollection.Item(r))
+            Dim valueUeber As Double = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+            If valueUeber > 0 Then
+                Dim valueUnter As Double = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+                Dim sortCriteria As Double = valueUeber - valueUnter
+                If sortCriteria > 0 Then
+                    While sortierteListe.ContainsKey(sortCriteria)
+                        sortCriteria = sortCriteria + 0.0000001
+                    End While
+                    ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+                    sortierteListe.Add(sortCriteria, roleName)
+                End If
+
             End If
         Next r
 
@@ -7533,7 +7562,7 @@ Public Module Projekte
                     .HasTitle = True
                     .ChartTitle.Text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                         titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
                 End With
@@ -7588,7 +7617,7 @@ Public Module Projekte
                     Else
                         .gsCollection = Nothing
                     End If
-                    
+
                     .isCockpitChart = False
                     .top = top
                     .left = left
@@ -12936,7 +12965,7 @@ Public Module Projekte
             Try
                 hproj = ShowProjekte.getProject(pname)
                 ' Sicherstellen, dass der Status Wechsel nur bei der Basis-Variante vorgenommen werden kann ...
-                If hproj.variantName <> "" Then
+                If hproj.variantName <> "" And Not hproj.isUnion Then
                     If awinSettings.englishLanguage Then
                         errmsg = hproj.getShapeText & " : status change of a project-variant is not possible!"
                     Else

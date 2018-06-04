@@ -12610,6 +12610,9 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' erzeugt das Union Projekt für die Konstellation ; ansonsten wird nichts gemacht 
     ''' wenn die Projekte noch nicht geladen sind, werden sie aus der Datenbank geholt, aber nicht in AlleProjekte geladen ...
+    ''' wenn budget = 0 : es hat kein Budget 
+    ''' wenn budget = -1: berechne das Budget aus den Budgets der Projekte bzw. Summary Projekte 
+    ''' wenn budget > 0 : übernehme diesen Wert als Budget 
     ''' </summary>
     ''' <param name="considerImportProjekte"></param>
     Public Function calcUnionProject(ByVal activeConstellation As clsConstellation,
@@ -12620,13 +12623,18 @@ Public Module awinGeneralModules
                                 Optional ByVal ampelbeschreibung As String = "",
                                 Optional ByVal responsible As String = "") As clsProjekt
 
-
-
+        Dim calculateBudget As Boolean = (budget <= -0.99)
+        Dim gesamtbudget As Double = budget
         Dim unionProj As clsProjekt = Nothing
         Dim projektListe As clsProjekteAlle = AlleProjekte
         'Dim outPutListe As clsProjekteAlle = AlleProjektSummaries
 
-        ' Das Ergebnis wird in der PortfolioProjektSummaries abgelegt 
+        ' das budget 
+        If budget >= 0 Then
+            gesamtbudget = budget
+        Else
+            gesamtbudget = 0
+        End If
 
         ' jetzt die Union bilden ... das erste als Default besetzen 
         Dim listOfProjectNames As SortedList(Of String, String) = activeConstellation.getProjectNames(considerShowAttribute:=True,
@@ -12661,6 +12669,11 @@ Public Module awinGeneralModules
                             isFirstProj = False
                         End If
 
+                        If budget <= -0.99 Then
+                            ' das Gesamtbudget soll sich aus der Summe der Einzelbudgets ergeben ... 
+                            gesamtbudget = gesamtbudget + hproj.Erloes
+                        End If
+
                         unionProj.variantName = portfolioVName
                         unionProj = unionProj.unionizeWith(hproj)
 
@@ -12670,7 +12683,7 @@ Public Module awinGeneralModules
 
                 ' jetzt ggf die Attribute noch ergänzen 
                 With unionProj
-                    .Erloes = budget
+                    .Erloes = gesamtbudget
                     .description = description
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung
@@ -12733,6 +12746,7 @@ Public Module awinGeneralModules
 
             End If
 
+
             ' hier muss eine summaryConstellation gemacht werden 
             If showSummaryProject Then
                 Dim fullSProjektNames As New SortedList(Of String, String)
@@ -12744,7 +12758,7 @@ Public Module awinGeneralModules
                     Dim oldSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, portfolioVName, AlleProjekte, storedAtOrBefore)
                     Dim oldBudget As Double = 0.0
                     If Not IsNothing(oldSummaryProj) Then
-                        oldBudget = oldSummaryProj.budgetWerte.Sum
+                        oldBudget = oldSummaryProj.Erloes
                     End If
 
                     Dim sProj As clsProjekt = calcUnionProject(kvp.Value, False, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)

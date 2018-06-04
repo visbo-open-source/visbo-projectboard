@@ -44,16 +44,26 @@
 
                 If kvp.Value.variantName = portfolioVName Then
                     Try
-                        Dim teilErgebnisListe As SortedList(Of String, Boolean) = projectConstellations.getConstellation(kvp.Value.projectName).getBasicProjectIDs
+                        If tmpResult.ContainsKey(kvp.Key) Then
+                            ' nichts tun, ist schon drin 
+                        Else
+                            tmpResult.Add(kvp.Key, kvp.Value.show)
+                        End If
 
-                        For Each teKvP As KeyValuePair(Of String, Boolean) In teilErgebnisListe
-                            If tmpResult.ContainsKey(teKvP.Key) Then
-                                ' nichts tun, ist schon drin 
-                            Else
-                                tmpResult.Add(teKvP.Key, teKvP.Value)
-                            End If
+                        Dim curConstellation As clsConstellation = projectConstellations.getConstellation(kvp.Value.projectName)
+                        If Not IsNothing(curConstellation) Then
+                            Dim teilErgebnisListe As SortedList(Of String, Boolean) = projectConstellations.getConstellation(kvp.Value.projectName).getBasicProjectIDs
 
-                        Next
+                            For Each teKvP As KeyValuePair(Of String, Boolean) In teilErgebnisListe
+                                If tmpResult.ContainsKey(teKvP.Key) Then
+                                    ' nichts tun, ist schon drin 
+                                Else
+                                    tmpResult.Add(teKvP.Key, teKvP.Value)
+                                End If
+
+                            Next
+                        End If
+
                     Catch ex As Exception
 
                     End Try

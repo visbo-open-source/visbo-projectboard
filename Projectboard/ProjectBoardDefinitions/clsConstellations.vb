@@ -1,5 +1,7 @@
 ﻿Public Class clsConstellations
     Private _allConstellations As SortedList(Of String, clsConstellation)
+    ' der bool'sche Wert hat aktuell keine Bedeutung; später evtl benutzen um zu bestimmen, das Portfolio Budget aus den Einzelbudgets zu berechnen ist
+    Private _listOfLoadedSessionPortfolios As SortedList(Of String, Boolean)
 
     Public ReadOnly Property Count As Integer
 
@@ -7,6 +9,52 @@
             Count = _allConstellations.Count
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="portfolioName"></param>
+    ''' <returns></returns>
+    Public Function addToLoadedSessionPortfolios(ByVal portfolioName As String) As Boolean
+        Dim tmpResult As Boolean = True
+        If Me.Contains(portfolioName) Then
+            If Not _listOfLoadedSessionPortfolios.ContainsKey(portfolioName) Then
+                _listOfLoadedSessionPortfolios.Add(portfolioName, True)
+            End If
+        Else
+            tmpResult = False
+        End If
+        addToLoadedSessionPortfolios = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' setzt die Liste der geladenen Session Portfolios zurück 
+    ''' </summary>
+    Public Sub clearLoadedPortfolios()
+        _listOfLoadedSessionPortfolios.Clear()
+    End Sub
+
+    ''' <summary>
+    ''' gibt das anteilige Gesamt Budget des Zeitraums im Gesamt-Portfolio zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getBudgetOfLoadedPortfolios() As Double
+        Get
+            Dim tmpResult As Double = 0.0
+            For Each pfKvP As KeyValuePair(Of String, Boolean) In _listOfLoadedSessionPortfolios
+                Dim key As String = calcProjektKey(pfKvP.Key, portfolioVName)
+                Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+                Dim teilbudget As Double, pk As Double, sk As Double, rk As Double, ergebnis As Double
+
+                If Not IsNothing(hproj) Then
+                    Call hproj.calculateRoundedKPI(teilbudget, pk, sk, rk, ergebnis)
+                    tmpResult = tmpResult + teilbudget
+                End If
+
+            Next
+            getBudgetOfLoadedPortfolios = tmpResult
+        End Get
     End Property
 
     ''' <summary>
@@ -127,6 +175,7 @@
     Sub New()
 
         _allConstellations = New SortedList(Of String, clsConstellation)
+        _listOfLoadedSessionPortfolios = New SortedList(Of String, Boolean)
 
     End Sub
 

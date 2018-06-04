@@ -32,6 +32,22 @@ Public Class clsRollen
     End Sub
 
     ''' <summary>
+    ''' gibt eine Liste aller Rollen zurück
+    ''' der Value hat hier keine Bedeutung 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getAllIDs() As SortedList(Of Integer, Double)
+        Get
+            Dim tmpValue As Double = 1.0
+            Dim tmpResult As New SortedList(Of Integer, Double)
+            For Each kvp As KeyValuePair(Of Integer, clsRollenDefinition) In _allRollen
+                tmpResult.Add(kvp.Key, tmpValue)
+            Next
+            getAllIDs = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt den Standard TopNode Name zurück, das ist der erste vorkommende Top Node 
     ''' </summary>
     ''' <value></value>

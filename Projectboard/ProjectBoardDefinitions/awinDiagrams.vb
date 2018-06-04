@@ -4351,6 +4351,8 @@ Public Module awinDiagrams
 
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
         budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+
+        budgetSum = System.Math.Round(projectConstellations.getBudgetOfLoadedPortfolios, mode:=MidpointRounding.ToEven)
         pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 

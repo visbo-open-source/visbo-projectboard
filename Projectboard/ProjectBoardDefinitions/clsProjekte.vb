@@ -3148,14 +3148,15 @@ Public Class clsProjekte
             If RoleDefinitions.containsName(roleName) Then
 
                 If istSammelRolle Then
-                    ' nur Platzhalter Rollenbedarfe berücksichtigen 
-                    roleValues = Me.getRoleValuesInMonth(roleName)
-                    ReDim kapaValues(zeitraum)
+                    myCollection.Add(roleName, roleName)
+                    ' dann sollen alle Werte, aslo inkl der Subroles berücksichtigt werden  
+                    roleValues = Me.getRoleValuesInMonthNew(roleName, considerAllSubRoles:=True)
+                    kapaValues = Me.getRoleKapasInMonth(myCollection, False)
 
                 Else
 
                     myCollection.Add(roleName, roleName)
-                    roleValues = Me.getRoleValuesInMonth(roleName)
+                    roleValues = Me.getRoleValuesInMonthNew(roleName)
                     kapaValues = Me.getRoleKapasInMonth(myCollection, False)
                     myCollection.Clear()
                 End If
@@ -3167,7 +3168,7 @@ Public Class clsProjekte
                         ' Auslastung
 
                         For ix = 0 To zeitraum
-                            If roleValues(ix) > kapaValues(ix) And Not istSammelRolle Then
+                            If roleValues(ix) > kapaValues(ix) Then
                                 ' es werden die maximale Anzahl Leute dieser Rolle berücksichtigt 
                                 tmpValues(ix) = tmpValues(ix) + kapaValues(ix)
                             Else
@@ -3180,7 +3181,7 @@ Public Class clsProjekte
                         ' Überauslastung
 
                         For ix = 0 To zeitraum
-                            If roleValues(ix) > kapaValues(ix) And Not istSammelRolle Then
+                            If roleValues(ix) > kapaValues(ix) Then
                                 ' es gibt Überauslastung  
                                 tmpValues(ix) = tmpValues(ix) + roleValues(ix) - kapaValues(ix)
                             Else
@@ -3192,7 +3193,7 @@ Public Class clsProjekte
                     Case 2
                         ' Unterauslastung
                         For ix = 0 To zeitraum
-                            If roleValues(ix) < kapaValues(ix) And Not istSammelRolle Then
+                            If roleValues(ix) < kapaValues(ix) Then
                                 ' es gibt Unterauslastung  
                                 tmpValues(ix) = tmpValues(ix) + kapaValues(ix) - roleValues(ix)
                             Else
