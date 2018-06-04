@@ -122,6 +122,8 @@ Imports System.Windows
             .lblStandvom.Visible = False
             .requiredDate.Visible = False
             .addToSession.Visible = False
+            .loadAsSummary.Visible = False
+
         End With
 
         Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog
@@ -228,24 +230,49 @@ Imports System.Windows
 
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
-                ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Suumary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
+                ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Summary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
                 ' geladen idt oder aber in einem anderen Summary Projekt referenziert wird ! 
-
-                Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
-                If Not IsNothing(constellation) Then
-                    If Not constellationsToDo.Contains(constellation.constellationName) Then
-                        constellationsToDo.Add(constellation)
-                    End If
-                Else
-                    constellation = dbConstellations.getConstellation(tmpName)
-                    If Not IsNothing(constellation) Then
-                        If Not constellationsToDo.Contains(constellation.constellationName) Then
-                            constellationsToDo.Add(constellation)
+                Try
+                    Dim ok As Boolean = False
+                    If Not AlleProjekte.containsAnySummaryProject _
+                        And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
+                        And Not loadConstellationFrm.loadAsSummary.Checked Then
+                        ' alles in Ordnung 
+                        ok = True
+                    Else
+                        If Not AlleProjekte.containsAnyConflictsWith(tmpName, True) Then
+                            ok = True
                         End If
-                        projectConstellations.Add(constellation)
                     End If
 
-                End If
+                    If ok Then
+                        ' aufnehmen ...
+                        Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+
+                        If Not IsNothing(constellation) Then
+                            If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                constellationsToDo.Add(constellation)
+                            End If
+                        Else
+                            constellation = dbConstellations.getConstellation(tmpName)
+                            If Not IsNothing(constellation) Then
+                                If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                    constellationsToDo.Add(constellation)
+                                End If
+                                projectConstellations.Add(constellation)
+                            End If
+
+                        End If
+                    Else
+                        ' Meldung, un dann nicht aufnehmen 
+                        Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
+                                     "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
+                    End If
+                Catch ex As Exception
+                    Dim tstmsg As String = ex.Message
+                End Try
+
+
 
             Next
 
@@ -3282,7 +3309,15 @@ Imports System.Windows
     End Sub
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
-        Call massEditRcTeAt(ptModus.massEditRessCost)
+        ' check ob auch keine Summary Projects selektiert sind ...
+        Dim nameCollection As New Collection
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        Else
+            Call massEditRcTeAt(ptModus.massEditRessCost)
+        End If
+
+
 
     End Sub
 

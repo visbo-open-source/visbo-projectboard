@@ -40,6 +40,87 @@ Public Class clsProjekteAlle
     End Property
 
     ''' <summary>
+    ''' gibt true zurück wenn irgendein Summary Projekt in der Liste enthalten ist 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property containsAnySummaryProject() As Boolean
+
+        Get
+            Dim tmpResult As Boolean = False
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                If kvp.Value.isUnion = True Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+            containsAnySummaryProject = tmpResult
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn es in Session und Constellation gemeinsame Projekte gibt 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <param name="isConstellation"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsAnyConflictsWith(ByVal pvName As String, ByVal isConstellation As Boolean) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+
+            Dim sortedListSession As New SortedList(Of String, Boolean)
+            Dim sortedListInQuestion As New SortedList(Of String, Boolean)
+
+            ' Aufbau aller in AlleProjekte referenzierten Liste 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                If kvp.Value.isUnion = True Then
+                    ' hier müssen die Projekte eingetragen werden, die in der entsprechenden Constellation verzeichnet sind ... 
+                    Dim curConstellation As clsConstellation = projectConstellations.getConstellation(kvp.Value.name)
+                    Dim teilergebnisListe As SortedList(Of String, Boolean) = curConstellation.getBasicProjectIDs
+
+                    For Each teKvP As KeyValuePair(Of String, Boolean) In teilergebnisListe
+                        If sortedListSession.ContainsKey(teKvP.Key) Then
+                            ' nichts tun, ist schon drin 
+                        Else
+                            sortedListSession.Add(teKvP.Key, teKvP.Value)
+                        End If
+
+                    Next
+
+                Else
+                    ' einfach nur den pvname eintragen 
+                    If Not sortedListSession.ContainsKey(kvp.Key) Then
+                        sortedListSession.Add(kvp.Key, True)
+                    End If
+                End If
+            Next
+
+            ' Aufbau der inQuestion Sorted Liste 
+            If isConstellation Then
+                Dim tmpconstellation As clsConstellation = projectConstellations.getConstellation(pvName)
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In tmpconstellation.Liste
+                    If Not sortedListInQuestion.ContainsKey(kvp.Key) Then
+                        sortedListInQuestion.Add(kvp.Key, kvp.Value.show)
+                    End If
+                Next
+
+            Else
+                sortedListInQuestion.Add(pvName, True)
+            End If
+
+            ' und jetzt kommt die Prüfung ..
+            For Each checkKvP As KeyValuePair(Of String, Boolean) In sortedListInQuestion
+                If sortedListSession.ContainsKey(checkKvP.Key) Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+
+            containsAnyConflictsWith = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
     ''' später soll die Aufrufleiste bereinigt werden ... 
     ''' wenn der Schlüssel bereits existiert, wird eine Argument-Exception geworfen 

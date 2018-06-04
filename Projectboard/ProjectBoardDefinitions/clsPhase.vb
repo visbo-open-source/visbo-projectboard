@@ -2739,128 +2739,131 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
                                ByVal corrFakt As Double, ByRef newValues() As Double)
-        Dim k As Integer
-        Dim newXwerte() As Double
-        Dim gesBedarf As Double
-        Dim Rest As Integer
-        Dim hDatum As Date
-        Dim anzDaysthisMonth As Double
+        'Dim k As Integer
+        'Dim newXwerte() As Double
+        'Dim gesBedarf As Double
+        'Dim Rest As Integer
+        'Dim hDatum As Date
+        'Dim anzDaysthisMonth As Double
 
-        Try
-            ReDim newXwerte(newValues.Length - 1)
+        newValues = Me.berechneBedarfeNew(startdate, endedate, oldXwerte, corrFakt)
 
-            If corrFakt <= 0 Then
-                corrFakt = 1.0
-            End If
+        ' Änderung tk 4.6.18 die berechneBedarfeNew verwendet 
+        'Try
+        '    ReDim newXwerte(newValues.Length - 1)
 
-            gesBedarf = oldXwerte.Sum
-            gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+        '    If corrFakt <= 0 Then
+        '        corrFakt = 1.0
+        '    End If
 
-
-            If newValues.Length = oldXwerte.Length Then
-
-                'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
-
-                'If gesBedarf = oldXwerte.Sum Then
-                If corrFakt = 1.0 Then
-                    newXwerte = oldXwerte
-                Else
-                    For i = 0 To newValues.Length - 1
-                        newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
-                    Next
-
-                    ' jetzt ggf die Reste verteilen 
-                    Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
-
-                    k = newXwerte.Length - 1
-                    While Rest <> 0
-
-                        If Rest > 0 Then
-                            newXwerte(k) = newXwerte(k) + 1
-                            Rest = Rest - 1
-                        Else
-
-                            If newXwerte(k) - 1 >= 0 Then
-                                newXwerte(k) = newXwerte(k) - 1
-                                Rest = Rest + 1
-                            End If
-
-                        End If
-                        k = k - 1
-                        If k < 0 Then
-                            k = newXwerte.Length - 1
-                        End If
-
-                    End While
-
-                End If
-
-            Else
-
-                Dim tmpSum As Double = 0
-                For k = 0 To newXwerte.Length - 1
-
-                    If k = 0 Then
-                        ' damit ist 00:00 des Startdates gemeint 
-                        hDatum = startdate
-
-                        anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
-
-                        'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-                        'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
-
-                    ElseIf k = newXwerte.Length - 1 Then
-                        ' damit hDatum das End-Datum um 23.00 Uhr
-
-                        anzDaysthisMonth = endedate.Day
-                        'hDatum = endedate.AddHours(23)
-                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
-
-                    Else
-                        hDatum = startdate
-                        anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
-                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
-                    End If
-
-                    newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
-                    tmpSum = tmpSum + anzDaysthisMonth
-                Next k
-
-                ' Kontrolle für Test ... aChck muss immer Null sein !
-                'Dim aChck As Double = Me.dauerInDays - tmpSum
+        '    gesBedarf = oldXwerte.Sum
+        '    gesBedarf = System.Math.Round(gesBedarf * corrFakt)
 
 
-                ' Rest wird auf alle newXwerte verteilt
+        '    If newValues.Length = oldXwerte.Length Then
 
-                Rest = CInt(gesBedarf - newXwerte.Sum)
+        '        'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
 
-                k = newXwerte.Length - 1
-                While Rest <> 0
-                    If Rest > 0 Then
-                        newXwerte(k) = newXwerte(k) + 1
-                        Rest = Rest - 1
-                    Else
-                        If newXwerte(k) - 1 >= 0 Then
-                            newXwerte(k) = newXwerte(k) - 1
-                            Rest = Rest + 1
-                        End If
-                    End If
-                    k = k - 1
-                    If k < 0 Then
-                        k = newXwerte.Length - 1
-                    End If
+        '        'If gesBedarf = oldXwerte.Sum Then
+        '        If corrFakt = 1.0 Then
+        '            newXwerte = oldXwerte
+        '        Else
+        '            For i = 0 To newValues.Length - 1
+        '                newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
+        '            Next
 
-                End While
+        '            ' jetzt ggf die Reste verteilen 
+        '            Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
 
-            End If
+        '            k = newXwerte.Length - 1
+        '            While Rest <> 0
 
-            newValues = newXwerte
+        '                If Rest > 0 Then
+        '                    newXwerte(k) = newXwerte(k) + 1
+        '                    Rest = Rest - 1
+        '                Else
 
-        Catch ex As Exception
+        '                    If newXwerte(k) - 1 >= 0 Then
+        '                        newXwerte(k) = newXwerte(k) - 1
+        '                        Rest = Rest + 1
+        '                    End If
 
-            Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
+        '                End If
+        '                k = k - 1
+        '                If k < 0 Then
+        '                    k = newXwerte.Length - 1
+        '                End If
 
-        End Try
+        '            End While
+
+        '        End If
+
+        '    Else
+
+        '        Dim tmpSum As Double = 0
+        '        For k = 0 To newXwerte.Length - 1
+
+        '            If k = 0 Then
+        '                ' damit ist 00:00 des Startdates gemeint 
+        '                hDatum = startdate
+
+        '                anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+        '                'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+        '                'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+        '            ElseIf k = newXwerte.Length - 1 Then
+        '                ' damit hDatum das End-Datum um 23.00 Uhr
+
+        '                anzDaysthisMonth = endedate.Day
+        '                'hDatum = endedate.AddHours(23)
+        '                'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+        '            Else
+        '                hDatum = startdate
+        '                anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+        '                'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+        '            End If
+
+        '            newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+        '            tmpSum = tmpSum + anzDaysthisMonth
+        '        Next k
+
+        '        ' Kontrolle für Test ... aChck muss immer Null sein !
+        '        'Dim aChck As Double = Me.dauerInDays - tmpSum
+
+
+        '        ' Rest wird auf alle newXwerte verteilt
+
+        '        Rest = CInt(gesBedarf - newXwerte.Sum)
+
+        '        k = newXwerte.Length - 1
+        '        While Rest <> 0
+        '            If Rest > 0 Then
+        '                newXwerte(k) = newXwerte(k) + 1
+        '                Rest = Rest - 1
+        '            Else
+        '                If newXwerte(k) - 1 >= 0 Then
+        '                    newXwerte(k) = newXwerte(k) - 1
+        '                    Rest = Rest + 1
+        '                End If
+        '            End If
+        '            k = k - 1
+        '            If k < 0 Then
+        '                k = newXwerte.Length - 1
+        '            End If
+
+        '        End While
+
+        '    End If
+
+        '    newValues = newXwerte
+
+        'Catch ex As Exception
+
+        '    Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
+
+        'End Try
 
 
 
@@ -2886,9 +2889,10 @@ Public Class clsPhase
         Dim Rest As Integer
         Dim hDatum As Date
         Dim anzDaysthisMonth As Double
-        Dim arrayLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+        Dim newLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+        Dim gesBedarfReal As Double = 0.0
 
-        ReDim newXwerte(arrayLength - 1)
+        ReDim newXwerte(newLength - 1)
 
         ' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
         ' andernfalls ist eh schon alles richtig 
@@ -2896,49 +2900,65 @@ Public Class clsPhase
 
             Try
 
+                gesBedarfReal = oldXwerte.Sum * corrFakt
+                gesBedarf = System.Math.Round(gesBedarfReal)
 
-                gesBedarf = oldXwerte.Sum
-                If awinSettings.propAnpassRess Then
-                    ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
-                    gesBedarf = System.Math.Round(gesBedarf * corrFakt)
-                End If
 
-                If arrayLength = oldXwerte.Length Then
+                If newLength = oldXwerte.Length Then
 
-                    'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
+                    'Bedarfe-Verteilung bleibt wie gehabt ... allerdings unter Berücksichtigung corrFakt
 
-                    If Not awinSettings.propAnpassRess Then
-                        newXwerte = oldXwerte
-                    Else
-                        For i = 0 To arrayLength - 1
-                            newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
-                        Next
 
-                        ' jetzt ggf die Reste verteilen 
-                        Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
+                    For i = 0 To newLength - 1
+                        newXwerte(i) = oldXwerte(i) * corrFakt
+                    Next
 
-                        k = newXwerte.Length - 1
-                        While Rest <> 0
+                    ' jetzt ggf die Reste verteilen 
+                    Rest = CInt(gesBedarf - newXwerte.Sum)
 
-                            If Rest > 0 Then
-                                newXwerte(k) = newXwerte(k) + 1
-                                Rest = Rest - 1
-                            Else
+                    k = newXwerte.Length - 1
+                    While Rest <> 0
 
-                                If newXwerte(k) - 1 >= 0 Then
-                                    newXwerte(k) = newXwerte(k) - 1
-                                    Rest = Rest + 1
-                                End If
+                        If Rest > 0 Then
+                            newXwerte(k) = newXwerte(k) + 1
+                            Rest = Rest - 1
+                        Else
 
+                            If newXwerte(k) - 1 >= 0 Then
+                                newXwerte(k) = newXwerte(k) - 1
+                                Rest = Rest + 1
                             End If
+
+                        End If
                             k = k - 1
                             If k < 0 Then
                                 k = newXwerte.Length - 1
                             End If
 
-                        End While
+                    End While
 
+                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+                    k = newXwerte.Length - 1
+                    If newXwerte.Sum <> gesBedarfReal Then
+                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+                            ' alles ok 
+
+                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+                                k = k - 1
+                            Loop
+                            ' jetzt ist ein k erreicht 
+                            newXwerte(k) = newXwerte(k) + RestDbl
+                            If newXwerte(k) < 0 Then
+                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+                            End If
+
+                        Else
+                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
+                        End If
                     End If
+
 
                 Else
 
@@ -2997,6 +3017,28 @@ Public Class clsPhase
 
                     End While
 
+                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+                    k = newXwerte.Length - 1
+                    If newXwerte.Sum <> gesBedarfReal Then
+                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+                            ' alles ok 
+
+                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+                                k = k - 1
+                            Loop
+                            ' jetzt ist ein k erreicht 
+                            newXwerte(k) = newXwerte(k) + RestDbl
+                            If newXwerte(k) < 0 Then
+                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+                            End If
+
+                        Else
+                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
+                        End If
+                    End If
+
                 End If
 
 
@@ -3007,7 +3049,7 @@ Public Class clsPhase
 
         Else
             ' alles auf Null setzen 
-            For ix = 0 To arrayLength - 1
+            For ix = 0 To newLength - 1
                 newXwerte(ix) = 0
             Next
         End If

@@ -31,7 +31,41 @@
 
     Private _constellationName As String = "Last"
 
+    ''' <summary>
+    ''' gibt eine sortierte Liste der eindeutigen Projekt-IDs zurück, das heisst wenn Summary PRojekte enthalten sind, werden die solange aufgelöst, bis nur noch Projekte enthalten sind 
+    ''' 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getBasicProjectIDs() As SortedList(Of String, Boolean)
+        Get
+            Dim tmpResult As New SortedList(Of String, Boolean)
 
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+
+                If kvp.Value.variantName = portfolioVName Then
+                    Try
+                        Dim teilErgebnisListe As SortedList(Of String, Boolean) = projectConstellations.getConstellation(kvp.Value.projectName).getBasicProjectIDs
+
+                        For Each teKvP As KeyValuePair(Of String, Boolean) In teilErgebnisListe
+                            If tmpResult.ContainsKey(teKvP.Key) Then
+                                ' nichts tun, ist schon drin 
+                            Else
+                                tmpResult.Add(teKvP.Key, teKvP.Value)
+                            End If
+
+                        Next
+                    Catch ex As Exception
+
+                    End Try
+
+                Else
+                    tmpResult.Add(kvp.Key, kvp.Value.show)
+                End If
+            Next
+
+            getBasicProjectIDs = tmpResult
+        End Get
+    End Property
     ''' <summary>
     ''' gibt den Projekt-Namen zurück, der an der entsprechenden Position in der Sort-Liste steht, allerdings zählen nur die PRojekte in ShowProjekte
     ''' Position kann Werte zwischen 1 und count annehmen 
@@ -1059,6 +1093,25 @@
 
             containsProject = found
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn die Constellation irgendein Summary Projekt enthält 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property containsAnySummaryProject() As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                If kvp.Value.variantName = portfolioVName Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+
+            containsAnySummaryProject = tmpResult
         End Get
     End Property
 
