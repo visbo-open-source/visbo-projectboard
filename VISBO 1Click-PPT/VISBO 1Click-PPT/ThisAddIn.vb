@@ -30,6 +30,7 @@ Public Class ThisAddIn
 
             awinSettings.databaseURL = My.Settings.mongoDBURL
             awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.DBWithSSL = My.Settings.mongoDBWithSSL
             awinSettings.globalPath = My.Settings.globalPath
             awinSettings.awinPath = My.Settings.awinPath
             awinSettings.visboTaskClass = My.Settings.TaskClass
