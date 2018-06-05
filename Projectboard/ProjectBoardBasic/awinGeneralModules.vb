@@ -22264,7 +22264,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' schreibt die Daten der in einer todoListe übergebenen Projekt-Namen in ein extra Tabellenblatt 
     ''' die Info-Daten werden in einer Range mit Name informationColumns zusammengefasst   
-    ''' Dabei wird überprüft, was der längste mögliche Ressourcen und Kosten-Namen überhaupt ist 
+    ''' ur: 05.06.2018: nicht mehr:Dabei wird überprüft, was der längste mögliche Ressourcen und Kosten-Namen überhaupt ist 
     ''' und was der längste eingetragene Namen ist ... Am Schluss wird notfalls die Spaltenbreite verlängert, damit auch der längste Namen reingeht ... 
     ''' </summary>
     ''' <param name="todoListe">enthält die pvNames der Projekte</param>"
@@ -22300,21 +22300,22 @@ Public Module awinGeneralModules
             Dim ressCostColumn As Integer
             Dim tmpName As String
 
+            ' ur: 05.06.2018: Spaltenbreite bleibt konstant, Änderung über Einstellungen Header einblenden möglich
 
             ' jetzt wird die maximale Länge eines strings für Mass-Edit ermittelt 
-            For i As Integer = 1 To RoleDefinitions.Count
-                Dim curItemLength As Integer = RoleDefinitions.getRoledef(i).name.Length
-                If curItemLength > maxRCLengthAbsolut Then
-                    maxRCLengthAbsolut = curItemLength
-                End If
-            Next
+            ''For i As Integer = 1 To RoleDefinitions.Count
+            ''    Dim curItemLength As Integer = RoleDefinitions.getRoledef(i).name.Length
+            ''    If curItemLength > maxRCLengthAbsolut Then
+            ''        maxRCLengthAbsolut = curItemLength
+            ''    End If
+            ''Next
 
-            For i As Integer = 1 To CostDefinitions.Count
-                Dim curItemLength As Integer = CostDefinitions.getCostdef(i).name.Length
-                If curItemLength > maxRCLengthAbsolut Then
-                    maxRCLengthAbsolut = curItemLength
-                End If
-            Next
+            ''For i As Integer = 1 To CostDefinitions.Count
+            ''    Dim curItemLength As Integer = CostDefinitions.getCostdef(i).name.Length
+            ''    If curItemLength > maxRCLengthAbsolut Then
+            ''        maxRCLengthAbsolut = curItemLength
+            ''    End If
+            ''Next
 
             ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
             Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
@@ -23238,14 +23239,16 @@ Public Module awinGeneralModules
                 Next
 
 
+                ' ur: allianz Pilotprojekt: 05.06.2018: Testweise
 
                 ' jetzt muss noch ggf die Spaltenbreite angepasst werden ...
-                If maxRCLengthVorkommen < maxRCLengthAbsolut Then
-                    If maxRCLengthVorkommen > 0 Then
-                        Dim neueBreite As Integer = CInt(CType(.Cells(zeile, 5), Excel.Range).ColumnWidth * maxRCLengthAbsolut / maxRCLengthVorkommen) + 1
-                        CType(.Cells(zeile, 5), Excel.Range).ColumnWidth = neueBreite
-                    End If
-                End If
+
+                ''If maxRCLengthVorkommen < maxRCLengthAbsolut Then
+                ''    If maxRCLengthVorkommen > 0 Then
+                ''        Dim neueBreite As Integer = CInt(CType(.Cells(zeile, 5), Excel.Range).ColumnWidth * maxRCLengthAbsolut / maxRCLengthVorkommen) + 1
+                ''        CType(.Cells(zeile, 5), Excel.Range).ColumnWidth = neueBreite
+                ''    End If
+                ''End If
 
                 Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
                 ' jetzt werden die Überschriften des Datenbereichs geschrieben 
