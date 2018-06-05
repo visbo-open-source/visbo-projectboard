@@ -1004,26 +1004,29 @@ Public Module PBBModules
                                 currentConstellationName = calcLastSessionScenarioName()
                             End If
 
-                            ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
-                            ShowProjekte.Remove(hproj.name)
+                            If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(newproj), False) Then
+                                ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+                                ShowProjekte.Remove(hproj.name)
 
-                            ' die neue Variante wird aufgenommen
-                            'key = calcProjektKey(newproj)
-                            AlleProjekte.Add(newproj)
-                            ShowProjekte.Add(newproj)
+                                ' die neue Variante wird aufgenommen
+                                'key = calcProjektKey(newproj)
+                                AlleProjekte.Add(newproj, checkOnConflicts:=True)
+                                ShowProjekte.Add(newproj)
 
-                            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                            Try
+                                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                                Try
 
-                                Dim tmpCollection As New Collection
-                                Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
+                                    Dim tmpCollection As New Collection
+                                    Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
 
-                            Catch ex As Exception
+                                Catch ex As Exception
 
-                                Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
+                                    Call MsgBox("Konflikte zw. Summary Projekt und Variante " & ex.Message)
 
-                            End Try
+                                End Try
+                            End If
+
 
                             zaehler = zaehler + 1
                         Else

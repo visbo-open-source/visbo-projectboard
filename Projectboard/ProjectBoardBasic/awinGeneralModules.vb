@@ -1690,6 +1690,8 @@ Public Module awinGeneralModules
         awinButtonEvents.Clear()
         projectboardShapes.clear()
 
+        projectConstellations.clearLoadedPortfolios()
+
 
         ' es gibt ja nix mehr in der Session 
         currentConstellationName = ""
@@ -3694,9 +3696,9 @@ Public Module awinGeneralModules
         Next
 
 
-        ' jetzt muss das Projekt eingetragen werden 
-        ImportProjekte.Add(hproj, False)
-        myCollection.Add(hproj.name)
+                    ' jetzt muss das Projekt eingetragen werden 
+                    ImportProjekte.Add(hproj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                    myCollection.Add(hproj.name)
 
 
         zeile = ende + 1
@@ -7504,7 +7506,7 @@ Public Module awinGeneralModules
 
                             ' jetzt in die Import-Projekte eintragen 
                             upDatedProjects = upDatedProjects + 1
-                            ImportProjekte.Add(newProj, False)
+                            ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
 
                             ' wegen test 
                             showRangeLeft = formerLeft
@@ -7571,7 +7573,7 @@ Public Module awinGeneralModules
 
                 If Not IsNothing(oldProj) Then
                     AlleProjekte.Add(oldProj, False)
-                    fctResult = True = True
+                    fctResult = True
                 Else
                     fctResult = False
                 End If
@@ -12152,17 +12154,19 @@ Public Module awinGeneralModules
                         Dim tmpValue As Integer = kvp.Value.dauerInDays
                         ' tk, Änderung 19.1.17 nicht mehr notwendig ..
                         ' Call awinCreateBudgetWerte(kvp.Value)
-
-                        AlleProjekte.Add(kvp.Value)
-                        If ShowProjekte.contains(kvp.Value.name) Then
-                            ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
-                        Else
-                            ShowProjekte.Add(kvp.Value)
-                            atleastOne = True
+                        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.isUnion) Then
+                            AlleProjekte.Add(kvp.Value)
+                            If ShowProjekte.contains(kvp.Value.name) Then
+                                ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
+                            Else
+                                ShowProjekte.Add(kvp.Value)
+                                atleastOne = True
+                            End If
                         End If
+
                     End If
 
-                End If
+                    End If
 
             Next
 
@@ -12191,22 +12195,27 @@ Public Module awinGeneralModules
                     Dim tmpValue As Integer = kvp.Value.dauerInDays
                     ' tk, Änderung 19.1.17 nicht mehr notwendig ..
                     ' Call awinCreateBudgetWerte(kvp.Value)
-                    AlleProjekte.Add(kvp.Value)
 
-                    Try
-                        ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
-                        If ShowProjekte.contains(kvp.Value.name) Then
-                            If kvp.Value.variantName = "" Then
-                                ShowProjekte.Remove(kvp.Value.name)
+                    If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.isUnion) Then
+
+                        AlleProjekte.Add(kvp.Value)
+
+                        Try
+                            ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
+                            If ShowProjekte.contains(kvp.Value.name) Then
+                                If kvp.Value.variantName = "" Then
+                                    ShowProjekte.Remove(kvp.Value.name)
+                                    ShowProjekte.Add(kvp.Value)
+                                End If
+                            Else
                                 ShowProjekte.Add(kvp.Value)
                             End If
-                        Else
-                            ShowProjekte.Add(kvp.Value)
-                        End If
 
-                    Catch ex As Exception
-                        Call MsgBox(ex.Message)
-                    End Try
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+                    End If
+
                 End If
 
             Next
@@ -12537,23 +12546,29 @@ Public Module awinGeneralModules
                                 newPosition = activeConstellation.getBoardZeile(hproj.name) + startOfFreeRows
                             End If
                         End If
-                        AlleProjekte.Add(hproj, True, newPosition)
-                        ' jetzt die Variante aktivieren 
-                        ' aber nur wenn es auch das Flag show hat 
-                        If showIT Then
 
-                            If boardwasEmpty Then
-                                'tryZeile = kvp.Value.zeile
-                                tryZeile = activeConstellation.getBoardZeile(hproj.name)
-                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
-                            Else
-                                'tryZeile = startOfFreeRows + zeilenOffset
-                                tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
-                                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
-                                'zeilenOffset = zeilenOffset + 1
+                        Try
+                            AlleProjekte.Add(hproj, updateCurrentConstellation:=True, sortkey:=newPosition, checkOnConflicts:=True)
+                            ' jetzt die Variante aktivieren 
+                            ' aber nur wenn es auch das Flag show hat 
+                            If showIT Then
+
+                                If boardwasEmpty Then
+                                    'tryZeile = kvp.Value.zeile
+                                    tryZeile = activeConstellation.getBoardZeile(hproj.name)
+                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, True, tryZeile)
+                                Else
+                                    'tryZeile = startOfFreeRows + zeilenOffset
+                                    tryZeile = startOfFreeRows + activeConstellation.getBoardZeile(hproj.name) - 2
+                                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
+                                    'zeilenOffset = zeilenOffset + 1
+                                End If
+
                             End If
+                        Catch ex As Exception
+                            Call MsgBox("Fehler mit Summary Projekten: " & ex.Message)
+                        End Try
 
-                        End If
                     Else
                         outputLine = pName & "(" & vName & ") Code: 098 " & nvErrorMessage
                         outPutCollection.Add(outputLine)
@@ -12767,17 +12782,22 @@ Public Module awinGeneralModules
                         AlleProjekte.Remove(kvp.Key, True)
                     End If
 
-                    AlleProjekte.Add(sProj, True)
+                    Try
+                        AlleProjekte.Add(sProj, True, checkOnConflicts:=True)
 
-                    Dim cItem As New clsConstellationItem
-                    With cItem
-                        .projectName = kvp.Value.constellationName
-                        .variantName = portfolioVName
-                        .zeile = zaehler
-                        .show = True
-                    End With
-                    zaehler = zaehler + 1
-                    activeSummaryConstellation.add(cItem, sKey:=zaehler)
+                        Dim cItem As New clsConstellationItem
+                        With cItem
+                            .projectName = kvp.Value.constellationName
+                            .variantName = portfolioVName
+                            .zeile = zaehler
+                            .show = True
+                        End With
+                        zaehler = zaehler + 1
+                        activeSummaryConstellation.add(cItem, sKey:=zaehler)
+                    Catch ex As Exception
+
+                    End Try
+
 
                 Next
                 constellationsToShow.Liste.Clear()
@@ -13079,38 +13099,43 @@ Public Module awinGeneralModules
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pName, vName)
 
-        ' ab diesem Wert soll neu gezeichnet werden 
-        Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
-        hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
-
-
-        If Not IsNothing(hproj) Then
-            ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-            ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-            If AlleProjekte.Containskey(key) Then
-                AlleProjekte.Remove(key)
-            End If
-
-            AlleProjekte.Add(hproj)
-
-            ' jetzt die writeProtections aktualisieren 
-            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
-            writeProtections.upsert(wpItem)
-
-            If show Then
-                ' prüfen, ob es bereits in der Showprojekt enthalten ist
-                ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
-                ' replaceProjectVariant
-
-                Call replaceProjectVariant(pName, vName, False, True, freieZeile)
-
-            End If
-        Else
-            Dim outputLine As String = "existiert nicht: " & pName & ", " & vName & " @ " & storedAtORBefore.ToString
+        If AlleProjekte.hasAnyConflictsWith(key, False) Then
+            Dim outputLine As String = "Projekt " & pName & " kann nicht geladen werden. ist bereits in Summary Projekt enthalten"
             outputCollection.Add(outputLine)
-        End If
+        Else
+            ' ab diesem Wert soll neu gezeichnet werden 
+            Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
+            hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
+
+
+            If Not IsNothing(hproj) Then
+                ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+                If AlleProjekte.Containskey(key) Then
+                    AlleProjekte.Remove(key)
+                End If
+
+                AlleProjekte.Add(hproj)
+
+                ' jetzt die writeProtections aktualisieren 
+                Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                writeProtections.upsert(wpItem)
+
+                If show Then
+                    ' prüfen, ob es bereits in der Showprojekt enthalten ist
+                    ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+                    ' replaceProjectVariant
+
+                    Call replaceProjectVariant(pName, vName, False, True, freieZeile)
+
+                End If
+            Else
+                Dim outputLine As String = "existiert nicht: " & pName & ", " & vName & " @ " & storedAtORBefore.ToString
+                outputCollection.Add(outputLine)
+            End If
+        End If
 
     End Sub
 

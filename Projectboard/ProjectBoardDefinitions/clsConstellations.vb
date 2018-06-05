@@ -45,6 +45,12 @@
             For Each pfKvP As KeyValuePair(Of String, Boolean) In _listOfLoadedSessionPortfolios
                 Dim key As String = calcProjektKey(pfKvP.Key, portfolioVName)
                 Dim hproj As clsProjekt = AlleProjekte.getProject(key)
+
+                ' wenn ein Portfolio nicht über Platzhalter geladen wird, dann werden die Summary Projekte in AlleProjektSummaries platziert ..
+                If IsNothing(hproj) Then
+                    hproj = AlleProjektSummaries.getProject(key)
+                End If
+
                 Dim teilbudget As Double, pk As Double, sk As Double, rk As Double, ergebnis As Double
 
                 If Not IsNothing(hproj) Then

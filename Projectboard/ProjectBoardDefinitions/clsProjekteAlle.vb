@@ -65,7 +65,7 @@ Public Class clsProjekteAlle
     ''' <param name="myElem"></param>
     ''' <param name="sortedListInQuestion"></param>
     ''' <returns></returns>
-    Public Function elemHasConflictsWith(ByVal myElem As String, ByVal sortedListInQuestion As SortedList(Of String, Boolean)) As Boolean
+    Private Function elemHasConflictsWith(ByVal myElem As String, ByVal sortedListInQuestion As SortedList(Of String, Boolean)) As Boolean
 
         Dim tmpResult As Boolean = False
         Dim mySortedList As New SortedList(Of String, Boolean)
@@ -257,36 +257,65 @@ Public Class clsProjekteAlle
     ''' <summary>
     ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
     ''' später soll die Aufrufleiste bereinigt werden ... 
+    ''' checkOnConflicts wird benötigt, um zu entscheiden, ob ein Summary Projekt-Konflkikt vorliegt. 
+    ''' Eigentlich sollen bei allen AlleProjekte.add Aufrufen der checkOn auf true gesetzt sein 
     ''' wenn der Schlüssel bereits existiert, wird eine Argument-Exception geworfen 
     ''' </summary>
     ''' <param name="project"></param>
     ''' <param name="updateCurrentConstellation">soll die currentConstellation aktualisiert werden; nur bei AlleProjekte</param>
     ''' <remarks></remarks>
-    Public Sub Add(ByVal project As clsProjekt, _
-                   Optional ByVal updateCurrentConstellation As Boolean = True, _
-                   Optional ByVal sortkey As Integer = -1)
+    Public Sub Add(ByVal project As clsProjekt,
+                   Optional ByVal updateCurrentConstellation As Boolean = True,
+                   Optional ByVal sortkey As Integer = -1,
+                   ByVal Optional checkOnConflicts As Boolean = False)
 
         Dim keyReal As String = calcProjektKey(project.name, project.variantName)
+        Dim pKey As String = calcProjektKey(project)
+
+        ' jetzt muss geprüft werden, ob es sich bei dem neuen um ein Union Projekt handelt ...
+        If checkOnConflicts Then
+
+            If project.isUnion Then
+
+                Dim myConstellation As clsConstellation = projectConstellations.getConstellation(project.name)
+
+                If Not IsNothing(myConstellation) Then
+                    Dim deleteCollection As New Collection
+
+
+                    Dim sortListInQuestion As SortedList(Of String, Boolean) = myConstellation.getBasicProjectIDs
+                    If Not sortListInQuestion.ContainsKey(pKey) Then
+                        sortListInQuestion.Add(pKey, True)
+                    End If
+
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                        If elemHasConflictsWith(kvp.Key, sortListInQuestion) Then
+                            deleteCollection.Add(kvp.Key)
+                        End If
+                    Next
+
+                    ' jetzt muss ggf die komplette deleteCollection durchgegangen werden 
+                    For Each item As String In deleteCollection
+                        Me.Remove(item, True)
+                    Next
+
+                End If
+
+            Else
+
+                If Me.hasAnyConflictsWith(pKey, False) Then
+                    Throw New ArgumentException("Summary Projekt Konflikt: " & project.name)
+                End If
+
+            End If
+        End If
+
+
         ' existiert es bereits ? 
         ' wenn ja, dann löschen ...
         If _allProjects.ContainsKey(keyReal) Then
             _allProjects.Remove(keyReal)
         End If
-
-        ' jetzt muss geprüft werden, ob es sich bei dem neuen um ein Union Projekt handelt ...
-        If project.isUnion Then
-            Dim myConstellation As clsConstellation = projectConstellations.getConstellation(project.name)
-            If Not IsNothing(myConstellation) Then
-                Dim deleteCollection As New Collection
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-
-                Next
-
-            End If
-
-
-        End If
-
         _allProjects.Add(keyReal, project)
 
         ' 21.3.17

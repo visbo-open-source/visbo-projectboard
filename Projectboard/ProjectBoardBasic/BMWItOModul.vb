@@ -1062,7 +1062,7 @@ Public Module BMWItOModul
                         End If
 
                         ' jetzt muss das Projekt eingetragen werden 
-                        ImportProjekte.Add(hproj, False)
+                        ImportProjekte.Add(hproj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                         myCollection.Add(calcProjektKey(hproj))
 
                     End If
