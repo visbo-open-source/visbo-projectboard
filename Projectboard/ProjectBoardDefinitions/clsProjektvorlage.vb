@@ -3325,12 +3325,12 @@
     '
     ' übergibt in getPersonalKosten die Personal Kosten der Rolle <roleid> über den Projektzeitraum
     '
-    Public ReadOnly Property getPersonalKosten(roleID As Object) As Double()
+    Public ReadOnly Property getPersonalKosten(roleID As Object, Optional ByVal inclSubRoles As Boolean = False) As Double()
         Get
             Dim costValues() As Double
             Dim anzRollen As Integer
             Dim anzPhasen As Integer
-            Dim found As Boolean
+
             Dim i As Integer, p As Integer, r As Integer
             Dim phase As clsPhase
             Dim role As clsRolle
@@ -3340,6 +3340,10 @@
             Dim tagessatz As Double
             Dim faktor As Double = 1
             Dim dimension As Integer
+            Dim roleUID As Integer
+            Dim roleName As String = ""
+
+            Dim roleIDs As New SortedList(Of Integer, Double)
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
@@ -3355,49 +3359,68 @@
             If _Dauer > 0 Then
                 lookforIndex = IsNumeric(roleID)
 
+                If IsNumeric(roleID) Then
+                    roleUID = CInt(roleID)
+                    roleName = RoleDefinitions.getRoledef(roleUID).name
+                Else
+                    If RoleDefinitions.containsName(CStr(roleID)) Then
+                        roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
+                        roleName = CStr(roleID)
+                    End If
+                End If
+
+                ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
+                If inclSubRoles Then
+                    roleIDs = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
+                Else
+                    roleIDs.Add(roleUID, 1.0)
+                End If
+
                 ReDim costValues(_Dauer - 1)
 
-                anzPhasen = AllPhases.Count
 
-                For p = 0 To anzPhasen - 1
-                    phase = AllPhases.Item(p)
-                    With phase
-                        ' Off1
-                        anzRollen = .countRoles
-                        phasenStart = .relStart - 1
-                        'phasenEnde = .relEnde - 1
+                For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
+                    roleName = RoleDefinitions.getRoledef(srkvp.Key).name
+
+                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
+                    anzPhasen = listOfPhases.Count
+
+                    For p = 1 To anzPhasen
+                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+
+                        With phase
+                            ' Off1
+                            anzRollen = .countRoles
+                            phasenStart = .relStart - 1
+                            'phasenEnde = .relEnde - 1
 
 
-                        For r = 1 To anzRollen
-                            role = .getRole(r)
-                            found = False
+                            For r = 1 To anzRollen
+                                role = .getRole(r)
 
-                            With role
-                                If lookforIndex Then
-                                    If .RollenTyp = roleID Then
-                                        found = True
+                                With role
+
+                                    If .RollenTyp = srkvp.Key Then
+
+                                        tagessatz = .tagessatzIntern
+                                        dimension = .getDimension
+                                        ReDim tempArray(dimension)
+                                        tempArray = .Xwerte
+
+                                        For i = phasenStart To phasenStart + dimension
+                                            costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
+                                        Next i
+
                                     End If
-                                Else
-                                    If .name = roleID Then
-                                        found = True
-                                    End If
-                                End If
-                                If found Then
-                                    tagessatz = .tagessatzIntern
-                                    dimension = .getDimension
-                                    ReDim tempArray(dimension)
-                                    tempArray = .Xwerte
-                                    For i = phasenStart To phasenStart + dimension
-                                        costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
-                                    Next i
-                                End If
-                            End With ' role
 
-                        Next r
+                                End With ' role
 
-                    End With ' phase
+                            Next r
 
-                Next p ' Loop über alle Phasen
+                        End With ' phase
+
+                    Next
+                Next
 
             Else
                 ReDim costValues(0)

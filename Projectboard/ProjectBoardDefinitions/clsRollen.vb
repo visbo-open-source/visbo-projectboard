@@ -66,13 +66,78 @@ Public Class clsRollen
     End Property
     ''' <summary>
     ''' gibt die Toplevel NodeIds zurück ...
+    ''' Level 0 ist die erste Ebene, Level 1 die zweite. Weitere werden aktuell nicht unterstützt 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getTopLevelNodeIDs() As List(Of Integer)
+    Public ReadOnly Property getTopLevelNodeIDs(Optional ByVal Level As Integer = 0) As List(Of Integer)
         Get
-            getTopLevelNodeIDs = _topLevelNodeIDs
+            Dim returnResult As New List(Of Integer)
+            If Level = 0 Then
+                returnResult = _topLevelNodeIDs
+            ElseIf Level = 1 Then
+                For Each roleID As Integer In _topLevelNodeIDs
+                    Dim subroleList As SortedList(Of Integer, Double) = _allRollen.Item(roleID).getSubRoleIDs()
+                    For Each srKvP As KeyValuePair(Of Integer, Double) In subroleList
+                        If Not returnResult.Contains(srKvP.Key) Then
+                            returnResult.Add(srKvP.Key)
+                        End If
+                    Next
+                Next
+            Else
+                ' noch nicht implementiert - damit etwas zurückgegeben wird ... 
+                ' leere Liste
+            End If
+
+            getTopLevelNodeIDs = returnResult
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Toplevel NodeIds zurück ...
+    ''' Level 0 ist die erste Ebene, Level 1 die zweite. Weitere werden aktuell nicht unterstützt 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTopLevelNodeNames(Optional ByVal Level As Integer = 0) As Collection
+        Get
+            Dim returnResult As New Collection
+
+            If Level = 0 Then
+                For Each roleID As Integer In _topLevelNodeIDs
+                    If _allRollen.ContainsKey(roleID) Then
+                        If Not returnResult.Contains(_allRollen.Item(roleID).name) Then
+                            returnResult.Add(_allRollen.Item(roleID).name)
+                        End If
+                    End If
+                Next
+
+            ElseIf Level = 1 Then
+
+                For Each roleID As Integer In _topLevelNodeIDs
+
+                    Dim subroleList As SortedList(Of Integer, Double) = _allRollen.Item(roleID).getSubRoleIDs()
+
+                    For Each srKvP As KeyValuePair(Of Integer, Double) In subroleList
+                        If _allRollen.ContainsKey(srKvP.Key) Then
+                            If Not returnResult.Contains(_allRollen.Item(srKvP.Key).name) Then
+                                returnResult.Add(_allRollen.Item(srKvP.Key).name)
+                            End If
+                        End If
+                    Next
+
+                Next
+
+            Else
+                ' noch nicht implementiert - damit etwas zurückgegeben wird ... 
+                ' leere Liste
+            End If
+
+            getTopLevelNodeNames = returnResult
+
         End Get
     End Property
 

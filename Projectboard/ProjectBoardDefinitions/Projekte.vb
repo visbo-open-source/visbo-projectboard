@@ -4084,8 +4084,13 @@ Public Module Projekte
             lastPlan = projekthistorie.ElementAtorBefore(vgl)
 
             If IsNothing(lastPlan) Then
-                'Throw New ArgumentException("es gibt keinen Stand vorher")
-                Throw New ArgumentException(repMessages.getmsg(185))
+                If projekthistorie.Count >= 1 Then
+                    lastPlan = projekthistorie.Last
+                End If
+                If IsNothing(lastPlan) Then
+                    Throw New ArgumentException(repMessages.getmsg(185))
+                End If
+
             End If
 
 
@@ -7751,7 +7756,20 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeR = hproj.getRoleNames
+        ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
+
+        If ErgebnisListeR.Count > 12 Then
+            ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(0)
+        End If
+        'ErgebnisListeR = hproj.getRoleNames
+        '' Test für Allianz Piloten ....
+        'ErgebnisListeR.Clear()
+        'ErgebnisListeR.Add("BOSV-KB")
+        'ErgebnisListeR.Add("Grp-BOSV-KB")
+        'ErgebnisListeR.Add("BOSV-SBP")
+        'ErgebnisListeR.Add("BOSV-SBF")
+        'ErgebnisListeR.Add("IT-FB")
+
         anzRollen = ErgebnisListeR.Count
 
         If anzRollen = 0 Then
@@ -7768,9 +7786,9 @@ Public Module Projekte
             Xdatenreihe(r) = roleName
 
             If auswahl = 1 Then
-                tdatenreihe(r) = System.Math.Round(hproj.getRessourcenBedarf(roleName).Sum, mode:=MidpointRounding.ToEven)
+                tdatenreihe(r) = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True).Sum
             Else
-                tdatenreihe(r) = System.Math.Round(hproj.getPersonalKosten(roleName).Sum, mode:=MidpointRounding.ToEven)
+                tdatenreihe(r) = hproj.getPersonalKosten(roleName).Sum
             End If
 
         Next r
@@ -7870,15 +7888,15 @@ Public Module Projekte
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlPie
-                        .HasDataLabels = True
-                        .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                        .HasDataLabels = False
+                        '.DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
                     End With
 
                     For r = 1 To anzRollen
                         roleName = CStr(ErgebnisListeR.Item(r))
                         With .SeriesCollection(1).Points(r)
                             .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
-                            .DataLabel.Font.Size = awinSettings.fontsizeItems
+                            '.DataLabel.Font.Size = awinSettings.fontsizeItems
                         End With
                     Next r
 
@@ -7970,7 +7988,12 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeR = hproj.getRoleNames
+        'ErgebnisListeR = hproj.getRoleNames
+        ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(1)
+
+        If ErgebnisListeR.Count > 12 Then
+            ErgebnisListeR = RoleDefinitions.getTopLevelNodeNames(0)
+        End If
         anzRollen = ErgebnisListeR.Count
 
         ' sonst kommt der in eine Endlos Schleife, wenn keine Rollen definiert sind 
@@ -7990,9 +8013,9 @@ Public Module Projekte
             Xdatenreihe(r) = roleName
 
             If auswahl = 1 Then
-                tdatenreihe(r) = System.Math.Round(hproj.getRessourcenBedarf(roleName).Sum, mode:=MidpointRounding.ToEven)
+                tdatenreihe(r) = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True).Sum
             Else
-                tdatenreihe(r) = System.Math.Round(hproj.getPersonalKosten(roleName).Sum, mode:=MidpointRounding.ToEven)
+                tdatenreihe(r) = hproj.getPersonalKosten(roleName).Sum
             End If
 
         Next r
@@ -8053,8 +8076,8 @@ Public Module Projekte
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlPie
-                .HasDataLabels = True
-                .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                .HasDataLabels = False
+                '.DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
             End With
 
             For r = 1 To anzRollen
