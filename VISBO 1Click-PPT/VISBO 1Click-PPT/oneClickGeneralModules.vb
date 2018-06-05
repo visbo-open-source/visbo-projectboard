@@ -2033,7 +2033,7 @@ Module oneClickGeneralModules
                                     Optional ByVal messageZeigen As Boolean = False)
 
         Dim hprojVariante As String = ""
-
+        Dim outputCollection As New Collection
         Try
             ' LOGIN in DB machen
             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
@@ -2060,7 +2060,7 @@ Module oneClickGeneralModules
                         Dim speichernInDBOk As Boolean = False
                         Dim identical As Boolean = False
                         Try
-                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
+                            speichernInDBOk = storeSingleProjectToDB(hproj, outputCollection, identical:=identical)
 
                             If hproj.variantName <> "" Then
                                 hprojVariante = "[" & hproj.variantName & "]"
@@ -2092,7 +2092,7 @@ Module oneClickGeneralModules
                         Dim speichernInDBOk As Boolean
                         Dim identical As Boolean = False
                         Try
-                            speichernInDBOk = storeSingleProjectToDB(hproj, identical)
+                            speichernInDBOk = storeSingleProjectToDB(hproj, outputCollection, identical)
                             If hproj.variantName <> "" Then
                                 hprojVariante = "[" & hproj.variantName & "]"
 

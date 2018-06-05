@@ -1210,26 +1210,45 @@ Public Module awinGeneralModules
                 '' '--------------------------------------------------------------------------------
                 '   Testen, ob der User die passende Lizenz besitzt
                 '' '--------------------------------------------------------------------------------
-                Dim user As String = myWindowsName
-                Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
 
-                ' Lesen des Lizenzen-Files
+                ' -----------------------------------------------------
+                ' Speziell für Pilot-Kunden
+                ' -----------------------------------------------------
 
-                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+                Dim pilot As Date = "31.08.2018"
 
-                ' Prüfen der Lizenzen
-                If Not lizenzen.validLicence(user, komponente) Then
+                If Date.Now > pilot Then
 
-                    Call logfileSchreiben("Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
+                    Dim user As String = myWindowsName
+                    Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
 
-                    ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                    ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
-                    Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                                & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                    ' Lesen des Lizenzen-Files
 
+                    Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
+
+                    ' Prüfen der Lizenzen
+                    If Not lizenzen.validLicence(user, komponente) Then
+
+                        Call logfileSchreiben("Aktueller User " & myWindowsName & " hat keine passende Lizenz", myWindowsName, anzFehler)
+
+                        ''Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                        ''            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                        Throw New ArgumentException("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                                    & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+
+                    End If
+
+                    ' Lizenz ist ok
+
+                Else
+                    ' Für Pilotkunden soll keine Lizenz erforderlich sein
+
+                    ' also:
+                    ' Lizenz ist ok
                 End If
 
-                ' Lizenz ist ok
+
+
 
 
             End If ' if special = "ProjectBoard"

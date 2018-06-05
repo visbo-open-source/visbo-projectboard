@@ -3902,6 +3902,11 @@ Public Module Module1
                         .Tags.Add("DBNAME", awinSettings.databaseName)
                     End If
 
+                    If .Tags.Item("DBSSL").Length > 0 Then
+                        .Tags.Delete("DBSSL")
+                    End If
+                    .Tags.Add("DBSSL", awinSettings.DBWithSSL.ToString)
+
                 End If
 
 

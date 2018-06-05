@@ -766,6 +766,7 @@ Module Module1
                     noDBAccessInPPT = True
                     awinSettings.databaseURL = .Tags.Item("DBURL")
                     awinSettings.databaseName = .Tags.Item("DBNAME")
+                    awinSettings.DBWithSSL = (.Tags.Item("DBSSL") = "True")
                 End If
                 
 
