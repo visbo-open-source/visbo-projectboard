@@ -5942,7 +5942,12 @@ Public Module Projekte
     Public Function setTimeZoneIfTimeZonewasOff() As Boolean
         Dim timeZoneWasOff As Boolean = False
         If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-            ' alles ok 
+            If ShowProjekte.Count > 0 Then
+                timeZoneWasOff = True
+            Else
+                timeZoneWasOff = False
+
+            End If ' alles ok 
         Else
 
             If ShowProjekte.Count > 0 Then
@@ -7446,19 +7451,43 @@ Public Module Projekte
         For r = 1 To anzRollen
             roleName = RoleDefinitions.getRoleDefByID(roleIDs.ElementAt(r - 1).Key).name
             'roleName = CStr(basicRolesCollection.Item(r))
-            Dim valueUeber As Double = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
-            If valueUeber > 0 Then
-                Dim valueUnter As Double = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
-                Dim sortCriteria As Double = valueUeber - valueUnter
-                If sortCriteria > 0 Then
-                    While sortierteListe.ContainsKey(sortCriteria)
-                        sortCriteria = sortCriteria + 0.0000001
-                    End While
-                    ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
-                    sortierteListe.Add(sortCriteria, roleName)
-                End If
+            Dim valueUeber As Double
+            Dim valueUnter As Double
+            Dim sortCriteria As Double
 
+            If auswahl = 1 Then ' Überauslastung
+                valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+                If valueUeber > 0 Then
+
+                    valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+                    sortCriteria = valueUeber - valueUnter
+                    If sortCriteria > 0 Then
+                        While sortierteListe.ContainsKey(sortCriteria)
+                            sortCriteria = sortCriteria + 0.0000001
+                        End While
+                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+                        sortierteListe.Add(sortCriteria, roleName)
+                    End If
+
+                End If
+            Else ' Unterauslastung 
+                valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+
+                If valueUnter > 0 Then
+
+                    valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+                    sortCriteria = valueUnter - valueUeber
+                    If sortCriteria > 0 Then
+                        While sortierteListe.ContainsKey(sortCriteria)
+                            sortCriteria = sortCriteria + 0.0000001
+                        End While
+                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+                        sortierteListe.Add(sortCriteria, roleName)
+                    End If
+
+                End If
             End If
+
         Next r
 
         ' in der tdaten-Reihe sollen die 5 Rollen stehen, die am meisten über-/unterausgelastet sind
