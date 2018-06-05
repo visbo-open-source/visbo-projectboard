@@ -25,6 +25,16 @@
         Else
             tmpResult = False
         End If
+        Dim skey As String = calcProjektKey(portfolioName, portfolioVName)
+
+        Dim hproj As clsProjekt = AlleProjekte.getProject(key:=skey)
+        If Not IsNothing(hproj) Then
+            If AlleProjektSummaries.Containskey(skey) Then
+                AlleProjektSummaries.Remove(skey, False)
+            End If
+            AlleProjektSummaries.Add(hproj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+        End If
+
         addToLoadedSessionPortfolios = tmpResult
     End Function
 
@@ -33,6 +43,7 @@
     ''' </summary>
     Public Sub clearLoadedPortfolios()
         _listOfLoadedSessionPortfolios.Clear()
+        AlleProjektSummaries.Clear(False)
     End Sub
 
     ''' <summary>

@@ -231,12 +231,16 @@ Imports System.Windows
             Dim constellationsToDo As New clsConstellations
 
 
-            Dim firsttime As Boolean = False
+
+            If clearBoard Then
+                'currentSessionConstellation.Liste.Clear()
+                AlleProjekte.Clear(updateCurrentConstellation:=True)
+                projectConstellations.clearLoadedPortfolios()
+            End If
 
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
-                ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Summary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
-                ' geladen idt oder aber in einem anderen Summary Projekt referenziert wird ! 
+                ' Plausibilitätsprüfung: darf das geladen werden 
                 Try
                     Dim ok As Boolean = False
                     If (Not AlleProjekte.containsAnySummaryProject _
@@ -253,11 +257,6 @@ Imports System.Windows
                     If ok Then
                         ' aufnehmen ...
                         Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
-
-                        If firsttime And clearBoard Then
-                            projectConstellations.clearLoadedPortfolios()
-                            firsttime = False
-                        End If
 
                         If Not IsNothing(constellation) Then
                             If Not constellationsToDo.Contains(constellation.constellationName) Then
@@ -292,7 +291,7 @@ Imports System.Windows
 
             Next
 
-            'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
+            'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
                 Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProjects)
@@ -9903,9 +9902,9 @@ Imports System.Windows
 
         Call projektTafelInit()
 
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9965,9 +9964,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte erst Projekte laden ...")
             End If
         End If
 
