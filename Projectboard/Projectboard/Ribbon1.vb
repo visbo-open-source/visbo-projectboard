@@ -11199,14 +11199,18 @@ Imports System.Windows
 
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
-        Dim timeZoneWasOff As Boolean = False
+        Dim timeZoneWasOff As Boolean = (showRangeLeft = 0 Or showRangeRight = 0)
         getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
 
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
-        If showRangeRight - showRangeLeft >= minColumns - 1 Then
+        If ok Then
 
             If ShowProjekte.Count > 0 Then
 
@@ -11218,16 +11222,11 @@ Imports System.Windows
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
         Else
-            ' automatisch bestimmen 
-            timeZoneWasOff = True
-            If selectedProjekte.Count > 0 Then
-                showRangeLeft = selectedProjekte.getMinMonthColumn
-                showRangeRight = selectedProjekte.getMaxMonthColumn
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/portfoliso first ...")
             Else
-                showRangeLeft = ShowProjekte.getMinMonthColumn
-                showRangeRight = ShowProjekte.getMaxMonthColumn
+                Call MsgBox("bitte erst Projekt/Portfolios laden ...")
             End If
-            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
         End If
 

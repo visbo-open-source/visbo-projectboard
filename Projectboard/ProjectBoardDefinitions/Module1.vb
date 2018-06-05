@@ -1040,34 +1040,49 @@ Public Module Module1
                     ' alle selektierten Projekte aufnehmen ... 
                     If selectedProjekte.Count > 0 Then
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
-                            If Not tmpCollection.Contains(kvp.Key) Then
-                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                    tmpCollection.Add(kvp.Key, kvp.Key)
+
+                            If Not kvp.Value.isUnion Then
+                                If Not tmpCollection.Contains(kvp.Key) Then
+                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                        tmpCollection.Add(kvp.Key, kvp.Key)
+                                    End If
+                                End If
+                            End If
+
+
+                        Next
+                    Else
+                        ' soll nur ausgewertet werden, wenn keine einzelnen Projekte selektiert waren 
+                        ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                            If kvp.Value.marker = True And Not kvp.Value.isUnion Then
+                                If Not tmpCollection.Contains(kvp.Key) Then
+                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                        tmpCollection.Add(kvp.Key, kvp.Key)
+                                    End If
                                 End If
                             End If
 
                         Next
+
                     End If
 
-                    ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                        If kvp.Value.marker = True Then
-                            If Not tmpCollection.Contains(kvp.Key) Then
-                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                    tmpCollection.Add(kvp.Key, kvp.Key)
-                                End If
+                    If tmpCollection.Count = 0 And takeAllIFNothingWasSelected Then
+                        ' es dürfen keine Summary Projekte enthalten sein ...
+                        If ShowProjekte.containsAnySummaryProject Then
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("no summary projects allowed in this context ... please select projects only. ")
+                            Else
+                                Call MsgBox("Summary Projekte nicht zugelassen ... bitte nur einfache Projekte auswählen.")
                             End If
+                        Else
+                            ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
+                            tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
                         End If
 
-                    Next
-
-
-                    If tmpCollection.Count = 0 And takeAllIFNothingWasSelected Then
-                        ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
-                        tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
                     End If
 
 

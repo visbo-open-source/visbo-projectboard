@@ -51,6 +51,26 @@ Public Class clsProjekte
 
     End Sub
 
+    ''' <summary>
+    ''' gibt true zurück wenn irgendein Summary Projekt in der Liste enthalten ist 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property containsAnySummaryProject() As Boolean
+
+        Get
+            Dim tmpResult As Boolean = False
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                If kvp.Value.isUnion = True Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+            containsAnySummaryProject = tmpResult
+        End Get
+
+    End Property
+
+
 
     ''' <summary>
     ''' trägt die Zuordnung Shape/Projekt in die AllShape Liste ein 
