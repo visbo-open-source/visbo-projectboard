@@ -231,12 +231,16 @@ Imports System.Windows
             Dim constellationsToDo As New clsConstellations
 
 
-            Dim firsttime As Boolean = False
+
+            If clearBoard Then
+                'currentSessionConstellation.Liste.Clear()
+                AlleProjekte.Clear(updateCurrentConstellation:=True)
+                projectConstellations.clearLoadedPortfolios()
+            End If
 
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
-                ' hier fehlt noch die Plausibilitäts-Prüfung: z.B. darf ein Summary Projekt nicht geladen werden, wenn eines seiner Projekte bereits 
-                ' geladen idt oder aber in einem anderen Summary Projekt referenziert wird ! 
+                ' Plausibilitätsprüfung: darf das geladen werden 
                 Try
                     Dim ok As Boolean = False
                     If (Not AlleProjekte.containsAnySummaryProject _
@@ -253,11 +257,6 @@ Imports System.Windows
                     If ok Then
                         ' aufnehmen ...
                         Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
-
-                        If firsttime And clearBoard Then
-                            projectConstellations.clearLoadedPortfolios()
-                            firsttime = False
-                        End If
 
                         If Not IsNothing(constellation) Then
                             If Not constellationsToDo.Contains(constellation.constellationName) Then
@@ -292,7 +291,7 @@ Imports System.Windows
 
             Next
 
-            'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
+            'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
                 Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProjects)
@@ -1966,6 +1965,13 @@ Imports System.Windows
                     tmpLabel = "Strategie/Risiko"
                 Else
                     tmpLabel = "Strategy/Risk"
+                End If
+
+            Case "PT2G1M2B3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Budget ändern"
+                Else
+                    tmpLabel = "Modify budget"
                 End If
 
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
@@ -8555,7 +8561,9 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8636,9 +8644,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8655,7 +8663,9 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8730,9 +8740,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8957,7 +8967,10 @@ Imports System.Windows
         End If
 
         If relevanteProjekte.Count > 0 Then
-            If showRangeRight - showRangeLeft >= minColumns - 1 Then
+
+            Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+            If ok Then
 
                 ' betrachte sowohl Vergangenheit als auch Gegenwart
                 future = 0
@@ -9010,7 +9023,7 @@ Imports System.Windows
 
                 pieChartZieleV.Show()
             Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+                Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
             End If
 
         Else
@@ -9040,8 +9053,8 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9105,9 +9118,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load project/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -9903,9 +9916,9 @@ Imports System.Windows
 
         Call projektTafelInit()
 
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9965,9 +9978,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte erst Projekte/Portfolios laden ...")
             End If
         End If
 

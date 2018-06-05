@@ -5930,6 +5930,36 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
+    ''' setzt die Time Zone
+    ''' gibt false zurück, wenn keine TimeZone gesetzt ist und keine Projekte da sind
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function setTimeZoneIfTimeZonewasOff() As Boolean
+        Dim timeZoneWasOff As Boolean = False
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+            ' alles ok 
+        Else
+
+            If ShowProjekte.Count > 0 Then
+                timeZoneWasOff = True
+                If selectedProjekte.Count > 0 Then
+                    showRangeLeft = selectedProjekte.getMinMonthColumn
+                    showRangeRight = selectedProjekte.getMaxMonthColumn
+                Else
+                    showRangeLeft = ShowProjekte.getMinMonthColumn
+                    showRangeRight = ShowProjekte.getMaxMonthColumn
+                End If
+                Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+            End If
+
+
+        End If
+
+        setTimeZoneIfTimeZonewasOff = timeZoneWasOff
+
+    End Function
+
+    ''' <summary>
     ''' aktualisiert in PPT die Balken Diagramme Rollen (PT oder T€) bzw. Kostenarten (T€)
     ''' </summary>
     ''' <param name="hproj"></param>

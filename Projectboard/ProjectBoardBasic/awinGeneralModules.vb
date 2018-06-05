@@ -12761,30 +12761,31 @@ Public Module awinGeneralModules
 
             End If
 
-
             ' hier muss eine summaryConstellation gemacht werden 
-            If showSummaryProject Then
-                Dim fullSProjektNames As New SortedList(Of String, String)
-                activeSummaryConstellation = New clsConstellation(skey:=ptSortCriteria.customTF)
-                Dim zaehler As Integer = 1
 
-                For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
+            ' wird im Falle showSummaryProject benötigt 
+            activeSummaryConstellation = New clsConstellation(skey:=ptSortCriteria.customTF)
+            Dim zaehler As Integer = 1
 
-                    Dim oldSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, portfolioVName, AlleProjekte, storedAtOrBefore)
-                    Dim oldBudget As Double = 0.0
-                    If Not IsNothing(oldSummaryProj) Then
-                        oldBudget = oldSummaryProj.Erloes
-                    End If
+            For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
-                    Dim sProj As clsProjekt = calcUnionProject(kvp.Value, False, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
+                ' hier wird das Summary Projekt immer neu gebildet .. evtl ist das an der Stelle unnötig; das wird sich zeigen müssen 
+                Dim curSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, portfolioVName, AlleProjekte, storedAtOrBefore)
+                Dim oldBudget As Double = 0.0
+                If Not IsNothing(curSummaryProj) Then
+                    oldBudget = curSummaryProj.Erloes
+                End If
 
+                curSummaryProj = calcUnionProject(kvp.Value, False, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
+
+                If showSummaryProject Then
+                    ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
                     If AlleProjekte.Containskey(kvp.Key) Then
                         AlleProjekte.Remove(kvp.Key, True)
                     End If
 
                     Try
-                        AlleProjekte.Add(sProj, True, checkOnConflicts:=True)
-
+                        AlleProjekte.Add(curSummaryProj, updateCurrentConstellation:=True, checkOnConflicts:=True)
                         Dim cItem As New clsConstellationItem
                         With cItem
                             .projectName = kvp.Value.constellationName
@@ -12797,13 +12798,31 @@ Public Module awinGeneralModules
                     Catch ex As Exception
 
                     End Try
+                Else
+                    ' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
+                    ' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
+                    If AlleProjektSummaries.Containskey(kvp.Key) Then
+                        AlleProjektSummaries.Remove(kvp.Key, updateCurrentConstellation:=False)
+                    End If
+
+                    Try
+                        AlleProjektSummaries.Add(curSummaryProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                    Catch ex As Exception
+
+                    End Try
+                End If
 
 
-                Next
+
+            Next
+
+            If showSummaryProject Then
                 constellationsToShow.Liste.Clear()
                 constellationsToShow.Add(activeSummaryConstellation)
                 showSummaryProject = False
             End If
+
+
 
             ' tk 28.10.17, wenn die Anzahl der Constellations < 1 ist, dann muss es immer auf CustomTF gesetzt werden ... 
             Dim anzConstellations As Integer = constellationsToShow.Liste.Count
@@ -12968,7 +12987,9 @@ Public Module awinGeneralModules
 
             Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, budget:=budget)
 
-            If Not storeSingleProjectToDB(sproj, outPutCollection) Then
+
+            Dim isIdentical As Boolean = False
+            If Not storeSingleProjectToDB(sproj, outPutCollection, identical:=isIdentical) Then ' wird im 1Click-PPT benötigt
                 Call MsgBox("speichern Summary Projekt mit Fehler ...")
             Else
                 Dim a As Integer = outPutCollection.Count
@@ -25531,7 +25552,8 @@ Public Module awinGeneralModules
     ''' <param name="hproj"></param>
     ''' <param name="outputCollection"></param>
     ''' <returns></returns>
-    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, ByRef outputCollection As Collection) As Boolean
+    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, ByRef outputCollection As Collection,
+                                           Optional ByRef identical As Boolean = False) As Boolean
 
         Dim tmpResult As Boolean = False
 
@@ -25612,6 +25634,7 @@ Public Module awinGeneralModules
                     End If
                 Else
                     ' storeNeeded ist false, Kein Speichern erforderlich
+                    identical = True
                     tmpResult = True
                 End If
             Else

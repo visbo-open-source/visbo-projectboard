@@ -272,62 +272,65 @@ Public Class clsProjekteAlle
         Dim keyReal As String = calcProjektKey(project.name, project.variantName)
         Dim pKey As String = calcProjektKey(project)
 
-        ' jetzt muss geprüft werden, ob es sich bei dem neuen um ein Union Projekt handelt ...
-        If checkOnConflicts Then
+        If Not IsNothing(project) Then
+            ' jetzt muss geprüft werden, ob es sich bei dem neuen um ein Union Projekt handelt ...
+            If checkOnConflicts Then
 
-            If project.isUnion Then
+                If project.isUnion Then
 
-                Dim myConstellation As clsConstellation = projectConstellations.getConstellation(project.name)
+                    Dim myConstellation As clsConstellation = projectConstellations.getConstellation(project.name)
 
-                If Not IsNothing(myConstellation) Then
-                    Dim deleteCollection As New Collection
+                    If Not IsNothing(myConstellation) Then
+                        Dim deleteCollection As New Collection
 
 
-                    Dim sortListInQuestion As SortedList(Of String, Boolean) = myConstellation.getBasicProjectIDs
-                    If Not sortListInQuestion.ContainsKey(pKey) Then
-                        sortListInQuestion.Add(pKey, True)
+                        Dim sortListInQuestion As SortedList(Of String, Boolean) = myConstellation.getBasicProjectIDs
+                        If Not sortListInQuestion.ContainsKey(pKey) Then
+                            sortListInQuestion.Add(pKey, True)
+                        End If
+
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                            If elemHasConflictsWith(kvp.Key, sortListInQuestion) Then
+                                deleteCollection.Add(kvp.Key)
+                            End If
+                        Next
+
+                        ' jetzt muss ggf die komplette deleteCollection durchgegangen werden 
+                        For Each item As String In deleteCollection
+                            Me.Remove(item, True)
+                        Next
+
                     End If
 
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                        If elemHasConflictsWith(kvp.Key, sortListInQuestion) Then
-                            deleteCollection.Add(kvp.Key)
-                        End If
-                    Next
+                Else
 
-                    ' jetzt muss ggf die komplette deleteCollection durchgegangen werden 
-                    For Each item As String In deleteCollection
-                        Me.Remove(item, True)
-                    Next
+                    If Me.hasAnyConflictsWith(pKey, False) Then
+                        Throw New ArgumentException("Summary Projekt Konflikt: " & project.name)
+                    End If
 
                 End If
+            End If
 
-            Else
 
-                If Me.hasAnyConflictsWith(pKey, False) Then
-                    Throw New ArgumentException("Summary Projekt Konflikt: " & project.name)
-                End If
+            ' existiert es bereits ? 
+            ' wenn ja, dann löschen ...
+            If _allProjects.ContainsKey(keyReal) Then
+                _allProjects.Remove(keyReal)
+            End If
+            _allProjects.Add(keyReal, project)
 
+            ' 21.3.17
+            ' soll die currentConstellation upgedated werden ? 
+            If updateCurrentConstellation Then
+                Dim cItem As New clsConstellationItem
+                With cItem
+                    .projectName = project.name
+                    .variantName = project.variantName
+                End With
+                currentSessionConstellation.add(cItem, sKey:=sortkey)
             End If
         End If
 
-
-        ' existiert es bereits ? 
-        ' wenn ja, dann löschen ...
-        If _allProjects.ContainsKey(keyReal) Then
-            _allProjects.Remove(keyReal)
-        End If
-        _allProjects.Add(keyReal, project)
-
-        ' 21.3.17
-        ' soll die currentConstellation upgedated werden ? 
-        If updateCurrentConstellation Then
-            Dim cItem As New clsConstellationItem
-            With cItem
-                .projectName = project.name
-                .variantName = project.variantName
-            End With
-            currentSessionConstellation.add(cItem, sKey:=sortkey)
-        End If
 
     End Sub
 

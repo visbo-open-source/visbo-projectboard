@@ -350,26 +350,29 @@ Public Module PBBModules
                 Dim ok As Boolean = True
                 If controlID = "PTXG1B4" Then
                     ' Multiprojekt Sicht erfordert Zeitraum 
-                    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-                        ' alles ok 
-                    Else
-                        timeZoneWasOff = True
-                        If selectedProjekte.Count > 0 Then
-                            showRangeLeft = selectedProjekte.getMinMonthColumn
-                            showRangeRight = selectedProjekte.getMaxMonthColumn
-                        Else
-                            showRangeLeft = ShowProjekte.getMinMonthColumn
-                            showRangeRight = ShowProjekte.getMaxMonthColumn
-                        End If
-                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                        ' wurde jetzt ersetzt durch automatische Selektion
-                        'ok = False
-                        'If awinSettings.englishLanguage Then
-                        '    Call MsgBox("please define timeframe first ...")
-                        'Else
-                        '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
-                        'End If
-                    End If
+
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
+
+                    'If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+                    '    ' alles ok 
+                    'Else
+                    '    timeZoneWasOff = True
+                    '    If selectedProjekte.Count > 0 Then
+                    '        showRangeLeft = selectedProjekte.getMinMonthColumn
+                    '        showRangeRight = selectedProjekte.getMaxMonthColumn
+                    '    Else
+                    '        showRangeLeft = ShowProjekte.getMinMonthColumn
+                    '        showRangeRight = ShowProjekte.getMaxMonthColumn
+                    '    End If
+                    '    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                    '    ' wurde jetzt ersetzt durch automatische Selektion
+                    '    'ok = False
+                    '    'If awinSettings.englishLanguage Then
+                    '    '    Call MsgBox("please define timeframe first ...")
+                    '    'Else
+                    '    '    Call MsgBox("bitte zuerst den Zeitraum definieren ...")
+                    '    'End If
+                    'End If
                 End If
 
                 If ok Then
@@ -393,16 +396,8 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        timeZoneWasOff = True
-                        If selectedProjekte.Count > 0 Then
-                            showRangeLeft = selectedProjekte.getMinMonthColumn
-                            showRangeRight = selectedProjekte.getMaxMonthColumn
-                        Else
-                            showRangeLeft = ShowProjekte.getMinMonthColumn
-                            showRangeRight = ShowProjekte.getMaxMonthColumn
-                        End If
-                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                        '
+                        timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
+
                         'ok = False
                         'If awinSettings.englishLanguage Then
                         '    Call MsgBox("please define timeframe first ...")
@@ -433,15 +428,7 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        timeZoneWasOff = True
-                        If selectedProjekte.Count > 0 Then
-                            showRangeLeft = selectedProjekte.getMinMonthColumn
-                            showRangeRight = selectedProjekte.getMaxMonthColumn
-                        Else
-                            showRangeLeft = ShowProjekte.getMinMonthColumn
-                            showRangeRight = ShowProjekte.getMaxMonthColumn
-                        End If
-                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
                         '
                         'ok = False
                         'If awinSettings.englishLanguage Then
@@ -476,15 +463,7 @@ Public Module PBBModules
                     ' Hierarchie auswählen, Leistbarkeit
                 Else
 
-                    timeZoneWasOff = True
-                    If selectedProjekte.Count > 0 Then
-                        showRangeLeft = selectedProjekte.getMinMonthColumn
-                        showRangeRight = selectedProjekte.getMaxMonthColumn
-                    Else
-                        showRangeLeft = ShowProjekte.getMinMonthColumn
-                        showRangeRight = ShowProjekte.getMaxMonthColumn
-                    End If
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
 
 
                 End If
@@ -578,15 +557,7 @@ Public Module PBBModules
 
                 Else
 
-                    timeZoneWasOff = True
-                    If selectedProjekte.Count > 0 Then
-                        showRangeLeft = selectedProjekte.getMinMonthColumn
-                        showRangeRight = selectedProjekte.getMaxMonthColumn
-                    Else
-                        showRangeLeft = ShowProjekte.getMinMonthColumn
-                        showRangeRight = ShowProjekte.getMaxMonthColumn
-                    End If
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
 
                 End If
 
@@ -615,16 +586,7 @@ Public Module PBBModules
 
                 Else
 
-                    timeZoneWasOff = True
-                    If selectedProjekte.Count > 0 Then
-                        showRangeLeft = selectedProjekte.getMinMonthColumn
-                        showRangeRight = selectedProjekte.getMaxMonthColumn
-                    Else
-                        showRangeLeft = ShowProjekte.getMinMonthColumn
-                        showRangeRight = ShowProjekte.getMaxMonthColumn
-                    End If
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
 
                 End If
 
