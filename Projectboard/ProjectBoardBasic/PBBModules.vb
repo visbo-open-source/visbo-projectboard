@@ -396,16 +396,8 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        timeZoneWasOff = True
-                        If selectedProjekte.Count > 0 Then
-                            showRangeLeft = selectedProjekte.getMinMonthColumn
-                            showRangeRight = selectedProjekte.getMaxMonthColumn
-                        Else
-                            showRangeLeft = ShowProjekte.getMinMonthColumn
-                            showRangeRight = ShowProjekte.getMaxMonthColumn
-                        End If
-                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-                        '
+                        timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
+
                         'ok = False
                         'If awinSettings.englishLanguage Then
                         '    Call MsgBox("please define timeframe first ...")
@@ -436,15 +428,7 @@ Public Module PBBModules
                     If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                         ' alles ok 
                     Else
-                        timeZoneWasOff = True
-                        If selectedProjekte.Count > 0 Then
-                            showRangeLeft = selectedProjekte.getMinMonthColumn
-                            showRangeRight = selectedProjekte.getMaxMonthColumn
-                        Else
-                            showRangeLeft = ShowProjekte.getMinMonthColumn
-                            showRangeRight = ShowProjekte.getMaxMonthColumn
-                        End If
-                        Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                        timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
                         '
                         'ok = False
                         'If awinSettings.englishLanguage Then
@@ -479,15 +463,7 @@ Public Module PBBModules
                     ' Hierarchie auswählen, Leistbarkeit
                 Else
 
-                    timeZoneWasOff = True
-                    If selectedProjekte.Count > 0 Then
-                        showRangeLeft = selectedProjekte.getMinMonthColumn
-                        showRangeRight = selectedProjekte.getMaxMonthColumn
-                    Else
-                        showRangeLeft = ShowProjekte.getMinMonthColumn
-                        showRangeRight = ShowProjekte.getMaxMonthColumn
-                    End If
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
 
 
                 End If
@@ -581,15 +557,7 @@ Public Module PBBModules
 
                 Else
 
-                    timeZoneWasOff = True
-                    If selectedProjekte.Count > 0 Then
-                        showRangeLeft = selectedProjekte.getMinMonthColumn
-                        showRangeRight = selectedProjekte.getMaxMonthColumn
-                    Else
-                        showRangeLeft = ShowProjekte.getMinMonthColumn
-                        showRangeRight = ShowProjekte.getMaxMonthColumn
-                    End If
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
 
                 End If
 
@@ -618,16 +586,7 @@ Public Module PBBModules
 
                 Else
 
-                    timeZoneWasOff = True
-                    If selectedProjekte.Count > 0 Then
-                        showRangeLeft = selectedProjekte.getMinMonthColumn
-                        showRangeRight = selectedProjekte.getMaxMonthColumn
-                    Else
-                        showRangeLeft = ShowProjekte.getMinMonthColumn
-                        showRangeRight = ShowProjekte.getMaxMonthColumn
-                    End If
-                    Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-
+                    timeZoneWasOff = setTimeZoneIfTimeZonewasOff()
 
                 End If
 

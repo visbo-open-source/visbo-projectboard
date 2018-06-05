@@ -12987,7 +12987,9 @@ Public Module awinGeneralModules
 
             Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, budget:=budget)
 
-            If Not storeSingleProjectToDB(sproj, outPutCollection) Then
+
+            Dim isIdentical As Boolean = False
+            If Not storeSingleProjectToDB(sproj, outPutCollection, identical:=isIdentical) Then ' wird im 1Click-PPT benötigt
                 Call MsgBox("speichern Summary Projekt mit Fehler ...")
             Else
                 Dim a As Integer = outPutCollection.Count
@@ -25550,7 +25552,8 @@ Public Module awinGeneralModules
     ''' <param name="hproj"></param>
     ''' <param name="outputCollection"></param>
     ''' <returns></returns>
-    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, ByRef outputCollection As Collection) As Boolean
+    Public Function storeSingleProjectToDB(ByVal hproj As clsProjekt, ByRef outputCollection As Collection,
+                                           Optional ByRef identical As Boolean = False) As Boolean
 
         Dim tmpResult As Boolean = False
 
@@ -25631,6 +25634,7 @@ Public Module awinGeneralModules
                     End If
                 Else
                     ' storeNeeded ist false, Kein Speichern erforderlich
+                    identical = True
                     tmpResult = True
                 End If
             Else

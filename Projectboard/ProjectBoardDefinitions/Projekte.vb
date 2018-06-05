@@ -5931,6 +5931,7 @@ Public Module Projekte
 
     ''' <summary>
     ''' setzt die Time Zone
+    ''' gibt false zurück, wenn keine TimeZone gesetzt ist und keine Projekte da sind
     ''' </summary>
     ''' <returns></returns>
     Public Function setTimeZoneIfTimeZonewasOff() As Boolean

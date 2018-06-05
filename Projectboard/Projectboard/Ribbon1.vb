@@ -1967,6 +1967,13 @@ Imports System.Windows
                     tmpLabel = "Strategy/Risk"
                 End If
 
+            Case "PT2G1M2B3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Budget ändern"
+                Else
+                    tmpLabel = "Modify budget"
+                End If
+
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Strategie/Risiko/Abhängigkeiten"
@@ -8554,7 +8561,9 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8635,9 +8644,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8654,7 +8663,9 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8729,9 +8740,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8956,7 +8967,10 @@ Imports System.Windows
         End If
 
         If relevanteProjekte.Count > 0 Then
-            If showRangeRight - showRangeLeft >= minColumns - 1 Then
+
+            Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+            If ok Then
 
                 ' betrachte sowohl Vergangenheit als auch Gegenwart
                 future = 0
@@ -9009,7 +9023,7 @@ Imports System.Windows
 
                 pieChartZieleV.Show()
             Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+                Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
             End If
 
         Else
@@ -9039,8 +9053,8 @@ Imports System.Windows
 
         Call projektTafelInit()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9104,9 +9118,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load project/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -9964,9 +9978,9 @@ Imports System.Windows
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please load projects first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte erst Projekte laden ...")
+                Call MsgBox("bitte erst Projekte/Portfolios laden ...")
             End If
         End If
 
