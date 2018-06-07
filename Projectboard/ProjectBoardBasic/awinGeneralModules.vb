@@ -50,6 +50,7 @@ Public Module awinGeneralModules
         Projektnummer = 6
         Status = 7
         itemType = 8
+        pvBudget = 9
     End Enum
 
     Private Enum ptModuleSpalten
@@ -6638,6 +6639,7 @@ Public Module awinGeneralModules
         Dim projVorhabensBudget As Double = 0.0
 
 
+
         Dim programName As String = ""
         Dim current1program As clsConstellation = Nothing
         Dim last1Budget As Double = 0.0
@@ -6792,6 +6794,7 @@ Public Module awinGeneralModules
                     colFields(allianzSpalten.Projektnummer) = CType(.Range("AD1"), Excel.Range).Column
                     colFields(allianzSpalten.Status) = CType(.Range("AF1"), Excel.Range).Column
                     colFields(allianzSpalten.Budget) = CType(.Range("M1"), Excel.Range).Column
+                    colFields(allianzSpalten.pvBudget) = CType(.Range("N1"), Excel.Range).Column
                 Catch ex As Exception
                     Dim errmsg As String = "fehlerhafte Range Definition ..."
                     Throw New ArgumentException(errmsg)
@@ -6870,6 +6873,13 @@ Public Module awinGeneralModules
                             If itemType = 4 Then
                                 ' ok weitermachen
                                 ok = True
+
+                                Try
+                                    projVorhabensBudget = CDbl(CType(.Cells(zeile, colFields(allianzSpalten.pvBudget)), Excel.Range).Value)
+                                Catch ex As Exception
+                                    projVorhabensBudget = 0.0
+                                End Try
+
                             Else
                                 ok = False
                                 ' jetzt muss geschaut werden, ob es sich um eine 1-er Konstellation handelt, dann soll 
@@ -6890,6 +6900,9 @@ Public Module awinGeneralModules
 
                                             ' jetzt das union-Projekt erstellen ; wird aktuell noch nicht gemacht ...
                                             Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
+
+                                            ' Status gleich auf 1: beauftragt setzen 
+                                            unionProj.Status = ProjektStatus(1)
 
                                             If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
                                                 ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
@@ -7006,7 +7019,13 @@ Public Module awinGeneralModules
                                 End Try
 
                                 Try ' Budget
-                                    budget = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Budget)), Excel.Range).Value)
+                                    budget = 0.0
+                                    If itemType = 4 Then
+                                        budget = CStr(CType(.Cells(zeile, colFields(allianzSpalten.pvBudget)), Excel.Range).Value)
+                                    ElseIf itemType = 1 Then
+                                        budget = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Budget)), Excel.Range).Value)
+                                    End If
+
                                 Catch ex As Exception
                                     budget = 0.0
                                 End Try
@@ -7021,14 +7040,16 @@ Public Module awinGeneralModules
 
                                 Try ' Status
 
-                                    Dim tmpStatus As String = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Status)), Excel.Range).Value)
-                                    If Not IsNothing(tmpStatus) Then
-                                        If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Or tmpStatus.Trim = "Lfd" Then
-                                            allianzStatus = ProjektStatus(1)
-                                        Else
-                                            allianzStatus = ProjektStatus(0)
-                                        End If
-                                    End If
+                                    'Dim tmpStatus As String = CStr(CType(.Cells(zeile, colFields(allianzSpalten.Status)), Excel.Range).Value)
+                                    'If Not IsNothing(tmpStatus) Then
+                                    '    If tmpStatus.Trim = "laufend" Or tmpStatus.Trim = "lfd" Or tmpStatus.Trim = "Lfd" Then
+                                    '        allianzStatus = ProjektStatus(1)
+                                    '    Else
+                                    '        allianzStatus = ProjektStatus(0)
+                                    '    End If
+                                    'End If
+                                    ' soll immer auf beauftragt gesetzt werden - dann kann verglichen werden mit erstem Stand .. 
+                                    allianzStatus = ProjektStatus(1)
                                 Catch ex As Exception
                                     allianzStatus = ""
                                 End Try
@@ -7162,6 +7183,9 @@ Public Module awinGeneralModules
 
                         ' jetzt das union-Projekt erstellen 
                         Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
+
+                        ' Status wird gleich auf 1: beauftragt gesetzt
+                        unionProj.Status = ProjektStatus(1)
 
                         If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
                             ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
@@ -12676,6 +12700,7 @@ Public Module awinGeneralModules
                 ' jetzt ggf die Attribute noch ergänzen 
                 With unionProj
                     .Erloes = gesamtbudget
+                    .Status = ProjektStatus(1)
                     .description = description
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung

@@ -7000,7 +7000,8 @@ Imports System.Windows
                         Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+                        'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                         repObj = Nothing
                         Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
@@ -7102,7 +7103,8 @@ Imports System.Windows
                     Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False)
 
                     ' jetzt wird das Pie-Diagramm gezeichnet 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                    'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     repObj = Nothing
                     Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)

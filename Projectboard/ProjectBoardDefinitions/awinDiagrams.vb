@@ -820,7 +820,7 @@ Public Module awinDiagrams
                             With .Format.Line
                                 .DashStyle = MsoLineDashStyle.msoLineSolid
                                 .ForeColor.RGB = XlRgbColor.rgbFireBrick
-                                .Weight = 1.5
+                                .Weight = 2.5
                             End With
 
                             nr_pts = CType(.Points, Excel.Points).Count
