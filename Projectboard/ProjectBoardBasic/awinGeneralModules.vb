@@ -1157,50 +1157,7 @@ Public Module awinGeneralModules
                 projectBoardSheet = CType(appInstance.ActiveSheet, _
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                With appInstance.ActiveWindow
-
-                    If .WindowState = Excel.XlWindowState.xlMaximized Then
-                        'maxScreenHeight = .UsableHeight
-                        maxScreenHeight = .Height
-                        'maxScreenWidth = .UsableWidth
-                        maxScreenWidth = .Width
-                    Else
-                        'Dim formerState As Excel.XlWindowState = .WindowState
-                        .WindowState = Excel.XlWindowState.xlMaximized
-                        'maxScreenHeight = .UsableHeight
-                        maxScreenHeight = .Height
-                        'maxScreenWidth = .UsableWidth
-                        maxScreenWidth = .Width
-                        '.WindowState = formerState
-                    End If
-
-
-                End With
-
-                ' jetzt das ProjectboardWindows (0) setzen 
-                projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
-
-                miniHeight = maxScreenHeight / 6
-                miniWidth = maxScreenWidth / 10
-
-                Dim oGrenze As Integer = UBound(frmCoord, 1)
-                ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
-                For i = 0 To oGrenze
-                    frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
-                    frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
-                Next
-
-                ' jetzt setzen der Werte für Status-Information und Milestone-Information
-                frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
-                frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-                frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
-                frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-                '  With listOfWorkSheets(arrWsNames(4))
-
-
-                ' Logfile (als ein ExcelSheet) öffnen und ggf. initialisieren
+                Call setWindowParameters()
 
                 Call logfileOpen()
 
@@ -6678,6 +6635,8 @@ Public Module awinGeneralModules
         Dim allianzProjektNummer As String = ""
         Dim allianzStatus As String = ""
         Dim ampelText As String
+        Dim projVorhabensBudget As Double = 0.0
+
 
         Dim programName As String = ""
         Dim current1program As clsConstellation = Nothing
@@ -7315,8 +7274,6 @@ Public Module awinGeneralModules
         ' enthät die Saplte, wo der ProjektName steht ...
         Dim colPname As Integer
 
-        ' enthält die Info, welche Orga-Struktur inkl. Sub-Roles gelöscht werden soll, alle anderen bleiben erhalten ...  
-        Dim roleNames As SortedList(Of Integer, Double) = Nothing
 
         ' enthält die Spalten-Nummer, wo die einzelnen Rollen-Namen zu finden sind
         Dim colRoleName As Integer = -1
@@ -7553,6 +7510,7 @@ Public Module awinGeneralModules
 
 
     End Sub
+
 
     ''' <summary>
     ''' bestimmt ob es sich um ein bekanntes Projekt handelt: entweder bereits in AlleProjekte geladen oder aber in der Datenbank vorhanden 

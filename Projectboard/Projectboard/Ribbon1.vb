@@ -9382,19 +9382,26 @@ Imports System.Windows
 
         visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
 
+        ' in Abhängigkeit von der Resolution soll jetzt mehr oder weniger prozentualer Platz spendiert werden 
+        Dim teilungsfaktor As Double = 0.75
+        If maxScreenHeight > 1400 Then
+            teilungsfaktor = 0.66
+        End If
+
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.massEdit)
             .Top = 0
             .Left = 1.0
-            .Height = 3 / 4 * maxScreenHeight
+            '.Height = 3 / 4 * maxScreenHeight
+            .Height = teilungsfaktor * maxScreenHeight
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.meChart)
-            .Top = 3 / 4 * maxScreenHeight + 3
+            .Top = teilungsfaktor * maxScreenHeight + 3
             .Left = 1.0
-            .Height = 1 / 4 * maxScreenHeight - 3
+            .Height = (1 - teilungsfaktor) * maxScreenHeight - 3
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 

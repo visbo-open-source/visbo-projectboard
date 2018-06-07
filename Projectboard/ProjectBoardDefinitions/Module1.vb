@@ -169,8 +169,8 @@ Public Module Module1
     Public maxScreenHeight As Double, maxScreenWidth As Double
     Public boxWidth As Double = 19.3, boxHeight As Double, topOfMagicBoard As Double
     Public screen_correct As Double = 0.26
-    Public miniWidth As Double = 126 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
-    Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
+    Public chartWidth As Double = 140 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
+    Public chartHeight As Double = 120 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
     ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
     Public massColFontValues(2, 100) As Double
@@ -4710,6 +4710,58 @@ Public Module Module1
         End Try
     End Sub
 
+    ''' <summary>
+    ''' setzt maxScreenWidth, maxScreenHeight und die dazugehörigen Default Windows- und Chartbreiten 
+    ''' </summary>
+    Public Sub setWindowParameters()
+        With appInstance.ActiveWindow
+
+            If .WindowState = Excel.XlWindowState.xlMaximized Then
+                'maxScreenHeight = .UsableHeight
+                maxScreenHeight = .Height
+                'maxScreenWidth = .UsableWidth
+                maxScreenWidth = .Width
+            Else
+                'Dim formerState As Excel.XlWindowState = .WindowState
+                .WindowState = Excel.XlWindowState.xlMaximized
+                'maxScreenHeight = .UsableHeight
+                maxScreenHeight = .Height
+                'maxScreenWidth = .UsableWidth
+                maxScreenWidth = .Width
+                '.WindowState = formerState
+            End If
+
+
+        End With
+
+        ' jetzt das ProjectboardWindows (0) setzen 
+        projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
+
+        chartHeight = maxScreenHeight / 6
+        chartWidth = maxScreenWidth / 5
+
+        If chartHeight < 120 Then
+            chartHeight = 120
+        End If
+
+        If chartWidth < 140 Then
+            chartWidth = 140
+        End If
+
+        Dim oGrenze As Integer = UBound(frmCoord, 1)
+        ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
+        For i = 0 To oGrenze
+            frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
+            frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
+        Next
+
+        ' jetzt setzen der Werte für Status-Information und Milestone-Information
+        frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
+        frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+        frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
+        frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+    End Sub
 
 
     ''' <summary>
@@ -4759,6 +4811,7 @@ Public Module Module1
         End Try
 
     End Sub
+
     ''' <summary>
     ''' öffnet das LogFile
     ''' </summary>
@@ -5098,14 +5151,14 @@ Public Module Module1
     ''' <param name="chwidth"></param>
     ''' <param name="chHeight"></param>
     ''' <remarks></remarks>
-    Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer, _
-                                            ByVal anzLegendEintraege As Integer, _
-                                                ByRef chtop As Double, _
-                                                ByRef chleft As Double, _
-                                                ByRef chwidth As Double, _
+    Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer,
+                                            ByVal anzLegendEintraege As Integer,
+                                                ByRef chtop As Double,
+                                                ByRef chleft As Double,
+                                                ByRef chwidth As Double,
                                                 ByRef chHeight As Double)
 
-        Dim currentWorksheet As Excel.Worksheet = _
+        Dim currentWorksheet As Excel.Worksheet =
             CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(tableTyp)), Excel.Worksheet)
 
         Dim tmpTop As Double = 2.0
@@ -5128,8 +5181,10 @@ Public Module Module1
         Catch ex As Exception
 
         End Try
-        Dim tmpWidth As Double = maxScreenWidth / 5 - 29
-        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH1 * korrfaktorH2
+        'Dim tmpWidth As Double = maxScreenWidth / 5 - 29
+        Dim tmpWidth As Double = chartWidth - 10
+        'Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH1 * korrfaktorH2
+        Dim tmpHeight As Double = chartHeight * korrfaktorH1 * korrfaktorH2
 
 
         ' wenn schon Charts existieren: ein neues Chart wird immer als letztes  angehängt ..
@@ -5267,7 +5322,8 @@ Public Module Module1
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formereOU As Boolean = enableOnUpdate
 
-        Dim stdPfPrWindowBreite As Double = maxScreenWidth / 5 - 10
+        'Dim stdPfPrWindowBreite As Double = maxScreenWidth / 5 - 10
+        Dim stdPfPrWindowBreite As Double = chartWidth + 10
 
         If enableOnUpdate Then
             enableOnUpdate = False
@@ -5335,7 +5391,8 @@ Public Module Module1
                             .Visible = True
                             .WindowState = Excel.XlWindowState.xlNormal
                             .EnableResize = True
-                            .Left = 4 * maxScreenWidth / 5
+                            '.Left = 4 * maxScreenWidth / 5
+                            .Left = maxScreenWidth - stdPfPrWindowBreite
                             .Width = stdPfPrWindowBreite
                             ' wenn prWindows schon existert hat ..
                             If prWindowAlreadyExisting Then
@@ -5452,7 +5509,7 @@ Public Module Module1
                                 .WindowState = Excel.XlWindowState.xlNormal
                             End If
 
-                            .Left = projectboardWindows(PTwindows.mptpr).Left + _
+                            .Left = projectboardWindows(PTwindows.mptpr).Left +
                                     projectboardWindows(PTwindows.mptpr).Width + 1
 
                             If pfWindowAlreadyExisting Then
@@ -5460,6 +5517,7 @@ Public Module Module1
                             Else
                                 .Width = maxScreenWidth - (projectboardWindows(PTwindows.mptpr).Width + 1)
                             End If
+
 
 
                         End With
@@ -5682,22 +5740,22 @@ Public Module Module1
                 ElseIf RoleDefinitions.containsName(rcName) Then
                     ' es handelt sich um eine Rolle
                     ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
                                              showRangeLeft, showRangeRight, True) Then
                         cphase.removeRoleByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
                         ok = False
                     End If
 
                 ElseIf CostDefinitions.containsName(rcName) Then
                     ' es handelt sih um eine Kostenart 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
                                              showRangeLeft, showRangeRight, True) Then
                         cphase.removeCostByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf & _
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
                         ok = False
                     End If
@@ -5756,7 +5814,7 @@ Public Module Module1
     ''' <param name="zeile"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String, _
+    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String,
                                              ByVal zeile As Integer) As Boolean
         Dim found As Boolean = False
         Dim curZeile As Integer = 2

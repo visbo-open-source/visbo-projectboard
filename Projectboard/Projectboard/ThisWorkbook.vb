@@ -34,6 +34,7 @@ Public Class ThisWorkbook
         Application.DisplayFormulaBar = True
 
         With Application.ActiveWindow
+
             .SplitColumn = 0
             .SplitRow = 0
             .DisplayWorkbookTabs = True
@@ -143,6 +144,7 @@ Public Class ThisWorkbook
         projectboardWindows(PTwindows.mpt) = Application.ActiveWindow
 
         With projectboardWindows(PTwindows.mpt)
+            .WindowState = XlWindowState.xlMaximized
             .DisplayHeadings = False
             '.Caption = windowNames(PTwindows.mpt)
             .Caption = bestimmeWindowCaption(PTwindows.mpt)
@@ -150,8 +152,15 @@ Public Class ThisWorkbook
             '.ScrollRow = 1
             '.ScrollColumn = 1
             .Visible = True
-            .Zoom = 100
-            .WindowState = XlWindowState.xlMaximized
+            If .Width < 1100 Then
+                .Zoom = 80
+            ElseIf .Width < 1400 Then
+                .zomm = 90
+            Else
+                .Zoom = 100
+            End If
+
+
         End With
 
 
@@ -514,5 +523,12 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_SheetDeactivate(Sh As Object) Handles Me.SheetDeactivate
         Dim a As Integer = -1
+    End Sub
+
+    Private Sub ThisWorkbook_WindowResize(Wn As Window) Handles Me.WindowResize
+        ' ein Vergrößern sollte immer das Chart größer, das heisst breiter werden lassen
+        ' das Mitte Window 
+        ' beim Verkleinern sollte gar nix passieren , auss
+
     End Sub
 End Class
