@@ -834,7 +834,7 @@ Public Module PBBModules
 
                 Try
                     Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    If hproj.isUnion Then
+                    If hproj.projectType = ptPRPFType.portfolio Then
                         tmpResult = False
                         Call MsgBox(errMsg)
                         Exit For

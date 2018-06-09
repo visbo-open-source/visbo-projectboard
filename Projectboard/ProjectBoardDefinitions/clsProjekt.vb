@@ -1,4 +1,5 @@
-﻿Imports System.Math
+﻿Imports System
+Imports System.Math
 
 Public Class clsProjekt
     Inherits clsProjektvorlage
@@ -33,17 +34,37 @@ Public Class clsProjekt
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
 
-    ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
-    Private _isUnion As Boolean = False
-    Public Property isUnion As Boolean
+    ' tk ergänzt am 9.6.18 actualDataUntil 
+    ' gibt an, bis zu welchem Monat einschließlich die Ressourcen und Kostenbedarfs-Werte den Ist-Daten aus der Zeiterfassung entsprechen 
+    Private _actualDataUntil As Date
+    Public Property actualDataUntil As Date
         Get
-            isUnion = _isUnion
+            actualDataUntil = _actualDataUntil
         End Get
-        Set(value As Boolean)
+        Set(value As Date)
             If Not IsNothing(value) Then
-                _isUnion = value
+                _actualDataUntil = value
             Else
-                _isUnion = False
+                _actualDataUntil = Date.MinValue
+            End If
+        End Set
+    End Property
+
+    ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
+    Private _projectType As Integer
+    Public Property projectType As Integer
+        Get
+            projectType = _projectType
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                If value >= 0 And value <= 2 Then
+                    _projectType = value
+                Else
+                    _projectType = ptPRPFType.project
+                End If
+            Else
+                _projectType = ptPRPFType.project
             End If
         End Set
     End Property
@@ -67,9 +88,9 @@ Public Class clsProjekt
             movable = _movable
         End Get
         Set(value As Boolean)
-            If _Status = ProjektStatus(PTProjektStati.geplant) Or _
-                _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or _
-                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or _
+            If _Status = ProjektStatus(PTProjektStati.geplant) Or
+                _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
+                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
                 value = False Then
                 _movable = value
 
@@ -265,7 +286,7 @@ Public Class clsProjekt
             Dim key As String = calcProjektKey(Me.name, Me.variantName)
             currentSessionConstellation.updateTFzeile(key, _tfZeile)
 
-            Dim tmpConst As clsConstellation = _
+            Dim tmpConst As clsConstellation =
                 projectConstellations.getConstellation(currentConstellationName)
             If Not IsNothing(tmpConst) Then
                 tmpConst.updateTFzeile(key, _tfZeile)
@@ -428,7 +449,7 @@ Public Class clsProjekt
                         Me.variantName = .variantName And
                         Me.variantDescription = .variantDescription And
                         Me.description = .description And
-                        Me.isUnion = .isUnion Then
+                        Me.projectType = .projectType Then
 
                         If Me.startDate.Date = .startDate.Date And
                             Me.endeDate.Date = .endeDate.Date Then
@@ -486,9 +507,9 @@ Public Class clsProjekt
                     End If
 
                     ' jetzt die Custom Fields prüfen 
-                    If stillOK And _
-                        Me.customBoolFields.Count = .customBoolFields.Count And _
-                        Me.customDblFields.Count = .customDblFields.Count And _
+                    If stillOK And
+                        Me.customBoolFields.Count = .customBoolFields.Count And
+                        Me.customDblFields.Count = .customDblFields.Count And
                         Me.customStringFields.Count = .customStringFields.Count Then
                         ' alle sind gleich , detaillierte Überprüfung lohnt 
 
@@ -567,7 +588,7 @@ Public Class clsProjekt
     ''' <param name="maxDate"></param>
     ''' <param name="durationInDays"></param>
     ''' <remarks></remarks>
-    Public Sub getMinMaxDatesAndDuration(ByVal selPhases As Collection, ByVal selMilestones As Collection, _
+    Public Sub getMinMaxDatesAndDuration(ByVal selPhases As Collection, ByVal selMilestones As Collection,
                                              ByRef minDate As Date, ByRef maxDate As Date, ByRef durationInDays As Long)
 
         Dim earliestDate As Date = Me.endeDate.AddMonths(1)
@@ -592,8 +613,8 @@ Public Class clsProjekt
             Dim pvName As String = ""
             Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb, type, pvName)
 
-            If type = -1 Or _
-                (type = PTProjektType.projekt And pvName = Me.name) Or _
+            If type = -1 Or
+                (type = PTProjektType.projekt And pvName = Me.name) Or
                 (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                 Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(phaseName, breadcrumb)
@@ -676,8 +697,8 @@ Public Class clsProjekt
             Dim pvName As String = ""
             Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
 
-            If type = -1 Or _
-                (type = PTProjektType.projekt And pvName = Me.name) Or _
+            If type = -1 Or
+                (type = PTProjektType.projekt And pvName = Me.name) Or
                 (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                 Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
@@ -799,7 +820,7 @@ Public Class clsProjekt
                         ' es handelt sich um eine Phase
                         Dim cPhase As clsPhase = Me.getPhaseByID(tmpID)
                         If Not IsNothing(cPhase) Then
-                            If phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde, _
+                            If phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde,
                                                      showRangeLeft, showRangeRight) Then
                                 Try
                                     ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
@@ -931,12 +952,12 @@ Public Class clsProjekt
         End Get
     End Property
 
-        ''' <summary>
-        ''' stellt sicher, daß variantName niemals Nothing sein kann
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns></returns>
-        ''' <remarks></remarks>
+    ''' <summary>
+    ''' stellt sicher, daß variantName niemals Nothing sein kann
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property variantName As String
         Get
             If IsNothing(_variantName) Then
@@ -1110,8 +1131,8 @@ Public Class clsProjekt
 
     End Property
 
-    Public Overrides Sub AddPhase(ByVal phase As clsPhase, _
-                                  Optional ByVal origName As String = "", _
+    Public Overrides Sub AddPhase(ByVal phase As clsPhase,
+                                  Optional ByVal origName As String = "",
                                   Optional ByVal parentID As String = "")
 
         Dim phaseEnde As Double
@@ -1432,8 +1453,8 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property listOfDifferences(ByVal vglproj As clsProjekt, ByVal absolut As Boolean, ByVal type As Integer, _
-                                               Optional strongRoleIdentity As Boolean = False, _
+    Public ReadOnly Property listOfDifferences(ByVal vglproj As clsProjekt, ByVal absolut As Boolean, ByVal type As Integer,
+                                               Optional strongRoleIdentity As Boolean = False,
                                                Optional strongCostIdentity As Boolean = False) As Collection
         Get
 
@@ -1590,7 +1611,7 @@ Public Class clsProjekt
                     End If
 
                     ' prüfen, ob die Attribute identisch sind
-                    If Me.StrategicFit <> vglproj.StrategicFit Or _
+                    If Me.StrategicFit <> vglproj.StrategicFit Or
                                 Me.Risiko <> vglproj.Risiko Then
                         Try
                             tmpCollection.Add(CInt(PThcc.fitrisk).ToString, CInt(PThcc.fitrisk).ToString)
@@ -1748,8 +1769,8 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestoneDate(ByVal milestoneName As String, _
-                                              Optional breadCrumb As String = "", _
+    Public ReadOnly Property getMilestoneDate(ByVal milestoneName As String,
+                                              Optional breadCrumb As String = "",
                                               Optional lfdNr As Integer = 1) As Date
         Get
             Dim found As Boolean = False
@@ -2106,7 +2127,7 @@ Public Class clsProjekt
 
             ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
             ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
-            If (differenzInTagen <> 0 And Me.movable) And _
+            If (differenzInTagen <> 0 And Me.movable) And
                 (_Status = ProjektStatus(0) Or _variantName <> "") Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
@@ -2345,7 +2366,7 @@ Public Class clsProjekt
                     Else
                         ' Behandlung von Phasen
                         Dim cphase As clsPhase = Me.getPhaseByID(elemID)
-                        If Me._Start + cphase.relStart - 1 > bis Or _
+                        If Me._Start + cphase.relStart - 1 > bis Or
                             Me._Start + cphase.relEnde - 1 < von Then
                             ' nichts tun 
                         Else
@@ -2383,7 +2404,7 @@ Public Class clsProjekt
             If bis - von < 1 Then
                 tmpResult = True
             Else
-                tmpResult = Not (getColumnOfDate(Me.startDate) > bis Or _
+                tmpResult = Not (getColumnOfDate(Me.startDate) > bis Or
                     getColumnOfDate(Me.endeDate) < von)
             End If
             isWithinTimeFrame = tmpResult
@@ -2509,7 +2530,7 @@ Public Class clsProjekt
             .volume = Me.volume
             .complexity = Me.complexity
             .businessUnit = Me.businessUnit
-            .isUnion = Me.isUnion
+            .projectType = Me.projectType
             .StartOffset = _StartOffset
             .startDate = _startDate
             .earliestStartDate = _earliestStartDate
@@ -5589,7 +5610,8 @@ Public Class clsProjekt
         _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
-        _isUnion = False
+        _projectType = ptPRPFType.project
+        _actualDataUntil = Date.MinValue
 
         _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing istshow 
         _variantDescription = ""
@@ -5627,8 +5649,14 @@ Public Class clsProjekt
         End With
 
         Me.AddPhase(cphase)
+        If unionizedP Then
+            _projectType = ptPRPFType.portfolio
+        Else
+            _projectType = ptPRPFType.project
+        End If
 
-        _isUnion = unionizedP
+        _actualDataUntil = Date.MinValue
+
         _extendedView = False
         '_relStart = 1
 
@@ -5648,7 +5676,7 @@ Public Class clsProjekt
         _variantName = ""
         _variantDescription = ""
 
-        If _isUnion Then
+        If unionizedP Then
             _description = "Summary Project of Program / Portfolio"
         Else
             _description = ""
@@ -5680,7 +5708,8 @@ Public Class clsProjekt
         _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
-        _isUnion = False
+        _projectType = ptPRPFType.project
+        _actualDataUntil = Date.MinValue
 
         _variantName = ""
         _variantDescription = ""
@@ -5712,7 +5741,9 @@ Public Class clsProjekt
 
         _Status = ProjektStatus(PTProjektStati.geplant)
         _timeStamp = Date.Now
-        _isUnion = False
+
+        _projectType = ptPRPFType.project
+        _actualDataUntil = Date.MinValue
 
         _variantName = ""
         _variantDescription = ""

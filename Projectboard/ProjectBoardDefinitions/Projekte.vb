@@ -11646,7 +11646,8 @@ Public Module Projekte
                                                  ByVal businessUnit As String, ByVal responsible As String, ByVal status As String, ByVal zeile As Integer,
                                                  ByVal roleNames() As String, ByVal roleValues() As Double,
                                                  ByVal costNames() As String, ByVal costValues() As Double,
-                                                 ByVal phNames() As String, ByVal przPhasenAnteile() As Double)
+                                                 ByVal phNames() As String, ByVal przPhasenAnteile() As Double,
+                                                 ByVal combinedName As Boolean)
 
         Dim hproj As clsProjekt = New clsProjekt
 
@@ -11677,7 +11678,17 @@ Public Module Projekte
         ' jetzt ist in hproj ein neues Projekt mit entsprechendem Name, etc. 
         Try
             With hproj
-                .name = pName
+
+                If combinedName Then
+                    If Not IsNothing(projectNummer) Then
+                        .name = projectNummer.Trim & "_" & pName
+                    Else
+                        .name = "_" & pName
+                    End If
+                Else
+                    .name = pName
+                End If
+
                 .variantName = vName
                 .Id = projectNummer
                 .getPhase(1).nameID = rootPhaseName
@@ -13054,7 +13065,7 @@ Public Module Projekte
             Try
                 hproj = ShowProjekte.getProject(pname)
                 ' Sicherstellen, dass der Status Wechsel nur bei der Basis-Variante vorgenommen werden kann ...
-                If hproj.variantName <> "" And Not hproj.isUnion Then
+                If hproj.variantName <> "" And hproj.projectType = ptPRPFType.project Then
                     If awinSettings.englishLanguage Then
                         errmsg = hproj.getShapeText & " : status change of a project-variant is not possible!"
                     Else
@@ -16932,7 +16943,7 @@ Public Module Projekte
                 schriftgroesse = .Schrift
                 status = .Status
                 pMarge = .ProjectMarge
-                isSummaryProject = .isUnion
+                isSummaryProject = (.projectType = ptPRPFType.portfolio)
             End With
         Catch ex As Exception
             Throw New ArgumentException("in zeichneProjektinBoard - Projektname existiert nicht: " & pname)
@@ -19091,7 +19102,7 @@ Public Module Projekte
 
         Try
             With myproject
-                If .isUnion Then
+                If (.projectType = ptPRPFType.portfolio) Then
                     pcolor = visboFarbeOrange
                 Else
                     pcolor = .farbe
@@ -19138,7 +19149,7 @@ Public Module Projekte
                     With .Line
                         .ForeColor.RGB = CInt(pcolor)
                         .Transparency = 0
-                        If myproject.isUnion Then
+                        If myproject.projectType = ptPRPFType.portfolio Then
                             .Weight = 5.5
                         Else
                             .Weight = 4.0

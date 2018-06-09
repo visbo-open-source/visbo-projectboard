@@ -139,7 +139,7 @@ Public Module awinGeneralModules
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
 
                 If Not IsNothing(hproj) Then
-                    If Not hproj.isUnion Then
+                    If Not hproj.projectType Then
                         key = calcProjektKey(hproj)
                         If Not tmpCollection.Contains(key) Then
                             tmpCollection.Add(key, key)
@@ -176,7 +176,7 @@ Public Module awinGeneralModules
 
                                 If Not IsNothing(pproj) Then
                                     ' jetzt ist das Projekt in AlleProjekte nachgeladen ...
-                                    If Not pproj.isUnion Then
+                                    If Not pproj.projectType = ptPRPFType.portfolio Then
                                         ' wenn kein Summary Projekt: direkt eintragen
                                         If Not tmpCollection.Contains(kvp.Key) Then
                                             tmpCollection.Add(kvp.Key, kvp.Key)
@@ -918,7 +918,7 @@ Public Module awinGeneralModules
             '  um dahinter temporär die Darstellungsklassen kopieren zu können , nur für ProjectBoard nötig 
             Dim projectBoardSheet As Excel.Worksheet = Nothing
 
-            Dim i As Integer
+
             Dim xlsCustomization As Excel.Workbook = Nothing
 
             ReDim importOrdnerNames(8)
@@ -6559,16 +6559,16 @@ Public Module awinGeneralModules
                                        ByRef colCostNamesToConsider() As Integer,
                                        ByVal currentWS As Excel.Worksheet)
 
-        Dim tmpRoleNames(17) As String
-        Dim tmpColBz(17) As String
-        Dim tmpCols(17) As Integer
+        Dim tmpRoleNames(18) As String
+        Dim tmpColBz(18) As String
+        Dim tmpCols(18) As Integer
         Dim errRoles As String = ""
         Dim ok As Boolean = True
 
 
-        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
+        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "SBF-DRUCK", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
                         "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
-        tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
+        tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DI1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
 
         If tmpRoleNames.Length <> tmpColBz.Length Then
             Throw New ArgumentException("ungleiche Anzahl Namen und Spalten-Ids")
@@ -6590,10 +6590,14 @@ Public Module awinGeneralModules
                 With currentWS
                     For i As Integer = 1 To tmpAnzahl
                         tmpCols(i - 1) = CType(.Range(tmpColBz(i - 1)), Excel.Range).Column
-                        ok = ok And CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1))
+
+                        ' test tk 9.6.18
+                        ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1)) Or
+                            tmpRoleNames(i - 1) = "SBF-DRUCK")
 
                         If Not ok Then
-                            Call MsgBox("Fehler? " & tmpRoleNames(i - 1))
+                            Call MsgBox("Fehler in Spalte mit Angaben zu (?) " & tmpRoleNames(i - 1))
+                            ok = True
                         End If
                     Next
                 End With
@@ -7081,7 +7085,7 @@ Public Module awinGeneralModules
                             ' lege ein Allianz IT - Projekt an
                             hproj = erstelleProjektausParametern(pName, variantName, vorlageName, startdate, endDate, budget, sFit, risk, allianzProjektNummer,
                                                                  description, custFields, businessUnit, responsiblePerson, allianzStatus,
-                                                                 zeile, roleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz)
+                                                                 zeile, roleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz, False)
 
                             ' Test tk 
                             Try
@@ -7125,8 +7129,8 @@ Public Module awinGeneralModules
                                         pkey = calcProjektKey(hproj)
 
                                         If ImportProjekte.Containskey(pkey) Then
-                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                            CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Name existiert bereits")
+                                            outPutLine = "Name existiert mehrfach: " & pName
+                                            outputCollection.Add(outPutLine)
                                         Else
                                             createdProjects = createdProjects + 1
                                             ImportProjekte.Add(hproj, False)
@@ -7145,8 +7149,8 @@ Public Module awinGeneralModules
                                         End If
 
                                     Catch ex As Exception
-                                        CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                        CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:=ex.Message)
+                                        outPutLine = "Fehler bei " & pName & vbLf & "Error: " & ex.Message
+                                        outputCollection.Add(outPutLine)
                                     End Try
 
                                 End If
@@ -7154,8 +7158,8 @@ Public Module awinGeneralModules
 
                             Else
                                 ok = False
-                                CType(.Range(.Cells(zeile, 1), .Cells(zeile, 15)), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                CType(.Cells(zeile, lastColumn + 1), Global.Microsoft.Office.Interop.Excel.Range).AddComment(Text:="Projekt konnte nicht erzeugt werden ...")
+                                outPutLine = "Fehler beim Erzeugen des Projektes " & pName
+                                outputCollection.Add(outPutLine)
                             End If
 
                         End If
@@ -7844,9 +7848,9 @@ Public Module awinGeneralModules
             Dim impProjekt As clsProjekt = kvp.Value
 
             If considerSummaryProjects Then
-                takeIntoAccount = impProjekt.isUnion
+                takeIntoAccount = (impProjekt.projectType = ptPRPFType.portfolio)
             Else
-                takeIntoAccount = Not impProjekt.isUnion
+                takeIntoAccount = Not (impProjekt.projectType = ptPRPFType.portfolio)
             End If
 
             If takeIntoAccount Then
@@ -12155,7 +12159,7 @@ Public Module awinGeneralModules
                         Dim tmpValue As Integer = kvp.Value.dauerInDays
                         ' tk, Änderung 19.1.17 nicht mehr notwendig ..
                         ' Call awinCreateBudgetWerte(kvp.Value)
-                        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.isUnion) Then
+                        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
                             AlleProjekte.Add(kvp.Value)
                             If ShowProjekte.contains(kvp.Value.name) Then
                                 ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
@@ -12197,7 +12201,7 @@ Public Module awinGeneralModules
                     ' tk, Änderung 19.1.17 nicht mehr notwendig ..
                     ' Call awinCreateBudgetWerte(kvp.Value)
 
-                    If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.isUnion) Then
+                    If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
 
                         AlleProjekte.Add(kvp.Value)
 

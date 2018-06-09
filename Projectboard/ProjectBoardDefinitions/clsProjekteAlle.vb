@@ -48,7 +48,7 @@ Public Class clsProjekteAlle
         Get
             Dim tmpResult As Boolean = False
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                If kvp.Value.isUnion = True Then
+                If kvp.Value.projectType = ptPRPFType.portfolio Then
                     tmpResult = True
                     Exit For
                 End If
@@ -74,7 +74,7 @@ Public Class clsProjekteAlle
         If _allProjects.ContainsKey(myElem) Then
             Dim myProject As clsProjekt = _allProjects.Item(myElem)
 
-            If myProject.isUnion Then
+            If myProject.projectType = ptPRPFType.portfolio Then
                 ' hier müssen die Projekte eingetragen werden, die in der entsprechenden Constellation verzeichnet sind ... 
                 Try
                     ' das Element selber eintragen ...
@@ -152,7 +152,7 @@ Public Class clsProjekteAlle
         ' Aufbau aller in AlleProjekte referenzierten PRojekte und Summary Projekte 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-            If kvp.Value.isUnion = True Then
+            If kvp.Value.projectType = ptPRPFType.portfolio Then
                 ' hier müssen die Projekte eingetragen werden, die in der entsprechenden Constellation verzeichnet sind ... 
                 Try
                     ' das Element selber eintragen ...
@@ -276,7 +276,7 @@ Public Class clsProjekteAlle
             ' jetzt muss geprüft werden, ob es sich bei dem neuen um ein Union Projekt handelt ...
             If checkOnConflicts Then
 
-                If project.isUnion Then
+                If project.projectType = ptPRPFType.portfolio Then
 
                     Dim myConstellation As clsConstellation = projectConstellations.getConstellation(project.name)
 

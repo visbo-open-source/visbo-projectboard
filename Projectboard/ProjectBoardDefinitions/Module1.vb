@@ -264,9 +264,12 @@ Public Module Module1
         prCardinvisible = 16
     End Enum
 
+    ' wenn diese Enum erweitert wird, inbedingt im clsProjekt .projecttype Property den Wertebereich anpassen ...
+    ' in mongoDBaccess wird statisch auf "0" für projekt abgefragt ..
     Public Enum ptPRPFType
         project = 0
         portfolio = 1
+        projectTemplate = 2
     End Enum
 
     ''' <summary>
@@ -1041,7 +1044,7 @@ Public Module Module1
                     If selectedProjekte.Count > 0 Then
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
 
-                            If Not kvp.Value.isUnion Then
+                            If kvp.Value.projectType = ptPRPFType.project Then
                                 If Not tmpCollection.Contains(kvp.Key) Then
                                     ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
                                     If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
@@ -1057,7 +1060,7 @@ Public Module Module1
                         ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                            If kvp.Value.marker = True And Not kvp.Value.isUnion Then
+                            If kvp.Value.marker = True And kvp.Value.projectType = ptPRPFType.project Then
                                 If Not tmpCollection.Contains(kvp.Key) Then
                                     ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
                                     If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then

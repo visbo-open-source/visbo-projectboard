@@ -45,7 +45,10 @@ Public Class clsProjektDB
     Public businessUnit As String
 
     ' ergänzt am 23.5.18 
-    Public isUnion As Boolean = False
+    Public projectType As Integer = ptPRPFType.project
+
+    ' ergänzt am 9.6.18 
+    Public actualDataUntil As Date = Date.MinValue
 
     Public Sub copyfrom(ByVal projekt As clsProjekt)
         Dim i As Integer
@@ -67,11 +70,12 @@ Public Class clsProjektDB
                 Me.Id = .Id
             End If
 
-            If Not IsNothing(.isUnion) Then
-                Me.isUnion = .isUnion
+            If Not IsNothing(.projectType) Then
+                Me.projectType = .projectType
             Else
-                Me.isUnion = False
+                Me.projectType = ptPRPFType.project
             End If
+
 
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
@@ -83,6 +87,8 @@ Public Class clsProjektDB
 
             Me.variantName = .variantName
             Me.variantDescription = .variantDescription
+
+            Me.actualDataUntil = .actualDataUntil.ToUniversalTime
 
             Me.Risiko = .Risiko
             Me.StrategicFit = .StrategicFit
@@ -164,8 +170,13 @@ Public Class clsProjektDB
             .variantName = Me.variantName
 
             ' tk 24.5.18 , wenn Nothing wird das in der Setting Property abgefangen 
-            .isUnion = Me.isUnion
+            .projectType = Me.projectType
 
+            If IsNothing(Me.actualDataUntil) Then
+                .actualDataUntil = Date.MinValue
+            Else
+                .actualDataUntil = Me.actualDataUntil.ToLocalTime
+            End If
 
             If IsNothing(Me.variantDescription) Then
                 .variantDescription = ""

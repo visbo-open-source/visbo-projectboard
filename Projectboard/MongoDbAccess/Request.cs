@@ -1148,13 +1148,13 @@ namespace MongoDbAccess
             
             
             int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
-            
-                
+                            
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.isUnion == false)
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.projectType == 0)
                             .Select(c => c.name)
                             .Distinct()
                             .ToList();
+
             // tk 29.5.18
             // wurde eingeführt, weil in Datenbank wo noch kein isUnion Attribut steckt , sonst die leere Liste rauskommt ...
             // 

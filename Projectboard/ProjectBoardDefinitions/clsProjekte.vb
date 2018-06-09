@@ -60,7 +60,7 @@ Public Class clsProjekte
         Get
             Dim tmpResult As Boolean = False
             For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-                If kvp.Value.isUnion = True Then
+                If kvp.Value.projectType = ptPRPFType.portfolio Then
                     tmpResult = True
                     Exit For
                 End If
