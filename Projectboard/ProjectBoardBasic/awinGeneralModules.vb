@@ -2166,8 +2166,10 @@ Public Module awinGeneralModules
                 Dim anzWithID As Integer = 0
                 Dim anzWithoutID As Integer = 0
                 Dim IDCollection As New Collection
+                Dim groupDefinitionIsOk As Boolean = True
 
                 For i = 2 To anzZeilen - 1
+
                     Try
                         Dim tmpValue As String = CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Value
                         c = CType(rolesRange.Cells(i, 1), Excel.Range)
@@ -2186,6 +2188,7 @@ Public Module awinGeneralModules
                             End If
                         End If
 
+                        Dim isWithoutID As Boolean = True
 
                         If CStr(c.Value) <> "" Then
                             If Not IsNothing(tmpValue) Then
@@ -2194,8 +2197,9 @@ Public Module awinGeneralModules
                                         If CInt(tmpValue.Trim) > 0 Then
                                             If Not IDCollection.Contains(tmpValue.Trim) Then
                                                 IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
+                                                isWithoutID = False
                                             Else
-                                                Throw New ArgumentException("roles with identical IDs are not allowed")
+                                                Throw New ArgumentException("roles with identical IDs are not allowed: " & tmpValue.Trim)
                                             End If
                                         Else
                                             anzWithoutID = anzWithoutID + 1
@@ -2211,6 +2215,17 @@ Public Module awinGeneralModules
                             End If
                         End If
 
+                        ' jetzt checken 
+                        If readingGroups And isWithoutID Then
+                            ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
+                            Dim roleName As String = CStr(c.Value.trim)
+                            If Not RoleDefinitions.containsName(roleName) Then
+                                Call MsgBox("Gruppen-Rolle " & roleName & " existiert nicht ...")
+                                groupDefinitionIsOk = False
+                            End If
+
+                        End If
+
                     Catch ex As Exception
                         anzWithoutID = anzWithoutID + 1
                     End Try
@@ -2220,6 +2235,8 @@ Public Module awinGeneralModules
                 anzWithID = IDCollection.Count
                 If anzWithID > 0 And anzWithoutID > 0 And Not readingGroups Then
                     Throw New ArgumentException("some roles do contain IDs, others not ...")
+                ElseIf Not groupDefinitionIsOK Then
+                    Throw New ArgumentException("Group Definitions not correct - abort ... ...")
                 Else
                     ' jetzt ist sichergestellt, dass alle Rollen eine ID haben oder keine ; dann wird sie generiert .. 
                     ' oder aber man ist im Reading Group Modus, wo ja nur die Gruppen eine ID benötigen
@@ -6566,7 +6583,7 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
 
 
-        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "SBF-DRUCK", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
+        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "INFOSYS, DRUCK", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
                         "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
         tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DI1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
 
@@ -6593,7 +6610,7 @@ Public Module awinGeneralModules
 
                         ' test tk 9.6.18
                         ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1)) Or
-                            tmpRoleNames(i - 1) = "SBF-DRUCK")
+                            tmpRoleNames(i - 1) = "INFOSYS, DRUCK")
 
                         If Not ok Then
                             Call MsgBox("Fehler in Spalte mit Angaben zu (?) " & tmpRoleNames(i - 1))
@@ -7268,7 +7285,7 @@ Public Module awinGeneralModules
         Dim ok As Boolean = False
 
         ' die Projekte
-        Dim oldProj As clsProjekt = Nothing
+
         Dim hproj As clsProjekt = Nothing
         Dim newProj As clsProjekt = Nothing
 
@@ -7373,20 +7390,24 @@ Public Module awinGeneralModules
                 'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
 
                 lastColumn = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
-                lastRow = CType(.Cells(2000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                lastRow = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
 
 
                 While zeile < lastRow
+
+                    Dim oldProj As clsProjekt = Nothing
 
                     currentColor = CInt(CType(.Cells(zeile, 2), Excel.Range).Interior.Color)
                     If currentColor = projectStartingColor Then
                         ' jetzt kommt die Behandlung ...   
 
                         Try
+
                             pName = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
                             geleseneProjekte = geleseneProjekte + 1
-                            ok = isKnownProject(pName, oldProj)
+                            ok = isKnownProject(pName, AlleProjekte)
+
                         Catch ex As Exception
                             ok = False
                         End Try
@@ -7410,6 +7431,9 @@ Public Module awinGeneralModules
                             outputCollection.Add(outPutLine)
 
                         Else
+
+                            Dim pvKey As String = calcProjektKey(pName, "")
+                            oldProj = AlleProjekte.getProject(pvKey)
 
                             ' jetzt werden die Values für ein Projekt ausgelsen 
                             rolePhaseValues.Clear()
@@ -7539,17 +7563,242 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
+    ''' </summary>
+    ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
+    Public Sub ImportAllianzType3(ByVal monat As Integer)
+
+        ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
+        Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
+
+        ' nimmt dann später pro Projekt die vorkommenden Rollen auf - setzt voraus, dass die Datei nach Projekt-Namen, dann nach Jahr, dann nach Monat sortiert ist ...  
+        Dim projectRoleNames(,) As String = Nothing
+
+        ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
+        Dim projectRoleValues(,,) As Double = Nothing
+
+        ' für den Output 
+        Dim outputFenster As New frmOutputWindow
+        Dim outputCollection As New Collection
+        Dim outPutLine As String = ""
+
+        Dim lastRow As Integer = -1
+        Dim updatedProjects As Integer = 0
+
+
+        ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
+        Try
+            Dim found As Boolean = False
+            Dim wsi As Integer = 1
+            Dim wsCount As Integer = appInstance.ActiveWorkbook.Worksheets.Count
+
+            While Not found And wsi <= wsCount
+                If CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet).Name.StartsWith("RL-Resourcen") Then
+                    found = True
+                Else
+                    wsi = wsi + 1
+                End If
+            End While
+
+            If Not found Then
+                Call MsgBox("keine Projekte-Tabelle gefunden ...")
+                Exit Sub
+            End If
+
+            If monat < 1 Or monat > 12 Then
+                Call MsgBox("ungültige Angabe des ActualDataUntil-Monats: " & monat)
+                Exit Sub
+            End If
+
+            ' jetzt kommt die eigentliche Import Behandlung 
+            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                           Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            With currentWS
+
+                Dim zeile As Integer = 2
+                lastRow = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                ' welche Werte sollen ausgelesen werden, wo stehen die 
+                Dim colISExtern As String = CType(.Range("B1"), Excel.Range).Column
+                Dim colResource As Integer = CType(.Range("C1"), Excel.Range).Column
+                Dim colProjectNr As Integer = CType(.Range("D1"), Excel.Range).Column
+                Dim colPname As Integer = CType(.Range("E1"), Excel.Range).Column
+
+                Dim colYear As Integer = CType(.Range("G1"), Excel.Range).Column
+                Dim colMonth As Integer = CType(.Range("H1"), Excel.Range).Column
+                Dim colActuals As Integer = CType(.Range("J1"), Excel.Range).Column
+
+
+
+                Dim cacheProjekte As New clsProjekteAlle
+
+                ' 1. Schleife: ermittle die Menge aller bekannten Projekte ... 
+                While zeile <= lastRow
+
+                    Try
+                        Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                        Dim tmpPNr As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                        Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
+
+                        Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
+                        Dim isExtern As Boolean = False
+
+                        Try
+                            isExtern = (CStr(CType(.Cells(zeile, colISExtern), Excel.Range).Value).Trim = "Extern")
+                        Catch ex1 As Exception
+                            isExtern = False
+                        End Try
+
+                        Dim ok As Boolean = isKnownProject(pName, cacheProjekte)
+
+                        Dim oldProj As clsProjekt = Nothing
+
+
+
+                        If ok Then
+                            ' nur dann handelt es sich um ein zuordenbares Projekt ... 
+
+                            Dim pvkey As String = calcProjektKey(oldProj)
+                            oldProj = cacheProjekte.getProject(pvkey)
+
+                            If Not IsNothing(oldProj) Then
+
+                                Dim roleName As String = getAllianzRoleNameFromValue(fullRoleName, isExtern)
+
+                                If roleName = "" Then
+                                    outPutLine = "unbekannt: " & fullRoleName
+                                    If Not outputCollection.Contains(outPutLine) Then
+                                        outputCollection.Add(outPutLine, outPutLine)
+                                    End If
+                                Else
+                                    ' Aufbauen des Eintrags
+                                    Dim roleValues As New SortedList(Of String, Double())
+                                    If Not validProjectNames.ContainsKey(pName) Then
+                                        validProjectNames.Add(pName, roleValues)
+                                    End If
+
+                                End If
+
+
+
+                            Else
+                                ' darf/kann eigentlich nicht sein ...
+                                Call MsgBox("How come ?")
+                            End If
+
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+                    zeile = zeile + 1
+
+                End While
+
+                ' jetzt kommt die zweite Bearbeitungs-Welle
+                ' es ist jetzt klar, wieviele gültige Projekte drin sind
+                ' jetzt sollen alle Rollen und deren Werte ausgelesen werden 
+
+                zeile = 2
+                While zeile <= lastRow
+
+                    Try
+
+                    Catch ex As Exception
+
+                    End Try
+
+                End While
+
+
+            End With
+
+
+        Catch ex As Exception
+            Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
+        End Try
+
+        If outputCollection.Count > 0 Then
+            Call showOutPut(outputCollection, "Import Detail-Planungs Typ 3", "")
+        End If
+
+        Call MsgBox("Zeilen gelesen: " & lastRow - 1 & vbLf &
+                    "Projekte aktualisiert: " & updatedProjects)
+
+
+    End Sub
 
     ''' <summary>
-    ''' bestimmt ob es sich um ein bekanntes Projekt handelt: entweder bereits in AlleProjekte geladen oder aber in der Datenbank vorhanden 
-    ''' wenn nur in DB, wird es geladen und in alleProjekte abgelegt
+    ''' macht aus einem PName, dem evtl die Projektnummer hinten angehängt ist, nur den  PName 
+    ''' </summary>
+    ''' <param name="tmpPName"></param>
+    ''' <param name="tmpPNr"></param>
+    ''' <returns></returns>
+    Private Function getAllianzPNameFromPPN(ByVal tmpPName As String, ByVal tmpPNr As String) As String
+        Dim tmpResult As String = ""
+
+        Dim tmpStr() As String = tmpPName.Split(New Char() {CChar(" ")})
+        If tmpStr.Length > 1 Then
+            If tmpStr(tmpStr.Length - 1).Trim = tmpPNr Then
+                For i As Integer = 0 To tmpStr.Length - 2
+                    tmpResult = tmpResult & tmpStr(i)
+                Next
+            Else
+                tmpResult = tmpPName
+            End If
+        Else
+            tmpResult = tmpPName
+        End If
+
+        getAllianzPNameFromPPN = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' gibt den Allianz Rollen-Namen zurück, sofern 
+    ''' </summary>
+    ''' <param name="fullRName"></param>
+    ''' <param name="isExtern"></param>
+    ''' <returns></returns>
+    Private Function getAllianzRoleNameFromValue(ByVal fullRName As String, ByVal isExtern As Boolean) As String
+        Dim tmpResult As String = ""
+        Dim found As Boolean = False
+        Dim roleName As String = ""
+
+        If isExtern Then
+            Dim tmpStr = fullRName.Split(New Char() {CChar("-"), CChar("("), CChar(")")})
+            If tmpStr.Length >= 3 Then
+                roleName = tmpStr(1)
+
+
+            End If
+        Else
+            roleName = fullRName
+        End If
+
+        ' jetzt prüfen, ob es die Rolle gibt ... 
+        If RoleDefinitions.containsName(roleName) Then
+            tmpResult = roleName
+        End If
+
+
+        getAllianzRoleNameFromValue = tmpResult
+    End Function
+    ''' <summary>
+    ''' macht aus dem pName einen gültigen Projekt-Namen und
+    ''' bestimmt ob es sich um ein bekanntes Projekt handelt: entweder bereits in projektliste geladen oder aber in der Datenbank vorhanden 
+    ''' wenn nur in DB, wird es geladen und in projektliste abgelegt
     ''' </summary>
     ''' <param name="pname"></param>
-    ''' <param name="oldProj"></param>
+    ''' <param name="projektListe">ist AlleProjekte oder eine andere Instanz vom Typ clsProjekteAlle, in der das Projekt aufgenommen wird, wenn es existiert </param>
     ''' <returns></returns>
-    Private Function isKnownProject(ByRef pname As String, ByRef oldProj As clsProjekt) As Boolean
+    Private Function isKnownProject(ByRef pname As String, ByRef projektListe As clsProjekteAlle) As Boolean
 
         Dim fctResult As Boolean = False
+        Dim oldProj As clsProjekt = Nothing
 
         If IsNothing(pname) Then
             fctResult = False
@@ -7564,8 +7813,8 @@ Public Module awinGeneralModules
 
             ' jetzt muss geprüft werden, ob das Projekt bereits in alleProjekte oder in der Datenbank existiert 
             ' wenn nein, dann wird abgebrochen ... 
-            If AlleProjekte.Containskey(key) Then
-                oldProj = AlleProjekte.getProject(key)
+            If projektListe.Containskey(key) Then
+                oldProj = projektListe.getProject(key)
                 fctResult = True
             Else
                 ' ist es in der Datenbank? wenn ja, in AlleProjekte holen ... 
@@ -7577,7 +7826,7 @@ Public Module awinGeneralModules
                 End If
 
                 If Not IsNothing(oldProj) Then
-                    AlleProjekte.Add(oldProj, False)
+                    projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                     fctResult = True
                 Else
                     fctResult = False

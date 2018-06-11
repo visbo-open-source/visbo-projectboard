@@ -273,9 +273,30 @@ Imports System.Windows
 
                         End If
 
+                        ' tk jetzt muss für jedes der items, das ein Portfolio ist, dieses in die Liste eintragen 
+                        'If constellation.containsAnySummaryProject Then
+                        '    For Each spKvP As KeyValuePair(Of String, clsConstellationItem) In constellation.Liste
+                        '        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(spKvP.Value.projectName, spKvP.Value.variantName, AlleProjekte, Date.Now)
+                        '        If Not IsNothing(tmpProj) Then
+                        '            If Not AlleProjekte.Containskey(spKvP.Key) Then
+                        '                AlleProjekte.Add(tmpProj, )
+                        '            End If
+                        '        End If
+                        '        If spKvP.Value.variantName = portfolioVName Then
+                        '            projectConstellations.addToLoadedSessionPortfolios(spKvP.Key)
+                        '        End If
+                        '    Next
+                        'Else
+                        '    If Not IsNothing(constellation) Then
+                        '        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                        '    End If
+                        'End If
+
+                        ' war vorher ..
                         If Not IsNothing(constellation) Then
                             projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
                         End If
+
 
 
                     Else
@@ -4964,6 +4985,17 @@ Imports System.Windows
                             deleteRoles.Add("BOSV-KB")
                             deleteRoles.Add("Grp-BOSV-KB")
                             Call importAllianzType2(deleteRoles)
+
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
+                            ' immer zwei Monate zurück gehen 
+                            Dim monat As Integer = Date.Now.Month - 2
+                            If monat <= 0 Then
+                                monat = 12
+                            End If
+
+                            If monat >= 1 And monat <= 12 Then
+                                Call ImportAllianzType3(monat)
+                            End If
 
                         Else
                             Call awinImportProjektInventur()

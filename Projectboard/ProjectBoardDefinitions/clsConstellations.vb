@@ -18,6 +18,7 @@
     ''' <returns></returns>
     Public Function addToLoadedSessionPortfolios(ByVal portfolioName As String) As Boolean
         Dim tmpResult As Boolean = True
+
         If Me.Contains(portfolioName) Then
             If Not _listOfLoadedSessionPortfolios.ContainsKey(portfolioName) Then
                 _listOfLoadedSessionPortfolios.Add(portfolioName, True)
