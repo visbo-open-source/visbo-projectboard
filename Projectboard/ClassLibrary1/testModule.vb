@@ -1857,6 +1857,8 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
+                                            ' tk 14.6.18 für Test ...
+                                            hproj.actualDataUntil = CDate("31.5.2018")
                                             Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalBalken
                                         End If
@@ -1901,6 +1903,8 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
+                                            ' tk 14.6.18 für Test ...
+                                            hproj.actualDataUntil = CDate("31.5.2018")
                                             Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalBalken
                                         End If

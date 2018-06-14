@@ -5643,6 +5643,8 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim hsum() As Double, gesamt_summe As Double
@@ -5717,6 +5719,8 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
 
         ReDim hsum(anzRollen - 1)
@@ -5814,13 +5818,49 @@ Public Module Projekte
                 End If
                 gesamt_summe = tdatenreihe.Sum
 
-               
+                ' die Betrachtung der Ist-Daten versus Prognose Daten ...
+                ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
+
+                Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
+
+                Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+                Dim actualdataIndex As Integer = -1
+
+                If considerIstDaten Then
+
+                    Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+                    actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+                    ' die Prognose Daten bereinigen
+                    For ix As Integer = 0 To actualdataIndex
+                        prognoseDatenReihe(ix) = 0
+                    Next
+
+                    For ix = actualdataIndex + 1 To plen - 1
+                        istDatenReihe(ix) = 0
+                    Next
+
+                    ' jetzt die Istdaten zeichnen 
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeBlau
+                        .Values = istDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlColumnStacked
+                    End With
+
+
+                End If
+
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                    .Interior.Color = visboFarbeBlau
-                    .Values = tdatenreihe
+                    '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                    '.Interior.Color = visboFarbeBlau
+                    .Interior.Color = visboFarbeYellow
+                    '.Values = tdatenreihe
+                    .Values = prognoseDatenReihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
 
@@ -5836,7 +5876,7 @@ Public Module Projekte
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(43) & " " & vglproj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(43).Trim & " " & vglproj.timeStamp.ToShortDateString
                         '.Interior.Color = 0
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
@@ -5989,6 +6029,8 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         'Dim sumdatenreihe() As Double
@@ -6011,22 +6053,24 @@ Public Module Projekte
         ' (,0) ist deutsch, (,1) ist englisch
         ' 0= 
         Dim repmsg() As String
-        ReDim repmsg(5)
+        ReDim repmsg(6)
 
         If awinSettings.englishLanguage Then
             repmsg(0) = "Personnel Costs" '164
-            repmsg(1) = "Version from" ' 273
+            repmsg(1) = "Forecast" ' 38
             repmsg(2) = "other Costs" ' 165
             repmsg(3) = "approved version" ' 43
             repmsg(4) = "Personnel Needs" '159
             repmsg(5) = "Total Costs" ' 166
+            repmsg(6) = "Actual data"
         Else
             repmsg(0) = "Personalkosten" '164
-            repmsg(1) = "Stand vom" ' 273
+            repmsg(1) = "Prognose" ' 38
             repmsg(2) = "sonstige Kosten" ' 165
             repmsg(3) = "Beauftragung" ' 43
             repmsg(4) = "Personalbedarf" '159
             repmsg(5) = "Gesamtkosten" ' 166
+            repmsg(6) = "Ist-Werte"
         End If
 
 
@@ -6083,6 +6127,8 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
         'ReDim sumdatenreihe(plen - 1)
 
@@ -6149,14 +6195,46 @@ Public Module Projekte
             gesamt_summe = tdatenreihe.Sum
             vSum = 0
 
-           
+            Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
+
+            Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+            Dim actualdataIndex As Integer = -1
+
+            If considerIstDaten Then
+
+                Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+                actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+                ' die Prognose Daten bereinigen
+                For ix As Integer = 0 To actualdataIndex
+                    prognoseDatenReihe(ix) = 0
+                Next
+
+                For ix = actualdataIndex + 1 To plen - 1
+                    istDatenReihe(ix) = 0
+                Next
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    .Name = repmsg(6) & " " & hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+                End With
+
+
+            End If
+
 
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                 .ChartType = Excel.XlChartType.xlColumnStacked
                 .Name = series1Name
-                .Interior.Color = visboFarbeBlau
-                .Values = tdatenreihe
+                '.Interior.Color = visboFarbeBlau
+                .Interior.Color = visboFarbeYellow
+                '.Values = tdatenreihe
+                .Values = prognoseDatenReihe
                 .XValues = Xdatenreihe
 
             End With
@@ -6296,6 +6374,8 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim gesamt_Summe As Double
@@ -6350,6 +6430,8 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
 
 
@@ -6387,18 +6469,52 @@ Public Module Projekte
             Else
                 tdatenreihe = hproj.getAllPersonalKosten
             End If
-
-
             gesamt_Summe = tdatenreihe.Sum
 
+            ' die Betrachtung der Ist-Daten versus Prognose Daten ...
+            ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
 
-           
+            Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
+
+            Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+            Dim actualdataIndex As Integer = -1
+
+            If considerIstDaten Then
+
+                Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+                actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+                ' die Prognose Daten bereinigen
+                For ix As Integer = 0 To actualdataIndex
+                    prognoseDatenReihe(ix) = 0
+                Next
+
+                For ix = actualdataIndex + 1 To plen - 1
+                    istDatenReihe(ix) = 0
+                Next
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+                End With
+
+
+            End If
+
+
 
             'series
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                .Interior.Color = visboFarbeBlau
-                .Values = tdatenreihe
+                '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                '.Interior.Color = visboFarbeBlau
+                .Interior.Color = visboFarbeYellow
+                '.Values = tdatenreihe
+                .Values = prognoseDatenReihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlColumnStacked
             End With
@@ -6546,6 +6662,8 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim gesamt_summe As Double
@@ -6610,6 +6728,8 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
 
         For i = 1 To plen
@@ -6709,14 +6829,50 @@ Public Module Projekte
 
                 gesamt_summe = tdatenreihe.Sum
 
-                
+                ' die Betrachtung der Ist-Daten versus Prognose Daten ...
+                ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
+
+                Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
+
+                Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+                Dim actualdataIndex As Integer = -1
+
+                If considerIstDaten Then
+
+                    Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+                    actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+                    ' die Prognose Daten bereinigen
+                    For ix As Integer = 0 To actualdataIndex
+                        prognoseDatenReihe(ix) = 0
+                    Next
+
+                    For ix = actualdataIndex + 1 To plen - 1
+                        istDatenReihe(ix) = 0
+                    Next
+
+                    ' jetzt die Istdaten zeichnen 
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        .Interior.Color = visboFarbeBlau
+                        .Values = istDatenReihe
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlColumnStacked
+                    End With
+
+
+                End If
+
 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     ' sonstige Kosten
-                    .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
                     '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                    .Interior.Color = visboFarbeBlau
-                    .Values = tdatenreihe
+                    '.Interior.Color = visboFarbeBlau
+                    .Interior.Color = visboFarbeYellow
+                    '.Values = tdatenreihe
+                    .Values = prognoseDatenReihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
                 End With
@@ -7107,6 +7263,8 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim gesamt_summe As Double = 0.0
@@ -7158,6 +7316,8 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
 
 
@@ -7204,14 +7364,51 @@ Public Module Projekte
 
             gesamt_summe = tdatenreihe.Sum
 
-            
+            ' die Betrachtung der Ist-Daten versus Prognose Daten ...
+            ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
+
+            Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
+
+            Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+            Dim actualdataIndex As Integer = -1
+
+            If considerIstDaten Then
+
+                Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+                actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+                ' die Prognose Daten bereinigen
+                For ix As Integer = 0 To actualdataIndex
+                    prognoseDatenReihe(ix) = 0
+                Next
+
+                For ix = actualdataIndex + 1 To plen - 1
+                    istDatenReihe(ix) = 0
+                Next
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Interior.Color = visboFarbeBlau
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+                End With
+
+
+            End If
+
 
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 ' Stand vom sonstige Kosten
-                .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
                 '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                .Interior.Color = visboFarbeBlau
-                .Values = tdatenreihe
+                '.Interior.Color = visboFarbeBlau
+                .Interior.Color = visboFarbeYellow
+                '.Values = tdatenreihe
+                '.Values = tdatenreihe
+                .Values = prognoseDatenReihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlColumnStacked
             End With
