@@ -7289,6 +7289,8 @@ Public Module awinGeneralModules
         Dim hproj As clsProjekt = Nothing
         Dim newProj As clsProjekt = Nothing
 
+        Dim projektKundenNummer As String = ""
+
         ' Standard-Definition
         Dim anzPhasen As Integer = 5
 
@@ -7406,7 +7408,7 @@ Public Module awinGeneralModules
 
                             pName = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
                             geleseneProjekte = geleseneProjekte + 1
-                            ok = isKnownProject(pName, AlleProjekte)
+                            ok = isKnownProject(pName, projektKundenNummer, AlleProjekte)
 
                         Catch ex As Exception
                             ok = False
@@ -7588,24 +7590,9 @@ Public Module awinGeneralModules
 
 
         ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
+        ' das aktive Sheet muss das richtige sein ... und die richtige Header Struktur haben 
         Try
-            Dim found As Boolean = False
-            Dim wsi As Integer = 1
-            Dim wsCount As Integer = appInstance.ActiveWorkbook.Worksheets.Count
 
-            While Not found And wsi <= wsCount
-                If CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
-                                                            Global.Microsoft.Office.Interop.Excel.Worksheet).Name.StartsWith("RL-Resourcen") Then
-                    found = True
-                Else
-                    wsi = wsi + 1
-                End If
-            End While
-
-            If Not found Then
-                Call MsgBox("keine Projekte-Tabelle gefunden ...")
-                Exit Sub
-            End If
 
             If monat < 1 Or monat > 12 Then
                 Call MsgBox("ungültige Angabe des ActualDataUntil-Monats: " & monat)
@@ -7613,8 +7600,16 @@ Public Module awinGeneralModules
             End If
 
             ' jetzt kommt die eigentliche Import Behandlung 
-            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            ' hat die Datei die richtige Header-Struktur ? 
+            Dim firstZeile As Excel.Range = currentWS.Rows(1)
+
+            If Not isCorrectAllianzImportStructure(firstZeile, 3) Then
+                Call MsgBox("Datei hat nicht den für Typ 3 erforderlichen Spalten-Aufbau!")
+                Exit Sub
+            End If
 
             With currentWS
 
@@ -7635,12 +7630,14 @@ Public Module awinGeneralModules
 
                 Dim cacheProjekte As New clsProjekteAlle
 
+                Dim handledNames As New SortedList(Of String, Boolean)
                 ' 1. Schleife: ermittle die Menge aller bekannten Projekte ... 
                 While zeile <= lastRow
 
                     Try
                         Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
-                        Dim tmpPNr As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                        Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
+
                         Dim pName As String = getAllianzPNameFromPPN(tmpPName, tmpPNr)
 
                         Dim fullRoleName As String = CStr(CType(.Cells(zeile, colResource), Excel.Range).Value).Trim
@@ -7652,16 +7649,41 @@ Public Module awinGeneralModules
                             isExtern = False
                         End Try
 
-                        Dim ok As Boolean = isKnownProject(pName, cacheProjekte)
+                        Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
+                        Dim curValue As Double = CDbl(CType(.Cells(zeile, colActuals), Excel.Range).Value)
 
+                        Dim shallContinue As Boolean = False
                         Dim oldProj As clsProjekt = Nothing
 
+                        If Not handledNames.ContainsKey(tmpPName) Then
 
+                            ' wenn ok = true zurück kommt, dann ist in cacheProjekte das Projekt mit Varianten-Name "" drin .. 
+                            If isKnownProject(pName, tmpPNr, cacheProjekte) Then
+                                shallContinue = True
+                                handledNames.Add(tmpPName, True)
+                            Else
+                                ' Projekt nicht erkannt 
+                                outPutLine = "unbekannt: " & pName
+                                outputCollection.Add(outPutLine)
 
-                        If ok Then
+                                shallContinue = False
+                                handledNames.Add(tmpPName, False)
+
+                            End If
+
+                        Else
+                            shallContinue = handledNames.Item(tmpPName)
+                        End If
+
+                        If shallContinue And curMonat >= 1 And curMonat <= monat And curValue >= 0 Then
                             ' nur dann handelt es sich um ein zuordenbares Projekt ... 
+                            ' nur dann geht es um gültige Werte
 
-                            Dim pvkey As String = calcProjektKey(oldProj)
+                            ' jetzt wird eine sortedlist of sortedlist aufgebaut
+                            ' Projekte, dann Rollen mit Values 
+                            ' 
+
+                            Dim pvkey As String = calcProjektKey(pName, "")
                             oldProj = cacheProjekte.getProject(pvkey)
 
                             If Not IsNothing(oldProj) Then
@@ -7669,15 +7691,41 @@ Public Module awinGeneralModules
                                 Dim roleName As String = getAllianzRoleNameFromValue(fullRoleName, isExtern)
 
                                 If roleName = "" Then
+
                                     outPutLine = "unbekannt: " & fullRoleName
-                                    If Not outputCollection.Contains(outPutLine) Then
-                                        outputCollection.Add(outPutLine, outPutLine)
-                                    End If
+                                    outputCollection.Add(outPutLine, outPutLine)
+
                                 Else
                                     ' Aufbauen des Eintrags
                                     Dim roleValues As New SortedList(Of String, Double())
+                                    Dim tmpValues() As Double
+                                    ReDim tmpValues(monat - 1)
+
                                     If Not validProjectNames.ContainsKey(pName) Then
+
+                                        roleValues = New SortedList(Of String, Double())
+                                        ReDim tmpValues(monat - 1)
+
+                                        tmpValues(curMonat - 1) = curValue
+
+                                        roleValues.Add(roleName, tmpValues)
                                         validProjectNames.Add(pName, roleValues)
+
+                                    Else
+                                        roleValues = validProjectNames.Item(pName)
+                                        If roleValues.ContainsKey(roleName) Then
+                                            ' rolle ist bereits enthalten 
+                                            ' also summieren 
+                                            tmpValues = roleValues.Item(roleName)
+                                            tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curValue
+
+                                        Else
+                                            ' Rolle ist noch nicht enthalten 
+                                            ReDim tmpValues(monat - 1)
+                                            tmpValues(curMonat - 1) = curValue
+                                            roleValues.Add(roleName, tmpValues)
+                                        End If
+
                                     End If
 
                                 End If
@@ -7691,8 +7739,10 @@ Public Module awinGeneralModules
 
                         End If
 
-                    Catch ex As Exception
 
+                    Catch ex As Exception
+                        outPutLine = "Fehler: " & ex.Message
+                        outputCollection.Add(outPutLine)
                     End Try
 
                     zeile = zeile + 1
@@ -7731,6 +7781,47 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' gibt true zurück, wenn die Spalten-Struktur dem erforderlichen Import Typ entspricht 
+    ''' false sonst
+    ''' </summary>
+    ''' <param name="firstZeile"></param>
+    ''' <param name="importTyp"></param>
+    ''' <returns></returns>
+    Private Function isCorrectAllianzImportStructure(ByVal firstZeile As Excel.Range, ByVal importTyp As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+
+        Select Case importTyp
+            Case 1
+            Case 2
+            Case 3
+                Dim headerCheck() As String = {"Referat", "Intern/Extern", "Ressource", "Projektnummer", "Projekt", "Jahr", "Monat", "IST", "(PT)"}
+                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 7, 8, 10, 10}
+
+                Try
+                    tmpResult = True ' initiale Vorbesetzung 
+                    Dim ix As Integer = 0
+                    Do While tmpResult = True And ix <= headerCheck.Length - 1
+                        tmpResult = tmpResult And CStr(CType(firstZeile.Cells(1, colCheck(ix)), Excel.Range).Value).Contains(headerCheck(ix))
+                        ix = ix + 1
+                    Loop
+
+                Catch ex As Exception
+                    tmpResult = False
+                End Try
+
+
+            Case Else
+                ' nicht vorgesehen 
+        End Select
+
+
+
+        isCorrectAllianzImportStructure = tmpResult
+
+    End Function
 
     ''' <summary>
     ''' macht aus einem PName, dem evtl die Projektnummer hinten angehängt ist, nur den  PName 
@@ -7793,12 +7884,16 @@ Public Module awinGeneralModules
     ''' wenn nur in DB, wird es geladen und in projektliste abgelegt
     ''' </summary>
     ''' <param name="pname"></param>
+    ''' <param name="projektKDNr">ist die optional anzugebende Projekt-Kunden-Nummer</param>
     ''' <param name="projektListe">ist AlleProjekte oder eine andere Instanz vom Typ clsProjekteAlle, in der das Projekt aufgenommen wird, wenn es existiert </param>
     ''' <returns></returns>
-    Private Function isKnownProject(ByRef pname As String, ByRef projektListe As clsProjekteAlle) As Boolean
+    Private Function isKnownProject(ByRef pname As String, ByVal projektKDNr As String, ByRef projektListe As clsProjekteAlle) As Boolean
 
         Dim fctResult As Boolean = False
         Dim oldProj As clsProjekt = Nothing
+        Dim anzFehler As Integer = 0 ' wird als Platzhalter Variable für logFile schreiben benötigt ...
+        Dim hauptMsg As String = ""
+        Dim addOnMsg As String = ""
 
         If IsNothing(pname) Then
             fctResult = False
@@ -7812,10 +7907,11 @@ Public Module awinGeneralModules
             Dim key As String = calcProjektKey(pname, "")
 
             ' jetzt muss geprüft werden, ob das Projekt bereits in alleProjekte oder in der Datenbank existiert 
-            ' wenn nein, dann wird abgebrochen ... 
+            ' wenn nein, dann wird per KundenProjekt-Nummer gesucht , ansonsten abgebrochen  ... 
             If projektListe.Containskey(key) Then
                 oldProj = projektListe.getProject(key)
                 fctResult = True
+
             Else
                 ' ist es in der Datenbank? wenn ja, in AlleProjekte holen ... 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -7828,6 +7924,57 @@ Public Module awinGeneralModules
                 If Not IsNothing(oldProj) Then
                     projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                     fctResult = True
+
+                ElseIf projektKDNr <> "" Then
+                    ' jetzt wird noch über die Kunden-Projekt-Nummer gesucht ... 
+
+                    Dim pNames As Collection = request.retrieveProjectNamesByPNRFromDB(projektKDNr)
+
+                    If pNames.Count = 1 Then
+
+                        Dim alternativePName As String = pNames.Item(1)
+
+                        If request.projectNameAlreadyExists(alternativePName, "", storedAtOrBefore) Then
+                            oldProj = request.retrieveOneProjectfromDB(alternativePName, "", storedAtOrBefore)
+                        End If
+
+                        If Not IsNothing(oldProj) Then
+                            projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                            fctResult = True
+
+                            hauptMsg = "Projekt-Nummer: " & projektKDNr & "; Name in PlanView: " & pname
+                            addOnMsg = " / Name in VISBO Datenbank: " & alternativePName
+                            Call logfileSchreiben(hauptMsg, addOnMsg, anzFehler)
+
+                            ' damit an der aufrufenden Stelle der richtige pName steht ...
+                            pname = alternativePName
+                        Else
+                            fctResult = False
+                        End If
+
+
+                    ElseIf pNames.Count > 1 Then
+                        ' Eintrag in Log-File 
+                        addOnMsg = ""
+
+                        For Each tmpName In pNames
+                            If addOnMsg = "" Then
+                                addOnMsg = tmpName
+                            Else
+                                addOnMsg = addOnMsg & "; " & tmpName
+                            End If
+
+                        Next
+
+                        hauptMsg = "Mehrfach Zuordnung P-Nr -> Projekt: " & projektKDNr & " -> "
+                        Call logfileSchreiben(hauptMsg, addOnMsg, anzFehler)
+
+                        fctResult = False
+                    Else
+
+                        fctResult = False
+
+                    End If
                 Else
                     fctResult = False
                 End If
@@ -13161,9 +13308,18 @@ Public Module awinGeneralModules
             Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
 
             If Not IsNothing(hproj) Then
+                If hproj.projectType = ptPRPFType.portfolio Then
+                    ' dann muss erst diese Child-Constellation gespeichert werden ...
+                    Dim childConstellation As clsConstellation = projectConstellations.getConstellation(hproj.name)
+                    If Not IsNothing(childConstellation) Then
+                        Call storeSingleConstellationToDB(outPutCollection, childConstellation)
+                    End If
+                End If
+
+                ' jetzt wird das Projekt bzw. Summary Projekt behandelt ... 
                 If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-                    ' speichern des Projektes 
-                    hproj.timeStamp = DBtimeStamp
+                        ' speichern des Projektes 
+                        hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
@@ -13227,14 +13383,21 @@ Public Module awinGeneralModules
                         End If
                     End If
                 End If
-            End If
+
+
+                End If
 
 
         Next
 
         ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
         Try
-            Dim budget As Double = 0.0
+            Dim budget As Double = projectConstellations.getBudgetOfLoadedPortfolios
+
+            If budget = 0 Then
+                budget = -1
+            End If
+
             Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, portfolioVName, AlleProjekte, Date.Now)
             If Not IsNothing(oldSummaryP) Then
                 budget = oldSummaryP.budgetWerte.Sum
@@ -13250,6 +13413,14 @@ Public Module awinGeneralModules
                 Dim a As Integer = outPutCollection.Count
             End If
 
+            Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
+            If AlleProjekte.Containskey(skey) Then
+                AlleProjekte.Remove(skey)
+            End If
+
+            If Not AlleProjekte.Containskey(skey) Then
+                AlleProjekte.Add(sproj)
+            End If
 
         Catch ex As Exception
 
@@ -13257,10 +13428,10 @@ Public Module awinGeneralModules
 
 
 
-        ' jetzt wird die 
+        ' jetzt wird das Portfolio weggeschrieben 
         Try
             If request.storeConstellationToDB(currentConstellation) Then
-
+                ' alles in Ordnung, Speichern hat geklappt ... 
             Else
                 If awinSettings.englishLanguage Then
                     outputLine = "Error when writing scenario: " & currentConstellation.constellationName

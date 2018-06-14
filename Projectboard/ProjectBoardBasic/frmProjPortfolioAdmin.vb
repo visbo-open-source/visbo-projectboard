@@ -2571,7 +2571,10 @@ Public Class frmProjPortfolioAdmin
                     toStoreConstellation.checkAndCorrectYourself()
                 End If
 
-
+                ' hier war vorher .update
+                ' jetzt muss die Constellation upgedated werden ... 
+                ' hier muss 
+                Dim budget As Double = projectConstellations.getBudgetOfLoadedPortfolios
                 projectConstellations.update(toStoreConstellation)
 
                 Dim txtMsg1 As String = ""
@@ -2601,6 +2604,36 @@ Public Class frmProjPortfolioAdmin
                         Call MsgBox(txtMsg1)
                     End If
                 Else
+
+                    ' jetzt das Union Projekt errechnen ... 
+                    ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
+                    Try
+
+                        If budget = 0 Then
+                            budget = -1
+                        End If
+
+                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, portfolioVName, AlleProjekte, Date.Now)
+                        If Not IsNothing(oldSummaryP) Then
+                            budget = oldSummaryP.budgetWerte.Sum
+                        End If
+
+                        Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, budget:=budget)
+
+                        Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
+                        If AlleProjekte.Containskey(skey) Then
+                            AlleProjekte.Remove(skey)
+                        End If
+
+                        If Not AlleProjekte.Containskey(skey) Then
+                            AlleProjekte.Add(sproj)
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                         txtMsg1 = "ok, " & currentConstellationName & " in Session gespeichert"
                     Else
@@ -2611,6 +2644,7 @@ Public Class frmProjPortfolioAdmin
 
                 ' jetzt das EIngabe Feld wieder zurücksetzen 
                 dropboxScenarioNames.Text = ""
+
 
             End If
 

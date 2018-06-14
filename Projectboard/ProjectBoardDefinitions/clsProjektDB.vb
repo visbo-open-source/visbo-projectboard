@@ -50,6 +50,9 @@ Public Class clsProjektDB
     ' ergänzt am 9.6.18 
     Public actualDataUntil As Date = Date.MinValue
 
+    ' ergänzt am 12.6.18 
+    Public kundenNummer As String = ""
+
     Public Sub copyfrom(ByVal projekt As clsProjekt)
         Dim i As Integer
 
@@ -74,6 +77,12 @@ Public Class clsProjektDB
                 Me.projectType = .projectType
             Else
                 Me.projectType = ptPRPFType.project
+            End If
+
+            If Not IsNothing(.kundenNummer) Then
+                Me.kundenNummer = .kundenNummer
+            Else
+                Me.kundenNummer = ""
             End If
 
 
@@ -171,6 +180,12 @@ Public Class clsProjektDB
 
             ' tk 24.5.18 , wenn Nothing wird das in der Setting Property abgefangen 
             .projectType = Me.projectType
+
+            If IsNothing(Me.kundenNummer) Then
+                .kundenNummer = ""
+            Else
+                .kundenNummer = Me.kundenNummer
+            End If
 
             If IsNothing(Me.actualDataUntil) Then
                 .actualDataUntil = Date.MinValue

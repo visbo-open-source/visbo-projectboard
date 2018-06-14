@@ -32,23 +32,27 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_Deactivate() Handles Me.Deactivate
 
         Application.DisplayFormulaBar = True
+        Try
+            With Application.ActiveWindow
 
-        With Application.ActiveWindow
+                .SplitColumn = 0
+                .SplitRow = 0
+                .DisplayWorkbookTabs = True
+                .GridlineColor = RGB(220, 220, 220)
+                .DisplayHeadings = True
 
-            .SplitColumn = 0
-            .SplitRow = 0
-            .DisplayWorkbookTabs = True
-            .GridlineColor = RGB(220, 220, 220)
-            .DisplayHeadings = True
+                Try
+                    .FreezePanes = False
+                Catch ex As Exception
 
-            Try
-                .FreezePanes = False
-            Catch ex As Exception
-
-            End Try
+                End Try
 
 
-        End With
+            End With
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 

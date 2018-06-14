@@ -34,6 +34,22 @@ Public Class clsProjekt
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
 
+    ' tk ergänzt am 12.6.18 eine Kundeninterne Nummer 
+    ' kann als eine vom Kunden vergebene Kundenspezifische Projekt-Nummer benutzt werden
+    Private _kundenNummer As String = ""
+    Public Property kundenNummer As String
+        Get
+            kundenNummer = _kundenNummer
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _kundenNummer = value
+            Else
+                _kundenNummer = ""
+            End If
+        End Set
+    End Property
+
     ' tk ergänzt am 9.6.18 actualDataUntil 
     ' gibt an, bis zu welchem Monat einschließlich die Ressourcen und Kostenbedarfs-Werte den Ist-Daten aus der Zeiterfassung entsprechen 
     Private _actualDataUntil As Date
@@ -449,7 +465,8 @@ Public Class clsProjekt
                         Me.variantName = .variantName And
                         Me.variantDescription = .variantDescription And
                         Me.description = .description And
-                        Me.projectType = .projectType Then
+                        Me.projectType = .projectType And
+                        Me.kundenNummer = .kundenNummer Then
 
                         If Me.startDate.Date = .startDate.Date And
                             Me.endeDate.Date = .endeDate.Date Then
@@ -5612,6 +5629,7 @@ Public Class clsProjekt
         _timeStamp = Date.Now
         _projectType = ptPRPFType.project
         _actualDataUntil = Date.MinValue
+        _kundenNummer = ""
 
         _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing istshow 
         _variantDescription = ""
@@ -5656,6 +5674,8 @@ Public Class clsProjekt
         End If
 
         _actualDataUntil = Date.MinValue
+
+        _kundenNummer = ""
 
         _extendedView = False
         '_relStart = 1
@@ -5710,6 +5730,7 @@ Public Class clsProjekt
         _timeStamp = Date.Now
         _projectType = ptPRPFType.project
         _actualDataUntil = Date.MinValue
+        _kundenNummer = ""
 
         _variantName = ""
         _variantDescription = ""
@@ -5744,6 +5765,7 @@ Public Class clsProjekt
 
         _projectType = ptPRPFType.project
         _actualDataUntil = Date.MinValue
+        _kundenNummer = ""
 
         _variantName = ""
         _variantDescription = ""

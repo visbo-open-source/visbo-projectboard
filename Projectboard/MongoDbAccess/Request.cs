@@ -1339,6 +1339,38 @@ namespace MongoDbAccess
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pNR"></param>
+        /// <returns></returns>
+        public Collection retrieveProjectNamesByPNRFromDB(string pNR)
+        {
+            var result = new Collection();
+
+            
+            //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
+            //var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
+            //               where e.name.Contains(searchstr)
+            //               select e.variantName
+            //               .Distinct();
+
+
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.kundenNummer == pNR)
+                            .OrderBy(c => c.name)
+                            .Select(c => c.name)
+                            .ToList()
+                            .Distinct();
+
+            foreach (string vName in prequery)
+            {
+                result.Add(vName);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// bringt alle in der Datenbank vorkommenden TimeStamps zurück , in absteigender Sortierung
         /// </summary>
         /// <returns></returns>

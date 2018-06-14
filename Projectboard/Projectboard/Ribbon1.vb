@@ -4860,7 +4860,7 @@ Imports System.Windows
                     Call importiereMassenEdit()
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, True)
+                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, noComparison:=True)
 
                     ' ''If wasNotEmpty Then
                     ' ''    Call awinClearPlanTafel()

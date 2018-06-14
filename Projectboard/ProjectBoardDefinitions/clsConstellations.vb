@@ -12,7 +12,8 @@
     End Property
 
     ''' <summary>
-    ''' 
+    ''' fügt der Liste an loadedSessionPortfolios ein Portfolio hinzu 
+    ''' wenn zum Portfolio noch kein Summary Projekt existiert, wird es erstellt 
     ''' </summary>
     ''' <param name="portfolioName"></param>
     ''' <returns></returns>
@@ -26,6 +27,7 @@
         Else
             tmpResult = False
         End If
+        ' was ist mit dem entsprechenden Summary Projekt ... 
         Dim skey As String = calcProjektKey(portfolioName, portfolioVName)
 
         Dim hproj As clsProjekt = AlleProjekte.getProject(key:=skey)
@@ -168,16 +170,23 @@
 
     ''' <summary>
     ''' ersetzt oder fügt eine neue Konstellation mit dem Namen ein 
+    ''' das wird die neue Konstellation , das heisst es muss auch ein neues Summary Projekt für diese Konstellation gemacht werden  
     ''' </summary>
     ''' <param name="item"></param>
     ''' <remarks></remarks>
     Public Sub update(item As clsConstellation)
+
+        Me.clearLoadedPortfolios()
 
         If Me._allConstellations.ContainsKey(item.constellationName) Then
             Me._allConstellations.Remove(item.constellationName)
         End If
 
         Me._allConstellations.Add(item.constellationName, item)
+
+        ' jetzt das in loadedSessionPortfolios reinbringen 
+        Me.addToLoadedSessionPortfolios(item.constellationName)
+
     End Sub
 
     Sub Remove(ByVal key As String)

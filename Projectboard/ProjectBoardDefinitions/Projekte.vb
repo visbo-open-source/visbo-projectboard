@@ -5823,6 +5823,7 @@ Public Module Projekte
                     .Values = tdatenreihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
+
                 End With
 
                 If Not IsNothing(vglproj) Then
@@ -11690,7 +11691,7 @@ Public Module Projekte
                 End If
 
                 .variantName = vName
-                .Id = projectNummer
+                .kundenNummer = projectNummer
                 .getPhase(1).nameID = rootPhaseName
                 .VorlagenName = vorlagenName
                 .startDate = startDate
