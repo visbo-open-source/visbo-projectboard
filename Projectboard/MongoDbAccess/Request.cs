@@ -1145,6 +1145,8 @@ namespace MongoDbAccess
             // in der Datenbank sind die Zeiten als Universal time gespeichert .. 
             // deshalb muss hier umgerechnet werden 
             storedatOrBefore = storedatOrBefore.ToUniversalTime();
+            zeitraumStart = zeitraumStart.ToUniversalTime();
+            zeitraumEnde = zeitraumEnde.ToUniversalTime();
             
             int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
             
@@ -1205,6 +1207,8 @@ namespace MongoDbAccess
             // deshalb muss hier umgerechnet werden 
             storedLatest = storedLatest.ToUniversalTime();
             storedEarliest = storedEarliest.ToUniversalTime();
+            zeitraumStart = zeitraumStart.ToUniversalTime();
+            zeitraumEnde = zeitraumEnde.ToUniversalTime();
 
             if (onlyLatest)
             {
@@ -1446,6 +1450,8 @@ namespace MongoDbAccess
         public bool storeRoleDefinitionToDB(clsRollenDefinition role, bool insertNewDate, DateTime ts)
         {
             bool tmpResult = true;
+            ts = ts.ToUniversalTime();
+
             try
             {
                 var roleDB = new clsRollenDefinitionDB();
@@ -1544,6 +1550,8 @@ namespace MongoDbAccess
         public bool storeCostDefinitionToDB(clsKostenartDefinition cost, bool insertNewDate, DateTime ts)
         {
             bool tmpResult = true;
+            ts = ts.ToUniversalTime();
+
             try
             {
                 var costDefDB = new clsKostenartDefinitionDB();

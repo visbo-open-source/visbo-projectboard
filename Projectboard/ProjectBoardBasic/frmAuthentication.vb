@@ -153,7 +153,27 @@ Public Class frmAuthentication
     End Sub
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        chbx_remember.Checked = awinSettings.rememberUserPwd
+        Try
+            'chbx_remember.Checked = awinSettings.rememberUserPwd
+            If chbx_remember.Checked Then
+
+                Dim cipherText As String = awinSettings.userNamePWD
+                Dim pwd As String
+                Dim user As String
+
+                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+
+                user = visboCrypto.getUserNameFromCipher(cipherText)
+                pwd = visboCrypto.getPwdFromCipher(cipherText)
+
+                benutzer.Text = user
+                maskedPwd.Text = pwd
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
     End Sub
 
     Private Sub chbx_remember_CheckedChanged(sender As Object, e As EventArgs) Handles chbx_remember.CheckedChanged
@@ -163,5 +183,9 @@ Public Class frmAuthentication
         Else
             awinSettings.rememberUserPwd = False
         End If
+    End Sub
+
+    Private Sub benutzer_TextChanged(sender As Object, e As EventArgs) Handles benutzer.TextChanged
+
     End Sub
 End Class

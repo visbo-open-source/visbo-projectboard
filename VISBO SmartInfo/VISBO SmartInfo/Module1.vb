@@ -1341,7 +1341,7 @@ Module Module1
         'awinSettings.visboServer = False   ' Zugriff zu DB soll über REST-Server erfolgen
         If awinSettings.visboServer Then
             ' remembered UserNamePWD bei serverzugriff löschen
-            My.Settings.userNamePWD = Nothing
+            'My.Settings.userNamePWD = Nothing
         End If
         ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
         If noDBAccessInPPT Then
@@ -1370,7 +1370,7 @@ Module Module1
                         My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
                     Else
                         ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
-                        noDBAccessInPPT = Not autoVisboLogin(My.Settings.userNamePWD)
+                        'noDBAccessInPPT = Not autoVisboLogin(My.Settings.userNamePWD)
 
                         ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
                         If noDBAccessInPPT Then
