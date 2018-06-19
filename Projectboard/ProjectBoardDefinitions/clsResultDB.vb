@@ -16,6 +16,9 @@ Public Class clsResultDB
     Public originalName As String
     Public appearance As String
 
+    Public docURL As String
+    Public docUrlAppID As String
+
     Public deliverables As List(Of String)
     Public percentDone As Double
 
@@ -47,6 +50,15 @@ Public Class clsResultDB
                     .nameID = calcHryElemKey(Me.name, True)
                 Else
                     .nameID = Me.name
+                End If
+
+                ' jetzt kommen die Doumenten Folder und AppIDs
+                If Not IsNothing(Me.docURL) Then
+                    .DocURL = Me.docURL
+                End If
+
+                If Not IsNothing(Me.docUrlAppID) Then
+                    .DocUrlAppID = Me.docUrlAppID
                 End If
 
                 .verantwortlich = Me.verantwortlich
@@ -138,6 +150,10 @@ Public Class clsResultDB
             Me.originalName = .originalName
             Me.appearance = .appearance
 
+            ' Dokumenten-Url und Applikation
+            Me.docURL = .docURL
+            Me.docUrlAppID = .docUrlAppID
+
             Me.alternativeColor = .individualColor
 
             Me.percentDone = .percentDone
@@ -215,6 +231,8 @@ Public Class clsResultDB
         percentDone = 0.0
         bewertungen = New SortedList(Of String, clsBewertungDB)
         deliverables = New List(Of String)
+        docURL = ""
+        docUrlAppID = ""
 
     End Sub
 

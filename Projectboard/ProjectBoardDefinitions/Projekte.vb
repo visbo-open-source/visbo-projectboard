@@ -21531,7 +21531,7 @@ Public Module Projekte
         End Try
 
         ' --------------------------------------
-        ' Worksheet Termine existriert jetzt ...
+        ' Worksheet Termine existiert jetzt ...
 
         With CType(appInstance.ActiveWorkbook.Worksheets("Termine"), Excel.Worksheet)
 
@@ -21637,16 +21637,19 @@ Public Module Projekte
                 .Cells(rowOffset + zeile, columnOffset + 8).value = cphase.percentDone
                 .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
                 .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                ' Änderung tk 1.11.15:
+                ' Änderung tk 11.5.18 Ergänzung Document Link 
+
+                If Not IsNothing(cphase.DocURL) Then
+                    .Cells(rowOffset + zeile, columnOffset + 9).value = cphase.DocURL
+                End If
 
                 Try
-                    For offs As Integer = 2 To 8
+                    For offs As Integer = 2 To 9
                         .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                     Next
                 Catch ex As Exception
 
                 End Try
-                ' Ende Änderung tk 1.11.15
 
                 zeile = zeile + 1
 
@@ -21692,10 +21695,15 @@ Public Module Projekte
 
                     ' Änderung tk 4.12. Schreiben verantwortlich und percentDone
                     .Cells(rowOffset + zeile, columnOffset + 7).value = cResult.verantwortlich
+
                     .Cells(rowOffset + zeile, columnOffset + 8).value = cResult.percentDone
                     .Cells(rowOffset + zeile, columnOffset + 8).NumberFormat = "0%"
                     .Cells(rowOffset + zeile, columnOffset + 8).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
 
+                    ' Schreiben des Dokumenten-Links
+                    If Not IsNothing(cResult.DocURL) Then
+                        .Cells(rowOffset + zeile, columnOffset + 9).value = cResult.DocURL
+                    End If
                     '
                     ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
                     Try
@@ -21709,7 +21717,7 @@ Public Module Projekte
                         End If
 
 
-                        For offs As Integer = 2 To 8
+                        For offs As Integer = 2 To 9
                             .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                         Next
                     Catch ex As Exception

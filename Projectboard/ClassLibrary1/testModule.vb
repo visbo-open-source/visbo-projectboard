@@ -13546,12 +13546,12 @@ Public Module testModule
                 End If
 
 
-                Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                            fullBreadCrumb, cphase.name, shortText, originalName, _
-                                            bestShortName, bestLongName, _
-                                            cphase.getStartDate, cphase.getEndDate, _
-                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
-                                            cphase.verantwortlich, cphase.percentDone)
+                Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                                            fullBreadCrumb, cphase.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            cphase.getStartDate, cphase.getEndDate,
+                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
+                                            cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
 
             End If
 
@@ -13617,12 +13617,12 @@ Public Module testModule
                         originalName = Nothing
                     End If
 
-                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                                fullBreadCrumb, cphase.name, shortText, originalName, _
-                                                bestShortName, bestLongName, _
-                                                cphase.getStartDate, cphase.getEndDate, _
-                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
-                                                cphase.verantwortlich, cphase.percentDone)
+                    Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                                                fullBreadCrumb, cphase.name, shortText, originalName,
+                                                bestShortName, bestLongName,
+                                                cphase.getStartDate, cphase.getEndDate,
+                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
+                                                cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
 
                 End If
 
@@ -15783,12 +15783,12 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTShapeInfo(copiedShape(1), _
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing, _
-                                                        Nothing, Nothing, _
-                                                        hproj.startDate, hproj.endeDate, _
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
-                                                        hproj.leadPerson, Nothing)
+                            Call addSmartPPTShapeInfo(copiedShape(1),
+                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
+                                                        Nothing, Nothing,
+                                                        hproj.startDate, hproj.endeDate,
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
 
                         End If
 
@@ -15809,12 +15809,12 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTShapeInfo(copiedShape(1), _
-                                                        Nothing, hproj.getShapeText, Nothing, Nothing, _
-                                                        Nothing, Nothing, _
-                                                        hproj.startDate, hproj.endeDate, _
-                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
-                                                        hproj.leadPerson, Nothing)
+                            Call addSmartPPTShapeInfo(copiedShape(1),
+                                                        Nothing, hproj.getShapeText, Nothing, Nothing,
+                                                        Nothing, Nothing,
+                                                        hproj.startDate, hproj.endeDate,
+                                                        hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                                                        hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
 
                         End If
 
@@ -15899,12 +15899,12 @@ Public Module testModule
 
                         If awinSettings.mppEnableSmartPPT Then
 
-                            Call addSmartPPTShapeInfo(copiedShape(1), _
-                                                   Nothing, hproj.getShapeText, Nothing, Nothing, _
-                                                   Nothing, Nothing, _
-                                                   hproj.startDate, hproj.endeDate, _
-                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing, _
-                                                   hproj.leadPerson, Nothing)
+                            Call addSmartPPTShapeInfo(copiedShape(1),
+                                                   Nothing, hproj.getShapeText, Nothing, Nothing,
+                                                   Nothing, Nothing,
+                                                   hproj.startDate, hproj.endeDate,
+                                                   hproj.ampelStatus, hproj.ampelErlaeuterung, Nothing,
+                                                   hproj.leadPerson, hproj.getPhase(1).percentDone, hproj.getPhase(1).DocURL)
 
                         End If
 
@@ -16283,12 +16283,12 @@ Public Module testModule
                                         originalName = Nothing
                                     End If
 
-                                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                                                fullBreadCrumb, cphase.name, shortText, originalName, _
-                                                                bestShortName, bestLongName, _
-                                                                phaseStart, phaseEnd, _
-                                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
-                                                                cphase.verantwortlich, cphase.percentDone)
+                                    Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                                                                fullBreadCrumb, cphase.name, shortText, originalName,
+                                                                bestShortName, bestLongName,
+                                                                phaseStart, phaseEnd,
+                                                                cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
+                                                                cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
                                 End If
 
                                 phShapeNames.Add(copiedShape(1).Name)
@@ -16979,12 +16979,12 @@ Public Module testModule
             End If
 
             Dim lieferumfaenge As String = MS.getAllDeliverables("#")
-            Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                        fullBreadCrumb, MS.name, shortText, originalName, _
-                                        bestShortName, bestLongName, _
-                                        Nothing, msdate, _
-                                        MS.getBewertung(1).colorIndex, MS.getBewertung(1).description, _
-                                        lieferumfaenge, MS.verantwortlich, MS.percentDone)
+            Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                                        fullBreadCrumb, MS.name, shortText, originalName,
+                                        bestShortName, bestLongName,
+                                        Nothing, msdate,
+                                        MS.getBewertung(1).colorIndex, MS.getBewertung(1).description,
+                                        lieferumfaenge, MS.verantwortlich, MS.percentDone, MS.DocURL)
         End If
 
         msShapeNames.Add(copiedShape.Item(1).Name)
@@ -17246,12 +17246,12 @@ Public Module testModule
                     originalName = Nothing
                 End If
 
-                Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                            fullBreadCrumb, cphase.name, shortText, originalName, _
-                                            bestShortName, bestLongName, _
-                                            phStartDate, phEndDate, _
-                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"), _
-                                            cphase.verantwortlich, cphase.percentDone)
+                Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                                            fullBreadCrumb, cphase.name, shortText, originalName,
+                                            bestShortName, bestLongName,
+                                            phStartDate, phEndDate,
+                                            cphase.ampelStatus, cphase.ampelErlaeuterung, cphase.getAllDeliverables("#"),
+                                            cphase.verantwortlich, cphase.percentDone, cphase.DocURL)
             End If
 
         End If
@@ -17465,12 +17465,12 @@ Public Module testModule
                         End If
 
                         Dim lieferumfaenge As String = cMilestone.getAllDeliverables("#")
-                        Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                                    fullBreadCrumb, cMilestone.name, shortText, originalName, _
-                                                    bestShortName, bestLongName, _
-                                                    Nothing, msDate, _
-                                                    cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
-                                                    lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone)
+                        Call addSmartPPTShapeInfo(copiedShape.Item(1),
+                                                    fullBreadCrumb, cMilestone.name, shortText, originalName,
+                                                    bestShortName, bestLongName,
+                                                    Nothing, msDate,
+                                                    cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
+                                                    lieferumfaenge, cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
                     End If
 
                     shapeNames.Add(.Name)

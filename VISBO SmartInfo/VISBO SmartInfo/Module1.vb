@@ -1479,7 +1479,6 @@ Module Module1
                 End If
 
 
-
                 ' den Short Name behandeln ...
                 tmpName = tmpShape.Tags.Item("SN")
                 If tmpName.Trim.Length = 0 Then
@@ -1559,8 +1558,12 @@ Module Module1
                 Catch ex As Exception
 
                 End Try
-                
+
             End If
+
+            ' Document Links behandeln ...
+            tmpName = tmpShape.Tags.Item("DUC")
+
 
             ' wurde das Element verschoben ? 
             ' SmartslideLists werden auch gleich mit aktualisiert ... 
@@ -2664,9 +2667,9 @@ Module Module1
                             Dim bsn As String = tmpShape.Tags.Item("BSN")
                             Dim bln As String = tmpShape.Tags.Item("BLN")
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
-                                                      ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
-                                                      ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
+                            Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                                                      ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
+                                                      ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
                         End If
 
 
@@ -2696,9 +2699,9 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing, _
-                                                          ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description, _
-                                                          ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone)
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
+                                                          ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description,
+                                                          ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone, ms.DocURL)
                             End If
 
 
@@ -2724,9 +2727,9 @@ Module Module1
                                 Dim bsn As String = tmpShape.Tags.Item("BSN")
                                 Dim bln As String = tmpShape.Tags.Item("BLN")
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate, _
-                                                             ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
-                                                             ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
+                                Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
+                                                             ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
+                                                             ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
                             End If
 
                         End If
@@ -5142,9 +5145,9 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing, _
-                                                  cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description, _
-                                                  cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone)
+                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
+                                                  cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
+                                                  cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
 
 
                         If Not versionAlreadyNotedAtMS Then
@@ -5170,9 +5173,9 @@ Module Module1
                         Dim elemName As String = origShape.Tags.Item("CN")
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen der Phase gesetzt werden 
-                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, _
-                                                  ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung, _
-                                                  ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
+                        Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
+                                                  ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
+                                                  ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
                     End If
 
                     If Not versionAlreadyNotedAtPH Then
@@ -5625,6 +5628,10 @@ Module Module1
                             .eleName.Text = bestimmeSymbolName(tmpShape)
                             .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
 
+                            ' Dokumenten Links ausblenden 
+                            .setLinksToVisible(False)
+                            .setLinkValues(tmpShape)
+
                         End With
                     Else
                         With ucPropertiesView
@@ -5661,9 +5668,14 @@ Module Module1
 
                             .eleRespons.Text = bestimmeElemVE(tmpShape)
 
+                            ' die Link Buttons grundsätzlich einblenden 
+                            .setLinksToVisible(True)
+                            .setLinkValues(tmpShape)
+
+
                         End With
                     End If
-                    
+
 
                 ElseIf selectedPlanShapes.Count > 1 Then
 
@@ -5684,6 +5696,14 @@ Module Module1
                         .eleAmpelText.Text = ""
                         .eleAmpel.BackColor = Drawing.Color.Silver
                         .percentDone.Text = ""
+
+                        .documentsLink = ""
+                        .myDocumentsLink = ""
+
+                        ' Dokumenten Links ausblenden 
+                        .setLinksToVisible(False)
+                        .setLinkValues(Nothing)
+
                     End With
 
                 End If
@@ -5697,6 +5717,10 @@ Module Module1
                     .eleAmpelText.Text = ""
                     .eleRespons.Text = ""
                     .percentDone.Text = ""
+
+                    .documentsLink = ""
+                    .myDocumentsLink = ""
+
                 End With
 
             End If
