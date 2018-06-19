@@ -13279,7 +13279,10 @@ Public Module awinGeneralModules
                                     ' in diesem Fall das mySettings setzen 
                                     Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
                                     awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+
                                 End If
+                            Else
+
                             End If
 
                         End If

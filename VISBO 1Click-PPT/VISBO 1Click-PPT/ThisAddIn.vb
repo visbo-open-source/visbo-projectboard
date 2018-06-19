@@ -44,6 +44,7 @@ Public Class ThisAddIn
             awinSettings.visboMapping = My.Settings.VISBOMapping
             awinSettings.visboServer = My.Settings.VISBOServer
             awinSettings.userNamePWD = My.Settings.userNamePWD
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
 
             dbUsername = ""

@@ -100,6 +100,7 @@ Public Class ThisWorkbook
                 awinSettings.visboMapping = My.Settings.VISBOMapping
                 awinSettings.visboDebug = My.Settings.VISBODebug
                 awinSettings.visboServer = My.Settings.VISBOServer
+                awinSettings.userNamePWD = My.Settings.userNamePWD
 
             End If
 

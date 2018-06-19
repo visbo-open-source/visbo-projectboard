@@ -2177,7 +2177,8 @@ Module oneClickGeneralModules
 
                 Else
                     ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
-                    noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
+                    ' ur: 19.06.2018
+                    'noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
 
                     ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
                     If noDBAccess Then
@@ -2191,37 +2192,29 @@ Module oneClickGeneralModules
                             End If
                         End If
 
-                        If noDBAccess Then
-                            If englishLanguage Then
-                                msg = "no database access ... "
-                            Else
-                                msg = "kein Datenbank Zugriff ... "
-                            End If
-                            Call MsgBox(msg)
-                        Else
-                            ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
-                            'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                            RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                            CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
-                        End If
-                    Else
-                        If englishLanguage Then
-                            If englishLanguage Then
-                                msg = "no database URL information available ... "
-                            Else
-                                msg = "keine Datenbank URL verfügbar ... "
-                            End If
-                            Call MsgBox(msg)
-                        End If
                     End If
+
                 End If
 
             End If
 
         End If
 
+        If noDBAccess Then
+            If englishLanguage Then
+                msg = "no database access ... "
+            Else
+                msg = "kein Datenbank Zugriff ... "
+            End If
+            Call MsgBox(msg)
+        Else
+            ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+            'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+            RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+            CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+        End If
 
         logInToMongoDB = Not noDBAccess
 

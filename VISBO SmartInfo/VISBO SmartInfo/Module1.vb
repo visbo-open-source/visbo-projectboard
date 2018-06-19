@@ -1372,6 +1372,8 @@ Module Module1
                         ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
                         'noDBAccessInPPT = Not autoVisboLogin(My.Settings.userNamePWD)
 
+                        awinSettings.userNamePWD = My.Settings.userNamePWD
+
                         ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
                         If noDBAccessInPPT Then
                             noDBAccessInPPT = Not loginProzedur()
@@ -6147,6 +6149,9 @@ Module Module1
     ''' <param name="newdate"></param>
     ''' <remarks></remarks>
     Public Sub performBtnAction(ByVal newdate As Date)
+
+        ' Versuch den Undo-Stack zu löschen
+        pptAPP.StartNewUndoEntry()
 
 
         If newdate <> currentTimestamp Then

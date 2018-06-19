@@ -4,13 +4,13 @@
     Public Property VPsId As SortedList(Of String, clsVP)
 
     Public Property VPvs As SortedList(Of String, SortedList(Of String, clsVarTs))
-    Public Property updateDelay As Long = 60
+    Public Property updateDelay As Long
     'Public Property varTsListe As SortedList(Of String, clsVarTs)
     Public Sub New()
         _VPsN = New SortedList(Of String, clsVP)
         _VPsId = New SortedList(Of String, clsVP)
         _VPvs = New SortedList(Of String, SortedList(Of String, clsVarTs))
-        _updateDelay = 5
+        _updateDelay = 60
     End Sub
 
 

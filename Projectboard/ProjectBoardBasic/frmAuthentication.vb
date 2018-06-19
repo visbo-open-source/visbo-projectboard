@@ -131,21 +131,29 @@ Public Class frmAuthentication
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
-                ' mongoDBAcc = Request
+                ' login am Rest-Server/mongoDB hat funktioniert
 
                 ' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
-                ' mongoDBAcc = token
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
+
+                If awinSettings.rememberUserPwd Then
+
+                    ' Username Passwort verschlüsselt merken
+                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                    awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+
+                End If
+
                 messageBox.Text = ""
-                DialogResult = System.Windows.Forms.DialogResult.OK
+                    DialogResult = System.Windows.Forms.DialogResult.OK
 
 
-                '' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
-                '' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
-                ' Dim initOK As Integer = CType(mongoDBAcc, MongoDbAccess.Request).initWriteProtectionsOnce(dbUsername)
+                    '' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
+                    '' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
+                    ' Dim initOK As Integer = CType(mongoDBAcc, MongoDbAccess.Request).initWriteProtectionsOnce(dbUsername)
 
-            End If
+                End If
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -154,21 +162,26 @@ Public Class frmAuthentication
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
-            'chbx_remember.Checked = awinSettings.rememberUserPwd
-            If chbx_remember.Checked Then
 
-                Dim cipherText As String = awinSettings.userNamePWD
-                Dim pwd As String
-                Dim user As String
+            Dim cipherText As String = awinSettings.userNamePWD
+            Dim pwd As String = ""
+            Dim user As String = ""
+
+            If awinSettings.rememberUserPwd Then
 
                 Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
 
                 user = visboCrypto.getUserNameFromCipher(cipherText)
                 pwd = visboCrypto.getPwdFromCipher(cipherText)
 
-                benutzer.Text = user
-                maskedPwd.Text = pwd
+                chbx_remember.Checked = True
+            Else
+                chbx_remember.Checked = False
             End If
+
+            benutzer.Text = user
+            maskedPwd.Text = pwd
+
 
         Catch ex As Exception
 

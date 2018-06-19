@@ -50,7 +50,6 @@ Public Class Request
     'Private webVPvs As clsWebVPv = Nothing
     'Private aktVPv As clsWebLongVPv = Nothing
 
-    Private updateDelay As Long = 5
 
 
 

@@ -24,21 +24,7 @@ Public Class Request
 
     Private usedWebServer As Boolean = awinSettings.visboServer
     Private DBAcc As Object
-    'Public aktVCid As String = ""
 
-    Public token As String = ""
-    'Private VCs As New List(Of clsVC)
-    'Private VPs As New List(Of clsVP)
-    'Private aktUser As clsUserReg = Nothing
-
-    'Private webVCs As clsWebVC = Nothing
-
-    'Private aktVC As clsWebVC = Nothing
-    'Private webVPs As clsWebVP = Nothing
-
-    'Private aktVP As clsWebVP = Nothing
-    'Private webVPvs As clsWebVPv = Nothing
-    'Private aktVPv As clsWebLongVPv = Nothing
 
     ''' <summary>
     '''  'Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort)
@@ -47,7 +33,7 @@ Public Class Request
     ''' <param name="databaseName">entspricht beim Visbo-Rest-Server dem VisboCenter</param>
     ''' <param name="username"></param>
     ''' <param name="dbPasswort"></param>
-    Public Function login(ByVal URL As String, ByVal databaseName As String, ByVal username As String, ByVal dbPasswort As String) As String
+    Public Function login(ByVal URL As String, ByVal databaseName As String, ByVal username As String, ByVal dbPasswort As String) As Boolean
 
 
         Dim loginOK As Boolean = False
@@ -56,9 +42,8 @@ Public Class Request
             If usedWebServer Then
 
                 Dim access As New WebServerAcc.Request
-                token = access.login(ServerURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort)
-                If token <> "" Then
-                    loginOK = True
+                loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort)
+                If loginOK Then
                     DBAcc = access
                 End If
 

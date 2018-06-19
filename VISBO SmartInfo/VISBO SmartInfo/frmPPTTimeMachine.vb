@@ -188,6 +188,8 @@
     ''' <remarks></remarks>
     Private Sub performBtnAction(ByVal newdate As Date)
 
+        ' Versuch den Undo-Stack zurückzusetzen
+        pptAPP.StartNewUndoEntry()
 
         If newdate <> currentTimestamp Then
 
