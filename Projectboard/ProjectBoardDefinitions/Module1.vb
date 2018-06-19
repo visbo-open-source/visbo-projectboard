@@ -4816,6 +4816,30 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
+    ''' </summary>
+    ''' <param name="text"></param>
+    Public Sub logfileSchreiben(ByVal text() As String)
+
+        Dim obj As Object
+        Try
+            Dim anzSpalten As Integer = text.Length
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                For ix As Integer = 1 To anzSpalten
+                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
+                Next
+                CType(.Cells(1, anzSpalten + 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, anzSpalten + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+            End With
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    ''' <summary>
     ''' öffnet das LogFile
     ''' </summary>
     ''' <remarks></remarks>

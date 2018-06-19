@@ -7588,6 +7588,11 @@ Public Module awinGeneralModules
         Dim lastRow As Integer = -1
         Dim updatedProjects As Integer = 0
 
+        Dim logF_Fehler As Integer = 0
+        ' nimmt die Texte für die LogFile Zeile auf
+        ' Array kann beliebig lang werden 
+        Dim logArray() As String
+
 
         ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
         ' das aktive Sheet muss das richtige sein ... und die richtige Header Struktur haben 
@@ -7611,13 +7616,16 @@ Public Module awinGeneralModules
                 Exit Sub
             End If
 
+            ' hier wird das Logfile jetzt geöffnet 
+            Call logfileOpen()
+
             With currentWS
 
                 Dim zeile As Integer = 2
                 lastRow = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 ' welche Werte sollen ausgelesen werden, wo stehen die 
-                Dim colISExtern As String = CType(.Range("B1"), Excel.Range).Column
+                Dim colISExtern As Integer = CType(.Range("B1"), Excel.Range).Column
                 Dim colResource As Integer = CType(.Range("C1"), Excel.Range).Column
                 Dim colProjectNr As Integer = CType(.Range("D1"), Excel.Range).Column
                 Dim colPname As Integer = CType(.Range("E1"), Excel.Range).Column
@@ -7630,7 +7638,11 @@ Public Module awinGeneralModules
 
                 Dim cacheProjekte As New clsProjekteAlle
 
-                Dim handledNames As New SortedList(Of String, Boolean)
+                ' im key steht der NAme aus der Datei , im Value steht der Name i CacheProjekte
+                Dim handledNames As New SortedList(Of String, String)
+                ' nimmt die unbekannten / nicht erkannten Role-Names auf 
+                Dim unKnownRoleNames As New SortedList(Of String, Boolean)
+
                 ' 1. Schleife: ermittle die Menge aller bekannten Projekte ... 
                 While zeile <= lastRow
 
@@ -7644,7 +7656,8 @@ Public Module awinGeneralModules
                         Dim isExtern As Boolean = False
 
                         Try
-                            isExtern = (CStr(CType(.Cells(zeile, colISExtern), Excel.Range).Value).Trim = "Extern")
+                            Dim tstExtern As String = CStr(CType(.Cells(zeile, colISExtern), Excel.Range).Value)
+                            isExtern = (tstExtern = "Extern")
                         Catch ex1 As Exception
                             isExtern = False
                         End Try
@@ -7660,19 +7673,25 @@ Public Module awinGeneralModules
                             ' wenn ok = true zurück kommt, dann ist in cacheProjekte das Projekt mit Varianten-Name "" drin .. 
                             If isKnownProject(pName, tmpPNr, cacheProjekte) Then
                                 shallContinue = True
-                                handledNames.Add(tmpPName, True)
+                                handledNames.Add(tmpPName, pName)
                             Else
                                 ' Projekt nicht erkannt 
-                                outPutLine = "unbekannt: " & pName
+                                outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
                                 outputCollection.Add(outPutLine)
 
+                                ReDim logArray(2)
+                                logArray(0) = "unbekanntes Projekt / PNr:"
+                                logArray(1) = pName
+                                logArray(2) = tmpPNr
+                                Call logfileSchreiben(logArray)
+
                                 shallContinue = False
-                                handledNames.Add(tmpPName, False)
+                                handledNames.Add(tmpPName, "")
 
                             End If
 
                         Else
-                            shallContinue = handledNames.Item(tmpPName)
+                            shallContinue = (handledNames.Item(tmpPName).Length > 0)
                         End If
 
                         If shallContinue And curMonat >= 1 And curMonat <= monat And curValue >= 0 Then
@@ -7682,7 +7701,7 @@ Public Module awinGeneralModules
                             ' jetzt wird eine sortedlist of sortedlist aufgebaut
                             ' Projekte, dann Rollen mit Values 
                             ' 
-
+                            pName = handledNames.Item(tmpPName)
                             Dim pvkey As String = calcProjektKey(pName, "")
                             oldProj = cacheProjekte.getProject(pvkey)
 
@@ -7692,8 +7711,17 @@ Public Module awinGeneralModules
 
                                 If roleName = "" Then
 
-                                    outPutLine = "unbekannt: " & fullRoleName
-                                    outputCollection.Add(outPutLine, outPutLine)
+                                    If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
+                                        unKnownRoleNames.Add(fullRoleName, True)
+                                        outPutLine = "unbekannt: " & fullRoleName
+                                        outputCollection.Add(outPutLine)
+
+                                        ReDim logArray(1)
+                                        logArray(0) = "unbekannte Rolle:"
+                                        logArray(1) = fullRoleName
+                                        Call logfileSchreiben(logArray)
+                                    End If
+
 
                                 Else
                                     ' Aufbauen des Eintrags
@@ -7734,7 +7762,10 @@ Public Module awinGeneralModules
 
                             Else
                                 ' darf/kann eigentlich nicht sein ...
-                                Call MsgBox("How come ?")
+                                ReDim logArray(1)
+                                logArray(0) = "Projekt Fehler 100411: "
+                                logArray(1) = pvkey
+                                Call logfileSchreiben(logArray)
                             End If
 
                         End If
@@ -7743,6 +7774,12 @@ Public Module awinGeneralModules
                     Catch ex As Exception
                         outPutLine = "Fehler: " & ex.Message
                         outputCollection.Add(outPutLine)
+
+                        ' darf/kann eigentlich nicht sein ...
+                        ReDim logArray(1)
+                        logArray(0) = "Projekt Fehler 100413 in Zeile: "
+                        logArray(1) = zeile.ToString
+                        Call logfileSchreiben(logArray)
                     End Try
 
                     zeile = zeile + 1
@@ -7750,25 +7787,49 @@ Public Module awinGeneralModules
                 End While
 
                 ' jetzt kommt die zweite Bearbeitungs-Welle
-                ' es ist jetzt klar, wieviele gültige Projekte drin sind
-                ' jetzt sollen alle Rollen und deren Werte ausgelesen werden 
+                ' das Rausschreiben der Test Records 
 
-                zeile = 2
-                While zeile <= lastRow
 
-                    Try
+                For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
-                    Catch ex As Exception
+                    Dim protocolLine As String = ""
+                    For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
 
-                    End Try
+                        ' jetzt schreiben 
 
-                End While
+                        ReDim logArray(rVKvP.Value.Length - 1 + 2)
+                        logArray(0) = vPKvP.Key
+                        logArray(1) = rVKvP.Key
+
+                        Dim dblValues As String = ""
+                        For i As Integer = 0 To rVKvP.Value.Length - 1
+                            logArray(2 + i) = rVKvP.Value(i).ToString("#0.#")
+                        Next
+
+                        Call logfileSchreiben(logArray)
+                    Next
+
+                Next
+                Call logfileSchliessen()
+
+
+                ' es wird pro Projekt eine Variante erzeugt 
+                ' die Rollen des referenzierten Fachbereichs werden in den ActualData Monaten gelöscht 
+                ' die neuen Rollen werden eingetragen 
+                ' 
+
+
 
 
             End With
 
 
         Catch ex As Exception
+            ReDim logArray(1)
+            logArray(0) = "Exception aufgetreten 100457: "
+            logArray(1) = ex.Message
+            Call logfileSchreiben(logArray)
+            Call logfileSchliessen()
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 
@@ -7892,8 +7953,8 @@ Public Module awinGeneralModules
         Dim fctResult As Boolean = False
         Dim oldProj As clsProjekt = Nothing
         Dim anzFehler As Integer = 0 ' wird als Platzhalter Variable für logFile schreiben benötigt ...
-        Dim hauptMsg As String = ""
-        Dim addOnMsg As String = ""
+        Dim logArray() As String
+
 
         If IsNothing(pname) Then
             fctResult = False
@@ -7932,22 +7993,26 @@ Public Module awinGeneralModules
 
                     If pNames.Count = 1 Then
 
-                        Dim alternativePName As String = pNames.Item(1)
+                        Dim visboDBname As String = pNames.Item(1)
 
-                        If request.projectNameAlreadyExists(alternativePName, "", storedAtOrBefore) Then
-                            oldProj = request.retrieveOneProjectfromDB(alternativePName, "", storedAtOrBefore)
+                        If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
+                            oldProj = request.retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
                         End If
 
                         If Not IsNothing(oldProj) Then
                             projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                             fctResult = True
 
-                            hauptMsg = "Projekt-Nummer: " & projektKDNr & "; Name in PlanView: " & pname
-                            addOnMsg = " / Name in VISBO Datenbank: " & alternativePName
-                            Call logfileSchreiben(hauptMsg, addOnMsg, anzFehler)
+                            ReDim logArray(3)
+                            logArray(0) = "erfolgreiches Mapping anhand P-Nr, PlanView, Visbo"
+                            logArray(1) = projektKDNr
+                            logArray(2) = pname
+                            logArray(3) = visboDBname
+
+                            Call logfileSchreiben(logArray)
 
                             ' damit an der aufrufenden Stelle der richtige pName steht ...
-                            pname = alternativePName
+                            pname = visboDBname
                         Else
                             fctResult = False
                         End If
@@ -7955,19 +8020,17 @@ Public Module awinGeneralModules
 
                     ElseIf pNames.Count > 1 Then
                         ' Eintrag in Log-File 
-                        addOnMsg = ""
+                        ReDim logArray(2 + pNames.Count)
+                        logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt: "
+                        logArray(1) = projektKDNr.ToString
 
+                        Dim ix As Integer = 0
                         For Each tmpName In pNames
-                            If addOnMsg = "" Then
-                                addOnMsg = tmpName
-                            Else
-                                addOnMsg = addOnMsg & "; " & tmpName
-                            End If
-
+                            logArray(2 + ix) = tmpName
+                            ix = ix + 1
                         Next
 
-                        hauptMsg = "Mehrfach Zuordnung P-Nr -> Projekt: " & projektKDNr & " -> "
-                        Call logfileSchreiben(hauptMsg, addOnMsg, anzFehler)
+                        Call logfileSchreiben(logArray)
 
                         fctResult = False
                     Else
