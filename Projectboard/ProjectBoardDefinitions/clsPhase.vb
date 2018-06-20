@@ -781,8 +781,8 @@ Public Class clsPhase
 
 
         Try
-
-            projektStartdate = Me.parentProject.startDate
+            ' Änderung tk, 20.6.18 .startDate.Date um zu normieren ..
+            projektStartdate = Me.parentProject.startDate.Date
             projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
@@ -922,8 +922,8 @@ Public Class clsPhase
 
 
         Try
-
-            projektStartdate = Me.parentProject.startDate
+            ' Änderung tk 20.6.18 .startDate.Date um zu normieren 
+            projektStartdate = Me.parentProject.startDate.Date
             projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
