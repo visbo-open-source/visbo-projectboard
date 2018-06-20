@@ -159,7 +159,7 @@ Public Class ThisWorkbook
             If .Width < 1100 Then
                 .Zoom = 80
             ElseIf .Width < 1400 Then
-                .zomm = 90
+                .Zoom = 90
             Else
                 .Zoom = 100
             End If
