@@ -86,7 +86,7 @@
               <!--label="Import Excel"-->
               <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Folder 'Import\RPLAN-Excel' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
               <!--label="Import MS Project"-->
-              <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="false" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
+              <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
               <!--label="Import RPLAN RXF"-->
               <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
               <menuSeparator id="menuSeparator1"/>

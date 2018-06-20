@@ -3847,9 +3847,22 @@ Public Module awinGeneralModules
                 ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
                 '' ''For proj_i = beginnProjekt To endeProjekt
 
+                ' Herausfinden, welches Startdatum des Projektes das früheste ist, da sonst die RootPhase zu spät anfängt
+                ' und manche Phasen dann einen negative startoffset bekommen
+                Dim ProjectStartDate As Date
 
+                ProjectStartDate = CDate(msproj.ProjectStart)
 
-                hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
+                If CDate(msproj.Start) < ProjectStartDate Then
+                    ProjectStartDate = CDate(msproj.Start)
+                End If
+
+                If CDate(msproj.EarlyStart) < ProjectStartDate Then
+                    ProjectStartDate = CDate(msproj.EarlyStart)
+                End If
+
+                ' Projekt nun mit diesem Startdatum anlegen
+                hproj = New clsProjekt(ProjectStartDate, ProjectStartDate, ProjectStartDate)
 
                 hproj.Erloes = 0
 
@@ -3940,7 +3953,7 @@ Public Module awinGeneralModules
                     ' hier muss der Uniquename(ID) erzeugt werden evt. aus PhaseDefinitions
 
                     If Not CType(msTask.Milestone, Boolean) _
-                        Or _
+                        Or
                         (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
 
                         ' Ergänzung tk für Demo BHTC 
@@ -4105,6 +4118,9 @@ Public Module awinGeneralModules
                             Dim cphaseStartOffset As Long
                             Dim dauerIndays As Long
                             cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
+                            If cphaseStartOffset < 0 Then
+                                Throw New ArgumentException("Beginn der Task " & msTask.Name & "liegt vor ProjektStart")
+                            End If
                             dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
                             .changeStartandDauer(cphaseStartOffset, dauerIndays)
                             .offset = 0
@@ -4455,7 +4471,7 @@ Public Module awinGeneralModules
                             Or missingMilestoneDefinitions.Contains(msTask.Name) Then
 
                             Dim msBewertung As New clsBewertung
-                            cmilestone.setDate = CType(msTask.Start, Date)
+                            cmilestone.setDate = CType(msTask.Start, Date).Date
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
 
                             'percentDone, falls Customfiels visbo_percentDone definiert ist
