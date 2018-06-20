@@ -99,6 +99,8 @@ Public Class ThisWorkbook
                 awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
                 awinSettings.visboMapping = My.Settings.VISBOMapping
                 awinSettings.visboDebug = My.Settings.VISBODebug
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+                awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
             End If
 
@@ -352,9 +354,6 @@ Public Class ThisWorkbook
             'Dim anzWindows As Integer = appInstance.Windows.Count
 
 
-
-
-
             appInstance.ScreenUpdating = True
 
             If Application.Workbooks.Count <= 1 Then
@@ -362,7 +361,8 @@ Public Class ThisWorkbook
                 'Dim name asstring = Application.Workbooks(1).name
             End If
 
-
+            ' um die Settings abzuspeichern
+            My.Settings.Save()
 
         Catch ex As Exception
 
