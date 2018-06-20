@@ -89,8 +89,7 @@
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
-    <WarningsAsErrors>
-    </WarningsAsErrors>
+    <WarningsAsErrors>41999,42016,42020,42021,42022</WarningsAsErrors>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -105,8 +104,7 @@
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
-    <WarningsAsErrors>
-    </WarningsAsErrors>
+    <WarningsAsErrors>41999,42016,42020,42021,42022</WarningsAsErrors>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <!--

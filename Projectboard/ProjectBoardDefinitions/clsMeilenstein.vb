@@ -587,15 +587,17 @@ Public Class clsMeilenstein
 
         Set(value As Date)
 
-            Dim projektStartDate As Date = Me.Parent.parentProject.startDate
+            ' Änderung tk, 20.6.18 .startdate.Date, um zu normieren  
+            Dim projektStartDate As Date = Me.Parent.parentProject.startDate.Date
             Dim phasenOffset As Integer = Me.Parent.startOffsetinDays
 
-            If DateDiff(DateInterval.Day, projektStartDate, value) < 0 Then
+            If DateDiff(DateInterval.Day, projektStartDate, value.Date) < 0 Then
                 Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString)
 
             Else
                 Try
-                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset), value)
+                    ' Änderung tk, 20.6.18 value.date , um zu normieren ...
+                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset), value.Date)
                 Catch ex As Exception
                     Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString & vbLf & _
                                         ex.Message)
