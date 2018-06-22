@@ -41,11 +41,14 @@
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Mapping</Value>
     </Setting>
-    <Setting Name="userNamePWD" Type="System.String" Scope="Application">
+    <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="mongoDBWithSSL" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="rememberUserPWD" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

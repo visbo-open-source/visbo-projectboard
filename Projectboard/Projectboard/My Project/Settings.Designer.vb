@@ -170,13 +170,16 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("")>  _
-    Public ReadOnly Property userNamePWD() As String
+    Public Property userNamePWD() As String
         Get
             Return CType(Me("userNamePWD"),String)
         End Get
+        Set
+            Me("userNamePWD") = value
+        End Set
     End Property
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
@@ -186,6 +189,17 @@ Partial Public NotInheritable Class MySettings
         Get
             Return CType(Me("mongoDBWithSSL"),Boolean)
         End Get
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute()>  _
+    Public Property rememberUserPWD() As Boolean
+        Get
+            Return CType(Me("rememberUserPWD"),Boolean)
+        End Get
+        Set
+            Me("rememberUserPWD") = value
+        End Set
     End Property
 End Class
 

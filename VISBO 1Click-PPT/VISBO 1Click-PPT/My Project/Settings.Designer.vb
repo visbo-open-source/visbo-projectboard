@@ -184,11 +184,23 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("false")>  _
-    Public ReadOnly Property mongoDBWithSSL() As String
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+    Public ReadOnly Property mongoDBWithSSL() As Boolean
         Get
-            Return CType(Me("mongoDBWithSSL"),String)
+            Return CType(Me("mongoDBWithSSL"),Boolean)
         End Get
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property rememberUserPWD() As Boolean
+        Get
+            Return CType(Me("rememberUserPWD"),Boolean)
+        End Get
+        Set
+            Me("rememberUserPWD") = value
+        End Set
     End Property
 End Class
 

@@ -11,8 +11,8 @@ Imports System.Security.Principal
 Imports System.Diagnostics
 Imports System.Drawing
 Imports System.Windows
-
-
+Imports System.Net
+Imports System.IO
 
 'TODO: Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
 
@@ -5753,6 +5753,8 @@ Imports System.Windows
             ' alle Import Projekte erstmal löschen
             ImportProjekte.Clear(False)
 
+            '' Cursor auf HourGlass setzen
+            Cursor.Current = Cursors.WaitCursor
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
             Dim i As Integer
@@ -5805,6 +5807,9 @@ Imports System.Windows
                 End Try
 
             Next i
+
+            '' Cursor auf Default setzen
+            Cursor.Current = Cursors.Default
 
 
             ' '' ''End If
@@ -12082,6 +12087,30 @@ Imports System.Windows
         enableOnUpdate = True
 
     End Sub
+    Public Sub PTWebRequest(control As IRibbonControl)
+        Dim bytearray() As Byte
+        Dim array As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
+        'Dim request As WebRequest = WebRequest.Create("http://visbo.myhome-server.de:3484/token/user/login")
+        Dim request As WebRequest = WebRequest.Create("http://localhost:3484/token/user/login")
+        request.Method = "POST"
+        request.ContentLength = array.Length
+        request.ContentType = "application/json"
+
+        ReDim bytearray(array.Length)
+        bytearray = UnicodeStringToBytes(array)
+        Try
+            Dim dataStream As Stream = request.GetRequestStream()
+            dataStream.Write(bytearray, 0, bytearray.Length)
+            dataStream.Close()
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+        End Try
+
+        Dim response As WebResponse = request.GetResponse()
+    End Sub
+    Private Function UnicodeStringToBytes(ByVal str As String) As Byte()
+        Return System.Text.Encoding.Unicode.GetBytes(str)
+    End Function
 #End Region
 
 #Region "Hilfsprogramme"

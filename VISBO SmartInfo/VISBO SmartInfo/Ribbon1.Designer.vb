@@ -277,6 +277,7 @@
     End Sub
 
     Private Sub Ribbon1_Close(sender As Object, e As EventArgs) Handles Me.Close
+
         My.Settings.Save()
     End Sub
 
