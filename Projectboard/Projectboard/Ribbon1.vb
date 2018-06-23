@@ -4971,6 +4971,7 @@ Imports System.Windows
 
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
+                        Dim isAllianzImport As Boolean = False
 
                         If scenarioNameP.StartsWith("Allianz-Typ 1") Then
                             Dim startdate As Date = CDate("1.1.2018")
@@ -5006,7 +5007,11 @@ Imports System.Windows
 
                         'sessionConstellationP enthält alle Projekte aus dem Import 
                         Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
-                        Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
+
+                        If isAllianzImport Then
+                            Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
+                        End If
+
                         'Call sessionConstellationP.calcUnionProject(False)
                         'Call sessionConstellationS.calcUnionProject(False)
 

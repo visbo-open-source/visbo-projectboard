@@ -2347,7 +2347,8 @@ Public Module awinGeneralModules
                                     Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
                                 Else
-                                    ' nichts tun 
+                                    ' hier den Parent weiterschalten  
+                                    parents(curLevel) = curRoleName
                                 End If
 
                                 ' weiterschalten ..

@@ -1150,7 +1150,7 @@ namespace MongoDbAccess
             int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
                             
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.projectType == 0)
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.projectType != 1 && c.projectType != 2)
                             .Select(c => c.name)
                             .Distinct()
                             .ToList();

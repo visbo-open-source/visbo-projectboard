@@ -5040,12 +5040,14 @@ Public Module Projekte
                 .Name = repMSg(6) & " " & hproj.timeStamp.ToString("d")
                 '.Name = "Version (" & hproj.timeStamp.ToString("d") & ")"
                 '.Interior.Color = awinSettings.SollIstFarbeC
-                .Interior.Color = visboFarbeBlau
+                '.Interior.Color = visboFarbeBlau
+                .Interior.Color = visboFarbeYellow
                 .Values = tdatenreiheC
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlLine
                 .Format.Line.Weight = 4
                 .Format.Line.ForeColor.RGB = visboFarbeBlau
+
             End With
 
             If vglBaseline Then
