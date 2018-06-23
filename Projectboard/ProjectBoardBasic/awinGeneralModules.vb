@@ -23081,7 +23081,7 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 4), Excel.Range).Value = "Phase-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Res./Cost-Name"
                     maxRCLengthVorkommen = 14
-                    CType(.Cells(1, 6), Excel.Range).Value = "Sum"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Sum" & vbLf & "[FTE]"
 
                     If awinSettings.mePrzAuslastung Then
                         CType(.Cells(1, 7), Excel.Range).Value = "Percent."
@@ -23095,7 +23095,7 @@ Public Module awinGeneralModules
                     CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
                     CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
                     maxRCLengthVorkommen = 20
-                    CType(.Cells(1, 6), Excel.Range).Value = "Summe"
+                    CType(.Cells(1, 6), Excel.Range).Value = "Summe" & vbLf & "[PT]"
 
                     If awinSettings.mePrzAuslastung Then
                         CType(.Cells(1, 7), Excel.Range).Value = "Proz."
@@ -23910,9 +23910,9 @@ Public Module awinGeneralModules
                         tmpRange.Columns.ColumnWidth = 5
                         'tmpRange.Font.Size = 10
                         If CInt(massColFontValues(0, 0)) > 3 Then
-                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0))
+                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0) - 1)
                         Else
-                            CType(tmpRange.Font, Excel.Font).Size = 10
+                            CType(tmpRange.Font, Excel.Font).Size = 9
                         End If
 
                         tmpRange.NumberFormat = "######0.0"

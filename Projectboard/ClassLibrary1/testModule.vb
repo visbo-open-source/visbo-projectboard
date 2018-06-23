@@ -2694,7 +2694,9 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(225)
                                 End If
-                                .TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
+                                '.TextFrame2.TextRange.Text = boxName & ": " & hproj.ampelErlaeuterung
+                                ' keine String Ampel-Text mehr rein-machen
+                                .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prAmpelText
@@ -2720,11 +2722,17 @@ Public Module testModule
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(227)
                                 End If
+                                '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description
+                                ' jetzt ohne boxName ...
                                 .TextFrame2.TextRange.Text = boxName & ": " & hproj.description
 
                                 Try
                                     If hproj.variantDescription.Length > 0 Then
-                                        .TextFrame2.TextRange.Text = boxName & ": " & hproj.description & vbLf & vbLf &
+                                        ' jetzt ohne boxName
+                                        '.TextFrame2.TextRange.Text = boxName & ": " & hproj.description & vbLf & vbLf &
+                                        '    "Varianten-Beschreibung: " & hproj.variantDescription
+
+                                        .TextFrame2.TextRange.Text = hproj.description & vbLf & vbLf &
                                             "Varianten-Beschreibung: " & hproj.variantDescription
                                     End If
                                 Catch ex As Exception

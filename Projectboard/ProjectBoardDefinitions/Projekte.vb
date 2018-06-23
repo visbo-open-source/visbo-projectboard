@@ -10500,8 +10500,10 @@ Public Module Projekte
 
                 Case ptReportComponents.prAmpelText
                     If Not IsNothing(hproj) Then
-                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                        pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
+                        'Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        'pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
+                        ' 23.6.18 nur noch den eigentlichen Ampel-Text schreiben ...
+                        pptShape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
                     End If
 
                 Case ptReportComponents.prBusinessUnit
@@ -10519,13 +10521,14 @@ Public Module Projekte
                 Case ptReportComponents.prDescription
                     If Not IsNothing(hproj) Then
                         Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                        Dim initialText As String = qualifier2 & ": " & hproj.description
-                        pptShape.TextFrame2.TextRange.Text = initialText
+                        ' tk 23.6.18 nur noch den eigentlichen Text schreiben  
+                        Dim initialText As String = hproj.description
 
                         If hproj.variantDescription.Length > 0 Then
-                            pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf & _
+                            initialText = initialText & vbLf & vbLf &
                                 "Varianten-Beschreibung: " & hproj.variantDescription
                         End If
+                        pptShape.TextFrame2.TextRange.Text = initialText
                     End If
 
                 Case ptReportComponents.prLaufzeit
