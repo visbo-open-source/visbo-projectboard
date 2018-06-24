@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO/Configuration</Value>
+      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\epcm\</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Task Class</Value>
@@ -21,7 +21,7 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">visbo</Value>
+      <Value Profile="(Default)">epcm</Value>
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
@@ -44,8 +44,11 @@
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="mongoDBWithSSL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">false</Value>
+    <Setting Name="mongoDBWithSSL" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="rememberUserPWD" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

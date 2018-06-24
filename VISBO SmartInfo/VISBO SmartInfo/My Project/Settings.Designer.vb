@@ -64,6 +64,18 @@ Partial Friend NotInheritable Class MySettings
             Me("userNamePWD") = value
         End Set
     End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public Property rememberUserPWD() As Boolean
+        Get
+            Return CType(Me("rememberUserPWD"),Boolean)
+        End Get
+        Set
+            Me("rememberUserPWD") = value
+        End Set
+    End Property
 End Class
 
 Namespace My

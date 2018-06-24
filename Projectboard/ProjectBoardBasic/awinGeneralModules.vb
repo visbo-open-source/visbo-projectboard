@@ -3765,7 +3765,7 @@ Public Module awinGeneralModules
                 ' ''prj.FileOpen(Name:="\\KOYTEK-NAS\backup\Ute\VISBO\MS Project Beispiele\ute.mpp", _
                 ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
 
-                prj.FileOpen(Name:=filename, _
+                prj.FileOpen(Name:=filename,
                             ReadOnly:=True, FormatID:="MSProject.MPP")
 
 
@@ -3848,9 +3848,22 @@ Public Module awinGeneralModules
                 ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
                 '' ''For proj_i = beginnProjekt To endeProjekt
 
+                ' Herausfinden, welches Startdatum des Projektes das früheste ist, da sonst die RootPhase zu spät anfängt
+                ' und manche Phasen dann einen negative startoffset bekommen
+                Dim ProjectStartDate As Date
 
+                ProjectStartDate = CDate(msproj.ProjectStart)
 
-                hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
+                If CDate(msproj.Start) < ProjectStartDate Then
+                    ProjectStartDate = CDate(msproj.Start)
+                End If
+
+                If CDate(msproj.EarlyStart) < ProjectStartDate Then
+                    ProjectStartDate = CDate(msproj.EarlyStart)
+                End If
+
+                ' Projekt nun mit diesem Startdatum anlegen
+                hproj = New clsProjekt(ProjectStartDate, ProjectStartDate, ProjectStartDate)
 
                 hproj.Erloes = 0
 
@@ -3941,7 +3954,7 @@ Public Module awinGeneralModules
                     ' hier muss der Uniquename(ID) erzeugt werden evt. aus PhaseDefinitions
 
                     If Not CType(msTask.Milestone, Boolean) _
-                        Or _
+                        Or
                         (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
 
                         ' Ergänzung tk für Demo BHTC 
@@ -4000,6 +4013,7 @@ Public Module awinGeneralModules
 
                             Dim phBewertung As New clsBewertung
                             If Not istElemID(msTask.Name) Then
+
                                 .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
                             End If
 
@@ -4106,6 +4120,9 @@ Public Module awinGeneralModules
                             Dim cphaseStartOffset As Long
                             Dim dauerIndays As Long
                             cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
+                            If cphaseStartOffset < 0 Then
+                                Throw New ArgumentException("Beginn der Task " & msTask.Name & "liegt vor ProjektStart")
+                            End If
                             dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
                             .changeStartandDauer(cphaseStartOffset, dauerIndays)
                             .offset = 0
@@ -4363,6 +4380,16 @@ Public Module awinGeneralModules
                                 Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
                             End If
 
+                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
+                            Dim newStdName As String = ""
+                            If awinSettings.createUniqueSiblingNames Then
+                                newStdName = hproj.hierarchy.findUniqueGeschwisterName(hrchynode.parentNodeKey, msTask.Name, False)
+                            Else
+                                newStdName = msTask.Name
+                            End If
+
+                            cphase.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, False)
+
                             hproj.AddPhase(cphase, origName:=origPhName, parentID:=hrchynode.parentNodeKey)
 
                             ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
@@ -4456,8 +4483,18 @@ Public Module awinGeneralModules
                             Or missingMilestoneDefinitions.Contains(msTask.Name) Then
 
                             Dim msBewertung As New clsBewertung
+
                             cmilestone.setDate = CType(msTask.Start, Date)
-                            cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
+
+                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
+                            Dim newStdName As String = ""
+                            If awinSettings.createUniqueSiblingNames Then
+                                newStdName = hproj.hierarchy.findUniqueGeschwisterName(msPhase.nameID, msTask.Name, True)
+                            Else
+                                newStdName = msTask.Name
+                            End If
+
+                            cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, True)
 
                             'percentDone, falls Customfiels visbo_percentDone definiert ist
                             If visbo_percentDone <> 0 Then
@@ -4707,7 +4744,7 @@ Public Module awinGeneralModules
                             ' Alle Projekte entfernen
                             ShowProjekte.Clear()
                         End If
-               
+
 
                         If Not ShowProjekte.contains(mapProj.name) Then
                             ShowProjekte.Add(mapProj)
@@ -16241,7 +16278,7 @@ Public Module awinGeneralModules
 
                     Else
                         ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
-                        noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
+                        ' noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
 
                         ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
                         If noDBAccess Then
@@ -16251,6 +16288,7 @@ Public Module awinGeneralModules
                                 ' in diesem Fall das mySettings setzen 
                                 Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
                                 awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+
                             End If
 
                         End If
@@ -16258,6 +16296,7 @@ Public Module awinGeneralModules
                 End If
             End If
         End If
+
         logInToMongoDB = Not noDBAccess
 
     End Function
@@ -23525,7 +23564,7 @@ Public Module awinGeneralModules
                                     End With
 
                                     CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0")
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0  ")
                                     If awinSettings.allowSumEditing Then
 
                                         With CType(.Cells(zeile, 6), Excel.Range)
@@ -23709,7 +23748,7 @@ Public Module awinGeneralModules
 
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
-                                            .NumberFormat = Format("######0.0")
+                                            .NumberFormat = Format("######0.0  ")
                                             .Value = ""
                                             If isProtectedbyOthers Then
                                             Else
@@ -25525,7 +25564,8 @@ Public Module awinGeneralModules
                             awinSettings.userNamePWD = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "VISBODebug"
                             awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
-
+                        Case "rememberUserPWD"
+                            awinSettings.rememberUserPwd = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                     End Select
                 Next
 

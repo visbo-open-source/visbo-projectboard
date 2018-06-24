@@ -89,7 +89,7 @@ Public Class frmAuthentication
                 End If
 
             Catch ex As Exception
-
+                Throw New ArgumentException(ex.Message)
             End Try
 
         End If
@@ -145,6 +145,15 @@ Public Class frmAuthentication
                 'ok = request.createIndicesOnce()
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
+
+                If awinSettings.rememberUserPwd Then
+
+                    ' Username Passwort verschlüsselt merken
+                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                    awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+
+                End If
+
                 messageBox.Text = ""
                 DialogResult = System.Windows.Forms.DialogResult.OK
                 ' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
@@ -153,12 +162,37 @@ Public Class frmAuthentication
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
     End Sub
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        chbx_remember.Checked = awinSettings.rememberUserPwd
+        Try
+
+            Dim cipherText As String = awinSettings.userNamePWD
+            Dim pwd As String = ""
+            Dim user As String = ""
+
+            If awinSettings.rememberUserPwd Then
+
+                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+
+                user = visboCrypto.getUserNameFromCipher(cipherText)
+                pwd = visboCrypto.getPwdFromCipher(cipherText)
+
+                chbx_remember.Checked = True
+            Else
+                chbx_remember.Checked = False
+            End If
+
+            benutzer.Text = user
+            maskedPwd.Text = pwd
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
     End Sub
 
     Private Sub chbx_remember_CheckedChanged(sender As Object, e As EventArgs) Handles chbx_remember.CheckedChanged
