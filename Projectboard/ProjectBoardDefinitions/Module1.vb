@@ -561,6 +561,7 @@ Public Module Module1
 
     Public Enum PTpptTableTypes
         prZiele = 0
+        prBudgetCostAPVCV = 1
     End Enum
     Public Enum PTpptTableCellType
         name = 0
