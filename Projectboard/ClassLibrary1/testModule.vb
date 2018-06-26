@@ -362,7 +362,11 @@ Public Module testModule
                         End If
 
                         bproj = request.retrieveFirstContractedPFromDB(hproj.name)
+                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, storedAtOrBefore:=Date.Now)
 
+                        If lproj.timeStamp = bproj.timeStamp Then
+                            lproj = Nothing
+                        End If
                         ' tk , 17.10.17 , das holen der Beauftragung, unabhängig von der Variante ... 
 
                     Catch ex As Exception
@@ -390,21 +394,21 @@ Public Module testModule
 
 
         '
-        '
-        Try
+        ' tk wurde ersetzt durch lproj = request.retrieveLastContracted .. siehe Zeile 365
+        ''Try
 
-            projekthistorie.currentIndex = projekthistorie.Count - 1
-            lproj = projekthistorie.letzteFreigabe
-            If lproj.timeStamp = bproj.timeStamp Then
-                ' es gibt ausser der Beauftragung keinen weiteren Freigabestand
-                lproj = Nothing
-            End If
+        ''    projekthistorie.currentIndex = projekthistorie.Count - 1
+        ''    lproj = projekthistorie.letzteFreigabe
+        ''    'If lproj.timeStamp = bproj.timeStamp Then
+        ''    '    ' es gibt ausser der Beauftragung keinen weiteren Freigabestand
+        ''    '    lproj = Nothing
+        ''    'End If
 
-        Catch ex As Exception
-            ' es gibt keinen letzten, freigegebenen Stand
-            lproj = Nothing
-        End Try
-        '
+        ''Catch ex As Exception
+        ''    ' es gibt keinen letzten, freigegebenen Stand
+        ''    lproj = Nothing
+        ''End Try
+        ''
         '
 
         If DateDiff(DateInterval.Month, hproj.startDate, heute) > 0 Then
@@ -861,6 +865,8 @@ Public Module testModule
                         Select Case kennzeichnung
 
                             Case "Projekt-Name"
+
+                                fullName = hproj.getShapeText
 
                                 If qualifier.Length > 0 Then
                                     If qualifier.Trim <> "Enlarge13" Then
@@ -1769,11 +1775,43 @@ Public Module testModule
                                         End If
                                     End If
 
+                                    ' jetzt kommt die Vorbereitung der  todoCollection .
+                                    If IsNothing(sRoles) Then
+                                        sRoles = New Collection
+                                    End If
+
+                                    If IsNothing(sCosts) Then
+                                        sCosts = New Collection
+                                    End If
+
+
+                                    Dim todoCollection As Collection = New Collection
+                                    Dim q1 As String = "0"
+                                    Dim q2 As String = "0"
+
+                                    If sRoles.Count + sCosts.Count = 0 Then
+                                        ' nichts tun, todoCollection ist schon leere Collection 
+                                    Else
+                                        ' jetzt wird die toDoCollection aufgebaut , es solle eine Liste aufgebaut werden, die die Reihenfolge beibehält 
+                                        For Each tmpName As String In sRoles
+                                            toDoCollection.Add(tmpName)
+                                        Next
+
+                                        For Each tmpName As String In sCosts
+                                            toDoCollection.Add(tmpName)
+                                        Next
+                                    End If
+
+                                    ' in Q1 steht die Anzahl der Detail Rollen , in q2 steht die Anzahl der 
+                                    q1 = sRoles.Count.ToString
+                                    q2 = sCosts.Count.ToString
+
+
 
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
                                     ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
-                                    Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, sRoles, sCosts, "", "")
+                                    Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, todoCollection, q1, q2)
                                     'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
 
 
@@ -2424,7 +2462,7 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
@@ -2444,7 +2482,7 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
                                     Dim vglBaseline As Boolean = False
 
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
@@ -2500,7 +2538,7 @@ Public Module testModule
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
@@ -2522,7 +2560,7 @@ Public Module testModule
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
@@ -2577,7 +2615,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
@@ -2597,7 +2635,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = False
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
@@ -2653,7 +2691,7 @@ Public Module testModule
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
@@ -2673,7 +2711,7 @@ Public Module testModule
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
@@ -2727,7 +2765,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke
@@ -2747,7 +2785,7 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = False
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke
@@ -9247,418 +9285,7 @@ Public Module testModule
 
     End Sub
 
-    ''' <summary>
-    ''' 
-    ''' </summary>
-    ''' <param name="pptShape"></param>
-    ''' <param name="hproj"></param>
-    ''' <param name="bproj"></param>
-    ''' <param name="lproj"></param>
-    ''' <param name="sRoles"></param>
-    ''' <param name="sCosts"></param>
-    ''' <param name="q1"></param>
-    ''' <param name="q2"></param>
-    Sub zeichneTableBudgetCostAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
-                                    ByVal sRoles As Collection, ByVal sCosts As Collection,
-                                    ByVal q1 As String, ByVal q2 As String)
 
-        Dim toDoCollection As New Collection
-        Dim tabelle As pptNS.Table
-        Dim anzSpalten As Integer
-
-
-        Dim bigType As Integer = ptReportBigTypes.tables
-        Dim compID As Integer = PTpptTableTypes.prBudgetCostAPVCV
-
-        Dim considerFapr As Boolean = Not IsNothing(bproj)
-        Dim considerLapr As Boolean = Not IsNothing(lproj)
-
-        If IsNothing(sRoles) Then
-            sRoles = New Collection
-        End If
-
-        If IsNothing(sCosts) Then
-            sCosts = New Collection
-        End If
-
-        Dim showOverviewOnly As Boolean
-
-        If sRoles.Count + sCosts.Count = 0 Then
-            showOverviewOnly = True
-            '' es soll nur die Übersichts-Tabelle gedruckt werden 
-            'sRoles = RoleDefinitions.getTopLevelNodeNames
-
-            'For i As Integer = 1 To CostDefinitions.Count - 1
-            '    Dim tmpCost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
-            '    If Not sCosts.Contains(tmpCost.name) Then
-            '        sCosts.Add(tmpCost.name, tmpCost.name)
-            '    End If
-            'Next
-
-        Else
-            ' nicht tun, sind schon drin ...  
-            ' hier werden nur die Details gezeigt ... 
-            showOverviewOnly = False
-
-            ' jetzt wird die toDoCollection aufgebaut , es solle eine Liste aufgebaut werden, die die Reihenfolge beibehält 
-            For Each tmpName As String In sRoles
-                toDoCollection.Add(tmpName)
-            Next
-
-            For Each tmpName As String In sCosts
-                toDoCollection.Add(tmpName)
-            Next
-        End If
-
-
-
-
-        ' in Q1 steht die Anzahl der Detail Rollen , in q2 steht die Anzahl der 
-        q1 = sRoles.Count.ToString
-        q2 = sCosts.Count.ToString
-
-
-        ' jetzt wird SmartTableInfo gesetzt 
-        ' jetzt wird die SmartTableInfo gesetzt 
-        Call addSmartPPTTableInfo(pptShape,
-                                  ptPRPFType.project, hproj.name, hproj.variantName,
-                                  q1, q2, bigType, compID,
-                                  toDoCollection)
-
-        ' jetzt werden die einzelnen Zeilen geschrieben 
-
-        Try
-            tabelle = pptShape.Table
-            anzSpalten = tabelle.Columns.Count
-            If anzSpalten = 6 Then
-                ' dann ist alles in Ordnung .. 
-
-
-                ' jetzt überprüfen, ob die Tabelle aktuell nur aus 2 Zeilen besteht ...
-                If tabelle.Rows.Count > 2 Then
-                    Do While tabelle.Rows.Count > 2
-                        tabelle.Rows(2).Delete()
-                    Loop
-                End If
-
-
-                Dim faprDate As Date = Date.MinValue
-                Dim laprDate As Date = Date.MinValue
-                Dim curDate As Date = Date.MinValue
-
-                If Not IsNothing(hproj) Then
-                    curDate = hproj.timeStamp
-                End If
-                If Not IsNothing(bproj) Then
-                    faprDate = bproj.timeStamp
-                End If
-                If Not IsNothing(lproj) Then
-                    laprDate = lproj.timeStamp
-                End If
-
-                ' jetzt die Headerzeile schreiben 
-                Call schreibeBudgetCostAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
-
-                Dim tabellenzeile As Integer = 2
-                Try
-
-                    If Not showOverviewOnly Then
-
-                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
-                        Dim firstCost As Boolean = True
-
-                        Dim curValue As Double = -1.0 ' not defined
-                        Dim faprValue As Double = -1.0 ' first approved version 
-                        Dim laprValue As Double = -1.0 ' last approved version
-
-                        If sRoles.Count > 0 Then
-                            ' 
-                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-                        End If
-
-                        For m As Integer = 1 To toDoCollection.Count
-
-                            Dim curItem As String = toDoCollection.Item(m)
-                            Dim isRole As Boolean = RoleDefinitions.containsName(curItem)
-                            Dim isCost As Boolean = False
-                            If Not isRole Then
-                                isCost = CostDefinitions.containsName(curItem)
-                            End If
-
-                            If isRole Then
-
-                                curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-
-                                If considerLapr Then
-                                    laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                End If
-
-                                If considerFapr Then
-                                    faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                End If
-
-
-                            ElseIf isCost Then
-
-                                If firstCost Then
-                                    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
-                                    tabelle.Rows.Add()
-                                    tabellenzeile = tabellenzeile + 1
-                                    firstCost = False
-                                End If
-
-                                curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
-
-                                If considerLapr Then
-                                    laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
-                                End If
-
-                                If considerFapr Then
-                                    faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
-                                End If
-
-                            End If
-
-                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, curItem, faprValue, laprValue, curValue,
-                                                          considerFapr, considerLapr)
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-
-                        Next
-
-
-                    Else
-
-                        Dim curPKI() As Double = {-1, -1, -1, -1}
-                        Dim faprPKI() As Double = {-1, -1, -1, -1}
-                        Dim laprPKI() As Double = {-1, -1, -1, -1}
-
-                        Dim txtPKI(3) As String
-                        txtPKI(0) = repMessages.getmsg(49) ' Budget
-                        txtPKI(1) = repMessages.getmsg(51) ' Personalkosten
-                        txtPKI(2) = repMessages.getmsg(52) ' Sonstige Kosten
-                        'txtPKI(3) = repMessages.getmsg(50) ' Risiko-Kosten
-                        txtPKI(3) = repMessages.getmsg(53) ' Ergebnis-Prognose
-
-                        Dim tmpValue As Double
-                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), True)
-
-                        If considerFapr Then
-                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), True)
-                        End If
-
-                        If considerLapr Then
-                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), True)
-                        End If
-
-
-                        ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
-
-                        For i = 0 To 3
-                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
-                                                          considerFapr, considerLapr)
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-                        Next
-
-
-                    End If
-
-                    ' jetzt letzte Zeile löschen  ...
-                    tabelle.Rows(tabellenzeile).Delete()
-                    tabellenzeile = tabellenzeile - 1
-
-                Catch ex1 As Exception
-
-                End Try
-            Else
-                Throw New Exception("Tabelle should have 6 columns ... exit ...")
-            End If
-        Catch ex As Exception
-
-        End Try
-
-    End Sub
-
-    ''' <summary>
-    ''' ergänzt den Text in der Tabelle BudgetCOst Approved versions versus current Version
-    ''' 
-    ''' </summary>
-    ''' <param name="table"></param>
-    ''' <param name="faprDate"></param>
-    ''' <param name="laprDate"></param>
-    ''' <param name="curDate"></param>
-    Private Sub schreibeBudgetCostAPVCVHeaderZeile(ByRef table As pptNS.Table,
-                                                   ByVal faprDate As Date, ByVal laprDate As Date, ByVal curDate As Date,
-                                                   ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
-
-        With table
-
-            Dim faprText As String
-            Dim laprText As String
-            Dim curText As String
-
-            If Not considerFapr Then
-                faprDate = Date.MinValue
-            End If
-
-            If Not considerLapr Then
-                laprDate = Date.MinValue
-            End If
-
-            curText = addDateToText(table.Cell(1, 2).Shape.TextFrame2.TextRange.Text, curDate)
-            laprText = addDateToText(table.Cell(1, 3).Shape.TextFrame2.TextRange.Text, laprDate)
-            faprText = addDateToText(table.Cell(1, 5).Shape.TextFrame2.TextRange.Text, faprDate)
-
-            table.Cell(1, 2).Shape.TextFrame2.TextRange.Text = curText
-            table.Cell(1, 3).Shape.TextFrame2.TextRange.Text = laprText
-            table.Cell(1, 5).Shape.TextFrame2.TextRange.Text = faprText
-
-
-        End With
-
-    End Sub
-
-    ''' <summary>
-    ''' 
-    ''' </summary>
-    ''' <param name="header"></param>
-    ''' <param name="myDate"></param>
-    ''' <returns></returns>
-    Private Function addDateToText(ByVal header As String, ByVal myDate As Date) As String
-
-        Dim tmpResult As String = ""
-        Dim dateString As String = "n.a"
-        Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
-
-        If DateDiff(DateInterval.Day, Date.MinValue, myDate) > 0 Then
-            dateString = "(" & myDate.ToShortDateString & ")"
-        End If
-
-        If tmpStr(0).EndsWith(vbVerticalTab) Then
-            tmpResult = tmpStr(0) & dateString
-        Else
-            tmpResult = tmpStr(0) & vbVerticalTab & dateString
-        End If
-
-
-        addDateToText = tmpResult
-    End Function
-
-    ''' <summary>
-    ''' schreibt eine Zeile in die Tabelle BudgetCost Approved Versions versus curVersion
-    ''' </summary>
-    ''' <param name="table"></param>
-    ''' <param name="zeile"></param>
-    ''' <param name="itemName"></param>
-    ''' <param name="faprValue"></param>
-    ''' <param name="laprValue"></param>
-    ''' <param name="curValue"></param>
-    Private Sub schreibeBudgetCostAPVCVZeile(ByRef table As pptNS.Table, ByVal zeile As Integer,
-                                             ByVal itemName As String, ByVal faprValue As Double, ByVal laprValue As Double, ByVal curValue As Double,
-                                             ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
-
-        Dim deltaFMC As String = "-" ' niummt das Delta auf zwischen Fapr und Current: First minsu Current 
-        Dim deltaLMC As String = "-" ' nimmt das Delta auf zwischen Lapr und Current : last minus Current
-        Dim dblFormat As String = "#,##0.00"
-        Dim cellText As String = "-"
-        Dim nada As String = "-"
-        Dim isPositiv As Boolean = False
-
-        If considerFapr Then
-            deltaFMC = (curValue - faprValue).ToString(dblFormat)
-        Else
-            deltaFMC = nada
-        End If
-
-        If considerLapr Then
-            deltaLMC = (curValue - laprValue).ToString(dblFormat)
-        Else
-            deltaLMC = nada
-        End If
-
-
-        ' jetzt wird das geschrieben 
-        With table
-            Dim tmpValue As String = "-"
-
-            ' Label schreiben 
-            CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = itemName
-
-            ' Current Value schreiben 
-            cellText = curValue.ToString(dblFormat)
-            CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
-
-            ' last Approved Value schreiben  
-            If considerLapr Then
-                cellText = laprValue.ToString(dblFormat)
-            Else
-                cellText = nada
-            End If
-            CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
-
-            ' Delta schreiben 
-            CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC
-
-            ' ggf einfärben 
-            If System.Math.Abs(curValue - laprValue) <= 0.5 Then
-                ' nichts tun 
-            ElseIf considerLapr Then
-
-                If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
-                    isPositiv = (curValue > laprValue + 0.5)
-                Else
-                    isPositiv = (laprValue > curValue + 0.5)
-                End If
-
-
-                ' Delta entsprechend einfärben 
-                If isPositiv Then
-                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
-                Else
-                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
-                End If
-
-
-            End If
-
-            ' first Approved Value schreiben  
-            If considerFapr Then
-                cellText = faprValue.ToString(dblFormat)
-            Else
-                cellText = nada
-            End If
-            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
-
-            ' Delta schreiben 
-            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC
-
-            ' ggf einfärben 
-            If System.Math.Abs(curValue - faprValue) <= 0.5 Then
-                ' nichts tun 
-            ElseIf considerFapr Then
-
-                If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
-                    isPositiv = (curValue > faprValue)
-                Else
-                    isPositiv = (faprValue > curValue)
-                End If
-
-                ' Delta entsprechend einfärben 
-                If isPositiv Then
-                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
-                Else
-                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
-                End If
-
-            End If
-
-        End With
-
-
-    End Sub
 
     ''' <summary>
     ''' zeichnet die Tabelle mit den Meilensteinen
@@ -19168,8 +18795,6 @@ Public Module testModule
 
 
         Dim rds As New clsPPTShapes
-
-        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
         rds.pptSlide = pptslide
 
 

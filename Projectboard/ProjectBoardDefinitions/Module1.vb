@@ -240,10 +240,10 @@ Public Module Module1
         planelements = 4
     End Enum
 
-    Public Enum ptReportTables
-        prMilestones = 0
-        pfMilestones = 1
-    End Enum
+    'Public Enum ptReportTables
+    '    prMilestones = 0
+    '    pfMilestones = 1
+    'End Enum
 
     Public Enum ptReportComponents
         prAmpel = 0
@@ -4560,18 +4560,12 @@ Public Module Module1
                                         ByVal bigtype As Integer, ByVal detailID As Integer,
                                         ByVal nameIDS As Collection)
 
-        If nameIDS.Count = 0 Then
+        If nameIDS.Count = 0 And bigtype = ptReportBigTypes.charts Then
             Exit Sub
         End If
 
         Dim nameIDString As String = ""
-        For Each tmpID As String In nameIDS
-            If nameIDString = "" Then
-                nameIDString = tmpID
-            Else
-                nameIDString = nameIDString & "#" & tmpID
-            End If
-        Next
+        nameIDString = convertCollToNids(nameIDS)
 
         Try
 
@@ -4644,6 +4638,431 @@ Public Module Module1
         End Try
 
     End Sub
+
+    ''' <summary>
+    ''' zeichnet bzw. aktualisiert die Powerpoint Table Kosten-Übersicht 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <param name="todoCollection">enthält die NAmen der Rollen und Kostenarten</param>
+    ''' <param name="q1">gibt an, wieviele Rollen, die ersten q1 in der todoCollection sind Rollen</param>
+    ''' <param name="q2">gibt an wieviele Kosten</param>
+    Sub zeichneTableBudgetCostAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
+                                    ByVal todoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
+
+
+        Dim tabelle As pptNS.Table
+        Dim anzSpalten As Integer
+
+
+        Dim bigType As Integer = ptReportBigTypes.tables
+        Dim compID As Integer = PTpptTableTypes.prBudgetCostAPVCV
+
+        Dim considerFapr As Boolean = Not IsNothing(bproj)
+        Dim considerLapr As Boolean = Not IsNothing(lproj)
+
+        Dim anzRoles As Integer = 0
+        Dim anzCosts As Integer = 0
+
+        ' in q1, q2 sind dei Anzahl Rollen bzw Kosten drin, sofern in toDoCollection was angegeben ist 
+        Try
+            anzRoles = CInt(q1)
+            anzCosts = CInt(q2)
+        Catch ex As Exception
+
+        End Try
+
+        Dim showOverviewOnly As Boolean = (todoCollection.Count = 0)
+
+        ' jetzt wird SmartTableInfo gesetzt 
+        ' jetzt wird die SmartTableInfo gesetzt 
+        Call addSmartPPTTableInfo(pptShape,
+                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  q1, q2, bigType, compID,
+                                  todoCollection)
+
+        ' jetzt werden die einzelnen Zeilen geschrieben 
+
+        Try
+            tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+            If anzSpalten = 6 Then
+                ' dann ist alles in Ordnung .. 
+
+
+                ' jetzt überprüfen, ob die Tabelle aktuell nur aus 2 Zeilen besteht ...
+                If tabelle.Rows.Count > 2 Then
+                    Do While tabelle.Rows.Count > 2
+                        tabelle.Rows(2).Delete()
+                    Loop
+                End If
+
+
+                Dim faprDate As Date = Date.MinValue
+                Dim laprDate As Date = Date.MinValue
+                Dim curDate As Date = Date.MinValue
+
+                If Not IsNothing(hproj) Then
+                    curDate = hproj.timeStamp
+                End If
+                If Not IsNothing(bproj) Then
+                    faprDate = bproj.timeStamp
+                End If
+                If Not IsNothing(lproj) Then
+                    laprDate = lproj.timeStamp
+                End If
+
+                ' jetzt die Headerzeile schreiben 
+                Call schreibeBudgetCostAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+
+                Dim tabellenzeile As Integer = 2
+                Try
+
+                    If Not showOverviewOnly Then
+
+                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                        Dim firstCost As Boolean = True
+
+                        Dim curValue As Double = -1.0 ' not defined
+                        Dim faprValue As Double = -1.0 ' first approved version 
+                        Dim laprValue As Double = -1.0 ' last approved version
+
+                        If anzRoles > 0 Then
+                            ' 
+                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+                        End If
+
+                        For m As Integer = 1 To todoCollection.Count
+
+                            Dim curItem As String = CStr(todoCollection.Item(m))
+                            Dim isRole As Boolean = RoleDefinitions.containsName(curItem)
+                            Dim isCost As Boolean = False
+                            If Not isRole Then
+                                isCost = CostDefinitions.containsName(curItem)
+                            End If
+
+                            If isRole Then
+
+                                curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+
+                                If considerLapr Then
+                                    laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                End If
+
+                                If considerFapr Then
+                                    faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                End If
+
+
+                            ElseIf isCost Then
+
+                                If firstCost Then
+                                    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
+                                    tabelle.Rows.Add()
+                                    tabellenzeile = tabellenzeile + 1
+                                    firstCost = False
+                                End If
+
+                                curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+
+                                If considerLapr Then
+                                    laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                End If
+
+                                If considerFapr Then
+                                    faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                End If
+
+                            End If
+
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, curItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+
+                        Next
+
+
+                    Else
+
+                        Dim curPKI() As Double = {-1, -1, -1, -1}
+                        Dim faprPKI() As Double = {-1, -1, -1, -1}
+                        Dim laprPKI() As Double = {-1, -1, -1, -1}
+
+                        Dim txtPKI(3) As String
+                        txtPKI(0) = repMessages.getmsg(49) ' Budget
+                        txtPKI(1) = repMessages.getmsg(51) ' Personalkosten
+                        txtPKI(2) = repMessages.getmsg(52) ' Sonstige Kosten
+                        'txtPKI(3) = repMessages.getmsg(50) ' Risiko-Kosten
+                        txtPKI(3) = repMessages.getmsg(53) ' Ergebnis-Prognose
+
+                        Dim tmpValue As Double
+                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), True)
+
+                        If considerFapr Then
+                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), True)
+                        End If
+
+                        If considerLapr Then
+                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), True)
+                        End If
+
+
+                        ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
+
+                        For i = 0 To 3
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
+                                                          considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+                        Next
+
+
+                    End If
+
+                    ' jetzt letzte Zeile löschen  ...
+                    tabelle.Rows(tabellenzeile).Delete()
+                    tabellenzeile = tabellenzeile - 1
+
+                Catch ex1 As Exception
+
+                End Try
+            Else
+                Throw New Exception("Tabelle should have 6 columns ... exit ...")
+            End If
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' ergänzt den Text in der Tabelle BudgetCOst Approved versions versus current Version
+    ''' 
+    ''' </summary>
+    ''' <param name="table"></param>
+    ''' <param name="faprDate"></param>
+    ''' <param name="laprDate"></param>
+    ''' <param name="curDate"></param>
+    Private Sub schreibeBudgetCostAPVCVHeaderZeile(ByRef table As pptNS.Table,
+                                                   ByVal faprDate As Date, ByVal laprDate As Date, ByVal curDate As Date,
+                                                   ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
+
+        With table
+
+            Dim faprText As String
+            Dim laprText As String
+            Dim curText As String
+
+            If Not considerFapr Then
+                faprDate = Date.MinValue
+            End If
+
+            If Not considerLapr Then
+                laprDate = Date.MinValue
+            End If
+
+            curText = addDateToText(table.Cell(1, 2).Shape.TextFrame2.TextRange.Text, curDate)
+            laprText = addDateToText(table.Cell(1, 3).Shape.TextFrame2.TextRange.Text, laprDate)
+            faprText = addDateToText(table.Cell(1, 5).Shape.TextFrame2.TextRange.Text, faprDate)
+
+            table.Cell(1, 2).Shape.TextFrame2.TextRange.Text = curText
+            table.Cell(1, 3).Shape.TextFrame2.TextRange.Text = laprText
+            table.Cell(1, 5).Shape.TextFrame2.TextRange.Text = faprText
+
+
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' ergänzt den String header um vbVerticalTab (myDate.toString)
+    ''' </summary>
+    ''' <param name="header"></param>
+    ''' <param name="myDate"></param>
+    ''' <returns></returns>
+    Private Function addDateToText(ByVal header As String, ByVal myDate As Date) As String
+
+        Dim tmpResult As String = ""
+        Dim dateString As String = "n.a"
+        Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
+
+        If DateDiff(DateInterval.Day, Date.MinValue, myDate) > 0 Then
+            dateString = "(" & myDate.ToShortDateString & ")"
+        End If
+
+        If tmpStr(0).EndsWith(vbVerticalTab) Then
+            tmpResult = tmpStr(0) & dateString
+        Else
+            tmpResult = tmpStr(0) & vbVerticalTab & dateString
+        End If
+
+
+        addDateToText = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' schreibt eine Zeile in die Tabelle BudgetCost Approved Versions versus curVersion
+    ''' </summary>
+    ''' <param name="table"></param>
+    ''' <param name="zeile"></param>
+    ''' <param name="itemName"></param>
+    ''' <param name="faprValue"></param>
+    ''' <param name="laprValue"></param>
+    ''' <param name="curValue"></param>
+    Private Sub schreibeBudgetCostAPVCVZeile(ByRef table As pptNS.Table, ByVal zeile As Integer,
+                                             ByVal itemName As String, ByVal faprValue As Double, ByVal laprValue As Double, ByVal curValue As Double,
+                                             ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
+
+        Dim deltaFMC As String = "-" ' niummt das Delta auf zwischen Fapr und Current: First minsu Current 
+        Dim deltaLMC As String = "-" ' nimmt das Delta auf zwischen Lapr und Current : last minus Current
+        Dim dblFormat As String = "#,##0.00"
+        Dim cellText As String = "-"
+        Dim nada As String = "-"
+        Dim isPositiv As Boolean = False
+
+
+
+        If considerFapr Then
+            deltaFMC = (curValue - faprValue).ToString(dblFormat)
+        Else
+            deltaFMC = nada
+        End If
+
+        If considerLapr Then
+            deltaLMC = (curValue - laprValue).ToString(dblFormat)
+        Else
+            deltaLMC = nada
+        End If
+
+
+        ' jetzt wird das geschrieben 
+        With table
+            Dim tmpValue As String = "-"
+
+            ' Label schreiben 
+            CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = itemName
+
+            ' wird benötigt, um die Schriftfarbe im Delta-Feld wieder auf Normal setzen zu können 
+            Dim normalColor As Integer = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB
+
+            ' Current Value schreiben 
+            cellText = curValue.ToString(dblFormat)
+            CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' last Approved Value schreiben  
+            If considerLapr Then
+                cellText = laprValue.ToString(dblFormat)
+            Else
+                cellText = nada
+            End If
+            CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC
+
+            ' ggf einfärben 
+            If System.Math.Abs(curValue - laprValue) <= 0.5 Then
+                ' nichts tun, ausser Farbe auf Nortmal setzen 
+                ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerLapr Then
+
+                If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                    isPositiv = (curValue > laprValue + 0.5)
+                Else
+                    isPositiv = (laprValue > curValue + 0.5)
+                End If
+
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+
+            End If
+
+            ' first Approved Value schreiben  
+            If considerFapr Then
+                cellText = faprValue.ToString(dblFormat)
+            Else
+                cellText = nada
+            End If
+            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC
+
+            ' ggf einfärben 
+            If System.Math.Abs(curValue - faprValue) <= 0.5 Then
+                ' nichts tun, ausser Farbe auf Nortmal setzen 
+                ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerFapr Then
+
+                If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                    isPositiv = (curValue > faprValue)
+                Else
+                    isPositiv = (faprValue > curValue)
+                End If
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+            End If
+
+        End With
+
+
+    End Sub
+
+    ''' <summary>
+    ''' wird benötigt, um Collections in Shape.Tags unterzubringen 
+    ''' </summary>
+    ''' <param name="nameCollection"></param>
+    ''' <returns></returns>
+    Public Function convertCollToNids(ByVal nameCollection As Collection) As String
+        Dim nids As String = ""
+        For Each tmpName As String In nameCollection
+            If nids = "" Then
+                nids = tmpName.Trim
+            Else
+                nids = nids & "#" & tmpName.Trim
+            End If
+        Next
+        convertCollToNids = nids
+    End Function
+
+    ''' <summary>
+    ''' wird benötigt, um Collection-Infos aus Shape.Tags wieder in eine Collection zu bringen  
+    ''' </summary>
+    ''' <param name="nids"></param>
+    ''' <returns></returns>
+    Public Function convertNidsToColl(ByVal nids As String) As Collection
+        Dim nameCollection As New Collection
+        Dim tmpStr() As String = nids.Split(New Char() {CChar("#")})
+
+        For Each tmpName In tmpStr
+            If tmpName.Trim.Length > 0 Then
+                nameCollection.Add(tmpName)
+            End If
+        Next
+        convertNidsToColl = nameCollection
+    End Function
+
 
     ''' <summary>
     ''' bestimmt aus dem Namen eines Charts die Informationen, die benötigt werden, um ein PPTShape aus der Smart-PPT heraus zu aktualisieren ...

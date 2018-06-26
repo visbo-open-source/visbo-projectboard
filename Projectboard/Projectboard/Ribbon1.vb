@@ -7661,6 +7661,7 @@ Imports System.IO
         Dim vglName As String = " "
         Dim pName As String = ";"
         Dim variantName As String = ""
+        Dim bproj As clsProjekt = Nothing
 
         Call projektTafelInit()
 
@@ -7719,6 +7720,9 @@ Imports System.IO
                     projekthistorie.Add(Date.Now, hproj)
                 End If
 
+                ' das bproj bestimmen 
+                bproj = request.retrieveFirstContractedPFromDB(hproj.name)
+
                 Dim nrSnapshots As Integer = projekthistorie.Count
 
                 appInstance.EnableEvents = False
@@ -7732,7 +7736,7 @@ Imports System.IO
                     Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     If typ = "Curve" Then
-                        Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstCurveOfProject(hproj, bproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
                         Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width, False)
                     End If

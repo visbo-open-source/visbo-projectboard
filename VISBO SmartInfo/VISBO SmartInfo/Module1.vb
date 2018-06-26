@@ -2004,7 +2004,7 @@ Module Module1
         Dim detailID As Integer = -1
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim bProj As clsProjekt = Nothing ' nimmt das erste beauftragte Projekt auf ..
-
+        Dim lProj As clsProjekt = Nothing ' nimmt das zuletzt beauftragte Projekt auf 
 
         Try
 
@@ -2218,8 +2218,26 @@ Module Module1
 
                             ElseIf bigType = ptReportBigTypes.tables Then
 
-                                If detailID = ptReportTables.prMilestones Then
+                                If detailID = PTpptTableTypes.prZiele Then
                                     Call updatePPTProjektTabelleZiele(pptShape, tsProj)
+
+                                ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
+                                    Try
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, curTimeStamp.AddHours(-1))
+                                        Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
+
+                                        Dim q1 As String = pptShape.Tags.Item("Q1")
+                                        Dim q2 As String = pptShape.Tags.Item("Q2")
+                                        Dim nids As String = pptShape.Tags.Item("NIDS")
+
+                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
+                                                                         toDoCollection, q1, q2)
+
+                                    Catch ex As Exception
+                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                        bProj = Nothing
+                                    End Try
                                 End If
 
                             End If
