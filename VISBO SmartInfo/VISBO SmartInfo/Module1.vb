@@ -2225,6 +2225,7 @@ Module Module1
                                     Try
                                         bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
                                         lProj = request.RetrieveLastContractedPFromDB(tsProj.name, curTimeStamp.AddHours(-1))
+
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
                                         Dim q1 As String = pptShape.Tags.Item("Q1")

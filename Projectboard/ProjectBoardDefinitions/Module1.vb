@@ -4653,12 +4653,40 @@ Public Module Module1
                                     ByVal todoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
 
 
+        Dim repmsg() As String
+        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
+        'repmsg(1) = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
+
+        ' solange die repMessages nicht in Datenbank sind, geht das nicht 
+        'txtPKI(0) = repMessages.getmsg(49) ' Budget
+        'txtPKI(1) = repMessages.getmsg(51) ' Personalkosten
+        'txtPKI(2) = repMessages.getmsg(52) ' Sonstige Kosten
+        ''txtPKI(3) = repMessages.getmsg(50) ' Risiko-Kosten
+        'txtPKI(3) = repMessages.getmsg(53) ' Ergebnis-Prognose
+
+        Dim txtPKI(3) As String
+
+        txtPKI(0) = repmsg(0) ' Budget
+        txtPKI(1) = repmsg(1) ' Personalkosten
+        txtPKI(2) = repmsg(2) ' Sonstige Kosten
+        txtPKI(3) = repmsg(3) ' Ergebnis-Prognose
+
+        ' steuert Einrückung ja, nein im Not Overview Modus 
+        Dim einrueckung As Integer = 0
+
         Dim tabelle As pptNS.Table
         Dim anzSpalten As Integer
 
 
         Dim bigType As Integer = ptReportBigTypes.tables
         Dim compID As Integer = PTpptTableTypes.prBudgetCostAPVCV
+
+        ' wenn die gleich sind, sollen keine zwei Spalten mit identischen Werten ausgewiesen werden 
+        If Not IsNothing(lproj) And Not IsNothing(bproj) Then
+            If lproj.timeStamp = bproj.timeStamp Then
+                lproj = Nothing
+            End If
+        End If
 
         Dim considerFapr As Boolean = Not IsNothing(bproj)
         Dim considerLapr As Boolean = Not IsNothing(lproj)
@@ -4699,6 +4727,17 @@ Public Module Module1
                     Loop
                 End If
 
+                ' jetzt die Werte in den 6 Spalten zurücksetzen 
+                Try
+                    With tabelle
+                        For i As Integer = 1 To 6
+                            .Cell(2, i).Shape.TextFrame2.TextRange.Text = ""
+                        Next
+                    End With
+                Catch ex As Exception
+
+                End Try
+
 
                 Dim faprDate As Date = Date.MinValue
                 Dim laprDate As Date = Date.MinValue
@@ -4722,6 +4761,8 @@ Public Module Module1
 
                     If Not showOverviewOnly Then
 
+                        einrueckung = 1
+
                         ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
                         Dim firstCost As Boolean = True
 
@@ -4731,13 +4772,15 @@ Public Module Module1
 
                         If anzRoles > 0 Then
                             ' 
-                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                            'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
                             tabelle.Rows.Add()
                             tabellenzeile = tabellenzeile + 1
                         End If
 
                         For m As Integer = 1 To todoCollection.Count
 
+                            ' wegen Einrückung in Details ...
                             Dim curItem As String = CStr(todoCollection.Item(m))
                             Dim isRole As Boolean = RoleDefinitions.containsName(curItem)
                             Dim isCost As Boolean = False
@@ -4761,7 +4804,8 @@ Public Module Module1
                             ElseIf isCost Then
 
                                 If firstCost Then
-                                    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
+                                    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
+                                    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(2)
                                     tabelle.Rows.Add()
                                     tabellenzeile = tabellenzeile + 1
                                     firstCost = False
@@ -4779,7 +4823,8 @@ Public Module Module1
 
                             End If
 
-                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, curItem, faprValue, laprValue, curValue,
+                            Dim zeilenItem As String = "  " & curItem
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
                                                           considerFapr, considerLapr)
                             tabelle.Rows.Add()
                             tabellenzeile = tabellenzeile + 1
@@ -4793,12 +4838,6 @@ Public Module Module1
                         Dim faprPKI() As Double = {-1, -1, -1, -1}
                         Dim laprPKI() As Double = {-1, -1, -1, -1}
 
-                        Dim txtPKI(3) As String
-                        txtPKI(0) = repMessages.getmsg(49) ' Budget
-                        txtPKI(1) = repMessages.getmsg(51) ' Personalkosten
-                        txtPKI(2) = repMessages.getmsg(52) ' Sonstige Kosten
-                        'txtPKI(3) = repMessages.getmsg(50) ' Risiko-Kosten
-                        txtPKI(3) = repMessages.getmsg(53) ' Ergebnis-Prognose
 
                         Dim tmpValue As Double
                         Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), True)
@@ -4888,7 +4927,7 @@ Public Module Module1
     Private Function addDateToText(ByVal header As String, ByVal myDate As Date) As String
 
         Dim tmpResult As String = ""
-        Dim dateString As String = "n.a"
+        Dim dateString As String = ""
         Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
 
         If DateDiff(DateInterval.Day, Date.MinValue, myDate) > 0 Then
@@ -4925,7 +4964,9 @@ Public Module Module1
         Dim nada As String = "-"
         Dim isPositiv As Boolean = False
 
-
+        ' notwendig, solange keine repMessages in der Datenbank sind 
+        Dim repmsg() As String
+        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
 
         If considerFapr Then
             deltaFMC = (curValue - faprValue).ToString(dblFormat)
@@ -4944,8 +4985,9 @@ Public Module Module1
         With table
             Dim tmpValue As String = "-"
 
-            ' Label schreiben 
+            ' Label schreiben
             CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = itemName
+
 
             ' wird benötigt, um die Schriftfarbe im Delta-Feld wieder auf Normal setzen zu können 
             Dim normalColor As Integer = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB
@@ -4973,7 +5015,7 @@ Public Module Module1
 
             ElseIf considerLapr Then
 
-                If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                If itemName = repmsg(0) Or itemName = repmsg(3) Then
                     isPositiv = (curValue > laprValue + 0.5)
                 Else
                     isPositiv = (laprValue > curValue + 0.5)
@@ -5008,8 +5050,8 @@ Public Module Module1
                 CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
 
             ElseIf considerFapr Then
-
-                If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                ' If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                If itemName = repmsg(0) Or itemName = repmsg(3) Then
                     isPositiv = (curValue > faprValue)
                 Else
                     isPositiv = (faprValue > curValue)

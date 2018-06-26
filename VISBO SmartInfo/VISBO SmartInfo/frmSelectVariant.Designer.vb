@@ -29,10 +29,12 @@ Partial Class frmSelectVariant
         '
         'variantNamesListBox
         '
+        Me.variantNamesListBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.variantNamesListBox.FormattingEnabled = True
+        Me.variantNamesListBox.ItemHeight = 16
         Me.variantNamesListBox.Location = New System.Drawing.Point(12, 25)
         Me.variantNamesListBox.Name = "variantNamesListBox"
-        Me.variantNamesListBox.Size = New System.Drawing.Size(253, 186)
+        Me.variantNamesListBox.Size = New System.Drawing.Size(253, 180)
         Me.variantNamesListBox.TabIndex = 0
         '
         'showButton
