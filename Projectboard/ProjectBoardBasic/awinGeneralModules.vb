@@ -11284,6 +11284,7 @@ Public Module awinGeneralModules
 
                                         If Not hproj.hierarchy.containsPhase(phaseName, breadcrumb) Then
 
+                                            Dim xxx As Boolean = hproj.hierarchy.containsPhase(phaseName, breadcrumb)
                                             ReDim phaseIndex(0)
                                             Call logfileSchreiben("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'", hproj.name, anzFehler)
                                             Throw New ArgumentException("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'")
