@@ -1232,12 +1232,13 @@
 
             ReDim phaseIndices(0)
             If _allNodes.ContainsKey(elemID) Then
-                first = _allNodes.IndexOfKey(calcHryElemKey(name, False))
+                first = _allNodes.IndexOfKey(elemID)
 
                 i = first + 1
                 Dim otherNamefound As Boolean = False
 
                 Do While Not otherNamefound And i <= anzahlNodes - 1
+                    ' tk anderer Name ist nur found, wenn sich mehr unterschediet als nur Groß-/Kleinschreibung 
                     If elemNameOfElemID(_allNodes.ElementAt(i).Key) <> name Then
                         otherNamefound = True
                     Else
@@ -1397,7 +1398,9 @@
 
                 Dim otherNamefound As Boolean = False
                 Do While Not otherNamefound And i <= anzahlNodes - 1
+
                     If elemNameOfElemID(_allNodes.ElementAt(i).Key) <> name Then
+                        ' wenn der einzige Unterschied ist: nur unterschiedliche Groß-/Kleinschreibung dann muss weitergesucht werden ..
                         otherNamefound = True
                     Else
                         i = i + 1
