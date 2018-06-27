@@ -4673,17 +4673,27 @@ Public Module awinGeneralModules
 
                 Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
 
-                ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-                ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-                If AlleProjekte.Containskey(key) Then
-                    AlleProjekte.Remove(key)
+                If modus = "BHTC" Then
+
+                    ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                    ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
+                    If AlleProjekte.Containskey(key) Then
+                        AlleProjekte.Remove(key)
+                    End If
+
+                    AlleProjekte.Add(hproj)
+
+                Else
+                    If ImportProjekte.Containskey(key) Then
+                        ImportProjekte.Remove(key)
+                    End If
+
+                    ImportProjekte.Add(hproj)
+
                 End If
 
-                AlleProjekte.Add(hproj)
-
-
                 If modus = "BHTC" Then
-                    ' Alle Projekte löschen
+                    ' Alle Projekte in ShowProjekte löschen
                     ShowProjekte.Clear()
                 End If
 
@@ -4731,13 +4741,24 @@ Public Module awinGeneralModules
 
                         key = calcProjektKey(mapProj.name, mapProj.variantName)
 
-                        ' prüfen, ob AlleProjekte das Projekt bereits enthält 
-                        ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
-                        If AlleProjekte.Containskey(key) Then
-                            AlleProjekte.Remove(key)
-                        End If
+                        If modus = "BHTC" Then
 
-                        AlleProjekte.Add(mapProj)
+                            ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                            ' danach ist sichergestellt, daß AlleProjekte das Projekt bereits enthält 
+                            If AlleProjekte.Containskey(key) Then
+                                AlleProjekte.Remove(key)
+                            End If
+
+                            AlleProjekte.Add(mapProj)
+
+                        Else
+                            If ImportProjekte.Containskey(key) Then
+                                ImportProjekte.Remove(key)
+                            End If
+
+                            ImportProjekte.Add(mapProj)
+
+                        End If
 
                         If modus = "BHTC" Then
                             ' Alle Projekte entfernen
@@ -10419,7 +10440,7 @@ Public Module awinGeneralModules
                             rowOffset = tbl.Row
                             columnOffset = tbl.Column
 
-                            lastrow = CInt(CType(.Cells(2000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
+                            lastrow = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
 
                             ' ur: 12.05.2015: hier wurde die Sortierung der ErgebnTabelle entfernt
 
@@ -11074,11 +11095,15 @@ Public Module awinGeneralModules
 
 
                         Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
+                        Dim oldrng = .Range("Phasen_des_Projekts")
+                        Dim columnOffset As Integer = oldrng.Column
+                        Dim lastrow As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
 
-                        rng = .Range("Phasen_des_Projekts")
+                        ' ´Verlängerung des Range "Phasen_des_Projekts" bis zur lastrow
+                        rng = wsRessourcen.Range(.Cells(oldrng.Row, oldrng.Column), .Cells(lastrow, oldrng.Column))
+                        rng.Name = "Phasen_des_Projekts"
 
-                        Dim testrange As Excel.Range = CType(.Cells(1, 2000), Excel.Range)
-
+                        Dim testrange As Excel.Range = CType(.Cells(10, 2000), Excel.Range)
                         Dim gefundenRange As Excel.Range = testrange.Find(What:="Summe")
                         If IsNothing(gefundenRange) Then
                             ' alte Version des Steckbriefes 
