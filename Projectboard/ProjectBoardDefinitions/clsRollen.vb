@@ -121,13 +121,21 @@ Public Class clsRollen
 
                     Dim subroleList As SortedList(Of Integer, Double) = _allRollen.Item(roleID).getSubRoleIDs()
 
-                    For Each srKvP As KeyValuePair(Of Integer, Double) In subroleList
-                        If _allRollen.ContainsKey(srKvP.Key) Then
-                            If Not returnResult.Contains(_allRollen.Item(srKvP.Key).name) Then
-                                returnResult.Add(_allRollen.Item(srKvP.Key).name)
+                    If subroleList.Count > 0 Then
+                        For Each srKvP As KeyValuePair(Of Integer, Double) In subroleList
+                            If _allRollen.ContainsKey(srKvP.Key) Then
+                                If Not returnResult.Contains(_allRollen.Item(srKvP.Key).name) Then
+                                    returnResult.Add(_allRollen.Item(srKvP.Key).name)
+                                End If
+                            End If
+                        Next
+                    Else
+                        If _allRollen.ContainsKey(roleID) Then
+                            If Not returnResult.Contains(_allRollen.Item(roleID).name) Then
+                                returnResult.Add(_allRollen.Item(roleID).name)
                             End If
                         End If
-                    Next
+                    End If
 
                 Next
 

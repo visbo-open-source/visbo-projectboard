@@ -221,7 +221,6 @@
         '
         'varianten_Tab
         '
-        Me.varianten_Tab.Enabled = False
         Me.varianten_Tab.Label = "Variants"
         Me.varianten_Tab.Name = "varianten_Tab"
         '

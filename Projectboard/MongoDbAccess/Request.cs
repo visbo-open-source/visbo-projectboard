@@ -411,6 +411,59 @@ namespace MongoDbAccess
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="projectname">beuaftragte werden nur von Variant-Name "" gesucht </param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <returns></returns>
+        public clsProjekt RetrieveLastContractedPFromDB(string projectname, DateTime storedAtOrBefore)
+        {
+            var result = new clsProjektDB();
+            string searchstr = Projekte.calcProjektKeyDB(projectname, "");
+
+            if (storedAtOrBefore == null)
+            {
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {                
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var builder = Builders<clsProjektDB>.Filter;
+
+            var filter = builder.Eq("name", searchstr) & builder.Eq("status", "beauftragt") & builder.Lte("timestamp", storedAtOrBefore);
+            // das folgende könnte auch gemacht werden 
+            // var filter = builder.Eq(c => c.name, searchstr) & builder.Lte(c => c.timestamp, storedAtOrBefore);
+
+            var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
+
+            try
+            {
+                result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch
+            {
+                result = null;
+            }
+
+            //TODO: rückumwandeln
+            if (result == null)
+            {
+
+                return null;
+            }
+            else
+            {
+                var projekt = new clsProjekt();
+                result.copyto(ref projekt);
+                int a = projekt.dauerInDays;
+                return projekt;
+            }
+
+        }
+
+        /// <summary>
         /// liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName), das zum angegebenen Zeitpunkt das aktuelle war
         /// falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
         /// </summary>
@@ -1155,7 +1208,7 @@ namespace MongoDbAccess
             int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
                             
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.projectType == 0)
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.projectType != 1 && c.projectType != 2)
                             .Select(c => c.name)
                             .Distinct()
                             .ToList();

@@ -76,12 +76,12 @@ Public Class frmSelectVariant
             Call moveAllShapes(True)
 
             ' das Formular aufschalten 
-            If IsNothing(changeFrm) Then
-                changeFrm = New frmChanges
-                changeFrm.Show()
-            Else
-                changeFrm.neuAufbau()
-            End If
+            'If IsNothing(changeFrm) Then
+            '    changeFrm = New frmChanges
+            '    changeFrm.Show()
+            'Else
+            '    changeFrm.neuAufbau()
+            'End If
 
             Me.UseWaitCursor = False
 

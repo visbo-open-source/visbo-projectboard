@@ -4971,6 +4971,7 @@ Imports System.IO
 
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
+                        Dim isAllianzImport As Boolean = False
 
                         If scenarioNameP.StartsWith("Allianz-Typ 1") Then
                             Dim startdate As Date = CDate("1.1.2018")
@@ -5006,7 +5007,11 @@ Imports System.IO
 
                         'sessionConstellationP enthält alle Projekte aus dem Import 
                         Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
-                        Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
+
+                        If isAllianzImport Then
+                            Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
+                        End If
+
                         'Call sessionConstellationP.calcUnionProject(False)
                         'Call sessionConstellationS.calcUnionProject(False)
 
@@ -7656,6 +7661,7 @@ Imports System.IO
         Dim vglName As String = " "
         Dim pName As String = ";"
         Dim variantName As String = ""
+        Dim bproj As clsProjekt = Nothing
 
         Call projektTafelInit()
 
@@ -7714,6 +7720,9 @@ Imports System.IO
                     projekthistorie.Add(Date.Now, hproj)
                 End If
 
+                ' das bproj bestimmen 
+                bproj = request.retrieveFirstContractedPFromDB(hproj.name)
+
                 Dim nrSnapshots As Integer = projekthistorie.Count
 
                 appInstance.EnableEvents = False
@@ -7727,7 +7736,7 @@ Imports System.IO
                     Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     If typ = "Curve" Then
-                        Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstCurveOfProject(hproj, bproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
                         Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width, False)
                     End If

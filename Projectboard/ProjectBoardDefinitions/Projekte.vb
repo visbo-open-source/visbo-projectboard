@@ -1536,6 +1536,7 @@ Public Module Projekte
         Dim tabelle As PowerPoint.Table
         Dim ampelColor(3) As Integer
         Dim todoCollection As New Collection
+
         If pptShape.Tags.Item("NIDS").Length > 0 Then
             ' es gibt was zu tun 
             Dim tmpStr() As String = pptShape.Tags.Item("NIDS").Split(New Char() {CChar("#")})
@@ -1579,10 +1580,18 @@ Public Module Projekte
                                 Dim tableCell As PowerPoint.Shape = CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape
                                 tableCell.TextFrame2.TextRange.Text = msNumber.ToString
 
+                                ' tk 26.6.18
+                                If cBewertung.colorIndex = 2 Then
+                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(0, 0, 0)
+                                Else
+                                    CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                                End If
 
+                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
 
-                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                                CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.Fill.ForeColor.RGB = ampelColor(cBewertung.colorIndex)
+                                ' tk 26.6.18 alt
+                                'CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                                'CType(.Cell(tabellenzeile, 1), PowerPoint.Cell).Shape.Fill.ForeColor.RGB = ampelColor(cBewertung.colorIndex)
 
 
                                 ' Name eintragen 
@@ -3992,13 +4001,13 @@ Public Module Projekte
 
     End Sub
 
-    
+
 
 
     ''' <summary>
     ''' zeigt bei beauftragten Projekten den Soll-/Ist Vergleich an
     ''' zeigt bei nicht beauftragten Projekten den Vergleich zwischen Min/Max/Current an
-    ''' Vorbedingung: es gibt eine Historie 
+    ''' es muss keine Historie mehr geben, es reicht wenn das Vergleichsprojekt 
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <param name="reportObj"></param>
@@ -4009,7 +4018,7 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks></remarks>
-    Sub createSollIstCurveOfProject(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean, _
+    Sub createSollIstCurveOfProject(ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal heute As Date, ByVal auswahl As Integer, ByVal qualifier As String, ByVal vglBaseline As Boolean,
                                            ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
         'Dim chtobj As Excel.ChartObject
         Dim anzDiagrams As Integer
@@ -4036,13 +4045,13 @@ Public Module Projekte
         Dim maxlenTitle1 As Integer = 20
         Dim newChtObj As Excel.ChartObject = Nothing
 
-        
+
 
         ' aktuell wird es nur von Report Generation aufgerufen ...
         Dim calledFromReporting As Boolean = True
 
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            If calledfromReporting Then
+            If calledFromReporting Then
                 currentSheetName = arrWsNames(ptTables.repCharts)
             Else
                 currentSheetName = arrWsNames(ptTables.mptPrCharts)
@@ -4052,195 +4061,201 @@ Public Module Projekte
             currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
-        If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
-            ' Soll-Ist Vergleich
-            vglBaseline = projekthistorie.Count > 1
-            isMinMax = False
+        ' tk 26.6.18 rausgenommen, weil jetzt bproj in der Parameter - Leiste übergeben wird
+        ''If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
+        ''    ' Soll-Ist Vergleich
+        ''    vglBaseline = projekthistorie.Count > 1
+        ''    isMinMax = False
 
-            Try
-                beauftragung = projekthistorie.beauftragung
-                If IsNothing(beauftragung) Then
-                    If projekthistorie.Count >= 1 Then
-                        beauftragung = projekthistorie.First
-                    Else
-                        'Throw New ArgumentException("es gibt keine Beauftragung")
-                        Throw New ArgumentException(repMessages.getmsg(184))
-                    End If
-                End If
-            Catch ex As Exception
-                'Throw New ArgumentException("es gibt keine Beauftragung")
-                Throw New ArgumentException(repMessages.getmsg(184))
-            End Try
+        ''    Try
+        ''        beauftragung = projekthistorie.beauftragung
+        ''        If IsNothing(beauftragung) Then
+        ''            If projekthistorie.Count >= 1 Then
+        ''                beauftragung = projekthistorie.First
+        ''            Else
+        ''                'Throw New ArgumentException("es gibt keine Beauftragung")
+        ''                Throw New ArgumentException(repMessages.getmsg(184))
+        ''            End If
+        ''        End If
+        ''    Catch ex As Exception
+        ''        'Throw New ArgumentException("es gibt keine Beauftragung")
+        ''        Throw New ArgumentException(repMessages.getmsg(184))
+        ''    End Try
 
-            abbruch = False
-            Dim index As Integer = 0
-
-
-
-            ' finde in der Projekt-Historie das Projekt, das direkt vor hproj gespeichert wurde
-
-            Dim vgl As Date = hproj.timeStamp.AddMinutes(-1)
-
-            lastPlan = projekthistorie.ElementAtorBefore(vgl)
-
-            If IsNothing(lastPlan) Then
-                If projekthistorie.Count >= 1 Then
-                    lastPlan = projekthistorie.Last
-                End If
-                If IsNothing(lastPlan) Then
-                    Throw New ArgumentException(repMessages.getmsg(185))
-                End If
-
-            End If
+        ''    abbruch = False
+        ''    Dim index As Integer = 0
 
 
-        Else
-            ' tk 31.1.18
-            ' nur wenn Projekt bereits beauftragt ist und mind ein Element in der Datenbank ist 
-            isMinMax = False
-            vglBaseline = False
 
-            Dim minIndex As Integer = 0
-            Dim maxIndex As Integer = 0
-            Dim minValue As Double, maxValue As Double
-            Dim tmpValue As Double
-            Select Case auswahl
-                Case 1
-                    ' Personalkosten
-                    With projekthistorie.ElementAt(0)
-                        minValue = .getAllPersonalKosten.Sum
-                        maxValue = .getAllPersonalKosten.Sum
-                    End With
+        ''    ' finde in der Projekt-Historie das Projekt, das direkt vor hproj gespeichert wurde
 
-                    For s = 1 To anzSnapshots - 1
-                        With projekthistorie.ElementAt(s)
-                            tmpValue = .getAllPersonalKosten.Sum
-                            If tmpValue < minValue Then
-                                minIndex = s
-                                minValue = tmpValue
-                            End If
-                            If tmpValue > maxValue Then
-                                maxIndex = s
-                                maxValue = tmpValue
-                            End If
-                        End With
-                    Next
+        ''    Dim vgl As Date = hproj.timeStamp.AddMinutes(-1)
+
+        ''    lastPlan = projekthistorie.ElementAtorBefore(vgl)
+
+        ''    If IsNothing(lastPlan) Then
+        ''        If projekthistorie.Count >= 1 Then
+        ''            lastPlan = projekthistorie.Last
+        ''        End If
+        ''        If IsNothing(lastPlan) Then
+        ''            Throw New ArgumentException(repMessages.getmsg(185))
+        ''        End If
+
+        ''    End If
 
 
-                Case 2
-                    ' Sonstige Kosten
-                    With projekthistorie.ElementAt(0)
-                        minValue = .getGesamtAndereKosten.Sum
-                        maxValue = .getGesamtAndereKosten.Sum
-                    End With
+        ''Else
+        ''    ' tk 31.1.18
+        ''    ' nur wenn Projekt bereits beauftragt ist und mind ein Element in der Datenbank ist 
+        ''    isMinMax = False
+        ''    vglBaseline = False
 
-                    For s = 1 To anzSnapshots - 1
-                        With projekthistorie.ElementAt(s)
-                            tmpValue = .getGesamtAndereKosten.Sum
-                            If tmpValue < minValue Then
-                                minIndex = s
-                                minValue = tmpValue
-                            End If
-                            If tmpValue > maxValue Then
-                                maxIndex = s
-                                maxValue = tmpValue
-                            End If
-                        End With
-                    Next
-                Case 3
-                    ' Gesamtkosten
-                    With projekthistorie.ElementAt(0)
-                        minValue = .getGesamtKostenBedarf.Sum
-                        maxValue = .getGesamtKostenBedarf.Sum
-                    End With
+        ''    Dim minIndex As Integer = 0
+        ''    Dim maxIndex As Integer = 0
+        ''    Dim minValue As Double, maxValue As Double
+        ''    Dim tmpValue As Double
+        ''    Select Case auswahl
+        ''        Case 1
+        ''            ' Personalkosten
+        ''            With projekthistorie.ElementAt(0)
+        ''                minValue = .getAllPersonalKosten.Sum
+        ''                maxValue = .getAllPersonalKosten.Sum
+        ''            End With
 
-                    For s = 1 To anzSnapshots - 1
-                        With projekthistorie.ElementAt(s)
-                            tmpValue = .getGesamtKostenBedarf.Sum
-                            If tmpValue < minValue Then
-                                minIndex = s
-                                minValue = tmpValue
-                            End If
-                            If tmpValue > maxValue Then
-                                maxIndex = s
-                                maxValue = tmpValue
-                            End If
-                        End With
-                    Next
-                Case 4
-                    ' Rollen mit Qualifier
-                    With projekthistorie.ElementAt(0)
-                        minValue = .getPersonalKosten(qualifier).Sum
-                        maxValue = .getPersonalKosten(qualifier).Sum
-                    End With
-
-                    For s = 1 To anzSnapshots - 1
-                        With projekthistorie.ElementAt(s)
-                            tmpValue = .getPersonalKosten(qualifier).Sum
-                            If tmpValue < minValue Then
-                                minIndex = s
-                                minValue = tmpValue
-                            End If
-                            If tmpValue > maxValue Then
-                                maxIndex = s
-                                maxValue = tmpValue
-                            End If
-                        End With
-                    Next
+        ''            For s = 1 To anzSnapshots - 1
+        ''                With projekthistorie.ElementAt(s)
+        ''                    tmpValue = .getAllPersonalKosten.Sum
+        ''                    If tmpValue < minValue Then
+        ''                        minIndex = s
+        ''                        minValue = tmpValue
+        ''                    End If
+        ''                    If tmpValue > maxValue Then
+        ''                        maxIndex = s
+        ''                        maxValue = tmpValue
+        ''                    End If
+        ''                End With
+        ''            Next
 
 
-                Case 5
-                    ' Kostenart mit Qualifier
-                    With projekthistorie.ElementAt(0)
-                        minValue = .getKostenBedarf(qualifier).Sum
-                        maxValue = .getKostenBedarf(qualifier).Sum
-                    End With
+        ''        Case 2
+        ''            ' Sonstige Kosten
+        ''            With projekthistorie.ElementAt(0)
+        ''                minValue = .getGesamtAndereKosten.Sum
+        ''                maxValue = .getGesamtAndereKosten.Sum
+        ''            End With
 
-                    For s = 1 To anzSnapshots - 1
-                        With projekthistorie.ElementAt(s)
-                            tmpValue = .getKostenBedarf(qualifier).Sum
-                            If tmpValue < minValue Then
-                                minIndex = s
-                                minValue = tmpValue
-                            End If
-                            If tmpValue > maxValue Then
-                                maxIndex = s
-                                maxValue = tmpValue
-                            End If
-                        End With
-                    Next
+        ''            For s = 1 To anzSnapshots - 1
+        ''                With projekthistorie.ElementAt(s)
+        ''                    tmpValue = .getGesamtAndereKosten.Sum
+        ''                    If tmpValue < minValue Then
+        ''                        minIndex = s
+        ''                        minValue = tmpValue
+        ''                    End If
+        ''                    If tmpValue > maxValue Then
+        ''                        maxIndex = s
+        ''                        maxValue = tmpValue
+        ''                    End If
+        ''                End With
+        ''            Next
+        ''        Case 3
+        ''            ' Gesamtkosten
+        ''            With projekthistorie.ElementAt(0)
+        ''                minValue = .getGesamtKostenBedarf.Sum
+        ''                maxValue = .getGesamtKostenBedarf.Sum
+        ''            End With
 
-                Case Else
-                    ' Gesamtkosten
-                    With projekthistorie.ElementAt(0)
-                        minValue = .getGesamtKostenBedarf.Sum
-                        maxValue = .getGesamtKostenBedarf.Sum
-                    End With
+        ''            For s = 1 To anzSnapshots - 1
+        ''                With projekthistorie.ElementAt(s)
+        ''                    tmpValue = .getGesamtKostenBedarf.Sum
+        ''                    If tmpValue < minValue Then
+        ''                        minIndex = s
+        ''                        minValue = tmpValue
+        ''                    End If
+        ''                    If tmpValue > maxValue Then
+        ''                        maxIndex = s
+        ''                        maxValue = tmpValue
+        ''                    End If
+        ''                End With
+        ''            Next
+        ''        Case 4
+        ''            ' Rollen mit Qualifier
+        ''            With projekthistorie.ElementAt(0)
+        ''                minValue = .getPersonalKosten(qualifier).Sum
+        ''                maxValue = .getPersonalKosten(qualifier).Sum
+        ''            End With
 
-                    For s = 1 To anzSnapshots - 1
-                        With projekthistorie.ElementAt(s)
-                            tmpValue = .getGesamtKostenBedarf.Sum
-                            If tmpValue < minValue Then
-                                minIndex = s
-                                minValue = tmpValue
-                            End If
-                            If tmpValue > maxValue Then
-                                maxIndex = s
-                                maxValue = tmpValue
-                            End If
-                        End With
-                    Next
-            End Select
+        ''            For s = 1 To anzSnapshots - 1
+        ''                With projekthistorie.ElementAt(s)
+        ''                    tmpValue = .getPersonalKosten(qualifier).Sum
+        ''                    If tmpValue < minValue Then
+        ''                        minIndex = s
+        ''                        minValue = tmpValue
+        ''                    End If
+        ''                    If tmpValue > maxValue Then
+        ''                        maxIndex = s
+        ''                        maxValue = tmpValue
+        ''                    End If
+        ''                End With
+        ''            Next
 
-            Try
-                beauftragung = projekthistorie.ElementAt(minIndex)
-                lastPlan = projekthistorie.ElementAt(maxIndex)
-            Catch ex As Exception
-                'Throw New ArgumentException("Fehler in Min-/Max Bestimmung " & ex.Message)
-                Throw New ArgumentException(repMessages.getmsg(186) & ex.Message)
-            End Try
 
-        End If
+        ''        Case 5
+        ''            ' Kostenart mit Qualifier
+        ''            With projekthistorie.ElementAt(0)
+        ''                minValue = .getKostenBedarf(qualifier).Sum
+        ''                maxValue = .getKostenBedarf(qualifier).Sum
+        ''            End With
+
+        ''            For s = 1 To anzSnapshots - 1
+        ''                With projekthistorie.ElementAt(s)
+        ''                    tmpValue = .getKostenBedarf(qualifier).Sum
+        ''                    If tmpValue < minValue Then
+        ''                        minIndex = s
+        ''                        minValue = tmpValue
+        ''                    End If
+        ''                    If tmpValue > maxValue Then
+        ''                        maxIndex = s
+        ''                        maxValue = tmpValue
+        ''                    End If
+        ''                End With
+        ''            Next
+
+        ''        Case Else
+        ''            ' Gesamtkosten
+        ''            With projekthistorie.ElementAt(0)
+        ''                minValue = .getGesamtKostenBedarf.Sum
+        ''                maxValue = .getGesamtKostenBedarf.Sum
+        ''            End With
+
+        ''            For s = 1 To anzSnapshots - 1
+        ''                With projekthistorie.ElementAt(s)
+        ''                    tmpValue = .getGesamtKostenBedarf.Sum
+        ''                    If tmpValue < minValue Then
+        ''                        minIndex = s
+        ''                        minValue = tmpValue
+        ''                    End If
+        ''                    If tmpValue > maxValue Then
+        ''                        maxIndex = s
+        ''                        maxValue = tmpValue
+        ''                    End If
+        ''                End With
+        ''            Next
+        ''    End Select
+
+        ''    Try
+        ''        beauftragung = projekthistorie.ElementAt(minIndex)
+        ''        lastPlan = projekthistorie.ElementAt(maxIndex)
+        ''    Catch ex As Exception
+        ''        'Throw New ArgumentException("Fehler in Min-/Max Bestimmung " & ex.Message)
+        ''        Throw New ArgumentException(repMessages.getmsg(186) & ex.Message)
+        ''    End Try
+
+        ''End If
+
+        ' beauftragung und lastplan auf bproj setzen 
+        ' die vorherige zurücksetzen 
+        beauftragung = bproj
+        lastPlan = bproj
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4283,7 +4298,7 @@ Public Module Projekte
                 If isMinMax Then
                     'titelTeile(0) = "Min/Max Personalkosten (T€)" & vbLf
                     titelTeile(0) = repMessages.getmsg(187)
-                    
+
                 Else
                     'titelTeile(0) = "Soll/Ist Personalkosten (T€)" & vbLf
                     If awinSettings.englishLanguage Then
@@ -4400,33 +4415,20 @@ Public Module Projekte
         Dim tmpSum As String
         If vglBaseline Then
             If projekthistorie.Count > 1 Then
-                tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+                tmpSum = " (" & werteC.Sum.ToString("##,##0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
             Else
-                tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
+                tmpSum = " (" & werteC.Sum.ToString("##,##0.") & zaehlEinheit & ")"
             End If
             'tmpSum = " (" & werteB.Sum.ToString("####0.") & " / " & werteC.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
 
         Else
-            'If projekthistorie.Count > 1 Then
-            '    tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteL.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
-            'Else
-            '    tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
-            'End If
-            tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
-            'tmpSum = " (" & werteL.Sum.ToString("####0.") & " / " & werteC.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
-
+            tmpSum = " (" & werteC.Sum.ToString("##,##0.") & zaehlEinheit & ")"
         End If
 
 
 
         titelTeile(0) = titelTeile(0) & tmpSum
         titelTeilLaengen(0) = titelTeile(0).Length
-        'titelTeile(1) = fullname & vbLf
-        'titelTeile(1) = ""
-        'titelTeilLaengen(1) = titelTeile(1).Length
-        'titelTeile(2) = ""
-        'titelTeilLaengen(2) = titelTeile(2).Length
-        'diagramTitle = titelTeile(0) & titelTeile(1)
         diagramTitle = titelTeile(0)
 
 
@@ -4503,7 +4505,7 @@ Public Module Projekte
         Next i
 
 
-        If gesternColumn >= minColumn And _
+        If gesternColumn >= minColumn And
             gesternColumn <= maxColumn Then
 
             pastAndFuture = True
@@ -4648,7 +4650,7 @@ Public Module Projekte
                     .Format.Line.ForeColor.RGB = visboFarbeBlau
                 End With
 
-                If (isMinMax Or vglBaseline) And projekthistorie.Count > 1 Then
+                If Not IsNothing(bproj) Then
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         If isMinMax Then
                             '.name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
@@ -4661,16 +4663,10 @@ Public Module Projekte
                         End If
                         '.Name = "Version (" & beauftragung.timeStamp.ToString("d") & ")"
                         '.Interior.Color = awinSettings.SollIstFarbeB
-                        .Interior.Color = visboFarbeBlau
+                        .Interior.Color = visboFarbeOrange
                         .Values = tdatenreiheB
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
-
-                        'If isMinMax Then
-                        '    .Format.Line.Weight = 3
-                        'Else
-                        '    .Format.Line.Weight = 4
-                        'End If
 
                         With .Format.Line
                             .Weight = 4
@@ -4682,28 +4678,7 @@ Public Module Projekte
                     End With
                 End If
 
-                ' tk, 31.1.18 gar nicht mehr machen ..
-                ''If (isMinMax Or Not vglBaseline) And projekthistorie.Count > 1 Then
-                ''    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                ''        If isMinMax Then
-                ''            '.name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")
-                ''            .Name = repMessages.getmsg(197) & " " & lastPlan.timeStamp.ToString("d")
-                ''        Else
-                ''            '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
-                ''            .Name = repMessages.getmsg(44) & " " & lastPlan.timeStamp.ToString("d")
-                ''        End If
-                ''        '.Name = "Version (" & lastPlan.timeStamp.ToString("d") & ")"
-                ''        .Interior.Color = awinSettings.SollIstFarbeL
-                ''        .Values = tdatenreiheL
-                ''        .XValues = Xdatenreihe
-                ''        .ChartType = Excel.XlChartType.xlLine
-                ''        .Format.Line.Weight = 6
-                ''        .Format.Line.ForeColor.RGB = visboFarbeOrange
-                ''    End With
-                ''End If
 
-
-                
 
             End With
 
@@ -4911,9 +4886,9 @@ Public Module Projekte
         Dim tmpSum As String
 
         If vglBaseline Then
-            tmpSum = " (" & werteC.Sum.ToString("####0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+            tmpSum = " (" & werteC.Sum.ToString("##,##0.") & " / " & werteB.Sum.ToString("##,##0.") & " " & zaehlEinheit & ")"
         Else
-            tmpSum = " (" & werteC.Sum.ToString("####0.") & zaehlEinheit & ")"
+            tmpSum = " (" & werteC.Sum.ToString("##,##0.") & zaehlEinheit & ")"
         End If
 
 
@@ -5038,24 +5013,18 @@ Public Module Projekte
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
                 .Name = repMSg(6) & " " & hproj.timeStamp.ToString("d")
-                '.Name = "Version (" & hproj.timeStamp.ToString("d") & ")"
-                '.Interior.Color = awinSettings.SollIstFarbeC
                 .Interior.Color = visboFarbeBlau
                 .Values = tdatenreiheC
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlLine
                 .Format.Line.Weight = 4
                 .Format.Line.ForeColor.RGB = visboFarbeBlau
+
             End With
 
             If vglBaseline Then
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-
-                    ''If vglBaseline Then
-                    ''    .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
-                    ''Else
-                    ''    .Name = repMSg(4) & " " & vProj.timeStamp.ToString("d")
-                    ''End If
+                    '
                     .Name = repMSg(3) & " " & vProj.timeStamp.ToString("d")
                     .Interior.Color = visboFarbeOrange
                     .Values = tdatenreiheB
@@ -5899,9 +5868,9 @@ Public Module Projekte
                 'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
                 If Not IsNothing(vglproj) Then
                     'titelTeile(0) = repMessages.getmsg(159) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
-                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
+                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
+                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("##,##0.") & " " & zE & ")"
                 End If
 
                 titelTeilLaengen(0) = titelTeile(0).Length
@@ -5928,9 +5897,9 @@ Public Module Projekte
 
                 If Not IsNothing(vglproj) Then
                     'titelTeile(0) = repMessages.getmsg(160) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                 End If
 
                 titelTeilLaengen(0) = titelTeile(0).Length
@@ -6288,10 +6257,10 @@ Public Module Projekte
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
                             'titelTeile(0) = repmsg(4) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
-                            titelTeile(0) = repmsg(4) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
+                            titelTeile(0) = repmsg(4) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
-                            titelTeile(0) = repmsg(4) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
+                            titelTeile(0) = repmsg(4) & " (" & gesamt_summe.ToString("##,##0.") & " " & zE & ")"
                         End If
                         titelTeile(1) = ""
 
@@ -6300,10 +6269,10 @@ Public Module Projekte
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                             'titelTeile(0) = repmsg(0) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(0) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                            titelTeile(0) = repmsg(0) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(0) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                            titelTeile(0) = repmsg(0) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                         End If
                         titelTeile(1) = ""
                     Else
@@ -6317,19 +6286,19 @@ Public Module Projekte
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                             'titelTeile(0) = repmsg(2) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(2) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                            titelTeile(0) = repmsg(2) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(2) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                            titelTeile(0) = repmsg(2) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                         End If
                     ElseIf auswahl = 2 Then
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                             'titelTeile(0) = repmsg(5) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(5) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                            titelTeile(0) = repmsg(5) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(5) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                            titelTeile(0) = repmsg(5) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                         End If
                     Else
                         titelTeile(0) = "--- (T€)" & vbLf & pname
@@ -6580,9 +6549,9 @@ Public Module Projekte
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
             If Not IsNothing(vglProj) Then
                 'titelTeile(0) = repMessages.getmsg(159) & " (" & vSum.ToString("####0.") & " / " & gesamt_Summe.ToString("####0.") & " " & zE & ")"
-                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
             Else
-                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
+                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("##,##0.") & " " & zE & ")"
             End If
 
             titelTeilLaengen(0) = titelTeile(0).Length
@@ -6596,9 +6565,9 @@ Public Module Projekte
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
             If Not IsNothing(vglProj) Then
                 'titelTeile(0) = repMessages.getmsg(160) & " (" & vSum.ToString("####0.") & " / " & gesamt_Summe.ToString("####0.") & " T€" & ")"
-                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
             Else
-                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
+                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("##,##0.") & " T€" & ")"
             End If
 
             titelTeilLaengen(0) = titelTeile(0).Length
@@ -6909,9 +6878,9 @@ Public Module Projekte
                 ' tk 12.6.17 
                 If Not IsNothing(vglProj) Then
                     'titelTeile(0) = repMessages.getmsg(165) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                 End If
 
                 titelTeilLaengen(0) = titelTeile(0).Length
@@ -6938,9 +6907,9 @@ Public Module Projekte
 
                 If Not IsNothing(vglProj) Then
                     'titelTeile(0) = repMessages.getmsg(166) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                 End If
 
                 titelTeilLaengen(0) = titelTeile(0).Length
@@ -7470,9 +7439,9 @@ Public Module Projekte
 
                 If Not IsNothing(vglProj) Then
                     'titelTeile(0) = repMessages.getmsg(165) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                 End If
 
 
@@ -7485,9 +7454,9 @@ Public Module Projekte
                 ' tk 12.6.17
                 If Not IsNothing(vglProj) Then
                     'titelTeile(0) = repMessages.getmsg(166) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
+                    titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                 End If
 
                 titelTeilLaengen(0) = titelTeile(0).Length
@@ -8026,7 +7995,7 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####0.") & " " & zE & ")"
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " " & zE & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = ""
             'If calledFromReporting Then
@@ -8048,7 +8017,7 @@ Public Module Projekte
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeile(1) = ""
@@ -8115,14 +8084,25 @@ Public Module Projekte
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlPie
-                        .HasDataLabels = False
-                        '.DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+
+                        If calledFromReporting Then
+                            .HasDataLabels = True
+                            .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                        Else
+                            .HasDataLabels = False
+                        End If
+
                     End With
 
                     For r = 1 To anzRollen
                         roleName = CStr(ErgebnisListeR.Item(r))
                         With .SeriesCollection(1).Points(r)
                             .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
+
+                            If calledFromReporting Then
+                                .DataLabel.Font.Size = 10
+                            End If
+
                             '.DataLabel.Font.Size = awinSettings.fontsizeItems
                         End With
                     Next r
@@ -8253,7 +8233,7 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("####0.") & " " & zE & ")"
+            titelTeile(0) = repMessages.getmsg(159) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " " & zE & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = ""
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
@@ -8263,7 +8243,7 @@ Public Module Projekte
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
+            titelTeile(0) = repMessages.getmsg(164) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             'titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeile(1) = ""
@@ -8303,7 +8283,7 @@ Public Module Projekte
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlPie
-                .HasDataLabels = False
+                '.HasDataLabels = False
                 '.DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
             End With
 
@@ -8448,7 +8428,7 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
 
-            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
+            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = ""
             'If calledFromReporting Then
@@ -8470,7 +8450,7 @@ Public Module Projekte
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
+            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = ""
 
@@ -8545,8 +8525,13 @@ Public Module Projekte
                         .Values = tdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlPie
-                        .HasDataLabels = True
-                        .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                        If calledFromReporting Then
+                            .HasDataLabels = True
+                            .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                        Else
+                            .HasDataLabels = False
+                        End If
+
                     End With
 
                     For k = 0 To anzKostenarten - 1 + auswahl - 1
@@ -8555,14 +8540,19 @@ Public Module Projekte
                             costname = repMessages.getmsg(164)
                             With .SeriesCollection(1).Points(k + 1)
                                 .Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                                .DataLabel.Font.Size = 10
+                                If calledFromReporting Then
+                                    .DataLabel.Font.Size = 10
+                                End If
+
 
                             End With
                         Else
                             costname = CStr(ErgebnisListeK.Item(k + 1))
                             With .SeriesCollection(1).Points(k + 1)
                                 .Interior.Color = CostDefinitions.getCostdef(costname).farbe
-                                .DataLabel.Font.Size = 10
+                                If calledFromReporting Then
+                                    .DataLabel.Font.Size = 10
+                                End If
 
                             End With
                         End If
@@ -8706,7 +8696,7 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
+            titelTeile(0) = repMessages.getmsg(165) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = ""
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -8715,7 +8705,7 @@ Public Module Projekte
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
-            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("####0.") & " T€" & ")"
+            titelTeile(0) = repMessages.getmsg(166) & " (" & tdatenreihe.Sum.ToString("##,##0.") & " T€" & ")"
             titelTeilLaengen(0) = titelTeile(0).Length
 
             titelTeile(1) = ""
@@ -8753,8 +8743,8 @@ Public Module Projekte
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlPie
-                .HasDataLabels = True
-                .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                '.HasDataLabels = True
+                '.DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
             End With
 
             For k = 0 To anzKostenarten - 1 + auswahl - 1
@@ -10498,8 +10488,10 @@ Public Module Projekte
 
                 Case ptReportComponents.prAmpelText
                     If Not IsNothing(hproj) Then
-                        Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                        pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
+                        'Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+                        'pptShape.TextFrame2.TextRange.Text = qualifier2 & ": " & hproj.ampelErlaeuterung
+                        ' 23.6.18 nur noch den eigentlichen Ampel-Text schreiben ...
+                        pptShape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
                     End If
 
                 Case ptReportComponents.prBusinessUnit
@@ -10517,13 +10509,14 @@ Public Module Projekte
                 Case ptReportComponents.prDescription
                     If Not IsNothing(hproj) Then
                         Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                        Dim initialText As String = qualifier2 & ": " & hproj.description
-                        pptShape.TextFrame2.TextRange.Text = initialText
+                        ' tk 23.6.18 nur noch den eigentlichen Text schreiben  
+                        Dim initialText As String = hproj.description
 
                         If hproj.variantDescription.Length > 0 Then
-                            pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf & _
+                            initialText = initialText & vbLf & vbLf &
                                 "Varianten-Beschreibung: " & hproj.variantDescription
                         End If
+                        pptShape.TextFrame2.TextRange.Text = initialText
                     End If
 
                 Case ptReportComponents.prLaufzeit
