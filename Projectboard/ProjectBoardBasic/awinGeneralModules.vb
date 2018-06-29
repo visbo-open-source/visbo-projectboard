@@ -2346,6 +2346,8 @@ Public Module awinGeneralModules
                                     Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
                                     Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
+                                    ' 29.6.18 auch hier den Parent weiterschalten 
+                                    parents(curLevel) = curRoleName
                                 Else
                                     ' hier den Parent weiterschalten  
                                     parents(curLevel) = curRoleName
@@ -2376,7 +2378,7 @@ Public Module awinGeneralModules
 
                                 If curLevel < lastLevel Then
                                     ' in der Hierarchie zurück 
-                                    For i As Integer = curLevel + 1 To maxIndent - 1
+                                    For i As Integer = curLevel + 1 To maxIndent
                                         parents(i) = ""
                                     Next
                                 End If
