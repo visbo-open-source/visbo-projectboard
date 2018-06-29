@@ -6642,7 +6642,7 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
 
 
-        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "INFOSYS, DRUCK", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
+        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "DRUCK", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
                         "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
         tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DI1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
 
@@ -6669,7 +6669,7 @@ Public Module awinGeneralModules
 
                         ' test tk 9.6.18
                         ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1)) Or
-                            tmpRoleNames(i - 1) = "INFOSYS, DRUCK")
+                            tmpRoleNames(i - 1) = "DRUCK")
 
                         If Not ok Then
                             Call MsgBox("Fehler in Spalte mit Angaben zu (?) " & tmpRoleNames(i - 1))

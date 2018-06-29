@@ -2239,6 +2239,25 @@ Module Module1
                                         Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
                                         bProj = Nothing
                                     End Try
+
+                                ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
+                                    Try
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, curTimeStamp.AddHours(-1))
+
+                                        Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
+
+                                        Dim q1 As String = pptShape.Tags.Item("Q1")
+                                        Dim q2 As String = pptShape.Tags.Item("Q2")
+                                        Dim nids As String = pptShape.Tags.Item("NIDS")
+
+                                        Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
+                                                                         toDoCollection, q1, q2)
+
+                                    Catch ex As Exception
+                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                        bProj = Nothing
+                                    End Try
                                 End If
 
                             End If
