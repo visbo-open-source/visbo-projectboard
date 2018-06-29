@@ -78,7 +78,7 @@ Public Class Ribbon1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    Call logInToMongoDB()
+                    noDBAccessInPPT = logInToMongoDB(True)
 
                 End If
 
@@ -149,7 +149,7 @@ Public Class Ribbon1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    Call logInToMongoDB()
+                    noDBAccessInPPT = logInToMongoDB(True)
 
                     ' jetzt soll der username, pwd verschlüsselt gemerkt werden ...
 
@@ -427,7 +427,7 @@ Public Class Ribbon1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    Call logInToMongoDB()
+                    noDBAccessInPPT = logInToMongoDB(True)
 
                 End If
 

@@ -41,8 +41,10 @@ Public Class ThisAddIn
             awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
             awinSettings.visboDebug = My.Settings.VISBODebug
             awinSettings.visboMapping = My.Settings.VISBOMapping
-            awinSettings.userNamePWD = My.Settings.userNamePWD
-
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If awinSettings.rememberUserPwd Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            End If
 
             dbUsername = ""
             dbPasswort = ""
@@ -83,12 +85,13 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
                 If awinSettings.rememberUserPwd Then
                     My.Settings.userNamePWD = awinSettings.userNamePWD
                 Else
                     My.Settings.userNamePWD = ""
                 End If
-
+                My.Settings.Save()
 
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
@@ -119,11 +122,7 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
-                If awinSettings.rememberUserPwd Then
-                    My.Settings.userNamePWD = awinSettings.userNamePWD
-                Else
-                    My.Settings.userNamePWD = ""
-                End If
+
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
 

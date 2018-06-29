@@ -13708,7 +13708,7 @@ Public Module awinGeneralModules
 
                     Else
                         ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
-                        noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
+                        ' noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
 
                         ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
                         If noDBAccess Then

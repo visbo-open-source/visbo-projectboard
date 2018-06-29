@@ -2043,9 +2043,9 @@ Module oneClickGeneralModules
                 If dbUsername = "" Or dbPasswort = "" Then
 
                     ' ur: 23.01.2015: Abfragen der Login-Informationen
-                    'loginErfolgreich = loginProzedur()
                     loginErfolgreich = logInToMongoDB(True)
 
+                    My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
                     If awinSettings.rememberUserPwd Then
                         My.Settings.userNamePWD = awinSettings.userNamePWD
                     Else

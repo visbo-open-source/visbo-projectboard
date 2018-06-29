@@ -45,13 +45,14 @@
         Me.Tab1 = Me.Factory.CreateRibbonTab
         Me.oneClickPPT = Me.Factory.CreateRibbonTab
         Me.VISBO = Me.Factory.CreateRibbonGroup
-        Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.EinzelprojektReport = Me.Factory.CreateRibbonButton
+        Me.Separator1 = Me.Factory.CreateRibbonSeparator
         Me.DBspeichern = Me.Factory.CreateRibbonButton
         Me.Einstellung = Me.Factory.CreateRibbonButton
         Me.Tab1.SuspendLayout()
         Me.oneClickPPT.SuspendLayout()
         Me.VISBO.SuspendLayout()
+        Me.SuspendLayout()
         '
         'Tab1
         '
@@ -74,10 +75,6 @@
         Me.VISBO.Label = "VISBO"
         Me.VISBO.Name = "VISBO"
         '
-        'Separator1
-        '
-        Me.Separator1.Name = "Separator1"
-        '
         'EinzelprojektReport
         '
         Me.EinzelprojektReport.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
@@ -85,6 +82,10 @@
         Me.EinzelprojektReport.Label = "Einzelprojekt Report"
         Me.EinzelprojektReport.Name = "EinzelprojektReport"
         Me.EinzelprojektReport.ShowImage = True
+        '
+        'Separator1
+        '
+        Me.Separator1.Name = "Separator1"
         '
         'DBspeichern
         '
@@ -116,6 +117,7 @@
         Me.oneClickPPT.PerformLayout()
         Me.VISBO.ResumeLayout(False)
         Me.VISBO.PerformLayout()
+        Me.ResumeLayout(False)
 
     End Sub
 
