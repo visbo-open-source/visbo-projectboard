@@ -50,7 +50,7 @@ Public Class clsawinSettings
     Public Property databaseURL As String
     Public Property userNamePWD As String
     Public Property rememberUserPwd As Boolean
-    Public Property mongoDBWithSSL As Boolean
+    Public Property DBWithSSL As Boolean
 
     Public Property globalPath As String
     Public Property awinPath As String
@@ -275,7 +275,7 @@ Public Class clsawinSettings
         _databaseName = ""
         _databaseURL = ""
         _rememberUserPwd = False
-        _mongoDBWithSSL = False
+        _DBWithSSL = False
         _awinPath = ""
 
         _selectedColumn = 1

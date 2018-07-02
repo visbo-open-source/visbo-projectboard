@@ -22897,7 +22897,7 @@ Public Module awinGeneralModules
                         Case "userNamePWD"
                             awinSettings.userNamePWD = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "mongoDBWithSSL"
-                            awinSettings.mongoDBWithSSL = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                            awinSettings.DBWithSSL = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "VISBODebug"
                             awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "rememberUserPWD"

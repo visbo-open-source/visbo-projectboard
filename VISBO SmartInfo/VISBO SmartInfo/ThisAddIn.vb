@@ -36,7 +36,10 @@ Public Class ThisAddIn
 
         ' im Powerpoint soll das pwd immer gemerkt werden ..
 
-
+        awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        If awinSettings.rememberUserPwd Then
+            awinSettings.userNamePWD = My.Settings.userNamePWD
+        End If
 
     End Sub
 
