@@ -562,6 +562,7 @@ Public Module Module1
     Public Enum PTpptTableTypes
         prZiele = 0
         prBudgetCostAPVCV = 1
+        prMilestoneAPVCV = 2
     End Enum
     Public Enum PTpptTableCellType
         name = 0
@@ -4640,7 +4641,243 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' zeichnet bzw. aktualisiert die Powerpoint Table Milestone-Übersicht 
+    ''' wenn todoCollection leer, dann wird die Perfromance Metrik gezeichnet 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <param name="toDoCollection">enthält die NAmen, ggf incl P:, V: oder C: Qualifier und ggf inkl Breadcrumb Anteilen </param>
+    ''' <param name="q1">0, später die Anzahl Phasen </param>
+    ''' <param name="q2">Anzahl Milestones; aktuell redundant, da identisch mit Anzahl in der Collection</param>
+    Public Sub zeichneTableMilestoneAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
+                                     ByVal toDoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
+
+        Dim repmsg() As String
+        ' Performance Ratio 1 ist das Verhältnis zwischen der Anzahl aktuell erreichter Meilensteine im betrachteten Monat versus der Anzahl erreichter Meilensteine im betrachteten Monat im stand zur Beauftragung 
+        ' Performance Ratio 2 ist das Verhältnis zwischen der Anzahl aktuell erreichter Meilensteine im betrachteten Monat versus der Anzahl erreichter Meilensteine im betrachteten Monat im Stand der letzten Planung
+        repmsg = {"total sum of milestones", "finished until last month", "due this month", "total sum of finished milestones up-to-date", "due next month", "Overdue", "Performance Ratio (first)", "Performance Ratio (last)"}
+
+        Dim txtPKI(7) As String
+
+        txtPKI(0) = repmsg(0) ' total sum of milestones
+        txtPKI(1) = repmsg(1) ' finished until last month
+        txtPKI(2) = repmsg(2) ' due this month
+        txtPKI(3) = repmsg(3) ' total sum of finished milestones up-to-date
+        txtPKI(4) = repmsg(4) ' due next month
+        txtPKI(5) = repmsg(5) ' Overdue
+        txtPKI(6) = repmsg(6) ' Performance Ratio (first)
+        txtPKI(7) = repmsg(7) ' Performance Ratio (last)
+
+
+        ' steuert Einrückung ja, nein im Not Overview Modus 
+        Dim einrueckung As Integer = 0
+
+        Dim tabelle As pptNS.Table
+        Dim anzSpalten As Integer
+
+
+        Dim bigType As Integer = ptReportBigTypes.tables
+        Dim compID As Integer = PTpptTableTypes.prMilestoneAPVCV
+
+        ' wenn die gleich sind, sollen keine zwei Spalten mit identischen Werten ausgewiesen werden 
+        If Not IsNothing(lproj) And Not IsNothing(bproj) Then
+            If lproj.timeStamp = bproj.timeStamp Then
+                lproj = Nothing
+            End If
+        End If
+
+        Dim considerFapr As Boolean = Not IsNothing(bproj)
+        Dim considerLapr As Boolean = Not IsNothing(lproj)
+
+        Dim anzMilestones As Integer = 0
+        Dim anzPhases As Integer = 0
+
+        ' in q1, q2 sind dei Anzahl Rollen bzw Kosten drin, sofern in toDoCollection was angegeben ist 
+        Try
+            anzPhases = CInt(q1)
+            anzMilestones = CInt(q2)
+        Catch ex As Exception
+
+        End Try
+
+        Dim showOverviewOnly As Boolean = (toDoCollection.Count = 0)
+
+        ' jetzt wird SmartTableInfo gesetzt 
+        ' jetzt wird die SmartTableInfo gesetzt 
+        Call addSmartPPTTableInfo(pptShape,
+                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  q1, q2, bigType, compID,
+                                  toDoCollection)
+
+        ' jetzt werden die einzelnen Zeilen geschrieben 
+
+        Try
+            tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+            If anzSpalten = 6 Then
+                ' dann ist alles in Ordnung .. 
+
+
+                ' jetzt überprüfen, ob die Tabelle aktuell nur aus 2 Zeilen besteht ...
+                If tabelle.Rows.Count > 2 Then
+                    Do While tabelle.Rows.Count > 2
+                        tabelle.Rows(2).Delete()
+                    Loop
+                End If
+
+                ' jetzt die Werte in den 6 Spalten zurücksetzen 
+                Try
+                    With tabelle
+                        For i As Integer = 1 To 6
+                            .Cell(2, i).Shape.TextFrame2.TextRange.Text = ""
+                        Next
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+                Dim faprDate As Date = Date.MinValue
+                Dim laprDate As Date = Date.MinValue
+                Dim curDate As Date = Date.MinValue
+
+                If Not IsNothing(hproj) Then
+                    curDate = hproj.timeStamp
+                End If
+                If Not IsNothing(bproj) Then
+                    faprDate = bproj.timeStamp
+                End If
+                If Not IsNothing(lproj) Then
+                    laprDate = lproj.timeStamp
+                End If
+
+                ' jetzt die Headerzeile schreiben 
+                Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+
+                Dim tabellenzeile As Integer = 2
+                Try
+
+                    If Not showOverviewOnly Then
+
+                        einrueckung = 1
+
+                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                        Dim firstMilestone As Boolean = True
+
+                        Dim curValue As Date = Date.MinValue ' not defined
+                        Dim faprValue As Date = Date.MinValue  ' first approved version 
+                        Dim laprValue As Date = Date.MinValue  ' last approved version
+
+                        If anzPhases > 0 Then
+                            ' 
+                            'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = "Phases"
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+                        End If
+
+                        ' nimmt die eindeutigen IDs auf 
+                        Dim listOfIDs As New Collection
+
+                        For m As Integer = 1 To toDoCollection.Count
+
+                            Dim tmpCollection As New Collection From {
+                                CStr(toDoCollection.Item(m))
+                            }
+
+                            'Dim hprojBreadcrumbs() As String = hproj.getBreadCrumbArray(Nothing, hproj.getElemIdsOf(tmpCollection, True))
+                            'Dim bprojBreadCrumbs() As String = Nothing
+                            'Dim lprojBreadCrumbs() As String = Nothing
+
+                            Dim hprojLIDs As Collection = hproj.getElemIdsOf(tmpCollection, True)
+                            Dim bProjLIDs As Collection = Nothing
+                            Dim lprojLIDs As Collection = Nothing
+
+                            If considerFapr Then
+                                bProjLIDs = bproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            If considerLapr Then
+                                lprojLIDs = lproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            ' hproj steuert jetzt die Schleife 
+                            For hix As Integer = 1 To hprojLIDs.Count
+
+                                Dim hprojMsID As String = CStr(hprojLIDs.Item(hix))
+                                Dim curItem As String = elemNameOfElemID(hprojMsID)
+
+                                curValue = Date.MinValue
+                                faprValue = Date.MinValue
+                                laprValue = Date.MinValue
+
+                                Dim hMilestone As clsMeilenstein = hproj.getMilestoneByID(hprojMsID)
+
+                                If Not IsNothing(hMilestone) Then
+                                    curValue = hMilestone.getDate
+                                End If
+
+                                Dim bMileStone As clsMeilenstein = Nothing
+                                If considerFapr Then
+                                    If hix <= bProjLIDs.Count Then
+                                        bMileStone = bproj.getMilestoneByID(CStr(bProjLIDs.Item(hix)))
+                                        If Not IsNothing(bMileStone) Then
+                                            faprValue = bMileStone.getDate
+                                        End If
+                                    End If
+                                End If
+
+                                Dim lMilestone As clsMeilenstein = Nothing
+                                If considerLapr Then
+                                    If hix <= lprojLIDs.Count Then
+                                        lMilestone = lproj.getMilestoneByID(CStr(lprojLIDs.Item(hix)))
+                                        If Not IsNothing(lMilestone) Then
+                                            laprValue = lMilestone.getDate
+                                        End If
+                                    End If
+                                End If
+
+                                Call schreibeMilestoneAPVCVZeile(tabelle, tabellenzeile, curItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+
+                                tabelle.Rows.Add()
+                                tabellenzeile = tabellenzeile + 1
+
+
+                            Next
+
+                        Next
+
+
+                    Else
+
+                        Call MsgBox("noch nicht implementiert ...")
+
+                    End If
+
+                    ' jetzt letzte Zeile löschen  ...
+                    tabelle.Rows(tabellenzeile).Delete()
+                    tabellenzeile = tabellenzeile - 1
+
+                Catch ex1 As Exception
+
+                End Try
+            Else
+                Throw New Exception("Tabelle should have 6 columns ... exit ...")
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+
+
+    ''' <summary>
     ''' zeichnet bzw. aktualisiert die Powerpoint Table Kosten-Übersicht 
+    ''' wenn todoCollection leer, dann wird die Gesamt-Übersicht Budget, Personal-Kosten, sonstige Kosten, Ergebnis gezeichnet 
     ''' </summary>
     ''' <param name="pptShape"></param>
     ''' <param name="hproj"></param>
@@ -4649,12 +4886,13 @@ Public Module Module1
     ''' <param name="todoCollection">enthält die NAmen der Rollen und Kostenarten</param>
     ''' <param name="q1">gibt an, wieviele Rollen, die ersten q1 in der todoCollection sind Rollen</param>
     ''' <param name="q2">gibt an wieviele Kosten</param>
-    Sub zeichneTableBudgetCostAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
+    Public Sub zeichneTableBudgetCostAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
                                     ByVal todoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
 
 
         Dim repmsg() As String
-        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
+
+        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
         'repmsg(1) = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
 
         ' solange die repMessages nicht in Datenbank sind, geht das nicht 
@@ -4670,6 +4908,8 @@ Public Module Module1
         txtPKI(1) = repmsg(1) ' Personalkosten
         txtPKI(2) = repmsg(2) ' Sonstige Kosten
         txtPKI(3) = repmsg(3) ' Ergebnis-Prognose
+
+
 
         ' steuert Einrückung ja, nein im Not Overview Modus 
         Dim einrueckung As Integer = 0
@@ -4754,7 +4994,7 @@ Public Module Module1
                 End If
 
                 ' jetzt die Headerzeile schreiben 
-                Call schreibeBudgetCostAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+                Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
 
                 Dim tabellenzeile As Integer = 2
                 Try
@@ -4887,7 +5127,7 @@ Public Module Module1
     ''' <param name="faprDate"></param>
     ''' <param name="laprDate"></param>
     ''' <param name="curDate"></param>
-    Private Sub schreibeBudgetCostAPVCVHeaderZeile(ByRef table As pptNS.Table,
+    Private Sub schreibeAPVCVHeaderZeile(ByRef table As pptNS.Table,
                                                    ByVal faprDate As Date, ByVal laprDate As Date, ByVal curDate As Date,
                                                    ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
 
@@ -5072,6 +5312,135 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' schreibt eine Zeile in die Tabelle Milestones Approved Versions versus curVersion
+    ''' </summary>
+    ''' <param name="table"></param>
+    ''' <param name="zeile"></param>
+    ''' <param name="itemName"></param>
+    ''' <param name="faprValue"></param>
+    ''' <param name="laprValue"></param>
+    ''' <param name="curValue"></param>
+    ''' <param name="considerFapr"></param>
+    ''' <param name="considerLapr"></param>
+    Private Sub schreibeMilestoneAPVCVZeile(ByRef table As pptNS.Table, ByVal zeile As Integer,
+                                             ByVal itemName As String, ByVal faprValue As Date, ByVal laprValue As Date, ByVal curValue As Date,
+                                             ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
+
+        Dim deltaFMC As Long = 0 ' niummt das Delta auf zwischen Fapr und Current: First minus Current 
+        Dim deltaLMC As Long = 0 ' nimmt das Delta auf zwischen Lapr und Current : last minus Current
+
+        Dim cellText As String = "-"
+        Dim nada As String = "-"
+        Dim isPositiv As Boolean = False
+
+
+        If considerFapr And faprValue > Date.MinValue Then
+            deltaFMC = DateDiff(DateInterval.Day, curValue.Date, faprValue.Date)
+        Else
+            deltaFMC = 0
+        End If
+
+        If considerLapr And laprValue > Date.MinValue Then
+            deltaLMC = DateDiff(DateInterval.Day, curValue.Date, laprValue.Date)
+        Else
+            deltaLMC = 0
+        End If
+
+
+        ' jetzt wird das geschrieben 
+        With table
+            Dim tmpValue As String = "-"
+
+            ' Label schreiben
+            CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = itemName
+
+
+            ' wird benötigt, um die Schriftfarbe im Delta-Feld wieder auf Normal setzen zu können 
+            Dim normalColor As Integer = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB
+
+            ' Current Value schreiben 
+            cellText = curValue.ToShortDateString
+            CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' last Approved Value schreiben  
+            If considerLapr And laprValue > Date.MinValue Then
+                cellText = laprValue.ToShortDateString
+            Else
+                cellText = nada
+            End If
+
+            CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            If cellText = nada Then
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+            Else
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC.ToString
+            End If
+
+
+            ' ggf einfärben 
+            If deltaLMC = 0 Then
+                ' nichts tun, ausser Farbe auf Normal setzen 
+                ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerLapr And laprValue > Date.MinValue Then
+
+                isPositiv = (deltaLMC > 0)
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+
+            End If
+
+            ' first Approved Value schreiben  
+            If considerFapr And faprValue > Date.MinValue Then
+                cellText = faprValue.ToShortDateString
+            Else
+                cellText = nada
+            End If
+
+            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            If cellText = nada Then
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+            Else
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC.ToString
+            End If
+
+
+            ' ggf einfärben 
+            If deltaFMC = 0 Then
+                ' nichts tun, ausser Farbe auf Normal setzen 
+                ' das ist notwendig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerFapr And faprValue > Date.MinValue Then
+                ' If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                isPositiv = (deltaFMC > 0)
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+            End If
+
+        End With
+
+
+    End Sub
+
+    ''' <summary>
     ''' wird benötigt, um Collections in Shape.Tags unterzubringen 
     ''' </summary>
     ''' <param name="nameCollection"></param>
@@ -5079,6 +5448,11 @@ Public Module Module1
     Public Function convertCollToNids(ByVal nameCollection As Collection) As String
         Dim nids As String = ""
         For Each tmpName As String In nameCollection
+
+            If tmpName.Contains("#") Then
+                tmpName = tmpName.Replace("#", "^")
+            End If
+
             If nids = "" Then
                 nids = tmpName.Trim
             Else
@@ -5098,6 +5472,11 @@ Public Module Module1
         Dim tmpStr() As String = nids.Split(New Char() {CChar("#")})
 
         For Each tmpName In tmpStr
+
+            If tmpName.Contains("^") Then
+                tmpName = tmpName.Replace("^", "#")
+            End If
+
             If tmpName.Trim.Length > 0 Then
                 nameCollection.Add(tmpName)
             End If

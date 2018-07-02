@@ -4971,12 +4971,13 @@ Imports System.IO
 
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
-                        Dim isAllianzImport As Boolean = False
+                        Dim isAllianzImport1 As Boolean = False
 
                         If scenarioNameP.StartsWith("Allianz-Typ 1") Then
                             Dim startdate As Date = CDate("1.1.2018")
                             Dim enddate As Date = CDate("31.12.2018")
 
+                            isAllianzImport1 = True
                             Call importAllianzType1(startdate, enddate)
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
@@ -5007,9 +5008,9 @@ Imports System.IO
 
                         'sessionConstellationP enthält alle Projekte aus dem Import 
                         Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
-
-                        If isAllianzImport Then
-                            Dim sessionConstellationS As clsConstellation = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
+                        Dim sessionConstellationS As clsConstellation = Nothing
+                        If isAllianzImport1 Then
+                            sessionConstellationS = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
                         End If
 
                         'Call sessionConstellationP.calcUnionProject(False)
@@ -5031,20 +5032,37 @@ Imports System.IO
                         'End If
                         ' ende test
 
+                        If isAllianzImport1 Then
+                            If sessionConstellationS.count > 0 Then
 
-                        If sessionConstellationP.count > 0 Then
+                                If projectConstellations.Contains(scenarioNameS) Then
+                                    projectConstellations.Remove(scenarioNameS)
+                                End If
 
-                            If projectConstellations.Contains(scenarioNameP) Then
-                                projectConstellations.Remove(scenarioNameP)
+                                projectConstellations.Add(sessionConstellationS)
+                                ' jetzt auf Projekt-Tafel anzeigen 
+                                Call loadSessionConstellation(scenarioNameS, False, False, True)
+
+                            Else
+                                Call MsgBox("keine Programmlinien importiert ...")
                             End If
-
-                            projectConstellations.Add(sessionConstellationP)
-                            ' jetzt auf Projekt-Tafel anzeigen 
-                            Call loadSessionConstellation(scenarioNameP, False, False, True)
-
                         Else
-                            Call MsgBox("keine Projekte importiert ...")
+                            If sessionConstellationP.count > 0 Then
+
+                                If projectConstellations.Contains(scenarioNameP) Then
+                                    projectConstellations.Remove(scenarioNameP)
+                                End If
+
+                                projectConstellations.Add(sessionConstellationP)
+                                ' jetzt auf Projekt-Tafel anzeigen 
+                                Call loadSessionConstellation(scenarioNameP, False, False, True)
+
+                            Else
+                                Call MsgBox("keine Projekte importiert ...")
+                            End If
                         End If
+
+
 
 
                         If ImportProjekte.Count > 0 Then
