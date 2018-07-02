@@ -33,17 +33,23 @@ Public NotInheritable Class clsVisboCryptography
     Public Function getUserNameFromCipher(ByVal verschluesselterText As String) As String
 
         Dim tmpName As String = ""
-        Dim completeString As String = Me.DecryptData(verschluesselterText)
-        Dim tmpStr() As String = completeString.Split(New Char() {CChar(vbLf)})
 
-        If tmpStr.Length = 5 Then
-            ' alles in Ordnung 
-            If tmpStr(0) = My.Computer.Name And tmpStr(1) = "visbo" And tmpStr(3) = "h0lzk1rch3n" Then
-                ' es kann weitergemacht werden 
-                tmpName = tmpStr(2)
+        If (verschluesselterText <> "") And
+            (Not IsNothing(verschluesselterText)) Then
+
+            Dim completeString As String = Me.DecryptData(verschluesselterText)
+            Dim tmpStr() As String = completeString.Split(New Char() {CChar(vbLf)})
+
+            If tmpStr.Length = 5 Then
+                ' alles in Ordnung 
+                If tmpStr(0) = My.Computer.Name And tmpStr(1) = "visbo" And tmpStr(3) = "h0lzk1rch3n" Then
+                    ' es kann weitergemacht werden 
+                    tmpName = tmpStr(2)
+                End If
+
             End If
-
         End If
+
 
         getUserNameFromCipher = tmpName
 
@@ -58,14 +64,20 @@ Public NotInheritable Class clsVisboCryptography
     Public Function getPwdFromCipher(ByVal verschluesselterText As String) As String
 
         Dim tmpPWD As String = ""
-        Dim completeString As String = Me.DecryptData(verschluesselterText)
-        Dim tmpStr() As String = completeString.Split(New Char() {CChar(vbLf)})
 
-        If tmpStr.Length = 5 Then
-            ' alles in Ordnung 
-            If tmpStr(0) = My.Computer.Name And tmpStr(1) = "visbo" And tmpStr(3) = "h0lzk1rch3n" Then
-                ' es kann weitergemacht werden 
-                tmpPWD = tmpStr(4)
+        If (verschluesselterText <> "") And
+            (Not IsNothing(verschluesselterText)) Then
+
+            Dim completeString As String = Me.DecryptData(verschluesselterText)
+            Dim tmpStr() As String = completeString.Split(New Char() {CChar(vbLf)})
+
+            If tmpStr.Length = 5 Then
+                ' alles in Ordnung 
+                If tmpStr(0) = My.Computer.Name And tmpStr(1) = "visbo" And tmpStr(3) = "h0lzk1rch3n" Then
+                    ' es kann weitergemacht werden 
+                    tmpPWD = tmpStr(4)
+                End If
+
             End If
 
         End If
