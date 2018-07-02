@@ -78,7 +78,7 @@ Public Class Ribbon1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    noDBAccessInPPT = logInToMongoDB(True)
+                    noDBAccessInPPT = Not logInToMongoDB(True)
 
                     If noDBAccessInPPT Then
                         If englishLanguage Then
@@ -165,7 +165,7 @@ Public Class Ribbon1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    noDBAccessInPPT = logInToMongoDB(True)
+                    noDBAccessInPPT = Not logInToMongoDB(True)
 
                     If noDBAccessInPPT Then
                         If englishLanguage Then
@@ -457,7 +457,7 @@ Public Class Ribbon1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    noDBAccessInPPT = logInToMongoDB(True)
+                    noDBAccessInPPT = Not logInToMongoDB(True)
 
                     If noDBAccessInPPT Then
                         If englishLanguage Then

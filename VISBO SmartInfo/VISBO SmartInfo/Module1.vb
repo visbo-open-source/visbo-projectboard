@@ -491,14 +491,29 @@ Module Module1
 
                             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                                noDBAccessInPPT = logInToMongoDB(True)
+                                noDBAccessInPPT = Not logInToMongoDB(True)
 
-                                If Not noDBAccessInPPT Then
+                                If noDBAccessInPPT Then
+                                    If englishLanguage Then
+                                        msg = "no database access ... "
+                                    Else
+                                        msg = "kein Datenbank Zugriff ... "
+                                    End If
+                                    Call MsgBox(msg)
+                                Else
+                                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                                    'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                                    'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                                    RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                                    CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+
                                     ' in allen Slides den Sicht Schutz aufheben 
                                     protectionSolved = True
                                     Call makeVisboShapesVisible(True)
 
                                 End If
+
 
                             End If
 
@@ -5996,7 +6011,23 @@ Module Module1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    noDBAccessInPPT = logInToMongoDB(True)
+                    noDBAccessInPPT = Not logInToMongoDB(True)
+
+                    If noDBAccessInPPT Then
+                        If englishLanguage Then
+                            msg = "no database access ... "
+                        Else
+                            msg = "kein Datenbank Zugriff ... "
+                        End If
+                        Call MsgBox(msg)
+                    Else
+                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                        'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                    End If
 
                 End If
 
