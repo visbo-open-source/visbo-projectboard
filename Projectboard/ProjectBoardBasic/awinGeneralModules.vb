@@ -22898,6 +22898,8 @@ Public Module awinGeneralModules
                             awinSettings.userNamePWD = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "VISBODebug"
                             awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "rememberUserPWD"
+                            awinSettings.rememberUserPwd = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
 
                     End Select
                 Next

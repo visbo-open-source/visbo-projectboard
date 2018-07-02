@@ -104,6 +104,14 @@ Public Class ThisWorkbook
 
             End If
 
+            ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If My.Settings.rememberUserPWD Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            Else
+                awinSettings.userNamePWD = ""
+            End If
+
             Call awinsetTypen("ProjectBoard")
 
         Catch ex As Exception
@@ -195,6 +203,16 @@ Public Class ThisWorkbook
             ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
             Try
 
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                    ' um die Settings abzuspeichern
+                Else
+                    My.Settings.userNamePWD = ""
+                End If
+                My.Settings.Save()
+
+
                 If Not noDB Then
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -228,7 +246,7 @@ Public Class ThisWorkbook
                             End If
                         End If
                     End If
-                    
+
 
                 End If
 
@@ -361,8 +379,6 @@ Public Class ThisWorkbook
                 'Dim name asstring = Application.Workbooks(1).name
             End If
 
-            ' um die Settings abzuspeichern
-            My.Settings.Save()
 
         Catch ex As Exception
 

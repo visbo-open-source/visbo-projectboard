@@ -80,6 +80,22 @@ Public Class Ribbon1
 
                     noDBAccessInPPT = logInToMongoDB(True)
 
+                    If noDBAccessInPPT Then
+                        If englishLanguage Then
+                            msg = "no database access ... "
+                        Else
+                            msg = "kein Datenbank Zugriff ... "
+                        End If
+                        Call MsgBox(msg)
+                    Else
+                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                        'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                    End If
+
                 End If
 
                 If Not noDBAccessInPPT Then
@@ -151,7 +167,21 @@ Public Class Ribbon1
 
                     noDBAccessInPPT = logInToMongoDB(True)
 
-                    ' jetzt soll der username, pwd verschlüsselt gemerkt werden ...
+                    If noDBAccessInPPT Then
+                        If englishLanguage Then
+                            msg = "no database access ... "
+                        Else
+                            msg = "kein Datenbank Zugriff ... "
+                        End If
+                        Call MsgBox(msg)
+                    Else
+                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                        'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                    End If
 
                     Dim tmpKey As String = ""
 
@@ -428,6 +458,22 @@ Public Class Ribbon1
                 If noDBAccessInPPT Then
 
                     noDBAccessInPPT = logInToMongoDB(True)
+
+                    If noDBAccessInPPT Then
+                        If englishLanguage Then
+                            msg = "no database access ... "
+                        Else
+                            msg = "kein Datenbank Zugriff ... "
+                        End If
+                        Call MsgBox(msg)
+                    Else
+                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                        'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                    End If
 
                 End If
 

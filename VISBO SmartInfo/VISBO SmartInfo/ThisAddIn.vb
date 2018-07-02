@@ -1,4 +1,7 @@
 ﻿Imports Microsoft.Office.Interop.PowerPoint
+Imports ProjectBoardDefinitions
+Imports MongoDbAccess
+Imports ProjectBoardBasic
 
 Public Class ThisAddIn
 
@@ -106,6 +109,15 @@ Public Class ThisAddIn
             listOfWindows.Add(Application.ActiveWindow.HWND)
         End If
 
+    End Sub
+
+    Private Sub Application_PresentationBeforeClose(Pres As Presentation, ByRef Cancel As Boolean) Handles Application.PresentationBeforeClose
+
+        My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+        If My.Settings.rememberUserPWD Then
+            My.Settings.userNamePWD = awinSettings.userNamePWD
+        End If
+        My.Settings.Save()
     End Sub
 
 End Class
