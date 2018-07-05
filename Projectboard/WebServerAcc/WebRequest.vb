@@ -789,7 +789,7 @@ Public Class Request
 
         Try
 
-            Dim zwischenResult As New SortedList(Of DateTime, clsProjektWebLong)
+            'Dim zwischenResult As New SortedList(Of DateTime, clsProjektWebLong)
             Dim vpid As String = ""
 
 
@@ -804,10 +804,10 @@ Public Class Request
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
                 For Each vpv In allVPv
                     If storedEarliest < vpv.timestamp And vpv.timestamp < storedLatest Then
-                        zwischenResult.Add(vpv.timestamp, vpv)
+                        'zwischenResult.Add(vpv.timestamp, vpv)
                         Dim hproj As New clsProjekt
                         vpv.copyto(hproj)
-                        result.Add(vpv.timestamp.ToUniversalTime, hproj)
+                        result.Add(hproj.timeStamp, hproj)
                     End If
                 Next
 
@@ -831,15 +831,30 @@ Public Class Request
     Public Function deleteProjectTimestampFromDB(ByVal projectname As String, ByVal variantName As String,
                                                      ByVal stored As DateTime, ByVal userName As String) As Boolean
 
+        Dim result As Boolean = False
+
         stored = stored.ToUniversalTime
         Try
+            Dim vpid As String = ""
 
+            ' VPID zu Projekt projectName holen vom WebServer/DB
+            vpid = GETvpid(projectname)._id
+
+            If vpid <> "" Then
+                ' gewünschte Variante vom Server anfordern
+                Dim allVPv As New List(Of clsProjektWebShort)
+                allVPv = GETallVPvShort(vpid, variantName, stored)
+
+                If allVPv.Count = 1 Then
+                    result = DELETEOneVPv(allVPv.Item(0)._id)
+                End If
+            End If
         Catch ex As Exception
 
         End Try
 
 
-        deleteProjectTimestampFromDB = False
+        deleteProjectTimestampFromDB = result
 
     End Function
 
@@ -975,7 +990,10 @@ Public Class Request
     ''' <param name="type"></param>
     ''' <returns></returns>
     Public Function getWriteProtection(ByVal pName As String, ByVal vName As String, Optional type As Integer = 0) As clsWriteProtectionItem
-        getWriteProtection = Nothing
+        Dim result As New clsWriteProtectionItem
+
+
+        getWriteProtection = result
     End Function
 
 
@@ -1021,7 +1039,7 @@ Public Class Request
     ''' </summary>
     ''' <returns></returns>
     Public Function retrieveConstellationsFromDB() As clsConstellations
-        retrieveConstellationsFromDB = Nothing
+        retrieveConstellationsFromDB = New clsConstellations
     End Function
 
 
@@ -1063,7 +1081,7 @@ Public Class Request
     ''' </summary>
     ''' <returns></returns>
     Public Function retrieveDependenciesFromDB() As clsDependencies
-        retrieveDependenciesFromDB = Nothing
+        retrieveDependenciesFromDB = New clsDependencies
     End Function
 
 
@@ -1525,11 +1543,12 @@ Public Class Request
 
                 While (pName = "" And anzLoop <= 2)
 
-                    If VRScache.VPsId.ContainsKey(vpid) > 0 Then
+                    If VRScache.VPsId.ContainsKey(vpid) Then
                         ' pName zu angegebene vpid herausfinden
                         pName = VRScache.VPsId(vpid).name
                     Else
                         VRScache.VPsN = GETallVP(aktVCid)
+                        pName = VRScache.VPsId(vpid).name
                     End If
 
                     anzLoop = anzLoop + 1
@@ -1800,7 +1819,17 @@ Public Class Request
             ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
             ' diese werden hier in die result-liste gebracht
             For Each kvp As KeyValuePair(Of Date, clsProjektWebShort) In VRScache.VPvs(vpid)(variantName).tsShort
-                result.Add(kvp.Value)
+
+                If storedAtorBefore > Date.MinValue Then
+
+                    If kvp.Key = storedAtorBefore Then
+                        result.Add(kvp.Value)
+                    End If
+
+                Else
+                    result.Add(kvp.Value)
+                End If
+
             Next
         Else
 
@@ -1809,16 +1838,35 @@ Public Class Request
                 Dim typeRequest As String = "/vpv"
                 Dim serverUriString As String = serverUriName & typeRequest
 
-                If vpid <> "" Then
-                    serverUriString = serverUriString & "?vpid=" & vpid
-                End If
+                'Dim refDate As String = DateTimeToISODate(storedAtorBefore.AddMinutes(1.0))
+                Dim refDate As String = DateTimeToISODate(storedAtorBefore)
 
-                If storedAtorBefore > Date.MinValue Then
-                    serverUriString = serverUriString & "&refDate=" & storedAtorBefore.Date.ToString
-                End If
+                If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> "" Then
+                    serverUriString = serverUriString & "?"
+                    If vpid <> "" Then
+                        serverUriString = serverUriString & "vpid=" & vpid
 
-                If variantName <> "" Then
-                    serverUriString = serverUriString & "&variantName=" & variantName
+                        If storedAtorBefore > Date.MinValue Then
+                            serverUriString = serverUriString & "&refDate=" & refDate
+                        End If
+
+                        If variantName <> "" Then
+                            serverUriString = serverUriString & "&variantName=" & variantName
+                        End If
+                    Else
+                        If storedAtorBefore > Date.MinValue Then
+                            serverUriString = serverUriString & "refDate=" & refDate
+                            If variantName <> "" Then
+                                serverUriString = serverUriString & "&variantName=" & variantName
+                            End If
+                        Else
+                            If variantName <> "" Then
+                                serverUriString = serverUriString & "variantName=" & variantName
+                            End If
+                        End If
+
+                    End If
+
                 End If
 
                 Dim serverUri As New Uri(serverUriString)
@@ -1889,7 +1937,15 @@ Public Class Request
             ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
             ' diese werden hier in die result-liste gebracht
             For Each kvp As KeyValuePair(Of Date, clsProjektWebLong) In VRScache.VPvs(vpid)(variantName).tsLong
-                result.Add(kvp.Value)
+                If storedAtorBefore > Date.MinValue Then
+
+                    If kvp.Key = storedAtorBefore Then
+                        result.Add(kvp.Value)
+                    End If
+                Else
+                    result.Add(kvp.Value)
+                End If
+
             Next
         Else
 
@@ -1898,25 +1954,43 @@ Public Class Request
                 Dim typeRequest As String = "/vpv"
                 Dim serverUriString As String = serverUriName & typeRequest
 
-                If vpvid <> "" Then
-                    serverUriString = serverUriString & "/" & vpvid
-                Else
+                'Dim refDate As String = DateTimeToISODate(storedAtorBefore.AddMinutes(1.0))
+                Dim refDate As String = DateTimeToISODate(storedAtorBefore)
+
+                If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> "" Then
+                    serverUriString = serverUriString & "?"
                     If vpid <> "" Then
-                        serverUriString = serverUriName & typeRequest & "?vpid=" & vpid
+                        serverUriString = serverUriString & "vpid=" & vpid
 
                         If storedAtorBefore > Date.MinValue Then
-                            serverUriString = serverUriString & "&refDate=" & storedAtorBefore.Date.ToString
+                            serverUriString = serverUriString & "&refDate=" & refDate
                         End If
 
                         If variantName <> "" Then
                             serverUriString = serverUriString & "&variantName=" & variantName
                         End If
+                    Else
+                        If storedAtorBefore > Date.MinValue Then
+                            serverUriString = serverUriString & "refDate=" & refDate
+                            If variantName <> "" Then
+                                serverUriString = serverUriString & "&variantName=" & variantName
+                            End If
+                        Else
+                            If variantName <> "" Then
+                                serverUriString = serverUriString & "variantName=" & variantName
+                            End If
+                        End If
 
-                        ' es wird die Long-Version einer VisboProjectVersion angefordert
-                        serverUriString = serverUriString & "&longList"
                     End If
 
+                    ' es wird die Long-Version einer VisboProjectVersion angefordert
+                    serverUriString = serverUriString & "&longList"
+                Else
+                    ' es wird die Long-Version einer VisboProjectVersion angefordert
+                    serverUriString = serverUriString & "?longList"
+
                 End If
+
 
                 Dim serverUri As New Uri(serverUriString)
 
@@ -1952,6 +2026,55 @@ Public Class Request
         End If
 
         GETallVPvLong = result
+
+    End Function
+
+    ''' <summary>
+    ''' löscht eine VisboProjectVersion
+    ''' </summary>
+    ''' <param name="vpvid"></param>
+    ''' <returns>true:  löschen erfolgreich
+    '''          false: löschen hat nicht funktioniert</returns>
+    Private Function DELETEOneVPv(ByVal vpvid As String) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            ' URL zusammensetzen
+            Dim typeRequest As String = "/vpv"
+            Dim serverUriString As String = serverUriName & typeRequest
+
+            If vpvid <> "" Then
+                serverUriString = serverUriString & "/" & vpvid
+            End If
+
+            Dim serverUri As New Uri(serverUriString)
+
+            ' DATA - Block zusammensetzen
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            ' Request absetzen
+            Dim Antwort As String
+            Dim webantwort As clsWebOutput = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
+                Antwort = ReadResponseContent(httpresp)
+                webantwort = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+            End Using
+
+            If webantwort.state = "success" Then
+                result = True
+            Else
+                Call MsgBox(webantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in DELETEOneVPv: " & ex.Message)
+        End Try
+
+        DELETEOneVPv = result
 
     End Function
 
@@ -2204,7 +2327,7 @@ Public Class Request
                 ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
                 result = True
             Else
-                Call MsgBox(webVPLockantwort.message)
+                ' Call MsgBox(webVPLockantwort.message)
             End If
 
         Catch ex As Exception
@@ -2214,5 +2337,22 @@ Public Class Request
         DELETEVPLock = result
 
     End Function
+
+    Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
+
+        Dim ISODateandTime As String = Nothing
+        Dim ISODate As String = ""
+        Dim ISOTime As String = ""
+
+        If datumUhrzeit > Date.MinValue And datumUhrzeit < Date.MaxValue Then
+            ' DatumUhrzeit wird um 1 Sekunde erhöht, dass die 1000-stel keine Rolle spielen
+            datumUhrzeit = datumUhrzeit.AddSeconds(1.0)
+            ISODateandTime = datumUhrzeit.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        End If
+
+        DateTimeToISODate = ISODateandTime
+
+    End Function
+
 End Class
 

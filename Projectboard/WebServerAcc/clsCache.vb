@@ -93,47 +93,53 @@
         Dim hvpv As SortedList(Of String, clsVarTs)
         Dim hVarTS As New clsVarTs
 
-        If result.Count > 0 Then
-            vpid = result.ElementAt(0).vpid
-        End If
+        Try
 
-        If _VPvs.ContainsKey(vpid) Then
-            hvpv = _VPvs(vpid)
-        Else
-            hvpv = New SortedList(Of String, clsVarTs)
-        End If
+            For Each vpv As clsProjektWebShort In result
 
-        For Each vpv As clsProjektWebShort In result
+                vpid = vpv.vpid
 
-            If Not hvpv.ContainsKey(vpv.variantName) Then
-                hVarTS = New clsVarTs
-            Else
-                hVarTS = hvpv(vpv.variantName)
-            End If
+                If _VPvs.ContainsKey(vpid) Then
+                    hvpv = _VPvs(vpid)
+                Else
+                    hvpv = New SortedList(Of String, clsVarTs)
+                End If
 
-            ' vpv nur eintragen, wenn der timestamp nicht bereits vorhanden
-            If Not hVarTS.tsShort.ContainsKey(vpv.timestamp) Then
-                hVarTS.vname = vpv.variantName
-                hVarTS.timeCached = timeCached
-                hVarTS.tsShort.Add(vpv.timestamp, vpv)
-            End If
+                If Not hvpv.ContainsKey(vpv.variantName) Then
+                    hVarTS = New clsVarTs
+                Else
+                    hVarTS = hvpv(vpv.variantName)
+                End If
 
+                ' vpv nur eintragen, wenn der timestamp nicht bereits vorhanden
+                If Not hVarTS.tsShort.ContainsKey(vpv.timestamp) Then
+                    hVarTS.vname = vpv.variantName
+                    hVarTS.timeCached = timeCached
+                    hVarTS.tsShort.Add(vpv.timestamp, vpv)
+                End If
 
-            If Not hvpv.ContainsKey(vpv.variantName) Then
-                hvpv.Add(vpv.variantName, hVarTS)
-            End If
-        Next
+                If Not hvpv.ContainsKey(vpv.variantName) Then
+                    hvpv.Add(vpv.variantName, hVarTS)
+                Else
+                    hvpv.Remove(vpv.variantName)
+                    hvpv.Add(vpv.variantName, hVarTS)
+                End If
 
-        If _VPvs.ContainsKey(vpid) Then
-            _VPvs(vpid) = hvpv
-        Else
-            _VPvs.Add(vpid, hvpv)
-        End If
+                If _VPvs.ContainsKey(vpid) Then
+                    _VPvs(vpid) = hvpv
+                Else
+                    _VPvs.Add(vpid, hvpv)
+                End If
 
+            Next
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Caching: createVPvShort")
+        End Try
     End Sub
 
     ''' <summary>
-    ''' Cache füllen mit ProjektShortVersions zum Zeitpunkt timeCached
+    ''' Cache füllen mit ProjektLongVersions und ShortVersions zum Zeitpunkt timeCached
     ''' </summary>
     ''' <param name="result">Liste von KurzProjektVersionen</param>
     ''' <param name="timeCached">Zeitpunkt, zu dem der Cache gefüllt wurde</param>
@@ -143,41 +149,54 @@
         Dim hvpv As New SortedList(Of String, clsVarTs)
         Dim hVarTS As New clsVarTs
 
-        If result.Count > 0 Then
-            vpid = result.ElementAt(0).vpid
-        End If
+        Try
+            For Each vpv As clsProjektWebLong In result
 
-        If _VPvs.ContainsKey(vpid) Then
-            hvpv = _VPvs(vpid)
-        Else
-            hvpv = New SortedList(Of String, clsVarTs)
-        End If
+                Dim vpvshort As clsProjektWebShort = vpvLong2vpshort(vpv)
 
-        For Each vpv As clsProjektWebLong In result
+                vpid = vpv.vpid
 
-            If Not hvpv.ContainsKey(vpv.variantName) Then
-                hVarTS = New clsVarTs
-            Else
-                hVarTS = hvpv(vpv.variantName)
-            End If
+                If _VPvs.ContainsKey(vpid) Then
+                    hvpv = _VPvs(vpid)
+                Else
+                    hvpv = New SortedList(Of String, clsVarTs)
+                End If
 
-            If Not hVarTS.tsLong.ContainsKey(vpv.timestamp) Then
-                hVarTS.vname = vpv.variantName
-                hVarTS.timeCached = timeCached
-                hVarTS.tsLong.Add(vpv.timestamp, vpv)
-            End If
 
-            If Not hvpv.ContainsKey(vpv.variantName) Then
-                hvpv.Add(vpv.variantName, hVarTS)
-            End If
+                If Not hvpv.ContainsKey(vpv.variantName) Then
+                    hVarTS = New clsVarTs
+                Else
+                    hVarTS = hvpv(vpv.variantName)
+                End If
 
-        Next
+                ' longVersion in den Cache
+                If Not hVarTS.tsLong.ContainsKey(vpv.timestamp) Then
+                    hVarTS.vname = vpv.variantName
+                    hVarTS.timeCached = timeCached
+                    hVarTS.tsLong.Add(vpv.timestamp, vpv)
+                End If
+                ' gleichzeitig auch die shortVersion cachen 
+                If Not hVarTS.tsShort.ContainsKey(vpvshort.timestamp) Then
+                    hVarTS.vname = vpvshort.variantName
+                    hVarTS.timeCached = timeCached
+                    hVarTS.tsShort.Add(vpvshort.timestamp, vpvshort)
+                End If
 
-        If _VPvs.ContainsKey(vpid) Then
-            _VPvs(vpid) = hvpv
-        Else
-            _VPvs.Add(vpid, hvpv)
-        End If
+                If Not hvpv.ContainsKey(vpv.variantName) Then
+                    hvpv.Add(vpv.variantName, hVarTS)
+                End If
+
+                If _VPvs.ContainsKey(vpid) Then
+                    _VPvs(vpid) = hvpv
+                Else
+                    _VPvs.Add(vpid, hvpv)
+                End If
+            Next
+
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Caching: createVPvLong")
+        End Try
 
     End Sub
 
@@ -321,6 +340,34 @@
         End If
 
         existsInCache = nothingToDo
+
+    End Function
+    ''' <summary>
+    ''' wandelt ein Projekt der Longversion in eines der shortversion
+    ''' </summary>
+    ''' <param name="vpvL"></param>
+    ''' <returns></returns>
+    Private Function vpvLong2vpshort(ByVal vpvL As clsProjektWebLong) As clsProjektWebShort
+
+        Dim vpvshort As New clsProjektWebShort
+        Try
+
+            vpvshort._id = vpvL._id
+            vpvshort.name = vpvL.name
+            vpvshort.vpid = vpvL.vpid
+            vpvshort.timestamp = vpvL.timestamp
+            vpvshort.Erloes = vpvL.Erloes
+            vpvshort.startDate = vpvL.startDate
+            vpvshort.endDate = vpvL.endDate
+            vpvshort.status = vpvL.status
+            vpvshort.variantName = vpvL.variantName
+            vpvshort.ampelStatus = vpvL.ampelStatus
+
+        Catch ex As Exception
+            vpvLong2vpshort = Nothing
+        End Try
+
+        vpvLong2vpshort = vpvshort
 
     End Function
 End Class

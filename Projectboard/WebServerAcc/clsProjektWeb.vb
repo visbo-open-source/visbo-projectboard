@@ -6,14 +6,28 @@ Imports WebServerAcc
 
 Public Class clsProjektWeb
 
-    Public name As String
-    ' Änderung ur: vpid wird für VisualBoard als Web-Anwendung benötigt. 
-    '              Im vc sind VisboProjekte enthalten, die über vpid eindeutig vorhandene Projekte referenziert sind.
-    Public vpid As Object
+    Inherits clsProjektWebShort
+
+    '' ur:2018.07.05: folgende doppelt auskommentiert Definitionen sind in clsProjektWebShort enthalten
+    ''Public _id As Object
+    ''Public name As String
+
+    '' Änderung ur: vpid wird für VisualBoard als Web-Anwendung benötigt. 
+    ''              Im vc sind VisboProjekte enthalten, die über vpid eindeutig vorhandene Projekte referenziert sind.
+    ''Public vpid As Object
+    ''Public timestamp As Date
+    ''Public Erloes As Double
+    ''Public startDate As Date
+    ''Public endDate As Date
+    ''Public status As String
+
+    ''Public variantName As String
+    ''Public ampelStatus As Integer
+
+
     ' Änderung ur: vor WebServer war dies die ID in der MongoDB (Projektname#Variantename#timestamp)
     Public origId As Object
-    Public _id As Object
-    Public variantName As String
+
     Public variantDescription As String
     Public Risiko As Double
     Public StrategicFit As Double
@@ -23,18 +37,16 @@ Public Class clsProjektWeb
     Public customStringFields As SortedList(Of String, String)
     Public customBoolFields As SortedList(Of String, Boolean)
 
-    Public Erloes As Double
+
     Public leadPerson As String
     Public tfSpalte As Integer
     Public tfZeile As Integer
-    Public startDate As Date
-    Public endDate As Date
+
     Public earliestStart As Integer
     Public earliestStartDate As Date
     Public latestStart As Integer
     Public latestStartDate As Date
-    Public status As String
-    Public ampelStatus As Integer
+
     Public ampelErlaeuterung As String
     Public farbe As Integer
     Public Schrift As Integer
@@ -44,7 +56,7 @@ Public Class clsProjektWeb
     Public AllPhases As List(Of clsPhaseDB)
     Public hierarchy As clsHierarchyDB
     Public Id As String
-    Public timestamp As Date
+
     ' ergänzt am 16.11.13
     Public volumen As Double
     Public complexity As Double
