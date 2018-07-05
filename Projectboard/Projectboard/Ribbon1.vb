@@ -4948,6 +4948,9 @@ Imports System.IO
                 dateiName = getInventurImport.selectedDateiName
 
                 Try
+                    ' jetzt das Logfile öffnen 
+                    Call logfileOpen()
+                    Dim logmsg() As String
 
                     If My.Computer.FileSystem.FileExists(dateiName) Then
 
@@ -4981,12 +4984,9 @@ Imports System.IO
                             Call importAllianzType1(startdate, enddate)
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
-                            Dim deleteRoles As New Collection
+
                             noScenarioCreation = True
-                            ' diese Rollen und Subroles sollen alle vorher gelöscht werden und dann mit den neuen Werten ersetzt werden 
-                            deleteRoles.Add("BOSV-KB")
-                            deleteRoles.Add("Grp-BOSV-KB")
-                            Call importAllianzType2(deleteRoles)
+                            Call importAllianzType2()
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
                             ' immer zwei Monate zurück gehen 
@@ -5018,19 +5018,28 @@ Imports System.IO
 
                         ' Testen ..
                         ' test
-                        'Dim everythingOK As Boolean = testUProjandSingleProjs(sessionConstellationP, False)
-                        'If Not everythingOK Then
-                        '    Call MsgBox("nicht identisch: " & sessionConstellationP.constellationName)
-                        'End If
-                        ' ende test
+                        If isAllianzImport1 Then
+                            Dim everythingOK As Boolean = testUProjandSingleProjs(sessionConstellationP, False)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = sessionConstellationP.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
+                            ' ende test
 
 
-                        ' test
-                        'everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
-                        'If Not everythingOK Then
-                        '    Call MsgBox("nicht identisch: " & sessionConstellationS.constellationName)
-                        'End If
-                        ' ende test
+                            ' test
+                            everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = sessionConstellationP.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
+                            ' ende test
+                        End If
+
 
                         If isAllianzImport1 Then
                             If sessionConstellationS.count > 0 Then
@@ -5073,8 +5082,11 @@ Imports System.IO
                         Call MsgBox("bitte Datei auswählen ...")
                     End If
 
+                    Call logfileSchliessen()
 
                 Catch ex As Exception
+                    Call logfileSchliessen()
+
                     appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                     Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
                 End Try
@@ -5083,6 +5095,8 @@ Imports System.IO
             End If
 
         End If
+
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True

@@ -474,8 +474,11 @@ Public Class clsProjekt
                             If Me.ampelStatus = .ampelStatus And
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then
 
-                                If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
-                                   Me.Erloes = .Erloes Then
+                                ' es soll nur auf Budget Gelichheit geprüft werden , die Verteilun g macht doch an der Stelle gar keinen Sinn .. . 
+                                ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
+                                If Me.Erloes = .Erloes Then
+                                    ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
+                                    'Me.Erloes = .Erloes Then
 
                                     If Me.businessUnit = .businessUnit And
                                         Me.complexity = .complexity And
@@ -486,20 +489,20 @@ Public Class clsProjekt
                                         Me.volume = .volume And
                                         Me.leadPerson = .leadPerson Then
 
-                                        stillOK = True
+                                            stillOK = True
 
-                                        ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
-                                        'Me.earliestStartDate = .earliestStartDate And _
-                                        'Me.latestStartDate = .latestStartDate And _
+                                            ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
+                                            'Me.earliestStartDate = .earliestStartDate And _
+                                            'Me.latestStartDate = .latestStartDate And _
+
+                                        End If
+
 
                                     End If
-
 
                                 End If
 
                             End If
-
-                        End If
 
                     End If
 

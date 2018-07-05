@@ -237,10 +237,17 @@ Public Class clsawinSettings
     Public Property useHierarchy As Boolean
 
     Public Property visboDebug As Boolean
+    ' wird für den Import von Excel Projekt-Dateien benötigt 
+    Public Property importSettings As String()
 
-
+    ' wird für den Import der Allianz Delete Roles im Import Type 2 benötigt
+    ' gibt an , welche Rollen gelöscht werden sollen, bevor die anderen importiert werden 
+    Public Property allianzI2DelRoles As String = ""
 
     Sub New()
+
+        ReDim _importSettings(17)
+        _allianzI2DelRoles = ""
 
         ' Chart Settings
         _fontsizeTitle = 10

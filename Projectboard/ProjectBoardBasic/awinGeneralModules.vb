@@ -2659,6 +2659,12 @@ Public Module awinGeneralModules
 
                 End Try
 
+                Try
+                    awinSettings.allianzI2DelRoles = CStr(.Range("allianzI2DelRoles").Value).Trim
+                Catch ex As Exception
+                    awinSettings.allianzI2DelRoles = ""
+                End Try
+
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
                 weightStrategicFit = CDbl(.Range("WeightStrategicFit").Value)
@@ -6720,7 +6726,7 @@ Public Module awinGeneralModules
         Dim ampelText As String
         Dim projVorhabensBudget As Double = 0.0
 
-
+        Dim logmsg() As String
 
         Dim programName As String = ""
         Dim current1program As clsConstellation = Nothing
@@ -6835,6 +6841,9 @@ Public Module awinGeneralModules
 
             Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+
             With currentWS
 
 
@@ -6882,6 +6891,18 @@ Public Module awinGeneralModules
                     Throw New ArgumentException(errmsg)
                 End Try
 
+
+                ' tk Test Logfile schreiben ...
+                Try
+                    ReDim logmsg(roleNamesToConsider.Count)
+                    logmsg(0) = ""
+                    For ix As Integer = 1 To roleNamesToConsider.Count
+                        logmsg(ix) = roleNamesToConsider(ix - 1)
+                    Next
+                    Call logfileSchreiben(logmsg)
+                Catch ex As Exception
+
+                End Try
 
                 While zeile <= lastRow
 
@@ -6994,7 +7015,10 @@ Public Module awinGeneralModules
                                             ' test
                                             Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                                             If Not everythingOK Then
-                                                Call MsgBox("nicht identisch: " & current1program.constellationName)
+                                                ReDim logmsg(1)
+                                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                                logmsg(1) = current1program.constellationName
+                                                Call logfileSchreiben(logmsg)
                                             End If
                                             ' ende test
                                         Else
@@ -7167,15 +7191,20 @@ Public Module awinGeneralModules
 
                             ' Test tk 
                             Try
+                                ReDim logmsg(0)
+                                logmsg(0) = pName
+
                                 For ix As Integer = 1 To roleNamesToConsider.Count
 
                                     Dim tmpRollenName As String = roleNamesToConsider(ix - 1)
                                     Dim sollBedarf As Double = roleNeeds(ix - 1)
+
+
                                     Dim tmpCollection As New Collection
                                     tmpCollection.Add(tmpRollenName)
                                     Dim istBedarf As Double = hproj.getRessourcenBedarfNew(tmpRollenName, True).Sum
 
-                                    If Math.Abs(sollBedarf - istBedarf) > 2.5 Then
+                                    If Math.Abs(sollBedarf - istBedarf) > 0.001 Then
                                         outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
                                         outputCollection.Add(outPutLine)
                                     End If
@@ -7185,14 +7214,17 @@ Public Module awinGeneralModules
                                 Dim sollBedarfGesamt As Double = roleNeeds.Sum
                                 Dim istBedarfGesamt As Double = hproj.getAlleRessourcen.Sum
 
-                                If Math.Abs(sollBedarfGesamt - istBedarfGesamt) > 0.01 * sollBedarfGesamt Then
+                                If Math.Abs(sollBedarfGesamt - istBedarfGesamt) > 0.001 Then
                                     outPutLine = "Gesamt Differenz bei " & pName & ": " & Math.Abs(sollBedarfGesamt - istBedarfGesamt).ToString("#0.##")
                                     outputCollection.Add(outPutLine)
                                 End If
 
+                                Call logfileSchreiben(logmsg, roleNeeds)
+
                             Catch ex As Exception
 
                             End Try
+
 
 
                             ' Ende Test tk 
@@ -7278,7 +7310,12 @@ Public Module awinGeneralModules
                         ' test
                         Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                         If Not everythingOK Then
-                            Call MsgBox("nicht identisch: " & current1program.constellationName)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = current1program.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
                         End If
                         ' ende test
                     Else
@@ -7321,7 +7358,7 @@ Public Module awinGeneralModules
     ''' dabei werden die neuen Daten in das Projekt "gemerged"; d.h alle Werte zu anderen Rollen als BOSV-KB bleiben erhalten 
     ''' Ebenso alle Attribute ; es werden also nur die Rollen-Bedarfe zu BOSV-KB ausgetauscht ...  
     ''' </summary>
-    Public Sub importAllianzType2(ByVal deleteRoles As Collection)
+    Public Sub importAllianzType2()
         Dim zeile As Integer, spalte As Integer
 
         Dim tfZeile As Integer = 2
@@ -7349,16 +7386,41 @@ Public Module awinGeneralModules
 
         Dim hproj As clsProjekt = Nothing
         Dim newProj As clsProjekt = Nothing
-
         Dim projektKundenNummer As String = ""
+
+        ' welche Rollen sollen gelöscht werden
+        Dim deleteRoles As New Collection
+
+        ' jetzt werden die aufgebaut ...
+        If awinSettings.allianzI2DelRoles = "" Then
+
+            deleteRoles.Add("BOSV-KB0")
+            deleteRoles.Add("BOSV-KB1")
+            deleteRoles.Add("BOSV-KB2")
+            deleteRoles.Add("BOSV-KB3")
+            deleteRoles.Add("Grp-BOSV-KB")
+
+        Else
+            Dim tmpStr() As String = awinSettings.allianzI2DelRoles.Split(New Char() {CChar(";")})
+            For Each tmpRCName As String In tmpStr
+                If RoleDefinitions.containsName(tmpRCName) Then
+                    deleteRoles.Add(tmpRCName)
+                End If
+            Next
+        End If
+
+        ' diese Rollen und Subroles sollen alle vorher gelöscht werden und dann mit den neuen Werten ersetzt werden 
+        ' Amis soll nicht gelöscht werden, deshalb die explizite Aufführung
+
 
         ' Standard-Definition
         Dim anzPhasen As Integer = 5
 
         Try
-            anzPhasen = Projektvorlagen.getProject("Rel").CountPhases
+            anzPhasen = Projektvorlagen.getProject(vorlageName).CountPhases
         Catch ex As Exception
-
+            Call MsgBox("in ImportAllianzType2: " & vbLf & "es gibt keine Projektvorlage " & vorlageName & ".xlsx!" & vbLf & "-> Abbruch ...")
+            Exit Sub
         End Try
 
 
@@ -7382,10 +7444,8 @@ Public Module awinGeneralModules
         ' enthät die Saplte, wo der ProjektName steht ...
         Dim colPname As Integer
 
-
         ' enthält die Spalten-Nummer, wo die einzelnen Rollen-Namen zu finden sind
         Dim colRoleName As Integer = -1
-
 
         ' jetzt werden die ImportProjekte zurückgesetzt ...
         ImportProjekte.Clear()
@@ -7561,7 +7621,7 @@ Public Module awinGeneralModules
                             Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
 
                             ' tk test ...
-                            If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.1 Then
+                            If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
                                 Call MsgBox(oldProj.name & " Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString)
                             End If
                             ' tk test ...
@@ -7590,7 +7650,7 @@ Public Module awinGeneralModules
 
                             Dim bosvErgebnis As Double = newProj.getRessourcenBedarfNew("Grp-BOSV-KB", True).Sum
 
-                            If Math.Abs(bosvErgebnis - addValues) >= 0.1 Then
+                            If Math.Abs(bosvErgebnis - addValues) >= 0.001 Then
                                 outPutLine = "addValues ungleich ergebnis: " & addValues.ToString("#0.##") & " <> " & bosvErgebnis.ToString("#0.##")
                                 outputCollection.Add(outPutLine)
                             End If
@@ -11097,14 +11157,18 @@ Public Module awinGeneralModules
                         .Unprotect(Password:="x")       ' Blattschutz aufheben
 
 
-                        Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
+                        'Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
                         Dim oldrng = .Range("Phasen_des_Projekts")
+                        ' Änderung tk: es muss die Spalte der Rollen betrachtet werden , wenn die Spalte der Phasen betrachtet wird, werden bei der letzten Phase die Rollen nicht mitgenommen 
                         Dim columnOffset As Integer = oldrng.Column
-                        Dim lastrow As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
 
+                        ' es muss das Maximum aus den beiden Spalten Pahse und Ressourcen gesucht werden
+                        Dim lastrow1 As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
+                        Dim lastRow2 As Integer = CInt(CType(.Cells(40000, columnOffset + 2), Excel.Range).End(XlDirection.xlUp).Row)
+                        Dim lastRow As Integer = System.Math.Max(lastrow1, lastRow2)
                         ' ´Verlängerung des Range "Phasen_des_Projekts" bis zur lastrow
                         rng = wsRessourcen.Range(.Cells(oldrng.Row, oldrng.Column), .Cells(lastrow, oldrng.Column))
-                        rng.Name = "Phasen_des_Projekts"
+                        'rng.Name = "Phasen_des_Projekts"
 
                         Dim testrange As Excel.Range = CType(.Cells(10, 2000), Excel.Range)
                         Dim gefundenRange As Excel.Range = testrange.Find(What:="Summe")
@@ -11139,10 +11203,10 @@ Public Module awinGeneralModules
                             'Next
                         End If
 
-                        Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
+                        Dim hstr As String = CStr(CType(rng.Cells(1), Excel.Range).Value)
                         hstr = elemNameOfElemID(rootPhaseName)
 
-                        If CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
+                        If CStr(CType(rng.Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
 
 
                             ' ProjektPhase wird hinzugefügt, sofern sie nich

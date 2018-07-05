@@ -232,6 +232,29 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum ptImportSettings
+        attributeNames1 = 0
+        attributeNamesCol1 = 1
+        roleCostNames1 = 2
+        roleCostNamesCol1 = 3
+        customFieldNames1 = 4
+        customFieldsNamesCol1 = 5
+        ' Werte für Import Typ 2
+        attributeNames2 = 6
+        attributeNamesCol2 = 7
+        roleCostNames2 = 8
+        roleCostNamesCol2 = 9
+        customFieldNames2 = 10
+        customFieldsNamesCol2 = 11
+        ' Werte für Import Typ 3
+        attributeNames3 = 12
+        attributeNamesCol3 = 13
+        roleCostNames3 = 14
+        roleCostNamesCol3 = 15
+        customFieldNames3 = 16
+        customFieldsNamesCol3 = 17
+
+    End Enum
 
     Public Enum ptReportBigTypes
         charts = 0
@@ -5206,8 +5229,8 @@ Public Module Module1
 
         ' notwendig, solange keine repMessages in der Datenbank sind 
         Dim repmsg() As String
-        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
-
+        'repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
+        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
         If considerFapr Then
             deltaFMC = (curValue - faprValue).ToString(dblFormat)
         Else
@@ -5682,10 +5705,38 @@ Public Module Module1
 
             With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
                 For ix As Integer = 1 To anzSpalten
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
                     CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
                 Next
                 CType(.Cells(1, anzSpalten + 1), Excel.Range).Value = Date.Now
                 CType(.Cells(1, anzSpalten + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+            End With
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    Public Sub logfileSchreiben(ByVal text() As String, ByVal values() As Double)
+
+        Dim obj As Object
+        Try
+            Dim anzSpaltenText As Integer = text.Length
+            Dim anzSpaltenValues As Integer = values.Length
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                For ix As Integer = 1 To anzSpaltenText
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
+                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
+                Next
+
+                For ix As Integer = 1 To anzSpaltenValues
+                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 1)
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "0.00"
+                Next
+                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
             End With
         Catch ex As Exception
 
