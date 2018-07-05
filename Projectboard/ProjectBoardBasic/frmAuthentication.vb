@@ -146,15 +146,14 @@ Public Class frmAuthentication
                 End If
 
                 messageBox.Text = ""
-                    DialogResult = System.Windows.Forms.DialogResult.OK
+                DialogResult = System.Windows.Forms.DialogResult.OK
 
 
-                    '' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
-                    '' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
-                    ' Dim initOK As Integer = CType(mongoDBAcc, MongoDbAccess.Request).initWriteProtectionsOnce(dbUsername)
+                '' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
+                '' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
+                ' Dim initOK As Integer = CType(mongoDBAcc, MongoDbAccess.Request).initWriteProtectionsOnce(dbUsername)
 
-                End If
-
+            End If
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -184,7 +183,7 @@ Public Class frmAuthentication
 
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
     End Sub

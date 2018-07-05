@@ -12,19 +12,6 @@ Public Class ThisAddIn
 
     Private Sub ThisAddIn_Startup() Handles Me.Startup
 
-        ' war nur zu Testzwecken
-
-        ' ''Call MsgBox("XML write TEst anfang")
-        ' ''Try
-        ' ''    Call xmltestwrite2()
-        ' ''    Call xmltestread2()
-        ' ''Catch ex As Exception
-        ' ''    Call MsgBox("XML write TEst Fehler")
-        ' ''End Try
-
-
-        ''Call MsgBox("Load VISBO Report Testversion")
-
 
 
         Try
@@ -46,6 +33,10 @@ Public Class ThisAddIn
             awinSettings.userNamePWD = My.Settings.userNamePWD
             awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If awinSettings.rememberUserPwd Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            End If
 
             dbUsername = ""
             dbPasswort = ""
@@ -86,12 +77,13 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
                 If awinSettings.rememberUserPwd Then
                     My.Settings.userNamePWD = awinSettings.userNamePWD
                 Else
                     My.Settings.userNamePWD = ""
                 End If
-
+                My.Settings.Save()
 
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
@@ -122,11 +114,7 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
-                If awinSettings.rememberUserPwd Then
-                    My.Settings.userNamePWD = awinSettings.userNamePWD
-                Else
-                    My.Settings.userNamePWD = ""
-                End If
+
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
 

@@ -99,9 +99,17 @@ Public Class ThisWorkbook
                 awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
                 awinSettings.visboMapping = My.Settings.VISBOMapping
                 awinSettings.visboDebug = My.Settings.VISBODebug
-                awinSettings.visboServer = My.Settings.VISBOServer
                 awinSettings.userNamePWD = My.Settings.userNamePWD
+                awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
+            End If
+
+            ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If My.Settings.rememberUserPWD Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            Else
+                awinSettings.userNamePWD = ""
             End If
 
             Call awinsetTypen("ProjectBoard")
@@ -195,10 +203,20 @@ Public Class ThisWorkbook
             ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
             Try
 
-                If Not noDB Then
-                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                    ' um die Settings abzuspeichern
+                Else
+                    My.Settings.userNamePWD = ""
+                End If
+                My.Settings.Save()
 
-                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
+
+                If Not noDB Then
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+                    If request.pingMongoDb() And AlleProjekte.Count > 0 Then
                         returnValue = projektespeichern.ShowDialog
 
                         If returnValue = DialogResult.Yes Then
@@ -219,21 +237,16 @@ Public Class ThisWorkbook
 
 
                     End If
-                    If awinSettings.userNamePWD <> "" Then
-                        My.Settings.userNamePWD = awinSettings.userNamePWD
-                        My.Settings.Save()
-                    End If
-
 
                     If Not cancelAbbruch Then
                         ' die temporären Schutz
-                        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
+                        If request.cancelWriteProtections(dbUsername) Then
                             If awinSettings.visboDebug Then
                                 Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
                             End If
                         End If
                     End If
-                    
+
 
                 End If
 
@@ -359,16 +372,12 @@ Public Class ThisWorkbook
             'Dim anzWindows As Integer = appInstance.Windows.Count
 
 
-
-
-
             appInstance.ScreenUpdating = True
 
             If Application.Workbooks.Count <= 1 Then
                 Dim a As Integer = Application.Workbooks.Count
                 'Dim name asstring = Application.Workbooks(1).name
             End If
-
 
 
         Catch ex As Exception

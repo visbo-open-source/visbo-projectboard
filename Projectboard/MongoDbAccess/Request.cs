@@ -89,7 +89,8 @@ namespace MongoDbAccess
         /// </summary>
         protected IGridFSBucket BucketDocuments;
         private String User;
-        
+
+              
         /// <summary>
         /// Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort
         /// </summary>
@@ -112,17 +113,32 @@ namespace MongoDbAccess
                 Client = new MongoClient(connectionString);
             }
             else
-
             {
+                
+
 
                 // wird nicht mehr verwendet , führt ggf zu Problemen bei zu schnellem Timeout 
                 // var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
+                
                 // normal, ohne SSL : 
                 var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
+                
                 // mit SSL: var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?ssl=true";
+                
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@cluster0-shard-00-00-5rtga.mongodb.net:27017,cluster0-shard-00-01-5rtga.mongodb.net:27017,cluster0-shard-00-02-5rtga.mongodb.net:27017/VisboServer?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
-
+                //var connectionString = "mongodb://tk:philden30.@cluster0-shard-00-00-5rtga.mongodb.net:27017,cluster0-shard-00-01-5rtga.mongodb.net:27017,cluster0-shard-00-02-5rtga.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
+                                
+                if (Module1.awinSettings.DBWithSSL)
+                {
+                     connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?ssl=true";
+                }
+                else
+                {
+                     connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
+                }
+                
+
                 Client = new MongoClient(connectionString);
                      
                

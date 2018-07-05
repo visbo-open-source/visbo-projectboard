@@ -1125,7 +1125,7 @@ Public Module testModule
                                     ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
                                     'swimlaneMode = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = ex.Message
+                                    .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
                                 End Try
 
@@ -1152,7 +1152,7 @@ Public Module testModule
                                     'swimlaneMode = True
                                 Catch ex As Exception
                                     awinSettings.mppExtendedMode = formerSetting
-                                    .TextFrame2.TextRange.Text = ex.Message
+                                    .TextFrame2.TextRange.Text = ex.Message & ": iDkey = " & iDkey
                                     objectsDone = objectsToDo
                                 End Try
 
@@ -13757,6 +13757,12 @@ Public Module testModule
 
         If Not swimlaneNameID = rootPhaseName Then
             ' hier werden jetzt alle Phasen-Kinder inkl ihrer Meilensteine untersucht, ob sie gezeichnet werden sollen ... 
+
+            Dim bestStartAtLevel As New SortedList(Of Integer, Integer)
+            Dim currentLevel As Integer = -1
+            Dim previousLevel As Integer = -1
+            Dim minBestStart As Integer = 0
+
             For swlIX As Integer = startNr + 1 To endNr
 
                 Try
@@ -13769,54 +13775,74 @@ Public Module testModule
                                         (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
                                                                                     zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
+
                                 Dim requiredZeilen As Integer
 
                                 ' ermittle den Zeilenoffset
                                 If extended Then
-                                    requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID, _
-                                                                                            selectedPhaseIDs, _
-                                                                                            selectedMilestoneIDs, _
-                                                                                            extended, _
-                                                                                            considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+
+                                    currentLevel = hproj.hierarchy.getIndentLevel(curPhase.nameID)
+                                    ' wenn es sich um ein Element handelt, das in der Hierarchie höher als das vorhergehende war , dann wird das die neue Start-Zeile 
+                                    If currentLevel < previousLevel Then
+                                        If bestStartAtLevel.ContainsKey(currentLevel) Then
+                                            minBestStart = bestStartAtLevel(currentLevel) - 1
+                                            If minBestStart < 0 Then
+                                                minBestStart = 0
+                                            End If
+                                        End If
+                                    End If
+
+                                    requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID,
+                                                                                            selectedPhaseIDs,
+                                                                                            selectedMilestoneIDs,
+                                                                                            extended,
+                                                                                            considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                             considerAll)
 
-                                    Dim bestStart As Integer = 0
+                                    Dim bestStart As Integer = minBestStart
                                     ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
                                     ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
 
-                                    Dim parentFound As Boolean = False
-                                    Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
-                                    Dim ix As Integer = maxOffsetZeile
+                                    ' tk 15.5.
+                                    ''Dim parentFound As Boolean = False
+                                    ''Dim curBreadCrumb As String = hproj.hierarchy.getBreadCrumb(curPhase.nameID)
+                                    ''Dim ix As Integer = maxOffsetZeile
 
-                                    While ix > 0 And Not parentFound
-                                        If listOfPhases(ix - 1).Count > 0 Then
-                                            Dim kx As Integer = 1
+                                    ''While ix > 0 And Not parentFound
+                                    ''    If listOfPhases(ix - 1).Count > 0 Then
+                                    ''        Dim kx As Integer = 1
 
-                                            While kx <= listOfPhases(ix - 1).Count And Not parentFound
-                                                Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
-                                                If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
-                                                    parentFound = True
-                                                Else
-                                                    kx = kx + 1
-                                                End If
-                                            End While
+                                    ''        While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                    ''            Dim vglBreadCrumb As String = hproj.hierarchy.getBreadCrumb(listOfPhases(ix - 1).Item(kx))
+                                    ''            If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                    ''                parentFound = True
+                                    ''            Else
+                                    ''                kx = kx + 1
+                                    ''            End If
+                                    ''        End While
 
-                                            If Not parentFound Then
-                                                ix = ix - 1
-                                            End If
+                                    ''        If Not parentFound Then
+                                    ''            ix = ix - 1
+                                    ''        End If
 
-                                        Else
-                                            ix = ix - 1
-                                        End If
-                                    End While
+                                    ''    Else
+                                    ''        ix = ix - 1
+                                    ''    End If
+                                    ''End While
 
-                                    If parentFound Then
-                                        bestStart = ix
-                                    Else
-                                        bestStart = 0
+                                    ''If parentFound Then
+                                    ''    bestStart = ix + minBestStart
+                                    ''Else
+                                    ''    bestStart = 0 + minBestStart
+                                    ''End If
+
+                                    ''zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+                                    zeilenoffset = findeBesteZeile(lastEndDates, minBestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+
+                                    ' wenn das aktuelle Element in der Hierarchie höher steht als das zuvor behandelte , dann wird die jetzt ermittelte Zeile als Start verwendet 
+                                    If currentLevel < previousLevel Then
+                                        minBestStart = zeilenoffset
                                     End If
-
-                                    zeilenoffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
                                 Else
                                     requiredZeilen = 1
                                     zeilenoffset = 1
@@ -13825,6 +13851,7 @@ Public Module testModule
                                 'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
                                 ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
                                 maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
+
 
                                 ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
                                 If Not listOfPhases(zeilenoffset - 1).Contains(curPhase.nameID) Then
@@ -13835,6 +13862,7 @@ Public Module testModule
                                 If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
                                     lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
                                 End If
+
 
                                 aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
 
@@ -13896,6 +13924,18 @@ Public Module testModule
                 Catch ex As Exception
                     Dim a As Integer = swlIX
                 End Try
+
+                previousLevel = currentLevel
+
+                If bestStartAtLevel.ContainsKey(currentLevel) Then
+                    If maxOffsetZeile > bestStartAtLevel.Item(currentLevel) Then
+                        bestStartAtLevel.Item(currentLevel) = maxOffsetZeile
+                    Else
+                        ' nichts tun ..
+                    End If
+                Else
+                    bestStartAtLevel.Add(currentLevel, maxOffsetZeile)
+                End If
 
 
             Next
@@ -13973,7 +14013,8 @@ Public Module testModule
 
         'End If
 
-
+        '' tk test 15.5
+        ''Call MsgBox("in swimlane zeichnen: " & maxOffsetZeile.ToString)
 
     End Sub
 
@@ -19327,6 +19368,7 @@ Public Module testModule
                 End If
 
 
+
                 '
                 ' bestimme das Format  
 
@@ -19344,7 +19386,9 @@ Public Module testModule
 
                 End If
 
-
+                ''
+                '' tk test 15.5 
+                ''Call MsgBox("anz Zeilen calculated: " & anzZeilen.ToString)
 
                 Dim oldHeight As Double
                 Dim oldwidth As Double

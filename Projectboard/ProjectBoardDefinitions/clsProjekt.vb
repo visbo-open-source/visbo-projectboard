@@ -4184,6 +4184,11 @@ Public Class clsProjekt
             Else
                 ' Schleife über alle Kind Phasen der Swimlane (startnr+1 bis zu endNr)
                 ' muss erst ab startnr + 1 beginnen, da phase(startNr) ja die swimlane selber ist ... 
+                Dim bestStartAtLevel As New SortedList(Of Integer, Integer)
+                Dim currentLevel As Integer = -1
+                Dim previousLevel As Integer = -1
+                Dim minBestStart As Integer = 0
+
                 For i = startNr + 1 To endNr
                     Try
                         Dim cPhase As clsPhase = Me.getPhase(i)
@@ -4202,59 +4207,78 @@ Public Class clsProjekt
                             If relevant Then           ' cphase ist eine der selektierten Phasen
 
                                 If Not considerTimespace _
-                                    Or _
-                                    (considerTimespace And phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde, _
+                                    Or
+                                    (considerTimespace And phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde,
                                                                                 zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
 
-                                    Dim requiredZeilen As Integer = Me.calcNeededLinesSwl(cPhase.nameID, _
-                                                                                           selectedPhaseIDs, _
-                                                                                           selectedMilestoneIDs, _
-                                                                                           extended, _
-                                                                                           considerTimespace, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                    currentLevel = Me.hierarchy.getIndentLevel(cPhase.nameID)
+                                    ' wenn es sich um ein Element handelt, das in der Hierarchie höher als das vorhergehende war , dann wird das die neue Start-Zeile 
+                                    If currentLevel < previousLevel Then
+                                        If bestStartAtLevel.ContainsKey(currentLevel) Then
+                                            minBestStart = bestStartAtLevel(currentLevel) - 1
+                                            If minBestStart < 0 Then
+                                                minBestStart = 0
+                                            End If
+                                        End If
+                                    End If
+
+                                    Dim requiredZeilen As Integer = Me.calcNeededLinesSwl(cPhase.nameID,
+                                                                                           selectedPhaseIDs,
+                                                                                           selectedMilestoneIDs,
+                                                                                           extended,
+                                                                                           considerTimespace, zeitraumGrenzeL, zeitraumGrenzeR,
                                                                                            considerAll)
 
-                                    Dim bestStart As Integer = 0
+                                    Dim bestStart As Integer = minBestStart
+                                    ' Dim bestStart As Integer = 0
                                     ' von unten her beginnend: enthält eine der Zeilen ein Eltern- oder Großeltern-Teil 
                                     ' das ist dann der Fall, wenn der BreadCrumb der aktuellen Phase den Breadcrumb einer der Zeilen-Phasen vollständig enthält 
 
-                                    Dim parentFound As Boolean = False
-                                    Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
-                                    Dim ix As Integer = maxOffsetZeile
+                                    ' tk 15.5.18
+                                    ''Dim parentFound As Boolean = False
+                                    ''Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
+                                    ''Dim ix As Integer = maxOffsetZeile
 
-                                    While ix > 0 And Not parentFound
+                                    ''While ix > 0 And Not parentFound
 
-                                        If listOfPhases(ix - 1).Count > 0 Then
-                                            Dim kx As Integer = 1
-                                            While kx <= listOfPhases(ix - 1).Count And Not parentFound
-                                                Dim vglBreadCrumb As String = Me.hierarchy.getBreadCrumb(CStr(listOfPhases(ix - 1).Item(kx)))
-                                                If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
-                                                    parentFound = True
-                                                Else
-                                                    kx = kx + 1
-                                                End If
-                                            End While
+                                    ''    If listOfPhases(ix - 1).Count > 0 Then
+                                    ''        Dim kx As Integer = 1
+                                    ''        While kx <= listOfPhases(ix - 1).Count And Not parentFound
+                                    ''            Dim vglBreadCrumb As String = Me.hierarchy.getBreadCrumb(CStr(listOfPhases(ix - 1).Item(kx)))
+                                    ''            If curBreadCrumb.StartsWith(vglBreadCrumb) And curBreadCrumb.Length > vglBreadCrumb.Length Then
+                                    ''                parentFound = True
+                                    ''            Else
+                                    ''                kx = kx + 1
+                                    ''            End If
+                                    ''        End While
 
-                                            If Not parentFound Then
-                                                ix = ix - 1
-                                            End If
+                                    ''        If Not parentFound Then
+                                    ''            ix = ix - 1
+                                    ''        End If
 
-                                        Else
-                                            ix = ix - 1
-                                        End If
-                                    End While
+                                    ''    Else
+                                    ''        ix = ix - 1
+                                    ''    End If
+                                    ''End While
 
-                                    If parentFound Then
-                                        bestStart = ix
-                                    Else
-                                        bestStart = 0
-                                    End If
+                                    ''If parentFound Then
+                                    ''    bestStart = ix
+                                    ''Else
+                                    ''    bestStart = 0
+                                    ''End If
 
                                     With cPhase
 
+                                        'zeilenOffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
+                                        zeilenOffset = findeBesteZeile(lastEndDates, minBestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
+                                        ' wenn das aktuelle Element in der Hierarchie höher steht als das zuvor behandelte , dann wird die jetzt ermittelte Zeile als Start verwendet 
+                                        If currentLevel < previousLevel Then
+                                            minBestStart = zeilenOffset
+                                        End If
 
-                                        zeilenOffset = findeBesteZeile(lastEndDates, bestStart, maxOffsetZeile, .getStartDate, requiredZeilen)
                                         maxOffsetZeile = System.Math.Max(zeilenOffset + requiredZeilen - 1, maxOffsetZeile)
+
 
                                         ' jetzt vermerken, welche Phase in der Zeile gezeichnet wurde ...
                                         If Not listOfPhases(zeilenOffset - 1).Contains(cPhase.nameID) Then
@@ -4264,6 +4288,7 @@ Public Class clsProjekt
                                         If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
                                             lastEndDates(zeilenOffset - 1) = .getEndDate
                                         End If
+
 
                                         'End If
 
@@ -4637,8 +4662,8 @@ Public Class clsProjekt
                     Dim pvName As String = ""
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb, type, pvName)
 
-                    If type = -1 Or _
-                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                    If type = -1 Or
+                        (type = PTProjektType.projekt And pvName = Me.name) Or
                         (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                         If namesAreMilestones Then
@@ -4750,8 +4775,10 @@ Public Class clsProjekt
 
             Next
 
+
             ' jetzt muss umkopiert werden 
             For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                iDkey = kvp.Value
                 iDCollection.Add(kvp.Value, kvp.Value)
             Next
 

@@ -5,7 +5,6 @@ Imports System.Windows.Forms
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
 
-
 Public Class Ribbon1
 
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
@@ -43,7 +42,8 @@ Public Class Ribbon1
                 ' Prüfen der Lizenzen
                 If lizenzen.validLicence(user, komponente) Then
 
-
+                    '' Set cursor as hourglass
+                    Cursor.Current = Cursors.WaitCursor
 
                     'Call MsgBox("EPReport_Click")
 
@@ -59,6 +59,9 @@ Public Class Ribbon1
                             End Try
                         End If
                     End If
+
+                    '' Set cursor as default
+                    Cursor.Current = Cursors.Default
 
                     If Not IsNothing(mapProj) Then
                         If mapProj.name <> "" And Not IsNothing(mapProj.name) Then
@@ -144,6 +147,8 @@ Public Class Ribbon1
                 ' Prüfen der Lizenzen
                 If lizenzen.validLicence(user, komponente) Then
 
+                    '' Set cursor as hourglass
+                    Cursor.Current = Cursors.WaitCursor
 
                     'Call MsgBox("EPReport_Click")
 
@@ -176,8 +181,8 @@ Public Class Ribbon1
                         End If
                     End If
 
-
-
+                    '' Set cursor as Default
+                    Cursor.Current = Cursors.Default
 
                 Else
                     Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
@@ -185,21 +190,7 @@ Public Class Ribbon1
 
                 End If
 
-
-                '' ''    Else    ' ohne Lizenzprüfung
-
-                '' ''    ' Laden des aktuell geladenen Projektes
-                '' ''    Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
-
-                '' ''    If hproj.name <> "" And Not IsNothing(hproj.name) Then
-                '' ''        reportAuswahl.hproj = hproj
-                '' ''        returnvalue = reportAuswahl.ShowDialog
-                '' ''    End If
-
-                '' ''End If ' Ende if Lizenzprüfung
-
-
-                End If
+            End If
 
         Catch ex As Exception
             Call MsgBox("Fehler mit Message:  " & ex.Message)

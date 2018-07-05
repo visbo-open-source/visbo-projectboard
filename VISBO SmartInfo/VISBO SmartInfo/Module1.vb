@@ -491,14 +491,29 @@ Module Module1
 
                             If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                                Call logInToMongoDB()
+                                noDBAccessInPPT = Not logInToMongoDB(True)
 
-                                If Not noDBAccessInPPT Then
+                                If noDBAccessInPPT Then
+                                    If englishLanguage Then
+                                        msg = "no database access ... "
+                                    Else
+                                        msg = "kein Datenbank Zugriff ... "
+                                    End If
+                                    Call MsgBox(msg)
+                                Else
+                                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                                    'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                                    'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                                    RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                                    CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+
                                     ' in allen Slides den Sicht Schutz aufheben 
                                     protectionSolved = True
                                     Call makeVisboShapesVisible(True)
 
                                 End If
+
 
                             End If
 
@@ -1332,89 +1347,80 @@ Module Module1
 
     End Function
 
-    ''' <summary>
-    ''' ruft Formular zum Login auf und holt die RoleDefinitions, CostDefinitions aus der Datenbank 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Friend Sub logInToMongoDB()
 
-        'awinSettings.visboServer = False   ' Zugriff zu DB soll über REST-Server erfolgen
-        If awinSettings.visboServer Then
-            ' remembered UserNamePWD bei serverzugriff löschen
-            'My.Settings.userNamePWD = Nothing
-        End If
-        ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
-        If noDBAccessInPPT Then
-            Dim msg As String
-            ''awinSettings.databaseURL = "http://visbo.myhome-server.de:3484"
-            'awinSettings.databaseURL = "http://localhost:3484"
-            'awinSettings.databaseName = "IT Projekte 2018"
+    '''' <summary>
+    '''' ruft Formular zum Login auf und holt die RoleDefinitions, CostDefinitions aus der Datenbank 
+    '''' </summary>
+    '''' <remarks></remarks>
+    'Friend Sub logInToMongoDB()
+    '    ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
 
-            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+    '    If noDBAccessInPPT Then
+    '        Dim msg As String
+    '        If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
 
-                ' jetzt prüfen , ob es bereits gespeicherte User-Credentials gibt 
-                If IsNothing(My.Settings.userNamePWD) Then
-                    ' tk: 17.11.16: Einloggen in Datenbank 
-                    noDBAccessInPPT = Not loginProzedur()
+    '            ' jetzt prüfen , ob es bereits gespeicherte User-Credentials gibt 
+    '            If IsNothing(My.Settings.userNamePWD) Then
+    '                ' tk: 17.11.16: Einloggen in Datenbank 
+    '                noDBAccessInPPT = Not loginProzedur()
 
-                    ' in diesem Fall das mySettings setzen 
-                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                    My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
-                Else
-                    If My.Settings.userNamePWD = "" Then
-                        ' tk: 17.11.16: Einloggen in Datenbank 
-                        noDBAccessInPPT = Not loginProzedur()
+    '                ' in diesem Fall das mySettings setzen 
+    '                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+    '                My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+    '            Else
+    '                If My.Settings.userNamePWD = "" Then
+    '                    ' tk: 17.11.16: Einloggen in Datenbank 
+    '                    noDBAccessInPPT = Not loginProzedur()
 
-                        ' in diesem Fall das mySettings setzen 
-                        Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                        My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
-                    Else
-                        ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
-                        'noDBAccessInPPT = Not autoVisboLogin(My.Settings.userNamePWD)
+    '                    ' in diesem Fall das mySettings setzen 
+    '                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+    '                    My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+    '                Else
+    '                    ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
+    '                    noDBAccessInPPT = Not autoVisboLogin(My.Settings.userNamePWD)
 
-                        awinSettings.userNamePWD = My.Settings.userNamePWD
+    '                    ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
+    '                    If noDBAccessInPPT Then
+    '                        noDBAccessInPPT = Not loginProzedur()
 
-                        ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
-                        If noDBAccessInPPT Then
-                            noDBAccessInPPT = Not loginProzedur()
+    '                        ' in diesem Fall das mySettings setzen 
+    '                        Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+    '                        My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+    '                    End If
+    '                End If
+    '            End If
 
-                            ' in diesem Fall das mySettings setzen 
-                            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                            My.Settings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
-                        End If
-                    End If
-                End If
-                
-                
 
-                If noDBAccessInPPT Then
-                    If englishLanguage Then
-                        msg = "no database access ... "
-                    Else
-                        msg = "kein Datenbank Zugriff ... "
-                    End If
-                    Call MsgBox(msg)
-                Else
-                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
-                    'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                    CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
-                End If
-            Else
-                If englishLanguage Then
-                    If englishLanguage Then
-                        msg = "no database URL information available ... "
-                    Else
-                        msg = "keine Datenbank URL verfügbar ... "
-                    End If
-                    Call MsgBox(msg)
-                End If
-            End If
-        End If
 
-    End Sub
+    '            If noDBAccessInPPT Then
+    '                If englishLanguage Then
+    '                    msg = "no database access ... "
+    '                Else
+    '                    msg = "kein Datenbank Zugriff ... "
+    '                End If
+    '                Call MsgBox(msg)
+    '            Else
+    '                ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+    '                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+    '                'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+    '                'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+    '                RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+    '                CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+    '            End If
+    '        Else
+    '            If englishLanguage Then
+    '                If englishLanguage Then
+    '                    msg = "no database URL information available ... "
+    '                Else
+    '                    msg = "keine Datenbank URL verfügbar ... "
+    '                End If
+    '                Call MsgBox(msg)
+    '            End If
+    '        End If
+    '    End If
+
+    'End Sub
+
 
     ''' <summary>
     ''' wird nur für relevante Shapes aufgerufen
@@ -6010,7 +6016,23 @@ Module Module1
                 ' muss noch eingeloggt werden ? 
                 If noDBAccessInPPT Then
 
-                    Call logInToMongoDB()
+                    noDBAccessInPPT = Not logInToMongoDB(True)
+
+                    If noDBAccessInPPT Then
+                        If englishLanguage Then
+                            msg = "no database access ... "
+                        Else
+                            msg = "kein Datenbank Zugriff ... "
+                        End If
+                        Call MsgBox(msg)
+                    Else
+                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
+                        'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
+                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                    End If
 
                 End If
 

@@ -3648,6 +3648,7 @@ Public Module awinGeneralModules
 
                             Dim phBewertung As New clsBewertung
                             If Not istElemID(msTask.Name) Then
+
                                 .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
                             End If
 
@@ -4011,6 +4012,16 @@ Public Module awinGeneralModules
                                 Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
                             End If
 
+                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
+                            Dim newStdName As String = ""
+                            If awinSettings.createUniqueSiblingNames Then
+                                newStdName = hproj.hierarchy.findUniqueGeschwisterName(hrchynode.parentNodeKey, msTask.Name, False)
+                            Else
+                                newStdName = msTask.Name
+                            End If
+
+                            cphase.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, False)
+
                             hproj.AddPhase(cphase, origName:=origPhName, parentID:=hrchynode.parentNodeKey)
 
                             ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
@@ -4105,7 +4116,17 @@ Public Module awinGeneralModules
 
                             Dim msBewertung As New clsBewertung
                             cmilestone.setDate = CType(msTask.Start, Date)
-                            cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
+
+                            ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase
+                            Dim newStdName As String = ""
+                            If awinSettings.createUniqueSiblingNames Then
+                                newStdName = hproj.hierarchy.findUniqueGeschwisterName(msPhase.nameID, msTask.Name, True)
+                            Else
+                                newStdName = msTask.Name
+                            End If
+
+                            cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, True)
+
 
                             'percentDone, falls Customfiels visbo_percentDone definiert ist
                             If visbo_percentDone <> 0 Then
@@ -13268,7 +13289,7 @@ Public Module awinGeneralModules
 
                     Else
                         ' die gespeicherten User-Credentials hernehmen, um sich einzuloggen 
-                        noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
+                        ' noDBAccess = Not autoVisboLogin(awinSettings.userNamePWD)
 
                         ' wenn das jetzt nicht geklappt hat, soll wieder das login Fenster kommen ..
                         If noDBAccess Then
@@ -13290,6 +13311,7 @@ Public Module awinGeneralModules
                 End If
             End If
         End If
+
         logInToMongoDB = Not noDBAccess
 
     End Function
@@ -22480,12 +22502,14 @@ Public Module awinGeneralModules
                             awinSettings.visboMapping = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "userNamePWD"
                             awinSettings.userNamePWD = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
-                        Case "rememberUserPWD"
-                            awinSettings.rememberUserPwd = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "VISBOServer"
                             awinSettings.visboServer = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "mongoDBWithSSL"
+                            awinSettings.DBWithSSL = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "VISBODebug"
                             awinSettings.visboDebug = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
+                        Case "rememberUserPWD"
+                            awinSettings.rememberUserPwd = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
 
                     End Select
                 Next

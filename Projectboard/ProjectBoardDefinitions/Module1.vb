@@ -20,6 +20,8 @@ Public Module Module1
     ' das Objekt, das später die Instanz-Variable Request aufnimmt 
     Public databaseAcc As Object = Nothing
 
+    Public iDkey As String = ""
+
     'login - Informationen
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
