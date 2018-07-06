@@ -502,16 +502,15 @@ Module Module1
                                     Call MsgBox(msg)
                                 Else
                                     ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                                     'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                                     'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                                    RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
-                                    CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                                    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                                    CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
                                     ' in allen Slides den Sicht Schutz aufheben 
                                     protectionSolved = True
                                     Call makeVisboShapesVisible(True)
-
                                 End If
 
 
@@ -6027,12 +6026,13 @@ Module Module1
                         Call MsgBox(msg)
                     Else
                         ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                         'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
                     End If
+
 
                 End If
 

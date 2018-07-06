@@ -2,7 +2,7 @@
 Imports PPTNS = Microsoft.Office.Interop.PowerPoint
 Imports DBAccLayer
 Imports ProjectBoardDefinitions
-'Imports ProjectBoardBasic
+Imports ProjectBoardBasic
 
 Public Class Ribbon1
 
@@ -89,11 +89,11 @@ Public Class Ribbon1
                         Call MsgBox(msg)
                     Else
                         ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                         'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
                     End If
 
                 End If
@@ -177,11 +177,11 @@ Public Class Ribbon1
                         Call MsgBox(msg)
                     Else
                         ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                         'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
                     End If
 
                     Dim tmpKey As String = ""
@@ -472,11 +472,11 @@ Public Class Ribbon1
                         Call MsgBox(msg)
                     Else
                         ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                         'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
                         'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
                     End If
 
                 End If
