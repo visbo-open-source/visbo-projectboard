@@ -4961,6 +4961,11 @@ Public Module Module1
         Try
             anzRoles = CInt(q1)
             anzCosts = CInt(q2)
+
+            If anzRoles = -1 And anzCosts = -1 Then
+                ' das ist das signal, dass erst die gemeinsame Liste bestimmt werden soll 
+                todoCollection = getCommonListOfRCNames(hproj, lproj, bproj, anzRoles, anzCosts)
+            End If
         Catch ex As Exception
 
         End Try

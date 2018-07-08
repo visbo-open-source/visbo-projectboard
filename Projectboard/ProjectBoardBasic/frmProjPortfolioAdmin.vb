@@ -2618,7 +2618,7 @@ Public Class frmProjPortfolioAdmin
                             budget = oldSummaryP.budgetWerte.Sum
                         End If
 
-                        Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, budget:=budget)
+                        Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
 
                         Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
                         If AlleProjekte.Containskey(skey) Then

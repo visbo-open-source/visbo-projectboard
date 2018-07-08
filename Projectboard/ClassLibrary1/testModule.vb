@@ -1790,69 +1790,95 @@ Public Module testModule
                                 Try
                                     ' wenn es im Qualifier angegebene Rollen und Kostenarten gibt, dann haben die Prio vor der interaktiven Auswahl 
                                     ' 
-                                    Dim sRoles As Collection = selectedRoles
-                                    Dim sCosts As Collection = selectedCosts
+                                    Dim sRoles As Collection = Nothing
+                                    Dim sCosts As Collection = Nothing
 
-                                    If Not IsNothing(qualifier2) Then
-                                        If qualifier2.Length > 0 Then
-                                            sRoles = New Collection
-                                            sCosts = New Collection
-                                            Dim tmpStr() As String = qualifier2.Split(New Char() {vbLf, vbCr})
-
-                                            For Each tmpRcName As String In tmpStr
-                                                ' es darf einen Namen nur entweder als Rolle oder als Kostenart geben ..
-                                                If RoleDefinitions.containsName(tmpRcName) Then
-                                                    If Not sRoles.Contains(tmpRcName) Then
-                                                        sRoles.Add(tmpRcName, tmpRcName)
-                                                    End If
-                                                ElseIf CostDefinitions.containsName(tmpRcName) Then
-                                                    If Not sCosts.Contains(tmpRcName) Then
-                                                        sCosts.Add(tmpRcName, tmpRcName)
-                                                    End If
-                                                End If
-                                            Next
-
-                                        End If
-                                    End If
-
-                                    ' jetzt kommt die Vorbereitung der  todoCollection .
-                                    If IsNothing(sRoles) Then
-                                        sRoles = New Collection
-                                    End If
-
-                                    If IsNothing(sCosts) Then
-                                        sCosts = New Collection
-                                    End If
-
-
-                                    Dim todoCollection As Collection = New Collection
+                                    Dim todoCollection As Collection = Nothing
                                     Dim q1 As String = "0"
                                     Dim q2 As String = "0"
 
-                                    If sRoles.Count + sCosts.Count = 0 Then
-                                        ' nichts tun, todoCollection ist schon leere Collection 
-                                    Else
-                                        ' jetzt wird die toDoCollection aufgebaut , es solle eine Liste aufgebaut werden, die die Reihenfolge beibehält 
-                                        For Each tmpName As String In sRoles
-                                            toDoCollection.Add(tmpName)
-                                        Next
+                                    ' es werden drei Fälle unterschieden
+                                    ' 1. qualifier2 = "" ->  die Budget, PK, SK, Ergebnis Übersicht  :todoCollection leer, q1= 0 , q2=0
+                                    ' 2. qualifier2 = %used% -> es wird die gemeinsame Liste ermittelt ; todoCollection leer oder mit Inhalt, q1=-1, q2= -1
+                                    ' 3. qualifier2 = Liste von Namen, todoCollection <> leer, q1 die Zahl der Rollen, q2 die Zahl der Kostenarten
 
-                                        For Each tmpName As String In sCosts
-                                            toDoCollection.Add(tmpName)
-                                        Next
+                                    Dim alreadyDone As Boolean = False
+                                    sRoles = selectedRoles
+                                    sCosts = selectedCosts
+                                    todoCollection = New Collection
+
+                                    If Not IsNothing(qualifier2) Then
+                                        If qualifier2.Length > 0 Then
+                                            If qualifier2.Trim = "%used%" Then
+                                                'Dim anzR As Integer, anzC As Integer
+                                                ' kann man sich hier sparen, weil die todoCollection ja im zeichneTableBudgetCostAPVCV erstellt wird
+                                                ' wichtig ist es, die q1, q2 auf -1 zu setzen 
+                                                'todoCollection = getCommonListOfRCNames(hproj, lproj, bproj, anzR, anzC)
+                                                q1 = "-1"
+                                                q2 = "-1"
+                                                alreadyDone = True
+
+                                            Else
+
+                                                sRoles = New Collection
+                                                sCosts = New Collection
+                                                Dim tmpStr() As String = qualifier2.Split(New Char() {vbLf, vbCr})
+
+                                                For Each tmpRcName As String In tmpStr
+                                                    ' es darf einen Namen nur entweder als Rolle oder als Kostenart geben ..
+                                                    If RoleDefinitions.containsName(tmpRcName) Then
+
+                                                        sRoles.Add(tmpRcName)
+
+                                                    ElseIf CostDefinitions.containsName(tmpRcName) Then
+
+                                                        sCosts.Add(tmpRcName)
+
+                                                    End If
+                                                Next
+
+                                            End If
+
+
+                                        End If
+
                                     End If
 
-                                    ' in Q1 steht die Anzahl der Detail Rollen , in q2 steht die Anzahl der 
-                                    q1 = sRoles.Count.ToString
-                                    q2 = sCosts.Count.ToString
+                                    If Not alreadyDone Then
+                                        ' in Fall 1, 3
+                                        ' jetzt kommt die Vorbereitung der  todoCollection .
+                                        If IsNothing(sRoles) Then
+                                            sRoles = New Collection
+                                        End If
+
+                                        If IsNothing(sCosts) Then
+                                            sCosts = New Collection
+                                        End If
 
 
+                                        If sRoles.Count + sCosts.Count = 0 Then
+                                            ' nichts tun, todoCollection ist schon leere Collection 
+                                        Else
+                                            ' jetzt wird die toDoCollection aufgebaut , es solle eine Liste aufgebaut werden, die die Reihenfolge beibehält 
+                                            For Each tmpName As String In sRoles
+                                                todoCollection.Add(tmpName)
+                                            Next
+
+                                            For Each tmpName As String In sCosts
+                                                todoCollection.Add(tmpName)
+                                            Next
+                                        End If
+
+                                        ' in Q1 steht die Anzahl der Detail Rollen , in q2 steht die Anzahl der 
+                                        q1 = sRoles.Count.ToString
+                                        q2 = sCosts.Count.ToString
+
+                                    End If
 
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
                                     ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
                                     Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, todoCollection, q1, q2)
-                                    'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
 
 
                                 Catch ex As Exception

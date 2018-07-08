@@ -26318,8 +26318,8 @@ Public Module Projekte
     ''' <param name="requiredZeilen">die Anzahl Zeilen, die die Phase inkl ihrer Kinder benötigt</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function findeBesteZeile(ByVal matrix() As Date, ByVal bestStart As Integer, ByVal maxZeile As Integer, _
-                                        ByVal startdate As Date, _
+    Public Function findeBesteZeile(ByVal matrix() As Date, ByVal bestStart As Integer, ByVal maxZeile As Integer,
+                                        ByVal startdate As Date,
                                         ByVal requiredZeilen As Integer) As Integer
 
 
@@ -26346,6 +26346,84 @@ Public Module Projekte
         Else
             findeBesteZeile = maxZeile + 1
         End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt Menge aller auftretenden Rollen und Kosten-Namen in hproj, lproj, bproj zurück 
+    ''' wird unter anderem für die TableBudgetCostAPVCV benötigt
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <returns></returns>
+    Public Function getCommonListOfRCNames(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt,
+                                           ByRef anzRoles As Integer, ByRef anzCosts As Integer) As Collection
+        Dim resultCollection As New Collection
+
+        ' bestimme die Menge an vorkommenden Namen in hproj, lproj, bproj
+        Dim tmpRListe As New SortedList(Of Integer, String)
+        Dim tmpCListe As New SortedList(Of Integer, String)
+
+        Dim sRoles As New Collection
+        Dim sCosts As New Collection
+
+        For i As Integer = 1 To 3
+            If i = 1 Then
+                sRoles = hproj.getRoleNames
+                sCosts = hproj.getCostNames
+            ElseIf i = 2 Then
+                If Not IsNothing(lproj) Then
+                    sRoles = lproj.getRoleNames
+                    sCosts = lproj.getCostNames
+                Else
+                    sRoles = New Collection
+                    sCosts = New Collection
+                End If
+            Else
+                If Not IsNothing(bproj) Then
+                    sRoles = bproj.getRoleNames
+                    sCosts = bproj.getCostNames
+                Else
+                    sRoles = New Collection
+                    sCosts = New Collection
+                End If
+            End If
+
+            For Each tmpRName As String In sRoles
+                Dim tmpUiD As Integer = RoleDefinitions.getRoledef(tmpRName).UID
+                If Not tmpRListe.ContainsKey(tmpUiD) Then
+                    tmpRListe.Add(tmpUiD, tmpRName)
+                End If
+            Next
+
+            For Each tmpCName As String In sCosts
+                Dim tmpUiD As Integer = CostDefinitions.getCostdef(tmpCName).UID
+                If Not tmpCListe.ContainsKey(tmpUiD) Then
+                    tmpCListe.Add(tmpUiD, tmpCName)
+                End If
+            Next
+
+        Next
+
+
+        For Each kvp As KeyValuePair(Of Integer, String) In tmpRListe
+
+            resultCollection.Add(kvp.Value)
+
+        Next
+
+        For Each kvp As KeyValuePair(Of Integer, String) In tmpCListe
+
+            resultCollection.Add(kvp.Value)
+
+        Next
+
+        anzRoles = tmpRListe.Count
+        anzCosts = tmpCListe.Count
+
+
+        getCommonListOfRCNames = resultCollection
 
     End Function
 

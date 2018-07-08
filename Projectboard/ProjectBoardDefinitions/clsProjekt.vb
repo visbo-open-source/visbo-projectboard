@@ -1361,6 +1361,7 @@ Public Class clsProjekt
     Public Function deleteRolesAndCosts(ByVal rolesToBeDeleted As Collection,
                                         ByVal costsToBedeleted As Collection,
                                         ByVal includingChilds As Boolean) As clsProjekt
+
         Dim newProj As clsProjekt = Me.createVariant("$delete$", "")
 
         ' hier passiert das jetzt 
@@ -2472,6 +2473,7 @@ Public Class clsProjekt
     End Sub
 
 
+
     Public Sub clearBewertungen()
         Dim cPhase As clsPhase
 
@@ -2801,7 +2803,7 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
-    ''' 
+    ''' für AllianzImport  
     ''' </summary>
     ''' <param name="rolePhaseValues"></param>
     ''' <param name="phaseNameIDs"></param>
@@ -3028,6 +3030,115 @@ Public Class clsProjekt
 
         unionizeWith = newProj
     End Function
+
+
+    ''' <summary>
+    ''' liest den geldwerten Betrag der Rollen bis zum Monat , ggf werden sie in Abhängigkeit von resetValuesToNull auf Null gesetzt 
+    ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich untilMonthIncl auf Null, die in der roleCostCollection verzeichnet sind   
+    ''' </summary>
+    ''' <param name="roleCostCollection"></param>
+    ''' <param name="relMonthCol"></param>
+    ''' <param name="resetValuesToNull">gibt an, ob die entsprechenden Werte dann auf Null gesetzt werden sollen</param>
+    ''' <returns></returns>
+    Public Function getSetRoleCostUntil(ByVal roleCostCollection As Collection, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
+
+        Dim usedRoles As Collection = Me.getRoleNames
+        Dim usedCosts As Collection = Me.getCostNames
+
+        Dim actualValue As Double = 0.0
+
+        For Each roleName As String In usedRoles
+            If isRelevantForNulling(roleName, roleCostCollection) Then
+                actualValue = actualValue + Me.getSetRoleValuesUntil(roleName, relMonthCol, resetValuesToNull)
+            End If
+        Next
+
+        getSetRoleCostUntil = actualValue
+
+    End Function
+
+    Private Function isRelevantForNulling(ByVal roleCostName As String, ByVal roleCostCollection As Collection) As Boolean
+        Dim tmpResult As Boolean = False
+
+        Dim isRole As Boolean = (RoleDefinitions.containsName(roleCostName))
+
+        Dim isCost As Boolean = False
+
+        If Not isRole Then
+            isCost = (CostDefinitions.containsName(roleCostName))
+        End If
+
+        If isRole Then
+            If RoleDefinitions.hasAnyChildParentRelationsship(roleCostName, roleCostCollection) Then
+                tmpResult = True
+            End If
+        Else
+            ' ist Kostenart - Vergleich auf Namensgleichheit reicht; es gibt noch keine Hierarchien
+            tmpResult = roleCostCollection.Contains(roleCostName)
+        End If
+
+        isRelevantForNulling = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich untilMonth auf Null
+    ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="relMonthCol"></param>
+    ''' <returns></returns>
+    Public Function getSetRoleValuesUntil(ByVal roleName As String, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
+
+        Dim tmpValue As Double = 0.0
+        Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+
+        If Not IsNothing(currentRoleDef) Then
+            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+            Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+
+            Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
+
+            For Each phNameID As String In listOfPhases
+
+                Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
+                If Not IsNothing(cPhase) Then
+                    With cPhase
+
+                        If .relStart <= relMonthCol Then
+                            ' jetzt die Werte auslesen und ggf. auf Null setzen 
+                            Dim cRole As clsRolle = .getRole(roleName)
+
+                            If Not IsNothing(cRole) Then
+                                Dim oldSum As Double = 0.0
+                                Dim ende As Integer = System.Math.Min(.relEnde, relMonthCol)
+
+                                For ix As Integer = 0 To ende - .relStart
+                                    oldSum = oldSum + cRole.Xwerte(ix)
+
+                                    ' hier werden ggf die Werte zurückgesetzt 
+                                    If resetValuesToNull Then
+                                        cRole.Xwerte(ix) = 0
+                                    End If
+
+                                Next
+
+                                tmpValue = tmpValue + oldSum * tagessatz
+                            End If
+
+                        End If
+
+                    End With
+
+                End If
+            Next
+
+        End If
+
+
+        getSetRoleValuesUntil = tmpValue
+
+    End Function
+
 
     ''' <summary>
     ''' gibt die Bedarfe (Phasen / Rollen / Kostenarten / Ergebnis pro Monat zurück 

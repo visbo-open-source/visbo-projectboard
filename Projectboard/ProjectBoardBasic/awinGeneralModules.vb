@@ -6650,7 +6650,7 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
 
 
-        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "DRUCK", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
+        tmpRoleNames = {"D-BOSV-KB0", "D-BOSV-KB1", "D-BOSV-KB2", "D-BOSV-KB3", "D-BOSV-SBF1", "D-BOSV-SBF2", "DRUCK", "D-BOSV-SBP1", "D-BOSV-SBP2", "D-BOSV-SBP3", "AMIS",
                         "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
         tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DI1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
 
@@ -6676,8 +6676,14 @@ Public Module awinGeneralModules
                         tmpCols(i - 1) = CType(.Range(tmpColBz(i - 1)), Excel.Range).Column
 
                         ' test tk 9.6.18
-                        ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1)) Or
+                        If tmpRoleNames(i - 1).StartsWith("D-") Then
+                            ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1).Substring(2)) Or
                             tmpRoleNames(i - 1) = "DRUCK")
+                        Else
+                            ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1)) Or
+                            tmpRoleNames(i - 1) = "DRUCK")
+                        End If
+
 
                         If Not ok Then
                             Call MsgBox("Fehler in Spalte mit Angaben zu (?) " & tmpRoleNames(i - 1))
@@ -7002,7 +7008,7 @@ Public Module awinGeneralModules
                                             projectConstellations.Add(current1program)
 
                                             ' jetzt das union-Projekt erstellen ; wird aktuell noch nicht gemacht ...
-                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
+                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                                             ' Status gleich auf 1: beauftragt setzen 
                                             unionProj.Status = ProjektStatus(1)
@@ -7296,7 +7302,7 @@ Public Module awinGeneralModules
                         projectConstellations.Add(current1program)
 
                         ' jetzt das union-Projekt erstellen 
-                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
+                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                         ' Status wird gleich auf 1: beauftragt gesetzt
                         unionProj.Status = ProjektStatus(1)
@@ -7394,17 +7400,17 @@ Public Module awinGeneralModules
         ' jetzt werden die aufgebaut ...
         If awinSettings.allianzI2DelRoles = "" Then
 
-            deleteRoles.Add("BOSV-KB0")
-            deleteRoles.Add("BOSV-KB1")
-            deleteRoles.Add("BOSV-KB2")
-            deleteRoles.Add("BOSV-KB3")
+            deleteRoles.Add("D-BOSV-KB0")
+            deleteRoles.Add("D-BOSV-KB1")
+            deleteRoles.Add("D-BOSV-KB2")
+            deleteRoles.Add("D-BOSV-KB3")
             deleteRoles.Add("Grp-BOSV-KB")
 
         Else
             Dim tmpStr() As String = awinSettings.allianzI2DelRoles.Split(New Char() {CChar(";")})
             For Each tmpRCName As String In tmpStr
-                If RoleDefinitions.containsName(tmpRCName) Then
-                    deleteRoles.Add(tmpRCName)
+                If RoleDefinitions.containsName(tmpRCName.Trim) Then
+                    deleteRoles.Add(tmpRCName.Trim)
                 End If
             Next
         End If
@@ -7618,7 +7624,7 @@ Public Module awinGeneralModules
 
                             Dim gesamtVorher As Double = oldProj.getAlleRessourcen().Sum
                             Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonthNew("Orga", True).Sum
-                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
+                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("D-BOSV-KB", True).Sum
 
                             ' tk test ...
                             If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
@@ -7714,6 +7720,8 @@ Public Module awinGeneralModules
         ' Array kann beliebig lang werden 
         Dim logArray() As String
 
+        ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+        Dim referatsCollection As New Collection
 
         ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
         ' das aktive Sheet muss das richtige sein ... und die richtige Header Struktur haben 
@@ -7746,15 +7754,15 @@ Public Module awinGeneralModules
                 lastRow = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 ' welche Werte sollen ausgelesen werden, wo stehen die 
-                Dim colISExtern As Integer = CType(.Range("B1"), Excel.Range).Column
-                Dim colResource As Integer = CType(.Range("C1"), Excel.Range).Column
-                Dim colProjectNr As Integer = CType(.Range("D1"), Excel.Range).Column
-                Dim colPname As Integer = CType(.Range("E1"), Excel.Range).Column
+                Dim colISExtern As Integer = CType(.Range("F1"), Excel.Range).Column
+                Dim colResource As Integer = CType(.Range("G1"), Excel.Range).Column
+                Dim colProjectNr As Integer = CType(.Range("C1"), Excel.Range).Column
+                Dim colPname As Integer = CType(.Range("D1"), Excel.Range).Column
 
-                Dim colYear As Integer = CType(.Range("G1"), Excel.Range).Column
-                Dim colMonth As Integer = CType(.Range("H1"), Excel.Range).Column
-                Dim colActuals As Integer = CType(.Range("J1"), Excel.Range).Column
-
+                Dim colYear As Integer = CType(.Range("H1"), Excel.Range).Column
+                Dim colMonth As Integer = CType(.Range("I1"), Excel.Range).Column
+                Dim colActuals As Integer = CType(.Range("K1"), Excel.Range).Column
+                Dim colReferat As Integer = CType(.Range("A1"), Excel.Range).Column
 
 
                 Dim cacheProjekte As New clsProjekteAlle
@@ -7768,6 +7776,16 @@ Public Module awinGeneralModules
                 While zeile <= lastRow
 
                     Try
+                        ' zu welchem Referat gehört die Rolle ? das wird später benötigt, um die zugehörigen Werte zurücksetzen zu können 
+                        Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
+                        If Not IsNothing(tmpReferat) Then
+                            If RoleDefinitions.containsName(tmpReferat) Then
+                                If Not referatsCollection.Contains(tmpReferat) Then
+                                    referatsCollection.Add(tmpReferat, tmpReferat)
+                                End If
+                            End If
+                        End If
+
                         Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
                         Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
 
@@ -7834,8 +7852,8 @@ Public Module awinGeneralModules
 
                                     If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
                                         unKnownRoleNames.Add(fullRoleName, True)
-                                        outPutLine = "unbekannt: " & fullRoleName
-                                        outputCollection.Add(outPutLine)
+                                        'outPutLine = "unbekannt: " & fullRoleName
+                                        'outputCollection.Add(outPutLine)
 
                                         ReDim logArray(1)
                                         logArray(0) = "unbekannte Rolle:"
@@ -7910,7 +7928,7 @@ Public Module awinGeneralModules
                 ' jetzt kommt die zweite Bearbeitungs-Welle
                 ' das Rausschreiben der Test Records 
 
-
+                ' Protokoll schreiben ...
                 For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
                     Dim protocolLine As String = ""
@@ -7931,13 +7949,45 @@ Public Module awinGeneralModules
                     Next
 
                 Next
-                Call logfileSchliessen()
+                ' Protokoll schreiben Ende ... 
 
 
-                ' es wird pro Projekt eine Variante erzeugt 
-                ' die Rollen des referenzierten Fachbereichs werden in den ActualData Monaten gelöscht 
-                ' die neuen Rollen werden eingetragen 
-                ' 
+                For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
+                    Dim oldPlanValue As Double = 0.0
+                    Dim newIstValue As Double = 0.0
+
+                    If Not IsNothing(hproj) Then
+                        ' es wird pro Projekt eine Variante erzeugt 
+                        Dim newProj As clsProjekt = hproj.createVariant("$IstDaten$", "temporär für Ist-Daten-Aufnahme")
+
+                        ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
+                        ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
+                        ' True: die Werte werden auf Null gesetzt 
+                        oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                        newIstValue = calcIstValueOf(vPKvP.Value)
+
+                        ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+
+                        ' die Differenz aus Soll und Ist zwischen Beautragung / Actual sowie Last / Actual in T€ wird gemerkt und dem Projekt als Attribut mitgegeben  
+
+                    Else
+                        ReDim logArray(1)
+                        logArray(0) = " Projekt existiert nicht !!?? ... kann eigentlich nicht sein ..."
+                        logArray(1) = vPKvP.Key
+
+                        Call logfileSchreiben(logArray)
+                    End If
+
+                Next
+
+
+
+
+
+
+
 
 
 
@@ -7965,6 +8015,25 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' berechnet in importAllianz3 aus einer sortierten Liste von Rollen und Array Namen den geldwerten Betrag  
+    ''' </summary>
+    ''' <param name="roleValues"></param>
+    ''' <returns></returns>
+    Private Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
+        Dim tmpResult As Double = 0.0
+        Dim hrole As clsRollenDefinition = Nothing
+
+        For Each rvkvp As KeyValuePair(Of String, Double()) In roleValues
+            hrole = RoleDefinitions.getRoledef(rvkvp.Key)
+            If Not IsNothing(hrole) Then
+                tmpResult = tmpResult + rvkvp.Value.Sum * hrole.tagessatzIntern
+            End If
+        Next
+
+        calcIstValueOf = tmpResult
+    End Function
+
+    ''' <summary>
     ''' gibt true zurück, wenn die Spalten-Struktur dem erforderlichen Import Typ entspricht 
     ''' false sonst
     ''' </summary>
@@ -7979,8 +8048,8 @@ Public Module awinGeneralModules
             Case 1
             Case 2
             Case 3
-                Dim headerCheck() As String = {"Referat", "Intern/Extern", "Ressource", "Projektnummer", "Projekt", "Jahr", "Monat", "IST", "(PT)"}
-                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 7, 8, 10, 10}
+                Dim headerCheck() As String = {"Referat", "Projekttyp", "Projektnummer", "Projekt", "Vorgang/Aktivität", "Intern/Extern", "Ressource/Planungsebene", "Jahr", "Monat", "IST", "(PT)"}
+                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 11}
 
                 Try
                     tmpResult = True ' initiale Vorbesetzung 
@@ -8042,19 +8111,24 @@ Public Module awinGeneralModules
         Dim roleName As String = ""
 
         If isExtern Then
-            Dim tmpStr = fullRName.Split(New Char() {CChar("-"), CChar("("), CChar(")")})
-            If tmpStr.Length >= 3 Then
-                roleName = tmpStr(1)
-
-
+            If fullRName.StartsWith("*") Then
+                fullRName = fullRName.Substring(1)
             End If
+            'Dim tmpStr = fullRName.Split(New Char() {CChar("-"), CChar("("), CChar(")")})
+            'If tmpStr.Length >= 3 Then
+            '    roleName = tmpStr(1)
+            'End If
+            roleName = fullRName
         Else
+            ' Prüfung 1: besteht es nur aus einem Wort ? 
             roleName = fullRName
         End If
 
         ' jetzt prüfen, ob es die Rolle gibt ... 
         If RoleDefinitions.containsName(roleName) Then
             tmpResult = roleName
+        Else
+            Dim a As Boolean = True
         End If
 
 
@@ -8142,7 +8216,7 @@ Public Module awinGeneralModules
                     ElseIf pNames.Count > 1 Then
                         ' Eintrag in Log-File 
                         ReDim logArray(2 + pNames.Count)
-                        logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt: "
+                        logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt:  "
                         logArray(1) = projektKDNr.ToString
 
                         Dim ix As Integer = 0
@@ -13288,6 +13362,7 @@ Public Module awinGeneralModules
     ''' <param name="considerImportProjekte"></param>
     Public Function calcUnionProject(ByVal activeConstellation As clsConstellation,
                                      ByVal considerImportProjekte As Boolean,
+                                     ByVal storedAtOrBefore As Date,
                                 Optional ByVal budget As Double = 0.0,
                                 Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
                                 Optional ByVal ampel As Integer = 0,
@@ -13326,7 +13401,7 @@ Public Module awinGeneralModules
 
                     Dim hproj As clsProjekt = getProjektFromSessionOrDB(getPnameFromKey(kvp.Key),
                                                                         getVariantnameFromKey(kvp.Key),
-                                                                        projektListe, Date.Now)
+                                                                        projektListe, storedAtOrBefore)
 
 
                     If Not IsNothing(hproj) Then
@@ -13360,6 +13435,11 @@ Public Module awinGeneralModules
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung
                     .leadPerson = responsible
+                    If Date.Now < storedAtOrBefore Then
+                        .timeStamp = Date.Now
+                    Else
+                        .timeStamp = storedAtOrBefore
+                    End If
                 End With
 
 
@@ -13433,7 +13513,7 @@ Public Module awinGeneralModules
                     oldBudget = curSummaryProj.Erloes
                 End If
 
-                curSummaryProj = calcUnionProject(kvp.Value, False, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
+                curSummaryProj = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
 
                 If showSummaryProject Then
                     ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
@@ -13658,7 +13738,7 @@ Public Module awinGeneralModules
                 budget = oldSummaryP.budgetWerte.Sum
             End If
 
-            Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, budget:=budget)
+            Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
 
 
             Dim isIdentical As Boolean = False
@@ -25600,6 +25680,8 @@ Public Module awinGeneralModules
         End If
 
     End Function
+
+
     ''' <summary>
     ''' liest, falls vorhanden aus ProjectboardConfig.xml die Settings
     ''' wenn nicht vorhanden, gibt false zurück 
