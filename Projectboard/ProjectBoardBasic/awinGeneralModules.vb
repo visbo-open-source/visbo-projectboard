@@ -2132,6 +2132,7 @@ Public Module awinGeneralModules
         Dim roleUID As Integer = 0
         Dim roleUidsDefined As Boolean = False
         Dim przSatz As Double = 1.0
+        Dim defaultTagessatz As Double = 800.0
 
         Try
             Dim hasHierarchy As Boolean = False
@@ -2267,7 +2268,11 @@ Public Module awinGeneralModules
                             With hrole
                                 .name = tmpStr.Trim
                                 .defaultKapa = CDbl(c.Offset(0, 1).Value)
+
                                 .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+                                If .tagessatzIntern <= 0 Then
+                                    .tagessatzIntern = defaultTagessatz
+                                End If
 
                                 Try
                                     If CDbl(c.Offset(0, 3).Value) = 0.0 Then
@@ -7719,6 +7724,7 @@ Public Module awinGeneralModules
         ' nimmt die Texte für die LogFile Zeile auf
         ' Array kann beliebig lang werden 
         Dim logArray() As String
+        Dim logDblArray() As Double
 
         ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
         Dim referatsCollection As New Collection
@@ -7761,7 +7767,7 @@ Public Module awinGeneralModules
 
                 Dim colYear As Integer = CType(.Range("H1"), Excel.Range).Column
                 Dim colMonth As Integer = CType(.Range("I1"), Excel.Range).Column
-                Dim colActuals As Integer = CType(.Range("K1"), Excel.Range).Column
+                Dim colEuroActuals As Integer = CType(.Range("L1"), Excel.Range).Column
                 Dim colReferat As Integer = CType(.Range("A1"), Excel.Range).Column
 
 
@@ -7802,7 +7808,7 @@ Public Module awinGeneralModules
                         End Try
 
                         Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
-                        Dim curValue As Double = CDbl(CType(.Cells(zeile, colActuals), Excel.Range).Value)
+                        Dim curEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
 
                         Dim shallContinue As Boolean = False
                         Dim oldProj As clsProjekt = Nothing
@@ -7818,10 +7824,12 @@ Public Module awinGeneralModules
                                 outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
                                 outputCollection.Add(outPutLine)
 
-                                ReDim logArray(2)
+                                ReDim logArray(4)
                                 logArray(0) = "unbekanntes Projekt / PNr:"
                                 logArray(1) = pName
                                 logArray(2) = tmpPNr
+                                logArray(3) = ""
+                                logArray(4) = ""
                                 Call logfileSchreiben(logArray)
 
                                 shallContinue = False
@@ -7833,7 +7841,7 @@ Public Module awinGeneralModules
                             shallContinue = (handledNames.Item(tmpPName).Length > 0)
                         End If
 
-                        If shallContinue And curMonat >= 1 And curMonat <= monat And curValue >= 0 Then
+                        If shallContinue And curMonat >= 1 And curMonat <= monat And curEuroValue >= 0 Then
                             ' nur dann handelt es sich um ein zuordenbares Projekt ... 
                             ' nur dann geht es um gültige Werte
 
@@ -7848,6 +7856,25 @@ Public Module awinGeneralModules
 
                                 Dim roleName As String = getAllianzRoleNameFromValue(fullRoleName, isExtern)
 
+                                If roleName = "" And tmpReferat <> "" Then
+                                    ' dann ersetzen durch 
+                                    roleName = tmpReferat
+
+                                    If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
+                                        unKnownRoleNames.Add(fullRoleName, True)
+                                        'outPutLine = "unbekannt: " & fullRoleName
+                                        'outputCollection.Add(outPutLine)
+
+                                        ReDim logArray(4)
+                                        logArray(0) = "unbekannte Rolle wird ersetzt durch Referat"
+                                        logArray(1) = ""
+                                        logArray(2) = ""
+                                        logArray(3) = fullRoleName
+                                        logArray(4) = tmpReferat
+                                        Call logfileSchreiben(logArray)
+                                    End If
+                                End If
+
                                 If roleName = "" Then
 
                                     If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
@@ -7855,9 +7882,12 @@ Public Module awinGeneralModules
                                         'outPutLine = "unbekannt: " & fullRoleName
                                         'outputCollection.Add(outPutLine)
 
-                                        ReDim logArray(1)
-                                        logArray(0) = "unbekannte Rolle:"
-                                        logArray(1) = fullRoleName
+                                        ReDim logArray(4)
+                                        logArray(0) = "unbekannte Rolle ohne Referat"
+                                        logArray(1) = ""
+                                        logArray(2) = ""
+                                        logArray(3) = fullRoleName
+                                        logArray(4) = "?"
                                         Call logfileSchreiben(logArray)
                                     End If
 
@@ -7868,32 +7898,51 @@ Public Module awinGeneralModules
                                     Dim tmpValues() As Double
                                     ReDim tmpValues(monat - 1)
 
-                                    If Not validProjectNames.ContainsKey(pName) Then
+                                    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
 
-                                        roleValues = New SortedList(Of String, Double())
-                                        ReDim tmpValues(monat - 1)
-
-                                        tmpValues(curMonat - 1) = curValue
-
-                                        roleValues.Add(roleName, tmpValues)
-                                        validProjectNames.Add(pName, roleValues)
-
-                                    Else
-                                        roleValues = validProjectNames.Item(pName)
-                                        If roleValues.ContainsKey(roleName) Then
-                                            ' rolle ist bereits enthalten 
-                                            ' also summieren 
-                                            tmpValues = roleValues.Item(roleName)
-                                            tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curValue
-
-                                        Else
-                                            ' Rolle ist noch nicht enthalten 
-                                            ReDim tmpValues(monat - 1)
-                                            tmpValues(curMonat - 1) = curValue
-                                            roleValues.Add(roleName, tmpValues)
+                                    If Not IsNothing(hrole) Then
+                                        Dim tagessatz As Double = hrole.tagessatzIntern
+                                        If tagessatz <= 0 Then
+                                            tagessatz = 800.0
                                         End If
 
+                                        If Not validProjectNames.ContainsKey(pName) Then
+
+                                            roleValues = New SortedList(Of String, Double())
+                                            ReDim tmpValues(monat - 1)
+
+                                            tmpValues(curMonat - 1) = curEuroValue / tagessatz
+
+                                            roleValues.Add(roleName, tmpValues)
+                                            validProjectNames.Add(pName, roleValues)
+
+                                        Else
+                                            roleValues = validProjectNames.Item(pName)
+                                            If roleValues.ContainsKey(roleName) Then
+                                                ' rolle ist bereits enthalten 
+                                                ' also summieren 
+                                                tmpValues = roleValues.Item(roleName)
+                                                tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curEuroValue / tagessatz
+
+                                            Else
+                                                ' Rolle ist noch nicht enthalten 
+                                                ReDim tmpValues(monat - 1)
+                                                tmpValues(curMonat - 1) = curEuroValue / tagessatz
+                                                roleValues.Add(roleName, tmpValues)
+                                            End If
+
+                                        End If
+                                    Else
+                                        ' darf/kann eigentlich nicht sein ...
+                                        ReDim logArray(3)
+                                        logArray(0) = "Rollendefinition nicht gefunden ... Fehler 100412: "
+                                        logArray(1) = ""
+                                        logArray(2) = ""
+                                        logArray(3) = roleName
+                                        Call logfileSchreiben(logArray)
                                     End If
+
+
 
                                 End If
 
@@ -7911,7 +7960,7 @@ Public Module awinGeneralModules
 
 
                     Catch ex As Exception
-                        outPutLine = "Fehler: " & ex.Message
+                        outPutLine = "Fehler 99232: " & ex.Message
                         outputCollection.Add(outPutLine)
 
                         ' darf/kann eigentlich nicht sein ...
@@ -7935,17 +7984,23 @@ Public Module awinGeneralModules
                     For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
 
                         ' jetzt schreiben 
+                        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledef(rVKvP.Key)
+                        Dim curTagessatz As Double = hrole.tagessatzIntern
 
-                        ReDim logArray(rVKvP.Value.Length - 1 + 2)
-                        logArray(0) = vPKvP.Key
-                        logArray(1) = rVKvP.Key
+                        ReDim logArray(3)
+                        logArray(0) = "Importiert wurde: "
+                        logArray(1) = vPKvP.Key
+                        logArray(2) = ""
+                        logArray(3) = rVKvP.Key
 
-                        Dim dblValues As String = ""
+
+                        ReDim logDblArray(rVKvP.Value.Length - 1)
                         For i As Integer = 0 To rVKvP.Value.Length - 1
-                            logArray(2 + i) = rVKvP.Value(i).ToString("#0.#")
+                            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                            logDblArray(i) = rVKvP.Value(i) * curTagessatz
                         Next
 
-                        Call logfileSchreiben(logArray)
+                        Call logfileSchreiben(logArray, logDblArray)
                     Next
 
                 Next
@@ -7965,30 +8020,57 @@ Public Module awinGeneralModules
                         ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
                         ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
                         ' True: die Werte werden auf Null gesetzt 
+                        Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+
                         oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
                         newIstValue = calcIstValueOf(vPKvP.Value)
 
                         ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+                        Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+
+                        Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                        Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
+                        ' Test tk 
+                        Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+
+                        If gesamtNachher <> checkNachher Then
+                            Dim abc As Integer = 0
+                        End If
+
+                        If checkIstValue <> newIstValue Then
+                            Dim abc As Integer = 0
+                        End If
+
+                        ReDim logArray(3)
+                        logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                        logArray(1) = vPKvP.Key
+                        logArray(2) = ""
+                        logArray(3) = ""
+
+                        ReDim logDblArray(4)
+                        logDblArray(0) = oldPlanValue
+                        logDblArray(1) = newIstValue
+                        logDblArray(2) = oldPlanValue - newIstValue
+                        logDblArray(3) = checkIstValue
+                        logDblArray(4) = gesamtNachher - checkNachher
+
+                        Call logfileSchreiben(logArray, logDblArray)
 
                         ' die Differenz aus Soll und Ist zwischen Beautragung / Actual sowie Last / Actual in T€ wird gemerkt und dem Projekt als Attribut mitgegeben  
+                        newProj.actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
 
                     Else
-                        ReDim logArray(1)
+                        ReDim logArray(4)
                         logArray(0) = " Projekt existiert nicht !!?? ... kann eigentlich nicht sein ..."
                         logArray(1) = vPKvP.Key
+                        logArray(2) = ""
+                        logArray(3) = ""
+                        logArray(4) = ""
 
                         Call logfileSchreiben(logArray)
                     End If
 
                 Next
-
-
-
-
-
-
-
-
 
 
 
@@ -8000,7 +8082,6 @@ Public Module awinGeneralModules
             logArray(0) = "Exception aufgetreten 100457: "
             logArray(1) = ex.Message
             Call logfileSchreiben(logArray)
-            Call logfileSchliessen()
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 
@@ -8198,11 +8279,12 @@ Public Module awinGeneralModules
                             projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                             fctResult = True
 
-                            ReDim logArray(3)
+                            ReDim logArray(4)
                             logArray(0) = "erfolgreiches Mapping anhand P-Nr, PlanView, Visbo"
                             logArray(1) = projektKDNr
                             logArray(2) = pname
-                            logArray(3) = visboDBname
+                            logArray(3) = ""
+                            logArray(4) = visboDBname
 
                             Call logfileSchreiben(logArray)
 
@@ -8215,13 +8297,15 @@ Public Module awinGeneralModules
 
                     ElseIf pNames.Count > 1 Then
                         ' Eintrag in Log-File 
-                        ReDim logArray(2 + pNames.Count)
+                        ReDim logArray(3 + pNames.Count)
                         logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt:  "
-                        logArray(1) = projektKDNr.ToString
+                        logArray(1) = ""
+                        logArray(2) = projektKDNr.ToString
+                        logArray(3) = ""
 
-                        Dim ix As Integer = 0
+                        Dim ix As Integer = 1
                         For Each tmpName In pNames
-                            logArray(2 + ix) = tmpName
+                            logArray(3 + ix) = tmpName
                             ix = ix + 1
                         Next
 
@@ -11241,7 +11325,7 @@ Public Module awinGeneralModules
                         Dim lastRow2 As Integer = CInt(CType(.Cells(40000, columnOffset + 2), Excel.Range).End(XlDirection.xlUp).Row)
                         Dim lastRow As Integer = System.Math.Max(lastrow1, lastRow2)
                         ' ´Verlängerung des Range "Phasen_des_Projekts" bis zur lastrow
-                        rng = wsRessourcen.Range(.Cells(oldrng.Row, oldrng.Column), .Cells(lastrow, oldrng.Column))
+                        rng = wsRessourcen.Range(.Cells(oldrng.Row, oldrng.Column), .Cells(lastRow, oldrng.Column))
                         'rng.Name = "Phasen_des_Projekts"
 
                         Dim testrange As Excel.Range = CType(.Cells(10, 2000), Excel.Range)
@@ -12896,7 +12980,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                    End If
+                End If
 
             Next
 
@@ -13653,8 +13737,8 @@ Public Module awinGeneralModules
 
                 ' jetzt wird das Projekt bzw. Summary Projekt behandelt ... 
                 If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-                        ' speichern des Projektes 
-                        hproj.timeStamp = DBtimeStamp
+                    ' speichern des Projektes 
+                    hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
@@ -13720,7 +13804,7 @@ Public Module awinGeneralModules
                 End If
 
 
-                End If
+            End If
 
 
         Next

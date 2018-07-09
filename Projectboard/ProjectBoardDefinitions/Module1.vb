@@ -5738,7 +5738,7 @@ Public Module Module1
 
                 For ix As Integer = 1 To anzSpaltenValues
                     CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 1)
-                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "0.00"
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "#,##0.##"
                 Next
                 CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
                 CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"

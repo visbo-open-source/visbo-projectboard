@@ -3031,7 +3031,52 @@ Public Class clsProjekt
         unionizeWith = newProj
     End Function
 
+    ''' <summary>
+    ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
+    ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
+    ''' </summary>
+    ''' <param name="phNameID"></param>
+    ''' <param name="actualValues"></param>
+    Public Sub mergeActualValues(ByVal phNameID As String, ByVal actualValues As SortedList(Of String, Double()))
 
+        Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
+
+        If Not IsNothing(cPhase) Then
+
+            Dim roleXwerte() As Double
+            Dim dimension As Integer = cPhase.relEnde - cPhase.relStart
+
+
+            For Each rvkvp As KeyValuePair(Of String, Double()) In actualValues
+
+                Dim hroleDef As clsRollenDefinition = RoleDefinitions.getRoledef(rvkvp.Key)
+                ReDim roleXwerte(dimension)
+
+                If Not IsNothing(hroleDef) Then
+
+                    Dim ixEnde As Integer = System.Math.Min(rvkvp.Value.Length - 1, dimension)
+                    For ix As Integer = 0 To ixEnde
+                        roleXwerte(ix) = rvkvp.Value(ix)
+                    Next
+
+                    Dim curRoleName As String = hroleDef.name
+                    Dim curRole As clsRolle = New clsRolle(cPhase.relEnde - cPhase.relStart)
+
+                    With curRole
+                        .RollenTyp = hroleDef.UID
+                        .Xwerte = roleXwerte
+                    End With
+                    ' wenn es schon existiert, werden die Werte addiert ...
+                    cPhase.addRole(curRole)
+
+                End If
+
+            Next
+
+        Else
+            Throw New ArgumentException("Merge Failed: Phase does not exist " & phNameID)
+        End If
+    End Sub
     ''' <summary>
     ''' liest den geldwerten Betrag der Rollen bis zum Monat , ggf werden sie in Abhängigkeit von resetValuesToNull auf Null gesetzt 
     ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich untilMonthIncl auf Null, die in der roleCostCollection verzeichnet sind   
