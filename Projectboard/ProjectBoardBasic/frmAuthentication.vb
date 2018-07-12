@@ -162,12 +162,33 @@ Public Class frmAuthentication
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException(ex.Message)
+            If awinSettings.englishLanguage Then
+                messageBox.Text = "Wrong username or password!"
+            Else
+                messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+            End If
+            benutzer.Text = ""
+            maskedPwd.Text = ""
+            dbUsername = benutzer.Text
+            dbPasswort = maskedPwd.Text
+            benutzer.Focus()
+            DialogResult = System.Windows.Forms.DialogResult.Retry
         End Try
     End Sub
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
+            If awinSettings.englishLanguage Then
+                Label2.Text = "Username"
+                Label3.Text = "Password"
+                chbx_remember.Text = "Remember Me"
+                abbrButton.Text = "Cancel"
+            Else
+                Label2.Text = "Benutzername"
+                Label3.Text = "Passwort"
+                chbx_remember.Text = "Passwort speichern"
+                abbrButton.Text = "Abbrechen"
+            End If
 
             Dim cipherText As String = awinSettings.userNamePWD
             Dim pwd As String = ""

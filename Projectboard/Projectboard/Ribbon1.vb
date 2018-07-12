@@ -112,7 +112,7 @@ Imports System.IO
 
         With storeConstellationFrm
             If awinSettings.englishLanguage Then
-                .Text = "store Portfolio(s) in Datenbase"
+                .Text = "save Portfolio(s) to Datenbase"
             Else
                 .Text = "Portfolio(s) in Datenbank speichern"
             End If
@@ -2077,7 +2077,7 @@ Imports System.IO
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "letzte Report Definition als Vorlage speichern"
                 Else
-                    tmpLabel = "Store last Report definition as pre-defined"
+                    tmpLabel = "Save last Report definition as pre-defined"
                 End If
 
             Case "PT1G1B5" ' Report-Profil ausführen
@@ -2622,7 +2622,7 @@ Imports System.IO
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Speichern in DB"
                 Else
-                    tmpLabel = "Store to Database"
+                    tmpLabel = "Save to Database"
                 End If
 
             Case "Pt5G2B1" ' Portfolio/s
@@ -2643,7 +2643,7 @@ Imports System.IO
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Alles Speichern"
                 Else
-                    tmpLabel = "Store everything"
+                    tmpLabel = "Save everything"
                 End If
 
             Case "PT5G3" ' Löschen

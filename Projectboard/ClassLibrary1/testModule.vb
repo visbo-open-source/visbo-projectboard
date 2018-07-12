@@ -5554,7 +5554,7 @@ Public Module testModule
                                 If request.storeProjectToDB(kvp.Value, dbUsername) Then
 
                                     If awinSettings.englishLanguage Then
-                                        outputline = "stored: " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outputline = "saved: " & kvp.Value.name & ", " & kvp.Value.variantName
                                         outPutCollection.Add(outputline)
                                     Else
                                         outputline = "gespeichert: " & kvp.Value.name & ", " & kvp.Value.variantName
@@ -5784,9 +5784,9 @@ Public Module testModule
                     Dim msgH As String, msgE As String
                     If awinSettings.englishLanguage Then
                         If everythingElse Then
-                            msgH = "Store Everything (Projects, Portfolios, Dependencies, ..)"
+                            msgH = "Save Everything (Projects, Portfolios, Dependencies, ..)"
                         Else
-                            msgH = "Store Projects"
+                            msgH = "Save Projects"
                         End If
 
                         msgE = "following results:"
@@ -5916,7 +5916,7 @@ Public Module testModule
                                 If request.storeProjectToDB(hproj, dbUsername) Then
 
                                     If awinSettings.englishLanguage Then
-                                        outputline = "stored: " & hproj.name & ", " & hproj.variantName
+                                        outputline = "saved: " & hproj.name & ", " & hproj.variantName
                                         outputCollection.Add(outputline)
                                     Else
                                         outputline = "gespeichert: " & hproj.name & ", " & hproj.variantName

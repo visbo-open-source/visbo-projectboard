@@ -58,6 +58,8 @@ Public Class frmHierarchySelection
             einstellungen.Text = "Settings"
             labelPPTVorlage.Text = "Powerpoint Template"
             AbbrButton.Text = "Reset Selection"
+            auswSpeichern.Text = "Save"
+            auswLaden.Text = "Load"
         End If
 
         With Me
@@ -84,7 +86,7 @@ Public Class frmHierarchySelection
 
                 If awinSettings.englishLanguage Then
                     .Text = "define Database Filter"
-                    .OKButton.Text = "Store"
+                    .OKButton.Text = "Save"
                     .filterLabel.Text = "Name of Filter"
                 Else
                     .Text = "Datenbank Filter definieren"
@@ -182,7 +184,7 @@ Public Class frmHierarchySelection
                     .Text = "Visualize Phases & Milestones"
                     .OKButton.Text = "Visualize"
                     .filterLabel.Text = "Selection"
-                    .auswSpeichern.Text = "Store"
+                    .auswSpeichern.Text = "Save"
                     .auswLaden.Text = "Load"
                     .AbbrButton.Text = "Cancel"
                     .chkbxOneChart.Text = "all in one chart"
