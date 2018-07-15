@@ -3380,7 +3380,7 @@
 
 
                 For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
-                    roleName = RoleDefinitions.getRoledef(srkvp.Key).name
+                    roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
 
                     Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
                     anzPhasen = listOfPhases.Count

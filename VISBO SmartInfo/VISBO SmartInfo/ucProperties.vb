@@ -108,9 +108,11 @@ Public Class ucProperties
                     ' die Prüfung , ob es sich um eine valide URL handelt erfolgt vor diesem Aufruf ! 
                     If value <> "" Then
                         _documentsLink = value
+                        doclnk.Image = My.Resources.documents
                         doclnk.Visible = True
                     Else
                         _documentsLink = ""
+                        doclnk.Image = My.Resources.documents_plus
                         doclnk.Visible = False
                     End If
                 Else

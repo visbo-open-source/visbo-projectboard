@@ -4262,7 +4262,8 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
 
-        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(hproj.timeStamp) - 1
+        Dim minColumn As Integer, maxColumn As Integer
+        Dim gesternColumn As Integer = -1
         Dim pastAndFuture As Boolean = False
 
         Dim werteB(beauftragung.anzahlRasterElemente - 1) As Double
@@ -4281,6 +4282,13 @@ Public Module Projekte
         Dim tmpCollection As New Collection
         tmpCollection.Add(hproj.name & "#" & auswahl.ToString & "#" & qualifier & "#" & CInt(vglBaseline).ToString)
         ' Bestimmen der Werte 
+
+        ' jetzt muss bestimmt werden, ob und bis wann es Actual Data gibt ...
+        If hproj.actualDataUntil > Date.MinValue Then
+            If DateDiff(DateInterval.Month, hproj.startDate, hproj.actualDataUntil) > 0 Then
+                gesternColumn = getColumnOfDate(hproj.actualDataUntil)
+            End If
+        End If
 
         ' wird benötigt, weil xml-texte aktuell noch nicht in DB sind - und sonst kann das nicht aktualisiert werden 
         Dim repMSg(2, 1) As String
@@ -4731,7 +4739,16 @@ Public Module Projekte
         Dim calledFromReporting As Boolean = True
         Dim chartType As Excel.XlChartType
         Dim curmaxScale As Double
-        Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(hproj.timeStamp) - 1
+        Dim minColumn As Integer, maxColumn As Integer
+        Dim gesternColumn As Integer = -1
+
+
+        ' jetzt muss bestimmt werden, ob und bis wann es Actual Data gibt ...
+        If hproj.actualDataUntil > Date.MinValue Then
+            If DateDiff(DateInterval.Month, hproj.startDate, hproj.actualDataUntil) > 0 Then
+                gesternColumn = getColumnOfDate(hproj.actualDataUntil)
+            End If
+        End If
 
         ' tk 31.1.18
         ' nur wenn Projekt bereits beauftragt ist und mind ein Element in der Datenbank ist 

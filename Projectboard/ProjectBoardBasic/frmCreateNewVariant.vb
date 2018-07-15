@@ -58,60 +58,70 @@ Public Class frmCreateNewVariant
         Dim key As String
         Dim ok As Boolean = False
 
-        key = calcProjektKey(Me.projektName.Text, Me.newVariant.Text)
+        If isValidVariantName(Me.newVariant.Text) Then
+            key = calcProjektKey(Me.projektName.Text, Me.newVariant.Text)
 
-        If Not noDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If Not noDB Then
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-            If request.pingMongoDb() Then
+                If request.pingMongoDb() Then
 
-                If Not _
-                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or _
+                    If Not _
+                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or
                      AlleProjekte.Containskey(key)) Then
 
-                    ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
+                        ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
+                        ok = True
+                    Else
+                        Dim msgTxt As String
+                        If awinSettings.englishLanguage Then
+                            msgTxt = "Projekt (Variante) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " &
+                                "existiert bereits in DB!"
+                        Else
+                            msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " &
+                                "does already exist in DB!"
+                        End If
+                        Call MsgBox(msgTxt)
+                    End If
+
+                Else
+                    Dim msgTxt As String
+                    If awinSettings.englishLanguage Then
+                        msgTxt = "Datenbank- Verbindung ist unterbrochen!"
+                    Else
+                        msgTxt = "no database connection!"
+                    End If
+                    Call MsgBox(msgTxt)
+
+                End If
+            Else
+                ' es wird ohne Datenbank gearbeitet
+                If Not AlleProjekte.Containskey(key) Then
+                    ' Projekt-Variante existiert noch nicht in der Session, kann also eingetragen werden
                     ok = True
                 Else
                     Dim msgTxt As String
                     If awinSettings.englishLanguage Then
-                        msgTxt = "Projekt (Variante) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                                "existiert bereits in DB!"
+                        msgTxt = " Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " &
+                            "existiert bereits in der Session!"
                     Else
-                        msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                                "does already exist in DB!"
+                        msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " &
+                            "does already exist in session!"
                     End If
                     Call MsgBox(msgTxt)
-                End If
 
-            Else
-                Dim msgTxt As String
-                If awinSettings.englishLanguage Then
-                    msgTxt = "Datenbank- Verbindung ist unterbrochen!"
-                Else
-                    msgTxt = "no database connection!"
                 End If
-                Call MsgBox(msgTxt)
-
             End If
         Else
-            ' es wird ohne Datenbank gearbeitet
-            If Not AlleProjekte.Containskey(key) Then
-                ' Projekt-Variante existiert noch nicht in der Session, kann also eingetragen werden
-                ok = True
+            Dim msgTxt As String
+            If awinSettings.englishLanguage Then
+                msgTxt = " Varianten-Name ist ein System-Name und damit nicht zugelassen - bitte wählen Sie einen anderen Namen!"
             Else
-                Dim msgTxt As String
-                If awinSettings.englishLanguage Then
-                    msgTxt = " Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                            "existiert bereits in der Session!"
-                Else
-                    msgTxt = "Project (Variant) " & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                            "does already exist in session!"
-                End If
-                Call MsgBox(msgTxt)
-
+                msgTxt = "Variant-Name is system-name and not therefore not allowed - please use another name!"
             End If
+            Call MsgBox(msgTxt)
         End If
-      
+
         If ok Then
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
@@ -119,15 +129,22 @@ Public Class frmCreateNewVariant
 
     End Sub
 
-    Private Sub newVariant_TextChanged(sender As Object, e As EventArgs) Handles newVariant.TextChanged
+    ''' <summary>
+    ''' bestimmt, ob es sich um einen gültigen Varianten-Namen handelt; der Varianten-Name darf nicht einer der konstanten und festgelegten System-Varianten eines Projektes sein .. 
+    ''' </summary>
+    ''' <param name="vName"></param>
+    ''' <returns></returns>
+    Private Function isValidVariantName(ByVal vName As String) As Boolean
+        Dim tmpResult As Boolean = False
 
-    End Sub
+        If Not IsNothing(vName) Then
+            If vName.Trim.Length > 0 Then
+                tmpResult = (vName.Trim <> portfolioVName And vName.Trim <> istDatenVName)
+            End If
+        End If
 
-    Private Sub infoText_Click(sender As Object, e As EventArgs) Handles infoText.Click
+        isValidVariantName = tmpResult
 
-    End Sub
+    End Function
 
-    Private Sub Label3_Click(sender As Object, e As EventArgs) Handles Label3.Click
-
-    End Sub
 End Class

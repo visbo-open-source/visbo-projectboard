@@ -8006,6 +8006,7 @@ Public Module awinGeneralModules
                 Next
                 ' Protokoll schreiben Ende ... 
 
+                Dim gesamtIstValue As Double = 0.0
 
                 For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
@@ -8015,7 +8016,7 @@ Public Module awinGeneralModules
 
                     If Not IsNothing(hproj) Then
                         ' es wird pro Projekt eine Variante erzeugt 
-                        Dim newProj As clsProjekt = hproj.createVariant("$IstDaten$", "temporär für Ist-Daten-Aufnahme")
+                        Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
                         ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
                         ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
@@ -8023,7 +8024,11 @@ Public Module awinGeneralModules
                         Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
                         oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                        'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+
                         newIstValue = calcIstValueOf(vPKvP.Value)
+
+                        gesamtIstValue = gesamtIstValue + newIstValue
 
                         ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
                         Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
@@ -8057,7 +8062,17 @@ Public Module awinGeneralModules
                         Call logfileSchreiben(logArray, logDblArray)
 
                         ' die Differenz aus Soll und Ist zwischen Beautragung / Actual sowie Last / Actual in T€ wird gemerkt und dem Projekt als Attribut mitgegeben  
-                        newProj.actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
+
+                        With newProj
+                            .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
+                            .variantName = ""
+                            .variantDescription = ""
+                        End With
+
+
+                        ' jetzt in die Import-Projekte eintragen 
+                        updatedProjects = updatedProjects + 1
+                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
 
                     Else
                         ReDim logArray(4)
@@ -8072,6 +8087,16 @@ Public Module awinGeneralModules
 
                 Next
 
+                ' tk Test 
+                ReDim logArray(3)
+                logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
+                logArray(1) = ""
+                logArray(2) = ""
+                logArray(3) = ""
+
+                ReDim logDblArray(0)
+                logDblArray(0) = gesamtIstValue
+                Call logfileSchreiben(logArray, logDblArray)
 
 
             End With

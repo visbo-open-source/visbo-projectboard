@@ -181,6 +181,8 @@ Public Module Module1
 
     ' diese Konstante bestimmt, welchen Varianten Namen Portfolios bzw. Programme bekommen 
     Public Const portfolioVName As String = "Portfolio/Prog."
+    ' diese Konstante bestimmt, wie die Variante heissen soll, die die Ist-Daten - zumindest temporär - aufnimmt 
+    Public Const istDatenVName As String = "ActualData"
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
@@ -5738,7 +5740,7 @@ Public Module Module1
 
                 For ix As Integer = 1 To anzSpaltenValues
                     CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 1)
-                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "#,##0.##"
+                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
                 Next
                 CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
                 CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"

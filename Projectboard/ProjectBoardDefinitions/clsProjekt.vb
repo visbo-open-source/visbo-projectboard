@@ -3052,7 +3052,8 @@ Public Class clsProjekt
                 Dim hroleDef As clsRollenDefinition = RoleDefinitions.getRoledef(rvkvp.Key)
                 ReDim roleXwerte(dimension)
 
-                If Not IsNothing(hroleDef) Then
+                ' nur wenn die Rolle existiert und ausserdem Werte von größer Null hat, soll sie angelegt werden ..
+                If Not IsNothing(hroleDef) And rvkvp.Value.Sum > 0 Then
 
                     Dim ixEnde As Integer = System.Math.Min(rvkvp.Value.Length - 1, dimension)
                     For ix As Integer = 0 To ixEnde

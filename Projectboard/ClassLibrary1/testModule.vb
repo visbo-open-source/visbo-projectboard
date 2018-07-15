@@ -1826,6 +1826,7 @@ Public Module testModule
 
                                                 For Each tmpRcName As String In tmpStr
                                                     ' es darf einen Namen nur entweder als Rolle oder als Kostenart geben ..
+                                                    tmpRcName = tmpRcName.Trim
                                                     If RoleDefinitions.containsName(tmpRcName) Then
 
                                                         sRoles.Add(tmpRcName)
