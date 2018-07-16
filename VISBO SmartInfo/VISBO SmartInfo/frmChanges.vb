@@ -59,10 +59,13 @@
 
     End Sub
 
+    ''' <summary>
+    ''' baut die Liste für die Changes auf.
+    ''' </summary>
     Private Sub listeAufbauen()
         Dim tmpPreviousVname As String = previousVariantName, tmpCurrentVname As String = currentVariantname
         Dim showVariantMode As Boolean = False
-        If currentVariantname <> previousVariantName And _
+        If currentVariantname <> previousVariantName And
             previousTimeStamp = currentTimestamp Then
 
             showVariantMode = True
@@ -84,7 +87,7 @@
                 changeListTable.Columns(3).HeaderText = "Version " & previousTimeStamp.ToShortDateString
             End If
         End If
-        
+
 
         Dim anzChangeItems As Integer = changeListe.getChangeListCount
 

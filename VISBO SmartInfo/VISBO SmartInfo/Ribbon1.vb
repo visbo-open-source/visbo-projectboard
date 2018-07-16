@@ -16,14 +16,16 @@ Public Class Ribbon1
                 .Group4.Label = "Actions"
                 .btnUpdate.Label = "Update"
                 .btnStart.Label = "First  "
-                .btnFastBack.Label = "Prev."
+                .btnFastBack.Label = "Backward"
                 .btnDate.Label = "Date"
                 .btnShowChanges.Label = "Difference"
-                .btnFastForward.Label = "Next"
+                .btnFastForward.Label = "Forward"
                 .btnEnd2.Label = "Last"
+                .btnPrevious.Label = "Previous"
                 .activateInfo.Label = "Properties"
                 .activateSearch.Label = "Search"
                 .activateTab.Label = "Annotate"
+                .btnFreeze.Label = "Freeze/Defreeze"
                 .settingsTab.Label = "Settings"
             End With
         Else
@@ -38,9 +40,11 @@ Public Class Ribbon1
                 .btnShowChanges.Label = "Veränderung"
                 .btnFastForward.Label = "Nächste Version"
                 .btnEnd2.Label = "Neueste Version"
+                .btnPrevious.Label = "zuletzt gezeigte Version"
                 .activateInfo.Label = "Eigenschaften"
                 .activateSearch.Label = "Suche"
                 .activateTab.Label = "Beschriften"
+                .btnFreeze.Label = "Konservieren/Freigeben"
                 .settingsTab.Label = "Einstellungen"
             End With
         End If
@@ -396,19 +400,22 @@ Public Class Ribbon1
             Call initPPTTimeMachine(varPPTTM)
         End If
 
-        If Not IsNothing(varPPTTM.timeStamps) Then
-            If varPPTTM.timeStamps.Count > 0 Then
+        If Not IsNothing(varPPTTM) Then
+            If Not IsNothing(varPPTTM.timeStamps) Then
+                If varPPTTM.timeStamps.Count > 0 Then
 
-                newDate = getNextNavigationDate(ptNavigationButtons.nachher)
+                    newDate = getNextNavigationDate(ptNavigationButtons.nachher)
 
-                If newDate <> currentTimestamp Then
+                    If newDate <> currentTimestamp Then
 
-                    Call performBtnAction(newDate)
+                        Call performBtnAction(newDate)
+
+                    End If
 
                 End If
-
             End If
         End If
+
 
     End Sub
 
@@ -423,24 +430,23 @@ Public Class Ribbon1
         If IsNothing(varPPTTM) Then
             Call initPPTTimeMachine(varPPTTM)
         End If
+        If Not IsNothing(varPPTTM) Then
 
-        If Not IsNothing(varPPTTM.timeStamps) Then
+            If Not IsNothing(varPPTTM.timeStamps) Then
 
-            If varPPTTM.timeStamps.Count > 0 Then
+                If varPPTTM.timeStamps.Count > 0 Then
 
-                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
+                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
 
-                If newDate <> currentTimestamp Then
+                    If newDate <> currentTimestamp Then
 
-                    Call performBtnAction(newDate)
+                        Call performBtnAction(newDate)
 
-
+                    End If
                 End If
-
-
             End If
-        End If
 
+        End If
     End Sub
     ''' <summary>
     ''' positioniert auf den ersten Timestamp 
@@ -453,18 +459,23 @@ Public Class Ribbon1
         If IsNothing(varPPTTM) Then
             Call initPPTTimeMachine(varPPTTM)
         End If
-        If Not IsNothing(varPPTTM.timeStamps) Then
-            If varPPTTM.timeStamps.Count > 0 Then
 
-                Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
+        If Not IsNothing(varPPTTM) Then
 
-                If newDate <> currentTimestamp Then
+            If Not IsNothing(varPPTTM.timeStamps) Then
+                If varPPTTM.timeStamps.Count > 0 Then
 
-                    Call performBtnAction(newDate)
+                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
+
+                    If newDate <> currentTimestamp Then
+
+                        Call performBtnAction(newDate)
+
+                    End If
 
                 End If
-
             End If
+
         End If
 
     End Sub
@@ -477,7 +488,7 @@ Public Class Ribbon1
             Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
             If Not IsNothing(sld) Then
                 If Not (sld.Tags.Item("FROZEN").Length > 0) Then
-                    Call pptAPP_UpdateSpecSlide(sld)
+                    Call pptAPP_UpdateOneSlide(sld)
                     Call visboUpdate(False)
                 End If
             End If
@@ -557,30 +568,35 @@ Public Class Ribbon1
             If IsNothing(varPPTTM) Then
                 Call initPPTTimeMachine(varPPTTM)
             End If
-            If Not IsNothing(varPPTTM.timeStamps) Then
-                If varPPTTM.timeStamps.Count > 0 Then
-                    Try
-                        ' das Formular für Kalender aufschalten 
-                        If IsNothing(calendarFrm) Then
-                            calendarFrm = New frmCalendar
-                            calendarFrm.ShowDialog()
-                        Else
-                            calendarFrm = New frmCalendar
-                            calendarFrm.ShowDialog()
+
+            If Not IsNothing(varPPTTM) Then
+
+                If Not IsNothing(varPPTTM.timeStamps) Then
+                    If varPPTTM.timeStamps.Count > 0 Then
+                        Try
+                            ' das Formular für Kalender aufschalten 
+                            If IsNothing(calendarFrm) Then
+                                calendarFrm = New frmCalendar
+                                calendarFrm.ShowDialog()
+                            Else
+                                calendarFrm = New frmCalendar
+                                calendarFrm.ShowDialog()
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                        Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.individual, calendarFrm.DateTimePicker1.Value)
+
+                        If newDate <> currentTimestamp Then
+
+                            Call performBtnAction(newDate)
+
                         End If
-                    Catch ex As Exception
-
-                    End Try
-
-                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.individual, calendarFrm.DateTimePicker1.Value)
-
-                    If newDate <> currentTimestamp Then
-
-                        Call performBtnAction(newDate)
 
                     End If
-
                 End If
+
             End If
         Catch ex As Exception
 
@@ -599,7 +615,12 @@ Public Class Ribbon1
             If Not IsNothing(varPPTTM.timeStamps) Then
                 If varPPTTM.timeStamps.Count > 0 Then
 
-                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.previous)
+                    If currentSlide.Tags.Item("PREV").Length > 0 Then
+                        smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
+                    End If
+
+                    Dim newDate As Date = smartSlideLists.prevDate
+                    'Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.previous)
 
                     If newDate <> currentTimestamp Then
 
