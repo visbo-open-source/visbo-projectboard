@@ -70,6 +70,9 @@ Module Module1
     Friend showOrigName As Boolean = False
     ' globale Varianle, die angibt, ob der Best-Name, also der eindeutige Name gezeigt werden soll 
     Friend showBestName As Boolean = False
+    ' globale Varianle, die angibt, ob die KW anstatt des Datums angezeigt werden soll
+    Friend showWeek As Boolean = False
+
 
     Friend protectType As Integer
     Friend protectFeld1 As String = ""
@@ -4067,6 +4070,14 @@ Module Module1
             Else
                 tmpText = msDate.Day.ToString & "." & msDate.Month.ToString
             End If
+            If showWeek Then
+                If englishLanguage Then
+                    tmpText = "week " & calcKW(msDate).ToString
+                Else
+                    tmpText = "KW " & calcKW(msDate).ToString
+                End If
+
+            End If
 
         ElseIf pptShapeIsPhase(curShape) Then
 
@@ -4084,6 +4095,13 @@ Module Module1
                     tmpText = curShape.Tags.Item("SD") & "-" & curShape.Tags.Item("ED")
                 End Try
 
+            End If
+            If showWeek Then
+                If englishLanguage Then
+                    tmpText = "week " & calcKW(startDate).ToString & "-" & calcKW(endDate).ToString
+                Else
+                    tmpText = "KW " & calcKW(startDate).ToString & "-" & calcKW(endDate).ToString
+                End If
             End If
 
         End If
