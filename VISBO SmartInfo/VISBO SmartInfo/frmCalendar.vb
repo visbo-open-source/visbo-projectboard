@@ -17,6 +17,8 @@ Public Class frmCalendar
             DateTimePicker1.Value = DateTimePicker1.Value.Date.AddHours(23).AddMinutes(59)
         End If
 
+        MyBase.Close()
+
     End Sub
 
 
@@ -43,7 +45,7 @@ Public Class frmCalendar
 
     Private Sub DateTimePicker1_ValueChanged(sender As Object, e As EventArgs) Handles DateTimePicker1.ValueChanged
 
-        MyBase.Close()
+        ' MyBase.Close()
 
     End Sub
 

@@ -6045,6 +6045,9 @@ Module Module1
 
             Case ptNavigationButtons.individual
 
+                Dim letzter As Date = varPPTTM.timeStamps.Last.Key
+                Dim erster As Date = varPPTTM.timeStamps.First.Key
+
                 If varPPTTM.timeStamps.Count > 0 Then
 
                     If specDate > varPPTTM.timeStamps.First.Key And specDate < varPPTTM.timeStamps.Last.Key Then
