@@ -2613,6 +2613,8 @@ Module Module1
                             Dim refName As String = tmpShape.Name.Substring(0, tmpShape.Name.Length - 1)
                             Dim refShape As PowerPoint.Shape = currentSlide.Shapes.Item(refName)
                             Dim tmpShort As Boolean = (tmpShape.TextFrame2.TextRange.Text.Length < 8)
+                            ' showWeek = true: datumsText muss mit KW sein
+                            showWeek = (tmpShape.TextFrame2.TextRange.Text.Contains("w") Or tmpShape.TextFrame2.TextRange.Text.Contains("W"))
                             Dim descriptionText As String = bestimmeElemDateText(refShape, tmpShort)
 
                             If diffMvList.ContainsKey(refName) Then
@@ -2622,7 +2624,8 @@ Module Module1
                                     .TextFrame2.TextRange.Text = descriptionText
                                 End With
                             End If
-
+                            ' showWeek wieder zurücksetzen
+                            showWeek = False
                         End If
 
                     End If

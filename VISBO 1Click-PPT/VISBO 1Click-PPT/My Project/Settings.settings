@@ -39,7 +39,7 @@
       <Value Profile="(Default)">% Work Complete</Value>
     </Setting>
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">TMS Mapping</Value>
+      <Value Profile="(Default)">TMS_View_local</Value>
     </Setting>
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
