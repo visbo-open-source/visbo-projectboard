@@ -6475,7 +6475,7 @@ Module Module1
             End If
 
         Catch ex As Exception
-            Call MsgBox("Fehler in pptAPP_UpdateSpecSlide")
+            Call MsgBox("Fehler in pptAPP_UpdateOneSlide")
         End Try
     End Sub
 

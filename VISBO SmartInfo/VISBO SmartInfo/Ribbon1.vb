@@ -483,6 +483,7 @@ Public Class Ribbon1
         'Call visboUpdate()
 
         Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+        Dim formerCurrentSlideID As Integer = currentSlide.SlideID
 
         For i As Integer = 1 To pres.Slides.Count
             Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
@@ -492,9 +493,9 @@ Public Class Ribbon1
                     Call visboUpdate(False)
                 End If
             End If
-
-
         Next
+        currentSlide = pres.Slides.FindBySlideID(formerCurrentSlideID)
+
     End Sub
 
     Private Sub varianten_Tab_Click(sender As Object, e As RibbonControlEventArgs) Handles varianten_Tab.Click

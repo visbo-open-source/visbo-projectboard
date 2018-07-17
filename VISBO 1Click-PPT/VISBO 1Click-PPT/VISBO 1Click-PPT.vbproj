@@ -32,10 +32,10 @@
     </StartupObject>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\Koytek\Documents\Publish Folder 1Click-PPT\</PublishUrl>
+    <PublishUrl>C:\Users\Koytek\Documents\publish\VISBO 1Click-PPT\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.1.0.17</ApplicationVersion>
+    <ApplicationVersion>2.1.0.18</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
