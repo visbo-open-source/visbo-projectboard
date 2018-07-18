@@ -5060,14 +5060,17 @@ Public Module Module1
 
                             If isRole Then
 
-                                curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                'curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                curValue = hproj.getPersonalKosten(curItem, True).Sum
 
                                 If considerLapr Then
-                                    laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    'laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    laprValue = lproj.getPersonalKosten(curItem, True).Sum
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    'faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    faprValue = bproj.getPersonalKosten(curItem, True).Sum
                                 End If
 
 
@@ -5081,14 +5084,17 @@ Public Module Module1
                                     firstCost = False
                                 End If
 
-                                curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                'curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                curValue = hproj.getKostenBedarfNew(curItem).Sum
 
                                 If considerLapr Then
-                                    laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
+                                    'laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                    'faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
                                 End If
 
                             End If
@@ -5110,14 +5116,14 @@ Public Module Module1
 
 
                         Dim tmpValue As Double
-                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), True)
+                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
 
                         If considerFapr Then
-                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), True)
+                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
                         End If
 
                         If considerLapr Then
-                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), True)
+                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
                         End If
 
 
