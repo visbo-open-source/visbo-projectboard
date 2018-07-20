@@ -142,11 +142,9 @@ Public Class ThisAddIn
 
         ' globale Variablen für Eigenschaften Pane und das Pane selbst löschen
         If listOfucProperties.ContainsKey(hWinID) Then
-            'Me.CustomTaskPanes.Remove(propertiesPane)
             listOfucProperties.Remove(hWinID)
         End If
         If listOfucPropView.ContainsKey(hWinID) Then
-            'ucPropertiesView = Nothing
             listOfucPropView.Remove(hWinID)
         End If
 
