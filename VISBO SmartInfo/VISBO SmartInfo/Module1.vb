@@ -61,8 +61,6 @@ Module Module1
     Friend markerWidth As Double = 13
 
 
-    ' gibt an, ob bei der suche die gefundenen Elemente mit AMrker angezeigt werden sollen oder nicht .. 
-    Friend showMarker As Boolean = False
 
     ' globale Variable, die angibt, ob ShortName gezeichnet werden soll 
     Friend showShortName As Boolean = False
@@ -216,7 +214,7 @@ Module Module1
     ''' </summary>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Friend Function calcColorCode() As Integer
+    Friend Function calcColorCode(ByVal showTrafficLights() As Boolean) As Integer
 
         Dim tmpNumber As Integer = 0
 
@@ -6447,7 +6445,7 @@ Module Module1
 
                                 If slideHasSmartElements Then
 
-                                    ucSearchView.fülltListbox()
+                                    ucSearchView.fülltListbox(showTrafficLights)
 
                                 End If
                             End If
