@@ -76,12 +76,6 @@ Module Module1
     Friend protectFeld1 As String = ""
     Friend protectFeld2 As String = ""
 
-    ' hier sollen die Namen aus projectboardDefinitions übernommen werden 
-    'Friend dbURL As String = ""
-    'Friend dbName As String = ""
-    'Friend userName As String = ""
-    'Friend userPWD As String = ""
-
     Friend noDBAccessInPPT As Boolean = True
     Friend myUserName As String = ""
     Friend myUserPWD As String = ""
@@ -117,6 +111,13 @@ Module Module1
 
     ' dieses Formular gibt soll die Eingabe im Kalender für TimeMachine Konkretes Datum ermöglichen
     Friend calendarFrm As frmCalendar = Nothing
+
+    ' see msdn: https://social.msdn.microsoft.com/Forums/sqlserver/en-US/b1c610bf-82ab-4d9e-b425-de21b45ea3fb/same-taskpane-in-multiple-powerpoint-windows?forum=vsto 
+    Friend listOfWindows As New List(Of Integer)
+    Friend listOfucProperties As New SortedList(Of Integer, Microsoft.Office.Tools.CustomTaskPane)
+    Friend listOfucSearch As New SortedList(Of Integer, Microsoft.Office.Tools.CustomTaskPane)
+    Friend listOfucPropView As New SortedList(Of Integer, ucProperties)
+    Friend listOfucSearchView As New SortedList(Of Integer, ucSearch)
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
@@ -589,14 +590,34 @@ Module Module1
 
     Private Sub pptAPP_PresentationBeforeClose(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeClose
 
+        ' Id des aktiven Windows
+        Dim hWinID As Integer = pptAPP.ActiveWindow.HWND
 
-        If Not IsNothing(currentSlide) Then
-            If currentSlide.Tags.Item("SMART").Length > 0 Then
-                ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
-                'Call resetMovedGlowOfShapes()
-            End If
+        ' globale Variablen für Eigenschaften Pane und das Pane selbst löschen
+        If listOfucProperties.ContainsKey(hWinID) Then
+            listOfucProperties.Remove(hWinID)
+        End If
+        If listOfucPropView.ContainsKey(hWinID) Then
+            listOfucPropView.Remove(hWinID)
         End If
 
+        If Not IsNothing(currentSlide) Then
+
+            ' changeliste der vorigen Slide (hier noch currentslide) in die chgeLstListe einfügen
+            If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
+                chgeLstListe.Item(currentSlide.SlideID) = changeListe
+            Else
+                chgeLstListe.Add(currentSlide.SlideID, changeListe)
+            End If
+
+        End If
+
+        ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
+        My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+        If My.Settings.rememberUserPWD Then
+            My.Settings.userNamePWD = awinSettings.userNamePWD
+        End If
+        My.Settings.Save()
         Try
             Call closeExcelAPP()
         Catch ex As Exception
@@ -617,11 +638,6 @@ Module Module1
 
     End Sub
 
-    Private Sub pptAPP_PresentationCloseFinal(Pres As PowerPoint.Presentation) Handles pptAPP.PresentationCloseFinal
-
-
-
-    End Sub
 
     ''' <summary>
     ''' ein VISBO Protected File kann nur als pptx gespeichert werden ...
@@ -653,16 +669,17 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_SlideSelectionChanged(SldRange As PowerPoint.SlideRange) Handles pptAPP.SlideSelectionChanged
 
-        If Not IsNothing(currentSlide) Then
+        'If Not IsNothing(currentSlide) Then
 
-            ' changeliste der vorigen Slide (hier noch currentslide) in die chgeLstListe einfügen
-            If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
-                chgeLstListe.Item(currentSlide.SlideID) = changeListe
-            Else
-                chgeLstListe.Add(currentSlide.SlideID, changeListe)
-            End If
+        '    ' changeliste der vorigen Slide (hier noch currentslide) in die chgeLstListe einfügen
+        '    If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
+        '        chgeLstListe.Item(currentSlide.SlideID) = changeListe
+        '    Else
+        '        chgeLstListe.Add(currentSlide.SlideID, changeListe)
+        '    End If
 
-        End If
+        'End If
+
 
 
 
@@ -1000,7 +1017,25 @@ Module Module1
     End Sub
 
     Private Sub pptAPP_WindowActivate(Pres As Microsoft.Office.Interop.PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowActivate
-        myPPTWindow = Wn
+        ' Id des aktiven DocumentWindow
+        Dim hwinid As Integer = Wn.HWND
+
+        ' globale Variablen für Eigenschaften Pane umsetzen
+        If listOfucProperties.ContainsKey(Wn.HWND) Then
+            propertiesPane = listOfucProperties.Item(Wn.HWND)
+        End If
+        If listOfucPropView.ContainsKey(Wn.HWND) Then
+            ucPropertiesView = listOfucPropView.Item(Wn.HWND)
+        End If
+
+        ' globale Variable für search pane umsetzen
+        If listOfucSearch.ContainsKey(Wn.HWND) Then
+            searchPane = listOfucSearch.Item(Wn.HWND)
+        End If
+        If listOfucSearchView.ContainsKey(Wn.HWND) Then
+            ucSearchView = listOfucSearchView.Item(Wn.HWND)
+        End If
+       
     End Sub
 
     Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
