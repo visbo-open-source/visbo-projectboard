@@ -1878,7 +1878,7 @@ Public Module testModule
 
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
-                                    ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
+                                    ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Werte / Identifier angeben kann 
                                     Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, todoCollection, q1, q2)
 
 
@@ -3635,6 +3635,7 @@ Public Module testModule
                         kennzeichnung = "Phase" Or
                         kennzeichnung = "P-Category" Or
                         kennzeichnung = "Rolle" Or
+                        kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
@@ -3704,8 +3705,6 @@ Public Module testModule
 
 
                         End If
-
-
 
 
                     Catch ex As Exception
@@ -5045,6 +5044,12 @@ Public Module testModule
                                 boxName = repMessages.getmsg(220)
                             End If
 
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
+                            If myCollection.Count = 0 Then
+                                myCollection = Nothing
+                            End If
+
                             boxName = boxName & repMessages.getmsg(218)
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -5054,7 +5059,7 @@ Public Module testModule
                             hheight = awinSettings.ChartHoehe2
                             hwidth = 340
                             obj = Nothing
-                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True)
+                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True, myCollection)
 
                             reportObj = obj
 
@@ -5451,6 +5456,81 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
+                        Case "TopBN"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(200)
+                            End If
+
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
+
+                            ' jetzt muss die Liste an Bottleneck Rollen aufgebaut werden 
+                            Dim sortierteListe As SortedList(Of Double, String) = getSortedListOfCapaUtilization(myCollection, 1)
+
+                            ' in qualifier2 sollte jetzt die Nummer stehen ..
+                            Dim nrBn As Integer = 1
+                            If Not IsNothing(qualifier2) Then
+                                If IsNumeric(qualifier2) Then
+                                    If CInt(qualifier2) > 0 Then
+                                        nrBn = CInt(qualifier2)
+                                    End If
+                                End If
+                            End If
+
+                            ' jetzt wird die myCollection mit dem nrBN Bottleneck besetzt ...
+                            myCollection.Clear()
+
+                            Dim anzBottlenecks As Integer = sortierteListe.Count
+                            Dim aktRoleName As String = ""
+                            If nrBn > 0 And nrBn <= anzBottlenecks Then
+                                aktRoleName = sortierteListe.ElementAt(anzBottlenecks - nrBn).Value
+                                myCollection.Add(aktRoleName, aktRoleName)
+                            End If
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = chartHeight  ' height of all charts
+                                hwidth = chartWidth   ' width of all charts
+                                obj = Nothing
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
+
+                                reportObj = obj
+                                ' jetzt wird die Größe der Überschrift neu bestimmt ...
+                                With reportObj
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                                With newShapeRange.Item(1)
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
+                                End With
+
+                                'Call awinDeleteChart(reportObj)
+                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                '.TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                                .TextFrame2.TextRange.Text = "keine weiteren Engpässe für " & qualifier
+
+                            End If
 
                         Case "Rolle"
 

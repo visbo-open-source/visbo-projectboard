@@ -5830,7 +5830,8 @@ Public Module Projekte
                     ' jetzt die Istdaten zeichnen 
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                        .Interior.Color = visboFarbeBlau
+                        '.Interior.Color = visboFarbeBlau
+                        .Interior.Color = awinSettings.SollIstFarbeArea
                         .Values = istDatenReihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -5844,8 +5845,7 @@ Public Module Projekte
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                     .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
-                    '.Interior.Color = visboFarbeBlau
-                    .Interior.Color = visboFarbeYellow
+                    .Interior.Color = visboFarbeBlau
                     '.Values = tdatenreihe
                     .Values = prognoseDatenReihe
                     .XValues = Xdatenreihe
@@ -6204,7 +6204,8 @@ Public Module Projekte
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .Name = repmsg(6) & " " & hproj.timeStamp.ToShortDateString
-                    .Interior.Color = visboFarbeBlau
+                    '.Interior.Color = visboFarbeBlau
+                    .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -6218,8 +6219,8 @@ Public Module Projekte
 
                 .ChartType = Excel.XlChartType.xlColumnStacked
                 .Name = series1Name
-                '.Interior.Color = visboFarbeBlau
-                .Interior.Color = visboFarbeYellow
+                .Interior.Color = visboFarbeBlau
+                '.Interior.Color = visboFarbeYellow
                 '.Values = tdatenreihe
                 .Values = prognoseDatenReihe
                 .XValues = Xdatenreihe
@@ -6483,7 +6484,8 @@ Public Module Projekte
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Interior.Color = visboFarbeBlau
+                    '.Interior.Color = visboFarbeBlau
+                    .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -6498,8 +6500,8 @@ Public Module Projekte
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                 .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
-                '.Interior.Color = visboFarbeBlau
-                .Interior.Color = visboFarbeYellow
+                .Interior.Color = visboFarbeBlau
+                '.Interior.Color = visboFarbeYellow
                 '.Values = tdatenreihe
                 .Values = prognoseDatenReihe
                 .XValues = Xdatenreihe
@@ -6841,7 +6843,8 @@ Public Module Projekte
                     ' jetzt die Istdaten zeichnen 
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                        .Interior.Color = visboFarbeBlau
+                        '.Interior.Color = visboFarbeBlau
+                        .Interior.Color = awinSettings.SollIstFarbeArea
                         .Values = istDatenReihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlColumnStacked
@@ -6856,8 +6859,8 @@ Public Module Projekte
                     '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                     .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
                     '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                    '.Interior.Color = visboFarbeBlau
-                    .Interior.Color = visboFarbeYellow
+                    .Interior.Color = visboFarbeBlau
+                    '.Interior.Color = visboFarbeYellow
                     '.Values = tdatenreihe
                     .Values = prognoseDatenReihe
                     .XValues = Xdatenreihe
@@ -7376,7 +7379,8 @@ Public Module Projekte
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Interior.Color = visboFarbeBlau
+                    '.Interior.Color = visboFarbeBlau
+                    .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
                     .XValues = Xdatenreihe
                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -7391,8 +7395,8 @@ Public Module Projekte
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
                 .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
                 '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
-                '.Interior.Color = visboFarbeBlau
-                .Interior.Color = visboFarbeYellow
+                .Interior.Color = visboFarbeBlau
+                '.Interior.Color = visboFarbeYellow
                 '.Values = tdatenreihe
                 '.Values = tdatenreihe
                 .Values = prognoseDatenReihe
@@ -7561,9 +7565,9 @@ Public Module Projekte
 
 
 
-        Dim anzRollen As Integer
+        'Dim anzRollen As Integer
         Dim roleName As String
-        Dim roleIDs As New SortedList(Of Integer, Double)
+        'Dim roleIDs As New SortedList(Of Integer, Double)
 
         Dim kennung As String
         Dim zE As String = awinSettings.kapaEinheit
@@ -7605,78 +7609,90 @@ Public Module Projekte
         '
         ' hole die Anzahl Rollen
 
-        'anzRollen = basicRolesCollection.Count
-        If IsNothing(roleCollection) Then
-            roleIDs = RoleDefinitions.getAllIDs
-        Else
 
-            For Each tmpRoleName As String In roleCollection
-                Dim tmpRoleIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(tmpRoleName, type:=PTcbr.all)
+        ' das sollte jetzt als Methode bereitgestellt werden ... 
+        ' tk - ersetzt das unten stehende ... ist jetzt neu 
+        Dim sortierteListe As SortedList(Of Double, String)
 
-                For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIds
-                    If Not roleIDs.ContainsKey(srKvP.Key) Then
-                        roleIDs.Add(srKvP.Key, srKvP.Value)
-                    End If
-                Next
-
-            Next
-
-        End If
-
-        anzRollen = roleIDs.Count
-        If anzRollen = 0 Then
-
-            'Call MsgBox("keine Rollen-Bedarfe definiert")
-            Call MsgBox(repMessages.getmsg(96))
+        Try
+            sortierteListe = getSortedListOfCapaUtilization(roleCollection, auswahl)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
             Exit Sub
-        End If
+        End Try
 
-        Dim sortierteListe As New SortedList(Of Double, String)
+        ' alt - wurde durch getSortedListOfCapaUtilization, siehe oben , ersetzt 
 
-        For r = 1 To anzRollen
-            roleName = RoleDefinitions.getRoleDefByID(roleIDs.ElementAt(r - 1).Key).name
-            'roleName = CStr(basicRolesCollection.Item(r))
-            Dim valueUeber As Double
-            Dim valueUnter As Double
-            Dim sortCriteria As Double
+        ''If IsNothing(roleCollection) Then
+        ''    roleIDs = RoleDefinitions.getAllIDs
+        ''Else
 
-            If auswahl = 1 Then ' Überauslastung
-                valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
-                If valueUeber > 0 Then
+        ''    For Each tmpRoleName As String In roleCollection
+        ''        Dim tmpRoleIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(tmpRoleName, type:=PTcbr.all)
 
-                    valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
-                    sortCriteria = valueUeber - valueUnter
-                    If sortCriteria > 0 Then
-                        While sortierteListe.ContainsKey(sortCriteria)
-                            sortCriteria = sortCriteria + 0.0000001
-                        End While
-                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
-                        sortierteListe.Add(sortCriteria, roleName)
-                    End If
+        ''        For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIds
+        ''            If Not roleIDs.ContainsKey(srKvP.Key) Then
+        ''                roleIDs.Add(srKvP.Key, srKvP.Value)
+        ''            End If
+        ''        Next
 
-                End If
-            Else ' Unterauslastung 
-                valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+        ''    Next
 
-                If valueUnter > 0 Then
+        ''End If
 
-                    valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
-                    sortCriteria = valueUnter - valueUeber
-                    If sortCriteria > 0 Then
-                        While sortierteListe.ContainsKey(sortCriteria)
-                            sortCriteria = sortCriteria + 0.0000001
-                        End While
-                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
-                        sortierteListe.Add(sortCriteria, roleName)
-                    End If
+        ''anzRollen = roleIDs.Count
+        ''If anzRollen = 0 Then
+        ''    'Call MsgBox("keine Rollen-Bedarfe definiert")
+        ''    Call MsgBox(repMessages.getmsg(96))
+        ''    Exit Sub
+        ''End If
 
-                End If
-            End If
 
-        Next r
 
-        ' in der tdaten-Reihe sollen die 5 Rollen stehen, die am meisten über-/unterausgelastet sind
-        ' dann als Summe alle anderen ..
+        ''For r = 1 To anzRollen
+        ''    roleName = RoleDefinitions.getRoleDefByID(roleIDs.ElementAt(r - 1).Key).name
+        ''    'roleName = CStr(basicRolesCollection.Item(r))
+        ''    Dim valueUeber As Double
+        ''    Dim valueUnter As Double
+        ''    Dim sortCriteria As Double
+
+        ''    If auswahl = 1 Then ' Überauslastung
+        ''        valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+        ''        If valueUeber > 0 Then
+
+        ''            valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+        ''            sortCriteria = valueUeber - valueUnter
+        ''            If sortCriteria > 0 Then
+        ''                While sortierteListe.ContainsKey(sortCriteria)
+        ''                    sortCriteria = sortCriteria + 0.0000001
+        ''                End While
+        ''                ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+        ''                sortierteListe.Add(sortCriteria, roleName)
+        ''            End If
+
+        ''        End If
+        ''    Else ' Unterauslastung 
+        ''        valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+
+        ''        If valueUnter > 0 Then
+
+        ''            valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+        ''            sortCriteria = valueUnter - valueUeber
+        ''            If sortCriteria > 0 Then
+        ''                While sortierteListe.ContainsKey(sortCriteria)
+        ''                    sortCriteria = sortCriteria + 0.0000001
+        ''                End While
+        ''                ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+        ''                sortierteListe.Add(sortCriteria, roleName)
+        ''            End If
+
+        ''        End If
+        ''    End If
+
+        ''Next r
+
+        '' in der tdaten-Reihe sollen die 5 Rollen stehen, die am meisten über-/unterausgelastet sind
+        '' dann als Summe alle anderen ..
 
 
         Dim anzItems As Integer = sortierteListe.Count
@@ -7897,7 +7913,99 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' gibt eine sortierte Liste mit den Top Über- bzw unterausgelasteten Ressourcen zurück
+    ''' roleCollection = Nothing: über alles
+    ''' Auswahl 1: Überlastung
+    ''' Auswahl 2: Unterauslastung
+    ''' RoleCollection enthält Rollen: dann nur die und deren Kinder  
+    ''' </summary>
+    ''' <param name="roleCollection"></param>
+    ''' <param name="auswahl"></param>
+    ''' <returns></returns>
+    Public Function getSortedListOfCapaUtilization(ByVal roleCollection As Collection, ByVal auswahl As Integer) As SortedList(Of Double, String)
+        Dim sortierteListe As New SortedList(Of Double, String)
 
+        Dim anzRollen As Integer
+        Dim roleName As String
+        Dim roleIDs As New SortedList(Of Integer, Double)
+
+        If IsNothing(roleCollection) Then
+            roleIDs = RoleDefinitions.getAllIDs
+        Else
+
+            For Each tmpRoleName As String In roleCollection
+                Dim tmpRoleIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(tmpRoleName, type:=PTcbr.all)
+
+                For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIds
+                    If Not roleIDs.ContainsKey(srKvP.Key) Then
+                        roleIDs.Add(srKvP.Key, srKvP.Value)
+                    End If
+                Next
+
+            Next
+
+        End If
+
+        anzRollen = roleIDs.Count
+        If anzRollen = 0 Then
+            'Call MsgBox("keine Rollen-Bedarfe definiert")
+            Dim errMsg As String = "no roles defined ..."
+            If Not IsNothing(repMessages) Then
+                If repMessages.Liste.Count > 96 Then
+                    errMsg = repMessages.getmsg(96)
+                End If
+            End If
+            Throw New ArgumentException(errMsg)
+            Exit Function
+        End If
+
+
+        For r = 1 To anzRollen
+            roleName = RoleDefinitions.getRoleDefByID(roleIDs.ElementAt(r - 1).Key).name
+            'roleName = CStr(basicRolesCollection.Item(r))
+            Dim valueUeber As Double
+            Dim valueUnter As Double
+            Dim sortCriteria As Double
+
+            If auswahl = 1 Then ' Überauslastung
+                valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+                If valueUeber > 0 Then
+
+                    valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+                    sortCriteria = valueUeber - valueUnter
+                    If sortCriteria > 0 Then
+                        While sortierteListe.ContainsKey(sortCriteria)
+                            sortCriteria = sortCriteria + 0.0000001
+                        End While
+                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+                        sortierteListe.Add(sortCriteria, roleName)
+                    End If
+
+                End If
+            Else ' Unterauslastung 
+                valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+
+                If valueUnter > 0 Then
+
+                    valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
+                    sortCriteria = valueUnter - valueUeber
+                    If sortCriteria > 0 Then
+                        While sortierteListe.ContainsKey(sortCriteria)
+                            sortCriteria = sortCriteria + 0.0000001
+                        End While
+                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+                        sortierteListe.Add(sortCriteria, roleName)
+                    End If
+
+                End If
+            End If
+
+        Next r
+
+
+        getSortedListOfCapaUtilization = sortierteListe
+    End Function
 
 
     ''' <summary>
