@@ -242,6 +242,12 @@
     <Compile Include="clsLanguages.vb" />
     <Compile Include="clsPPTTimeMachine.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
+    <Compile Include="frmCalendar.Designer.vb">
+      <DependentUpon>frmCalendar.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCalendar.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmChanges.Designer.vb">
       <DependentUpon>frmChanges.vb</DependentUpon>
     </Compile>
@@ -310,6 +316,9 @@
     <Compile Include="ucSearch.vb">
       <SubType>UserControl</SubType>
     </Compile>
+    <EmbeddedResource Include="frmCalendar.resx">
+      <DependentUpon>frmCalendar.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmChanges.resx">
       <DependentUpon>frmChanges.vb</DependentUpon>
     </EmbeddedResource>
