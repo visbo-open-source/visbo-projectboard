@@ -1174,11 +1174,15 @@ Public Module awinGeneralModules
                         xlsCustomization.Close(SaveChanges:=False)
                         Call logfileSchreiben("LOGIN cancelled ...", "", -1)
                         Call logfileSchliessen()
-                        Throw New ArgumentException("LOGIN cancelled ...")
+                        If awinSettings.englishLanguage Then
+                            Throw New ArgumentException("LOGIN cancelled ...")
+                        Else
+                            Throw New ArgumentException("LOGIN abgebrochen ...")
+                        End If
 
                     End If
-
                 End If
+
             End If 'if special="ProjectBoard"
 
 
@@ -11001,7 +11005,7 @@ Public Module awinGeneralModules
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
-                            outputLine = "stored: " & hproj.name & ", " & hproj.variantName
+                            outputLine = "saved: " & hproj.name & ", " & hproj.variantName
                             outPutCollection.Add(outputLine)
                         Else
                             outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
@@ -11035,7 +11039,7 @@ Public Module awinGeneralModules
                         If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                             If awinSettings.englishLanguage Then
-                                outputLine = "stored: " & hproj.name & ", " & hproj.variantName
+                                outputLine = "saved: " & hproj.name & ", " & hproj.variantName
                                 outPutCollection.Add(outputLine)
                             Else
                                 outputLine = "gespeichert: " & hproj.name & ", " & hproj.variantName
@@ -11100,7 +11104,7 @@ Public Module awinGeneralModules
         End If
 
         If awinSettings.englishLanguage Then
-            outputLine = "Stored ... " & vbLf &
+            outputLine = "Saved ... " & vbLf &
                 "Portfolio: " & currentConstellation.constellationName & vbLf & vbLf &
                 "Number new projects/project-variants: " & anzahlNeue.ToString & vbLf &
                 "Number changed projects/project-variants: " & anzahlChanged.ToString & vbLf &
@@ -23218,7 +23222,7 @@ Public Module awinGeneralModules
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
-                            outputline = "stored: " & hproj.name & ", " & hproj.variantName
+                            outputline = "saved: " & hproj.name & ", " & hproj.variantName
                             outPutCollection.Add(outputline)
                         Else
                             outputline = "gespeichert: " & hproj.name & ", " & hproj.variantName

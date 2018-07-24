@@ -44,6 +44,7 @@ Public Class clsSmartSlideListen
     Private _ovdList As SortedList(Of String, SortedList(Of Integer, Boolean))
 
     Private _creationDate As Date
+    Private _prevDate As Date
 
     Private _slideDBUrl As String
     Private _slideDBName As String
@@ -78,6 +79,25 @@ Public Class clsSmartSlideListen
                 _creationDate = value
             Else
                 _creationDate = Date.MinValue
+            End If
+
+        End Set
+    End Property
+    ''' <summary>
+    ''' liest bzw. setzt das previous Date der Slide 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property prevDate As Date
+        Get
+            prevDate = _prevDate
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                _prevDate = value
+            Else
+                _prevDate = Date.MinValue
             End If
 
         End Set
@@ -1401,6 +1421,7 @@ Public Class clsSmartSlideListen
         _resourceList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _costList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _creationDate = Date.MinValue
+        _prevDate = Date.MinValue
         _slideDBUrl = ""
         _slideDBName = ""
     End Sub

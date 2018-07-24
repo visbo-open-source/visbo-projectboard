@@ -83,6 +83,16 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
+        Friend ReadOnly Property calendar() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("calendar", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
         Friend ReadOnly Property find() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("find", resourceCulture)
@@ -396,6 +406,26 @@ Namespace My.Resources
         Friend ReadOnly Property shape_triangle() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("shape_triangle", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property snowflake() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("snowflake", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property undo() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("undo", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property

@@ -101,7 +101,7 @@
         Me.Einstellung.Image = CType(resources.GetObject("Einstellung.Image"), System.Drawing.Image)
         Me.Einstellung.Label = "Einstellungen"
         Me.Einstellung.Name = "Einstellung"
-        Me.Einstellung.ScreenTip = "Einstellu"
+        Me.Einstellung.ScreenTip = "Einstellung"
         Me.Einstellung.ShowImage = True
         Me.Einstellung.Visible = False
         '

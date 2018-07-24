@@ -9,12 +9,17 @@ Public Class ucSearch
     ' innerhalb der Klasse überall im Zugriff; Colorcode ist die Zahl , die sich ergibt , 
     ' wenn man die Werte 0, 1, 2, 3 als Potenzen von 2 und in Summe ausrechnet
 
+    ' lokale Variable für die gewünschten Ampeln
+    Private hShowTrafficLights(4) As Boolean
+
     ' wird in den entsprechenden Checkbox Routinen gesetzt 
     Private colorCode As Integer = 0
 
     ' wird im entsprechenden Suchfeld gesetzt 
     Private suchString As String = ""
 
+    ' gibt an, ob bei der suche die gefundenen Elemente mit AMrker angezeigt werden sollen oder nicht .. 
+    Friend showMarker As Boolean = False
 
     '' '' tk , 16.5.
     '' '' Private Const deltaAmpel As Integer = 50
@@ -58,13 +63,13 @@ Public Class ucSearch
     Private Sub shwOhneLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwOhneLight.CheckedChanged
 
         Dim ampelColor As Integer = PTfarbe.none
-        showTrafficLights(ampelColor) = shwOhneLight.Checked
+        hshowTrafficLights(ampelColor) = shwOhneLight.Checked
 
         If shwOhneLight.Checked Then
 
         End If
 
-        Call fülltListbox()
+        Call fülltListbox(hShowTrafficLights)
 
         Call faerbeShapes(ampelColor, shwOhneLight.Checked)
     End Sub
@@ -77,13 +82,13 @@ Public Class ucSearch
     ''' <remarks></remarks>
     Private Sub shwGreenLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwGreenLight.CheckedChanged
         Dim ampelColor As Integer = PTfarbe.green
-        showTrafficLights(ampelColor) = shwGreenLight.Checked
+        hShowTrafficLights(ampelColor) = shwGreenLight.Checked
 
         If shwGreenLight.Checked Then
 
         End If
 
-        Call fülltListbox()
+        Call fülltListbox(hShowTrafficLights)
 
         Call faerbeShapes(ampelColor, shwGreenLight.Checked)
     End Sub
@@ -97,13 +102,13 @@ Public Class ucSearch
     Private Sub shwYellowLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwYellowLight.CheckedChanged
 
         Dim ampelColor As Integer = PTfarbe.yellow
-        showTrafficLights(ampelColor) = shwYellowLight.Checked
+        hShowTrafficLights(ampelColor) = shwYellowLight.Checked
 
         If shwYellowLight.Checked Then
 
         End If
 
-        Call fülltListbox()
+        Call fülltListbox(hShowTrafficLights)
 
         Call faerbeShapes(ampelColor, shwYellowLight.Checked)
     End Sub
@@ -117,13 +122,13 @@ Public Class ucSearch
     ''' <remarks></remarks>
     Private Sub shwRedLight_CheckedChanged(sender As Object, e As EventArgs) Handles shwRedLight.CheckedChanged
         Dim ampelColor As Integer = PTfarbe.red
-        showTrafficLights(ampelColor) = shwRedLight.Checked
+        hShowTrafficLights(ampelColor) = shwRedLight.Checked
 
         If shwRedLight.Checked Then
 
         End If
 
-        Call fülltListbox()
+        Call fülltListbox(hShowTrafficLights)
 
         Call faerbeShapes(ampelColor, shwRedLight.Checked)
     End Sub
@@ -132,13 +137,13 @@ Public Class ucSearch
     ''' erstellt die Listbox aufgrund der Settings bei Ampeln, Radio-Button und Suchstr neu 
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub fülltListbox()
+    Friend Sub fülltListbox(ByVal sTrafLights() As Boolean)
 
         If Not dontFire Then
 
             selListboxNames.Items.Clear()
 
-            colorCode = calcColorCode()
+            colorCode = calcColorCode(sTrafLights)
 
             Dim catCode As Integer
 
@@ -359,7 +364,7 @@ Public Class ucSearch
 
         ' ''selListboxNames.Items.Clear()
         suchString = filterText.Text
-        Call fülltListbox()
+        Call fülltListbox(hShowTrafficLights)
 
     End Sub
 
@@ -467,7 +472,7 @@ Public Class ucSearch
             nameArrayI(i) = tmpText
         Next
 
-        Dim colorCode As Integer = calcColorCode()
+        Dim colorCode As Integer = calcColorCode(hShowTrafficLights)
 
         ' in tmpCollection werden alle Elementnamen geschoben, auf die die Selection in listboxNames zutrifft
 
@@ -575,7 +580,7 @@ Public Class ucSearch
         filterText.Text = ""
         ' tk, 11.1.18 das folgende muss nur dann aufgerufen werden, wenn es keine Änderung im Filtertext-Feld gab. Dann muss das fülltListbox  in dem Event Aufruf von cathegoryList_SelectedIndexChanged
         If oldFilterText = "" Then
-            Call fülltListbox()
+            Call fülltListbox(hShowTrafficLights)
         End If
 
         listboxNames.Focus()

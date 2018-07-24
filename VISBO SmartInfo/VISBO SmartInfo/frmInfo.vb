@@ -19,6 +19,7 @@ Public Class frmInfo
     Private Const smallHeight As Integer = 220
 
     Private dontFire As Boolean = False
+
     ' innerhalb der Klasse überall im Zugriff; Colorcode ist die Zahl , die sich ergibt , 
     ' wenn man die Werte 0, 1, 2, 3 als Potenzen von 2 und in Summe ausrechnet
 
@@ -56,8 +57,9 @@ Public Class frmInfo
             With Me
                 .Text = "Annotate"
                 .showAbbrev.Text = "Abbreviation"
-                .uniqueNameRequired.Text = "unique Name"
-                .showOrginalName.Text = "original Name"
+                .uniqueNameRequired.Text = "Unique Name"
+                .showOrginalName.Text = "Original Name"
+                .showKW.Text = "Week"
             End With
         Else
             With Me
@@ -65,6 +67,7 @@ Public Class frmInfo
                 .showAbbrev.Text = "Abkürzung"
                 .uniqueNameRequired.Text = "eindeutiger Name"
                 .showOrginalName.Text = "Original Name"
+                .showKW.Text = "KW"
             End With
         End If
 
@@ -129,6 +132,8 @@ Public Class frmInfo
 
 
         showAbbrev.Checked = showShortName
+
+        showKW.Checked = showWeek
 
         '' jetzt muss geprüft werden, ob GoToHome und GoToChangedPos enabled sind ... 
         'btnSentToChange.Enabled = changedButtonRelevance
@@ -758,4 +763,47 @@ Public Class frmInfo
 
         dontFire = False
     End Sub
+
+    ''' <summary>
+    ''' Es soll die kw angezeigt werden
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    Private Sub showKW_CheckedChanged(sender As Object, e As EventArgs) Handles showKW.CheckedChanged
+
+        showWeek = showKW.Checked
+
+        If dontFire Then
+            Exit Sub
+        End If
+
+        Try
+            If showWeek Then
+
+                dontFire = True
+
+                ' KW berechnen 
+                If Not IsNothing(selectedPlanShapes) Then
+                    If selectedPlanShapes.Count = 1 Then
+                        Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                        Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
+                    End If
+                End If
+
+
+            ElseIf Not IsNothing(selectedPlanShapes) Then
+
+                If selectedPlanShapes.Count = 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    Me.elemDate.Text = bestimmeElemDateText(tmpShape, False)
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        dontFire = False
+    End Sub
+
 End Class

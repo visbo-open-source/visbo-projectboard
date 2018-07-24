@@ -194,9 +194,9 @@ Public Class frmProjPortfolioAdmin
                     End If
                 Else
                     If storeToDBasWell.Checked Then
-                        .OKButton.Text = "Store to Session and DB"
+                        .OKButton.Text = "Save to Session and DB"
                     Else
-                        .OKButton.Text = "Store to Session"
+                        .OKButton.Text = "Save to Session"
                     End If
                 End If
 
@@ -2587,7 +2587,7 @@ Public Class frmProjPortfolioAdmin
                             txtMsg1 = "Speichern Portfolio " & toStoreConstellation.constellationName
                             txtMsg2 = "folgende Informationen:"
                         Else
-                            txtMsg1 = "Store Portfolio " & toStoreConstellation.constellationName
+                            txtMsg1 = "Save Portfolio " & toStoreConstellation.constellationName
                             txtMsg2 = "following messages:"
                         End If
                         Call showOutPut(outPutCollection, txtMsg1, txtMsg2)
@@ -3884,9 +3884,9 @@ Public Class frmProjPortfolioAdmin
             End If
         Else
             If storeToDBasWell.Checked Then
-                Me.OKButton.Text = "Store to Session and DB"
+                Me.OKButton.Text = "Save to Session and DB"
             Else
-                Me.OKButton.Text = "Store to Session"
+                Me.OKButton.Text = "Save to Session"
             End If
         End If
 
