@@ -12,11 +12,7 @@ Public Class ThisAddIn
 
     Private Sub ThisAddIn_Startup() Handles Me.Startup
 
-
-
-        ''Try
-
-<<<<<<< HEAD
+        Try
             awinSettings.databaseURL = My.Settings.mongoDBURL
             awinSettings.databaseName = My.Settings.mongoDBname
             awinSettings.globalPath = My.Settings.globalPath
@@ -38,41 +34,14 @@ Public Class ThisAddIn
             If awinSettings.rememberUserPwd Then
                 awinSettings.userNamePWD = My.Settings.userNamePWD
             End If
-=======
-        ''    awinSettings.databaseURL = My.Settings.mongoDBURL
-        ''    awinSettings.databaseName = My.Settings.mongoDBname
-        ''    awinSettings.globalPath = My.Settings.globalPath
-        ''    awinSettings.awinPath = My.Settings.awinPath
-        ''    awinSettings.visboTaskClass = My.Settings.TaskClass
-        ''    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-        ''    awinSettings.visboAmpel = My.Settings.VISBOAmpel
-        ''    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
-        ''    awinSettings.visboresponsible = My.Settings.VISBOresponsible
-        ''    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
-        ''    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-        ''    awinSettings.visboDebug = My.Settings.VISBODebug
-        ''    awinSettings.visboMapping = My.Settings.VISBOMapping
-        ''    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-        ''    If awinSettings.rememberUserPwd Then
-        ''        awinSettings.userNamePWD = My.Settings.userNamePWD
-        ''    End If
->>>>>>> master
 
-        ''    dbUsername = ""
-        ''    dbPasswort = ""
+        Catch ex As Exception
 
-        ''    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-        ''    Call awinsetTypen("BHTC")
+            Call MsgBox(ex.Message)
 
-        ''    StartofCalendar = StartofCalendar.AddMonths(-12)
+        Finally
 
-        ''Catch ex As Exception
-
-        ''    Call MsgBox(ex.Message)
-
-        ''Finally
-
-        ''End Try
+        End Try
 
     End Sub
 
