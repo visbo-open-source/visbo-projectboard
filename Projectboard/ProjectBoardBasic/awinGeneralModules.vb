@@ -13505,6 +13505,7 @@ Public Module awinGeneralModules
 
                 ' jetzt mit allen anderen aufsummieren ..
                 Dim isFirstProj As Boolean = True
+                Dim maxActualDate As Date = Date.MinValue
 
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
 
@@ -13529,6 +13530,14 @@ Public Module awinGeneralModules
                             gesamtbudget = gesamtbudget + hproj.Erloes
                         End If
 
+                        ' hat eines der Projekte bereits eine Actualdata? 
+                        ' wenn ja, dann wird das größte auftretende hergenommen 
+                        If Not hproj.actualDataUntil = Date.MinValue Then
+                            If DateDiff(DateInterval.Month, maxActualDate, hproj.actualDataUntil) > 0 Then
+                                maxActualDate = hproj.actualDataUntil
+                            End If
+                        End If
+
                         unionProj.variantName = portfolioVName
                         unionProj = unionProj.unionizeWith(hproj)
 
@@ -13544,6 +13553,12 @@ Public Module awinGeneralModules
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung
                     .leadPerson = responsible
+
+                    ' gibt es ein ActualDate ? 
+                    If Not maxActualDate = Date.MinValue Then
+                        .actualDataUntil = maxActualDate
+                    End If
+
                     If Date.Now < storedAtOrBefore Then
                         .timeStamp = Date.Now
                     Else

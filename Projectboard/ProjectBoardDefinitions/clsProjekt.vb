@@ -2895,6 +2895,8 @@ Public Class clsProjekt
             .movable = Me.movable
 
 
+
+
         End With
 
         ' ------------------------------------------------------------------------------------------------------
@@ -5861,7 +5863,6 @@ Public Class clsProjekt
         End If
 
         _actualDataUntil = Date.MinValue
-
         _kundenNummer = ""
 
         _extendedView = False
