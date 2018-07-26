@@ -8110,7 +8110,7 @@ Public Module Projekte
             If auswahl = 1 Then
                 tdatenreihe(r) = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True).Sum
             Else
-                tdatenreihe(r) = hproj.getPersonalKosten(roleName).Sum
+                tdatenreihe(r) = hproj.getPersonalKosten(roleName, inclSubRoles:=True).Sum
             End If
 
         Next r

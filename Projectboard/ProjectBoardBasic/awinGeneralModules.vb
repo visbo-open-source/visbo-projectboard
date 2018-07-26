@@ -7786,6 +7786,14 @@ Public Module awinGeneralModules
                         Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
                         If Not IsNothing(tmpReferat) Then
                             If RoleDefinitions.containsName(tmpReferat) Then
+                                ' wenn es sich um KB handelt , dann ist KB0 gemeint ...
+                                If tmpReferat = "D-BOSV-KB" Then
+                                    tmpReferat = "D-BOSV-KB0"
+                                    ' jetzt auch AMIS in ReferatsCollection aufnehmen ..
+                                    If Not referatsCollection.Contains("AMIS") Then
+                                        referatsCollection.Add("AMIS", "AMIS")
+                                    End If
+                                End If
                                 If Not referatsCollection.Contains(tmpReferat) Then
                                     referatsCollection.Add(tmpReferat, tmpReferat)
                                 End If
