@@ -29,7 +29,7 @@ Public Class Request
     Private token As String = ""
     Private VCs As New List(Of clsVC)
 
-    Private VRScache As New clsCache
+    Public VRScache As New clsCache
     ' hierin werden  alle Visbo-Projects und 
     ' die vom Server bereits angeforderten VisboProjectsVersionsgecacht
     '
@@ -1039,7 +1039,41 @@ Public Class Request
     ''' </summary>
     ''' <returns></returns>
     Public Function retrieveConstellationsFromDB() As clsConstellations
-        retrieveConstellationsFromDB = New clsConstellations
+
+        Dim result As New clsConstellations
+
+        Dim intermediate As New SortedList(Of String, clsVP)
+        Dim timestamp As Date = Date.Now
+        Dim c As New clsConstellation
+
+        intermediate = GETallVP(aktVCid)
+        For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
+
+            ' ur:TODO  vpType korrigieren, beim Server anders als im Client
+            'If kvp.Value.vpType = PTProjektType.portfolio Then
+            If kvp.Value.vpType = 2 Then
+
+                Dim vpid As String = kvp.Value._id
+                Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp)
+                If portfolioVersions.Count > 0 Then
+
+                    Dim aktPortfolio As clsVPf = portfolioVersions.Last.Value
+                    aktPortfolio.copyto(c)
+
+                    If Not result.Contains(c.constellationName) Then
+                        result.Add(c)
+                    End If
+
+                End If
+
+            Else
+                ' es gibt keine Portfolios
+
+            End If
+
+        Next
+
+        retrieveConstellationsFromDB = result
     End Function
 
 
@@ -1049,7 +1083,84 @@ Public Class Request
     ''' <param name="c"></param>
     ''' <returns></returns>
     Public Function storeConstellationToDB(ByVal c As clsConstellation) As Boolean
-        storeConstellationToDB = False
+
+        Dim result As Boolean = False
+
+        Try
+            Dim vpType As Integer = PTProjektType.portfolio
+            Dim cVPf As New clsVPf
+            Dim cVP As New clsVP
+            Dim newVP As New List(Of clsVP)
+            Dim newVPf As New List(Of clsVPf)
+
+            cVP = GETvpid(c.constellationName, PTProjektType.portfolio)
+
+            cVPf.copyfrom(c)
+
+            If cVP._id = "" Then
+                Call MsgBox("es ist noch kein VisboPortfolio angelegt")
+                ' Portfolio-Name
+                cVP.name = cVPf.name
+                ' berechtiger User
+                Dim user As New clsUser
+                user.email = aktUser.email
+                user.role = "Admin"
+                cVP.users.Add(user)
+                ' VisboCenter - Id
+                cVP.vcid = aktVCid
+                ' VisboProject-Type - Portfolio
+                cVP.vpType = ptPRPFType.portfolio
+                ' ur:TODO: ??? darf nicht bleiben
+                '          aktuell ist im Server ProjektTemplate=0, Projekt=1, Portfolio=2
+                cVP.vpType = 2
+
+                ' Erzeugen des VisboPortfolios in der Collection visboproject im akt. VisboCenter
+                newVP = POSTOneVP(cVP)
+                If newVP.Count > 0 Then
+                    cVP._id = newVP.Item(0)._id
+                Else
+
+                End If
+
+            End If
+
+            cVPf.vpid = cVP._id
+
+            ' timestamp setzen
+
+            cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
+
+            ' die zugehörigen vpids in die allItems mit aufnehmen
+            For Each item In cVPf.allItems
+                item.vpid = GETvpid(item.name)._id
+            Next
+
+            ' RestServer erwartet die sortlist als array von vpids
+            Dim serverSortlist As New List(Of String)
+            Dim serverItem As String = ""
+            For Each item In cVPf.sortList
+                serverItem = GETvpid(item)._id
+                serverSortlist.Add(serverItem)
+            Next
+            cVPf.sortList.Clear()
+            cVPf.sortList = serverSortlist
+
+
+            If cVP._id <> "" Then
+
+                newVPf = POSTOneVPf(cVPf)
+
+                If newVPf.Count > 0 Then
+                    result = True
+                End If
+
+            End If
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+        storeConstellationToDB = result
+
     End Function
 
     ''' <summary>
@@ -1487,10 +1598,11 @@ Public Class Request
 
     ''' <summary>
     ''' holt zu dem Projekt projectName die zugehörige vpid vom Server
+    ''' vpType = 1 ist Projekt; vpType = 0 ist Template (noch nicht fertig programmiert- ur:2018.07.24)
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Private Function GETvpid(ByVal projectName As String) As clsVP
+    Private Function GETvpid(ByVal projectName As String, Optional ByVal vpType As Integer = PTProjektType.projekt) As clsVP
 
         Dim vpid As String = ""
         Dim aktvp As New clsVP
@@ -2029,6 +2141,65 @@ Public Class Request
 
     End Function
 
+
+    ''' <summary>
+    ''' Holt alle VisboProject-PortfolioVersionen zu dem aktuellen VISboCenter  und VisboProject-Id vpid
+    ''' und baut im Cache die Liste VPsId sortiert nach id und die VPsN sortiert nach Namen auf
+    ''' </summary>
+    ''' <param name="vpid">vpid = "": es werden alle VisboportfolioVersions  dieser vpid geholt
+    '''                    die jünger sind als timestamp</param>
+    ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
+    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date) As SortedList(Of Date, clsVPf)
+
+        Dim result As New SortedList(Of Date, clsVPf)          ' sortiert nach datum
+        Dim secondResult As New SortedList(Of String, clsVPf)    ' sortiert nach vpid
+
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vp"
+
+            ' URL zusammensetzen
+            serverUriString = serverUriName & typeRequest & "/" & vpid & "/portfolio"
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim Antwort As String
+            Dim webVPantwort As clsWebVPf = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                webVPantwort = JsonConvert.DeserializeObject(Of clsWebVPf)(Antwort)
+            End Using
+
+            If webVPantwort.state = "success" Then
+                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+
+                'die PortfolioVersionen werden nach Timestamp sortiert
+                For Each vpf In webVPantwort.vpf
+
+                    Dim x As Date = CDate(vpf.timestamp)
+
+                    result.Add(vpf.timestamp, vpf)
+
+                Next
+
+                GETallVPf = result
+
+            Else
+                Call MsgBox(webVPantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in PTWebRequest: " & ex.Message)
+        End Try
+
+        GETallVPf = result
+
+    End Function
+
     ''' <summary>
     ''' löscht eine VisboProjectVersion
     ''' </summary>
@@ -2235,6 +2406,7 @@ Public Class Request
     ''' <returns>Liste der VisboProjects</returns>
     Private Function POSTVPLock(ByVal vpid As String, ByVal variantName As String) As Boolean
 
+
         Dim result As Boolean = False
 
         Try
@@ -2337,6 +2509,99 @@ Public Class Request
         DELETEVPLock = result
 
     End Function
+
+
+    ''' <summary>
+    ''' legt ein VisboProject/VisboPortfolio an
+    ''' </summary>
+    ''' <param name="vp">hier sind alle Daten des Projektes/Portfolios enthalten</param>
+    ''' <returns>Liste mit dem angelegten VisboProject/VisboPortfolio inkl. kreierter _Id</returns>
+    Private Function POSTOneVP(ByVal vp As clsVP) As List(Of clsVP)
+
+        Dim result As New List(Of clsVP)
+
+        Try
+            Dim serverUriString As String = ""
+            Dim typeRequest As String = "/vp"
+
+            ' URL zusammensetzen
+            serverUriString = serverUriName & typeRequest
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim data As Byte() = serverInputDataJson(vp, "")
+
+            Dim Antwort As String
+            Dim webVPantwort As clsWebVP = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                webVPantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+            End Using
+
+            If webVPantwort.state = "success" Then
+                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+
+                result = webVPantwort.vp
+            Else
+                Call MsgBox(webVPantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in POSTOneVP: " & ex.Message)
+        End Try
+
+        POSTOneVP = result
+
+    End Function
+
+    ''' <summary>
+    ''' legt ein VisboPortfolio-Version an
+    ''' </summary>
+    ''' <param name="vpf">hier sind alle Daten des Projektes/Portfolios enthalten</param>
+    ''' <returns>Liste mit dem angelegten VisboProject/VisboPortfolio inkl. kreierter _Id</returns>
+    Private Function POSTOneVPf(ByVal vpf As clsVPf) As List(Of clsVPf)
+
+        Dim result As New List(Of clsVPf)
+
+        Try
+            Dim serverUriString As String = ""
+            Dim typeRequest As String = "/vp"
+
+
+            ' URL zusammensetzen
+            If vpf.vpid <> "" Then
+                serverUriString = serverUriName & typeRequest & "/" & vpf.vpid & "/portfolio"
+            Else
+                Throw New ArgumentException(" vpid wurde für das Portfolio nicht angegeben")
+            End If
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim data As Byte() = serverInputDataJson(vpf, "")
+
+            Dim Antwort As String
+            Dim webVPfantwort As clsWebVPf = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                webVPfantwort = JsonConvert.DeserializeObject(Of clsWebVPf)(Antwort)
+            End Using
+
+            If webVPfantwort.state = "success" Then
+                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+
+                result = webVPfantwort.vpf
+            Else
+                Call MsgBox(webVPfantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in POSTOneVPf: " & ex.Message)
+        End Try
+
+        POSTOneVPf = result
+
+    End Function
+
+
+
 
     Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
 

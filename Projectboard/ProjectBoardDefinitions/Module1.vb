@@ -264,6 +264,7 @@ Public Module Module1
     Public Enum ptPRPFType
         project = 0
         portfolio = 1
+        projectTemplate = 2
     End Enum
 
     ''' <summary>
@@ -580,6 +581,7 @@ Public Module Module1
         projekt = 1
         nameList = 2
         categoryList = 3
+        portfolio = 4
     End Enum
 
     ''' <summary>

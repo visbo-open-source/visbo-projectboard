@@ -79,11 +79,14 @@
     <Compile Include="clsUserLoginSignup.vb" />
     <Compile Include="clsVCcost.vb" />
     <Compile Include="clsVCrole.vb" />
+    <Compile Include="clsVPf.vb" />
     <Compile Include="clsVPLock.vb" />
     <Compile Include="clsVPVariant.vb" />
     <Compile Include="clsWebLongVPv.vb" />
+    <Compile Include="clsWebVPfItem.vb" />
     <Compile Include="clsWebVCcost.vb" />
     <Compile Include="clsWebVCrole.vb" />
+    <Compile Include="clsWebVPf.vb" />
     <Compile Include="clsWebVPlock.vb" />
     <Compile Include="clsWebVPv.vb" />
     <Compile Include="clsInputSigninLogin.vb" />
