@@ -118,6 +118,7 @@ Public Class Request
                     Return sr.ReadToEnd()
                 End Using
                 If statcode <> HttpStatusCode.OK Then
+
                     Call MsgBox("( " & CType(statcode, Integer).ToString & ") : " & httpresp.StatusDescription)
                     Throw New ArgumentException(statcode.ToString & ":" & httpresp.StatusDescription)
                 Else
@@ -256,15 +257,21 @@ Public Class Request
             Dim vpid As String = ""
 
             vpid = GETvpid(projectname)._id
-            ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
-            For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
-                If vpVar.variantName = variantname Then
-                    If vpVar.createdAt <= storedAtorBefore Then
-                        result = True
-                        Exit For
+
+            If vpid <> "" And variantname <> "" Then
+                ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
+                For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
+                    If vpVar.variantName = variantname Then
+                        If vpVar.createdAt <= storedAtorBefore Then
+                            result = True
+                            Exit For
+                        End If
                     End If
-                End If
-            Next
+                Next
+            Else
+                result = (vpid <> "")
+            End If
+
 
         Catch ex As Exception
 
@@ -1058,10 +1065,15 @@ Public Class Request
                 If portfolioVersions.Count > 0 Then
 
                     Dim aktPortfolio As clsVPf = portfolioVersions.Last.Value
-                    aktPortfolio.copyto(c)
 
-                    If Not result.Contains(c.constellationName) Then
-                        result.Add(c)
+                    c = clsVPf2clsConstellation(aktPortfolio)
+
+                    If Not IsNothing(c) Then
+
+                        If Not result.Contains(c.constellationName) Then
+                            result.Add(c)
+                        End If
+
                     End If
 
                 End If
@@ -1095,7 +1107,7 @@ Public Class Request
 
             cVP = GETvpid(c.constellationName, PTProjektType.portfolio)
 
-            cVPf.copyfrom(c)
+            cVPf = clsConst2clsVPf(c)
 
             If cVP._id = "" Then
                 Call MsgBox("es ist noch kein VisboPortfolio angelegt")
@@ -2616,6 +2628,128 @@ Public Class Request
         End If
 
         DateTimeToISODate = ISODateandTime
+
+    End Function
+
+    Public Function clsVPf2clsConstellation(ByVal vpf As clsVPf) As clsConstellation
+        Dim result As New clsConstellation
+        Dim hConstItem As clsConstellationItem
+
+        Try
+
+            With result
+                .constellationName = vpf.name
+                ' Aufbau der Constellation.allitems
+                For Each hvpfItem As clsVPfItem In vpf.allItems
+
+                    hConstItem = New clsConstellationItem
+                    hConstItem = clsVPfItem2clsConstItem(hvpfItem)
+
+                    Dim pvname As String = calcProjektKey(hConstItem.projectName, hConstItem.variantName)
+                    If Not .Liste.ContainsKey(pvname) Then
+                        result.Liste.Add(pvname, hConstItem)
+                    End If
+
+                Next
+                .sortCriteria = vpf.sortType
+                Dim hsortliste As SortedList(Of String, String) = .sortListe(vpf.sortType)
+            End With
+
+        Catch ex As Exception
+            result = Nothing
+        End Try
+
+        clsVPf2clsConstellation = result
+
+    End Function
+
+    Public Function clsConst2clsVPf(ByVal c As clsConstellation) As clsVPf
+
+        Dim result As New clsVPf
+        Try
+            Dim hvpid As String = ""
+            Dim vpfItem As New clsVPfItem
+
+            With result
+                .name = c.constellationName
+                ._id = ""
+                ' TODO: ReST-Server muss auf ptPRPFType-Enumeration angepasst werden
+                '.vpid = GETvpid(c.constellationName, vpType:=ptPRPFType.portfolio)._id
+                .vpid = GETvpid(c.constellationName, vpType:=2)._id
+
+                .timestamp = DateTimeToISODate(Date.Now)
+
+                .sortType = c.sortCriteria
+                ' .sortlist aufbauen aus c.sortlist
+                For Each kvp As KeyValuePair(Of String, String) In c.sortListe(result.sortType)
+                    hvpid = GETvpid(kvp.Value)._id
+                    If Not .sortList.Contains(hvpid) Then
+                        .sortList.Add(hvpid)
+                    End If
+                Next
+                ' .allitems liste aufbauen aus c.allitems
+                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In c.Liste
+                    vpfItem = clsConstItem2clsVPfItem(kvp.Value)
+                    If Not .allItems.Contains(vpfItem) Then
+                        .allItems.Add(vpfItem)
+                    End If
+                Next
+            End With
+        Catch ex As Exception
+
+        End Try
+
+        clsConst2clsVPf = result
+
+    End Function
+
+    Public Function clsVPfItem2clsConstItem(ByVal vpfItem As clsVPfItem) As clsConstellationItem
+        Dim result As New clsConstellationItem
+
+        Try
+            With result
+
+                .projectName = GETpName(vpfItem.vpid)
+                .variantName = vpfItem.variantName
+                .start = vpfItem.start
+                .show = vpfItem.show
+                .zeile = vpfItem.zeile
+                .reasonToExclude = vpfItem.reasonToExclude
+                .reasonToInclude = vpfItem.reasonToInclude
+
+            End With
+
+        Catch ex As Exception
+            result = Nothing
+        End Try
+
+        clsVPfItem2clsConstItem = result
+
+    End Function
+
+    Public Function clsConstItem2clsVPfItem(ByVal c As clsConstellationItem) As clsVPfItem
+        Dim result As New clsVPfItem
+        Try
+            With result
+
+                result.name = c.projectName
+                result.vpid = GETvpid(c.projectName)._id
+                result._id = ""
+                result.projectName = c.projectName
+                result.variantName = c.variantName
+                result.start = c.start
+                result.show = c.show
+                result.zeile = c.zeile
+                result.reasonToExclude = c.reasonToExclude
+                result.reasonToInclude = c.reasonToInclude
+
+            End With
+
+        Catch ex As Exception
+            result = Nothing
+        End Try
+
+        clsConstItem2clsVPfItem = result
 
     End Function
 

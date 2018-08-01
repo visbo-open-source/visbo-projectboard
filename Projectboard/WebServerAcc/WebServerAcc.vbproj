@@ -83,7 +83,7 @@
     <Compile Include="clsVPLock.vb" />
     <Compile Include="clsVPVariant.vb" />
     <Compile Include="clsWebLongVPv.vb" />
-    <Compile Include="clsWebVPfItem.vb" />
+    <Compile Include="clsVPfItem.vb" />
     <Compile Include="clsWebVCcost.vb" />
     <Compile Include="clsWebVCrole.vb" />
     <Compile Include="clsWebVPf.vb" />
