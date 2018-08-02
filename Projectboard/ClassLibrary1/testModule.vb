@@ -2547,9 +2547,9 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
@@ -2623,11 +2623,11 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
@@ -2699,10 +2699,10 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
@@ -2774,11 +2774,11 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
@@ -2849,10 +2849,10 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke

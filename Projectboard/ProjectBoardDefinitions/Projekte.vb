@@ -7199,10 +7199,10 @@ Public Module Projekte
 
         With prcDiagram
 
-            If anzPieSegments > 1 Then
+            If anzPieSegments >= 1 Then
                 .gsCollection = New Collection
                 Dim tmpAnz As Integer = sortierteListe.Count
-                For i = 1 To anzPieSegments - 1
+                For i = 1 To anzPieSegments
                     Try
                         .gsCollection.Add(sortierteListe.ElementAt(tmpAnz - i).Value)
                     Catch ex As Exception
@@ -7513,7 +7513,7 @@ Public Module Projekte
 
 
     ''' <summary>
-    ''' zeigt die Zusammensetzung der Überauslastung bzw Unterauslastung an 
+    ''' zeigt die Zusammensetzung der Top3 Überauslastungen bzw Unterauslastungen an 
     ''' wenn keine Sammelrolle angegeben ist, werden alle Rollen untersucht; anonsten nur die Sammelrolle plus Kinden
     ''' 
     ''' </summary>
@@ -7859,7 +7859,7 @@ Public Module Projekte
                 With prcDiagram
                     .DiagrammTitel = diagramTitle
                     .diagrammTyp = DiagrammTypen(4)
-                    If anzPieSegments > 1 Then
+                    If anzPieSegments >= 1 Then
                         .gsCollection = New Collection
                         Dim tmpAnz As Integer = sortierteListe.Count
                         Dim loopNrs As Integer
@@ -7960,45 +7960,69 @@ Public Module Projekte
             Exit Function
         End If
 
+        ' tk 30.7.18 Wenn es Zukunftswerte gibt, dann sollen ausschlie0lich zukünftige Bottlenecks betrachtet werden 
+
+        Dim ixLeft As Integer = 0
+        Dim ixRight As Integer = 0
+        Dim heuteColumn As Integer = getColumnOfDate(Date.Now)
+
+        If heuteColumn > showRangeLeft Then
+            ixLeft = heuteColumn - showRangeLeft
+            ixRight = showRangeRight - showRangeLeft
+        Else
+            ixLeft = 0
+            ixRight = showRangeRight - showRangeLeft
+        End If
 
         For r = 1 To anzRollen
             roleName = RoleDefinitions.getRoleDefByID(roleIDs.ElementAt(r - 1).Key).name
             'roleName = CStr(basicRolesCollection.Item(r))
-            Dim valueUeber As Double
-            Dim valueUnter As Double
-            Dim sortCriteria As Double
+            Dim sumValue1 As Double
+            Dim sumValue2 As Double
 
-            If auswahl = 1 Then ' Überauslastung
-                valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
-                If valueUeber > 0 Then
+            Dim array1 As Double() = Nothing
+            Dim array2 As Double() = Nothing
+            Dim myCollection As New Collection From {
+                roleName, roleName}
 
-                    valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
-                    sortCriteria = valueUeber - valueUnter
-                    If sortCriteria > 0 Then
-                        While sortierteListe.ContainsKey(sortCriteria)
-                            sortCriteria = sortCriteria + 0.0000001
-                        End While
-                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
-                        sortierteListe.Add(sortCriteria, roleName)
-                    End If
+            Dim kapaArray As Double() = ShowProjekte.getRoleKapasInMonth(myCollection, False)
+
+            Dim sortCriteria As Double = 0.0
+
+            If auswahl = 1 Then
+                array1 = ShowProjekte.getAuslastungsValues(roleName, 1)
+                If heuteColumn >= showRangeRight Then
+                    array2 = ShowProjekte.getAuslastungsValues(roleName, 2)
+                End If
+
+            Else
+                array1 = ShowProjekte.getAuslastungsValues(roleName, 2)
+                If heuteColumn >= showRangeRight Then
+                    array2 = ShowProjekte.getAuslastungsValues(roleName, 1)
+                End If
+            End If
+
+            If heuteColumn >= showRangeRight Then
+                ' alte Vorgehensweise 
+                sumValue1 = array1.Sum
+                If sumValue1 > 0 Then
+
+                    sumValue2 = array2.Sum
+                    sortCriteria = sumValue1 - sumValue2
 
                 End If
-            Else ' Unterauslastung 
-                valueUnter = ShowProjekte.getAuslastungsValues(roleName, 2).Sum
+            Else
+                ' jetzt wird das Kriterium etwas anders betrachtet ... 
+                ' alle in der Zukunft liegenden Monate, und hier die größten Ausschläge betrachten ... 
+                sortCriteria = calcUtilizationSortCriteria(array1, ixLeft, ixRight, kapaArray)
+            End If
 
-                If valueUnter > 0 Then
-
-                    valueUeber = ShowProjekte.getAuslastungsValues(roleName, 1).Sum
-                    sortCriteria = valueUnter - valueUeber
-                    If sortCriteria > 0 Then
-                        While sortierteListe.ContainsKey(sortCriteria)
-                            sortCriteria = sortCriteria + 0.0000001
-                        End While
-                        ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
-                        sortierteListe.Add(sortCriteria, roleName)
-                    End If
-
-                End If
+            If sortCriteria > 0 Then
+                While sortierteListe.ContainsKey(sortCriteria)
+                    sortCriteria = sortCriteria + 0.0000001
+                End While
+                ' jetzt enthält sortierte Liste nicht mehr den Schlüssel ..
+                sortierteListe.Add(sortCriteria, roleName)
             End If
 
         Next r
@@ -8007,6 +8031,44 @@ Public Module Projekte
         getSortedListOfCapaUtilization = sortierteListe
     End Function
 
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="arrayZahlen"></param>
+    ''' <param name="ixLeft"></param>
+    ''' <param name="ixRight"></param>
+    ''' <returns></returns>
+    Private Function calcUtilizationSortCriteria(ByVal arrayZahlen() As Double, ByVal ixLeft As Integer, ByVal ixRight As Integer, ByVal kapaArray() As Double) As Double
+        Dim tmpResult As Double = 0.0
+
+        Dim dimension1 As Integer = arrayZahlen.Length - 1
+        Dim dimension2 As Integer = kapaArray.Length - 1
+
+        If dimension1 <> dimension2 Then
+            ' nichts tun 
+        Else
+            If ixLeft >= 0 And ixRight <= dimension1 Then
+                For i As Integer = ixLeft To ixRight
+
+                    If arrayZahlen(i) > 0 Then
+                        If kapaArray(i) > 0 Then
+                            tmpResult = tmpResult + System.Math.Pow((arrayZahlen(i) + kapaArray(i)) / kapaArray(i), 3)
+                        Else
+                            tmpResult = tmpResult + System.Math.Pow(arrayZahlen(i), 2)
+                        End If
+
+                    End If
+
+                Next
+            End If
+
+        End If
+
+
+
+        calcUtilizationSortCriteria = tmpResult
+    End Function
 
     ''' <summary>
     ''' auswahl = 1: Ressourcenbedarf in PT

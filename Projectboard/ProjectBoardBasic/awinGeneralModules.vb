@@ -2670,6 +2670,12 @@ Public Module awinGeneralModules
                     awinSettings.allianzI2DelRoles = ""
                 End Try
 
+                Try
+                    awinSettings.autoSetActualDataDate = CBool(.Range("autoSetActualDataDate").Value)
+                Catch ex As Exception
+                    awinSettings.autoSetActualDataDate = False
+                End Try
+
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
                 weightStrategicFit = CDbl(.Range("WeightStrategicFit").Value)
@@ -5959,7 +5965,7 @@ Public Module awinGeneralModules
                 activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets("VISBO"),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             Catch ex As Exception
-                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets("Liste"),
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             End Try
 
@@ -8129,6 +8135,155 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' übernimmt für Projekte, die bislang noch keine Projekt-Nummern hatten, die Projekt-Nummer  
+    ''' </summary>
+    Public Sub importAllianzType4()
+        Dim zeile As Integer, spalte As Integer
+
+        Dim tfZeile As Integer = 2
+
+        Dim pName As String = ""
+        Dim variantName As String = ""
+
+
+        Dim upDatedProjects As Integer = 0
+        Dim errorProjects As Integer = 0
+
+        ' für den Output 
+        Dim outputFenster As New frmOutputWindow
+        Dim outputCollection As New Collection
+        Dim outPutLine As String = ""
+
+
+        Dim lastRow As Integer
+        Dim geleseneProjekte As Integer
+        Dim ok As Boolean = False
+
+        ' die Projekte
+
+        Dim hproj As clsProjekt = Nothing
+        Dim projektKundenNummer As String = ""
+
+
+
+        ' enthät die Saplte, wo der "alte" ProjektName steht ...
+        Dim colPname As Integer = 4
+        ' enthält die Spalte, wo die PRojekt-Nummer drin steht 
+
+        ' enthält die Spalten-Nummer, wo die einzelnen Rollen-Namen zu finden sind
+        Dim colPNr As Integer = 3
+
+
+        ' jetzt werden die ImportProjekte zurückgesetzt ...
+        ImportProjekte.Clear()
+
+        Dim firstZeile As Excel.Range
+
+
+        zeile = 2
+        spalte = 1
+        geleseneProjekte = 0
+
+ 
+        Try
+
+            Dim found As Boolean = False
+            Dim wsi As Integer = 1
+            Dim wsCount As Integer = appInstance.ActiveWorkbook.Worksheets.Count
+
+
+            While Not found And wsi <= wsCount
+                If CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet).Name.StartsWith("logBuch") Then
+                    found = True
+                Else
+                    wsi = wsi + 1
+                End If
+            End While
+
+            If Not found Then
+                Call MsgBox("keine Projekte-Tabelle gefunden ...")
+                Exit Sub
+            End If
+
+            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            With currentWS
+
+
+                firstZeile = CType(.Rows(2), Excel.Range)
+                lastRow = CType(.Cells(20000, "D"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+
+
+                While zeile < lastRow
+
+                    Dim oldProj As clsProjekt = Nothing
+
+                    Try
+
+                        pName = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                        projektKundenNummer = CStr(CType(.Cells(zeile, colPNr), Excel.Range).Value).Trim
+
+                        If pName <> "" And projektKundenNummer <> "" Then
+                            ' jetzt kann ggf der Update erfolgen ... 
+                            geleseneProjekte = geleseneProjekte + 1
+                            ok = isKnownProject(pName, projektKundenNummer, AlleProjekte)
+                        End If
+
+
+                    Catch ex As Exception
+                        ok = False
+                    End Try
+
+                    If ok Then
+                        hproj = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now)
+                        If Not IsNothing(hproj) Then
+
+                            If hproj.kundenNummer = "" Then
+                                hproj.kundenNummer = projektKundenNummer
+                                ' jetzt in die Import-Projekte eintragen 
+                                upDatedProjects = upDatedProjects + 1
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                            Else
+                                outPutLine = "Projekt hat bereits eine Kunden-Nummer: " & pName & " old-Nr: " & hproj.kundenNummer & "; new-Nr: " & projektKundenNummer
+                                outputCollection.Add(outPutLine)
+                            End If
+
+
+
+                        Else
+                            outPutLine = "Projekt nicht in Datenbank gefunden: " & pName
+                            outputCollection.Add(outPutLine)
+                        End If
+                    Else
+                        outPutLine = "Projekt nicht bekannt: " & pName
+                        outputCollection.Add(outPutLine)
+                    End If
+
+                    zeile = zeile + 1
+
+                End While
+
+
+            End With
+        Catch ex As Exception
+
+            Throw New Exception("Fehler in Import-Datei" & ex.Message)
+
+        End Try
+
+        If outputCollection.Count > 0 Then
+            Call showOutPut(outputCollection, "Import Detail-Planungs Typ 4", "")
+        End If
+
+        Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
+                    "Projekte aktualisiert: " & upDatedProjects)
+
+
+    End Sub
+
+    ''' <summary>
     ''' berechnet in importAllianz3 aus einer sortierten Liste von Rollen und Array Namen den geldwerten Betrag  
     ''' </summary>
     ''' <param name="roleValues"></param>
@@ -8626,7 +8781,7 @@ Public Module awinGeneralModules
 
             If takeIntoAccount Then
 
-                ' jetzt das Import Datum setzen und dann in PortfolioProjektSummareis verschieben ...
+                ' jetzt das Import Datum setzen und dann in PortfolioProjektSummaries verschieben ...
                 impProjekt.timeStamp = importDate
 
                 Dim importKey As String = calcProjektKey(impProjekt)
@@ -8710,6 +8865,10 @@ Public Module awinGeneralModules
 
                 End If
 
+                ' wenn jetzt automatisch setzen des ActualdataDate gemacht werden soll
+                If awinSettings.autoSetActualDataDate Then
+                    impProjekt.actualDataUntil = importDate.AddMonths(-1)
+                End If
 
                 ' Aufnehmen in Constellation
                 Dim newCItem As New clsConstellationItem
@@ -15710,6 +15869,8 @@ Public Module awinGeneralModules
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
 
+                                            Dim defaultHrsPerdayForThisPerson As Double = 8 * hrole.defaultKapa / nrOfDaysMonth
+
                                             Dim iSp As Integer = firstUrlspalte
                                             Dim anzArbTage As Double = 0
                                             Dim anzArbStd As Double = 0
@@ -15733,7 +15894,7 @@ Public Module awinGeneralModules
                                                                     anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                                                 Else
                                                                     If awinSettings.englishLanguage Then
-                                                                        msgtxt = "Error reading the  amount of working hours of " & hrole.name & " ..."
+                                                                        msgtxt = "Error reading the amount of working hours of " & hrole.name & " ..."
                                                                     Else
                                                                         msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " ..."
                                                                     End If
@@ -15752,7 +15913,8 @@ Public Module awinGeneralModules
 
                                                                 ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
                                                                 If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex = noColor Then
-                                                                    anzArbStd = anzArbStd + 8
+                                                                    'anzArbStd = anzArbStd + 8
+                                                                    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
                                                                 Else
                                                                     ' freier Tag für Teilzeitbeschäftigte
                                                                 End If
@@ -15866,7 +16028,7 @@ Public Module awinGeneralModules
         enableOnUpdate = True
         kapaWB.Close(SaveChanges:=False)
 
-        Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Problem sind beim Lesen der Urlaubsplanung aufgetreten")
+        Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Probleme sind beim Lesen der Urlaubsplanung aufgetreten")
 
         ' ''If outPutCollection.Count > 0 Then
         ' ''    Call showOutPut(outPutCollection, _

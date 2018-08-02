@@ -4999,6 +4999,9 @@ Imports System.IO
                                 Call ImportAllianzType3(monat)
                             End If
 
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
+                            Call importAllianzType4()
+
                         Else
                             Call awinImportProjektInventur()
                         End If

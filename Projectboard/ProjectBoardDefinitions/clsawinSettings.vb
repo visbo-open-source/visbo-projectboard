@@ -244,6 +244,10 @@ Public Class clsawinSettings
     ' gibt an , welche Rollen gelöscht werden sollen, bevor die anderen importiert werden 
     Public Property allianzI2DelRoles As String = ""
 
+    ' das ist ein Setting, das bewirkt, das zu jedem Projekt das ActualDataDate auf einen Monat vor dem aktuellem Timestamp gesetzt wird
+    ' wurde eingeführt von tk am 27.7.18, extrem wichtig für Demo Zwecke ...
+    Public Property autoSetActualDataDate As Boolean = False
+
     Sub New()
 
         ReDim _importSettings(17)

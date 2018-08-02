@@ -41,6 +41,10 @@ Public Class ThisAddIn
             awinSettings.userNamePWD = My.Settings.userNamePWD
         End If
 
+        ' für Demo Zwecke only !! 
+        ' vor Auslieferung auf false setzen ! 
+        awinSettings.autoSetActualDataDate = True
+
     End Sub
 
 
