@@ -7027,7 +7027,7 @@ Public Module awinGeneralModules
                                             Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                                             ' Status gleich auf 1: beauftragt setzen 
-                                            unionProj.Status = ProjektStatus(1)
+                                            unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                                             If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
                                                 ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
@@ -7321,7 +7321,7 @@ Public Module awinGeneralModules
                         Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                         ' Status wird gleich auf 1: beauftragt gesetzt
-                        unionProj.Status = ProjektStatus(1)
+                        unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                         If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
                             ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
@@ -13856,7 +13856,7 @@ Public Module awinGeneralModules
                 ' jetzt ggf die Attribute noch ergänzen 
                 With unionProj
                     .Erloes = gesamtbudget
-                    .Status = ProjektStatus(1)
+                    .Status = ProjektStatus(PTProjektStati.beauftragt)
                     .description = description
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung

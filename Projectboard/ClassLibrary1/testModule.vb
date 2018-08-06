@@ -361,8 +361,10 @@ Public Module testModule
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                         End If
 
+
                         bproj = request.retrieveFirstContractedPFromDB(hproj.name)
-                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, storedAtOrBefore:=Date.Now)
+                        Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
+                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, storedAtOrBefore:=lDate)
 
                         If lproj.timeStamp = bproj.timeStamp Then
                             lproj = Nothing
