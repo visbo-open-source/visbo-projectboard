@@ -4990,9 +4990,11 @@ Imports System.IO
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
                             ' immer zwei Monate zurück gehen 
-                            Dim monat As Integer = Date.Now.Month - 2
-                            If monat <= 0 Then
-                                monat = 12
+                            ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
+                            Dim monat As Integer = Date.Now.Month - 1
+
+                            If awinSettings.actualDataMonth <> Date.MinValue Then
+                                monat = awinSettings.actualDataMonth.Month
                             End If
 
                             If monat >= 1 And monat <= 12 Then

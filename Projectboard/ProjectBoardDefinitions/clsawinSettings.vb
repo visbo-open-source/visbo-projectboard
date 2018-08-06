@@ -245,8 +245,13 @@ Public Class clsawinSettings
     Public Property allianzI2DelRoles As String = ""
 
     ' das ist ein Setting, das bewirkt, das zu jedem Projekt das ActualDataDate auf einen Monat vor dem aktuellem Timestamp gesetzt wird
-    ' wurde eingeführt von tk am 27.7.18, extrem wichtig für Demo Zwecke ...
+    ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
+    ' im Produktivbetrieb, wenn tatsächlich mit Ist-Werte gearbeitet wird, die eingelesen werden, sollte das immer auf false stehen ; 
+    ' unbedingt beachten: kann im Konflikt mit actzalDataMonth stehen ;
     Public Property autoSetActualDataDate As Boolean = False
+
+    ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
+    Public Property actualDataMonth As Date = Date.MinValue
 
     Sub New()
 

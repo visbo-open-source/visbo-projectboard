@@ -2676,6 +2676,12 @@ Public Module awinGeneralModules
                     awinSettings.autoSetActualDataDate = False
                 End Try
 
+                Try
+                    awinSettings.actualDataMonth = CDate(.Range("ActualDataMonth").Value)
+                Catch ex As Exception
+                    awinSettings.actualDataMonth = Date.MinValue
+                End Try
+
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
                 weightStrategicFit = CDbl(.Range("WeightStrategicFit").Value)
@@ -2902,16 +2908,15 @@ Public Module awinGeneralModules
         ''listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
         ''              FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
 
-        If listOfFiles.Count = 1 Then
-            Call readUrlOfRole(listOfFiles.Item(0))
-        ElseIf listOfFiles.Count = 0 Then
-            Call logfileSchreiben("Es gibt keine Datei zur Urlaubsplanung" & vbLf _
-                         & "Es wurde daher jetzt keine berücksichtigt", _
-                         "", anzFehler)
-        Else
+        If listOfFiles.Count >= 1 Then
 
-            Call logfileSchreiben("Es gibt mehrere Dateien zur Urlaubsplanung" & vbLf _
-                         & "Es wurde daher jetzt keine berücksichtigt", _
+            For Each tmpDatei As String In listOfFiles
+                Call readUrlOfRole(tmpDatei)
+            Next
+
+        Else
+            Call logfileSchreiben("Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                         & "Es wurde daher jetzt keine berücksichtigt",
                          "", anzFehler)
         End If
 
@@ -7746,14 +7751,85 @@ Public Module awinGeneralModules
             End If
 
             ' jetzt kommt die eigentliche Import Behandlung 
-            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet,
+            Dim currentWS As Excel.Worksheet = Nothing
+            Try
+                currentWS = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+                If Not currentWS.Name.Contains("Bericht") Then
+                    currentWS = CType(appInstance.ActiveWorkbook.Worksheets("Bericht_RL_Kapa_Excel"),
+                                                           Global.Microsoft.Office.Interop.Excel.Worksheet)
+                End If
+            Catch ex As Exception
+                Call MsgBox("Keine Tabelle mit Berichts-Daten gefunden ... Abbruch")
+                Exit Sub
+            End Try
+
+
+            ' tk, 2.8.2018 Behandlung LookupTable 
+            Dim lookUpTableWS As Excel.Worksheet = Nothing
+
+            ' die lookupTable nimmt die Projekt-Nummer als KEy auf und den korrespondierenden NAmen aus der Rupi-Liste
+            ' bei Aufbau der lookupTable werden die Rupi-Liste NAmen bereits in valide Namen gewandelt ... 
+            Dim lookupTable As SortedList(Of String, String) = Nothing
+
+            Try
+                lookUpTableWS = CType(appInstance.ActiveWorkbook.Worksheets("lookupTable"),
+                                                           Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Catch ex As Exception
+                lookUpTableWS = Nothing
+            End Try
+
+            ' wenn jetzt eine Tabelle vorhanden ist, dann muss die LookupTable aufgebaut werden 
+            If Not IsNothing(lookUpTableWS) Then
+
+                With lookUpTableWS
+
+                    Dim lupTLastZeile As Integer = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                    Dim lupTZeile As Integer = 2
+                    If lupTLastZeile >= lupTZeile Then
+
+                        lookupTable = New SortedList(Of String, String)
+
+                        While lupTZeile <= lupTLastZeile
+                            Try
+                                Dim pNr As String = CStr(CType(.Cells(lupTZeile, 2), Excel.Range).Value).Trim
+                                Dim rupiPName As String = CStr(CType(.Cells(lupTZeile, 3), Excel.Range).Value).Trim
+
+                                If Not isValidProjectName(rupiPName) Then
+                                    rupiPName = makeValidProjectName(rupiPName)
+                                End If
+
+                                If pNr <> "" Then
+                                    If Not lookupTable.ContainsKey(pNr) Then
+                                        lookupTable.Add(pNr, rupiPName)
+                                    End If
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+                            lupTZeile = lupTZeile + 1
+
+                        End While
+
+                    End If
+                End With
+
+
+            End If
+
+            Dim lookupsExist As Boolean = False
+            If Not IsNothing(lookupTable) Then
+                lookupsExist = (lookupTable.Count > 0)
+            End If
+
 
             ' hat die Datei die richtige Header-Struktur ? 
             Dim firstZeile As Excel.Range = currentWS.Rows(1)
 
             If Not isCorrectAllianzImportStructure(firstZeile, 3) Then
-                Call MsgBox("Datei hat nicht den für Typ 3 erforderlichen Spalten-Aufbau!")
+                Call MsgBox("Datei hat nicht den für Typ 3 (= Istdaten-Import) erforderlichen Spalten-Aufbau!")
                 Exit Sub
             End If
 
@@ -7830,11 +7906,10 @@ Public Module awinGeneralModules
                         If Not handledNames.ContainsKey(tmpPName) Then
 
                             ' wenn ok = true zurück kommt, dann ist in cacheProjekte das Projekt mit Varianten-Name "" drin .. 
-                            If isKnownProject(pName, tmpPNr, cacheProjekte) Then
+                            If isKnownProject(pName, tmpPNr, cacheProjekte, lookupTable) Then
                                 shallContinue = True
                                 handledNames.Add(tmpPName, pName)
                             Else
-                                ' Projekt nicht erkannt 
                                 outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
                                 outputCollection.Add(outPutLine)
 
@@ -8412,7 +8487,8 @@ Public Module awinGeneralModules
     ''' <param name="projektKDNr">ist die optional anzugebende Projekt-Kunden-Nummer</param>
     ''' <param name="projektListe">ist AlleProjekte oder eine andere Instanz vom Typ clsProjekteAlle, in der das Projekt aufgenommen wird, wenn es existiert </param>
     ''' <returns></returns>
-    Private Function isKnownProject(ByRef pname As String, ByVal projektKDNr As String, ByRef projektListe As clsProjekteAlle) As Boolean
+    Private Function isKnownProject(ByRef pname As String, ByVal projektKDNr As String, ByRef projektListe As clsProjekteAlle,
+                                    Optional ByVal lookupTable As SortedList(Of String, String) = Nothing) As Boolean
 
         Dim fctResult As Boolean = False
         Dim oldProj As clsProjekt = Nothing
@@ -8456,7 +8532,7 @@ Public Module awinGeneralModules
                     Dim pNames As Collection = request.retrieveProjectNamesByPNRFromDB(projektKDNr)
 
                     If pNames.Count = 1 Then
-
+                        ' in der Datenbank gibt es aktuell genau ein Projekt, dem diese Projekt-Kundennummer zugeordnet ist 
                         Dim visboDBname As String = pNames.Item(1)
 
                         If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
@@ -8468,7 +8544,7 @@ Public Module awinGeneralModules
                             fctResult = True
 
                             ReDim logArray(4)
-                            logArray(0) = "erfolgreiches Mapping anhand P-Nr, PlanView, Visbo"
+                            logArray(0) = "erfolgreiches Mapping anhand Plan-View P-Nr -> Visbo DB P-Nr"
                             logArray(1) = projektKDNr
                             logArray(2) = pname
                             logArray(3) = ""
@@ -8484,6 +8560,7 @@ Public Module awinGeneralModules
 
 
                     ElseIf pNames.Count > 1 Then
+                        ' in der Datenbank gibt es mehrere Projekte, denen diese Projekt-Kundennummer zugeordnet ist : Fehler ! 
                         ' Eintrag in Log-File 
                         ReDim logArray(3 + pNames.Count)
                         logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt:  "
@@ -8500,11 +8577,75 @@ Public Module awinGeneralModules
                         Call logfileSchreiben(logArray)
 
                         fctResult = False
+
+                    ElseIf Not IsNothing(lookuptable) Then
+                        ' checken ob es in der LoopUpTable eine Projekt-Zuordnung gibt ... 
+
+                        If lookupTable.ContainsKey(projektKDNr) Then
+
+                            Dim visboDBname As String = lookupTable.Item(projektKDNr)
+
+                            If visboDBname.Trim <> "" Then
+                                If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
+
+                                    Dim rupiProj As clsProjekt = request.retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
+                                    If Not IsNothing(rupiProj) Then
+                                        projektListe.Add(rupiProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                                        fctResult = True
+
+                                        ReDim logArray(4)
+                                        logArray(0) = "lookupTable: erfolgreiches Mapping"
+                                        logArray(1) = projektKDNr
+                                        logArray(2) = pname
+                                        logArray(3) = ""
+                                        logArray(4) = visboDBname
+
+                                        Call logfileSchreiben(logArray)
+
+                                        ' damit an der aufrufenden Stelle der richtige pName steht ...
+                                        pname = visboDBname
+                                    Else
+                                        ' kann eigentlich nicht passieren ...
+                                        fctResult = False
+                                    End If
+
+                                Else
+                                    ReDim logArray(4)
+                                    logArray(0) = "lookupTable: Name existiert nicht in initialer Projektliste"
+                                    logArray(1) = projektKDNr
+                                    logArray(2) = pname
+                                    logArray(3) = ""
+                                    logArray(4) = visboDBname
+
+                                    Call logfileSchreiben(logArray)
+
+                                    fctResult = False
+                                End If
+                            Else
+
+                                ReDim logArray(4)
+                                logArray(0) = "lookupTable: kein Name definiert für Projekt-Nummer"
+                                logArray(1) = projektKDNr
+                                logArray(2) = pname
+                                logArray(3) = ""
+                                logArray(4) = visboDBname
+
+                                Call logfileSchreiben(logArray)
+
+                                fctResult = False
+                            End If
+
+
+                        Else
+                            fctResult = False
+                        End If
+
                     Else
 
                         fctResult = False
 
                     End If
+
                 Else
                     fctResult = False
                 End If
