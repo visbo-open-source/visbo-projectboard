@@ -2061,9 +2061,15 @@ Module Module1
                                     ' das neue Chart ..
                                     Dim newchtobj As xlNS.ChartObject = Nothing
 
+                                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                                    Dim tmpVariantName As String = ""
+                                    If tsProj.projectType = ptPRPFType.portfolio Then
+                                        tmpVariantName = portfolioVName
+                                    End If
+
                                     ' jetzt das bProj (Beauftragung) holen
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
                                     Catch ex As Exception
                                         bProj = Nothing
                                     End Try
@@ -2213,6 +2219,12 @@ Module Module1
 
                         If Not IsNothing(tsProj) Then
 
+                            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                            Dim tmpVariantName As String = ""
+                            If tsProj.projectType = ptPRPFType.portfolio Then
+                                tmpVariantName = portfolioVName
+                            End If
+
                             If bigType = ptReportBigTypes.components Then
                                 Call updatePPTComponent(tsProj, pptShape, detailID)
 
@@ -2223,8 +2235,8 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
-                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, curTimeStamp.AddHours(-1))
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
@@ -2242,8 +2254,8 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
-                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, curTimeStamp.AddHours(-1))
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 

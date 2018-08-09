@@ -4311,18 +4311,24 @@ Public Module Projekte
                 Else
                     'titelTeile(0) = "Soll/Ist Personalkosten (T€)" & vbLf
                     If awinSettings.englishLanguage Then
-                        titelTeile(0) = repMSg(0, 1)
+                        titelTeile(0) = repMSg(0, 1) & " " & qualifier
                     Else
-                        titelTeile(0) = repMSg(0, 0)
+                        titelTeile(0) = repMSg(0, 0) & " " & qualifier
                     End If
 
                 End If
                 zaehlEinheit = "T€"
                 kennung = calcChartKennung("pr", PTprdk.SollIstPersonalkostenC, tmpCollection)
                 'kennung = "Soll/Ist Kurve Personalkosten"
-                werteB = beauftragung.getAllPersonalKosten
-                werteL = lastPlan.getAllPersonalKosten
-                werteC = hproj.getAllPersonalKosten
+                If qualifier = "" Then
+                    werteB = beauftragung.getAllPersonalKosten
+                    werteL = lastPlan.getAllPersonalKosten
+                    werteC = hproj.getAllPersonalKosten
+                Else
+                    werteB = beauftragung.getPersonalKosten(qualifier, True)
+                    werteL = lastPlan.getPersonalKosten(qualifier, True)
+                    werteC = hproj.getPersonalKosten(qualifier, True)
+                End If
 
             Case 2
                 ' Sonstige Kosten
@@ -4373,9 +4379,9 @@ Public Module Projekte
                 'kennung = "Rolle " & qualifier
                 kennung = calcChartKennung("pr", PTprdk.SollIstRolleC, tmpCollection)
                 Try
-                    werteB = beauftragung.getPersonalKosten(qualifier)
-                    werteL = lastPlan.getPersonalKosten(qualifier)
-                    werteC = hproj.getPersonalKosten(qualifier)
+                    werteB = beauftragung.getPersonalKosten(qualifier, True)
+                    werteL = lastPlan.getPersonalKosten(qualifier, True)
+                    werteC = hproj.getPersonalKosten(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -4424,7 +4430,7 @@ Public Module Projekte
         Dim tmpSum As String
         If vglBaseline Then
             If projekthistorie.Count > 1 Then
-                tmpSum = " (" & werteC.Sum.ToString("##,##0.") & " / " & werteB.Sum.ToString("####0.") & " " & zaehlEinheit & ")"
+                tmpSum = " (" & werteC.Sum.ToString("##,##0.") & " / " & werteB.Sum.ToString("##,##0.") & " " & zaehlEinheit & ")"
             Else
                 tmpSum = " (" & werteC.Sum.ToString("##,##0.") & zaehlEinheit & ")"
             End If
@@ -4648,7 +4654,8 @@ Public Module Projekte
                 ' heutiger stand 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
-                    .Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
+                    '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
+                    .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToString("d")
                     '.Name = "Version (" & hproj.timeStamp.ToString("d") & ")"
                     '.Interior.Color = awinSettings.SollIstFarbeC
                     .Interior.Color = visboFarbeBlau
@@ -4807,7 +4814,7 @@ Public Module Projekte
             repMSg(3) = "approved version"
             repMSg(4) = "last version"
             repMSg(5) = "actual values"
-            repMSg(6) = "Version from"
+            repMSg(6) = "Forecast"
         Else
             repMSg(0) = "kumulierte Personalkosten"
             repMSg(1) = "kumulierte Sonstige Kosten"
@@ -4815,20 +4822,27 @@ Public Module Projekte
             repMSg(3) = "Beauftragung"
             repMSg(4) = "letzter Stand"
             repMSg(5) = "Ist-Werte"
-            repMSg(6) = "Stand vom"
+            repMSg(6) = "Prognose"
         End If
 
 
         Select Case auswahl
             Case 1
                 ' Personalkosten
-                titelTeile(0) = repMSg(0)
+                titelTeile(0) = repMSg(0) & " " & qualifier
                 zaehlEinheit = "T€"
                 If vglBaseline Then
-                    werteB = vProj.getAllPersonalKosten
+                    If qualifier = "" Then
+                        werteB = vProj.getAllPersonalKosten
+                        werteC = hproj.getAllPersonalKosten
+                    Else
+                        werteB = vProj.getPersonalKosten(qualifier, True)
+                        werteC = hproj.getPersonalKosten(qualifier, True)
+                    End If
+
                 End If
 
-                werteC = hproj.getAllPersonalKosten
+
 
             Case 2
                 ' Sonstige Kosten
@@ -4859,10 +4873,10 @@ Public Module Projekte
 
                 Try
                     If vglBaseline Then
-                        werteB = vProj.getPersonalKosten(qualifier)
+                        werteB = vProj.getPersonalKosten(qualifier, True)
                     End If
 
-                    werteC = hproj.getPersonalKosten(qualifier)
+                    werteC = hproj.getPersonalKosten(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -5599,7 +5613,7 @@ Public Module Projekte
 
     End Sub
 
-    
+
 
     ''' <summary>
     ''' Prozedur zeigt die Ressourcen Struktur des Projektes an (Balken-Diagramm)
@@ -5616,10 +5630,10 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks>Kennung Phasen, Personalbedarf, Personalkosten, Sonstige Kosten, Gesamtkosten, Strategie, Ergebnis</remarks>
-    Public Sub createRessBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglproj As clsProjekt, _
-                                         ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                            ByVal top As Double, left As Double, height As Double, width As Double, _
-                                            ByVal calledFromReporting As Boolean)
+    Public Sub createRessBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglproj As clsProjekt,
+                                         ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer,
+                                            ByVal top As Double, left As Double, height As Double, width As Double,
+                                            ByVal calledFromReporting As Boolean, Optional ByVal roleName As String = "")
 
 
         Dim kennung As String = " "
@@ -5671,8 +5685,12 @@ Public Module Projekte
 
 
         Dim pname As String = hproj.name
+        If roleName = "" Then
+            tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        Else
+            tmpcollection.Add(hproj.name & "#" & auswahl.ToString & "#" & roleName)
+        End If
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
 
@@ -5799,9 +5817,19 @@ Public Module Projekte
             With newChtObj.Chart
 
                 If auswahl = 1 Then
-                    tdatenreihe = hproj.getAlleRessourcen
+                    If roleName = "" Then
+                        tdatenreihe = hproj.getAlleRessourcen
+                    Else
+                        tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
+                    End If
+
                 Else
-                    tdatenreihe = hproj.getAllPersonalKosten
+                    If roleName = "" Then
+                        tdatenreihe = hproj.getAllPersonalKosten
+                    Else
+                        tdatenreihe = hproj.getPersonalKosten(roleName, True)
+                    End If
+
                 End If
                 gesamt_summe = tdatenreihe.Sum
 
@@ -5877,18 +5905,22 @@ Public Module Projekte
                     End With
                 End If
 
-               
+
 
             End With
 
             If auswahl = 1 Then
                 ' tk 12.6.17 
                 'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+                Dim anfText As String = repMessages.getmsg(159)
+                If roleName <> "" Then
+                    anfText = anfText & " " & roleName
+                End If
                 If Not IsNothing(vglproj) Then
                     'titelTeile(0) = repMessages.getmsg(159) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
-                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
+                    titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("##,##0.") & " " & zE & ")"
+                    titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " " & zE & ")"
                 End If
 
                 titelTeilLaengen(0) = titelTeile(0).Length
@@ -5913,11 +5945,16 @@ Public Module Projekte
                 ' tk 12.6.17
                 'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
 
+                Dim anfText As String = repMessages.getmsg(160)
+                If roleName <> "" Then
+                    anfText = anfText & " " & roleName
+                End If
+
                 If Not IsNothing(vglproj) Then
                     'titelTeile(0) = repMessages.getmsg(160) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
+                    titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                 Else
-                    titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
+                    titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                 End If
 
                 titelTeilLaengen(0) = titelTeile(0).Length
@@ -5946,7 +5983,7 @@ Public Module Projekte
             With newChtObj.Chart
                 .ChartTitle.Text = diagramTitle
                 .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End With
 
@@ -6010,7 +6047,7 @@ Public Module Projekte
                                              ByVal prcTyp As Integer, ByVal auswahl As Integer)
 
         Dim xlsChart As Excel.Chart = chtobj.Chart
-        Dim kennung As String = " "
+        Dim kennung As String = chtobj.Name
         Dim diagramTitle As String = " "
         Dim plen As Integer
         Dim i As Integer
@@ -6022,10 +6059,10 @@ Public Module Projekte
         Dim vSum As Double = 0.0
         'Dim sumdatenreihe() As Double
         Dim hsum(1) As Double, gesamt_summe As Double
-        Dim anzElemente As Integer
+        'Dim anzElemente As Integer
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
-        Dim ErgebnisListeRC As New Collection
+        'Dim ErgebnisListeRC As New Collection
         'Dim roleCostName As String
         Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
@@ -6035,6 +6072,12 @@ Public Module Projekte
 
         Dim chartType As Excel.XlChartType
         Dim curmaxScale As Double
+
+        ' die Settings herauslesen ...
+        Dim chartTyp As String = ""
+        Dim typID As Integer = -1
+        Dim rcName As String = ""
+        Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, rcName)
 
         ' solnage die repMessages noch nicht in der Datenbank sind, muss man sich über dieses Konstrukt behelfen ... 
         ' (,0) ist deutsch, (,1) ist englisch
@@ -6101,13 +6144,14 @@ Public Module Projekte
         '
         ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
         '
-        If prcTyp = ptElementTypen.roles Then
-            ErgebnisListeRC = hproj.getRoleNames
-        Else
-            ErgebnisListeRC = hproj.getCostNames
-        End If
+        ' tk 9.8.18 braucht man hier nicht 
+        ''If prcTyp = ptElementTypen.roles Then
+        ''    ErgebnisListeRC = hproj.getRoleNames
+        ''Else
+        ''    ErgebnisListeRC = hproj.getCostNames
+        ''End If
 
-        anzElemente = ErgebnisListeRC.Count
+        ''anzElemente = ErgebnisListeRC.Count
 
 
 
@@ -6152,16 +6196,32 @@ Public Module Projekte
 
             If prcTyp = ptElementTypen.roles Then
                 If auswahl = 2 Then
-                    tdatenreihe = hproj.getAllPersonalKosten
-                    If Not IsNothing(vglProj) Then
-                        vdatenreihe = vglProj.getAllPersonalKosten
+                    If rcName = "" Then
+                        tdatenreihe = hproj.getAllPersonalKosten
+                        If Not IsNothing(vglProj) Then
+                            vdatenreihe = vglProj.getAllPersonalKosten
+                        End If
+                    Else
+                        tdatenreihe = hproj.getPersonalKosten(rcName, True)
+                        If Not IsNothing(vglProj) Then
+                            vdatenreihe = vglProj.getPersonalKosten(rcName, True)
+                        End If
                     End If
+
                 Else
-                    tdatenreihe = hproj.getAlleRessourcen
-                    If Not IsNothing(vglProj) Then
-                        vdatenreihe = vglProj.getAlleRessourcen
+                    If rcName = "" Then
+                        tdatenreihe = hproj.getAlleRessourcen
+                        If Not IsNothing(vglProj) Then
+                            vdatenreihe = vglProj.getAlleRessourcen
+                        End If
+                    Else
+                        tdatenreihe = hproj.getRessourcenBedarfNew(rcName, True)
+                        If Not IsNothing(vglProj) Then
+                            vdatenreihe = vglProj.getRessourcenBedarfNew(rcName, True)
+                        End If
                     End If
                 End If
+
             ElseIf prcTyp = ptElementTypen.costs Then
                 If auswahl = 2 Then
                     tdatenreihe = hproj.getGesamtKostenBedarf
@@ -6272,26 +6332,36 @@ Public Module Projekte
 
                 If prcTyp = ptElementTypen.roles Then
                     If auswahl = 1 Then
-                        'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("####0.") & " " & zE & ")"
+
+                        Dim anfText As String = repmsg(4)
+                        If rcName <> "" Then
+                            anfText = anfText & " " & rcName
+                        End If
+
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
                             'titelTeile(0) = repmsg(4) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
-                            titelTeile(0) = repmsg(4) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
+                            titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
-                            titelTeile(0) = repmsg(4) & " (" & gesamt_summe.ToString("##,##0.") & " " & zE & ")"
+                            titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " " & zE & ")"
                         End If
                         titelTeile(1) = ""
 
                     ElseIf auswahl = 2 Then
-                        'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
+
+                        Dim anfText As String = repmsg(0)
+                        If rcName <> "" Then
+                            anfText = anfText & " " & rcName
+                        End If
+
                         If Not IsNothing(vglProj) Then
                             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
                             'titelTeile(0) = repmsg(0) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(0) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
+                            titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                         Else
                             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
-                            titelTeile(0) = repmsg(0) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
+                            titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                         End If
                         titelTeile(1) = ""
                     Else
@@ -6351,9 +6421,10 @@ Public Module Projekte
     ''' 2: Diagramm zeigt Personal-Kosten</param>
     ''' <param name="changeScale">gibt an, ob der Scale ggf an neue Werte angepasst werden muss</param>
     ''' <remarks>wenn es aus der Time Machine aus aufgerufen wird, darf der Scale gerade nicht angepasst werden </remarks>
-    Public Sub updateRessBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, _
-                                         ByRef chtobj As Excel.ChartObject, _
-                                         ByVal auswahl As Integer, ByVal changeScale As Boolean)
+    Public Sub updateRessBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                         ByRef chtobj As Excel.ChartObject,
+                                         ByVal auswahl As Integer, ByVal changeScale As Boolean,
+                                         ByVal roleName As String)
 
 
         Dim kennung As String = " "
@@ -6367,16 +6438,16 @@ Public Module Projekte
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim gesamt_Summe As Double
-       
-        Dim anzRollen As Integer
+
+        'Dim anzRollen As Integer
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
-        Dim ErgebnisListeR As New Collection
+        'Dim ErgebnisListeR As New Collection
         'Dim roleName As String
         Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
-        Dim tmpCollection As New Collection
+        'Dim tmpCollection As New Collection
         Dim maxlenTitle1 As Integer = 20
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -6386,8 +6457,8 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
 
-        tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
+        'tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
+        'kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
 
 
         '
@@ -6404,14 +6475,15 @@ Public Module Projekte
             End If
         End If
 
-        '
-        ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
-        '
-        '
-        ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
-        '
-        ErgebnisListeR = hproj.getRoleNames
-        anzRollen = ErgebnisListeR.Count
+        ' tk , braucht man hier nicht 
+        ''
+        '' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
+        ''
+        ''
+        '' hole die Anzahl Rollen, die in diesem Projekt vorkommen
+        ''
+        'ErgebnisListeR = hproj.getRoleNames
+        'anzRollen = ErgebnisListeR.Count
 
 
 
@@ -6453,9 +6525,18 @@ Public Module Projekte
             End Try
 
             If auswahl = 1 Then
-                tdatenreihe = hproj.getAlleRessourcen
+                If roleName = "" Then
+                    tdatenreihe = hproj.getAlleRessourcen
+                Else
+                    tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
+                End If
+
             Else
-                tdatenreihe = hproj.getAllPersonalKosten
+                If roleName = "" Then
+                    tdatenreihe = hproj.getAllPersonalKosten
+                Else
+                    tdatenreihe = hproj.getPersonalKosten(roleName, True)
+                End If
             End If
             gesamt_Summe = tdatenreihe.Sum
 
@@ -6531,7 +6612,7 @@ Public Module Projekte
                     End With
                 End With
             End If
-            
+
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
@@ -6567,27 +6648,36 @@ Public Module Projekte
         If auswahl = 1 Then
             ' tk 12.6.17 
             'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")" & vbLf & hproj.getShapeText & vbLf
+            Dim anfText As String = repMessages.getmsg(159)
+            If roleName <> "" Then
+                anfText = anfText & " " & roleName
+            End If
             If Not IsNothing(vglProj) Then
-                'titelTeile(0) = repMessages.getmsg(159) & " (" & vSum.ToString("####0.") & " / " & gesamt_Summe.ToString("####0.") & " " & zE & ")"
-                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
+                'titelTeile(0) = repMessages.getmsg(159) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
+                titelTeile(0) = anfText & " (" & gesamt_Summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
             Else
-                titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_Summe.ToString("##,##0.") & " " & zE & ")"
+                titelTeile(0) = anfText & " (" & gesamt_Summe.ToString("##,##0.") & " " & zE & ")"
             End If
 
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = ""
-            
+
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
         ElseIf auswahl = 2 Then
             ' tk 12.6.17
             'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")" & vbLf & hproj.getShapeText & vbLf
+            Dim anfText As String = repMessages.getmsg(160)
+            If roleName <> "" Then
+                anfText = anfText & " " & roleName
+            End If
+
             If Not IsNothing(vglProj) Then
-                'titelTeile(0) = repMessages.getmsg(160) & " (" & vSum.ToString("####0.") & " / " & gesamt_Summe.ToString("####0.") & " T€" & ")"
-                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
+                'titelTeile(0) = repMessages.getmsg(160) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
+                titelTeile(0) = anfText & " (" & gesamt_Summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
             Else
-                titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_Summe.ToString("##,##0.") & " T€" & ")"
+                titelTeile(0) = anfText & " (" & gesamt_Summe.ToString("##,##0.") & " T€" & ")"
             End If
 
             titelTeilLaengen(0) = titelTeile(0).Length
@@ -6607,15 +6697,15 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' Änderung tk: wieder mit reingenmmen, da ja jetzt zu Beginn die fontsize1, ..2 bestimmt werden 
                 .ChartTitle.Font.Size = CSng(fontSize1)
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = CSng(fontSize2)
-
             End If
 
 
         End With
 
-        chtobj.Name = kennung
+        ' tk, 9.8.18 das hat ja schon den richtigen Namen 
+        'chtobj.Name = kennung
 
 
 

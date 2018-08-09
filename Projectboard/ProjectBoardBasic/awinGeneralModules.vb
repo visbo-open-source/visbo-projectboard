@@ -7023,7 +7023,7 @@ Public Module awinGeneralModules
                                             createdPrograms = createdPrograms + 1
                                             projectConstellations.Add(current1program)
 
-                                            ' jetzt das union-Projekt erstellen ; wird aktuell noch nicht gemacht ...
+                                            ' jetzt das union-Projekt erstellen ; 
                                             Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                                             ' Status gleich auf 1: beauftragt setzen 
@@ -7712,7 +7712,8 @@ Public Module awinGeneralModules
     ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
     ''' </summary>
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer)
+    Public Sub ImportAllianzType3(ByVal monat As Integer, Optional readAll As Boolean = False)
+
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -7739,6 +7740,11 @@ Public Module awinGeneralModules
 
         ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
         Dim referatsCollection As New Collection
+
+        Dim lastValidMonth As Integer = monat
+        If readAll Then
+            lastValidMonth = 12
+        End If
 
         ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
         ' das aktive Sheet muss das richtige sein ... und die richtige Header Struktur haben 
@@ -7851,7 +7857,7 @@ Public Module awinGeneralModules
                 Dim colMonth As Integer = CType(.Range("I1"), Excel.Range).Column
                 Dim colEuroActuals As Integer = CType(.Range("L1"), Excel.Range).Column
                 Dim colReferat As Integer = CType(.Range("A1"), Excel.Range).Column
-
+                Dim colPTZuweisung As Integer = CType(.Range("J1"), Excel.Range).Column
 
                 Dim cacheProjekte As New clsProjekteAlle
 
@@ -7898,7 +7904,8 @@ Public Module awinGeneralModules
                         End Try
 
                         Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
-                        Dim curEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
+                        Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
+                        Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
 
                         Dim shallContinue As Boolean = False
                         Dim oldProj As clsProjekt = Nothing
@@ -7930,7 +7937,15 @@ Public Module awinGeneralModules
                             shallContinue = (handledNames.Item(tmpPName).Length > 0)
                         End If
 
-                        If shallContinue And curMonat >= 1 And curMonat <= monat And curEuroValue >= 0 Then
+                        If Not readAll Then
+                            shallContinue = shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0
+                        Else
+                            ' readAll:
+                            shallContinue = shallContinue And curMonat >= 1 And curMonat <= lastValidMonth And curZuwPTValue >= 0
+                        End If
+
+                        If shallContinue Then
+                            'If shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0 Then
                             ' nur dann handelt es sich um ein zuordenbares Projekt ... 
                             ' nur dann geht es um gültige Werte
 
@@ -7944,6 +7959,36 @@ Public Module awinGeneralModules
                             If Not IsNothing(oldProj) Then
 
                                 Dim roleName As String = getAllianzRoleNameFromValue(fullRoleName, isExtern)
+
+                                ' tk 7.8.18, um zu verhindern, dass Rollen mehrfach gezählt werden, wenn sie in der Config Datei / Ist-Daten  Datei zu unterschiedlichen Referaten gehören ...   
+                                ' sicherstellen, dass roleName auch existiert ..
+                                If roleName <> "" Then
+                                    If Not RoleDefinitions.hasAnyChildParentRelationsship(roleName, referatsCollection) Then
+                                        ' in diesem Fall muss die Eltern-Rolle der RoleName noch aufgenommen werden ..
+                                        Dim tmpparentRole As String = ""
+                                        Try
+                                            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+
+                                            tmpparentRole = RoleDefinitions.getParentRoleOf(roleUID).name
+                                            If Not referatsCollection.Contains(tmpparentRole) Then
+                                                referatsCollection.Add(tmpparentRole, tmpparentRole)
+                                            End If
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                        ReDim logArray(4)
+                                        logArray(0) = "Rolle hat anderes Referat wie in Konfiguration"
+                                        logArray(1) = ""
+                                        logArray(2) = tmpReferat
+                                        logArray(3) = fullRoleName
+                                        logArray(4) = tmpparentRole
+                                        Call logfileSchreiben(logArray)
+
+                                    End If
+                                End If
+
+
 
                                 If roleName = "" And tmpReferat <> "" Then
                                     ' dann ersetzen durch 
@@ -7985,7 +8030,10 @@ Public Module awinGeneralModules
                                     ' Aufbauen des Eintrags
                                     Dim roleValues As New SortedList(Of String, Double())
                                     Dim tmpValues() As Double
-                                    ReDim tmpValues(monat - 1)
+
+                                    'ReDim tmpValues(monat - 1)
+                                    ' lastValidMonth ist entweder der monat oder aber 12, falls alles gelesen werden soll 
+                                    ReDim tmpValues(lastValidMonth - 1)
 
                                     Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
 
@@ -7998,9 +8046,16 @@ Public Module awinGeneralModules
                                         If Not validProjectNames.ContainsKey(pName) Then
 
                                             roleValues = New SortedList(Of String, Double())
-                                            ReDim tmpValues(monat - 1)
+                                            ' wird doch überhaupt nicht gebraucht
+                                            'ReDim tmpValues(monat - 1)
+                                            If readAll Then
+                                                ' es handelt sich um Zuweisung PT, also muss nichts umgerechnet werden 
+                                                tmpValues(curMonat - 1) = curZuwPTValue
+                                            Else
+                                                ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
+                                                tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                            End If
 
-                                            tmpValues(curMonat - 1) = curEuroValue / tagessatz
 
                                             roleValues.Add(roleName, tmpValues)
                                             validProjectNames.Add(pName, roleValues)
@@ -8011,12 +8066,24 @@ Public Module awinGeneralModules
                                                 ' rolle ist bereits enthalten 
                                                 ' also summieren 
                                                 tmpValues = roleValues.Item(roleName)
-                                                tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curEuroValue / tagessatz
+                                                If readAll Then
+                                                    tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curZuwPTValue
+                                                Else
+                                                    tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
+                                                End If
 
                                             Else
                                                 ' Rolle ist noch nicht enthalten 
-                                                ReDim tmpValues(monat - 1)
-                                                tmpValues(curMonat - 1) = curEuroValue / tagessatz
+                                                'ReDim tmpValues(monat - 1)
+
+                                                If readAll Then
+                                                    ' es handelt sich um Zuweisung PT, also muss nichts umgerechnet werden 
+                                                    tmpValues(curMonat - 1) = curZuwPTValue
+                                                Else
+                                                    ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
+                                                    tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                                End If
+
                                                 roleValues.Add(roleName, tmpValues)
                                             End If
 
@@ -8112,7 +8179,8 @@ Public Module awinGeneralModules
                         ' True: die Werte werden auf Null gesetzt 
                         Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
 
-                        oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                        'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                        oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastvalidmonth, True)
                         'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
 
                         newIstValue = calcIstValueOf(vPKvP.Value)
@@ -8125,7 +8193,8 @@ Public Module awinGeneralModules
                         Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
                         Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
                         ' Test tk 
-                        Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                        'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                        Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
 
                         If gesamtNachher <> checkNachher Then
                             Dim abc As Integer = 0
@@ -13968,8 +14037,8 @@ Public Module awinGeneralModules
 
                     End Try
                 Else
-                    ' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
-                    ' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
+                    '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
+                    '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
                     If AlleProjektSummaries.Containskey(kvp.Key) Then
                         AlleProjektSummaries.Remove(kvp.Key, updateCurrentConstellation:=False)
                     End If
@@ -13982,10 +14051,13 @@ Public Module awinGeneralModules
                 End If
 
 
-
             Next
 
             If showSummaryProject Then
+                ' damit der Name des einen Portfolios übernommen wird ...
+                If constellationsToShow.Count = 1 Then
+                    activeSummaryConstellation.constellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
+                End If
                 constellationsToShow.Liste.Clear()
                 constellationsToShow.Add(activeSummaryConstellation)
                 showSummaryProject = False
@@ -26709,6 +26781,12 @@ Public Module awinGeneralModules
 
         If Not (hproj Is Nothing) Then
 
+            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+            Dim tmpVariantName As String = ""
+            If hproj.projectType = ptPRPFType.portfolio Then
+                tmpVariantName = portfolioVName
+            End If
+
             With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentWsName), Excel.Worksheet)
                 Dim tmpArray() As String
                 Dim anzDiagrams As Integer
@@ -26747,13 +26825,15 @@ Public Module awinGeneralModules
 
                                         Case PTprdk.PersonalBalken
                                             Dim vglProj As clsProjekt = Nothing
+
+
                                             Try
-                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
 
 
                                         Case PTprdk.PersonalPie
@@ -26767,7 +26847,7 @@ Public Module awinGeneralModules
 
                                             Dim vglProj As clsProjekt = Nothing
                                             Try
-                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try

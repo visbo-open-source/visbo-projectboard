@@ -361,10 +361,15 @@ Public Module testModule
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                         End If
 
+                        ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                        Dim tmpVariantName As String = ""
+                        If hproj.projectType = ptPRPFType.portfolio Then
+                            tmpVariantName = portfolioVName
+                        End If
 
-                        bproj = request.retrieveFirstContractedPFromDB(hproj.name)
+                        bproj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, storedAtOrBefore:=lDate)
+                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
 
                         If lproj.timeStamp = bproj.timeStamp Then
                             lproj = Nothing
@@ -2057,7 +2062,15 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            If qualifier2 <> "" Then
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalbedarf: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -2065,13 +2078,15 @@ Public Module testModule
                                         compID = PTprdk.PersonalPie
                                     End If
 
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
-                                    Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
-                                        boxName = boxName & " (" & gesamtSumme.ToString &
-                                        " " & awinSettings.kapaEinheit & ")"
-                                    End If
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' immer den Text nehmen ..
+                                    ''If obj.Chart.HasTitle Then
+                                    ''    boxName = obj.Chart.ChartTitle.Text
+                                    ''Else
+                                    ''    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                    ''    boxName = boxName & " (" & gesamtSumme.ToString &
+                                    ''    " " & awinSettings.kapaEinheit & ")"
+                                    ''End If
 
 
                                     reportObj = obj
@@ -2101,7 +2116,16 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            If qualifier2 <> "" Then
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
                                             compID = PTprdk.PersonalBalken
                                         End If
 
@@ -2110,13 +2134,14 @@ Public Module testModule
                                         compID = PTprdk.PersonalPie
                                     End If
 
-
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
-                                    Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
-                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                    End If
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' tk 9.8.18
+                                    'If obj.Chart.HasTitle Then
+                                    '    boxName = obj.Chart.ChartTitle.Text
+                                    'Else
+                                    '    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                    '    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    'End If
 
 
                                     reportObj = obj
@@ -2531,7 +2556,16 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    If qualifier2 <> "" Then
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist1C Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
+
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
@@ -2551,7 +2585,16 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    If qualifier2 <> "" Then
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist2C Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
+
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke

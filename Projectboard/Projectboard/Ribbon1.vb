@@ -4998,7 +4998,8 @@ Imports System.IO
                             End If
 
                             If monat >= 1 And monat <= 12 Then
-                                Call ImportAllianzType3(monat)
+                                'Call ImportAllianzType3(monat)
+                                Call ImportAllianzType3(monat, readAll:=True)
                             End If
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
@@ -6936,6 +6937,12 @@ Imports System.IO
 
         If ok And Not IsNothing(hproj) Then
 
+            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+            Dim tmpVariantName As String = ""
+            If hproj.projectType = ptPRPFType.portfolio Then
+                tmpVariantName = portfolioVName
+            End If
+
             Dim repObj As Excel.ChartObject
             appInstance.EnableEvents = False
             appInstance.ScreenUpdating = False
@@ -6962,7 +6969,7 @@ Imports System.IO
                                                          top, left, width, height, False)
 
                 Try
-                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
@@ -7049,6 +7056,12 @@ Imports System.IO
 
                 If ok Then
 
+                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                    Dim tmpVariantName As String = ""
+                    If hproj.projectType = ptPRPFType.portfolio Then
+                        tmpVariantName = portfolioVName
+                    End If
+
                     Dim repObj As Excel.ChartObject
                     appInstance.EnableEvents = False
                     appInstance.ScreenUpdating = False
@@ -7068,7 +7081,7 @@ Imports System.IO
                     Try
 
                         Try
-                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
@@ -7156,6 +7169,11 @@ Imports System.IO
                     Exit Sub
                 End Try
 
+                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                Dim tmpVariantName As String = ""
+                If hproj.projectType = ptPRPFType.portfolio Then
+                    tmpVariantName = portfolioVName
+                End If
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -7171,7 +7189,7 @@ Imports System.IO
 
                 Try
                     Try
-                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                     Catch ex As Exception
                         vglProj = Nothing
                     End Try
@@ -7726,41 +7744,49 @@ Imports System.IO
                     Exit Sub
                 End Try
 
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.getShapeText
-                    End If
-                Else
-                    projekthistorie = New clsProjektHistorie
-                End If
+                ' tk, 7.8.18 wird nicht mehr gebraucht .... wurde ersetzt durch retrieveFirstContracted ...
+                ''If Not projekthistorie Is Nothing Then
+                ''    If projekthistorie.Count > 0 Then
+                ''        vglName = projekthistorie.First.getShapeText
+                ''    End If
+                ''Else
+                ''    projekthistorie = New clsProjektHistorie
+                ''End If
 
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                End With
+                ''With hproj
+                ''    pName = .name
+                ''    variantName = .variantName
+                ''End With
 
-                If vglName <> hproj.getShapeText Then
-                    If request.pingMongoDb() Then
-                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                        projekthistorie.Add(Date.Now, hproj)
-                    Else
-                        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
-                        projekthistorie.clear()
-                    End If
+                ''If vglName <> hproj.getShapeText Then
+                ''    If request.pingMongoDb() Then
+                ''        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                ''        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
+                ''                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                ''        projekthistorie.Add(Date.Now, hproj)
+                ''    Else
+                ''        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+                ''        projekthistorie.clear()
+                ''    End If
 
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    Dim lastElem As Integer = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, hproj)
+                ''Else
+                ''    ' der aktuelle Stand hproj muss hinzugefügt werden 
+                ''    Dim lastElem As Integer = projekthistorie.Count - 1
+                ''    projekthistorie.RemoveAt(lastElem)
+                ''    projekthistorie.Add(Date.Now, hproj)
+                ''End If
+                ''Dim nrSnapshots As Integer = projekthistorie.Count
+
+                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                Dim tmpVariantName As String = ""
+                If hproj.projectType = ptPRPFType.portfolio Then
+                    tmpVariantName = portfolioVName
                 End If
 
                 ' das bproj bestimmen 
-                bproj = request.retrieveFirstContractedPFromDB(hproj.name)
+                bproj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
 
-                Dim nrSnapshots As Integer = projekthistorie.Count
+
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
