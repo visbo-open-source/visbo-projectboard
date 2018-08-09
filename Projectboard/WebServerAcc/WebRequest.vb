@@ -53,115 +53,6 @@ Public Class Request
 
 
 
-
-    ''' <summary>
-    ''' Sendet einen Request vom Typ method an den Server. Außerdem wird hier auch die Antwort empfangen und an die aufrufenden Routine zurückgegeben
-    ''' </summary>
-    ''' <param name="uri">Url fur den REst-Request</param>
-    ''' <param name="data">Daten für die Aufrufe von POST/PUT</param>
-    ''' <param name="method">Typ des Rest-Request  GET/POST/PUT/DELETE</param>
-    Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
-        'Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
-
-        Dim response As HttpWebResponse = Nothing
-
-        Try
-            Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-
-            request.Method = method
-            request.ContentType = "application/json"
-            request.Headers.Add("access-key", token)
-            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
-
-            request.ContentLength = data.Length
-
-            If request.ContentLength > 0 Then
-                Try
-                    Using requestStream As Stream = request.GetRequestStream()
-                        ' Send the data.
-                        requestStream.Write(data, 0, data.Length)
-                        requestStream.Close()
-                        requestStream.Dispose()
-                    End Using
-                Catch ex As Exception
-                    'Call MsgBox("Fehler bei GetRequestStream:  " & ex.Message)
-                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
-                End Try
-            End If
-
-            Try
-                response = request.GetResponse()
-
-            Catch ex As WebException
-
-                response = ex.Response
-            End Try
-
-        Catch ex1 As Exception
-            Call MsgBox(ex1.Message)
-            Throw
-        End Try
-
-        Return response
-
-    End Function
-
-    Private Function ReadResponseContent(ByRef httpresp As HttpWebResponse) As String
-        'Private Function ReadResponseContent(ByRef resp As HttpWebResponse) As String
-        Try
-
-            If IsNothing(httpresp) Then
-                Throw New ArgumentNullException("HttpWebResponse ist Nothing")
-            Else
-                Dim statcode As HttpStatusCode = httpresp.StatusCode
-                Using sr As New StreamReader(httpresp.GetResponseStream)
-                    Return sr.ReadToEnd()
-                End Using
-                If statcode <> HttpStatusCode.OK Then
-
-                    Call MsgBox("( " & CType(statcode, Integer).ToString & ") : " & httpresp.StatusDescription)
-                    Throw New ArgumentException(statcode.ToString & ":" & httpresp.StatusDescription)
-                Else
-                    Using sr As New StreamReader(httpresp.GetResponseStream)
-                        Return sr.ReadToEnd()
-                    End Using
-                End If
-            End If
-
-        Catch ex As Exception
-            Throw New ArgumentException("ReadResponseContent:" & ex.Message)
-        End Try
-    End Function
-
-
-    ''' <summary>
-    ''' diese Funktion konvertiert die Struktur, die für diesen Server-Request benötigt wird (type) in ein ByteArray im Json-Format
-    ''' </summary>
-    ''' <param name="dataClass"></param>
-    ''' <param name="type"></param>
-    ''' <returns>Object</returns>
-    Private Function serverInputDataJson(ByVal dataClass As Object, ByVal type As String) As Byte()
-        'Private Function serverInputDataJson(ByVal dataClass As Object, ByVal type As String) As Byte()
-
-        serverInputDataJson = Nothing
-        Dim encoding As New System.Text.UTF8Encoding()
-        Dim bytes() As Byte = Nothing
-        'Dim bufferlge As Int32 = 256
-        'Dim ms As New MemoryStream(bufferlge)
-        Dim hstr As String = ""
-        'Dim ok As Boolean = True
-
-        Try
-            hstr = JsonConvert.SerializeObject(dataClass)
-            'serverInputDataJson = encoding.GetBytes(hstr)
-            serverInputDataJson = encoding.GetBytes(JsonConvert.SerializeObject(dataClass))
-
-        Catch ex As Exception
-            Call MsgBox("Fehler in serverInputDataJson " & type & ": " & ex.Message)
-        End Try
-
-    End Function
-
     ''' <summary>
     '''  'Verbindung mit der Datenbank aufbauen (mit Angabe von Username und Passwort)
     ''' </summary>
@@ -504,7 +395,7 @@ Public Class Request
                 ' gewünschte Variante vom Server anfordern
                 Dim allVPv As New List(Of clsProjektWebLong)
                 allVPv = GETallVPvLong(vpid, , variantname, storedAtOrBefore)
-                If allVPv.Count = 1 Then
+                If allVPv.Count > 0 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
                     webProj.copyto(hproj)
                     result = hproj
@@ -593,6 +484,7 @@ Public Class Request
         Try
 
             Dim webVP As New clsWebVP
+            Dim vpErg As New List(Of clsVP)
             Dim data() As Byte
 
             Dim pname As String = projekt.name
@@ -615,49 +507,53 @@ Public Class Request
                 VP.users.Add(user)
                 VP.name = pname
                 VP.vcid = aktVCid
-                data = serverInputDataJson(VP, typeRequest)
 
-                Dim Antwort As String
-                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-                    Antwort = ReadResponseContent(httpresp)
-                    webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
-                End Using
+                vpErg = POSTOneVP(VP)
+
+                ''data = serverInputDataJson(VP, typeRequest)
+
+                ''Dim Antwort As String
+                ''Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                ''    Antwort = ReadResponseContent(httpresp)
+                ''    webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+                ''End Using
 
 
-                Call MsgBox(webVP.message)
+                '' 'Call MsgBox(webVP.message)
 
-                If webVP.state = "success" Then
-                    ' vpid für neues Projekt merken, wird für speichern von vpv benötigt
-                    vpid = webVP.vp.ElementAt(0)._id
+                ''If webVP.state = "success" Then
+                ''    ' vpid für neues Projekt merken, wird für speichern von vpv benötigt
+                ''    vpid = webVP.vp.ElementAt(0)._id
+                ''    storedVP = (vpid <> "")
+                ''End If
+                If vpErg.Count > 0 Then
+
+                    ' vpErg.ElementAt(0) ist nun das aktuelle VP
+                    vpid = vpErg.ElementAt(0)._id
+                    aktvp = vpErg.ElementAt(0)
                     storedVP = (vpid <> "")
+
+                Else
+                    Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
 
             End If
 
             ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
-            If vname <> "" Then
+            Dim storedVPVariant As Boolean = False
+            If vname <> "" And aktvp.Variant.Count > 0 Then
                 For Each var As clsVPvariant In aktvp.Variant
                     If var.variantName = vname Then
-                        storedVP = storedVP And True
+                        storedVPVariant = True
                     End If
                 Next
             End If
 
             ' wenn Variante noch nicht vorhanden, so muss sie angelegt werden
-            If Not storedVP Then
-                Dim typeRequest As String = "/vp"
-                Dim serverUriString As String = serverUriName & typeRequest & "/" & vpid & "/variant"
-                Dim serverUri As New Uri(serverUriString)
+            If Not storedVPVariant Then
 
-                Dim var As New clsVPvariant
+                storedVPVariant = POSTVPVariant(vpid, vname)
 
-                data = serverInputDataJson(var, typeRequest)
-
-                Dim Antwort As String
-                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-                    Antwort = ReadResponseContent(httpresp)
-                    webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
-                End Using
             End If
 
             ' Projekt ist bereits in VisboProjects Collection gespeichert, es existiert eine vpid
@@ -932,57 +828,28 @@ Public Class Request
     ''' <param name="type"></param>
     ''' <returns>true -  es darf geändert werden
     '''          false - es darf nicht geändert werden</returns>
-    Public Function checkChgPermission(ByVal pName As String, ByVal vName As String, ByVal userName As String, Optional type As Integer = 0) As Boolean
+    Public Function checkChgPermission(ByVal pName As String, ByVal vName As String, ByVal userName As String, Optional type As Integer = ptPRPFType.project) As Boolean
 
-        'Dim result As Boolean = False
-        Dim result As Boolean = True
+        Dim result As Boolean = False
+
 
         Try
+            ' TODO: ur: type muss im ReST-Server auf unsere Enumeration geändert werden: 
+            '           ptPRPFType.portfolio = 1
+            '           ptPRPFType.project = 0
+            '           ptPRPFType.projectTemplate = 2
+            type = 1
+            Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, type)
 
+            If wpItem.isProtected Then
+                result = (wpItem.userName = aktUser.email)
+            Else
+                result = True
+            End If
 
-
-
-            ''clsWriteProtectionItemDB wpItemDB = New clsWriteProtectionItemDB();
-
-            ''    var Filter() = Builders < clsWriteProtectionItemDB > .Filter.Eq("pName", pName) &
-            ''                 Builders < clsWriteProtectionItemDB > .Filter.Eq("vName", vName) &
-            ''                 Builders < clsWriteProtectionItemDB > .Filter.Eq("type", type);
-            ''    //var sort = Builders<clsWriteProtectionItemDB>.Sort.Ascending("pvName");
-
-            ''    bool alreadyExisting = CollectionWriteProtections.AsQueryable < clsWriteProtectionItemDB > ()
-            ''                   .Any(wp >= wp.pName == pName && wp.vName == vName && wp.type == type);
-
-            ''    If (alreadyExisting) Then
-            ''                        {
-
-            ''        wpItemDB = CollectionWriteProtections.Find(Filter).ToList().Last();
-            ''        //var fresult = CollectionWriteProtections.Find(filter).ToList();
-            ''        If (wpItemDB.isProtected) Then
-            ''                                {
-            ''            Return (wpItemDB.userName == userName);   
-            ''        }
-            ''        Else
-            ''        {
-            ''            Return True;
-            ''        }
-
-            ''    }
-            ''    Else
-            ''    {
-            ''        Return True;
-            ''    }
-            ''}
-
-            ''Catch (Exception)
-            ''{
-
-            ''    Return False;
-
-            ''}
         Catch ex As Exception
 
         End Try
-
 
         checkChgPermission = result
     End Function
@@ -996,11 +863,46 @@ Public Class Request
     ''' <param name="vName"></param>
     ''' <param name="type"></param>
     ''' <returns></returns>
-    Public Function getWriteProtection(ByVal pName As String, ByVal vName As String, Optional type As Integer = 0) As clsWriteProtectionItem
+    Public Function getWriteProtection(ByVal pName As String, ByVal vName As String, Optional type As Integer = ptPRPFType.project) As clsWriteProtectionItem
         Dim result As New clsWriteProtectionItem
+        Try
+            type = 1  ' TODO: aktuell in ReSTServer für Projekt
+            Dim vp As clsVP = GETvpid(pName, type)
+            result.pvName = calcProjektKey(pName, vName)
+            result.isProtected = False
+            result.isSessionOnly = True
+            result.permanent = False
+            result.lastDateSet = Nothing
+            result.lastDateReleased = Nothing
+            result.userName = ""
+            result.type = type
 
+            If vp.lock.Count > 0 Then
+                For Each vplock As clsVPLock In vp.lock
+
+                    If vplock.variantName = vName Then
+                        If vplock.expiresAt.ToLocalTime > Date.Now Then
+                            result.isProtected = True
+                        Else
+                            result.isProtected = False
+                        End If
+                        result.isSessionOnly = True
+                        result.lastDateSet = vplock.createdAt.ToLocalTime
+                        result.userName = vplock.email
+                        Exit For
+
+                    End If
+                Next
+            End If
+
+
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in getWriteProtection: " & ex.Message)
+        End Try
 
         getWriteProtection = result
+
     End Function
 
 
@@ -1015,7 +917,7 @@ Public Class Request
 
         Try
             Dim pname As String = Projekte.getPnameFromKey(wpItem.pvName)
-            Dim vname As String = Projekte.getPnameFromKey(wpItem.pvName)
+            Dim vname As String = Projekte.getVariantnameFromKey(wpItem.pvName)
 
             Dim aktvp As clsVP = GETvpid(pname)
             Dim vpid As String = aktvp._id
@@ -1028,7 +930,19 @@ Public Class Request
                 End If
             Next
             If vpid <> "" And variantExists Then
-                result = POSTVPLock(vpid, vname)
+
+                If wpItem.isProtected Then
+                    result = POSTVPLock(vpid, vname)
+                Else
+                    result = DELETEVPLock(vpid, vname)
+                End If
+
+            Else
+                If wpItem.isProtected Then
+                    result = POSTVPLock(vpid, "")
+                Else
+                    result = DELETEVPLock(vpid, "")
+                End If
             End If
 
         Catch ex As Exception
@@ -1099,18 +1013,22 @@ Public Class Request
         Dim result As Boolean = False
 
         Try
-            Dim vpType As Integer = PTProjektType.portfolio
+            Dim vpType As Integer = ptPRPFType.portfolio
             Dim cVPf As New clsVPf
             Dim cVP As New clsVP
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New List(Of clsVPf)
 
-            cVP = GETvpid(c.constellationName, PTProjektType.portfolio)
+            ' TODO: korrigieren, wenn ReST-Server geändert wurde
+            'cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
+            cVP = GETvpid(c.constellationName, vpType:=2)
 
             cVPf = clsConst2clsVPf(c)
 
             If cVP._id = "" Then
-                Call MsgBox("es ist noch kein VisboPortfolio angelegt")
+                '' ur: war nur zu Testzwecken: 
+                '' Call MsgBox("es ist noch kein VisboPortfolio angelegt")
+
                 ' Portfolio-Name
                 cVP.name = cVPf.name
                 ' berechtiger User
@@ -1142,21 +1060,6 @@ Public Class Request
 
             cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
 
-            ' die zugehörigen vpids in die allItems mit aufnehmen
-            For Each item In cVPf.allItems
-                item.vpid = GETvpid(item.name)._id
-            Next
-
-            ' RestServer erwartet die sortlist als array von vpids
-            Dim serverSortlist As New List(Of String)
-            Dim serverItem As String = ""
-            For Each item In cVPf.sortList
-                serverItem = GETvpid(item)._id
-                serverSortlist.Add(serverItem)
-            Next
-            cVPf.sortList.Clear()
-            cVPf.sortList = serverSortlist
-
 
             If cVP._id <> "" Then
 
@@ -1181,33 +1084,32 @@ Public Class Request
     ''' <param name="c"></param>
     ''' <returns></returns>
     Public Function removeConstellationFromDB(ByVal c As clsConstellation) As Boolean
-        removeConstellationFromDB = False
+        Dim result As Boolean = False
+
+        Try
+            Dim vpType As Integer = ptPRPFType.portfolio
+            Dim cVPf As New clsVPf
+            Dim cVP As New clsVP
+            Dim newVP As New List(Of clsVP)
+            Dim newVPf As New SortedList(Of Date, clsVPf)
+
+            ' TODO: korrigieren, wenn ReST-Server geändert wurde
+            'cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
+            cVP = GETvpid(c.constellationName, vpType:=2)
+            newVPf = GETallVPf(cVP._id, Date.Now)
+            If newVPf.Count = 1 Then
+                result = DELETEOneVPf(cVP._id, newVPf.ElementAt(0).Value._id)
+            Else
+                Call MsgBox("Es gibt mehrer Portfolio-Versionen zu: " & c.constellationName)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        removeConstellationFromDB = result
+
     End Function
-
-
-
-    ''' <summary>
-    '''  speichert einen Filter mit Namen 'name' in der Datenbank
-    ''' </summary>
-    ''' <param name="ptFilter"></param>
-    ''' <param name="selfilter"></param>
-    ''' <returns></returns>
-    Public Function storeFilterToDB(ByVal ptFilter As clsFilter, ByRef selfilter As Boolean) As Boolean
-        storeFilterToDB = False
-    End Function
-
-
-
-    ''' <summary>
-    ''' Alle Abhängigkeiten aus der Datenbank lesen
-    ''' und als Ergebnis ein Liste von Abhängigkeiten zurückgeben
-    ''' </summary>
-    ''' <returns></returns>
-    Public Function retrieveDependenciesFromDB() As clsDependencies
-        retrieveDependenciesFromDB = New clsDependencies
-    End Function
-
-
 
     ''' <summary>
     ''' holt von allen Projekt-Varianten in AlleProjekte die Write-Protections
@@ -1215,7 +1117,29 @@ Public Class Request
     ''' <param name="AlleProjekte"></param>
     ''' <returns></returns>
     Public Function retrieveWriteProtectionsFromDB(ByVal AlleProjekte As clsProjekteAlle) As SortedList(Of String, clsWriteProtectionItem)
-        retrieveWriteProtectionsFromDB = New SortedList(Of String, clsWriteProtectionItem)
+
+        Dim result As New SortedList(Of String, clsWriteProtectionItem)
+
+        Try
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+
+                Dim wpItem As New clsWriteProtectionItem
+                wpItem.pvName = kvp.Key
+                Dim pname As String = Projekte.getPnameFromKey(kvp.Key)
+                Dim vname As String = Projekte.getVariantnameFromKey(kvp.Key)
+                wpItem = getWriteProtection(pname, vname, ptPRPFType.project)
+
+                If Not result.ContainsKey(wpItem.pvName) Then
+                    result.Add(wpItem.pvName, wpItem)
+                End If
+
+            Next
+        Catch ex As Exception
+
+        End Try
+
+
+        retrieveWriteProtectionsFromDB = result
     End Function
 
 
@@ -1256,26 +1180,6 @@ Public Class Request
     End Function
 
 
-    ''' <summary>
-    ''' liest alle Filter aus der Datenbank 
-    ''' </summary>
-    ''' <param name="selfilter"></param>
-    ''' <returns></returns>
-    Public Function retrieveAllFilterFromDB(ByVal selfilter As Boolean) As SortedList(Of String, clsFilter)
-        retrieveAllFilterFromDB = New SortedList(Of String, clsFilter)
-    End Function
-
-
-    ''' <summary>
-    ''' löscht einen bestimmten Filter aus der Datenbank
-    ''' </summary>
-    ''' <param name="filter"></param>
-    ''' <returns></returns>
-    Public Function removeFilterFromDB(ByVal filter As clsFilter) As Boolean
-
-        removeFilterFromDB = False
-
-    End Function
 
     ''' <summary>
     ''' liest die Rollendefinitionen aus der Datenbank 
@@ -1283,7 +1187,9 @@ Public Class Request
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
     Public Function retrieveRolesFromDB(ByVal storedAtOrBefore As DateTime) As clsRollen
+
         Dim result As New clsRollen()
+
         Try
             If storedAtOrBefore <= Date.MinValue Then
                 storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime()
@@ -1292,6 +1198,7 @@ Public Class Request
             End If
 
             Dim allRoles As New List(Of clsVCrole)
+
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
             allRoles = GETallVCrole(aktVCid)
 
@@ -1316,13 +1223,32 @@ Public Class Request
     ''' wenn insertNewDate = true: speichere eine neue Timestamp-Instanz 
     ''' andernfalls wird die Rolle Replaced 
     ''' </summary>
-    ''' <param name="role"></param>
+    ''' <param name="roleDef"></param>
     ''' <param name="insertNewDate"></param>
     ''' <param name="ts"></param>
     ''' <returns></returns>
-    Public Function storeRoleDefinitionToDB(ByVal role As clsRollenDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
+    Public Function storeRoleDefinitionToDB(ByVal roleDef As clsRollenDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
+
         Dim result As Boolean = False
-        ts = ts.ToUniversalTime()
+        Dim webRoles As New clsWebVCrole
+
+        Try
+            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
+
+            Dim role As New clsVCrole
+            role.copyFrom(roleDef)
+
+            If insertNewDate Then
+                result = POSTOneVCrole(aktVCid, role)
+            Else
+                Dim roleid As String = VRScache.VCrole(role.name)._id
+                role._id = roleid
+                result = PUTOneVCrole(aktVCid, role)
+            End If
+
+        Catch ex As Exception
+
+        End Try
 
         storeRoleDefinitionToDB = result
     End Function
@@ -1553,59 +1479,130 @@ Public Class Request
 
     End Function
 
-
-    ''' <summary>
-    ''' speichert Projekt-Dependencies in DB 
-    ''' </summary>
-    ''' <param name="d"></param>
-    ''' <returns></returns>
-    Public Function storeDependencyofPToDB(ByVal d As clsDependenciesOfP) As Boolean
-
-        Dim result As Boolean = False
-        storeDependencyofPToDB = result
-
-    End Function
-    ''    {
-
-    ''        Try
-    ''        {
-    ''            var depDB = New clsDependenciesOfPDB();
-    ''            depDB.copyFrom(d);
-    ''            depDB.Id = depDB.projectName;
-
-    ''            bool alreadyExisting = CollectionDependencies.AsQueryable < clsDependenciesOfPDB > ()
-    ''.Any(p >= p.projectName == d.projectName);
-
-    ''            If (alreadyExisting)
-    ''            {
-    ''                var filter = Builders < clsDependenciesOfPDB > .Filter.Eq("projectName", d.projectName);
-    ''                var rResult = CollectionDependencies.ReplaceOne(filter, depDB);
-    ''                If (rResult.ModifiedCount > 0)
-    ''                {
-    ''                    Return True;
-    ''                }
-    ''                Else
-    ''                {
-    ''                    Return False;
-    ''                }
-    ''            }
-    ''            Else
-    ''            {
-    ''                CollectionDependencies.InsertOne(depDB);
-    ''                Return True;
-    ''            }
-
-    ''        }
-    ''        Catch (Exception)
-    ''        {
-
-    ''            Return False;
-    ''        }
-
-
     ' ------------------------------------------------------------------------------------------
     '  Interne Funktionen für VisboRestServer - zugriff
     ' --------------------------------------------------------------------------------------------
+
+
+    ''' <summary>
+    ''' Sendet einen Request vom Typ method an den Server. Außerdem wird hier auch die Antwort empfangen und an die aufrufenden Routine zurückgegeben
+    ''' </summary>
+    ''' <param name="uri">Url fur den REst-Request</param>
+    ''' <param name="data">Daten für die Aufrufe von POST/PUT</param>
+    ''' <param name="method">Typ des Rest-Request  GET/POST/PUT/DELETE</param>
+    Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
+        'Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
+
+        Dim response As HttpWebResponse = Nothing
+
+        Try
+            Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+
+            request.Method = method
+            request.ContentType = "application/json"
+            request.Headers.Add("access-key", token)
+            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+
+            request.ContentLength = data.Length
+
+            If request.ContentLength > 0 Then
+                Try
+                    Using requestStream As Stream = request.GetRequestStream()
+                        ' Send the data.
+                        requestStream.Write(data, 0, data.Length)
+                        requestStream.Close()
+                        requestStream.Dispose()
+                    End Using
+                Catch ex As Exception
+                    'Call MsgBox("Fehler bei GetRequestStream:  " & ex.Message)
+                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+                End Try
+            End If
+
+            Try
+                response = request.GetResponse()
+
+            Catch ex As WebException
+
+                response = ex.Response
+            End Try
+
+        Catch ex1 As Exception
+            Call MsgBox(ex1.Message)
+            Throw
+        End Try
+
+        Return response
+
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="httpresp"></param>
+    ''' <returns></returns>
+    Private Function ReadResponseContent(ByRef httpresp As HttpWebResponse) As String
+        'Private Function ReadResponseContent(ByRef resp As HttpWebResponse) As String
+        Try
+
+            If IsNothing(httpresp) Then
+                Throw New ArgumentNullException("HttpWebResponse ist Nothing")
+            Else
+                Dim statcode As HttpStatusCode = httpresp.StatusCode
+                Try
+                    Using sr As New StreamReader(httpresp.GetResponseStream)
+                        Return sr.ReadToEnd()
+                    End Using
+
+                Catch ex As Exception
+
+                End Try
+
+                If statcode <> HttpStatusCode.OK Then
+
+                    Call MsgBox("( " & CType(statcode, Integer).ToString & ") : " & httpresp.StatusDescription)
+                    Throw New ArgumentException(statcode.ToString & ":" & httpresp.StatusDescription)
+                Else
+                    Using sr As New StreamReader(httpresp.GetResponseStream)
+                        Return sr.ReadToEnd()
+                    End Using
+                End If
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("ReadResponseContent:" & ex.Message)
+        End Try
+    End Function
+
+
+    ''' <summary>
+    ''' diese Funktion konvertiert die Struktur, die für diesen Server-Request benötigt wird (type) in ein ByteArray im Json-Format
+    ''' </summary>
+    ''' <param name="dataClass"></param>
+    ''' <param name="type"></param>
+    ''' <returns>Object</returns>
+    Private Function serverInputDataJson(ByVal dataClass As Object, ByVal type As String) As Byte()
+        'Private Function serverInputDataJson(ByVal dataClass As Object, ByVal type As String) As Byte()
+
+        serverInputDataJson = Nothing
+        Dim encoding As New System.Text.UTF8Encoding()
+        Dim bytes() As Byte = Nothing
+        ''ReDim bytes(1028)
+        'Dim bufferlge As Int32 = 256
+        'Dim ms As New MemoryStream(bufferlge)
+        Dim hstr As String = ""
+        'Dim ok As Boolean = True
+
+        Try
+            hstr = JsonConvert.SerializeObject(dataClass)
+            'serverInputDataJson = encoding.GetBytes(hstr)
+            serverInputDataJson = encoding.GetBytes(JsonConvert.SerializeObject(dataClass))
+
+        Catch ex As Exception
+            Call MsgBox("Fehler in serverInputDataJson " & type & ": " & ex.Message)
+        End Try
+
+    End Function
 
 
     ''' <summary>
@@ -1614,7 +1611,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Private Function GETvpid(ByVal projectName As String, Optional ByVal vpType As Integer = PTProjektType.projekt) As clsVP
+    Private Function GETvpid(ByVal projectName As String, Optional ByVal vpType As Integer = ptPRPFType.project) As clsVP
 
         Dim vpid As String = ""
         Dim aktvp As New clsVP
@@ -1837,7 +1834,11 @@ Public Class Request
                 GETallVP = result
 
             Else
-                Call MsgBox(webVPantwort.message)
+                If webVPantwort.message.Contains("Token is dead") Then
+                    Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                Else
+                    Call MsgBox(webVPantwort.message)
+                End If
             End If
 
         Catch ex As Exception
@@ -2017,7 +2018,12 @@ Public Class Request
 
 
                 Else
-                    Throw New ArgumentException(webVPvAntwort.state & ": " & webVPvAntwort.message)
+                    If webVPvAntwort.message.Contains("Token is dead") Then
+                        Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    Else
+                        Throw New ArgumentException(webVPvAntwort.state & ": " & webVPvAntwort.message)
+                    End If
+
                 End If
 
             Catch ex As Exception
@@ -2063,7 +2069,7 @@ Public Class Request
             For Each kvp As KeyValuePair(Of Date, clsProjektWebLong) In VRScache.VPvs(vpid)(variantName).tsLong
                 If storedAtorBefore > Date.MinValue Then
 
-                    If kvp.Key = storedAtorBefore Then
+                    If kvp.Key <= storedAtorBefore Then
                         result.Add(kvp.Value)
                     End If
                 Else
@@ -2134,9 +2140,9 @@ Public Class Request
                     result = webVPvAntwort.vpv
 
                     ' cache soll nur befüllt werden, wenn nicht explizit mit VisboProjectVersion-Id aufgerufen
-                    If (storedAtorBefore <= Date.MinValue) And Not (vpvid <> "") Then
+                    If (vpvid = "") Then
                         ' nur dann soll der Cache gefüllt werden, damit auch wirklich alle aktuellen Timestamps enthalten sind
-                        VRScache.createVPvLong(result, Date.Now)
+                        VRScache.createVPvLong(result)
                     End If
 
                 Else
@@ -2193,8 +2199,10 @@ Public Class Request
                 For Each vpf In webVPantwort.vpf
 
                     Dim x As Date = CDate(vpf.timestamp)
-
-                    result.Add(vpf.timestamp, vpf)
+                    Dim constellationName As String = GETpName(vpid)
+                    If vpf.name = constellationName Then
+                        result.Add(vpf.timestamp, vpf)
+                    End If
 
                 Next
 
@@ -2262,6 +2270,56 @@ Public Class Request
     End Function
 
     ''' <summary>
+    ''' löscht eine VisboPortfolioVersion
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <param name="vpfid"></param>
+    ''' <returns>true:  löschen erfolgreich
+    '''          false: löschen hat nicht funktioniert</returns>
+    Private Function DELETEOneVPf(ByVal vpid As String, ByVal vpfid As String) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            ' URL zusammensetzen
+            Dim typeRequest As String = "/vp"
+            Dim serverUriString As String = serverUriName & typeRequest
+
+            If vpid <> "" And vpfid <> "" Then
+                serverUriString = serverUriString & "/" & vpid & "/portfolio/" & vpfid
+            End If
+
+            Dim serverUri As New Uri(serverUriString)
+
+            ' DATA - Block zusammensetzen
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            ' Request absetzen
+            Dim Antwort As String
+            Dim webantwort As clsWebVP = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
+                Antwort = ReadResponseContent(httpresp)
+                webantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+            End Using
+
+            If webantwort.state = "success" Then
+                result = True
+            Else
+                Call MsgBox(webantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in DELETEOneVPf: " & ex.Message)
+        End Try
+
+        DELETEOneVPf = result
+
+    End Function
+
+    ''' <summary>
     ''' Holt alle Rollen (vcrole) zu dem VisboCenter vcid
     ''' </summary>
     ''' <param name="vcid">vcid = "": es werden alle Rollen vom Visbocenter vcid  geholt</param>
@@ -2300,8 +2358,18 @@ Public Class Request
                 ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
 
                 result = webVCroleantwort.vcrole
+
+                ' hier werden die Rollen im Cache angelegt.
+                For Each vcrole As clsVCrole In result
+
+                    If Not VRScache.VCrole.ContainsKey(vcrole.name) Then
+                        VRScache.VCrole.Add(vcrole.name, vcrole)
+                    End If
+
+                Next
+
             Else
-                Call MsgBox(webVCroleantwort.message)
+                Call MsgBox("Fehler in GETallVCrole: " & webVCroleantwort.message)
             End If
 
         Catch ex As Exception
@@ -2309,6 +2377,109 @@ Public Class Request
         End Try
 
         GETallVCrole = result
+
+    End Function
+
+
+
+
+    ''' <summary>
+    ''' erzeugt die Rolle role im VisboCenter vcid
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="role"></param>
+    ''' <returns></returns>
+    Private Function POSTOneVCrole(ByVal vcid As String, ByVal role As clsVCrole) As Boolean
+
+        Dim result As Boolean
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/role"
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(role, "")
+
+
+            Dim Antwort As String
+            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+            End Using
+
+            If webVCroleantwort.state = "success" Then
+                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+
+                result = True
+            Else
+                Call MsgBox("Fehler in POSTOneVCrole: " & webVCroleantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in POSTOneVCrole: " & ex.Message)
+        End Try
+
+        POSTOneVCrole = result
+
+    End Function
+
+
+
+    ''' <summary>
+    ''' erzeugt die Rolle role im VisboCenter vcid
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="role"></param>
+    ''' <returns></returns>
+    Private Function PUTOneVCrole(ByVal vcid As String, ByVal role As clsVCrole) As Boolean
+
+        Dim result As Boolean
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/role/" & role._id
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(role, "")
+
+
+            Dim Antwort As String
+            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
+                Antwort = ReadResponseContent(httpresp)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+            End Using
+
+            If webVCroleantwort.state = "success" Then
+                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+
+                result = True
+            Else
+                Call MsgBox("Fehler in PUTOneVCrole: " & webVCroleantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in PUTOneVCrole: " & ex.Message)
+        End Try
+
+        PUTOneVCrole = result
 
     End Function
 
@@ -2451,10 +2622,28 @@ Public Class Request
 
             If webVPLockantwort.state = "success" Then
                 ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+                Dim newLock As clsVPLock = webVPLockantwort.lock.ElementAt(0)
+                If VRScache.VPsId(vpid).lock.Count = 0 Then
+                    VRScache.VPsId(vpid).lock.Add(newLock)
+                Else
+                    For Each lastlock As clsVPLock In VRScache.VPsId(vpid).lock
+                        If lastlock.variantName = newLock.variantName Then
+                            If VRScache.VPsId(vpid).lock.Contains(lastlock) Then
+                                VRScache.VPsId(vpid).lock.Remove(lastlock)
+                                VRScache.VPsId(vpid).lock.Add(newLock)
+                            End If
 
-                result = True
+                            Exit For
+                        End If
+                    Next
+                End If
+
+                Dim pname As String = GETpName(vpid)
+                ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
+                result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
             Else
                 Call MsgBox(webVPLockantwort.message)
+
             End If
 
         Catch ex As Exception
@@ -2464,6 +2653,8 @@ Public Class Request
         POSTVPLock = result
 
     End Function
+
+
 
     ''' <summary>
     ''' löscht den Lock eines Projektes/variante
@@ -2485,40 +2676,109 @@ Public Class Request
             Else
                 serverUriString = serverUriString & "/" & vpid & "/lock"
             End If
-            If variantName <> "" Then
-                serverUriString = serverUriString & "?variantName=" & variantName
-            End If
+            'If variantName <> "" Then
+            serverUriString = serverUriString & "?variantName=" & variantName
+            'End If
+
+
 
             Dim serverUri As New Uri(serverUriString)
 
-            ' DATA - Block zusammensetzen
-            Dim vplock As New clsVPLock
-            vplock.variantName = variantName
-            vplock.email = aktUser.email
-            vplock.expiresAt = DateAdd(DateInterval.Day, 1.0, Date.Now) ' heute + 1 Tag
 
-            Dim data As Byte() = serverInputDataJson(vplock, "")
+            ' DATA - Block zusammensetzen
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
 
             ' Request absetzen
             Dim Antwort As String
             Dim webVPLockantwort As clsWebVPlock = Nothing
+
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                 Antwort = ReadResponseContent(httpresp)
                 webVPLockantwort = JsonConvert.DeserializeObject(Of clsWebVPlock)(Antwort)
             End Using
 
             If webVPLockantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
-                result = True
+                Dim anzLock As Integer = webVPLockantwort.lock.Count
+                If anzLock = 0 Then
+                    VRScache.VPsId(vpid).lock.Clear()
+                End If
+                For Each lastlock As clsVPLock In VRScache.VPsId(vpid).lock
+                    If lastlock.variantName = variantName Then
+                        If VRScache.VPsId(vpid).lock.Contains(lastlock) Then
+                            VRScache.VPsId(vpid).lock.Remove(lastlock)
+                        End If
+
+                        Exit For
+                    End If
+                Next
+
+
+
+                ''VRScache.VPsId(vpid).lock.Clear()
+                ''VRScache.VPsId(vpid).lock = webVPLockantwort.lock
+
+                Dim pname As String = GETpName(vpid)
+                ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
+                result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
+
             Else
-                ' Call MsgBox(webVPLockantwort.message)
+                Call MsgBox(webVPLockantwort.message)
             End If
+
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler in DELETEVPLock: " & ex.Message)
         End Try
 
         DELETEVPLock = result
+
+    End Function
+
+    ''' <summary>
+    ''' Erzeugt die Variante  variantName zu dem VisboProject vpid
+    ''' </summary>
+    ''' <param name="vpid">vpid = "": es wird ein VisboProject geändert. user muss die Rechte haben, das checkt der Server</param>
+    ''' <param name="variantName"></param>
+    ''' <returns></returns>
+    Private Function POSTVPVariant(ByVal vpid As String, ByVal variantName As String) As Boolean
+
+
+        Dim result As Boolean = False
+        Dim webVP As clsWebVP
+        Dim Data() As Byte
+        Try
+
+            Dim typeRequest As String = "/vp"
+            Dim serverUriString As String = serverUriName & typeRequest & "/" & vpid & "/variant"
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim var As New clsVPvariant
+            var.variantName = variantName
+            var.email = aktUser.email
+
+            Data = serverInputDataJson(var, typeRequest)
+
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, Data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+            End Using
+
+            If webVP.state = "success" Then
+                result = True
+            Else
+                Call MsgBox(webVP.message)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        POSTVPVariant = result
 
     End Function
 
@@ -2613,9 +2873,12 @@ Public Class Request
     End Function
 
 
-
-
-    Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
+    ''' <summary>
+    ''' Umwandlung einen Datum des Typs Date in einen ISO-Datums-String
+    ''' </summary>
+    ''' <param name="datumUhrzeit"></param>
+    ''' <returns></returns>
+    Private Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
 
         Dim ISODateandTime As String = Nothing
         Dim ISODate As String = ""
@@ -2631,7 +2894,12 @@ Public Class Request
 
     End Function
 
-    Public Function clsVPf2clsConstellation(ByVal vpf As clsVPf) As clsConstellation
+    ''' <summary>
+    ''' Kopieren des ReST-Server Portfolios vpf in das der DB-Version clsConstellation
+    ''' </summary>
+    ''' <param name="vpf"></param>
+    ''' <returns></returns>
+    Private Function clsVPf2clsConstellation(ByVal vpf As clsVPf) As clsConstellation
         Dim result As New clsConstellation
         Dim hConstItem As clsConstellationItem
 
@@ -2663,7 +2931,12 @@ Public Class Request
 
     End Function
 
-    Public Function clsConst2clsVPf(ByVal c As clsConstellation) As clsVPf
+    ''' <summary>
+    ''' Kopieren des Portfolio c in das Portfolio des ReST-Servers vom Tyü clsVPf
+    ''' </summary>
+    ''' <param name="c"></param>
+    ''' <returns></returns>
+    Private Function clsConst2clsVPf(ByVal c As clsConstellation) As clsVPf
 
         Dim result As New clsVPf
         Try
@@ -2690,8 +2963,8 @@ Public Class Request
                 ' .allitems liste aufbauen aus c.allitems
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In c.Liste
                     vpfItem = clsConstItem2clsVPfItem(kvp.Value)
-                    If Not .allItems.Contains(vpfItem) Then
-                        .allItems.Add(vpfItem)
+                    If Not result.allItems.Contains(vpfItem) Then
+                        result.allItems.Add(vpfItem)
                     End If
                 Next
             End With
@@ -2703,7 +2976,13 @@ Public Class Request
 
     End Function
 
-    Public Function clsVPfItem2clsConstItem(ByVal vpfItem As clsVPfItem) As clsConstellationItem
+    ''' <summary>
+    ''' Kopieren des vpfItem clsVPfItem in ein Element vom Typ clsConstellationItem 
+    ''' wird vorallem bei den Portfolios (da anders als in ursprünglichen DB Version) benötigt
+    ''' </summary>
+    ''' <param name="vpfItem"></param>
+    ''' <returns></returns>
+    Private Function clsVPfItem2clsConstItem(ByVal vpfItem As clsVPfItem) As clsConstellationItem
         Dim result As New clsConstellationItem
 
         Try
@@ -2727,21 +3006,27 @@ Public Class Request
 
     End Function
 
-    Public Function clsConstItem2clsVPfItem(ByVal c As clsConstellationItem) As clsVPfItem
+    ''' <summary>
+    ''' Kopieren des clsConstellationItem cItem in ein Element vom Typ clsVPfItem
+    ''' wird vorallem bei den Portfolios (da anders als in ursprünglichen DB Version) benötigt
+    ''' </summary>
+    ''' <param name="cItem"></param>
+    ''' <returns></returns>
+    Private Function clsConstItem2clsVPfItem(ByVal cItem As clsConstellationItem) As clsVPfItem
         Dim result As New clsVPfItem
         Try
             With result
 
-                result.name = c.projectName
-                result.vpid = GETvpid(c.projectName)._id
+                result.name = cItem.projectName
+                result.vpid = GETvpid(cItem.projectName)._id
                 result._id = ""
-                result.projectName = c.projectName
-                result.variantName = c.variantName
-                result.start = c.start
-                result.show = c.show
-                result.zeile = c.zeile
-                result.reasonToExclude = c.reasonToExclude
-                result.reasonToInclude = c.reasonToInclude
+                result.projectName = cItem.projectName
+                result.variantName = cItem.variantName
+                result.start = cItem.start
+                result.show = cItem.show
+                result.zeile = cItem.zeile
+                result.reasonToExclude = cItem.reasonToExclude
+                result.reasonToInclude = cItem.reasonToInclude
 
             End With
 
@@ -2752,6 +3037,103 @@ Public Class Request
         clsConstItem2clsVPfItem = result
 
     End Function
+
+    '---------------------------------------------------------------------------------------------------------------
+    '
+    ' TODO: ur: Funktionen die für den Zugriff auf DB über ReST-Server noch fehlern
+    '
+    '---------------------------------------------------------------------------------------------------------------
+
+    ''' <summary>
+    '''  speichert einen Filter mit Namen 'name' in der Datenbank
+    ''' </summary>
+    ''' <param name="ptFilter"></param>
+    ''' <param name="selfilter"></param>
+    ''' <returns></returns>
+    Public Function storeFilterToDB(ByVal ptFilter As clsFilter, ByRef selfilter As Boolean) As Boolean
+        storeFilterToDB = False
+    End Function
+
+
+
+    ''' <summary>
+    ''' Alle Abhängigkeiten aus der Datenbank lesen
+    ''' und als Ergebnis ein Liste von Abhängigkeiten zurückgeben
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function retrieveDependenciesFromDB() As clsDependencies
+        retrieveDependenciesFromDB = New clsDependencies
+    End Function
+
+    ''' <summary>
+    ''' liest alle Filter aus der Datenbank 
+    ''' </summary>
+    ''' <param name="selfilter"></param>
+    ''' <returns></returns>
+    Public Function retrieveAllFilterFromDB(ByVal selfilter As Boolean) As SortedList(Of String, clsFilter)
+        retrieveAllFilterFromDB = New SortedList(Of String, clsFilter)
+    End Function
+
+
+    ''' <summary>
+    ''' löscht einen bestimmten Filter aus der Datenbank
+    ''' </summary>
+    ''' <param name="filter"></param>
+    ''' <returns></returns>
+    Public Function removeFilterFromDB(ByVal filter As clsFilter) As Boolean
+
+        removeFilterFromDB = False
+
+    End Function
+
+    ''' <summary>
+    ''' speichert Projekt-Dependencies in DB 
+    ''' </summary>
+    ''' <param name="d"></param>
+    ''' <returns></returns>
+    Public Function storeDependencyofPToDB(ByVal d As clsDependenciesOfP) As Boolean
+
+        Dim result As Boolean = False
+        storeDependencyofPToDB = result
+
+    End Function
+    ''    {
+
+    ''        Try
+    ''        {
+    ''            var depDB = New clsDependenciesOfPDB();
+    ''            depDB.copyFrom(d);
+    ''            depDB.Id = depDB.projectName;
+
+    ''            bool alreadyExisting = CollectionDependencies.AsQueryable < clsDependenciesOfPDB > ()
+    ''.Any(p >= p.projectName == d.projectName);
+
+    ''            If (alreadyExisting)
+    ''            {
+    ''                var filter = Builders < clsDependenciesOfPDB > .Filter.Eq("projectName", d.projectName);
+    ''                var rResult = CollectionDependencies.ReplaceOne(filter, depDB);
+    ''                If (rResult.ModifiedCount > 0)
+    ''                {
+    ''                    Return True;
+    ''                }
+    ''                Else
+    ''                {
+    ''                    Return False;
+    ''                }
+    ''            }
+    ''            Else
+    ''            {
+    ''                CollectionDependencies.InsertOne(depDB);
+    ''                Return True;
+    ''            }
+
+    ''        }
+    ''        Catch (Exception)
+    ''        {
+
+    ''            Return False;
+    ''        }
+
 
 End Class
 

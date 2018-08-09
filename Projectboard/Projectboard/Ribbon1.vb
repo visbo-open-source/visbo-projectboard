@@ -339,8 +339,10 @@ Imports System.ServiceModel.Web
 
                 constFilterName = removeConstFilterFrm.ListBox1.Text
 
-                Call awinRemoveConstellation(constFilterName, removeFromDB)
-                Call MsgBox(constFilterName & " wurde gelöscht ...")
+                If (awinRemoveConstellation(constFilterName, removeFromDB) = True) Then
+                    Call MsgBox(constFilterName & " wurde gelöscht ...")
+                End If
+
 
                 If constFilterName = currentConstellationName Then
 
@@ -11556,7 +11558,15 @@ Imports System.ServiceModel.Web
     ' ----------------------------------------------------------------
     ' Ab hier sind die MenuPunkte für WebServer
     ' ----------------------------------------------------------------
+    Public Sub PTWebRequestLogin(control As IRibbonControl)
+        Try
 
+            Dim loginerfolgreich As Boolean = logInToMongoDB(True)
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
 
 
     '''''' <summary>

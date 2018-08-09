@@ -4,12 +4,14 @@
     Public Property VPsId As SortedList(Of String, clsVP)
 
     Public Property VPvs As SortedList(Of String, SortedList(Of String, clsVarTs))
+    Public Property VCrole As SortedList(Of String, clsVCrole)
     Public Property updateDelay As Long
     'Public Property varTsListe As SortedList(Of String, clsVarTs)
     Public Sub New()
         _VPsN = New SortedList(Of String, clsVP)
         _VPsId = New SortedList(Of String, clsVP)
         _VPvs = New SortedList(Of String, SortedList(Of String, clsVarTs))
+        _VCrole = New SortedList(Of String, clsVCrole)
         _updateDelay = 60
     End Sub
 
@@ -143,7 +145,7 @@
     ''' </summary>
     ''' <param name="result">Liste von KurzProjektVersionen</param>
     ''' <param name="timeCached">Zeitpunkt, zu dem der Cache gefüllt wurde</param>
-    Public Sub createVPvLong(ByVal result As List(Of clsProjektWebLong), ByVal timeCached As Date)
+    Public Sub createVPvLong(ByVal result As List(Of clsProjektWebLong), Optional ByVal timeCached As Date = Nothing)
 
         Dim vpid As String = ""
         Dim hvpv As New SortedList(Of String, clsVarTs)
@@ -152,7 +154,7 @@
         Try
             For Each vpv As clsProjektWebLong In result
 
-                Dim vpvshort As clsProjektWebShort = vpvLong2vpshort(vpv)
+                Dim vpvshort As clsProjektWebShort = vpvLong2vpvshort(vpv)
 
                 vpid = vpv.vpid
 
@@ -172,13 +174,20 @@
                 ' longVersion in den Cache
                 If Not hVarTS.tsLong.ContainsKey(vpv.timestamp) Then
                     hVarTS.vname = vpv.variantName
-                    hVarTS.timeCached = timeCached
+                    ' timeCached soll nicht aktualisiert werden, da Timestamps nicht vollständig sind, sondern nur einzelne dazukamen
+                    If timeCached > Date.MinValue Then
+                        hVarTS.timeCached = timeCached
+                    End If
+
                     hVarTS.tsLong.Add(vpv.timestamp, vpv)
                 End If
                 ' gleichzeitig auch die shortVersion cachen 
                 If Not hVarTS.tsShort.ContainsKey(vpvshort.timestamp) Then
                     hVarTS.vname = vpvshort.variantName
-                    hVarTS.timeCached = timeCached
+                    ' timeCached soll nicht aktualisiert werden, da Timestamps nicht vollständig sind, sondern nur einzelne dazukamen
+                    If timeCached > Date.MinValue Then
+                        hVarTS.timeCached = timeCached
+                    End If
                     hVarTS.tsShort.Add(vpvshort.timestamp, vpvshort)
                 End If
 
@@ -347,7 +356,7 @@
     ''' </summary>
     ''' <param name="vpvL"></param>
     ''' <returns></returns>
-    Private Function vpvLong2vpshort(ByVal vpvL As clsProjektWebLong) As clsProjektWebShort
+    Private Function vpvLong2vpvshort(ByVal vpvL As clsProjektWebLong) As clsProjektWebShort
 
         Dim vpvshort As New clsProjektWebShort
         Try
@@ -364,10 +373,10 @@
             vpvshort.ampelStatus = vpvL.ampelStatus
 
         Catch ex As Exception
-            vpvLong2vpshort = Nothing
+            vpvLong2vpvshort = Nothing
         End Try
 
-        vpvLong2vpshort = vpvshort
+        vpvLong2vpvshort = vpvshort
 
     End Function
 End Class

@@ -11131,7 +11131,7 @@ Public Module awinGeneralModules
     ''' </param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub awinRemoveConstellation(ByVal constellationName As String, ByVal deleteDB As Boolean)
+    Public Function awinRemoveConstellation(ByVal constellationName As String, ByVal deleteDB As Boolean) As Boolean
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
@@ -11142,7 +11142,8 @@ Public Module awinGeneralModules
             activeConstellation = projectConstellations.getConstellation(constellationName)
         Catch ex As Exception
             Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
-            Exit Sub
+            awinRemoveConstellation = False
+            Exit Function
         End Try
 
         If deleteDB Then
@@ -11168,10 +11169,12 @@ Public Module awinGeneralModules
                 Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
             End Try
         Else
-            Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
+            'Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
         End If
 
-    End Sub
+        awinRemoveConstellation = returnValue
+
+    End Function
 
     ''' <summary>
     ''' lädt die über pName#vName angegebene Variante aus der Datenbank;
