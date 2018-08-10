@@ -8049,8 +8049,12 @@ Public Module awinGeneralModules
                                             ' wird doch überhaupt nicht gebraucht
                                             'ReDim tmpValues(monat - 1)
                                             If readAll Then
-                                                ' es handelt sich um Zuweisung PT, also muss nichts umgerechnet werden 
-                                                tmpValues(curMonat - 1) = curZuwPTValue
+                                                ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
+                                                If curMonat <= monat Then
+                                                    tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                                Else
+                                                    tmpValues(curMonat - 1) = curZuwPTValue
+                                                End If
                                             Else
                                                 ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
                                                 tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
@@ -8067,7 +8071,12 @@ Public Module awinGeneralModules
                                                 ' also summieren 
                                                 tmpValues = roleValues.Item(roleName)
                                                 If readAll Then
-                                                    tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curZuwPTValue
+                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
+                                                    If curMonat <= monat Then
+                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
+                                                    Else
+                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curZuwPTValue
+                                                    End If
                                                 Else
                                                     tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
                                                 End If
@@ -8077,8 +8086,12 @@ Public Module awinGeneralModules
                                                 'ReDim tmpValues(monat - 1)
 
                                                 If readAll Then
-                                                    ' es handelt sich um Zuweisung PT, also muss nichts umgerechnet werden 
-                                                    tmpValues(curMonat - 1) = curZuwPTValue
+                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
+                                                    If curMonat <= monat Then
+                                                        tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                                    Else
+                                                        tmpValues(curMonat - 1) = curZuwPTValue
+                                                    End If
                                                 Else
                                                     ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
                                                     tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
