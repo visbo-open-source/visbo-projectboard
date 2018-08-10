@@ -21,7 +21,7 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">bhtc</Value>
+      <Value Profile="(Default)">bhtcrel</Value>
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
