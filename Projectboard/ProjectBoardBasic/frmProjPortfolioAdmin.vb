@@ -1424,10 +1424,10 @@ Public Class frmProjPortfolioAdmin
                         Else
                             If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
                                 If awinSettings.englishLanguage Then
-                                    Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf &
+                                    Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf &
                                                 "please store at database before protecting ...")
                                 Else
-                                    Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf &
+                                    Call MsgBox(pName & ", " & vName & " bitte erst in Datenbank speichern ... " & vbLf &
                                                 "dann schützen ...")
                                 End If
                             End If

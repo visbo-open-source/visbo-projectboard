@@ -587,12 +587,15 @@ Public Class Request
                 End If
             End If
 
+            ' Cache aktualisieren
+            VRScache.VPsN = GETallVP(aktVCid)
 
         Catch ex As Exception
             Throw New ArgumentException("storeProjectToDB:" & ex.Message)
         End Try
 
         storeProjectToDB = result
+
     End Function
 
 
@@ -929,7 +932,7 @@ Public Class Request
                     Exit For
                 End If
             Next
-            If vpid <> "" And variantExists Then
+            If (vpid <> "" And variantExists) Or (vpid <> "" And vname = "") Then
 
                 If wpItem.isProtected Then
                     result = POSTVPLock(vpid, vname)
@@ -938,11 +941,9 @@ Public Class Request
                 End If
 
             Else
-                If wpItem.isProtected Then
-                    result = POSTVPLock(vpid, "")
-                Else
-                    result = DELETEVPLock(vpid, "")
-                End If
+
+                result = False
+
             End If
 
         Catch ex As Exception
@@ -2622,23 +2623,37 @@ Public Class Request
 
             If webVPLockantwort.state = "success" Then
                 ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+                Dim pname As String = GETpName(vpid)
+
                 Dim newLock As clsVPLock = webVPLockantwort.lock.ElementAt(0)
                 If VRScache.VPsId(vpid).lock.Count = 0 Then
                     VRScache.VPsId(vpid).lock.Add(newLock)
+                    VRScache.VPsN(pname).lock.Add(newLock)
                 Else
+                    Dim variantNotFound As Boolean = True
+                    ' suchen, ob bereits ein Lock für diese Variante besteht, der dann erneuert wird.
                     For Each lastlock As clsVPLock In VRScache.VPsId(vpid).lock
                         If lastlock.variantName = newLock.variantName Then
+                            variantNotFound = False
                             If VRScache.VPsId(vpid).lock.Contains(lastlock) Then
                                 VRScache.VPsId(vpid).lock.Remove(lastlock)
                                 VRScache.VPsId(vpid).lock.Add(newLock)
                             End If
-
+                            If VRScache.VPsN(pname).lock.Contains(lastlock) Then
+                                VRScache.VPsN(pname).lock.Remove(lastlock)
+                                VRScache.VPsN(pname).lock.Add(newLock)
+                            End If
                             Exit For
                         End If
                     Next
+                    If variantNotFound Then
+                        VRScache.VPsId(vpid).lock.Add(newLock)
+                        VRScache.VPsN(pname).lock.Add(newLock)
+                    End If
+
                 End If
 
-                Dim pname As String = GETpName(vpid)
+
                 ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
                 result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
             Else
@@ -2702,26 +2717,25 @@ Public Class Request
             End Using
 
             If webVPLockantwort.state = "success" Then
+                Dim pname As String = GETpName(vpid)
+
                 Dim anzLock As Integer = webVPLockantwort.lock.Count
                 If anzLock = 0 Then
                     VRScache.VPsId(vpid).lock.Clear()
+                Else
+                    VRScache.VPsId(vpid).lock = webVPLockantwort.lock
+                    VRScache.VPsN(pname).lock = webVPLockantwort.lock
                 End If
-                For Each lastlock As clsVPLock In VRScache.VPsId(vpid).lock
-                    If lastlock.variantName = variantName Then
-                        If VRScache.VPsId(vpid).lock.Contains(lastlock) Then
-                            VRScache.VPsId(vpid).lock.Remove(lastlock)
-                        End If
+                ''For Each lastlock As clsVPLock In VRScache.VPsId(vpid).lock
+                ''    If lastlock.variantName = variantName Then
+                ''        If VRScache.VPsId(vpid).lock.Contains(lastlock) Then
+                ''            VRScache.VPsId(vpid).lock.Remove(lastlock)
+                ''        End If
 
-                        Exit For
-                    End If
-                Next
+                ''        Exit For
+                ''    End If
+                ''Next
 
-
-
-                ''VRScache.VPsId(vpid).lock.Clear()
-                ''VRScache.VPsId(vpid).lock = webVPLockantwort.lock
-
-                Dim pname As String = GETpName(vpid)
                 ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
                 result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
 
@@ -2748,7 +2762,7 @@ Public Class Request
 
 
         Dim result As Boolean = False
-        Dim webVP As clsWebVP
+        Dim webVPVar As clsWebVPVariant
         Dim Data() As Byte
         Try
 
@@ -2765,13 +2779,18 @@ Public Class Request
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, Data, "POST")
                 Antwort = ReadResponseContent(httpresp)
-                webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+                webVPVar = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
             End Using
 
-            If webVP.state = "success" Then
+            If webVPVar.state = "success" Then
+                ' Variante variantName in Cache mitaufnehmen
+                var = webVPVar.Variant.ElementAt(0)
+                If Not VRScache.VPsId(vpid).Variant.Contains(var) Then
+                    VRScache.VPsId(vpid).Variant.Add(var)
+                End If
                 result = True
             Else
-                Call MsgBox(webVP.message)
+                Call MsgBox(webVPVar.message)
             End If
 
         Catch ex As Exception
@@ -2779,6 +2798,73 @@ Public Class Request
         End Try
 
         POSTVPVariant = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' löscht die Variante variantName eines Projektes
+    ''' </summary>
+    ''' <param name="vpid">vpid = "": es wird die Variante des VisboProject vpid gelöscht. user muss die Rechte haben, das checkt der Server</param>
+    ''' <returns>true: gelöscht
+    '''          false: konnte nicht gelöscht werden</returns>
+    Private Function DELETEVPVariant(ByVal vpid As String, Optional ByVal varID As String = "") As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            ' URL zusammensetzen
+            Dim typeRequest As String = "/vp"
+            Dim serverUriString As String = serverUriName & typeRequest
+
+            If vpid = "" Then
+                serverUriString = serverUriString & "/lock"
+            Else
+                serverUriString = serverUriString & "/" & vpid & "/variant/" & varID
+            End If
+
+
+            Dim serverUri As New Uri(serverUriString)
+
+
+            ' DATA - Block zusammensetzen
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+            ' Request absetzen
+            Dim Antwort As String
+            Dim webVPVarAntwort As clsWebVPVariant = Nothing
+
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
+                Antwort = ReadResponseContent(httpresp)
+                webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
+            End Using
+
+            If webVPVarAntwort.state = "success" Then
+                Dim anzLock As Integer = webVPVarAntwort.Variant.Count
+                If anzLock = 0 Then
+                    VRScache.VPsId(vpid).Variant.Clear()
+                Else
+                    VRScache.VPsId(vpid).Variant = webVPVarAntwort.Variant
+                End If
+
+                Dim pname As String = GETpName(vpid)
+                ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
+                result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
+
+            Else
+                Call MsgBox(webVPVarAntwort.message)
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in DELETEVPVariant: " & ex.Message)
+        End Try
+
+        DELETEVPVariant = result
 
     End Function
 

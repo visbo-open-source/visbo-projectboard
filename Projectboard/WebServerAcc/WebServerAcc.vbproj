@@ -102,6 +102,7 @@
     <Compile Include="clsWebOutput.vb" />
     <Compile Include="clsWebUser.vb" />
     <Compile Include="clsWebVP.vb" />
+    <Compile Include="clsWebVPVariant.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
