@@ -269,6 +269,14 @@ Public Class Ribbon1
                                 End If
                             End Try
                         End If
+                    Else
+                        If awinSettings.visboMapping <> "" Then
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("Error mapping the project: no TMS - project created")
+                            Else
+                                Call MsgBox("Fehler beim  Mapping dieses Projektes: Kein TMS-project erstellt")
+                            End If
+                        End If
                     End If
 
                     '' Set cursor as Default
