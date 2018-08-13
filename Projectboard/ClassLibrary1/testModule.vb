@@ -371,10 +371,6 @@ Public Module testModule
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
                         lproj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
 
-                        If lproj.timeStamp = bproj.timeStamp Then
-                            lproj = Nothing
-                        End If
-                        ' tk , 17.10.17 , das holen der Beauftragung, unabhängig von der Variante ... 
 
                     Catch ex As Exception
                         projekthistorie.clear()
@@ -744,9 +740,13 @@ Public Module testModule
                         kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or
                         kennzeichnung = "Projektphasen" Or
                         kennzeichnung = "Personalbedarf" Or
+                        kennzeichnung = "Personalbedarf2" Or
                         kennzeichnung = "Personalkosten" Or
+                        kennzeichnung = "Personalkosten2" Or
                         kennzeichnung = "Sonstige Kosten" Or
+                        kennzeichnung = "Sonstige Kosten2" Or
                         kennzeichnung = "Gesamtkosten" Or
+                        kennzeichnung = "Gesamtkosten2" Or
                         kennzeichnung = "Trend Strategischer Fit/Risiko" Or
                         kennzeichnung = "Trend Kennzahlen" Or
                         kennzeichnung = "Fortschritt Personalkosten" Or
@@ -2099,6 +2099,57 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(233)
                                 End Try
 
+                            Case "Personalbedarf2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(159)
+                                End If
+
+
+                                Try
+                                    auswahl = 1
+
+                                    If qualifier.Length > 0 Then
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalPie
+                                        Else
+                                            If qualifier2 <> "" Then
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalbedarf: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            compID = PTprdk.PersonalBalken2
+                                        End If
+                                    Else
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.PersonalPie
+                                    End If
+
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' immer den Text nehmen ..
+                                    ''If obj.Chart.HasTitle Then
+                                    ''    boxName = obj.Chart.ChartTitle.Text
+                                    ''Else
+                                    ''    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                    ''    boxName = boxName & " (" & gesamtSumme.ToString &
+                                    ''    " " & awinSettings.kapaEinheit & ")"
+                                    ''End If
+
+
+                                    reportObj = obj
+                                    notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+
+
+                                Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(233)
+                                End Try
 
                             Case "Personalkosten"
 
@@ -2127,6 +2178,60 @@ Public Module testModule
 
                                             Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
                                             compID = PTprdk.PersonalBalken
+                                        End If
+
+                                    Else
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.PersonalPie
+                                    End If
+
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' tk 9.8.18
+                                    'If obj.Chart.HasTitle Then
+                                    '    boxName = obj.Chart.ChartTitle.Text
+                                    'Else
+                                    '    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                    '    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    'End If
+
+
+                                    reportObj = obj
+                                    notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+
+
+                                Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(162)
+                                End Try
+
+                            Case "Personalkosten2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(164)
+                                End If
+
+
+                                Try
+                                    auswahl = 2
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalPie
+                                        Else
+                                            If qualifier2 <> "" Then
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            compID = PTprdk.PersonalBalken2
                                         End If
 
                                     Else
@@ -2197,6 +2302,48 @@ Public Module testModule
 
                                 End Try
 
+                            Case "Sonstige Kosten2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(165)
+                                End If
+
+                                Try
+                                    auswahl = 1
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenPie
+                                        Else
+                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenBalken2
+                                        End If
+
+                                    Else
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.KostenPie
+                                    End If
+
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    End If
+
+                                    reportObj = obj
+                                    notYetDone = True
+
+                                    bigType = ptReportBigTypes.charts
+
+                                Catch ex As Exception
+
+                                    '.TextFrame2.TextRange.Text = "Sonstige Kosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(163)
+
+                                End Try
 
                             Case "Gesamtkosten"
 
@@ -2221,6 +2368,51 @@ Public Module testModule
                                         Else
                                             Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken
+                                        End If
+
+                                    Else
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                    End If
+
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    End If
+
+                                    reportObj = obj
+                                    notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+
+                                Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(168)
+                                End Try
+
+                            Case "Gesamtkosten2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(166)
+                                End If
+
+
+                                'htop = 100
+                                'hleft = 100
+                                'hwidth = boxWidth * 14
+                                'hheight = boxHeight * 10
+
+                                Try
+                                    auswahl = 2
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenPie
+                                        Else
+                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenBalken2
                                         End If
 
                                     Else
@@ -2598,6 +2790,8 @@ Public Module testModule
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstPersonalkostenC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
@@ -2676,6 +2870,8 @@ Public Module testModule
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstSonstKostenC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
@@ -2751,6 +2947,8 @@ Public Module testModule
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstGesamtkostenC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
@@ -2827,6 +3025,8 @@ Public Module testModule
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstRolleC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
@@ -2901,6 +3101,8 @@ Public Module testModule
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstKostenartC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."

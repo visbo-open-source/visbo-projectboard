@@ -4635,27 +4635,12 @@ Public Module Projekte
 
                 'series
 
-                If pastAndFuture Then
-                    ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
-
-                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        '.name = "Istwerte"
-                        .Name = repMessages.getmsg(194)
-                        .Interior.Color = awinSettings.SollIstFarbeArea
-                        .Values = gesterndatenreihe
-                        '.XValues = Xgestern
-                        .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlArea
-
-                    End With
-
-                End If
 
                 ' heutiger stand 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    '.name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
-                    '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
-                    .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToString("d")
+
+                    '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToString("d")
+                    .Name = repMessages.getmsg(38)
                     '.Name = "Version (" & hproj.timeStamp.ToString("d") & ")"
                     '.Interior.Color = awinSettings.SollIstFarbeC
                     .Interior.Color = visboFarbeBlau
@@ -4664,6 +4649,7 @@ Public Module Projekte
                     .ChartType = Excel.XlChartType.xlLine
                     .Format.Line.Weight = 4
                     .Format.Line.ForeColor.RGB = visboFarbeBlau
+
                 End With
 
                 If Not IsNothing(bproj) Then
@@ -4674,7 +4660,9 @@ Public Module Projekte
 
                         Else
                             '.name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .Name = repMessages.getmsg(43) & " " & beauftragung.timeStamp.ToString("d")
+                            '.Name = repMessages.getmsg(43) & " " & beauftragung.timeStamp.ToString("d")
+                            ' Stand vom ...
+                            .Name = repMessages.getmsg(273) & " " & beauftragung.timeStamp.ToString("d")
 
                         End If
                         '.Name = "Version (" & beauftragung.timeStamp.ToString("d") & ")"
@@ -4694,6 +4682,22 @@ Public Module Projekte
                     End With
                 End If
 
+
+                If pastAndFuture Then
+                    ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
+
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                        '.name = "Istwerte"
+                        .Name = repMessages.getmsg(194)
+                        .Interior.Color = awinSettings.SollIstFarbeArea
+                        .Values = gesterndatenreihe
+                        '.XValues = Xgestern
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlArea
+
+                    End With
+
+                End If
 
 
             End With
@@ -4811,7 +4815,8 @@ Public Module Projekte
             repMSg(0) = "cumulated Personnel Cost"
             repMSg(1) = "cumulated Other Cost"
             repMSg(2) = "cumulated Total Cost"
-            repMSg(3) = "approved version"
+            'repMSg(3) = "approved version"
+            repMSg(3) = "version from"
             repMSg(4) = "last version"
             repMSg(5) = "actual values"
             repMSg(6) = "Forecast"
@@ -4819,7 +4824,8 @@ Public Module Projekte
             repMSg(0) = "kumulierte Personalkosten"
             repMSg(1) = "kumulierte Sonstige Kosten"
             repMSg(2) = "kumulierte Gesamtkosten"
-            repMSg(3) = "Beauftragung"
+            'repMSg(3) = "Beauftragung"
+            repMSg(3) = "Stand vom"
             repMSg(4) = "letzter Stand"
             repMSg(5) = "Ist-Werte"
             repMSg(6) = "Prognose"
@@ -4889,10 +4895,10 @@ Public Module Projekte
 
                 Try
                     If vglBaseline Then
-                        werteB = vProj.getKostenBedarf(qualifier)
+                        werteB = vProj.getKostenBedarfNew(qualifier)
                     End If
 
-                    werteC = hproj.getKostenBedarf(qualifier)
+                    werteC = hproj.getKostenBedarfNew(qualifier)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -5044,10 +5050,12 @@ Public Module Projekte
             ' heutiger stand 
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
-                .Name = repMSg(6) & " " & hproj.timeStamp.ToString("d")
+                '.Name = repMSg(6) & " " & hproj.timeStamp.ToString("d")
+                .Name = repMSg(6)
                 .Interior.Color = visboFarbeBlau
                 .Values = tdatenreiheC
                 .XValues = Xdatenreihe
+
                 .ChartType = Excel.XlChartType.xlLine
                 .Format.Line.Weight = 4
                 .Format.Line.ForeColor.RGB = visboFarbeBlau
@@ -5685,11 +5693,13 @@ Public Module Projekte
 
 
         Dim pname As String = hproj.name
+
         If roleName = "" Then
             tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
         Else
             tmpcollection.Add(hproj.name & "#" & auswahl.ToString & "#" & roleName)
         End If
+
 
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
@@ -5857,7 +5867,8 @@ Public Module Projekte
 
                     ' jetzt die Istdaten zeichnen 
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(194)
                         '.Interior.Color = visboFarbeBlau
                         .Interior.Color = awinSettings.SollIstFarbeArea
                         .Values = istDatenReihe
@@ -5872,7 +5883,8 @@ Public Module Projekte
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(38)
                     .Interior.Color = visboFarbeBlau
                     '.Values = tdatenreihe
                     .Values = prognoseDatenReihe
@@ -5883,15 +5895,26 @@ Public Module Projekte
 
                 If Not IsNothing(vglproj) Then
                     If auswahl = 1 Then
-                        vdatenreihe = vglproj.getAlleRessourcen
+                        If roleName = "" Then
+                            vdatenreihe = vglproj.getAlleRessourcen
+                        Else
+                            vdatenreihe = vglproj.getRessourcenBedarfNew(roleName, True)
+                        End If
                     Else
-                        vdatenreihe = vglproj.getAllPersonalKosten
+                        If roleName = "" Then
+                            vdatenreihe = vglproj.getAllPersonalKosten
+                        Else
+                            vdatenreihe = vglproj.getPersonalKosten(roleName, True)
+                        End If
                     End If
+
                     vSum = vdatenreihe.Sum
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(43).Trim & " " & vglproj.timeStamp.ToShortDateString
+                        '.Name = repMessages.getmsg(43).Trim & " " & vglproj.timeStamp.ToShortDateString
+                        ' Stand vom ... (273)
+                        .Name = repMessages.getmsg(273).Trim & " " & vglproj.timeStamp.ToShortDateString
                         '.Interior.Color = 0
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
@@ -6037,14 +6060,16 @@ Public Module Projekte
     ''' <summary>
     ''' aktualisiert in PPT die Balken Diagramme Rollen (PT oder T€) bzw. Kostenarten (T€)
     ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <param name="chtobj"></param>
-    ''' <param name="prcTyp"></param>
-    ''' <param name="auswahl"></param>
+    ''' <param name="hproj">das Ausgangsprojekt</param>
+    ''' <param name="vglProj">das Projekt, mit dem verglichen wird</param>
+    ''' <param name="chtobj">das Chart, das aktualisiert werden soll</param>
+    ''' <param name="prcTyp">handelt es sich um Rollen, Phasen, Meilensteine oder Kostenarten</param>
+    ''' <param name="auswahl">Kosten oder Personalbedarf</param>
+    ''' <param name="rcName">leer, oder Rollen oder Kostenart-Name</param>
     ''' <remarks></remarks>
-    Public Sub updatePPTBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, _
-                                        ByRef chtobj As Excel.ChartObject, _
-                                             ByVal prcTyp As Integer, ByVal auswahl As Integer)
+    Public Sub updatePPTBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                        ByRef chtobj As Excel.ChartObject,
+                                             ByVal prcTyp As Integer, ByVal auswahl As Integer, ByVal rcName As String)
 
         Dim xlsChart As Excel.Chart = chtobj.Chart
         Dim kennung As String = chtobj.Name
@@ -6076,8 +6101,12 @@ Public Module Projekte
         ' die Settings herauslesen ...
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
-        Dim rcName As String = ""
-        Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, rcName)
+        Dim rcNameChk As String = ""
+        Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, rcNameChk)
+
+        If rcNameChk <> rcName Then
+            Dim a As Integer = 1
+        End If
 
         ' solnage die repMessages noch nicht in der Datenbank sind, muss man sich über dieses Konstrukt behelfen ... 
         ' (,0) ist deutsch, (,1) ist englisch
@@ -6089,7 +6118,7 @@ Public Module Projekte
             repmsg(0) = "Personnel Costs" '164
             repmsg(1) = "Forecast" ' 38
             repmsg(2) = "other Costs" ' 165
-            repmsg(3) = "approved version" ' 43
+            repmsg(3) = "version from" ' 273, vorher 43
             repmsg(4) = "Personnel Needs" '159
             repmsg(5) = "Total Costs" ' 166
             repmsg(6) = "Actual data"
@@ -6097,7 +6126,7 @@ Public Module Projekte
             repmsg(0) = "Personalkosten" '164
             repmsg(1) = "Prognose" ' 38
             repmsg(2) = "sonstige Kosten" ' 165
-            repmsg(3) = "Beauftragung" ' 43
+            repmsg(3) = "Stand vom" ' 273 ; Beauftragung 43
             repmsg(4) = "Personalbedarf" '159
             repmsg(5) = "Gesamtkosten" ' 166
             repmsg(6) = "Ist-Werte"
@@ -6183,7 +6212,8 @@ Public Module Projekte
 
             End Try
 
-            Dim series1Name As String = repmsg(1) & " " & hproj.timeStamp.ToShortDateString ' Stand vom 
+            'Dim series1Name As String = repmsg(1) & " " & hproj.timeStamp.ToShortDateString ' Stand vom 
+            Dim series1Name As String = repmsg(1)
             Dim series2Name As String = "-"
             If Not IsNothing(vglProj) Then
                 series2Name = repmsg(3) & " " & vglProj.timeStamp.ToShortDateString ' erste Beauftragung vom 
@@ -6238,7 +6268,7 @@ Public Module Projekte
                 ' darf eigentlich gar nicht sein ... 
 
             End If
-            
+
             gesamt_summe = tdatenreihe.Sum
             vSum = 0
 
@@ -6263,7 +6293,8 @@ Public Module Projekte
 
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repmsg(6) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repmsg(6) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repmsg(6)
                     '.Interior.Color = visboFarbeBlau
                     .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
@@ -6307,7 +6338,7 @@ Public Module Projekte
                     End With
                 End With
             End If
-            
+
 
             If CBool(.HasAxis(Excel.XlAxisType.xlValue)) Then
 
@@ -6319,7 +6350,7 @@ Public Module Projekte
                         .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
                     End If
 
-                    
+
                 End With
 
             End If
@@ -6392,7 +6423,7 @@ Public Module Projekte
                     Else
                         titelTeile(0) = "--- (T€)" & vbLf & pname
                     End If
-                    
+
                     titelTeile(1) = ""
                 End If
 
@@ -6564,7 +6595,8 @@ Public Module Projekte
 
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(194)
                     '.Interior.Color = visboFarbeBlau
                     .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
@@ -6580,7 +6612,8 @@ Public Module Projekte
             'series
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                .Name = repMessages.getmsg(38)
                 .Interior.Color = visboFarbeBlau
                 '.Interior.Color = visboFarbeYellow
                 '.Values = tdatenreihe
@@ -6590,16 +6623,28 @@ Public Module Projekte
             End With
 
             If Not IsNothing(vglProj) Then
+
                 If auswahl = 1 Then
-                    vdatenreihe = vglProj.getAlleRessourcen
+                    If roleName = "" Then
+                        vdatenreihe = vglProj.getAlleRessourcen
+                    Else
+                        vdatenreihe = vglProj.getRessourcenBedarfNew(roleName, True)
+                    End If
                 Else
-                    vdatenreihe = vglProj.getAllPersonalKosten
+                    If roleName = "" Then
+                        vdatenreihe = vglProj.getAllPersonalKosten
+                    Else
+                        vdatenreihe = vglProj.getPersonalKosten(roleName, True)
+                    End If
                 End If
+
                 vSum = vdatenreihe.Sum
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
+                    ' Stand vom (273)
+                    .Name = repMessages.getmsg(273) & " " & vglProj.timeStamp.ToShortDateString
                     '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe

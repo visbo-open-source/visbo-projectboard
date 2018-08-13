@@ -431,7 +431,7 @@ Public Module Module1
         MilestoneCategories = 22
     End Enum
 
-    ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 
+    ' Enumeration Projekt Diagramm Kennungen 
     Public Enum PTprdk
         PersonalBalken = 0
         PersonalPie = 1
@@ -453,6 +453,16 @@ Public Module Module1
         SollIstGesamtkostenC = 23
         SollIstRolleC = 24
         SollIstKostenartC = 25
+        PersonalBalken2 = 26
+        KostenBalken2 = 27
+        SollIstPersonalkosten2 = 28
+        SollIstSonstKosten2 = 29
+        SollIstGesamtkosten2 = 30
+        SollIstPersonalkostenC2 = 31
+        SollIstSonstKostenC2 = 32
+        SollIstGesamtkostenC2 = 33
+        SollIstRolleC2 = 34
+        SollIstKostenartC2 = 35
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
@@ -5040,13 +5050,14 @@ Public Module Module1
                         Dim faprValue As Double = -1.0 ' first approved version 
                         Dim laprValue As Double = -1.0 ' last approved version
 
-                        If anzRoles > 0 Then
-                            ' 
-                            'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
-                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-                        End If
+                        ' keine zusätzliche Zeile schreiben ... macht das ganze nur unübersichtlicher  
+                        'If anzRoles > 0 And anzCosts > 0 Then
+                        '    ' 
+                        '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                        '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
+                        '    tabelle.Rows.Add()
+                        '    tabellenzeile = tabellenzeile + 1
+                        'End If
 
                         For m As Integer = 1 To todoCollection.Count
 
@@ -5076,13 +5087,13 @@ Public Module Module1
 
                             ElseIf isCost Then
 
-                                If firstCost Then
-                                    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
-                                    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(2)
-                                    tabelle.Rows.Add()
-                                    tabellenzeile = tabellenzeile + 1
-                                    firstCost = False
-                                End If
+                                'If firstCost Then
+                                '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
+                                '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(2)
+                                '    tabelle.Rows.Add()
+                                '    tabellenzeile = tabellenzeile + 1
+                                '    firstCost = False
+                                'End If
 
                                 'curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
                                 curValue = hproj.getKostenBedarfNew(curItem).Sum
@@ -5099,7 +5110,12 @@ Public Module Module1
 
                             End If
 
-                            Dim zeilenItem As String = "  " & curItem
+                            Dim zeilenItem As String = curItem
+                            'If anzRoles > 0 And anzCosts > 0 Then
+                            '    ' dann muss unterhalb Personalkosten und Sonstige Kosten eingerückt werden ... 
+                            '    zeilenItem = "  " & curItem
+                            'End If
+
                             Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
                                                           considerFapr, considerLapr)
                             tabelle.Rows.Add()
@@ -5548,42 +5564,39 @@ Public Module Module1
             ' bestimme den Charttyp ...
             prpfTyp = ptPRPFType.project
 
-            chartTyp = CInt(tmpStr(1))
-
-            If chartTyp = PTprdk.KostenBalken Or
-                chartTyp = PTprdk.KostenPie Then
-                prcTyp = ptElementTypen.costs
-            ElseIf chartTyp = PTprdk.PersonalBalken Or
-                chartTyp = PTprdk.PersonalPie Then
-                prcTyp = ptElementTypen.roles
-            Else
-                prcTyp = ptElementTypen.ergebnis
-            End If
-
-
-            ' bestimme pName und vName 
-            Dim fullName As String = tmpStr(2)
-
-            If fullName.Contains("[") And fullName.Contains("]") Then
-                Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
-                pName = tmpstr1(0)
-                vName = tmpstr1(1)
-            Else
-                pName = fullName
-                vName = ""
-            End If
-
-            ' bestimme, um welche Auswahl es sich handelt ... 
-            auswahl = CInt(tmpStr(3))
         ElseIf tmpStr(0) = "pf" Then
-
             prpfTyp = ptPRPFType.portfolio
-            ' noch nicht implementiert ... 
         Else
 
         End If
 
+        chartTyp = CInt(tmpStr(1))
 
+        If chartTyp = PTprdk.KostenBalken Or
+            chartTyp = PTprdk.KostenPie Then
+            prcTyp = ptElementTypen.costs
+        ElseIf chartTyp = PTprdk.PersonalBalken Or
+            chartTyp = PTprdk.PersonalPie Then
+            prcTyp = ptElementTypen.roles
+        Else
+            prcTyp = ptElementTypen.ergebnis
+        End If
+
+
+        ' bestimme pName und vName 
+        Dim fullName As String = tmpStr(2)
+
+        If fullName.Contains("[") And fullName.Contains("]") Then
+            Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
+            pName = tmpstr1(0)
+            vName = tmpstr1(1)
+        Else
+            pName = fullName
+            vName = ""
+        End If
+
+        ' bestimme, um welche Auswahl es sich handelt ... 
+        auswahl = CInt(tmpStr(3))
 
 
     End Sub
