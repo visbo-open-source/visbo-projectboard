@@ -14153,6 +14153,11 @@ Public Module awinGeneralModules
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
+        ' wenn HistoryMode aktiv ist ... 
+        If demoModusHistory Then
+            DBtimeStamp = historicDate
+        End If
+
         ' jetzt müssen auch alle Projekte, die in der Constellation referenziert werden, aber noch nicht 
         ' in der Datenbank gespeichert sind, abgespeichert werden ... 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
