@@ -118,10 +118,15 @@ Public Class Request
     Public Function pingMongoDb() As Boolean
 
         Dim result As Boolean = False
-        If token <> "" Then
-            Dim vcid As String = GETvcid(awinSettings.databaseName)
-            result = (vcid <> "")
-        End If
+        Try
+            If token <> "" Then
+                Dim vcid As String = GETvcid(awinSettings.databaseName)
+                result = (vcid <> "")
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
 
         pingMongoDb = result
     End Function
@@ -510,22 +515,7 @@ Public Class Request
 
                 vpErg = POSTOneVP(VP)
 
-                ''data = serverInputDataJson(VP, typeRequest)
 
-                ''Dim Antwort As String
-                ''Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-                ''    Antwort = ReadResponseContent(httpresp)
-                ''    webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
-                ''End Using
-
-
-                '' 'Call MsgBox(webVP.message)
-
-                ''If webVP.state = "success" Then
-                ''    ' vpid für neues Projekt merken, wird für speichern von vpv benötigt
-                ''    vpid = webVP.vp.ElementAt(0)._id
-                ''    storedVP = (vpid <> "")
-                ''End If
                 If vpErg.Count > 0 Then
 
                     ' vpErg.ElementAt(0) ist nun das aktuelle VP
@@ -739,26 +729,41 @@ Public Class Request
 
         Dim result As Boolean = False
 
-        stored = stored.ToUniversalTime
-        Try
-            Dim vpid As String = ""
+        If aktUser.email = userName Then
 
-            ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectname)._id
+            stored = stored.ToUniversalTime
+            Try
+                Dim vpid As String = ""
 
-            If vpid <> "" Then
-                ' gewünschte Variante vom Server anfordern
-                Dim allVPv As New List(Of clsProjektWebShort)
-                allVPv = GETallVPvShort(vpid, variantName, stored)
+                ' VPID zu Projekt projectName holen vom WebServer/DB
+                vpid = GETvpid(projectname)._id
 
-                If allVPv.Count = 1 Then
-                    result = DELETEOneVPv(allVPv.Item(0)._id)
+                If vpid <> "" Then
+                    ' gewünschte Variante vom Server anfordern
+                    Dim allVPv As New List(Of clsProjektWebShort)
+                    allVPv = GETallVPvShort(vpid, variantName, stored)
+                    If allVPv.Count >= 0 Then
+                        If allVPv.Count = 1 Then
+                            result = DELETEOneVPv(allVPv.Item(0)._id)
+                        Else
+                            For Each vpv As clsProjektWebShort In allVPv
+                                If vpv.variantName = variantName Then
+                                    result = result And DELETEOneVPv(vpv._id)
+                                End If
+                            Next
+                        End If
+
+                    End If
+
                 End If
-            End If
-        Catch ex As Exception
+            Catch ex As Exception
 
-        End Try
+            End Try
+        Else
 
+            Call MsgBox("Fehler in deletProjectTimestampFromDB: User '" & userName & "' darf nicht löschen")
+
+        End If
 
         deleteProjectTimestampFromDB = result
 
@@ -1080,11 +1085,12 @@ Public Class Request
     End Function
 
     ''' <summary>
-    ''' Löschen des Portfolios  aus der Datenbank
+    ''' Löschen des Portfolios  mit allen vorhandene Versionen aus der Datenbank
     ''' </summary>
     ''' <param name="c"></param>
     ''' <returns></returns>
     Public Function removeConstellationFromDB(ByVal c As clsConstellation) As Boolean
+
         Dim result As Boolean = False
 
         Try
@@ -1098,12 +1104,35 @@ Public Class Request
             'cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
             cVP = GETvpid(c.constellationName, vpType:=2)
             newVPf = GETallVPf(cVP._id, Date.Now)
-            If newVPf.Count = 1 Then
-                result = DELETEOneVPf(cVP._id, newVPf.ElementAt(0).Value._id)
+
+            'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
+            If newVPf.Count > 0 Then
+
+                If newVPf.Count = 1 Then
+                    result = DELETEOneVPf(cVP._id, newVPf.ElementAt(0).Value._id)
+                Else
+                    Dim lv As Integer = 0
+                    Dim ok As Boolean = True
+                    result = ok
+                    While result And (lv < newVPf.Count)
+                        lv = lv + 1
+                        ok = DELETEOneVPf(cVP._id, newVPf.ElementAt(lv - 1).Value._id)
+                        If lv = 1 Then
+                            result = ok
+                        Else
+                            result = result And ok
+                        End If
+                    End While
+                    'Call MsgBox("Es gab mehrer Portfolio-Versionen zu: " & c.constellationName)
+                End If
             Else
-                Call MsgBox("Es gibt mehrer Portfolio-Versionen zu: " & c.constellationName)
+                ' aktuell existiert keine PortfolioVersion zu vpid
+                ' TODO: was ist, wenn nur der Token is dead war?!?!?
             End If
 
+            If result = True Then
+                result = DELETEOneVP(cVP._id)
+            End If
         Catch ex As Exception
 
         End Try
@@ -1711,15 +1740,15 @@ Public Class Request
                         End If
                     Next
                 End If
-                If vcid = "" Then
-                    VCs = GETallVC("")
-                End If
+                'If vcid = "" Then
+                VCs = GETallVC("")
+                'End If
 
                 anzLoop = anzLoop + 1
             End While
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         GETvcid = vcid
@@ -1759,6 +1788,10 @@ Public Class Request
                 ' Call MsgBox(webVCantwort.message & vbCrLf & "es existieren " & webVCantwort.vc.Count & "VisboCenters")
                 result = webVCantwort.vc
             Else
+                If webVCantwort.message = "Token is dead" Then
+                    token = ""
+                    Throw New ArgumentException(webVCantwort.message)
+                End If
                 Call MsgBox(webVCantwort.message)
             End If
 
@@ -1836,7 +1869,9 @@ Public Class Request
 
             Else
                 If webVPantwort.message.Contains("Token is dead") Then
-                    Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    token = ""
+                    Throw New ArgumentException(webVPantwort.message)
+                    'Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 Else
                     Call MsgBox(webVPantwort.message)
                 End If
@@ -1866,72 +1901,6 @@ Public Class Request
         Dim nothingToDo As Boolean = True
         Dim result As New List(Of clsProjektWebShort)
 
-        'If vpid <> "" Then
-        '    If VRScache.VPvs.ContainsKey(vpid) Then
-
-
-
-        '        If variantName <> "" And VRScache.VPvs(vpid).ContainsKey(variantName) Then
-
-        '            ' nachsehen, ob im Cache für Projekt vpid die Variante variantName und ihre Timestamps gespeichert sind, 
-        '            ' wenn ja, dann result-liste aufbauen
-
-        '            If VRScache.VPvs(vpid)(variantName).ts.Count > 0 And
-        '                DateDiff(DateInterval.Minute, VRScache.VPvs(vpid)(variantName).timeCached, Date.Now) <= updateDelay Then
-
-        '                nothingToDo = nothingToDo And True
-
-        '                ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
-        '                ' diese werden hier in die result-liste gebracht
-        '                For Each kvp As KeyValuePair(Of Date, clsProjektWebShort) In VRScache.VPvs(vpid)(variantName).ts
-        '                    result.Add(kvp.Value)
-        '                Next
-
-        '            Else
-        '                nothingToDo = nothingToDo And False
-        '            End If
-
-        '        Else
-        '            ' nachsehen, ob im Cache für Projekt vpid alle Variante und Timestamps gespeichert sind, 
-        '            ' wenn ja, dann result-liste aufbauen
-
-        '            Dim pname As String = GETpName(vpid)
-        '            Dim vp As clsVP = VRScache.VPs(pname)
-        '            For Each vpvar As clsVPvariant In vp.Variant
-        '                Try
-        '                    If VRScache.VPvs(vpid).ContainsKey(vpvar.variantName) Then
-
-        '                        If VRScache.VPvs(vpid)(variantName).ts.Count > 0 And
-        '                            DateDiff(DateInterval.Minute, VRScache.VPvs(vpid)(variantName).timeCached, Date.Now) <= updateDelay Then
-
-        '                            ' Variante des VP mit vpid wurde bereits gecacht, also nur result-liste aufbauen
-        '                            For Each kvp As KeyValuePair(Of Date, clsProjektWebShort) In VRScache.VPvs(vpid)(vpvar.variantName).ts
-        '                                result.Add(kvp.Value)
-        '                            Next
-
-        '                            nothingToDo = nothingToDo And True
-        '                        Else
-
-        '                            nothingToDo = nothingToDo And False
-
-        '                        End If
-
-        '                    End If
-        '                Catch ex As Exception
-
-        '                End Try
-
-        '            Next
-
-        '        End If
-        '    Else
-        '        nothingToDo = nothingToDo And False
-
-        '    End If
-        'Else
-        '    nothingToDo = nothingToDo And False
-
-        'End If
         Try
             ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
             nothingToDo = VRScache.existsInCache(vpid, variantName, , False)
@@ -2020,10 +1989,17 @@ Public Class Request
 
                 Else
                     If webVPvAntwort.message.Contains("Token is dead") Then
-                        Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        token = ""
+                        Throw New ArgumentException(webVPvAntwort.message)
+                        'Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     Else
-                        Throw New ArgumentException(webVPvAntwort.state & ": " & webVPvAntwort.message)
+                        Call MsgBox(webVPvAntwort.message)
                     End If
+                    'If webVPvAntwort.message.Contains("Token is dead") Then
+                    '    Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    'Else
+                    '    Throw New ArgumentException(webVPvAntwort.state & ": " & webVPvAntwort.message)
+                    'End If
 
                 End If
 
@@ -2187,17 +2163,17 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As String
-            Dim webVPantwort As clsWebVPf = Nothing
+            Dim webVPfantwort As clsWebVPf = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
-                webVPantwort = JsonConvert.DeserializeObject(Of clsWebVPf)(Antwort)
+                webVPfantwort = JsonConvert.DeserializeObject(Of clsWebVPf)(Antwort)
             End Using
 
-            If webVPantwort.state = "success" Then
+            If webVPfantwort.state = "success" Then
                 ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
 
                 'die PortfolioVersionen werden nach Timestamp sortiert
-                For Each vpf In webVPantwort.vpf
+                For Each vpf In webVPfantwort.vpf
 
                     Dim x As Date = CDate(vpf.timestamp)
                     Dim constellationName As String = GETpName(vpid)
@@ -2210,7 +2186,7 @@ Public Class Request
                 GETallVPf = result
 
             Else
-                Call MsgBox(webVPantwort.message)
+                Call MsgBox(webVPfantwort.message)
             End If
 
         Catch ex As Exception
@@ -2583,6 +2559,69 @@ Public Class Request
     End Function
 
 
+
+    ''' <summary>
+    ''' löscht den Lock eines Projektes/variante
+    ''' </summary>
+    ''' <param name="vpid">vpid = "": es wird dass VisboProject vpid gelöscht. user muss die Rechte haben, das checkt der Server</param>
+    ''' <returns>true: gelöscht
+    '''          false: konnte nicht gelöscht werden</returns>
+    Private Function DELETEOneVP(ByVal vpid As String) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+            ' URL zusammensetzen
+            Dim typeRequest As String = "/vp"
+            Dim serverUriString As String = serverUriName & typeRequest
+
+            If vpid <> "" Then
+                serverUriString = serverUriString & "/" & vpid
+            End If
+
+            Dim serverUri As New Uri(serverUriString)
+
+            ' DATA - Block zusammensetzen
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+
+            ' Request absetzen
+            Dim Antwort As String
+            Dim webVP As clsWebVP = Nothing
+
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
+                Antwort = ReadResponseContent(httpresp)
+                webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
+            End Using
+
+            If webVP.state = "success" Then
+                Dim pname As String = GETpName(vpid)
+
+                If VRScache.VPsId.ContainsKey(vpid) Then
+                    VRScache.VPsId.Remove(vpid)
+                End If
+
+                If VRScache.VPsN.ContainsKey(pname) Then
+                    VRScache.VPsN.Remove(pname)
+                End If
+                result = True
+            Else
+                Call MsgBox(webVP.message)
+            End If
+
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in DELETEOneVP: " & ex.Message)
+        End Try
+
+        DELETEOneVP = result
+
+    End Function
+
+
     ''' <summary>
     ''' Lockt ein Projekt/variante
     ''' </summary>
@@ -2818,47 +2857,45 @@ Public Class Request
             Dim serverUriString As String = serverUriName & typeRequest
 
             If vpid = "" Then
-                serverUriString = serverUriString & "/lock"
+                Call MsgBox("Fehler in DELETEVPVariant: keine vpid angegeben")
             Else
                 serverUriString = serverUriString & "/" & vpid & "/variant/" & varID
-            End If
+
+                Dim serverUri As New Uri(serverUriString)
+
+                ' DATA - Block zusammensetzen
+
+                Dim datastr As String = ""
+                Dim encoding As New System.Text.UTF8Encoding()
+                Dim data As Byte() = encoding.GetBytes(datastr)
 
 
-            Dim serverUri As New Uri(serverUriString)
+                ' Request absetzen
+                Dim Antwort As String
+                Dim webVPVarAntwort As clsWebVPVariant = Nothing
 
+                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
+                    Antwort = ReadResponseContent(httpresp)
+                    webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
+                End Using
 
-            ' DATA - Block zusammensetzen
+                If webVPVarAntwort.state = "success" Then
+                    Dim anzvar As Integer = webVPVarAntwort.Variant.Count
+                    If anzvar = 0 Then
+                        VRScache.VPsId(vpid).Variant.Clear()
+                    Else
+                        VRScache.VPsId(vpid).Variant = webVPVarAntwort.Variant
+                    End If
 
-            Dim datastr As String = ""
-            Dim encoding As New System.Text.UTF8Encoding()
-            Dim data As Byte() = encoding.GetBytes(datastr)
+                    Dim pname As String = GETpName(vpid)
+                    ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
+                    result = VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count
 
-
-            ' Request absetzen
-            Dim Antwort As String
-            Dim webVPVarAntwort As clsWebVPVariant = Nothing
-
-            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
-                Antwort = ReadResponseContent(httpresp)
-                webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
-            End Using
-
-            If webVPVarAntwort.state = "success" Then
-                Dim anzLock As Integer = webVPVarAntwort.Variant.Count
-                If anzLock = 0 Then
-                    VRScache.VPsId(vpid).Variant.Clear()
                 Else
-                    VRScache.VPsId(vpid).Variant = webVPVarAntwort.Variant
+                    Call MsgBox(webVPVarAntwort.message)
                 End If
 
-                Dim pname As String = GETpName(vpid)
-                ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
-                result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
-
-            Else
-                Call MsgBox(webVPVarAntwort.message)
-            End If
-
+            End If    ' ende von if vpid <> ""
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler in DELETEVPVariant: " & ex.Message)

@@ -71,16 +71,20 @@ Public Class Request
     Public Function pingMongoDb() As Boolean
 
         Dim result As Boolean = False
+        Try
+            If usedWebServer Then
 
-        If usedWebServer Then
+                result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
 
-            result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
+            Else 'es wird eine MongoDB direkt adressiert
 
-        Else 'es wird eine MongoDB direkt adressiert
+                result = CType(DBAcc, MongoDbAccess.Request).pingMongoDb()
 
-            result = CType(DBAcc, MongoDbAccess.Request).pingMongoDb()
+            End If
 
-        End If
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
 
         pingMongoDb = result
     End Function
