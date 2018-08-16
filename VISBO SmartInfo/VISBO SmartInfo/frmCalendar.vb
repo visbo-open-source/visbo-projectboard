@@ -7,15 +7,6 @@ Imports ProjectBoardBasic
 Public Class frmCalendar
     Private Sub frmCalendar_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
 
-        ' Koordinaten merken
-        frmCoord(PTfrm.calendar, PTpinfo.top) = Me.Top
-        frmCoord(PTfrm.calendar, PTpinfo.left) = Me.Left
-        frmCoord(PTfrm.calendar, PTpinfo.width) = Me.Width
-        frmCoord(PTfrm.calendar, PTpinfo.height) = Me.Height
-
-        If DateTimePicker1.Value > Date.MinValue Then
-            DateTimePicker1.Value = DateTimePicker1.Value.Date.AddHours(23).AddMinutes(59)
-        End If
 
         MyBase.Close()
 
@@ -43,10 +34,29 @@ Public Class frmCalendar
 
     End Sub
 
-    Private Sub DateTimePicker1_ValueChanged(sender As Object, e As EventArgs) Handles DateTimePicker1.ValueChanged
 
-        ' MyBase.Close()
+    Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
+        ' Koordinaten merken
+        frmCoord(PTfrm.calendar, PTpinfo.top) = Me.Top
+        frmCoord(PTfrm.calendar, PTpinfo.left) = Me.Left
+        frmCoord(PTfrm.calendar, PTpinfo.width) = Me.Width
+        frmCoord(PTfrm.calendar, PTpinfo.height) = Me.Height
+
+        If DateTimePicker1.Value > Date.MinValue Then
+            DateTimePicker1.Value = DateTimePicker1.Value.Date.AddHours(23).AddMinutes(59)
+            DateTimePicker1.Value = DateTimePicker1.Value.Date.AddHours(DateTimePicker2.Value.TimeOfDay.Hours).AddMinutes(DateTimePicker2.Value.TimeOfDay.Minutes).AddSeconds(DateTimePicker2.Value.TimeOfDay.Seconds)
+
+        End If
+        MyBase.Close()
 
     End Sub
 
+    Private Sub DateTimePicker1_ValueChanged(sender As Object, e As EventArgs)
+
+
+    End Sub
+
+    Private Sub DateTimePicker2_ValueChanged(sender As Object, e As EventArgs) Handles DateTimePicker2.ValueChanged
+
+    End Sub
 End Class

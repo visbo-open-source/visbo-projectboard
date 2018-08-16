@@ -335,8 +335,10 @@ Public Class Ribbon1
             ' das Formular aufschalten 
             If IsNothing(changeFrm) Then
                 changeFrm = New frmChanges
+                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
                 changeFrm.Show()
             Else
+                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
                 changeFrm.neuAufbau()
             End If
         Catch ex As Exception
