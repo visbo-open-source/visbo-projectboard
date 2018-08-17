@@ -3499,12 +3499,12 @@ Public Module awinGeneralModules
 
 
 
-                hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
+                hproj = New clsProjekt(CDate(msproj.ProjectStart).Date, CDate(msproj.ProjectStart).Date, CDate(msproj.ProjectStart).Date)
 
                 hproj.Erloes = 0
 
 
-                Dim ProjektdauerIndays As Integer = calcDauerIndays(hproj.startDate, CDate(msproj.Finish))
+                Dim ProjektdauerIndays As Integer = calcDauerIndays(hproj.startDate, CDate(msproj.Finish).Date)
                 Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
 
                 ' Projektname ohne "."
@@ -3755,8 +3755,8 @@ Public Module awinGeneralModules
                             ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                             Dim cphaseStartOffset As Long
                             Dim dauerIndays As Long
-                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
-                            dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
+                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start).Date)
+                            dauerIndays = calcDauerIndays(CDate(msTask.Start).Date, CDate(msTask.Finish).Date)
                             .changeStartandDauer(cphaseStartOffset, dauerIndays)
                             .offset = 0
 
@@ -3909,8 +3909,8 @@ Public Module awinGeneralModules
                                                 Dim unit As Double = CType(ass.Units, Double)
                                                 Dim budgetWork As Double = CType(ass.BudgetWork, Double)
 
-                                                Dim startdate As Date = CDate(msTask.Start)
-                                                Dim endedate As Date = CDate(msTask.Finish)
+                                                Dim startdate As Date = CDate(msTask.Start).Date
+                                                Dim endedate As Date = CDate(msTask.Finish).Date
 
                                                 ' Änderung tk: wurde ersetzt durch tk Anpassung: keine Gleichverteilung auf die Monate, sondern 
                                                 ' entsprechend der Lage der Monate ; es muss auch beachtet werden, dass anzmonth von 3.5 - 1.6 2 Monate sind; 
@@ -4127,7 +4127,7 @@ Public Module awinGeneralModules
                             End If
 
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, True)
-
+                            Dim testDate As Date = cmilestone.getDate
 
                             'percentDone, falls Customfiels visbo_percentDone definiert ist
                             If visbo_percentDone <> 0 Then
@@ -4489,9 +4489,14 @@ Public Module awinGeneralModules
 
         Next i
 
+        ' von beiden Datum nur die Datumsvariante hernehmen
+        minDate = minDate.Date
+        maxDate = maxDate.Date
 
         ' ENDE min-max - Bestimmung
         ' ------------------------------
+
+
         If vMapping Then
 
             vproj = erstelleProjektAusVorlage("TMSHilfsproj", mapStruktur, minDate, maxDate, hproj.Erloes, 0,
@@ -4580,10 +4585,14 @@ Public Module awinGeneralModules
                                     ' Berechnung Phasen-Start
                                     Dim mphaseStartOffset As Long
                                     Dim dauerIndays As Long
-                                    mphaseStartOffset = DateDiff(DateInterval.Day, minDate, CDate(msTask.Start))
-                                    dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
+                                    mphaseStartOffset = DateDiff(DateInterval.Day, minDate, CDate(msTask.Start).Date)
+                                    dauerIndays = calcDauerIndays(CDate(msTask.Start).Date, CDate(msTask.Finish).Date)
                                     mPhase.changeStartandDauer(mphaseStartOffset, dauerIndays)
                                     mPhase.offset = 0
+
+                                    Dim mphasestart As Date = mPhase.getStartDate
+                                    Dim mphaseende As Date = mPhase.getEndDate
+
                                     ' eintragen Phase
                                     mproj.AddPhase(mPhase, msTask.Name, aktPhase.nameID)
                                 Catch ex As Exception
@@ -4605,6 +4614,7 @@ Public Module awinGeneralModules
                                 Dim hMSDate As Date = hMilestone.getDate
                                 mMilestone.setDate = hMSDate
 
+                                Dim testDate As Date = mMilestone.getDate
 
                                 Try
                                     aktPhase.addMilestone(mMilestone, origName:=msTask.Name)

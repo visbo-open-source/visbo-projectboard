@@ -1336,7 +1336,7 @@ Public Class frmHierarchySelection
                         End If
 
 
-                        ' Alternativ ohne Background Worker
+
                         If Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
                             'Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
@@ -1344,10 +1344,16 @@ Public Class frmHierarchySelection
                             If menuOption = PTmenue.reportMultiprojektTafel Then
                                 If Not repProfil.isMpp And selectedProjekte.Count < 1 Then
                                     Throw New ArgumentException("Zum Erstellen des Reports muss ein Projekt ausgewählt sein")
-                                ElseIf repProfil.isMpp And _
+                                ElseIf repProfil.isMpp And
                                     Not (showRangeLeft > 0 And showRangeRight > showRangeLeft) Then  ' Zeitraum wurde nicht gesetzt
                                     Throw New ArgumentException("Zum Erstellen des Reports muss ein ein Zeitraum gesetzt sein")
                                 End If
+                            ElseIf Me.menuOption = PTmenue.reportBHTC Then
+
+                                showRangeLeft = getColumnOfDate(repProfil.VonDate)
+                                showRangeRight = getColumnOfDate(repProfil.BisDate)
+
+
                             End If
 
 
