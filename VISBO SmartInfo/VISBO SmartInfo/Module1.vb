@@ -101,9 +101,9 @@ Module Module1
     Friend smartSlideLists As New clsSmartSlideListen
 
     ' diese Liste enthält die Veränderungen nach einem TimeStamp oder Varianten Wechsel 
-    Friend changeListe As New clsChangeListe
+    'Friend changeListe As New clsChangeListe
 
-    ' diese Liste enthölt für jede Slide der Presentation die changeListe, sortiert nach SlideNr.
+    ' diese Liste enthält für jede Slide der Presentation die changeListe, sortiert nach SlideNr.
     Friend chgeLstListe As New SortedList(Of Integer, clsChangeListe)
 
     ' dieses Formular gibt die Changes, die sich bei den Elementen ergeben haben 
@@ -582,7 +582,11 @@ Module Module1
             languages = xml_deserialize(langXMLstring)
 
         End If
-
+        ' Anlegen einer leeren changeliste für jede Slide in der activePresentation
+        For Each slide As PowerPoint.Slide In pptAPP.ActivePresentation.Slides
+            Dim chgelst As New clsChangeListe
+            chgeLstListe.Add(slide.SlideID, chgelst)
+        Next
 
 
     End Sub
@@ -604,11 +608,12 @@ Module Module1
         If Not IsNothing(currentSlide) Then
 
             ' changeliste der vorigen Slide (hier noch currentslide) in die chgeLstListe einfügen
-            If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
-                chgeLstListe.Item(currentSlide.SlideID) = changeListe
-            Else
-                chgeLstListe.Add(currentSlide.SlideID, changeListe)
-            End If
+            'If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
+            '    chgeLstListe.Remove(currentSlide.SlideID)
+            '    chgeLstListe.Add(currentSlide.SlideID, changeListe)
+            'Else
+            '    chgeLstListe.Add(currentSlide.SlideID, changeListe)
+            'End If
 
         End If
 
@@ -803,6 +808,15 @@ Module Module1
 
             ''    End If
 
+            Try
+                ' das Formular aufschalten 
+                If Not IsNothing(changeFrm) Then
+                    changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
+                    changeFrm.neuAufbau()
+                End If
+            Catch ex As Exception
+
+            End Try
 
         Else
             ' nichts tun, das heisst auch nichts verändern ...
@@ -2516,6 +2530,8 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub moveAllShapes(Optional ByVal showOtherVariant As Boolean = False)
 
+        Dim changeliste As New clsChangeListe
+
         Dim namesToBeRenamed As New Collection
         'Dim ix As Integer = 0
 
@@ -2557,26 +2573,35 @@ Module Module1
                         If showOtherVariant Then
                             ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
                             namesToBeRenamed.Add(tmpShape.Name)
-                            Call sendToNewPosition(tmpShape.Name, Date.Now, diffMvList, showOtherVariant)
+                            Call sendToNewPosition(tmpShape.Name, Date.Now, diffMvList, showOtherVariant, changeliste)
                         Else
-                            Call sendToNewPosition(tmpShape.Name, currentTimestamp, diffMvList, showOtherVariant)
+                            Call sendToNewPosition(tmpShape.Name, currentTimestamp, diffMvList, showOtherVariant, changeliste)
+                        End If
+
+                        ' PropertiesPane (sofern sichtbar) mit selektiertem Shape aktualisieren
+                        If propertiesPane.Visible Then
+                            For Each shp As PowerPoint.Shape In selectedPlanShapes
+                                If shp.Id = tmpShape.Id Then
+                                    Call aktualisiereInfoPane(tmpShape)
+                                End If
+                            Next
                         End If
 
 
                     ElseIf isCommentShape(tmpShape) Then
 
-                        If showOtherVariant Then
-                            namesToBeRenamed.Add(tmpShape.Name)
-                            ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
-                            Call modifyComment(tmpShape, Date.Now, showOtherVariant)
-                        Else
-                            Call modifyComment(tmpShape, currentTimestamp, showOtherVariant)
-                        End If
+                            If showOtherVariant Then
+                                namesToBeRenamed.Add(tmpShape.Name)
+                                ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
+                                Call modifyComment(tmpShape, Date.Now, showOtherVariant)
+                            Else
+                                Call modifyComment(tmpShape, currentTimestamp, showOtherVariant)
+                            End If
 
 
-                    ElseIf isOtherVisboComponent(tmpShape) Then
+                        ElseIf isOtherVisboComponent(tmpShape) Then
 
-                        toDoList.Add(tmpShape.Name)
+                            toDoList.Add(tmpShape.Name)
                         'Call updateVisboComponent(tmpShape, currentTimestamp, previousTimeStamp)
 
                     End If
@@ -2714,8 +2739,11 @@ Module Module1
         Call faerbeShapes(PTfarbe.yellow, True)
         Call faerbeShapes(PTfarbe.red, True)
 
-
-
+        If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
+            chgeLstListe(currentSlide.SlideID) = changeliste
+        Else
+            chgeLstListe.Add(currentSlide.SlideID, changeliste)
+        End If
 
     End Sub
 
@@ -2726,8 +2754,11 @@ Module Module1
     ''' </summary>
     ''' <param name="tmpShapeName"></param>
     ''' <remarks></remarks>
-    Friend Sub sendToNewPosition(ByVal tmpShapeName As String, ByVal timestamp As Date, ByRef diffMvList As SortedList(Of String, Double),
-                                       ByVal showOtherVariant As Boolean)
+    Friend Sub sendToNewPosition(ByVal tmpShapeName As String,
+                                 ByVal timestamp As Date,
+                                 ByRef diffMvList As SortedList(Of String, Double),
+                                 ByVal showOtherVariant As Boolean,
+                                 ByRef changeliste As clsChangeListe)
 
         Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShapeName)
 
@@ -2788,7 +2819,7 @@ Module Module1
                                     tmpShape.Visible = True
                                 End If
 
-                                Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, showOtherVariant)
+                                Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, showOtherVariant, changeliste)
                                 If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
@@ -2816,7 +2847,7 @@ Module Module1
                                     tmpShape.Visible = True
                                 End If
 
-                                Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, showOtherVariant)
+                                Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, showOtherVariant, changeliste)
                                 If Not diffMvList.ContainsKey(tmpShape.Name) And mvDiff * mvDiff > 0.01 Then
                                     diffMvList.Add(tmpShape.Name, mvDiff)
                                 End If
@@ -2978,8 +3009,11 @@ Module Module1
     ''' <param name="tsStartdate"></param>
     ''' <param name="tsEndDate"></param>
     ''' <remarks></remarks>
-    Friend Function mvPhaseToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal tsStartdate As Date, ByVal tsEndDate As Date,
-                                               ByVal showOtherVariant As Boolean) As Double
+    Friend Function mvPhaseToTimestampPosition(ByRef tmpShape As PowerPoint.Shape,
+                                               ByVal tsStartdate As Date,
+                                               ByVal tsEndDate As Date,
+                                               ByVal showOtherVariant As Boolean,
+                                               ByRef changeliste As clsChangeListe) As Double
 
         Dim x1Pos As Double, x2Pos As Double
         Dim diffEnde As Double = 0.0
@@ -3037,9 +3071,9 @@ Module Module1
                 Dim chgExplanation As clsChangeItem = buildChangeExplanation(expPvName, expElemName, oldValue, newValue, CInt(diffEnde))
 
                 If showOtherVariant Then
-                    Call changeListe.addToChangeList(newShapeName, chgExplanation)
+                    Call changeliste.addToChangeList(newShapeName, chgExplanation)
                 Else
-                    Call changeListe.addToChangeList(tmpShape.Name, chgExplanation)
+                    Call changeliste.addToChangeList(tmpShape.Name, chgExplanation)
                 End If
 
 
@@ -3069,7 +3103,10 @@ Module Module1
     ''' <param name="msDate"></param>
     ''' <param name="showOtherVariant"></param>
     ''' <remarks></remarks>
-    Friend Function mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape, ByVal msDate As Date, ByVal showOtherVariant As Boolean) As Double
+    Friend Function mvMilestoneToTimestampPosition(ByRef tmpShape As PowerPoint.Shape,
+                                                   ByVal msDate As Date,
+                                                   ByVal showOtherVariant As Boolean,
+                                                   ByRef changeliste As clsChangeListe) As Double
         Dim x1Pos As Double, x2Pos As Double
         Dim diff As Double = 0.0
         Dim diffInDays As Integer
@@ -3113,9 +3150,9 @@ Module Module1
                 chgExplanation = buildChangeExplanation(expPvName, expElemName, oldValue, newValue, diffInDays)
 
                 If showOtherVariant Then
-                    Call changeListe.addToChangeList(newShapeName, chgExplanation)
+                    Call changeliste.addToChangeList(newShapeName, chgExplanation)
                 Else
-                    Call changeListe.addToChangeList(tmpShape.Name, chgExplanation)
+                    Call changeliste.addToChangeList(tmpShape.Name, chgExplanation)
                 End If
 
 
@@ -5140,7 +5177,7 @@ Module Module1
 
     End Sub
     ''' <summary>
-    ''' wird aufgerufen, um die Elemente aus der ChangeListe (TimeMachine) ervorheben zu können, die sich verändert haben. 
+    ''' wird aufgerufen, um die Elemente aus der ChangeListe (TimeMachine) hervorheben zu können, die sich verändert haben. 
     ''' 
     ''' </summary>
     ''' <remarks></remarks>
@@ -6105,15 +6142,27 @@ Module Module1
                 If varPPTTM.timeStamps.Count > 0 Then
 
                     If specDate > varPPTTM.timeStamps.First.Key And specDate < varPPTTM.timeStamps.Last.Key Then
+
                         tmpDate = specDate
                     Else
                         If specDate > varPPTTM.timeStamps.Last.Key Then
                             tmpIndex = varPPTTM.timeStamps.Count - 1
+
+                            If englishLanguage Then
+                                Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " does not exist: Now the newest is shown")
+                            Else
+                                Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " existiert nicht: Es wird der neueste angezeigt")
+                            End If
                             tmpDate = varPPTTM.timeStamps.Last.Key
                         End If
                         If specDate < varPPTTM.timeStamps.First.Key Then
+                            If englishLanguage Then
+                                Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " does not exist")
+                            Else
+                                Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " existiert nicht")
+                            End If
                             tmpIndex = 0
-                            tmpDate = varPPTTM.timeStamps.First.Key
+                            tmpDate = currentTimestamp
                         End If
                     End If
 
@@ -6328,11 +6377,9 @@ Module Module1
     ''' <remarks></remarks>
     Public Sub performBtnAction(ByVal newdate As Date)
 
+        Dim ddiff As Integer = DateDiff(DateInterval.Second, newdate, currentTimestamp)
 
-        If newdate <> currentTimestamp Then
-
-            ' clear changelist 
-            Call changeListe.clearChangeList()
+        If ddiff <> 0 Then
 
             previousVariantName = currentVariantname
             previousTimeStamp = currentTimestamp
@@ -6385,22 +6432,6 @@ Module Module1
                 End If
             End If
 
-            If chgeLstListe.Count > 0 Then
-
-                ' jetzt die changeliste auf die richtige Slide setzten
-                If chgeLstListe.ContainsKey(specSlide.SlideID) Then
-                    changeListe = chgeLstListe.Item(specSlide.SlideID)
-                Else
-                    ' neue changeListe für akt. Slide in chgelstliste hinzufügen
-                    changeListe = New clsChangeListe
-                    'chgeLstListe.Add(specSlide.SlideID, changeListe)
-                End If
-            Else
-                ' neue changeListe für akt. Slide in chgelstliste hinzufügen
-                changeListe = New clsChangeListe
-                'chgeLstListe.Add(specSlide.SlideID, changeListe)
-
-            End If
 
             ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
             currentSlide = specSlide
@@ -6517,7 +6548,11 @@ Module Module1
     ''' führt den Code gehe-zum-letzten bzw Visbo-Update aus 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub visboUpdate(Optional ByVal showMessage As Boolean = True)
+    Public Sub visboUpdate(Optional ByVal updateModus As Integer = ptNavigationButtons.letzter,
+                           Optional ByVal specDate As Date = Nothing,
+                           Optional ByVal showMessage As Boolean = True)
+
+        Dim newDate As Date
 
         If IsNothing(varPPTTM) Then
             Call initPPTTimeMachine(varPPTTM, showMessage)
@@ -6528,9 +6563,23 @@ Module Module1
 
                 If varPPTTM.timeStamps.Count > 0 Then
 
-                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+                    If updateModus = ptNavigationButtons.previous Then
 
-                    If newDate <> currentTimestamp Then
+                        If currentSlide.Tags.Item("PREV").Length > 0 Then
+                            smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
+                        End If
+
+                        newDate = smartSlideLists.prevDate
+
+                    Else
+
+                        newDate = getNextNavigationDate(updateModus, specDate)
+
+                    End If
+
+                    Dim ddiff As Integer = DateDiff(DateInterval.Second, newDate, currentTimestamp)
+
+                    If ddiff <> 0 Then
 
                         Call performBtnAction(newDate)
 
@@ -6540,7 +6589,6 @@ Module Module1
         Else
 
         End If
-
 
     End Sub
 
