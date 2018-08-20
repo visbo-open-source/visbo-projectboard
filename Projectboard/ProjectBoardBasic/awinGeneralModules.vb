@@ -3395,6 +3395,11 @@ Public Module awinGeneralModules
         ' Diese Liste enthält keine Elemente, wenn das VISBO-Flag nicht definiert ist
         Dim visboFlagListe As New SortedList(Of String, Boolean)
 
+
+        Dim outputCollection As New Collection
+        Dim outputline As String = ""
+
+
         Try
 
             'On Error Resume Next
@@ -3590,7 +3595,7 @@ Public Module awinGeneralModules
                     ' hier muss der Uniquename(ID) erzeugt werden evt. aus PhaseDefinitions
 
                     If Not CType(msTask.Milestone, Boolean) _
-                        Or _
+                        Or
                         (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
 
                         ' Ergänzung tk für Demo BHTC 
@@ -3763,6 +3768,14 @@ Public Module awinGeneralModules
                             ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
                             Dim phaseStartdate As Date = .getStartDate
                             Dim phaseEnddate As Date = .getEndDate
+
+                            ' Verification Check
+                            If DateDiff(DateInterval.Day, CDate(msTask.Start).Date, phaseStartdate.Date) <> 0 Then
+                                outputline = "Task (Phase) : " & msTask.Name & "beginnt: " & CDate(msTask.Start).Date.ToShortDateString & "(MSProject) - " & phaseStartdate.ToShortDateString & "(VISBO)"
+                                outputCollection.Add(outputline)
+                                outputline = "Task (Phase) : " & msTask.Name & "endet: " & CDate(msTask.Finish).Date.ToShortDateString & "(MSProject) - " & phaseEnddate.ToShortDateString & "(VISBO)"
+                                outputCollection.Add(outputline)
+                            End If
 
 
                             Dim anzRessources As Integer = msTask.Resources.Count
@@ -4129,6 +4142,13 @@ Public Module awinGeneralModules
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(newStdName, True)
                             Dim testDate As Date = cmilestone.getDate
 
+                            ' Check der Daten: wenn nicht identisch, dann Output bringen
+                            If DateDiff(DateInterval.Day, CDate(msTask.Start).Date, cmilestone.getDate) <> 0 Then
+                                outputline = "Task(Milestone): " & msTask.Name & "beginnt: " & CDate(msTask.Start).Date.ToShortDateString & "(MSProject) - " & cmilestone.getDate.ToShortDateString & "(VISBO)"
+                                outputCollection.Add(outputline)
+                            End If
+
+
                             'percentDone, falls Customfiels visbo_percentDone definiert ist
                             If visbo_percentDone <> 0 Then
                                 Dim strPercentDone As String = msTask.GetField(visbo_percentDone)
@@ -4250,6 +4270,12 @@ Public Module awinGeneralModules
 
 
                 Next i          ' Ende Schleife über alle Tasks/Phasen eines Projektes
+
+                ' Ausgabe der Checks-Fehler
+                If outputCollection.Count > 0 Then
+                    Call showOutPut(outputCollection, "Import " & hproj.name & " Standard", "folgende Ungereimtheiten in den Daten wurden festgestellt")
+                End If
+
 
                 Dim ele_i As Integer = 0
                 Dim msStart As Integer = hproj.hierarchy.getIndexOf1stMilestone
@@ -4454,6 +4480,10 @@ Public Module awinGeneralModules
         ' vMapping = true, wenn Mapping-Spalte Inhalte hat
         Dim vMapping As Boolean = False
 
+        ' Für Check-Message
+        Dim outputCollection As New Collection
+        Dim outputline As String = ""
+
         ' -------------------------------------------------------------------------
         ' Check, ob gemappt werden muss (visbo_mapping enthält Angaben zum Mapping)
         '
@@ -4593,6 +4623,18 @@ Public Module awinGeneralModules
                                     Dim mphasestart As Date = mPhase.getStartDate
                                     Dim mphaseende As Date = mPhase.getEndDate
 
+                                    ' Verification Check
+                                    If DateDiff(DateInterval.Day, CDate(msTask.Start).Date, mphasestart.Date) <> 0 Then
+                                        outputline = "(Phase) : " & msTask.Name & "beginnt:(MSProject):" & CDate(msTask.Start).Date.ToShortDateString & " - " & "(VISBO):" & mphasestart.ToShortDateString
+                                        outputCollection.Add(outputline)
+                                    End If
+                                    If DateDiff(DateInterval.Day, CDate(msTask.Finish).Date, mphaseende.Date) <> 0 Then
+                                        outputline = "(Phase) : " & msTask.Name & "endet:(MSProject):" & CDate(msTask.Finish).Date.ToShortDateString & " - " & "(VISBO):" & mphaseende.ToShortDateString
+                                        outputCollection.Add(outputline)
+                                    End If
+
+
+
                                     ' eintragen Phase
                                     mproj.AddPhase(mPhase, msTask.Name, aktPhase.nameID)
                                 Catch ex As Exception
@@ -4616,6 +4658,13 @@ Public Module awinGeneralModules
 
                                 Dim testDate As Date = mMilestone.getDate
 
+                                ' Verification Check
+                                If DateDiff(DateInterval.Day, hMilestone.getDate.Date, mMilestone.getDate.Date) <> 0 Then
+                                    outputline = "Milestone : " & msTask.Name & " : (MSProject):" & hMilestone.getDate.ToShortDateString & " - " & "(VISBO):" & mMilestone.getDate.ToShortDateString
+                                    outputCollection.Add(outputline)
+                                End If
+
+
                                 Try
                                     aktPhase.addMilestone(mMilestone, origName:=msTask.Name)
 
@@ -4633,6 +4682,13 @@ Public Module awinGeneralModules
                 Next hi
 
                 mappingProject = mproj
+
+
+                If outputCollection.Count > 0 Then
+                    Call showOutPut(outputCollection, "Mapping " & mproj.name & " TMS-Variante", "folgende Ungereimtheiten In den Daten wurden festgestellt")
+                End If
+
+
 
 
             Else
@@ -4704,7 +4760,7 @@ Public Module awinGeneralModules
         ' was noch in die Session importiert werden muss. 
 
         ''If myCollection.Count <> ImportProjekte.Count Then
-        ''    Throw New ArgumentException("keine Übereinstimmung in der Anzahl gültiger/ímportierter Projekte - Abbruch!")
+        ''    Throw New ArgumentException("keine Übereinstimmung In der Anzahl gültiger/ímportierter Projekte - Abbruch!")
         ''End If
 
 
@@ -4945,7 +5001,7 @@ Public Module awinGeneralModules
             If awinSettings.englishLanguage Then
 
                 Call MsgBox(ImportProjekte.Count & " projects were read " & vbLf & vbLf &
-                        anzNeuProjekte.ToString & " new projects" & vbLf &
+                        anzNeuProjekte.ToString & " New projects" & vbLf &
                         anzAktualisierungen.ToString & " project updates")
             Else
 
@@ -5639,7 +5695,7 @@ Public Module awinGeneralModules
             End With
         Catch ex As Exception
 
-            Throw New Exception("Fehler in Portfolio-Datei" & ex.Message)
+            Throw New Exception("Fehler In Portfolio-Datei" & ex.Message)
         End Try
 
 

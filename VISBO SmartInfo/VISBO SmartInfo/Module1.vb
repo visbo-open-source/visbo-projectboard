@@ -2578,21 +2578,30 @@ Module Module1
                             Call sendToNewPosition(tmpShape.Name, currentTimestamp, diffMvList, showOtherVariant, changeliste)
                         End If
 
-
-                    ElseIf isCommentShape(tmpShape) Then
-
-                        If showOtherVariant Then
-                            namesToBeRenamed.Add(tmpShape.Name)
-                            ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
-                            Call modifyComment(tmpShape, Date.Now, showOtherVariant)
-                        Else
-                            Call modifyComment(tmpShape, currentTimestamp, showOtherVariant)
+                        ' PropertiesPane (sofern sichtbar) mit selektiertem Shape aktualisieren
+                        If propertiesPane.Visible Then
+                            For Each shp As PowerPoint.Shape In selectedPlanShapes
+                                If shp.Id = tmpShape.Id Then
+                                    Call aktualisiereInfoPane(tmpShape)
+                                End If
+                            Next
                         End If
 
 
-                    ElseIf isOtherVisboComponent(tmpShape) Then
+                    ElseIf isCommentShape(tmpShape) Then
 
-                        toDoList.Add(tmpShape.Name)
+                            If showOtherVariant Then
+                                namesToBeRenamed.Add(tmpShape.Name)
+                                ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
+                                Call modifyComment(tmpShape, Date.Now, showOtherVariant)
+                            Else
+                                Call modifyComment(tmpShape, currentTimestamp, showOtherVariant)
+                            End If
+
+
+                        ElseIf isOtherVisboComponent(tmpShape) Then
+
+                            toDoList.Add(tmpShape.Name)
                         'Call updateVisboComponent(tmpShape, currentTimestamp, previousTimeStamp)
 
                     End If
