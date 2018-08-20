@@ -56,7 +56,8 @@ Public Class frmCalendar
 
     End Sub
 
-    Private Sub DateTimePicker2_ValueChanged(sender As Object, e As EventArgs) Handles DateTimePicker2.ValueChanged
+    Private Sub DateTimePicker2_ValueChanged(sender As Object, e As EventArgs) 
 
     End Sub
+
 End Class
