@@ -23,44 +23,67 @@ Partial Class frmOutputWindow
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmOutputWindow))
+        Me.Panel1 = New System.Windows.Forms.Panel()
         Me.lblOutput = New System.Windows.Forms.Label()
         Me.ListBoxOutput = New System.Windows.Forms.ListBox()
+        Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
+        '
+        'Panel1
+        '
+        Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.lblOutput)
+        Me.Panel1.Controls.Add(Me.ListBoxOutput)
+        Me.Panel1.Location = New System.Drawing.Point(6, 0)
+        Me.Panel1.Name = "Panel1"
+        Me.Panel1.Size = New System.Drawing.Size(509, 483)
+        Me.Panel1.TabIndex = 2
         '
         'lblOutput
         '
         Me.lblOutput.AutoSize = True
-        Me.lblOutput.Location = New System.Drawing.Point(12, 10)
+        Me.lblOutput.Location = New System.Drawing.Point(4, 18)
+        Me.lblOutput.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.lblOutput.Name = "lblOutput"
-        Me.lblOutput.Size = New System.Drawing.Size(39, 13)
-        Me.lblOutput.TabIndex = 0
+        Me.lblOutput.Size = New System.Drawing.Size(51, 17)
+        Me.lblOutput.TabIndex = 3
         Me.lblOutput.Text = "Label1"
         '
         'ListBoxOutput
         '
+        Me.ListBoxOutput.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ListBoxOutput.FormattingEnabled = True
         Me.ListBoxOutput.HorizontalExtent = 1024
         Me.ListBoxOutput.HorizontalScrollbar = True
-        Me.ListBoxOutput.Location = New System.Drawing.Point(12, 44)
+        Me.ListBoxOutput.ItemHeight = 16
+        Me.ListBoxOutput.Location = New System.Drawing.Point(0, 59)
+        Me.ListBoxOutput.Margin = New System.Windows.Forms.Padding(4)
         Me.ListBoxOutput.Name = "ListBoxOutput"
-        Me.ListBoxOutput.Size = New System.Drawing.Size(371, 329)
-        Me.ListBoxOutput.TabIndex = 1
+        Me.ListBoxOutput.Size = New System.Drawing.Size(507, 420)
+        Me.ListBoxOutput.TabIndex = 2
         '
         'frmOutputWindow
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(395, 397)
-        Me.Controls.Add(Me.ListBoxOutput)
-        Me.Controls.Add(Me.lblOutput)
+        Me.ClientSize = New System.Drawing.Size(527, 489)
+        Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmOutputWindow"
         Me.Text = "Meldungen"
         Me.TopMost = True
+        Me.Panel1.ResumeLayout(False)
+        Me.Panel1.PerformLayout()
         Me.ResumeLayout(False)
-        Me.PerformLayout()
 
     End Sub
-    Friend WithEvents ListBoxOutput As System.Windows.Forms.ListBox
-    Public WithEvents lblOutput As System.Windows.Forms.Label
+
+    Friend WithEvents Panel1 As Windows.Forms.Panel
+    Public WithEvents lblOutput As Windows.Forms.Label
+    Friend WithEvents ListBoxOutput As Windows.Forms.ListBox
 End Class

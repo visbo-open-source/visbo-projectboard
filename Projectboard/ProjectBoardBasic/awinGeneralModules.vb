@@ -4686,18 +4686,14 @@ Public Module awinGeneralModules
 
                 If outputCollection.Count > 0 Then
                     Call showOutPut(outputCollection, "Mapping " & mproj.name & " TMS-Variante", "folgende Ungereimtheiten In den Daten wurden festgestellt")
+                    mappingProject = Nothing
                 End If
-
-
-
 
             Else
 
                 mappingProject = Nothing
 
             End If
-
-
 
         Else
 
