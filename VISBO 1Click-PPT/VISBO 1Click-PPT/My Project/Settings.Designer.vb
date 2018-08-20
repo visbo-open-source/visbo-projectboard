@@ -100,7 +100,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("DESKTOP-7HACVHA")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -184,7 +184,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
     Public Property rememberUserPWD() As Boolean
         Get
             Return CType(Me("rememberUserPWD"),Boolean)

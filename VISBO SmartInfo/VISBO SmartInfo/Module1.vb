@@ -2578,21 +2578,30 @@ Module Module1
                             Call sendToNewPosition(tmpShape.Name, currentTimestamp, diffMvList, showOtherVariant, changeliste)
                         End If
 
-
-                    ElseIf isCommentShape(tmpShape) Then
-
-                        If showOtherVariant Then
-                            namesToBeRenamed.Add(tmpShape.Name)
-                            ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
-                            Call modifyComment(tmpShape, Date.Now, showOtherVariant)
-                        Else
-                            Call modifyComment(tmpShape, currentTimestamp, showOtherVariant)
+                        ' PropertiesPane (sofern sichtbar) mit selektiertem Shape aktualisieren
+                        If propertiesPane.Visible Then
+                            For Each shp As PowerPoint.Shape In selectedPlanShapes
+                                If shp.Id = tmpShape.Id Then
+                                    Call aktualisiereInfoPane(tmpShape)
+                                End If
+                            Next
                         End If
 
 
-                    ElseIf isOtherVisboComponent(tmpShape) Then
+                    ElseIf isCommentShape(tmpShape) Then
 
-                        toDoList.Add(tmpShape.Name)
+                            If showOtherVariant Then
+                                namesToBeRenamed.Add(tmpShape.Name)
+                                ' wenn es eine Variante gibt, wird currentTimeStamp dort auf den entsprechenden Wert der Variante gelegt 
+                                Call modifyComment(tmpShape, Date.Now, showOtherVariant)
+                            Else
+                                Call modifyComment(tmpShape, currentTimestamp, showOtherVariant)
+                            End If
+
+
+                        ElseIf isOtherVisboComponent(tmpShape) Then
+
+                            toDoList.Add(tmpShape.Name)
                         'Call updateVisboComponent(tmpShape, currentTimestamp, previousTimeStamp)
 
                     End If
@@ -6368,8 +6377,9 @@ Module Module1
     ''' <remarks></remarks>
     Public Sub performBtnAction(ByVal newdate As Date)
 
+        Dim ddiff As Integer = DateDiff(DateInterval.Second, newdate, currentTimestamp)
 
-        If newdate <> currentTimestamp Then
+        If ddiff <> 0 Then
 
             previousVariantName = currentVariantname
             previousTimeStamp = currentTimestamp
@@ -6422,23 +6432,6 @@ Module Module1
                 End If
             End If
 
-            'If chgeLstListe.Count > 0 Then
-
-            '    ' jetzt die changeliste auf die richtige Slide setzten
-            '    If chgeLstListe.ContainsKey(specSlide.SlideID) Then
-            '        'changeListe = New clsChangeListe
-            '        changeListe = chgeLstListe.Item(specSlide.SlideID)
-            '    Else
-            '        ' neue changeListe für akt. Slide in chgelstliste hinzufügen
-            '        changeListe = New clsChangeListe
-            '        chgeLstListe.Add(specSlide.SlideID, changeListe)
-            '    End If
-            'Else
-            '    ' neue changeListe für akt. Slide in chgelstliste hinzufügen
-            '    changeListe = New clsChangeListe
-            '    chgeLstListe.Add(specSlide.SlideID, changeListe)
-
-            'End If
 
             ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
             currentSlide = specSlide
@@ -6555,7 +6548,11 @@ Module Module1
     ''' führt den Code gehe-zum-letzten bzw Visbo-Update aus 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub visboUpdate(Optional ByVal showMessage As Boolean = True)
+    Public Sub visboUpdate(Optional ByVal updateModus As Integer = ptNavigationButtons.letzter,
+                           Optional ByVal specDate As Date = Nothing,
+                           Optional ByVal showMessage As Boolean = True)
+
+        Dim newDate As Date
 
         If IsNothing(varPPTTM) Then
             Call initPPTTimeMachine(varPPTTM, showMessage)
@@ -6566,9 +6563,23 @@ Module Module1
 
                 If varPPTTM.timeStamps.Count > 0 Then
 
-                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.letzter)
+                    If updateModus = ptNavigationButtons.previous Then
 
-                    If newDate <> currentTimestamp Then
+                        If currentSlide.Tags.Item("PREV").Length > 0 Then
+                            smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
+                        End If
+
+                        newDate = smartSlideLists.prevDate
+
+                    Else
+
+                        newDate = getNextNavigationDate(updateModus, specDate)
+
+                    End If
+
+                    Dim ddiff As Integer = DateDiff(DateInterval.Second, newDate, currentTimestamp)
+
+                    If ddiff <> 0 Then
 
                         Call performBtnAction(newDate)
 
@@ -6578,7 +6589,6 @@ Module Module1
         Else
 
         End If
-
 
     End Sub
 
