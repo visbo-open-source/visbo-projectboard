@@ -674,149 +674,147 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_SlideSelectionChanged(SldRange As PowerPoint.SlideRange) Handles pptAPP.SlideSelectionChanged
 
-        'If Not IsNothing(currentSlide) Then
-
-        '    ' changeliste der vorigen Slide (hier noch currentslide) in die chgeLstListe einfügen
-        '    If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
-        '        chgeLstListe.Item(currentSlide.SlideID) = changeListe
-        '    Else
-        '        chgeLstListe.Add(currentSlide.SlideID, changeListe)
-        '    End If
-
-        'End If
-
-
-
 
         ' die aktuelle Slide setzen 
         If SldRange.Count = 1 Then
 
-            Call pptAPP_UpdateOneSlide(SldRange.Item(1))
+            Dim afterSlide As Integer = SldRange.SlideID ' aktuell selektierte SlideID
+            Dim beforeSlide As Integer = 0               ' zuvor selektierte SlideID
+            If Not IsNothing(currentSlide) Then
+                beforeSlide = currentSlide.SlideID
+            End If
 
-            '' ur:20180710: die auskommentierten Zeilen sind nun in pptAPP_UpdateSpecSlide - Defninition enthalten
+            ' nur wenn die SlideID gewechselt hat, muss agiert werden
+            If beforeSlide <> afterSlide Then
 
-            ''    smartSlideLists = New clsSmartSlideListen
+                Call pptAPP_UpdateOneSlide(SldRange.Item(1))
 
-            ''    If Not IsNothing(searchPane) Then
-            ''        If searchPane.Visible Then
-            ''            Call clearSearchPane(Nothing)
-            ''        End If
-            ''    End If
+                '' ur:20180710: die auskommentierten Zeilen sind nun in pptAPP_UpdateSpecSlide - Defninition enthalten
 
+                ''    smartSlideLists = New clsSmartSlideListen
 
-            ''    ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
-            ''    currentSlide = SldRange.Item(1)
-
-            ''    Try
-            ''        If Not IsNothing(currentSlide) Then
-            ''            If currentSlide.Tags.Item("SMART").Length > 0 Then
-            ''                ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
-            ''                'Call resetMovedGlowOfShapes()
-            ''            End If
-            ''        End If
-
-            ''        Call deleteMarkerShapes()
-
-            ''        Call putAllNoPrioShapesInNoshow()
-
-            ''    Catch ex As Exception
-
-            ''    End Try
-
-            ''    thereIsNoVersionFieldOnSlide = True
-
-            ''    If currentSlide.Tags.Count > 0 Then
-            ''        Try
-            ''            If currentSlide.Tags.Item("SMART").Length > 0 Then
-
-            ''                ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
-            ''                Call getDBsettings()
-
-            ''                Dim msg As String = ""
-            ''                If userIsEntitled(msg) Then
-
-            ''                    ' die HomeButtonRelevanz setzen 
-            ''                    homeButtonRelevance = False
-            ''                    changedButtonRelevance = False
-
-            ''                    slideHasSmartElements = True
-
-            ''                    Try
-
-            ''                        slideCoordInfo = New clsPPTShapes
-            ''                        slideCoordInfo.pptSlide = currentSlide
-
-            ''                        With currentSlide
-
-            ''                            ' currentTimeStamp setzen 
-            ''                            If .Tags.Item("CRD").Length > 0 Then
-            ''                                currentTimestamp = CDate(.Tags.Item("CRD"))
-            ''                            End If
-
-            ''                            If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-            ''                                Dim tmpSD As String = .Tags.Item("CALL")
-            ''                                Dim tmpED As String = .Tags.Item("CALR")
-            ''                                slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-            ''                            End If
-
-            ''                            If .Tags.Item("SOC").Length > 0 Then
-            ''                                StartofCalendar = CDate(.Tags.Item("SOC"))
-            ''                            End If
+                ''    If Not IsNothing(searchPane) Then
+                ''        If searchPane.Visible Then
+                ''            Call clearSearchPane(Nothing)
+                ''        End If
+                ''    End If
 
 
+                ''    ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
+                ''    currentSlide = SldRange.Item(1)
 
-            ''                        End With
+                ''    Try
+                ''        If Not IsNothing(currentSlide) Then
+                ''            If currentSlide.Tags.Item("SMART").Length > 0 Then
+                ''                ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
+                ''                'Call resetMovedGlowOfShapes()
+                ''            End If
+                ''        End If
 
-            ''                    Catch ex As Exception
-            ''                        slideCoordInfo = Nothing
-            ''                    End Try
+                ''        Call deleteMarkerShapes()
+
+                ''        Call putAllNoPrioShapesInNoshow()
+
+                ''    Catch ex As Exception
+
+                ''    End Try
+
+                ''    thereIsNoVersionFieldOnSlide = True
+
+                ''    If currentSlide.Tags.Count > 0 Then
+                ''        Try
+                ''            If currentSlide.Tags.Item("SMART").Length > 0 Then
+
+                ''                ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
+                ''                Call getDBsettings()
+
+                ''                Dim msg As String = ""
+                ''                If userIsEntitled(msg) Then
+
+                ''                    ' die HomeButtonRelevanz setzen 
+                ''                    homeButtonRelevance = False
+                ''                    changedButtonRelevance = False
+
+                ''                    slideHasSmartElements = True
+
+                ''                    Try
+
+                ''                        slideCoordInfo = New clsPPTShapes
+                ''                        slideCoordInfo.pptSlide = currentSlide
+
+                ''                        With currentSlide
+
+                ''                            ' currentTimeStamp setzen 
+                ''                            If .Tags.Item("CRD").Length > 0 Then
+                ''                                currentTimestamp = CDate(.Tags.Item("CRD"))
+                ''                            End If
+
+                ''                            If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
+                ''                                Dim tmpSD As String = .Tags.Item("CALL")
+                ''                                Dim tmpED As String = .Tags.Item("CALR")
+                ''                                slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                ''                            End If
+
+                ''                            If .Tags.Item("SOC").Length > 0 Then
+                ''                                StartofCalendar = CDate(.Tags.Item("SOC"))
+                ''                            End If
 
 
-            ''                    Call buildSmartSlideLists()
 
-            ''                    ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-            ''                    initialHomeButtonRelevance = homeButtonRelevance
-            ''                    initialChangedButtonRelevance = changedButtonRelevance
-            ''                    If searchPane.Visible Then
+                ''                        End With
 
-            ''                        If slideHasSmartElements Then
+                ''                    Catch ex As Exception
+                ''                        slideCoordInfo = Nothing
+                ''                    End Try
 
-            ''                            ucSearchView.fülltListbox()
 
-            ''                        End If
-            ''                    End If
+                ''                    Call buildSmartSlideLists()
 
-            ''                Else
-            ''                    Call MsgBox(msg)
-            ''                End If
+                ''                    ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                ''                    initialHomeButtonRelevance = homeButtonRelevance
+                ''                    initialChangedButtonRelevance = changedButtonRelevance
+                ''                    If searchPane.Visible Then
 
-            ''            End If
-            ''        Catch ex As Exception
+                ''                        If slideHasSmartElements Then
 
-            ''        End Try
-            ''    Else
+                ''                            ucSearchView.fülltListbox()
 
-            ''        slideHasSmartElements = False
-            ''        ' Listen löschen
-            ''        smartSlideLists = New clsSmartSlideListen
+                ''                        End If
+                ''                    End If
 
-            ''        If Not IsNothing(searchPane) Then
-            ''            If searchPane.Visible Then
-            ''                Call clearSearchPane(Nothing)
-            ''            End If
-            ''        End If
+                ''                Else
+                ''                    Call MsgBox(msg)
+                ''                End If
 
-            ''    End If
+                ''            End If
+                ''        Catch ex As Exception
 
-            Try
-                ' das Formular aufschalten 
-                If Not IsNothing(changeFrm) Then
-                    changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
-                    changeFrm.neuAufbau()
-                End If
-            Catch ex As Exception
+                ''        End Try
+                ''    Else
 
-            End Try
+                ''        slideHasSmartElements = False
+                ''        ' Listen löschen
+                ''        smartSlideLists = New clsSmartSlideListen
+
+                ''        If Not IsNothing(searchPane) Then
+                ''            If searchPane.Visible Then
+                ''                Call clearSearchPane(Nothing)
+                ''            End If
+                ''        End If
+
+                ''    End If
+
+                Try
+                    ' das Formular aufschalten 
+                    If Not IsNothing(changeFrm) Then
+                        changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
+                        changeFrm.neuAufbau()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            End If       'Ende ob SlideIDs ungleich sind
 
         Else
             ' nichts tun, das heisst auch nichts verändern ...

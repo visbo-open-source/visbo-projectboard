@@ -29,7 +29,7 @@ Public Class ThisAddIn
         showTrafficLights(4) = False
 
         ' muss hier noch auf andere Art und Weise bestimmt werden 
-        englishLanguage = False
+        englishLanguage = True
 
         ' im Powerpoint soll das pwd immer gemerkt werden ..
 
