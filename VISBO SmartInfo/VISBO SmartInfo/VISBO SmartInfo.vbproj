@@ -41,7 +41,7 @@
     <PublishUrl>C:\Users\Koytek\Documents\publish\VISBO SmartInfo\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.1.0.33</ApplicationVersion>
+    <ApplicationVersion>2.1.0.35</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>

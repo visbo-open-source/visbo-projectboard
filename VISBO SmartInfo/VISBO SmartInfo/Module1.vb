@@ -2741,7 +2741,9 @@ Module Module1
         Call faerbeShapes(PTfarbe.red, True)
 
         If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
-            chgeLstListe(currentSlide.SlideID) = changeliste
+            chgeLstListe.Remove(currentSlide.SlideID)
+            chgeLstListe.Add(currentSlide.SlideID, changeliste)
+            'chgeLstListe(currentSlide.SlideID) = changeliste
         Else
             chgeLstListe.Add(currentSlide.SlideID, changeliste)
         End If
@@ -6386,15 +6388,13 @@ Module Module1
                 Call showTSMessage(currentTimestamp)
             End If
 
-            ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
+            ''    das Formular ggf, also wenn aktiv, updaten 
+            '    If IsNothing(changeFrm) Then
+            '        Nichts tun, user soll ja explizit aufschalten ..
+            '    Else
+            '        changeFrm.neuAufbau()
+            '    End If
 
-            ' das Formular ggf, also wenn aktiv,  updaten 
-            If IsNothing(changeFrm) Then
-                ' Nichts tun, user soll ja explizit aufschalten ..
-            Else
-                changeFrm.neuAufbau()
-            End If
-            'End If
 
 
 
