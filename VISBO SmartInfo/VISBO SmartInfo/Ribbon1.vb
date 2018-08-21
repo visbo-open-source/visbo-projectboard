@@ -374,6 +374,11 @@ Public Class Ribbon1
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
 
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+
         Catch ex As Exception
 
         End Try
@@ -407,6 +412,12 @@ Public Class Ribbon1
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
 
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+
+
         Catch ex As Exception
 
         End Try
@@ -439,6 +450,10 @@ Public Class Ribbon1
             currentSlide = formerSlide
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
         Catch ex As Exception
 
         End Try
@@ -468,7 +483,10 @@ Public Class Ribbon1
             currentSlide = formerSlide
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
-
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
         Catch ex As Exception
 
         End Try
@@ -493,6 +511,10 @@ Public Class Ribbon1
             currentSlide = formerSlide
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
 
         Catch ex As Exception
 
@@ -612,6 +634,10 @@ Public Class Ribbon1
             currentSlide = formerSlide
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
 
         Catch ex As Exception
 
@@ -639,6 +665,10 @@ Public Class Ribbon1
             currentSlide = formerSlide
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
 
         Catch ex As Exception
 
