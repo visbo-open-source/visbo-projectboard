@@ -680,8 +680,14 @@ Module Module1
 
             Dim afterSlide As Integer = SldRange.SlideID ' aktuell selektierte SlideID
             Dim beforeSlide As Integer = 0               ' zuvor selektierte SlideID
+
             If Not IsNothing(currentSlide) Then
-                beforeSlide = currentSlide.SlideID
+                Try
+                    beforeSlide = currentSlide.SlideID
+                Catch ex As Exception
+
+                End Try
+
             End If
 
 
