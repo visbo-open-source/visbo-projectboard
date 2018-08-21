@@ -26851,7 +26851,9 @@ Public Module awinGeneralModules
                                                 vglProj = Nothing
                                             End Try
 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
+                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, "")
 
 
                                         Case PTprdk.PersonalPie
