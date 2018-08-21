@@ -43,7 +43,7 @@ Public Class ThisAddIn
 
         ' für Demo Zwecke only !! 
         ' vor Auslieferung auf false setzen ! 
-        'awinSettings.autoSetActualDataDate = true
+        awinSettings.autoSetActualDataDate = True
 
     End Sub
 
