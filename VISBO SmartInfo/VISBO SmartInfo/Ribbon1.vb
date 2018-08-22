@@ -311,12 +311,17 @@ Public Class Ribbon1
     End Sub
 
     Private Sub activateInfo_Click(sender As Object, e As RibbonControlEventArgs) Handles activateInfo.Click
+        Try
 
-        If propertiesPane.Visible Then
-            propertiesPane.Visible = False
-        Else
-            propertiesPane.Visible = True
-        End If
+            If propertiesPane.Visible Then
+                propertiesPane.Visible = False
+            Else
+                propertiesPane.Visible = True
+            End If
+
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 
