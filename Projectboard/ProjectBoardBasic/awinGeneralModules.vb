@@ -3502,9 +3502,22 @@ Public Module awinGeneralModules
                 ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
                 '' ''For proj_i = beginnProjekt To endeProjekt
 
+                ' Herausfinden, welches Startdatum des Projektes das früheste ist, da sonst die RootPhase zu spät anfängt
+                ' und manche Phasen dann einen negative startoffset bekommen
+                Dim ProjectStartDate As Date
+
+                ProjectStartDate = CDate(msproj.ProjectStart)
+
+                If CDate(msproj.Start) < ProjectStartDate Then
+                    ProjectStartDate = CDate(msproj.Start)
+                End If
+
+                If CDate(msproj.EarlyStart) < ProjectStartDate Then
+                    ProjectStartDate = CDate(msproj.EarlyStart)
+                End If
 
 
-                hproj = New clsProjekt(CDate(msproj.ProjectStart).Date, CDate(msproj.ProjectStart).Date, CDate(msproj.ProjectStart).Date)
+                hproj = New clsProjekt(CDate(ProjectStartDate).Date, CDate(ProjectStartDate).Date, CDate(ProjectStartDate).Date)
 
                 hproj.Erloes = 0
 
