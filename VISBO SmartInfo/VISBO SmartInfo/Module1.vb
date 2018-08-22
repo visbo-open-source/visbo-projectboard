@@ -6636,7 +6636,7 @@ Module Module1
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub visboUpdate(Optional ByVal updateModus As Integer = ptNavigationButtons.letzter,
-                           Optional ByVal specDate As Date = Nothing,
+                           Optional ByRef specDate As Date = Nothing,
                            Optional ByVal showMessage As Boolean = True)
 
         Dim newDate As Date
@@ -6653,10 +6653,10 @@ Module Module1
                     If updateModus = ptNavigationButtons.previous Then
 
                         If currentSlide.Tags.Item("PREV").Length > 0 Then
-                            smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
+                            'smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
+                            newDate = CDate(currentSlide.Tags.Item("PREV"))
                         End If
 
-                        newDate = smartSlideLists.prevDate
 
                     Else
 
@@ -6673,6 +6673,9 @@ Module Module1
 
         End If
 
+        If updateModus = ptNavigationButtons.letzter Then
+            specDate = newDate
+        End If
     End Sub
 
 End Module
