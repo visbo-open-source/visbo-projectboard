@@ -364,7 +364,9 @@ Public Class Ribbon1
         Try
             Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
             Dim formerSlide As PowerPoint.Slide = currentSlide
+            Dim newestVersion As Boolean = False
             Dim newdate As Date
+            Dim formerCurrentTimestamp As Date
 
             For i As Integer = 1 To pres.Slides.Count
                 Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
@@ -372,12 +374,16 @@ Public Class Ribbon1
                 If Not IsNothing(sld) Then
                     If Not (sld.Tags.Item("FROZEN").Length > 0) Then
                         Call pptAPP_UpdateOneSlide(sld)
+                        formerCurrentTimestamp = currentTimestamp
                         Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
+                        If formerCurrentTimestamp = newdate Then
+                            newestVersion = True
+                        End If
                     End If
                 End If
             Next
 
-            If DateDiff(DateInterval.Day, newdate.Date, currentTimestamp.Date) = 0 Then
+            If newestVersion Then
                 If englishLanguage Then
                     Call MsgBox("newest TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " is already shown!")
                 Else
@@ -512,7 +518,9 @@ Public Class Ribbon1
 
             Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
             Dim formerSlide As PowerPoint.Slide = currentSlide
+            Dim newestVersion As Boolean = False
             Dim newdate As Date
+            Dim formerCurrentTimestamp As Date
 
             For i As Integer = 1 To pres.Slides.Count
                 Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
@@ -520,11 +528,15 @@ Public Class Ribbon1
                 If Not IsNothing(sld) Then
                     If Not (sld.Tags.Item("FROZEN").Length > 0) Then
                         Call pptAPP_UpdateOneSlide(sld)
+                        formerCurrentTimestamp = currentTimestamp
                         Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
+                        If formerCurrentTimestamp = newdate Then
+                            newestVersion = True
+                        End If
                     End If
                 End If
             Next
-            If DateDiff(DateInterval.Day, newdate.Date, currentTimestamp.Date) = 0 Then
+            If newestVersion Then
                 If englishLanguage Then
                     Call MsgBox("newest TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " is already shown!")
                 Else
@@ -539,10 +551,8 @@ Public Class Ribbon1
                 changeFrm.neuAufbau()
             End If
 
-
-
         Catch ex As Exception
-            pptAPP.Cursor = Excel.XlMousePointer.xlDefault
+
         End Try
     End Sub
 

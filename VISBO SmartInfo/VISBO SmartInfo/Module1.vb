@@ -6675,7 +6675,6 @@ Module Module1
 
         If updateModus = ptNavigationButtons.letzter Then
             specDate = newDate
-
         End If
     End Sub
 
