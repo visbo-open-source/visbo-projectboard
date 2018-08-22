@@ -364,16 +364,26 @@ Public Class Ribbon1
         Try
             Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
             Dim formerSlide As PowerPoint.Slide = currentSlide
+            Dim newdate As Date
 
             For i As Integer = 1 To pres.Slides.Count
                 Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                newdate = Nothing
                 If Not IsNothing(sld) Then
                     If Not (sld.Tags.Item("FROZEN").Length > 0) Then
                         Call pptAPP_UpdateOneSlide(sld)
-                        Call visboUpdate(ptNavigationButtons.letzter, , False)
+                        Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
                     End If
                 End If
             Next
+
+            If DateDiff(DateInterval.Day, newdate.Date, currentTimestamp.Date) = 0 Then
+                If englishLanguage Then
+                    Call MsgBox("newest TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " is already shown!")
+                Else
+                    Call MsgBox("neuester TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " wird bereits angezeigt")
+                End If
+            End If
 
             currentSlide = formerSlide
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
@@ -502,17 +512,25 @@ Public Class Ribbon1
 
             Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
             Dim formerSlide As PowerPoint.Slide = currentSlide
+            Dim newdate As Date
 
             For i As Integer = 1 To pres.Slides.Count
                 Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                newdate = Nothing
                 If Not IsNothing(sld) Then
                     If Not (sld.Tags.Item("FROZEN").Length > 0) Then
                         Call pptAPP_UpdateOneSlide(sld)
-                        Call visboUpdate(ptNavigationButtons.letzter, , False)
+                        Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
                     End If
                 End If
             Next
-
+            If DateDiff(DateInterval.Day, newdate.Date, currentTimestamp.Date) = 0 Then
+                If englishLanguage Then
+                    Call MsgBox("newest TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " is already shown!")
+                Else
+                    Call MsgBox("neuester TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " wird bereits angezeigt")
+                End If
+            End If
             currentSlide = formerSlide
             ' smartSlideLists für die aktuelle currentslide wieder aufbauen
             Call buildSmartSlideLists()
@@ -521,8 +539,10 @@ Public Class Ribbon1
                 changeFrm.neuAufbau()
             End If
 
-        Catch ex As Exception
 
+
+        Catch ex As Exception
+            pptAPP.Cursor = Excel.XlMousePointer.xlDefault
         End Try
     End Sub
 
@@ -655,6 +675,7 @@ Public Class Ribbon1
 
             Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
             Dim formerSlide As PowerPoint.Slide = currentSlide
+
 
             For i As Integer = 1 To pres.Slides.Count
                 Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
