@@ -41,6 +41,7 @@
     'Nehmen Sie keine Änderungen mit dem Code-Editor vor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Ribbon1))
         Me.Tab1 = Me.Factory.CreateRibbonTab
         Me.Tab2 = Me.Factory.CreateRibbonTab
         Me.Group2 = Me.Factory.CreateRibbonGroup
@@ -99,8 +100,8 @@
         Me.btnUpdate.Name = "btnUpdate"
         Me.btnUpdate.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnUpdate.ShowImage = True
-        Me.btnUpdate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the latest version in the database; "
+        Me.btnUpdate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and" &
+    " tables  are synchronized with the the latest version in the database; "
         '
         'Group3
         '
@@ -121,8 +122,8 @@
         Me.btnStart.Name = "btnStart"
         Me.btnStart.ScreenTip = "VISBO Time-Machine: synchronize with first version"
         Me.btnStart.ShowImage = True
-        Me.btnStart.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the first version in the database; "
+        Me.btnStart.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and" &
+    " tables  are synchronized with the the first version in the database; "
         '
         'btnFastBack
         '
@@ -133,8 +134,7 @@
         Me.btnFastBack.ScreenTip = "VISBO Time-Machine: synchronize with version 1 month earlier"
         Me.btnFastBack.ShowImage = True
         Me.btnFastBack.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the version 1 month earlier in the databas" &
-    "e; "
+    "and tables  are synchronized with the version 1 month earlier in the database; "
         '
         'btnDate
         '
@@ -143,6 +143,9 @@
         Me.btnDate.Label = "Date"
         Me.btnDate.Name = "btnDate"
         Me.btnDate.ShowImage = True
+        Me.btnDate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and" &
+    " tables  are synchronized with the version of the selected date and time in the " &
+    "database"
         '
         'btnFastForward
         '
@@ -165,7 +168,7 @@
         Me.btnEnd2.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnEnd2.ShowImage = True
         Me.btnEnd2.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the latest version in the database; "
+    "and tables  are synchronized with the latest version in the database; "
         '
         'btnPrevious
         '
@@ -174,6 +177,7 @@
         Me.btnPrevious.Label = "Previous"
         Me.btnPrevious.Name = "btnPrevious"
         Me.btnPrevious.ShowImage = True
+        Me.btnPrevious.SuperTip = resources.GetString("btnPrevious.SuperTip")
         '
         'Group4
         '
@@ -193,8 +197,8 @@
         Me.btnShowChanges.Name = "btnShowChanges"
         Me.btnShowChanges.ScreenTip = "VISBO Time-Machine: show differences"
         Me.btnShowChanges.ShowImage = True
-        Me.btnShowChanges.SuperTip = "shows differences in milestone and task dates between currant version and last ac" &
-    "tive version. "
+        Me.btnShowChanges.SuperTip = "shows differences in milestone and task dates between current version and last ac" &
+    "tive version in the database"
         '
         'activateSearch
         '
@@ -236,6 +240,7 @@
         Me.btnFreeze.Label = "Freeze/Defreeze"
         Me.btnFreeze.Name = "btnFreeze"
         Me.btnFreeze.ShowImage = True
+        Me.btnFreeze.SuperTip = resources.GetString("btnFreeze.SuperTip")
         '
         'SmartInfo
         '
@@ -246,6 +251,7 @@
         '
         'settingsTab
         '
+        Me.settingsTab.Enabled = False
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
@@ -254,13 +260,16 @@
         Me.varianten_Tab.Enabled = False
         Me.varianten_Tab.Label = "Variants"
         Me.varianten_Tab.Name = "varianten_Tab"
+        Me.varianten_Tab.Visible = False
         '
         'Button1
         '
+        Me.Button1.Enabled = False
         Me.Button1.Label = "Smartify Chart"
         Me.Button1.Name = "Button1"
         Me.Button1.ScreenTip = "embeds information about data source in Chart and uploads timestamped data source" &
     ""
+        Me.Button1.Visible = False
         '
         'Ribbon1
         '

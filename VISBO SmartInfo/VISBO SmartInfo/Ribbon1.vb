@@ -162,12 +162,17 @@ Public Class Ribbon1
     End Sub
 
     Private Sub activateInfo_Click(sender As Object, e As RibbonControlEventArgs) Handles activateInfo.Click
+        Try
 
-        If propertiesPane.Visible Then
-            propertiesPane.Visible = False
-        Else
-            propertiesPane.Visible = True
-        End If
+            If propertiesPane.Visible Then
+                propertiesPane.Visible = False
+            Else
+                propertiesPane.Visible = True
+            End If
+
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 
@@ -186,8 +191,10 @@ Public Class Ribbon1
             ' das Formular aufschalten 
             If IsNothing(changeFrm) Then
                 changeFrm = New frmChanges
+                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
                 changeFrm.Show()
             Else
+                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
                 changeFrm.neuAufbau()
             End If
         Catch ex As Exception
@@ -205,10 +212,54 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Private Sub btnEnd2_Click(sender As Object, e As RibbonControlEventArgs) Handles btnEnd2.Click
 
-        Call visboUpdate()
+
+        Try
+            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            Dim formerSlide As PowerPoint.Slide = currentSlide
+            Dim newestVersion As Boolean = False
+            Dim newdate As Date
+            Dim formerCurrentTimestamp As Date
+
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                newdate = Nothing
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) Then
+                        Call pptAPP_UpdateOneSlide(sld)
+                        formerCurrentTimestamp = currentTimestamp
+                        Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
+                        If formerCurrentTimestamp = newdate Then
+                            newestVersion = True
+                        End If
+                    End If
+                End If
+            Next
+
+            If newestVersion Then
+                If englishLanguage Then
+                    Call MsgBox("newest TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " is already shown!")
+                Else
+                    Call MsgBox("neuester TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " wird bereits angezeigt")
+                End If
+            End If
+
+            currentSlide = formerSlide
+            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            ' tk 22.8.18
+            Call pptAPP_UpdateOneSlide(currentSlide)
+            'Call buildSmartSlideLists()
+
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+
+        Catch ex As Exception
+
+        End Try
 
     End Sub
-
+>>>>>>> master
 
     ''' <summary>
     ''' geht einen Schritt in die Zukunft 
@@ -218,30 +269,36 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Private Sub btnFastForward_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastForward.Click
 
-        Dim newDate As Date
-        Dim found As Boolean = False
-        Dim weitermachen As Boolean = False
+        Try
 
+            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            Dim formerSlide As PowerPoint.Slide = currentSlide
 
-        If IsNothing(varPPTTM) Then
-            Call initPPTTimeMachine(varPPTTM)
-        End If
-
-        If Not IsNothing(varPPTTM) Then
-            If Not IsNothing(varPPTTM.timeStamps) Then
-                If varPPTTM.timeStamps.Count > 0 Then
-
-                    newDate = getNextNavigationDate(ptNavigationButtons.nachher)
-
-                    If newDate <> currentTimestamp Then
-
-                        Call performBtnAction(newDate)
-
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) Then
+                        Call pptAPP_UpdateOneSlide(sld)
+                        Call visboUpdate(ptNavigationButtons.nachher, , False)
                     End If
-
                 End If
+            Next
+
+            currentSlide = formerSlide
+            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            ' tk 22.8.18
+            Call pptAPP_UpdateOneSlide(currentSlide)
+            'Call buildSmartSlideLists()
+
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
             End If
-        End If
+
+
+        Catch ex As Exception
+
+        End Try
 
 
     End Sub
@@ -253,76 +310,116 @@ Public Class Ribbon1
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
+        Try
 
-        If IsNothing(varPPTTM) Then
-            Call initPPTTimeMachine(varPPTTM)
-        End If
-        If Not IsNothing(varPPTTM) Then
+            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            Dim formerSlide As PowerPoint.Slide = currentSlide
 
-            If Not IsNothing(varPPTTM.timeStamps) Then
-
-                If varPPTTM.timeStamps.Count > 0 Then
-
-                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.vorher)
-
-                    If newDate <> currentTimestamp Then
-
-                        Call performBtnAction(newDate)
-
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) Then
+                        Call pptAPP_UpdateOneSlide(sld)
+                        Call visboUpdate(ptNavigationButtons.vorher, , False)
                     End If
                 End If
-            End If
+            Next
 
-        End If
+            currentSlide = formerSlide
+            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            ' tk 22.8.18
+            Call pptAPP_UpdateOneSlide(currentSlide)
+            'Call buildSmartSlideLists()
+
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+        Catch ex As Exception
+
+        End Try
+
     End Sub
     ''' <summary>
-    ''' positioniert auf den ersten Timestamp 
+    ''' positioniert alle Slides auf den ersten Timestamp 
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
+        Try
+            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            Dim formerSlide As PowerPoint.Slide = currentSlide
 
-        If IsNothing(varPPTTM) Then
-            Call initPPTTimeMachine(varPPTTM)
-        End If
-
-        If Not IsNothing(varPPTTM) Then
-
-            If Not IsNothing(varPPTTM.timeStamps) Then
-                If varPPTTM.timeStamps.Count > 0 Then
-
-                    Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.erster)
-
-                    If newDate <> currentTimestamp Then
-
-                        Call performBtnAction(newDate)
-
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) Then
+                        Call pptAPP_UpdateOneSlide(sld)
+                        Call visboUpdate(ptNavigationButtons.erster, , False)
                     End If
 
                 End If
-            End If
+            Next
+            currentSlide = formerSlide
+            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            ' tk 22.8.18
+            Call pptAPP_UpdateOneSlide(currentSlide)
+            'Call buildSmartSlideLists()
 
-        End If
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+        Catch ex As Exception
+
+        End Try
 
     End Sub
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
-        'Call visboUpdate()
+        Try
 
-        Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
-        Dim formerCurrentSlideID As Integer = currentSlide.SlideID
+            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            Dim formerSlide As PowerPoint.Slide = currentSlide
+            Dim newestVersion As Boolean = False
+            Dim newdate As Date
+            Dim formerCurrentTimestamp As Date
 
-        For i As Integer = 1 To pres.Slides.Count
-            Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
-            If Not IsNothing(sld) Then
-                If Not (sld.Tags.Item("FROZEN").Length > 0) Then
-                    Call pptAPP_UpdateOneSlide(sld)
-                    Call visboUpdate(False)
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                newdate = Nothing
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) Then
+                        Call pptAPP_UpdateOneSlide(sld)
+                        formerCurrentTimestamp = currentTimestamp
+                        Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
+                        If formerCurrentTimestamp = newdate Then
+                            newestVersion = True
+                        End If
+                    End If
+                End If
+            Next
+            If newestVersion Then
+                If englishLanguage Then
+                    Call MsgBox("newest TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " is already shown!")
+                Else
+                    Call MsgBox("neuester TimeStamp: " & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & " wird bereits angezeigt")
                 End If
             End If
-        Next
-        currentSlide = pres.Slides.FindBySlideID(formerCurrentSlideID)
+            currentSlide = formerSlide
+            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            ' tk 22.8.18
+            Call pptAPP_UpdateOneSlide(currentSlide)
+            'Call buildSmartSlideLists()
 
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+
+        Catch ex As Exception
+
+        End Try
     End Sub
 
     Private Sub varianten_Tab_Click(sender As Object, e As RibbonControlEventArgs) Handles varianten_Tab.Click
@@ -391,41 +488,62 @@ Public Class Ribbon1
     End Sub
 
     Private Sub btnDate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnDate.Click
+
+        Dim userResult As Windows.Forms.DialogResult
         Try
+            Try
+                ' das Formular für Kalender aufschalten 
+                calendarFrm = New frmCalendar
+                userResult = calendarFrm.ShowDialog()
 
-            If IsNothing(varPPTTM) Then
-                Call initPPTTimeMachine(varPPTTM)
-            End If
+            Catch ex As Exception
+                Throw New ArgumentException("Fehler bei der Datumseingabe: " & ex.Message)
+            End Try
 
-            If Not IsNothing(varPPTTM) Then
+            If userResult = Windows.Forms.DialogResult.OK Then
+                Dim specDate As Date = calendarFrm.DateTimePicker1.Value
 
-                If Not IsNothing(varPPTTM.timeStamps) Then
-                    If varPPTTM.timeStamps.Count > 0 Then
-                        Try
-                            ' das Formular für Kalender aufschalten 
-                            If IsNothing(calendarFrm) Then
-                                calendarFrm = New frmCalendar
-                                calendarFrm.ShowDialog()
-                            Else
-                                calendarFrm = New frmCalendar
-                                calendarFrm.ShowDialog()
-                            End If
-                        Catch ex As Exception
+                Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+                Dim formerSlide As PowerPoint.Slide = currentSlide
 
-                        End Try
-
-                        Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.individual, calendarFrm.DateTimePicker1.Value)
-
-                        If newDate <> currentTimestamp Then
-
-                            Call performBtnAction(newDate)
-
+                For i As Integer = 1 To pres.Slides.Count
+                    Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                    If Not IsNothing(sld) Then
+                        If Not (sld.Tags.Item("FROZEN").Length > 0) Then
+                            Call pptAPP_UpdateOneSlide(sld)
+                            Call visboUpdate(ptNavigationButtons.individual, specDate, False)
                         End If
-
+                    End If
+                Next
+                If specDate > varPPTTM.timeStamps.Last.Key Then
+                    If englishLanguage Then
+                        Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " does not exist: Now the newest is shown")
+                    Else
+                        Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " existiert nicht: Es wird der neueste angezeigt")
+                    End If
+                End If
+                If specDate < varPPTTM.timeStamps.First.Key Then
+                    If englishLanguage Then
+                        Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " does not exist")
+                    Else
+                        Call MsgBox("TimeStamp: " & specDate.ToLongDateString & " " & specDate.TimeOfDay.ToString & " existiert nicht")
                     End If
                 End If
 
+
+                currentSlide = formerSlide
+                ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+                ' tk 22.8.18
+                Call pptAPP_UpdateOneSlide(currentSlide)
+                'Call buildSmartSlideLists()
+
+                ' das Formular ggf, also wenn aktiv,  updaten 
+                If Not IsNothing(changeFrm) Then
+                    changeFrm.neuAufbau()
+                End If
+
             End If
+
         Catch ex As Exception
 
         End Try
@@ -433,34 +551,37 @@ Public Class Ribbon1
 
 
     Private Sub btnPrevious_Click(sender As Object, e As RibbonControlEventArgs) Handles btnPrevious.Click
+        Try
 
-        If IsNothing(varPPTTM) Then
-            Call initPPTTimeMachine(varPPTTM)
-        End If
+            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            Dim formerSlide As PowerPoint.Slide = currentSlide
 
-        If Not IsNothing(varPPTTM) Then
 
-            If Not IsNothing(varPPTTM.timeStamps) Then
-                If varPPTTM.timeStamps.Count > 0 Then
-
-                    If currentSlide.Tags.Item("PREV").Length > 0 Then
-                        smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) Then
+                        Call pptAPP_UpdateOneSlide(sld)
+                        Call visboUpdate(ptNavigationButtons.previous, Nothing, False)
                     End If
-
-                    Dim newDate As Date = smartSlideLists.prevDate
-                    'Dim newDate As Date = getNextNavigationDate(ptNavigationButtons.previous)
-
-                    If newDate <> currentTimestamp Then
-
-                        Call performBtnAction(newDate)
-
-                    End If
-
                 End If
+            Next
 
+
+            currentSlide = formerSlide
+            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            ' tk 22.8.18
+            Call pptAPP_UpdateOneSlide(currentSlide)
+            'Call buildSmartSlideLists()
+
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
             End If
 
-        End If
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class
 

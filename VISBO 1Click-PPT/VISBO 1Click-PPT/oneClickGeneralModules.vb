@@ -2071,15 +2071,15 @@ Module oneClickGeneralModules
                                 If messageZeigen Then
                                     If awinSettings.englishLanguage Then
                                         If Not identical Then
-                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' saved to DB sucessfully")
+                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' stored" & vbLf & "version stored @ " & Date.Now.ToString)
                                         Else
-                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' and the newest version in DB are identical")
+                                            Call MsgBox("Project is identical to last database version" & vbLf & "no new version stored ")
                                         End If
                                     Else
                                         If Not identical Then
-                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' gespeichert" & vbLf & "gespeicherte Version @ " & Date.Now.ToString)
                                         Else
-                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                            Call MsgBox("Projekt  ist identisch mit der aktuellen Version in der DB" & vbLf & "keine neue Version gespeichert")
                                         End If
                                     End If
                                 End If
@@ -2120,15 +2120,15 @@ Module oneClickGeneralModules
                                 If messageZeigen Then
                                     If awinSettings.englishLanguage Then
                                         If Not identical Then
-                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' saved to DB sucessfully")
+                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' stored" & vbLf & "version stored @ " & Date.Now.ToString)
                                         Else
-                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' and the newest version in DB are identical")
+                                            Call MsgBox("Project is identical to last database version" & vbLf & "no new version stored ")
                                         End If
                                     Else
                                         If Not identical Then
-                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' gespeichert" & vbLf & "gespeicherte Version @ " & Date.Now.ToString)
                                         Else
-                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                            Call MsgBox("Projekt  ist identisch mit der aktuellen Version in der DB" & vbLf & "keine neue Version gespeichert")
                                         End If
                                     End If
                                 End If

@@ -400,9 +400,6 @@
                     '' jetzt die Checkbox anzeigen ... 
                     Me.showChangeList.Visible = True
 
-                    ' clear changelist 
-                    Call changeListe.clearChangeList()
-
                     previousVariantName = currentVariantname
                     previousTimeStamp = currentTimestamp
                     currentTimestamp = eingabe

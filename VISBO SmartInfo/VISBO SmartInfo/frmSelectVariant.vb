@@ -56,8 +56,6 @@ Public Class frmSelectVariant
             ' die Aktion durchführen 
 
             Me.UseWaitCursor = True
-            ' clear changelist 
-            Call changeListe.clearChangeList()
 
             previousTimeStamp = currentTimestamp
             previousVariantName = currentVariantname
@@ -78,8 +76,10 @@ Public Class frmSelectVariant
             ' das Formular aufschalten 
             If IsNothing(changeFrm) Then
                 changeFrm = New frmChanges
+                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
                 changeFrm.Show()
             Else
+                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
                 changeFrm.neuAufbau()
             End If
 

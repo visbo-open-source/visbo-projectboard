@@ -556,13 +556,13 @@ Public Class ucSearch
 
                 Next
 
-
+                selectedPlanShapes.Select()
 
             Catch ex As Exception
 
             End Try
 
-            selectedPlanShapes.Select()
+
 
         Else
             ' nichts tun ...
