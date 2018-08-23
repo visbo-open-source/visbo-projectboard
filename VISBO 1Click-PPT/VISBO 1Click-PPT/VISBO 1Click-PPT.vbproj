@@ -32,7 +32,7 @@
     </StartupObject>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\Koytek\Documents\Publish Folder 1Click-PPT\</PublishUrl>
+    <PublishUrl>C:\publish\VISBO 1Click-PPT REST\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
     <ApplicationVersion>3.0.0.0</ApplicationVersion>
