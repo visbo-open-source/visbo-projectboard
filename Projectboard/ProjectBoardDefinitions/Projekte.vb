@@ -4528,6 +4528,10 @@ Public Module Projekte
             ReDim Xgestern(gesternColumn - minColumn)
             For i = minColumn To gesternColumn
                 gesterndatenreihe(i - minColumn) = tdatenreiheC(i - minColumn)
+                ' tk 23.8.18
+                If i < gesternColumn Then
+                    tdatenreiheC(i - minColumn) = 0
+                End If
                 Xgestern(i - minColumn) = Xdatenreihe(i - minColumn)
             Next
         Else
@@ -4636,7 +4640,7 @@ Public Module Projekte
                 'series
 
 
-                ' heutiger stand 
+                ' 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
                     '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToString("d")
@@ -4646,9 +4650,15 @@ Public Module Projekte
                     .Interior.Color = visboFarbeBlau
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlLine
-                    .Format.Line.Weight = 4
-                    .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    If pastAndFuture Then
+                        .Interior.Color = visboFarbeBlau
+                        .ChartType = Excel.XlChartType.xlArea
+                    Else
+                        .ChartType = Excel.XlChartType.xlLine
+                        .Format.Line.Weight = 4
+                        .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    End If
+
 
                 End With
 
@@ -4689,10 +4699,10 @@ Public Module Projekte
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.name = "Istwerte"
                         .Name = repMessages.getmsg(194)
-                        .Interior.Color = awinSettings.SollIstFarbeArea
                         .Values = gesterndatenreihe
                         '.XValues = Xgestern
                         .XValues = Xdatenreihe
+                        .Interior.Color = awinSettings.SollIstFarbeArea
                         .ChartType = Excel.XlChartType.xlArea
 
                     End With
@@ -4999,6 +5009,10 @@ Public Module Projekte
             ReDim Xgestern(gesternColumn - minColumn)
             For i = minColumn To gesternColumn
                 gesterndatenreihe(i - minColumn) = tdatenreiheC(i - minColumn)
+                ' tk 23.8.18
+                If i < gesternColumn Then
+                    tdatenreiheC(i - minColumn) = 0
+                End If
                 Xgestern(i - minColumn) = Xdatenreihe(i - minColumn)
             Next
         Else
@@ -5030,23 +5044,6 @@ Public Module Projekte
 
         With chtObj.Chart
 
-            If pastAndFuture Then
-                ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
-
-                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    '.name = "Istwerte"
-                    '.Name = repMessages.getmsg(194)
-                    .Name = repMSg(5)
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = gesterndatenreihe
-                    '.XValues = Xgestern
-                    .XValues = Xdatenreihe
-                    .ChartType = Excel.XlChartType.xlArea
-
-                End With
-
-            End If
-
             ' heutiger stand 
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToString("d")
@@ -5056,9 +5053,15 @@ Public Module Projekte
                 .Values = tdatenreiheC
                 .XValues = Xdatenreihe
 
-                .ChartType = Excel.XlChartType.xlLine
-                .Format.Line.Weight = 4
-                .Format.Line.ForeColor.RGB = visboFarbeBlau
+                If pastAndFuture Then
+                    .Interior.Color = visboFarbeBlau
+                    .ChartType = Excel.XlChartType.xlArea
+                Else
+                    .ChartType = Excel.XlChartType.xlLine
+                    .Format.Line.Weight = 4
+                    .Format.Line.ForeColor.RGB = visboFarbeBlau
+                End If
+
 
             End With
 
@@ -5081,7 +5084,23 @@ Public Module Projekte
                 End With
 
             End If
-           
+
+            If pastAndFuture Then
+                ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
+
+                With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+
+                    .Name = repMSg(5)
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = gesterndatenreihe
+
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlArea
+
+                End With
+
+            End If
+
 
 
 
