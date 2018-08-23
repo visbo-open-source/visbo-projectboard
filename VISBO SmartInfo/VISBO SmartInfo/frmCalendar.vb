@@ -7,7 +7,6 @@ Imports ProjectBoardBasic
 Public Class frmCalendar
     Private Sub frmCalendar_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
 
-
         MyBase.Close()
 
     End Sub

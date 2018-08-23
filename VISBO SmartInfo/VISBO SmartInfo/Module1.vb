@@ -6502,6 +6502,8 @@ Module Module1
         Try
 
             smartSlideLists = New clsSmartSlideListen
+            ' tk 22.8.18, SlideCoordInfo steuert die Berechnung des Datums anhand der "versteckten" Kalenderlinie ..
+            slideCoordInfo = Nothing
             Try
 
                 If Not IsNothing(searchPane) Then
@@ -6590,14 +6592,18 @@ Module Module1
                                 ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
                                 initialHomeButtonRelevance = homeButtonRelevance
                                 initialChangedButtonRelevance = changedButtonRelevance
-                                If searchPane.Visible Then
 
-                                    If slideHasSmartElements Then
+                                If Not IsNothing(searchPane) Then
+                                    If searchPane.Visible Then
 
-                                        ucSearchView.fülltListbox(showTrafficLights)
+                                        If slideHasSmartElements Then
 
+                                            ucSearchView.fülltListbox(showTrafficLights)
+
+                                        End If
                                     End If
                                 End If
+
 
                             Else
                                 Call MsgBox(msg)
@@ -6613,6 +6619,8 @@ Module Module1
                     slideHasSmartElements = False
                     ' Listen löschen
                     smartSlideLists = New clsSmartSlideListen
+                    ' tk ergänzt am 22.8.18; slideCoordInfo steuert die Berechnung des Datums aufgrund PPTCalendarStart und PPTCalendarEnde
+                    slideCoordInfo = Nothing
 
                     If Not IsNothing(searchPane) Then
                         If searchPane.Visible Then
@@ -6675,7 +6683,6 @@ Module Module1
 
         If updateModus = ptNavigationButtons.letzter Then
             specDate = newDate
-
         End If
     End Sub
 
