@@ -251,6 +251,7 @@
         '
         'settingsTab
         '
+        Me.settingsTab.Enabled = False
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
@@ -263,6 +264,7 @@
         '
         'Button1
         '
+        Me.Button1.Enabled = False
         Me.Button1.Label = "Smartify Chart"
         Me.Button1.Name = "Button1"
         Me.Button1.ScreenTip = "embeds information about data source in Chart and uploads timestamped data source" &
