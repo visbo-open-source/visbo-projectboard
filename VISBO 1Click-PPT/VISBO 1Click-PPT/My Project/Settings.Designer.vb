@@ -55,7 +55,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("\\desbhtcprj1\Visbo\MS Project VISBO AddIn\")>  _
     Public ReadOnly Property globalPath() As String
         Get
             Return CType(Me("globalPath"),String)
@@ -64,7 +64,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("\\desbhtcprj1\Visbo\MS Project VISBO AddIn\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("MS Project VISBO AddIn")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
