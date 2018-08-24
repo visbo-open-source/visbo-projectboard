@@ -259,7 +259,7 @@ Public Class Ribbon1
         End Try
 
     End Sub
->>>>>>> master
+
 
     ''' <summary>
     ''' geht einen Schritt in die Zukunft 
