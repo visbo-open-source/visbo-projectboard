@@ -3196,7 +3196,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBedarfeInMonths(ByVal mycollection As Collection, ByVal type As String) As Double()
+    Public ReadOnly Property getBedarfeInMonths(ByVal mycollection As Collection, ByVal type As String, Optional ByVal inclSubRoles As Boolean = False) As Double()
         Get
             Dim i As Integer, k As Integer, projektDauer As Integer = Me.anzahlRasterElemente
             Dim valueArray() As Double
@@ -3233,11 +3233,11 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getRessourcenBedarfNew(itemName)
+                            valueArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles)
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getRessourcenBedarfNew(itemName)
+                                tempArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next
@@ -3486,7 +3486,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBedarfeInMonth(mycollection As Collection, type As String, monat As Integer) As Double
+    Public ReadOnly Property getBedarfeInMonth(mycollection As Collection, type As String, monat As Integer, Optional ByVal inclSubRoles As Boolean = False) As Double
 
 
         Get
@@ -3500,7 +3500,7 @@ Public Class clsProjekt
             Else
                 If projektDauer > 0 Then
                     ReDim valueArray(projektDauer - 1)
-                    valueArray = Me.getBedarfeInMonths(mycollection, type)
+                    valueArray = Me.getBedarfeInMonths(mycollection, type, inclSubRoles)
                     If monat >= start And monat <= start + projektDauer - 1 Then
                         tmpValue = valueArray(monat - start)
                     Else

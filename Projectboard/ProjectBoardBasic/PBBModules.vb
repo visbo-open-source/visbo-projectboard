@@ -181,8 +181,9 @@ Public Module PBBModules
 
         If controlID = "Pt6G3M1B1" Then
             ' normale, volle Auswahl des filters ; Namens-Definition
-
-            With nameFormular
+            ' With nameFormular
+            awinSettings.useHierarchy = True
+            With hryFormular
 
                 .menuOption = PTmenue.filterdefinieren
                 returnValue = .ShowDialog
@@ -201,6 +202,7 @@ Public Module PBBModules
             End With
 
         ElseIf controlID = "PT0G1B8" Then
+            ' Menupunkt Filter  
 
             Dim currentFilterConstellation As clsConstellation = currentSessionConstellation.copy("Filter Result")
             beforeFilterConstellation = currentSessionConstellation.copy("beforeFilter")
@@ -210,16 +212,19 @@ Public Module PBBModules
             Dim filter As clsFilter = Nothing
 
             Try
-                With nameFormular
+                '  With nameFormular
+
+                awinSettings.useHierarchy = True
+
+                With hryFormular
 
                     Dim anzP As Integer = ShowProjekte.Count
                     .menuOption = PTmenue.sessionFilterDefinieren
-                    .actionCode = PTTvActions.chgInSession
+                    '.actionCode = PTTvActions.chgInSession
 
 
                     returnValue = .ShowDialog
                     filter = filterDefinitions.retrieveFilter("Last")
-
 
                     ' Anzeigen ...
                     Dim removeList As New Collection
@@ -278,7 +283,7 @@ Public Module PBBModules
 
                         projectConstellations.Add(currentFilterConstellation)
 
-                        Call showConstellations(constellationsToShow:=tmpConstellation, _
+                        Call showConstellations(constellationsToShow:=tmpConstellation,
                                                 clearBoard:=True, clearSession:=False, storedAtOrBefore:=Date.Now)
 
                         ''Call awinNeuZeichnenDiagramme(2)

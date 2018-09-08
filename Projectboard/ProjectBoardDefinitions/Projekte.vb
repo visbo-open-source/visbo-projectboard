@@ -12039,9 +12039,24 @@ Public Module Projekte
         appInstance.EnableEvents = formerEE
 
     End Sub
-    Public Function erstelleProjektAusVorlage(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
-                                ByVal endedate As Date, ByVal budgetVorgabe As Double, _
-                                ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String, _
+    ''' <summary>
+    ''' legt mit den entsprechenden Angaben ein neues Projekt auf Basis der Vorlage an 
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="vorlagenName">Name der Projekt-Vorlage, die verwendet werden soll </param>
+    ''' <param name="startdate">Startdatum</param>
+    ''' <param name="endedate">Ende-Datum</param>
+    ''' <param name="budgetVorgabe">Budget in T€, darf nicht negativ sein</param>
+    ''' <param name="tafelZeile"></param>
+    ''' <param name="sfit">Integer Wert für Strategie KPI, zwischen 1 und 9 </param>
+    ''' <param name="risk">Integer Wert für Risiko KPI, zwischen 1 und 9</param>
+    ''' <param name="profitUserAskedFor">Nothing oder positiver Wert zwischen 0 und 1, 0.1 heisst 10%</param>
+    ''' <param name="kurzBeschreibung">Kurzbeschreibung des Projektes</param>
+    ''' <param name="buName">Frei-Text für Business-Unit, wird nicht überprüft</param>
+    ''' <returns></returns>
+    Public Function erstelleProjektAusVorlage(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date,
+                                ByVal endedate As Date, ByVal budgetVorgabe As Double,
+                                ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal profitUserAskedFor As String,
                                 ByVal kurzBeschreibung As String, ByVal buName As String) As clsProjekt
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
@@ -12088,7 +12103,7 @@ Public Module Projekte
                 End If
             End If
         Else
-            Call MsgBox("es gibt keine entsprechende Vorlage ..")
+            Call MsgBox("es gibt keine entsprechende Vorlage: " & vorlagenName)
             erstelleProjektAusVorlage = Nothing
             Exit Function
         End If
@@ -18543,7 +18558,7 @@ Public Module Projekte
         Dim currentColumn As Integer = tmpShowRangeLeft
 
         ' bestimme den Wert
-        Dim currentValue As Double = hproj.getBedarfeInMonth(namenListe, type, tmpShowRangeLeft)
+        Dim currentValue As Double = hproj.getBedarfeInMonth(namenListe, type, tmpShowRangeLeft, True)
 
         ' schreibe jetzt den Wert in die Zelle
         Dim formerEE As Boolean = appInstance.EnableEvents

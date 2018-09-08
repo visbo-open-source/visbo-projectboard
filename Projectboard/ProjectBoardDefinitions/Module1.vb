@@ -1212,8 +1212,30 @@ Public Module Module1
         If found Then
             Dim weitermachen As Boolean = False
             If istRollenDiagramm(chtObj) Then
+
+                ' tk 9.9.18 jetzt sollen alle Kinder- und Kindes-Kinder Rollen gekennzeichnet werden 
+                ' es sollen jetzt Sammelrollen durch alle ihre BasicRoles ersetzt werden ... 
+                Dim substituteCollection As New Collection
+
+                For Each roleName As String In myCollection
+                    If Not substituteCollection.Contains(roleName) Then
+                        substituteCollection.Add(roleName, roleName)
+
+                        Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName)
+                        For Each roleKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
+                            Dim childName As String = RoleDefinitions.getRoleDefByID(roleKvP.Key).name
+                            If Not substituteCollection.Contains(childName) Then
+                                substituteCollection.Add(childName, childName)
+                            End If
+                        Next
+                    End If
+
+                Next
+
+                'currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
+                '                                                myCollection, Nothing)
                 currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
-                                                                myCollection, Nothing)
+                                                                substituteCollection, Nothing)
                 weitermachen = True
 
 

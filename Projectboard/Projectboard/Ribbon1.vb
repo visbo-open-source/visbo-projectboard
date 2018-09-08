@@ -2338,6 +2338,27 @@ Imports System.IO
                     tmpLabel = "Modify Attributes"
                 End If
 
+            Case "PT4G2M3" ' Export to Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export Projekte in Excel"
+                Else
+                    tmpLabel = "Export Projects to Excel"
+                End If
+
+            Case "PT4G2M3B1" ' Projekte mit einer Übersichtszeile in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Übersicht"
+                Else
+                    tmpLabel = "Overview"
+                End If
+
+            Case "PT4G2M3B2" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Details"
+                Else
+                    tmpLabel = "Details"
+                End If
+
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Einstellungen"
@@ -4999,7 +5020,7 @@ Imports System.IO
 
                             If monat >= 1 And monat <= 12 Then
                                 'Call ImportAllianzType3(monat)
-                                Call ImportAllianzType3(monat, readAll:=True)
+                                Call ImportAllianzType3(monat, readAll:=True, createUnknown:=True)
                             End If
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
@@ -6005,7 +6026,85 @@ Imports System.IO
 
     End Sub
 
+    ''' <summary>
+    ''' schreibt die Prio Liste 
+    ''' </summary>
+    ''' <param name="control"></param>
     Public Sub awinWritePrioList(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Dim roleCostCollection As New Collection
+        Try
+            Call writeProjektsForSequencing(roleCostCollection)
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+    End Sub
+
+    ''' <summary>
+    ''' schreibt pro Projekt eine Zeile ...
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub exportExcelSumme(control As IRibbonControl)
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+
+            Dim myCollection As Collection = frmMERoleCost.ergItems
+
+            Try
+                Call writeProjektsForSequencing(myCollection)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt pro Projekt alle ausgewählten Rollen / Kosten weg 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub exportExcelDetails(control As IRibbonControl)
+
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -6013,7 +6112,16 @@ Imports System.IO
         enableOnUpdate = False
 
         Try
-            Call writeProjektsForSequencing()
+            If control.Id = "PT4G2M3B1" Then
+                ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 0)
+            ElseIf control.Id = "PT4G2M3B2" Then
+                ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 1)
+            ElseIf control.Id = "PT4G2M3B3" Then
+                'Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 2)
+            End If
         Catch ex As Exception
             Call MsgBox(ex.Message)
         End Try
