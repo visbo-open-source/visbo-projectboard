@@ -7683,6 +7683,7 @@ Public Module awinGeneralModules
                             If isKnownProject(pName, tmpPNr, cacheProjekte, lookupTable, createUnknown) Then
                                 shallContinue = True
                                 handledNames.Add(tmpPName, pName)
+
                             Else
                                 outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
                                 outputCollection.Add(outPutLine)
@@ -8375,6 +8376,12 @@ Public Module awinGeneralModules
                 End If
 
                 If Not IsNothing(oldProj) Then
+
+                    If oldProj.kundenNummer = "" Then
+                        ' wenn vorher die Kunden-Nummer noch nicht bekannt war ...
+                        oldProj.kundenNummer = projektKDNr
+                    End If
+
                     projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                     fctResult = True
 
@@ -8509,6 +8516,7 @@ Public Module awinGeneralModules
                         oldProj = erstelleProjektAusVorlage(pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "created")
 
                         If Not IsNothing(oldProj) Then
+                            oldProj.kundenNummer = projektKDNr
                             projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                             fctResult = True
 
@@ -18519,27 +18527,30 @@ Public Module awinGeneralModules
             menuOption = PTmenue.sessionFilterDefinieren Or
             menuOption = PTmenue.filterAuswahl Then
 
-            If calledFromHry Then
-                Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
+            ' tk 10.9.18 nicht mehr notwednig 
+            ''If calledFromHry Then
+            ''    Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
 
-                If Not IsNothing(nameLastFilter) Then
-                    With nameLastFilter
-                        lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, fRole, fCost)
-                    End With
-                Else
-                    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''    If Not IsNothing(nameLastFilter) Then
+            ''        With nameLastFilter
+            ''            lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, fRole, fCost)
+            ''        End With
+            ''    Else
+            ''        lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''    End If
+
+
+            ''Else
+            ''    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''End If
+
+            lastFilter = New clsFilter(fName, fBU, fTyp,
                                       fPhase, fMilestone,
                                      fRole, fCost)
-                End If
-
-
-            Else
-                lastFilter = New clsFilter(fName, fBU, fTyp,
-                                      fPhase, fMilestone,
-                                     fRole, fCost)
-            End If
-
-
 
             filterDefinitions.storeFilter(fName, lastFilter)
 
@@ -18566,26 +18577,30 @@ Public Module awinGeneralModules
 
         Else        ' nicht menuOption = PTmenue.filterdefinieren
 
-            If calledFromHry Then
-                Dim nameLastFilter As clsFilter = selFilterDefinitions.retrieveFilter("Last")
+            ' tk 10.9.18 nicht mehr notwendig 
+            ''If calledFromHry Then
+            ''    Dim nameLastFilter As clsFilter = selFilterDefinitions.retrieveFilter("Last")
 
-                If Not IsNothing(nameLastFilter) Then
-                    With nameLastFilter
-                        lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, fRole, fCost)
-                    End With
-                Else
-                    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''    If Not IsNothing(nameLastFilter) Then
+            ''        With nameLastFilter
+            ''            lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, fRole, fCost)
+            ''        End With
+            ''    Else
+            ''        lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''    End If
+
+
+            ''Else
+            ''    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''End If
+
+            lastFilter = New clsFilter(fName, fBU, fTyp,
                                       fPhase, fMilestone,
                                      fRole, fCost)
-                End If
-
-
-            Else
-                lastFilter = New clsFilter(fName, fBU, fTyp,
-                                      fPhase, fMilestone,
-                                     fRole, fCost)
-            End If
-
             selFilterDefinitions.storeFilter(fName, lastFilter)
 
             If Not noDB Then
@@ -23228,12 +23243,11 @@ Public Module awinGeneralModules
             considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
         End If
 
-        Dim expFName As String = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
-
+        Dim expFName As String = ""
         If considerAll Then
             expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
         Else
-            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Overview.xlsx"
+            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & "_Overview.xlsx"
         End If
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 
@@ -23267,12 +23281,19 @@ Public Module awinGeneralModules
                 CType(.Cells(1, 3), Excel.Range).Value = "Project-Nr"
                 CType(.Cells(1, 4), Excel.Range).Value = "Responsible"
                 CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 6), Excel.Range).Value = "Budget [T€]"
-                CType(.Cells(1, 7), Excel.Range).Value = "Project-Start"
-                CType(.Cells(1, 8), Excel.Range).Value = "Project-End"
+                CType(.Cells(1, 6), Excel.Range).Value = "Project-Start"
+                CType(.Cells(1, 7), Excel.Range).Value = "Project-End"
+
+                If considerAll Then
+                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Profit/Loss [T€]"
+                Else
+                    CType(.Cells(1, 8), Excel.Range).Value = "First Version [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Difference [T€]"
+                End If
+
                 CType(.Cells(1, 9), Excel.Range).Value = "Sum Personnel-Cost [T€]" & roleNames
                 CType(.Cells(1, 10), Excel.Range).Value = "Sum Other Cost [T€]" & costNames
-                CType(.Cells(1, 11), Excel.Range).Value = "Profit/Loss [T€]"
 
                 CType(.Cells(1, 12), Excel.Range).Value = "Strategy"
                 CType(.Cells(1, 13), Excel.Range).Value = "Risk"
@@ -23284,18 +23305,28 @@ Public Module awinGeneralModules
                 CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
                 CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
                 CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 6), Excel.Range).Value = "Budget [T€]"
-                CType(.Cells(1, 7), Excel.Range).Value = "Projekt-Start"
-                CType(.Cells(1, 8), Excel.Range).Value = "Projekt-Ende"
+                CType(.Cells(1, 6), Excel.Range).Value = "Projekt-Start"
+                CType(.Cells(1, 7), Excel.Range).Value = "Projekt-Ende"
+
+                If considerAll Then
+                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Gewinn/Verlust [T€]"
+                Else
+                    CType(.Cells(1, 8), Excel.Range).Value = "Erste Planung [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Differenz [T€]"
+                End If
+
                 CType(.Cells(1, 9), Excel.Range).Value = "Summe Personalkosten [T€]" & roleNames
                 CType(.Cells(1, 10), Excel.Range).Value = "Summe sonst. Kosten [T€]" & costNames
-                CType(.Cells(1, 11), Excel.Range).Value = "Gewinn/Verlust [T€]"
+
                 CType(.Cells(1, 12), Excel.Range).Value = "Strategie"
                 CType(.Cells(1, 13), Excel.Range).Value = "Risiko"
                 CType(.Cells(1, 14), Excel.Range).Value = "Beschreibung"
 
 
             End If
+
+
 
             spalte = startOfCustomFields
             For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
@@ -23307,18 +23338,20 @@ Public Module awinGeneralModules
 
         End With
 
-        ' jetzt den AutoFit machen 
-        Try
-            ersteZeile.AutoFit()
-        Catch ex As Exception
 
-        End Try
+        '' jetzt den AutoFit machen 
+        'Try
+        '    ersteZeile.AutoFit()
+        'Catch ex As Exception
+
+        'End Try
 
         zeile = 2
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
             Dim budget As Double, pk As Double, ok As Double, rk As Double, pl As Double
+            Dim alterPlanStand As Date = Date.MinValue
 
             If considerAll Then
                 Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
@@ -23326,6 +23359,7 @@ Public Module awinGeneralModules
                 ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
                 Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 vorgabeProj = request.retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
+
 
                 ' Berechnung budget/Vorgabe 
                 budget = 0.0
@@ -23346,6 +23380,9 @@ Public Module awinGeneralModules
                 ' Berechnung Personalkosten
                 pl = budget - (pk + ok)
 
+                ' welcher Planungs-Stand ist das ? 
+                alterPlanStand = vorgabeProj.timeStamp
+
             End If
 
 
@@ -23355,12 +23392,26 @@ Public Module awinGeneralModules
                 CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.kundenNummer
                 CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.leadPerson
                 CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.businessUnit
-                CType(.Cells(zeile, 6), Excel.Range).Value = budget.ToString("#,##0.00")
-                CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.startDate
-                CType(.Cells(zeile, 8), Excel.Range).Value = kvp.Value.endeDate
-                CType(.Cells(zeile, 9), Excel.Range).Value = pk.ToString("#,##0.00")
-                CType(.Cells(zeile, 10), Excel.Range).Value = ok.ToString("#,##0.00")
-                CType(.Cells(zeile, 11), Excel.Range).Value = pl.ToString("#,##0.00")
+                CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.startDate
+                CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.endeDate
+
+                CType(.Cells(zeile, 8), Excel.Range).Value = budget
+                CType(.Cells(zeile, 8), Excel.Range).NumberFormat = "0.00"
+                If Not considerAll Then
+                    ' damit wird klar, von wann diese Version ist
+                    CType(.Cells(zeile, 8), Excel.Range).AddComment(alterPlanStand.ToLongDateString)
+                End If
+
+
+                CType(.Cells(zeile, 9), Excel.Range).Value = pk
+                CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
+
+                CType(.Cells(zeile, 10), Excel.Range).Value = ok
+                CType(.Cells(zeile, 10), Excel.Range).NumberFormat = "0.00"
+
+                CType(.Cells(zeile, 11), Excel.Range).Value = pl
+                CType(.Cells(zeile, 11), Excel.Range).NumberFormat = "0.00"
+
                 CType(.Cells(zeile, 12), Excel.Range).Value = kvp.Value.StrategicFit
                 CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.Risiko
                 CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.fullDescription
@@ -23389,6 +23440,109 @@ Public Module awinGeneralModules
             End With
             zeile = zeile + 1
         Next
+
+        ' jetzt müssen die Spaltenbreiten und sonstigen Werte gesetzt werden ...
+        Dim letzteSpalte As Integer = startOfCustomFields + customFieldDefinitions.liste.Count - 1
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            For s As Integer = 1 To letzteSpalte
+
+                If s = 1 Then
+                    ' Projekt-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 54
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 2 Then
+                    ' Varianten-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 3 Then
+                    ' Projekt-Nummer
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Center
+                    'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                ElseIf s = 4 Then
+                    ' Verantwortlich
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 5 Then
+                    ' Business Unit
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 6 Then
+                    ' Projekt-Start
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                ElseIf s = 7 Then
+                    ' Projekt-Ende
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                ElseIf s = 8 Then
+                    ' Budget bzw. erste Planung 
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                ElseIf s = 9 Then
+                    ' summe Personalkosten
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+
+                ElseIf s = 10 Then
+                    ' summe Sonst Kosten
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                ElseIf s = 11 Then
+                    ' Profit/Loss bzw. Differenz
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                ElseIf s = 12 Then
+                    ' Strategie 
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Center
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
+                ElseIf s = 13 Then
+                    ' Risiko 
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Center
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
+                ElseIf s = 14 Then
+                    ' Beschreibung
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                Else
+                    ' customFields
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                End If
+                ' 
+
+
+            Next
+
+            ' jetzt muss noch die erste Zeile formatiert werden 
+            CType(.Rows.Item(1), Excel.Range).RowHeight = 45
+            CType(.Rows.Item(1), Excel.Range).VerticalAlignment = XlTopBottom.xlTop10Top
+            CType(.Rows.Item(1), Excel.Range).Interior.Color = RGB(220, 220, 220)
+
+        End With
+
+
 
 
         Try
