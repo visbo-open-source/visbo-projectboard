@@ -791,6 +791,8 @@ Public Module Module1
     'Public appInstance As _Application
     Public appInstance As Microsoft.Office.Interop.Excel.Application
 
+    Public pseudoappInstance As New Microsoft.Office.Interop.Excel.Application
+
     Public pptApp As Microsoft.Office.Interop.PowerPoint.Application
 
 
