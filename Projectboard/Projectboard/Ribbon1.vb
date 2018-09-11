@@ -6102,34 +6102,43 @@ Imports System.IO
     ''' <param name="control"></param>
     Public Sub exportExcelDetails(control As IRibbonControl)
 
-
         Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
         Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
 
-        Try
-            If control.Id = "PT4G2M3B1" Then
-                ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 0)
-                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 0)
-            ElseIf control.Id = "PT4G2M3B2" Then
-                ' Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 1)
-                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 1)
-            ElseIf control.Id = "PT4G2M3B3" Then
-                'Call writeProjektBedarfeXLSX(showRangeLeft, showRangeRight, 2)
-                Call writeProjektPhasenBedarfeXLSX(showRangeLeft, showRangeRight, 2)
-            End If
-        Catch ex As Exception
-            Call MsgBox(ex.Message)
-        End Try
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
 
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
+            Dim myCollection As Collection = frmMERoleCost.ergItems
+
+            Try
+                Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollection)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
     End Sub
 
     ''' <summary>

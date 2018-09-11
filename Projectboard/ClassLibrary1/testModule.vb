@@ -2167,7 +2167,12 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
+
                                             If qualifier2 <> "" Then
+                                                If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                                    qualifier2 = selectedRoles.Item(1)
+                                                End If
+
                                                 If RoleDefinitions.containsName(qualifier2) Then
                                                     ' alles ok
                                                 Else
@@ -2222,6 +2227,9 @@ Public Module testModule
                                             compID = PTprdk.PersonalPie
                                         Else
                                             If qualifier2 <> "" Then
+                                                If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                                    qualifier2 = selectedRoles.Item(1)
+                                                End If
                                                 If RoleDefinitions.containsName(qualifier2) Then
                                                     ' alles ok
                                                 Else
@@ -2749,6 +2757,9 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
                                         If RoleDefinitions.containsName(qualifier2) Then
                                             ' alles ok
                                         Else
@@ -2778,6 +2789,9 @@ Public Module testModule
                                     Dim vglBaseline As Boolean = True
 
                                     If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
                                         If RoleDefinitions.containsName(qualifier2) Then
                                             ' alles ok
                                         Else
@@ -10066,7 +10080,8 @@ Public Module testModule
 
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    If awinSettings.compareWithStandardVariant Then
+                    ' If awinSettings.compareWithStandardVariant Then
+                    If hproj.projectType = ptPRPFType.project And awinSettings.compareWithStandardVariant Then
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     Else

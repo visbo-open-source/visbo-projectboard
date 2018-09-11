@@ -384,11 +384,11 @@ Public Class frmHierarchySelection
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
 
-                .rdbRoles.Visible = False
-                .pictureRoles.Visible = False
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
 
-                .rdbCosts.Visible = False
-                .pictureCosts.Visible = False
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
 
                 .rdbPhaseMilest.Visible = False
                 .picturePhaseMilest.Visible = False

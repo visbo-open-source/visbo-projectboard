@@ -22696,6 +22696,421 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' schreibt die Projekt-Details in eine Excel Datei
+    ''' dabei werden nur die Rollen / Kosten-Bedarfe rausgeschrieben, die in der myCollection angegeben sind
+    ''' Bei Rollen werden auch alle Rollen rausgeschrieben, die Kind oder Kindeskind einer angegebenen Rolle sind    ''' 
+    ''' </summary>
+    ''' <param name="von">Start-Monat (showrangeleft)</param>
+    ''' <param name="bis">Ende-Monat (showrangeright)</param>
+    ''' <param name="roleCostCollection"></param>
+    Public Sub writeProjektDetailsToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleCostCollection As Collection)
+
+        appInstance.EnableEvents = False
+
+        Dim projectsToWork As New Collection
+        Dim defDone As Boolean = False
+        If Not IsNothing(selectedProjekte) Then
+            If selectedProjekte.Count > 0 Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                    If Not projectsToWork.Contains(kvp.Key) Then
+                        projectsToWork.Add(kvp.Key, kvp.Key)
+                    End If
+                Next
+                defDone = True
+            End If
+        End If
+
+
+        If Not defDone And ShowProjekte.getMarkedProjects.Count > 0 Then
+            projectsToWork = ShowProjekte.getMarkedProjects
+            defDone = True
+        End If
+
+        If Not defDone Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                projectsToWork.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+
+        Dim newWB As Excel.Workbook
+
+        Dim considerAll As Boolean = (roleCostCollection.Count = 0)
+
+        Dim roleCollection As New Collection
+        Dim costCollection As New Collection
+
+        If Not considerAll Then
+            For Each itemName As String In roleCostCollection
+                If RoleDefinitions.containsName(itemName) Then
+                    If Not roleCollection.Contains(itemName) Then
+                        roleCollection.Add(itemName, itemName)
+                    End If
+                ElseIf CostDefinitions.containsName(itemName) Then
+                    If Not costCollection.Contains(itemName) Then
+                        costCollection.Add(itemName, itemName)
+                    End If
+                End If
+            Next
+            ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
+            considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
+        End If
+
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+        If roleCollection.Count > 0 Then
+            fNameExtension = roleCollection.Item(1)
+            If roleCollection.Count > 1 Or costCollection.Count > 0 Then
+                fNameExtension = fNameExtension & " etc"
+            End If
+
+            If fNameExtension = "" And costCollection.Count > 0 Then
+                fNameExtension = costCollection.Item(1)
+                If costCollection.Count > 1 Then
+                    fNameExtension = fNameExtension & " etc"
+                End If
+            End If
+        End If
+
+
+        Dim ressCostColumn As Integer
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\Details " & fNameExtension & ".xlsx"
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startSpalteDaten As Integer = 9
+        Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        Dim tmpName As String = ""
+
+
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            Dim ersteZeile As Excel.Range
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
+            CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
+            CType(.Cells(1, 5), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 6), Excel.Range).Value = "Ress./Kostenart-Name"
+            CType(.Cells(1, 7), Excel.Range).Value = "Tagessatz"
+            CType(.Cells(1, 8), Excel.Range).Value = "Summe [PT]"
+            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+
+            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+            ressCostColumn = 6
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+            ' jetzt wird der Name hinzugefügt
+            Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
+            Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + bis - von), Global.Microsoft.Office.Interop.Excel.Range)
+            newWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
+            newWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+            Next
+
+
+        End With
+
+        zeile = 2
+
+        Dim schnittmenge() As Double
+        Dim zeilenWerte() As Double
+        Dim zeilensumme As Double
+        Dim pStart As Integer, pEnde As Integer
+
+        Dim editRange As Excel.Range
+
+        For Each pName As String In projectsToWork
+
+            If ShowProjekte.contains(pName) Then
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+
+                Dim atLeastOne As Boolean = False
+
+                pStart = getColumnOfDate(hproj.startDate)
+                pEnde = getColumnOfDate(hproj.endeDate)
+
+                For p = 1 To hproj.CountPhases
+
+                    Dim cphase As clsPhase = hproj.getPhase(p)
+                    Dim phaseNameID As String = cphase.nameID
+                    Dim phaseName As String = cphase.name
+                    Dim chckNameID As String = calcHryElemKey(phaseName, False)
+
+                    If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
+                        ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+
+                        ' jetzt müssen die Zellen, die zur Phase gehören , entsperrt werden  ...
+                        Dim ixZeitraum As Integer
+                        Dim ix As Integer, breite As Integer
+
+                        Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
+
+
+                        For r = 1 To cphase.countRoles
+
+
+                            Dim role As clsRolle = cphase.getRole(r)
+                            Dim roleName As String = role.name
+                            Dim relevant As Boolean = False
+
+                            ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
+                            If roleCollection.Count = 0 Then
+                                relevant = True
+                            Else
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCollection) Then
+                                    relevant = True
+                                End If
+                            End If
+
+                            ' nur weitermachen, wenn es relevant ist ..
+                            If relevant Then
+
+                                Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                                Dim xValues() As Double = role.Xwerte
+                                Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
+
+                                'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                                ReDim zeilenWerte(bis - von)
+
+                                ' Schreiben der Projekt-Informationen 
+                                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                                    CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                                    CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = roleName
+                                    CType(.Cells(zeile, 7), Excel.Range).Value = tagessatz
+                                    CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
+
+                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                End With
+
+                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                For mis As Integer = 0 To bis - von
+                                    zeilenWerte(mis) = schnittmenge(mis)
+                                Next
+
+                                editRange.Value = zeilenWerte
+                                atLeastOne = True
+
+                                zeile = zeile + 1
+
+
+                            End If
+
+                        Next r
+
+                        For c = 1 To cphase.countCosts
+                            Dim cost As clsKostenart = cphase.getCost(c)
+                            Dim xValues() As Double = cost.Xwerte
+                            Dim costName As String = cost.name
+
+                            Dim relevant As Boolean = False
+
+                            ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
+                            If costCollection.Count = 0 Then
+                                relevant = True
+                            Else
+                                ' If CostDefinitions.hasAnyChildParentRelationsship(costName, costCollection) Then
+                                If costCollection.Contains(costName) Then
+                                    relevant = True
+                                End If
+
+                            End If
+
+                            ' nur weitermachen, wenn es relevant ist ..
+                            If relevant Then
+
+
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
+
+                                'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                                ReDim zeilenWerte(bis - von)
+
+                                ' Schreiben der Projekt-Informationen 
+                                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                                    CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                                    CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = costName
+                                    CType(.Cells(zeile, 7), Excel.Range).Value = ""
+                                    CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
+
+                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                End With
+
+                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                For mis As Integer = 0 To bis - von
+                                    zeilenWerte(mis) = schnittmenge(mis)
+                                    ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
+                                    'zeilenWerte(2 * mis) = schnittmenge(mis)
+                                    'zeilenWerte(2 * mis + 1) = 0
+                                Next
+
+                                'editRange.Value = schnittmenge
+                                editRange.Value = zeilenWerte
+                                atLeastOne = True
+
+                                zeile = zeile + 1
+
+                            End If
+
+                        Next c
+
+                    End If
+
+                Next p
+
+                If Not atLeastOne Then
+                    ' Schreiben der Projekt-Informationen 
+                    With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                        CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                        CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                        CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                        CType(.Cells(zeile, 5), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, 6), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, 7), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, 8), Excel.Range).Value = "-"
+
+                        zeile = zeile + 1
+                    End With
+                End If
+
+            End If
+
+
+        Next
+
+        ' jetzt müssen die Spaltenbreiten und sonstigen Werte gesetzt werden ...
+        Dim letzteSpalte As Integer = 9 + bis - von
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            For s As Integer = 1 To letzteSpalte
+
+                If s = 1 Then
+                    ' Projekt-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 54
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 2 Then
+                    ' Varianten-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 3 Then
+                    ' Projekt-Nummer
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                ElseIf s = 4 Then
+                    ' Verantwortlich
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 5 Then
+                    ' Phasen-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 6 Then
+                    ' Rolle / Kostenart 
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 7 Then
+                    ' Tagessatz
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "#,##0.##"
+
+                ElseIf s = 8 Then
+                    ' Summe
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "#,##0.##"
+
+                Else
+                    ' die monatlichen Werte 
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 9
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 1
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "#,##0.##"
+                End If
+                ' 
+
+
+            Next
+
+            ' jetzt muss noch die erste Zeile formatiert werden 
+            CType(.Rows.Item(1), Excel.Range).RowHeight = 45
+            'CType(.Rows.Item(1), Excel.Range).VerticalAlignment = XlTopBottom.xlTop10Top
+            CType(.Rows.Item(1), Excel.Range).VerticalAlignment = XlVAlign.xlVAlignTop
+            CType(.Rows.Item(1), Excel.Range).Interior.Color = RGB(220, 220, 220)
+
+        End With
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            newWB.Close(SaveChanges:=True)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Speichern" & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+
+    End Sub
+
+    ''' <summary>
     ''' schreibt eine Datei mit den monatlichen Zuordnungen Projekt/Phase - Rollenbedarfe / Kosten 
     ''' Diese Datei kann editiert werden , dann wieder importiert werden 
     ''' in Abhängigkeit vom Typ wird geschrieben: 
@@ -22724,17 +23139,8 @@ Public Module awinGeneralModules
         Try
 
             newWB = appInstance.Workbooks.Add()
-
             CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
-            'If newWB.Worksheets.Count < 2 Then
-            '    newWB.Worksheets.Add(After:=newWB.Worksheets("VISBO"))
-            '    CType(appInstance.ActiveSheet, Excel.Worksheet).Name = "tmp"
-
-            'Else
-            '    CType(newWB.Worksheets.Item(2), Excel.Worksheet).Name = "tmp"
-            'End If
-
-            newWB.SaveAs(expFName)
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
 
         Catch ex As Exception
             Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
@@ -22746,63 +23152,25 @@ Public Module awinGeneralModules
         Dim zeile As Integer = 1
         Dim spalte As Integer = 1
 
-        Dim startSpalteDaten As Integer = 8
+        Dim startSpalteDaten As Integer = 9
         Dim roleCostNames As Excel.Range = Nothing
         Dim roleCostInput As Excel.Range = Nothing
 
         Dim tmpName As String = ""
-
-        ' hier werden jetzt erst mal die Ressourcen und Kostenarten geschrieben 
-        ' tk , nicht mehr notwendig 
-        ''With CType(newWB.Worksheets("tmp"), Excel.Worksheet)
-
-        ''    Dim sortedRCListe As New SortedList(Of String, String)
-        ''    For iz As Integer = 1 To RoleDefinitions.Count
-        ''        tmpName = RoleDefinitions.getRoledef(iz).name
-        ''        If Not sortedRCListe.ContainsKey(tmpName) Then
-        ''            sortedRCListe.Add(tmpName, tmpName)
-        ''        End If
-        ''    Next
-        ''    For iz As Integer = 1 To sortedRCListe.Count
-        ''        tmpName = sortedRCListe.ElementAt(iz - 1).Value
-        ''        CType(.Cells(iz, 1), Excel.Range).Value = tmpName
-        ''    Next
-
-        ''    Dim offz As Integer = sortedRCListe.Count
-        ''    sortedRCListe.Clear()
-
-        ''    For iz As Integer = 1 To CostDefinitions.Count - 1
-        ''        tmpName = CostDefinitions.getCostdef(iz).name
-        ''        If Not sortedRCListe.ContainsKey(tmpName) Then
-        ''            sortedRCListe.Add(tmpName, tmpName)
-        ''        End If
-        ''    Next
-
-        ''    For iz As Integer = 1 To sortedRCListe.Count
-        ''        tmpName = sortedRCListe.ElementAt(iz - 1).Value
-        ''        CType(.Cells(iz + offz, 1), Excel.Range).Value = tmpName
-        ''    Next
-
-        ''    offz = offz + sortedRCListe.Count
-        ''    roleCostNames = CType(.Range(.Cells(1, 1), .Cells(offz, 1)), Excel.Range)
-        ''    newWB.Names.Add(Name:="RollenKostenNamen", RefersToR1C1:=roleCostNames)
-        ''    CType(newWB.Worksheets("tmp"), Excel.Worksheet).Visible = False    ' Worksheet "tmp" ausblenden
-
-        ''End With
-
 
 
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
             Dim ersteZeile As Excel.Range
             ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
 
-            CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
-            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
-            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
-            CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
-            CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
-            CType(.Cells(1, 6), Excel.Range).Value = "Tagessatz"
-            CType(.Cells(1, 7), Excel.Range).Value = "Summe"
+            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
+            CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
+            CType(.Cells(1, 5), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 6), Excel.Range).Value = "Ress./Kostenart-Name"
+            CType(.Cells(1, 7), Excel.Range).Value = "Tagessatz"
+            CType(.Cells(1, 8), Excel.Range).Value = "Summe [PT]"
             'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
 
             ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
@@ -22818,7 +23186,6 @@ Public Module awinGeneralModules
 
             ' jetzt werden die Überschriften des Datenbereichs geschrieben 
             For m As Integer = 0 To bis - von
-                ' With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
                 With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
                     .Value = startMonat.AddMonths(m)
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
@@ -23243,11 +23610,27 @@ Public Module awinGeneralModules
             considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
         End If
 
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+        If roleCollection.Count > 0 Then
+            fNameExtension = roleCollection.Item(1)
+            If roleCollection.Count > 1 Or costCollection.Count > 0 Then
+                fNameExtension = fNameExtension & " etc"
+            End If
+
+            If fNameExtension = "" And costCollection.Count > 0 Then
+                fNameExtension = costCollection.Item(1)
+                If costCollection.Count > 1 Then
+                    fNameExtension = fNameExtension & " etc"
+                End If
+            End If
+        End If
+
         Dim expFName As String = ""
         If considerAll Then
             expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
         Else
-            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\" & currentConstellationName & "_Overview.xlsx"
+            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\Overview " & fNameExtension & ".xlsx"
         End If
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 
@@ -23458,7 +23841,7 @@ Public Module awinGeneralModules
                     ' Projekt-Nummer
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Center
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                     'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                 ElseIf s = 4 Then
                     ' Verantwortlich
@@ -23472,26 +23855,26 @@ Public Module awinGeneralModules
                     ' Projekt-Start
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                 ElseIf s = 7 Then
                     ' Projekt-Ende
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                 ElseIf s = 8 Then
                     ' Budget bzw. erste Planung 
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
                 ElseIf s = 9 Then
                     ' summe Personalkosten
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
 
@@ -23499,27 +23882,27 @@ Public Module awinGeneralModules
                     ' summe Sonst Kosten
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
                 ElseIf s = 11 Then
                     ' Profit/Loss bzw. Differenz
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Right
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
                 ElseIf s = 12 Then
                     ' Strategie 
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Center
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
                 ElseIf s = 13 Then
                     ' Risiko 
                     CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = HorizontalAlignment.Center
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                     CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
                 ElseIf s = 14 Then
                     ' Beschreibung
@@ -23537,7 +23920,7 @@ Public Module awinGeneralModules
 
             ' jetzt muss noch die erste Zeile formatiert werden 
             CType(.Rows.Item(1), Excel.Range).RowHeight = 45
-            CType(.Rows.Item(1), Excel.Range).VerticalAlignment = XlTopBottom.xlTop10Top
+            CType(.Rows.Item(1), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignTop
             CType(.Rows.Item(1), Excel.Range).Interior.Color = RGB(220, 220, 220)
 
         End With

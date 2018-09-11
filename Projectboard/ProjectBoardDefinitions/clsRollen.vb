@@ -367,10 +367,8 @@ Public Class clsRollen
                 Loop
             End If
 
-
-        ElseIf CostDefinitions.containsName(roleCostName) Then
-            ' Kostenart kennt - noch - keine Hierarchien
-            found = roleCostCollection.Contains(roleCostName)
+        Else
+            ' nichts tun, foudn = false lassen
         End If
 
         hasAnyChildParentRelationsship = found
