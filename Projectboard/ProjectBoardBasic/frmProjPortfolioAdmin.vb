@@ -2618,7 +2618,7 @@ Public Class frmProjPortfolioAdmin
                             budget = oldSummaryP.budgetWerte.Sum
                         End If
 
-                        Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, budget:=budget)
+                        Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
 
                         Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
                         If AlleProjekte.Containskey(skey) Then
@@ -3279,8 +3279,8 @@ Public Class frmProjPortfolioAdmin
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub filterIcon_Click(sender As Object, e As EventArgs) Handles filterIcon.Click
-
-        Dim filterFormular As New frmNameSelection
+        'Dim filterFormular As New frmNameSelection
+        Dim filterFormular As New frmHierarchySelection
         Dim considerDependencies As Boolean
         Dim zeitraumVon As Date = StartofCalendar
         Dim zeitraumBis As Date = StartofCalendar.AddYears(20)
@@ -3289,6 +3289,8 @@ Public Class frmProjPortfolioAdmin
         ' hier ist der einzige Grund für browserAlleProjekte: es muss etwas da sein, wo reingeladen werden kann 
         ' wenn auf der Datenbank gefiltert werden soll - und das geht nur , in dem etwas geladen wird ... 
         Dim browserAlleProjekte As New clsProjekteAlle
+
+        awinSettings.useHierarchy = True
 
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
@@ -3358,10 +3360,12 @@ Public Class frmProjPortfolioAdmin
                 aKtionskennung = PTTvActions.delAllExceptFromDB Or _
                 aKtionskennung = PTTvActions.delFromDB Then
                 ' damit im Filterformular unterschieden werden kann, ob der Aufruf aus dem ProjPortfolioAdmin Formular erfolgte ...
-                .actionCode = aKtionskennung
+                'tk 9.9.18 
+                '.actionCode = aKtionskennung
                 .menuOption = PTmenue.filterdefinieren
             Else
-                .actionCode = aKtionskennung
+                ' tk 9.9.18
+                '.actionCode = aKtionskennung
                 .menuOption = PTmenue.sessionFilterDefinieren
             End If
 

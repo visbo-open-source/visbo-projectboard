@@ -73,16 +73,22 @@ Public Class frmMEhryRoleCost
 
         For i = 1 To anzahlcheckedRoles
 
-            If IsNothing(hproj.getPhaseByID(phaseNameID).getRole(selectedRC.Item(i))) _
+            If Not IsNothing(hproj) Then
+
+                If IsNothing(hproj.getPhaseByID(phaseNameID).getRole(selectedRC.Item(i))) _
                 And IsNothing(hproj.getPhaseByID(phaseNameID).getCost(selectedRC.Item(i))) Then
 
-                ''Call massEditZeileEinfügen("")
-                ergItems.Add(selectedRC.Item(i))
-            Else
-                If rcName = selectedRC.Item(i) Then
+                    ''Call massEditZeileEinfügen("")
                     ergItems.Add(selectedRC.Item(i))
+                Else
+                    If rcName = selectedRC.Item(i) Then
+                        ergItems.Add(selectedRC.Item(i))
+                    End If
                 End If
+            Else
+                ergItems.Add(selectedRC.Item(i))
             End If
+
 
         Next
 
@@ -112,7 +118,11 @@ Public Class frmMEhryRoleCost
 
     Public Sub buildMERoleTree()
 
-        Dim hPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+
+        Dim hPhase As clsPhase = Nothing
+        If Not IsNothing(hproj) Then
+            hPhase = hproj.getPhaseByID(phaseNameID)
+        End If
 
         Dim topLevelNode As TreeNode
         Dim checkProj As Boolean = False
@@ -215,12 +225,17 @@ Public Class frmMEhryRoleCost
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
 
 
-        Dim hPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+        Dim hPhase As clsPhase = Nothing
+        If Not IsNothing(hproj) Then
+            hPhase = hproj.getPhaseByID(phaseNameID)
+        End If
+
         Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
         Dim doItAnyWay As Boolean = False
 
         Dim newNode As TreeNode
         With parentNode
+
             newNode = .Nodes.Add(currentRole.name)
             newNode.Name = roleUid.ToString
             newNode.Text = currentRole.name
@@ -228,8 +243,8 @@ Public Class frmMEhryRoleCost
             ' hier muss gecheckt werden, welche Rollen in dem Projekt und dieser Phase, in der der Doppelclick erfolgte
             ' vergeben sind. Diese sollen dann als kursiv dargestellt werden, die aktuelle Rolle als gecheckt markiert sein
 
-            If Not IsNothing(hphase) Then
-                If Not IsNothing(hphase.getRole(currentRole.name)) Then
+            If Not IsNothing(hPhase) Then
+                If Not IsNothing(hPhase.getRole(currentRole.name)) Then
 
                     ' entsprechend kennzeichnen
                     newNode.NodeFont = existingRoleFont

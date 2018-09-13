@@ -314,6 +314,66 @@ Public Class clsRollen
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt true zurück, wenn die angegebene Rolle / Kostenart ein Kind oder Kindeskind eines der Elemente ist
+    ''' oder das Element selber ist 
+    ''' </summary>
+    ''' <param name="roleCostName"></param>
+    ''' <param name="roleCostCollection"></param>
+    ''' <returns></returns>
+    Public Function hasAnyChildParentRelationsship(ByVal roleCostName As String, ByVal roleCostCollection As Collection) As Boolean
+
+        Dim isRole As Boolean = RoleDefinitions.containsName(roleCostName)
+        Dim iscost As Boolean = False
+        Dim found As Boolean = False
+        Dim ix As Integer = 1
+        Dim myIDs As SortedList(Of Integer, Double)
+
+        If isRole Then
+
+            ' ist es eine Gruppe ...
+            If roleCostName.StartsWith("#") Then
+                myIDs = Me.getSubRoleIDsOf(roleCostName)
+            Else
+                myIDs = New SortedList(Of Integer, Double)
+                Dim myUID As Integer = RoleDefinitions.getRoledef(roleCostName).UID
+                myIDs.Add(myUID, 1.0)
+            End If
+
+            If roleCostCollection.Contains(roleCostName) Then
+                found = True
+            Else
+                Do While Not found And ix <= roleCostCollection.Count
+
+                    Dim parentName As String = CStr(roleCostCollection.Item(ix))
+
+                    If RoleDefinitions.containsName(parentName) Then
+                        Dim myUID As Integer = RoleDefinitions.getRoledef(roleCostName).UID
+                        Dim childIDs As SortedList(Of Integer, Double) = Me.getSubRoleIDsOf(parentName)
+                        Dim myIX As Integer = 0
+                        Do While Not found And myIX <= myIDs.Count - 1
+                            found = childIDs.ContainsKey(myIDs.ElementAt(myIX).Key)
+                            If Not found Then
+                                myIX = myIX + 1
+                            End If
+                        Loop
+
+                    End If
+
+                    If Not found Then
+                        ix = ix + 1
+                    End If
+
+                Loop
+            End If
+
+        Else
+            ' nichts tun, foudn = false lassen
+        End If
+
+        hasAnyChildParentRelationsship = found
+
+    End Function
 
 
     ''' <summary>

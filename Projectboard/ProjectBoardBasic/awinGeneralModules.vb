@@ -212,242 +212,7 @@ Public Module awinGeneralModules
         substitutePortfolioByProjects = tmpCollection
     End Function
 
-    ' Änderung tk: ist ersetzt worden durch writePhaseMilestoneDefinitions
 
-    ' ''' <summary>
-    ' ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
-    ' ''' das Customization File 
-    ' ''' </summary>
-    ' ''' <remarks></remarks>
-    'Public Sub awinWritePhaseDefinitions()
-
-    '    Dim phaseDefs As Excel.Range
-    '    Dim milestoneDefs As Excel.Range
-    '    'Dim foundRow As Integer
-    '    Dim phName As String, phColor As Long
-    '    Dim lastrow As Excel.Range
-
-    '    'appInstance.ScreenUpdating = False
-    '    appInstance.EnableEvents = False
-
-
-
-    '    ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
-    '    ' das File 
-    '    Try
-    '        appInstance.Workbooks.Open(awinPath & customizationFile)
-
-    '    Catch ex As Exception
-    '        Call MsgBox("Customization File nicht gefunden - Abbruch")
-    '        Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-    '    End Try
-
-    '    appInstance.Workbooks(myCustomizationFile).Activate()
-    '    Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-    '                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-    '    phaseDefs = wsName4.Range("awin_Phasen_Definition")
-
-    '    Dim anzZeilen As Integer = phaseDefs.Rows.Count
-    '    lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
-
-    '    Dim vglsListe As New SortedList(Of String, String)
-    '    Dim ergStr As String
-
-    '    For Each c As Excel.Range In phaseDefs
-    '        Try
-    '            ergStr = CStr(c.Value).Trim
-
-    '            If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
-
-    '                vglsListe.Add(ergStr, ergStr)
-
-    '            End If
-    '        Catch ex As Exception
-
-    '        End Try
-
-    '    Next
-
-
-    '    ' jetzt muss getestet werden, ob jede Phase in PhaseDefinitions bereits in der Customization vorkommt 
-
-    '    Dim i As Integer
-    '    Dim darstellungsKlasse As String
-    '    For i = 1 To PhaseDefinitions.Count
-
-    '        With PhaseDefinitions.getPhaseDef(i)
-    '            phName = .name
-    '            phColor = CLng(PhaseDefinitions.getPhaseDef(i).farbe)
-    '            darstellungsKlasse = .darstellungsKlasse
-    '        End With
-
-
-    '        If vglsListe.ContainsKey(phName) Then
-    '            ' nichts zu tun 
-    '        Else
-    '            ' eintragen 
-    '            lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
-    '            CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-
-
-    '        End If
-
-
-
-    '    Next i
-
-
-    '    If awinSettings.addMissingPhaseMilestoneDef Then
-
-    '        'jede Phase, die noch nicht in dem CustomizationFile ist, wird noch hinzugefügt 
-    '        ' und in die PhaseDefinitions eingetragen
-
-    '        For mPh As Integer = 1 To missingPhaseDefinitions.Count
-
-    '            Dim missPhaseDef As clsPhasenDefinition = missingPhaseDefinitions.getPhaseDef(mPh)
-
-    '            With missPhaseDef
-    '                phName = .name
-    '                phColor = CLng(missingPhaseDefinitions.getPhaseDef(mPh).farbe)
-    '                darstellungsKlasse = .darstellungsKlasse
-    '            End With
-
-
-    '            If vglsListe.ContainsKey(phName) Then
-    '                ' nichts zu tun 
-    '            Else
-    '                ' eintragen 
-    '                lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
-    '                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-
-    '                Try
-    '                    PhaseDefinitions.Add(missPhaseDef)
-    '                Catch ex As Exception
-
-    '                End Try
-
-
-
-    '            End If
-
-
-    '        Next mPh
-
-    '        missingPhaseDefinitions.Clear()
-
-    '    End If
-
-    '    ' jetzt noch die Meilensteine schreiben 
-    '    ' awin_Meilenstein_Definition
-
-    '    milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
-    '    anzZeilen = milestoneDefs.Rows.Count
-    '    lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
-
-    '    ' jetzt muss getestet werden, ob jede Meilenstein  in MilestoneDefinitions bereits in der Customization vorkommt 
-
-    '    vglsListe.Clear()
-
-    '    For Each c As Excel.Range In milestoneDefs
-    '        Try
-    '            ergStr = CStr(c.Value).Trim
-
-    '            If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
-
-    '                vglsListe.Add(ergStr, ergStr)
-
-    '            End If
-    '        Catch ex As Exception
-
-    '        End Try
-
-    '    Next
-
-
-    '    Dim msName As String
-    '    Dim shortName As String
-    '    Dim belongsTo As String
-
-
-    '    For i = 1 To MilestoneDefinitions.Count
-
-    '        With MilestoneDefinitions.elementAt(i - 1)
-    '            msName = .name
-    '            shortName = .shortName
-    '            belongsTo = .belongsTo
-    '            darstellungsKlasse = .darstellungsKlasse
-    '        End With
-
-    '        If vglsListe.ContainsKey(msName) Then
-    '            ' nichts zu tun 
-    '        Else
-    '            ' eintragen 
-    '            lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
-    '            CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-
-    '        End If
-
-
-
-    '    Next i
-
-
-    '    If awinSettings.addMissingPhaseMilestoneDef Then
-
-    '        ' die Meilensteine, die noch nicht in MilestoneDefinitions enthalten sind, werden nun in CustomizationFile eingetragen 
-    '        ' und in die MilestoneDefinitions
-
-    '        For mMs As Integer = 1 To missingMilestoneDefinitions.Count
-
-    '            Dim msDef As clsMeilensteinDefinition = missingMilestoneDefinitions.elementAt(mMs - 1)
-    '            With msDef
-    '                msName = .name
-    '                shortName = .shortName
-    '                belongsTo = .belongsTo
-    '                darstellungsKlasse = .darstellungsKlasse
-    '            End With
-
-    '            If vglsListe.ContainsKey(msName) Then
-    '                ' nichts zu tun 
-    '            Else
-    '                ' eintragen 
-    '                lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
-    '                CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-    '                If Not MilestoneDefinitions.Contains(msDef.name) Then
-    '                    MilestoneDefinitions.Add(msDef)
-    '                End If
-
-
-    '            End If
-
-    '        Next mMs
-    '        missingMilestoneDefinitions.Clear()
-
-    '    End If
-
-
-    '    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-    '    'appInstance.ScreenUpdating = True
-    '    appInstance.EnableEvents = True
-
-    'End Sub
 
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
@@ -2132,6 +1897,7 @@ Public Module awinGeneralModules
         Dim roleUID As Integer = 0
         Dim roleUidsDefined As Boolean = False
         Dim przSatz As Double = 1.0
+        Dim defaultTagessatz As Double = 800.0
 
         Try
             Dim hasHierarchy As Boolean = False
@@ -2267,7 +2033,11 @@ Public Module awinGeneralModules
                             With hrole
                                 .name = tmpStr.Trim
                                 .defaultKapa = CDbl(c.Offset(0, 1).Value)
+
                                 .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+                                If .tagessatzIntern <= 0 Then
+                                    .tagessatzIntern = defaultTagessatz
+                                End If
 
                                 Try
                                     If CDbl(c.Offset(0, 3).Value) = 0.0 Then
@@ -2659,6 +2429,24 @@ Public Module awinGeneralModules
 
                 End Try
 
+                Try
+                    awinSettings.allianzI2DelRoles = CStr(.Range("allianzI2DelRoles").Value).Trim
+                Catch ex As Exception
+                    awinSettings.allianzI2DelRoles = ""
+                End Try
+
+                Try
+                    awinSettings.autoSetActualDataDate = CBool(.Range("autoSetActualDataDate").Value)
+                Catch ex As Exception
+                    awinSettings.autoSetActualDataDate = False
+                End Try
+
+                Try
+                    awinSettings.actualDataMonth = CDate(.Range("ActualDataMonth").Value)
+                Catch ex As Exception
+                    awinSettings.actualDataMonth = Date.MinValue
+                End Try
+
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
                 weightStrategicFit = CDbl(.Range("WeightStrategicFit").Value)
@@ -2885,16 +2673,15 @@ Public Module awinGeneralModules
         ''listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
         ''              FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
 
-        If listOfFiles.Count = 1 Then
-            Call readUrlOfRole(listOfFiles.Item(0))
-        ElseIf listOfFiles.Count = 0 Then
-            Call logfileSchreiben("Es gibt keine Datei zur Urlaubsplanung" & vbLf _
-                         & "Es wurde daher jetzt keine berücksichtigt", _
-                         "", anzFehler)
-        Else
+        If listOfFiles.Count >= 1 Then
 
-            Call logfileSchreiben("Es gibt mehrere Dateien zur Urlaubsplanung" & vbLf _
-                         & "Es wurde daher jetzt keine berücksichtigt", _
+            For Each tmpDatei As String In listOfFiles
+                Call readUrlOfRole(tmpDatei)
+            Next
+
+        Else
+            Call logfileSchreiben("Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                         & "Es wurde daher jetzt keine berücksichtigt",
                          "", anzFehler)
         End If
 
@@ -5948,7 +5735,7 @@ Public Module awinGeneralModules
                 activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets("VISBO"),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             Catch ex As Exception
-                activeWSListe = CType(appInstance.ActiveWorkbook.Worksheets("Liste"),
+                activeWSListe = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             End Try
 
@@ -6644,7 +6431,7 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
 
 
-        tmpRoleNames = {"BOSV-KB0", "BOSV-KB1", "BOSV-KB2", "BOSV-KB3", "BOSV-SBF1", "BOSV-SBF2", "DRUCK", "BOSV-SBP1", "BOSV-SBP2", "BOSV-SBP3", "AMIS",
+        tmpRoleNames = {"D-BOSV-KB0", "D-BOSV-KB1", "D-BOSV-KB2", "D-BOSV-KB3", "D-BOSV-SBF1", "D-BOSV-SBF2", "DRUCK", "D-BOSV-SBP1", "D-BOSV-SBP2", "D-BOSV-SBP3", "AMIS",
                         "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
         tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DI1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
 
@@ -6670,8 +6457,14 @@ Public Module awinGeneralModules
                         tmpCols(i - 1) = CType(.Range(tmpColBz(i - 1)), Excel.Range).Column
 
                         ' test tk 9.6.18
-                        ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1)) Or
+                        If tmpRoleNames(i - 1).StartsWith("D-") Then
+                            ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1).Substring(2)) Or
                             tmpRoleNames(i - 1) = "DRUCK")
+                        Else
+                            ok = ok And (CStr(CType(.Cells(2, tmpCols(i - 1)), Excel.Range).Value).StartsWith(tmpRoleNames(i - 1)) Or
+                            tmpRoleNames(i - 1) = "DRUCK")
+                        End If
+
 
                         If Not ok Then
                             Call MsgBox("Fehler in Spalte mit Angaben zu (?) " & tmpRoleNames(i - 1))
@@ -6720,7 +6513,7 @@ Public Module awinGeneralModules
         Dim ampelText As String
         Dim projVorhabensBudget As Double = 0.0
 
-
+        Dim logmsg() As String
 
         Dim programName As String = ""
         Dim current1program As clsConstellation = Nothing
@@ -6835,6 +6628,9 @@ Public Module awinGeneralModules
 
             Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+
             With currentWS
 
 
@@ -6882,6 +6678,18 @@ Public Module awinGeneralModules
                     Throw New ArgumentException(errmsg)
                 End Try
 
+
+                ' tk Test Logfile schreiben ...
+                Try
+                    ReDim logmsg(roleNamesToConsider.Count)
+                    logmsg(0) = ""
+                    For ix As Integer = 1 To roleNamesToConsider.Count
+                        logmsg(ix) = roleNamesToConsider(ix - 1)
+                    Next
+                    Call logfileSchreiben(logmsg)
+                Catch ex As Exception
+
+                End Try
 
                 While zeile <= lastRow
 
@@ -6980,11 +6788,11 @@ Public Module awinGeneralModules
                                             createdPrograms = createdPrograms + 1
                                             projectConstellations.Add(current1program)
 
-                                            ' jetzt das union-Projekt erstellen ; wird aktuell noch nicht gemacht ...
-                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
+                                            ' jetzt das union-Projekt erstellen ; 
+                                            Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                                             ' Status gleich auf 1: beauftragt setzen 
-                                            unionProj.Status = ProjektStatus(1)
+                                            unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                                             If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
                                                 ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
@@ -6994,7 +6802,10 @@ Public Module awinGeneralModules
                                             ' test
                                             Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                                             If Not everythingOK Then
-                                                Call MsgBox("nicht identisch: " & current1program.constellationName)
+                                                ReDim logmsg(1)
+                                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                                logmsg(1) = current1program.constellationName
+                                                Call logfileSchreiben(logmsg)
                                             End If
                                             ' ende test
                                         Else
@@ -7167,15 +6978,20 @@ Public Module awinGeneralModules
 
                             ' Test tk 
                             Try
+                                ReDim logmsg(0)
+                                logmsg(0) = pName
+
                                 For ix As Integer = 1 To roleNamesToConsider.Count
 
                                     Dim tmpRollenName As String = roleNamesToConsider(ix - 1)
                                     Dim sollBedarf As Double = roleNeeds(ix - 1)
+
+
                                     Dim tmpCollection As New Collection
                                     tmpCollection.Add(tmpRollenName)
                                     Dim istBedarf As Double = hproj.getRessourcenBedarfNew(tmpRollenName, True).Sum
 
-                                    If Math.Abs(sollBedarf - istBedarf) > 2.5 Then
+                                    If Math.Abs(sollBedarf - istBedarf) > 0.001 Then
                                         outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
                                         outputCollection.Add(outPutLine)
                                     End If
@@ -7185,14 +7001,17 @@ Public Module awinGeneralModules
                                 Dim sollBedarfGesamt As Double = roleNeeds.Sum
                                 Dim istBedarfGesamt As Double = hproj.getAlleRessourcen.Sum
 
-                                If Math.Abs(sollBedarfGesamt - istBedarfGesamt) > 0.01 * sollBedarfGesamt Then
+                                If Math.Abs(sollBedarfGesamt - istBedarfGesamt) > 0.001 Then
                                     outPutLine = "Gesamt Differenz bei " & pName & ": " & Math.Abs(sollBedarfGesamt - istBedarfGesamt).ToString("#0.##")
                                     outputCollection.Add(outPutLine)
                                 End If
 
+                                Call logfileSchreiben(logmsg, roleNeeds)
+
                             Catch ex As Exception
 
                             End Try
+
 
 
                             ' Ende Test tk 
@@ -7264,10 +7083,10 @@ Public Module awinGeneralModules
                         projectConstellations.Add(current1program)
 
                         ' jetzt das union-Projekt erstellen 
-                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, budget:=last1Budget)
+                        Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
                         ' Status wird gleich auf 1: beauftragt gesetzt
-                        unionProj.Status = ProjektStatus(1)
+                        unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
                         If ImportProjekte.Containskey(calcProjektKey(unionProj)) Then
                             ImportProjekte.Remove(calcProjektKey(unionProj), updateCurrentConstellation:=False)
@@ -7278,7 +7097,12 @@ Public Module awinGeneralModules
                         ' test
                         Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                         If Not everythingOK Then
-                            Call MsgBox("nicht identisch: " & current1program.constellationName)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = current1program.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
                         End If
                         ' ende test
                     Else
@@ -7321,7 +7145,7 @@ Public Module awinGeneralModules
     ''' dabei werden die neuen Daten in das Projekt "gemerged"; d.h alle Werte zu anderen Rollen als BOSV-KB bleiben erhalten 
     ''' Ebenso alle Attribute ; es werden also nur die Rollen-Bedarfe zu BOSV-KB ausgetauscht ...  
     ''' </summary>
-    Public Sub importAllianzType2(ByVal deleteRoles As Collection)
+    Public Sub importAllianzType2()
         Dim zeile As Integer, spalte As Integer
 
         Dim tfZeile As Integer = 2
@@ -7349,16 +7173,41 @@ Public Module awinGeneralModules
 
         Dim hproj As clsProjekt = Nothing
         Dim newProj As clsProjekt = Nothing
-
         Dim projektKundenNummer As String = ""
+
+        ' welche Rollen sollen gelöscht werden
+        Dim deleteRoles As New Collection
+
+        ' jetzt werden die aufgebaut ...
+        If awinSettings.allianzI2DelRoles = "" Then
+
+            deleteRoles.Add("D-BOSV-KB0")
+            deleteRoles.Add("D-BOSV-KB1")
+            deleteRoles.Add("D-BOSV-KB2")
+            deleteRoles.Add("D-BOSV-KB3")
+            deleteRoles.Add("Grp-BOSV-KB")
+
+        Else
+            Dim tmpStr() As String = awinSettings.allianzI2DelRoles.Split(New Char() {CChar(";")})
+            For Each tmpRCName As String In tmpStr
+                If RoleDefinitions.containsName(tmpRCName.Trim) Then
+                    deleteRoles.Add(tmpRCName.Trim)
+                End If
+            Next
+        End If
+
+        ' diese Rollen und Subroles sollen alle vorher gelöscht werden und dann mit den neuen Werten ersetzt werden 
+        ' Amis soll nicht gelöscht werden, deshalb die explizite Aufführung
+
 
         ' Standard-Definition
         Dim anzPhasen As Integer = 5
 
         Try
-            anzPhasen = Projektvorlagen.getProject("Rel").CountPhases
+            anzPhasen = Projektvorlagen.getProject(vorlageName).CountPhases
         Catch ex As Exception
-
+            Call MsgBox("in ImportAllianzType2: " & vbLf & "es gibt keine Projektvorlage " & vorlageName & ".xlsx!" & vbLf & "-> Abbruch ...")
+            Exit Sub
         End Try
 
 
@@ -7382,10 +7231,8 @@ Public Module awinGeneralModules
         ' enthät die Saplte, wo der ProjektName steht ...
         Dim colPname As Integer
 
-
         ' enthält die Spalten-Nummer, wo die einzelnen Rollen-Namen zu finden sind
         Dim colRoleName As Integer = -1
-
 
         ' jetzt werden die ImportProjekte zurückgesetzt ...
         ImportProjekte.Clear()
@@ -7558,10 +7405,10 @@ Public Module awinGeneralModules
 
                             Dim gesamtVorher As Double = oldProj.getAlleRessourcen().Sum
                             Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonthNew("Orga", True).Sum
-                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("BOSV-KB", True).Sum
+                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("D-BOSV-KB", True).Sum
 
                             ' tk test ...
-                            If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.1 Then
+                            If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
                                 Call MsgBox(oldProj.name & " Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString)
                             End If
                             ' tk test ...
@@ -7590,7 +7437,7 @@ Public Module awinGeneralModules
 
                             Dim bosvErgebnis As Double = newProj.getRessourcenBedarfNew("Grp-BOSV-KB", True).Sum
 
-                            If Math.Abs(bosvErgebnis - addValues) >= 0.1 Then
+                            If Math.Abs(bosvErgebnis - addValues) >= 0.001 Then
                                 outPutLine = "addValues ungleich ergebnis: " & addValues.ToString("#0.##") & " <> " & bosvErgebnis.ToString("#0.##")
                                 outputCollection.Add(outPutLine)
                             End If
@@ -7630,7 +7477,10 @@ Public Module awinGeneralModules
     ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
     ''' </summary>
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer)
+    ''' <param name="readAll">gibt an, ob sowohl Vergangenheit als auch Zukunft gelesen wird</param>
+    ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
+    Public Sub ImportAllianzType3(ByVal monat As Integer, Optional readAll As Boolean = False, Optional createUnknown As Boolean = False)
+
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
         Dim validProjectNames As New SortedList(Of String, SortedList(Of String, Double()))
@@ -7653,7 +7503,15 @@ Public Module awinGeneralModules
         ' nimmt die Texte für die LogFile Zeile auf
         ' Array kann beliebig lang werden 
         Dim logArray() As String
+        Dim logDblArray() As Double
 
+        ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
+        Dim referatsCollection As New Collection
+
+        Dim lastValidMonth As Integer = monat
+        If readAll Then
+            lastValidMonth = 12
+        End If
 
         ' jetzt muss als erstes auf das korrekte Worksheet positioniert werden 
         ' das aktive Sheet muss das richtige sein ... und die richtige Header Struktur haben 
@@ -7666,14 +7524,85 @@ Public Module awinGeneralModules
             End If
 
             ' jetzt kommt die eigentliche Import Behandlung 
-            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet,
+            Dim currentWS As Excel.Worksheet = Nothing
+            Try
+                currentWS = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+                If Not currentWS.Name.Contains("Bericht") Then
+                    currentWS = CType(appInstance.ActiveWorkbook.Worksheets("Bericht_RL_Kapa_Excel"),
+                                                           Global.Microsoft.Office.Interop.Excel.Worksheet)
+                End If
+            Catch ex As Exception
+                Call MsgBox("Keine Tabelle mit Berichts-Daten gefunden ... Abbruch")
+                Exit Sub
+            End Try
+
+
+            ' tk, 2.8.2018 Behandlung LookupTable 
+            Dim lookUpTableWS As Excel.Worksheet = Nothing
+
+            ' die lookupTable nimmt die Projekt-Nummer als KEy auf und den korrespondierenden NAmen aus der Rupi-Liste
+            ' bei Aufbau der lookupTable werden die Rupi-Liste NAmen bereits in valide Namen gewandelt ... 
+            Dim lookupTable As SortedList(Of String, String) = Nothing
+
+            Try
+                lookUpTableWS = CType(appInstance.ActiveWorkbook.Worksheets("lookupTable"),
+                                                           Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Catch ex As Exception
+                lookUpTableWS = Nothing
+            End Try
+
+            ' wenn jetzt eine Tabelle vorhanden ist, dann muss die LookupTable aufgebaut werden 
+            If Not IsNothing(lookUpTableWS) Then
+
+                With lookUpTableWS
+
+                    Dim lupTLastZeile As Integer = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                    Dim lupTZeile As Integer = 2
+                    If lupTLastZeile >= lupTZeile Then
+
+                        lookupTable = New SortedList(Of String, String)
+
+                        While lupTZeile <= lupTLastZeile
+                            Try
+                                Dim pNr As String = CStr(CType(.Cells(lupTZeile, 2), Excel.Range).Value).Trim
+                                Dim rupiPName As String = CStr(CType(.Cells(lupTZeile, 3), Excel.Range).Value).Trim
+
+                                If Not isValidProjectName(rupiPName) Then
+                                    rupiPName = makeValidProjectName(rupiPName)
+                                End If
+
+                                If pNr <> "" Then
+                                    If Not lookupTable.ContainsKey(pNr) Then
+                                        lookupTable.Add(pNr, rupiPName)
+                                    End If
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
+                            lupTZeile = lupTZeile + 1
+
+                        End While
+
+                    End If
+                End With
+
+
+            End If
+
+            Dim lookupsExist As Boolean = False
+            If Not IsNothing(lookupTable) Then
+                lookupsExist = (lookupTable.Count > 0)
+            End If
+
 
             ' hat die Datei die richtige Header-Struktur ? 
             Dim firstZeile As Excel.Range = currentWS.Rows(1)
 
             If Not isCorrectAllianzImportStructure(firstZeile, 3) Then
-                Call MsgBox("Datei hat nicht den für Typ 3 erforderlichen Spalten-Aufbau!")
+                Call MsgBox("Datei hat nicht den für Typ 3 (= Istdaten-Import) erforderlichen Spalten-Aufbau!")
                 Exit Sub
             End If
 
@@ -7686,16 +7615,16 @@ Public Module awinGeneralModules
                 lastRow = CType(.Cells(20000, "B"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 ' welche Werte sollen ausgelesen werden, wo stehen die 
-                Dim colISExtern As Integer = CType(.Range("B1"), Excel.Range).Column
-                Dim colResource As Integer = CType(.Range("C1"), Excel.Range).Column
-                Dim colProjectNr As Integer = CType(.Range("D1"), Excel.Range).Column
-                Dim colPname As Integer = CType(.Range("E1"), Excel.Range).Column
+                Dim colISExtern As Integer = CType(.Range("F1"), Excel.Range).Column
+                Dim colResource As Integer = CType(.Range("G1"), Excel.Range).Column
+                Dim colProjectNr As Integer = CType(.Range("C1"), Excel.Range).Column
+                Dim colPname As Integer = CType(.Range("D1"), Excel.Range).Column
 
-                Dim colYear As Integer = CType(.Range("G1"), Excel.Range).Column
-                Dim colMonth As Integer = CType(.Range("H1"), Excel.Range).Column
-                Dim colActuals As Integer = CType(.Range("J1"), Excel.Range).Column
-
-
+                Dim colYear As Integer = CType(.Range("H1"), Excel.Range).Column
+                Dim colMonth As Integer = CType(.Range("I1"), Excel.Range).Column
+                Dim colEuroActuals As Integer = CType(.Range("L1"), Excel.Range).Column
+                Dim colReferat As Integer = CType(.Range("A1"), Excel.Range).Column
+                Dim colPTZuweisung As Integer = CType(.Range("J1"), Excel.Range).Column
 
                 Dim cacheProjekte As New clsProjekteAlle
 
@@ -7708,6 +7637,24 @@ Public Module awinGeneralModules
                 While zeile <= lastRow
 
                     Try
+                        ' zu welchem Referat gehört die Rolle ? das wird später benötigt, um die zugehörigen Werte zurücksetzen zu können 
+                        Dim tmpReferat As String = CStr(CType(.Cells(zeile, colReferat), Excel.Range).Value).Trim
+                        If Not IsNothing(tmpReferat) Then
+                            If RoleDefinitions.containsName(tmpReferat) Then
+                                ' wenn es sich um KB handelt , dann ist KB0 gemeint ...
+                                If tmpReferat = "D-BOSV-KB" Then
+                                    tmpReferat = "D-BOSV-KB0"
+                                    ' jetzt auch AMIS in ReferatsCollection aufnehmen ..
+                                    If Not referatsCollection.Contains("AMIS") Then
+                                        referatsCollection.Add("AMIS", "AMIS")
+                                    End If
+                                End If
+                                If Not referatsCollection.Contains(tmpReferat) Then
+                                    referatsCollection.Add(tmpReferat, tmpReferat)
+                                End If
+                            End If
+                        End If
+
                         Dim tmpPName As String = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
                         Dim tmpPNr As String = CStr(CType(.Cells(zeile, colProjectNr), Excel.Range).Value).Trim
 
@@ -7724,7 +7671,8 @@ Public Module awinGeneralModules
                         End Try
 
                         Dim curMonat As Integer = CInt(CType(.Cells(zeile, colMonth), Excel.Range).Value)
-                        Dim curValue As Double = CDbl(CType(.Cells(zeile, colActuals), Excel.Range).Value)
+                        Dim curIstEuroValue As Double = CDbl(CType(.Cells(zeile, colEuroActuals), Excel.Range).Value)
+                        Dim curZuwPTValue As Double = CDbl(CType(.Cells(zeile, colPTZuweisung), Excel.Range).Value)
 
                         Dim shallContinue As Boolean = False
                         Dim oldProj As clsProjekt = Nothing
@@ -7732,18 +7680,20 @@ Public Module awinGeneralModules
                         If Not handledNames.ContainsKey(tmpPName) Then
 
                             ' wenn ok = true zurück kommt, dann ist in cacheProjekte das Projekt mit Varianten-Name "" drin .. 
-                            If isKnownProject(pName, tmpPNr, cacheProjekte) Then
+                            If isKnownProject(pName, tmpPNr, cacheProjekte, lookupTable, createUnknown) Then
                                 shallContinue = True
                                 handledNames.Add(tmpPName, pName)
+
                             Else
-                                ' Projekt nicht erkannt 
                                 outPutLine = "unbekanntes Projekt: " & pName & "; P-Nr: " & tmpPNr
                                 outputCollection.Add(outPutLine)
 
-                                ReDim logArray(2)
-                                logArray(0) = "unbekanntes Projekt / PNr:"
-                                logArray(1) = pName
-                                logArray(2) = tmpPNr
+                                ReDim logArray(4)
+                                logArray(0) = "unbekannte PNr / Projekt "
+                                logArray(1) = tmpPNr
+                                logArray(2) = pName
+                                logArray(3) = ""
+                                logArray(4) = ""
                                 Call logfileSchreiben(logArray)
 
                                 shallContinue = False
@@ -7755,7 +7705,15 @@ Public Module awinGeneralModules
                             shallContinue = (handledNames.Item(tmpPName).Length > 0)
                         End If
 
-                        If shallContinue And curMonat >= 1 And curMonat <= monat And curValue >= 0 Then
+                        If Not readAll Then
+                            shallContinue = shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0
+                        Else
+                            ' readAll:
+                            shallContinue = shallContinue And curMonat >= 1 And curMonat <= lastValidMonth And curZuwPTValue >= 0
+                        End If
+
+                        If shallContinue Then
+                            'If shallContinue And curMonat >= 1 And curMonat <= monat And curIstEuroValue >= 0 Then
                             ' nur dann handelt es sich um ein zuordenbares Projekt ... 
                             ' nur dann geht es um gültige Werte
 
@@ -7770,16 +7728,68 @@ Public Module awinGeneralModules
 
                                 Dim roleName As String = getAllianzRoleNameFromValue(fullRoleName, isExtern)
 
+                                ' tk 7.8.18, um zu verhindern, dass Rollen mehrfach gezählt werden, wenn sie in der Config Datei / Ist-Daten  Datei zu unterschiedlichen Referaten gehören ...   
+                                ' sicherstellen, dass roleName auch existiert ..
+                                If roleName <> "" Then
+                                    If Not RoleDefinitions.hasAnyChildParentRelationsship(roleName, referatsCollection) Then
+                                        ' in diesem Fall muss die Eltern-Rolle der RoleName noch aufgenommen werden ..
+                                        Dim tmpparentRole As String = ""
+                                        Try
+                                            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+
+                                            tmpparentRole = RoleDefinitions.getParentRoleOf(roleUID).name
+                                            If Not referatsCollection.Contains(tmpparentRole) Then
+                                                referatsCollection.Add(tmpparentRole, tmpparentRole)
+                                            End If
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                        ReDim logArray(4)
+                                        logArray(0) = "Rolle hat anderes Referat wie in Konfiguration"
+                                        logArray(1) = ""
+                                        logArray(2) = tmpReferat
+                                        logArray(3) = fullRoleName
+                                        logArray(4) = tmpparentRole
+                                        Call logfileSchreiben(logArray)
+
+                                    End If
+                                End If
+
+
+
+                                If roleName = "" And tmpReferat <> "" Then
+                                    ' dann ersetzen durch 
+                                    roleName = tmpReferat
+
+                                    If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
+                                        unKnownRoleNames.Add(fullRoleName, True)
+                                        'outPutLine = "unbekannt: " & fullRoleName
+                                        'outputCollection.Add(outPutLine)
+
+                                        ReDim logArray(4)
+                                        logArray(0) = "unbekannte Rolle wird ersetzt durch Referat"
+                                        logArray(1) = ""
+                                        logArray(2) = ""
+                                        logArray(3) = fullRoleName
+                                        logArray(4) = tmpReferat
+                                        Call logfileSchreiben(logArray)
+                                    End If
+                                End If
+
                                 If roleName = "" Then
 
                                     If Not unKnownRoleNames.ContainsKey(fullRoleName) Then
                                         unKnownRoleNames.Add(fullRoleName, True)
-                                        outPutLine = "unbekannt: " & fullRoleName
-                                        outputCollection.Add(outPutLine)
+                                        'outPutLine = "unbekannt: " & fullRoleName
+                                        'outputCollection.Add(outPutLine)
 
-                                        ReDim logArray(1)
-                                        logArray(0) = "unbekannte Rolle:"
-                                        logArray(1) = fullRoleName
+                                        ReDim logArray(4)
+                                        logArray(0) = "unbekannte Rolle ohne Referat"
+                                        logArray(1) = ""
+                                        logArray(2) = ""
+                                        logArray(3) = fullRoleName
+                                        logArray(4) = "?"
                                         Call logfileSchreiben(logArray)
                                     End If
 
@@ -7788,34 +7798,88 @@ Public Module awinGeneralModules
                                     ' Aufbauen des Eintrags
                                     Dim roleValues As New SortedList(Of String, Double())
                                     Dim tmpValues() As Double
-                                    ReDim tmpValues(monat - 1)
 
-                                    If Not validProjectNames.ContainsKey(pName) Then
+                                    'ReDim tmpValues(monat - 1)
+                                    ' lastValidMonth ist entweder der monat oder aber 12, falls alles gelesen werden soll 
+                                    ReDim tmpValues(lastValidMonth - 1)
 
-                                        roleValues = New SortedList(Of String, Double())
-                                        ReDim tmpValues(monat - 1)
+                                    Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
 
-                                        tmpValues(curMonat - 1) = curValue
-
-                                        roleValues.Add(roleName, tmpValues)
-                                        validProjectNames.Add(pName, roleValues)
-
-                                    Else
-                                        roleValues = validProjectNames.Item(pName)
-                                        If roleValues.ContainsKey(roleName) Then
-                                            ' rolle ist bereits enthalten 
-                                            ' also summieren 
-                                            tmpValues = roleValues.Item(roleName)
-                                            tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curValue
-
-                                        Else
-                                            ' Rolle ist noch nicht enthalten 
-                                            ReDim tmpValues(monat - 1)
-                                            tmpValues(curMonat - 1) = curValue
-                                            roleValues.Add(roleName, tmpValues)
+                                    If Not IsNothing(hrole) Then
+                                        Dim tagessatz As Double = hrole.tagessatzIntern
+                                        If tagessatz <= 0 Then
+                                            tagessatz = 800.0
                                         End If
 
+                                        If Not validProjectNames.ContainsKey(pName) Then
+
+                                            roleValues = New SortedList(Of String, Double())
+                                            ' wird doch überhaupt nicht gebraucht
+                                            'ReDim tmpValues(monat - 1)
+                                            If readAll Then
+                                                ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
+                                                If curMonat <= monat Then
+                                                    tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                                Else
+                                                    tmpValues(curMonat - 1) = curZuwPTValue
+                                                End If
+                                            Else
+                                                ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
+                                                tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                            End If
+
+
+                                            roleValues.Add(roleName, tmpValues)
+                                            validProjectNames.Add(pName, roleValues)
+
+                                        Else
+                                            roleValues = validProjectNames.Item(pName)
+                                            If roleValues.ContainsKey(roleName) Then
+                                                ' rolle ist bereits enthalten 
+                                                ' also summieren 
+                                                tmpValues = roleValues.Item(roleName)
+                                                If readAll Then
+                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
+                                                    If curMonat <= monat Then
+                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
+                                                    Else
+                                                        tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curZuwPTValue
+                                                    End If
+                                                Else
+                                                    tmpValues(curMonat - 1) = tmpValues(curMonat - 1) + curIstEuroValue / tagessatz
+                                                End If
+
+                                            Else
+                                                ' Rolle ist noch nicht enthalten 
+                                                'ReDim tmpValues(monat - 1)
+
+                                                If readAll Then
+                                                    ' es muss unterschieden werden, ob es sich um Ist-Daten oder um Zuwesiung handelt ...  
+                                                    If curMonat <= monat Then
+                                                        tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                                    Else
+                                                        tmpValues(curMonat - 1) = curZuwPTValue
+                                                    End If
+                                                Else
+                                                    ' es handelt sich um Ist-Euro, also muss umgerechnet werden 
+                                                    tmpValues(curMonat - 1) = curIstEuroValue / tagessatz
+                                                End If
+
+                                                roleValues.Add(roleName, tmpValues)
+                                            End If
+
+                                        End If
+                                    Else
+                                        ' darf/kann eigentlich nicht sein ...
+                                        ReDim logArray(3)
+                                        logArray(0) = "Rollendefinition nicht gefunden ... Fehler 100412: "
+                                        logArray(1) = ""
+                                        logArray(2) = ""
+                                        logArray(3) = roleName
+                                        Call logfileSchreiben(logArray)
                                     End If
+
+
 
                                 End If
 
@@ -7833,7 +7897,7 @@ Public Module awinGeneralModules
 
 
                     Catch ex As Exception
-                        outPutLine = "Fehler: " & ex.Message
+                        outPutLine = "Fehler 99232: " & ex.Message
                         outputCollection.Add(outPutLine)
 
                         ' darf/kann eigentlich nicht sein ...
@@ -7850,36 +7914,128 @@ Public Module awinGeneralModules
                 ' jetzt kommt die zweite Bearbeitungs-Welle
                 ' das Rausschreiben der Test Records 
 
-
+                ' Protokoll schreiben ...
                 For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
 
                     Dim protocolLine As String = ""
                     For Each rVKvP As KeyValuePair(Of String, Double()) In vPKvP.Value
 
                         ' jetzt schreiben 
+                        Dim hrole As clsRollenDefinition = RoleDefinitions.getRoledef(rVKvP.Key)
+                        Dim curTagessatz As Double = hrole.tagessatzIntern
 
-                        ReDim logArray(rVKvP.Value.Length - 1 + 2)
-                        logArray(0) = vPKvP.Key
-                        logArray(1) = rVKvP.Key
+                        ReDim logArray(3)
+                        logArray(0) = "Importiert wurde: "
+                        logArray(1) = ""
+                        logArray(2) = vPKvP.Key
+                        logArray(3) = rVKvP.Key
 
-                        Dim dblValues As String = ""
+
+                        ReDim logDblArray(rVKvP.Value.Length - 1)
                         For i As Integer = 0 To rVKvP.Value.Length - 1
-                            logArray(2 + i) = rVKvP.Value(i).ToString("#0.#")
+                            ' umrechnen, damit es mit dem Input File wieder vergleichbar wird 
+                            logDblArray(i) = rVKvP.Value(i) * curTagessatz
                         Next
 
-                        Call logfileSchreiben(logArray)
+                        Call logfileSchreiben(logArray, logDblArray)
                     Next
 
                 Next
-                Call logfileSchliessen()
+                ' Protokoll schreiben Ende ... 
+
+                Dim gesamtIstValue As Double = 0.0
+
+                For Each vPKvP As KeyValuePair(Of String, SortedList(Of String, Double())) In validProjectNames
+
+                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(vPKvP.Key, "", cacheProjekte, Date.Now)
+                    Dim oldPlanValue As Double = 0.0
+                    Dim newIstValue As Double = 0.0
+
+                    If Not IsNothing(hproj) Then
+                        ' es wird pro Projekt eine Variante erzeugt 
+                        Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
+
+                        ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
+                        ' gleichzeitig werden die bisherigen Soll-Werte dieser Zeit in T€ gemerkt ...
+                        ' True: die Werte werden auf Null gesetzt 
+                        Dim gesamtvorher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+
+                        'oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, monat, True)
+                        oldPlanValue = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, True)
+                        'Dim checkOldPlanValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+
+                        newIstValue = calcIstValueOf(vPKvP.Value)
+
+                        gesamtIstValue = gesamtIstValue + newIstValue
+
+                        ' die Werte der neuen Rollen in PT werden in der RootPhase eingetragen 
+                        Call newProj.mergeActualValues(rootPhaseName, vPKvP.Value)
+
+                        Dim gesamtNachher As Double = newProj.getGesamtKostenBedarf().Sum * 1000
+                        Dim checkNachher As Double = gesamtvorher - oldPlanValue + newIstValue
+                        ' Test tk 
+                        'Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, monat, False)
+                        Dim checkIstValue As Double = newProj.getSetRoleCostUntil(referatsCollection, lastValidMonth, False)
+
+                        If gesamtNachher <> checkNachher Then
+                            Dim abc As Integer = 0
+                        End If
+
+                        If checkIstValue <> newIstValue Then
+                            Dim abc As Integer = 0
+                        End If
+
+                        ReDim logArray(3)
+                        logArray(0) = "Import Istdaten old/new/diff/check1/check2"
+                        logArray(1) = ""
+                        logArray(2) = vPKvP.Key
+                        logArray(3) = ""
+
+                        ReDim logDblArray(4)
+                        logDblArray(0) = oldPlanValue
+                        logDblArray(1) = newIstValue
+                        logDblArray(2) = oldPlanValue - newIstValue
+                        logDblArray(3) = checkIstValue
+                        logDblArray(4) = gesamtNachher - checkNachher
+
+                        Call logfileSchreiben(logArray, logDblArray)
+
+                        ' die Differenz aus Soll und Ist zwischen Beautragung / Actual sowie Last / Actual in T€ wird gemerkt und dem Projekt als Attribut mitgegeben  
+
+                        With newProj
+                            .actualDataUntil = newProj.startDate.AddMonths(monat - 1).AddDays(15)
+                            .variantName = ""
+                            .variantDescription = ""
+                        End With
 
 
-                ' es wird pro Projekt eine Variante erzeugt 
-                ' die Rollen des referenzierten Fachbereichs werden in den ActualData Monaten gelöscht 
-                ' die neuen Rollen werden eingetragen 
-                ' 
+                        ' jetzt in die Import-Projekte eintragen 
+                        updatedProjects = updatedProjects + 1
+                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
 
+                    Else
+                        ReDim logArray(4)
+                        logArray(0) = " Projekt existiert nicht !!?? ... kann eigentlich nicht sein ..."
+                        logArray(1) = ""
+                        logArray(2) = vPKvP.Key
+                        logArray(3) = ""
+                        logArray(4) = ""
 
+                        Call logfileSchreiben(logArray)
+                    End If
+
+                Next
+
+                ' tk Test 
+                ReDim logArray(3)
+                logArray(0) = "Import von insgesamt " & updatedProjects & " Projekten (Gesamt-Euro): "
+                logArray(1) = ""
+                logArray(2) = ""
+                logArray(3) = ""
+
+                ReDim logDblArray(0)
+                logDblArray(0) = gesamtIstValue
+                Call logfileSchreiben(logArray, logDblArray)
 
 
             End With
@@ -7890,7 +8046,6 @@ Public Module awinGeneralModules
             logArray(0) = "Exception aufgetreten 100457: "
             logArray(1) = ex.Message
             Call logfileSchreiben(logArray)
-            Call logfileSchliessen()
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 
@@ -7903,6 +8058,174 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' übernimmt für Projekte, die bislang noch keine Projekt-Nummern hatten, die Projekt-Nummer  
+    ''' </summary>
+    Public Sub importAllianzType4()
+        Dim zeile As Integer, spalte As Integer
+
+        Dim tfZeile As Integer = 2
+
+        Dim pName As String = ""
+        Dim variantName As String = ""
+
+
+        Dim upDatedProjects As Integer = 0
+        Dim errorProjects As Integer = 0
+
+        ' für den Output 
+        Dim outputFenster As New frmOutputWindow
+        Dim outputCollection As New Collection
+        Dim outPutLine As String = ""
+
+
+        Dim lastRow As Integer
+        Dim geleseneProjekte As Integer
+        Dim ok As Boolean = False
+
+        ' die Projekte
+
+        Dim hproj As clsProjekt = Nothing
+        Dim projektKundenNummer As String = ""
+
+
+
+        ' enthät die Saplte, wo der "alte" ProjektName steht ...
+        Dim colPname As Integer = 4
+        ' enthält die Spalte, wo die PRojekt-Nummer drin steht 
+
+        ' enthält die Spalten-Nummer, wo die einzelnen Rollen-Namen zu finden sind
+        Dim colPNr As Integer = 3
+
+
+        ' jetzt werden die ImportProjekte zurückgesetzt ...
+        ImportProjekte.Clear()
+
+        Dim firstZeile As Excel.Range
+
+
+        zeile = 2
+        spalte = 1
+        geleseneProjekte = 0
+
+ 
+        Try
+
+            Dim found As Boolean = False
+            Dim wsi As Integer = 1
+            Dim wsCount As Integer = appInstance.ActiveWorkbook.Worksheets.Count
+
+
+            While Not found And wsi <= wsCount
+                If CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet).Name.StartsWith("logBuch") Then
+                    found = True
+                Else
+                    wsi = wsi + 1
+                End If
+            End While
+
+            If Not found Then
+                Call MsgBox("keine Projekte-Tabelle gefunden ...")
+                Exit Sub
+            End If
+
+            Dim currentWS As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets.Item(wsi),
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            With currentWS
+
+
+                firstZeile = CType(.Rows(2), Excel.Range)
+                lastRow = CType(.Cells(20000, "D"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+
+
+                While zeile < lastRow
+
+                    Dim oldProj As clsProjekt = Nothing
+
+                    Try
+
+                        pName = CStr(CType(.Cells(zeile, colPname), Excel.Range).Value).Trim
+                        projektKundenNummer = CStr(CType(.Cells(zeile, colPNr), Excel.Range).Value).Trim
+
+                        If pName <> "" And projektKundenNummer <> "" Then
+                            ' jetzt kann ggf der Update erfolgen ... 
+                            geleseneProjekte = geleseneProjekte + 1
+                            ok = isKnownProject(pName, projektKundenNummer, AlleProjekte)
+                        End If
+
+
+                    Catch ex As Exception
+                        ok = False
+                    End Try
+
+                    If ok Then
+                        hproj = getProjektFromSessionOrDB(pName, "", AlleProjekte, Date.Now)
+                        If Not IsNothing(hproj) Then
+
+                            If hproj.kundenNummer = "" Then
+                                hproj.kundenNummer = projektKundenNummer
+                                ' jetzt in die Import-Projekte eintragen 
+                                upDatedProjects = upDatedProjects + 1
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
+                            Else
+                                outPutLine = "Projekt hat bereits eine Kunden-Nummer: " & pName & " old-Nr: " & hproj.kundenNummer & "; new-Nr: " & projektKundenNummer
+                                outputCollection.Add(outPutLine)
+                            End If
+
+
+
+                        Else
+                            outPutLine = "Projekt nicht in Datenbank gefunden: " & pName
+                            outputCollection.Add(outPutLine)
+                        End If
+                    Else
+                        outPutLine = "Projekt nicht bekannt: " & pName
+                        outputCollection.Add(outPutLine)
+                    End If
+
+                    zeile = zeile + 1
+
+                End While
+
+
+            End With
+        Catch ex As Exception
+
+            Throw New Exception("Fehler in Import-Datei" & ex.Message)
+
+        End Try
+
+        If outputCollection.Count > 0 Then
+            Call showOutPut(outputCollection, "Import Detail-Planungs Typ 4", "")
+        End If
+
+        Call MsgBox("Zeilen gelesen: " & geleseneProjekte & vbLf &
+                    "Projekte aktualisiert: " & upDatedProjects)
+
+
+    End Sub
+
+    ''' <summary>
+    ''' berechnet in importAllianz3 aus einer sortierten Liste von Rollen und Array Namen den geldwerten Betrag  
+    ''' </summary>
+    ''' <param name="roleValues"></param>
+    ''' <returns></returns>
+    Private Function calcIstValueOf(ByVal roleValues As SortedList(Of String, Double())) As Double
+        Dim tmpResult As Double = 0.0
+        Dim hrole As clsRollenDefinition = Nothing
+
+        For Each rvkvp As KeyValuePair(Of String, Double()) In roleValues
+            hrole = RoleDefinitions.getRoledef(rvkvp.Key)
+            If Not IsNothing(hrole) Then
+                tmpResult = tmpResult + rvkvp.Value.Sum * hrole.tagessatzIntern
+            End If
+        Next
+
+        calcIstValueOf = tmpResult
+    End Function
 
     ''' <summary>
     ''' gibt true zurück, wenn die Spalten-Struktur dem erforderlichen Import Typ entspricht 
@@ -7919,8 +8242,8 @@ Public Module awinGeneralModules
             Case 1
             Case 2
             Case 3
-                Dim headerCheck() As String = {"Referat", "Intern/Extern", "Ressource", "Projektnummer", "Projekt", "Jahr", "Monat", "IST", "(PT)"}
-                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 7, 8, 10, 10}
+                Dim headerCheck() As String = {"Referat", "Projekttyp", "Projektnummer", "Projekt", "Vorgang/Aktivität", "Intern/Extern", "Ressource/Planungsebene", "Jahr", "Monat", "IST", "(PT)"}
+                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 11}
 
                 Try
                     tmpResult = True ' initiale Vorbesetzung 
@@ -7982,19 +8305,24 @@ Public Module awinGeneralModules
         Dim roleName As String = ""
 
         If isExtern Then
-            Dim tmpStr = fullRName.Split(New Char() {CChar("-"), CChar("("), CChar(")")})
-            If tmpStr.Length >= 3 Then
-                roleName = tmpStr(1)
-
-
+            If fullRName.StartsWith("*") Then
+                fullRName = fullRName.Substring(1)
             End If
+            'Dim tmpStr = fullRName.Split(New Char() {CChar("-"), CChar("("), CChar(")")})
+            'If tmpStr.Length >= 3 Then
+            '    roleName = tmpStr(1)
+            'End If
+            roleName = fullRName
         Else
+            ' Prüfung 1: besteht es nur aus einem Wort ? 
             roleName = fullRName
         End If
 
         ' jetzt prüfen, ob es die Rolle gibt ... 
         If RoleDefinitions.containsName(roleName) Then
             tmpResult = roleName
+        Else
+            Dim a As Boolean = True
         End If
 
 
@@ -8008,8 +8336,12 @@ Public Module awinGeneralModules
     ''' <param name="pname"></param>
     ''' <param name="projektKDNr">ist die optional anzugebende Projekt-Kunden-Nummer</param>
     ''' <param name="projektListe">ist AlleProjekte oder eine andere Instanz vom Typ clsProjekteAlle, in der das Projekt aufgenommen wird, wenn es existiert </param>
+    ''' <param name="lookupTable">enthält die Mapping Informationen zu Projekten, also welcher Name ist welches Projekt</param>
+    ''' <param name="createUnknownProject">gibt an, ob ein unbekanntes Projekt erzeugt und in projektliste aufgenommen werden soll </param>
     ''' <returns></returns>
-    Private Function isKnownProject(ByRef pname As String, ByVal projektKDNr As String, ByRef projektListe As clsProjekteAlle) As Boolean
+    Private Function isKnownProject(ByRef pname As String, ByVal projektKDNr As String, ByRef projektListe As clsProjekteAlle,
+                                    Optional ByVal lookupTable As SortedList(Of String, String) = Nothing,
+                                    Optional ByVal createUnknownProject As Boolean = False) As Boolean
 
         Dim fctResult As Boolean = False
         Dim oldProj As clsProjekt = Nothing
@@ -8044,16 +8376,35 @@ Public Module awinGeneralModules
                 End If
 
                 If Not IsNothing(oldProj) Then
+
+                    If oldProj.kundenNummer = "" Then
+                        ' wenn vorher die Kunden-Nummer noch nicht bekannt war ...
+                        oldProj.kundenNummer = projektKDNr
+                    End If
+
                     projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                     fctResult = True
 
                 ElseIf projektKDNr <> "" Then
                     ' jetzt wird noch über die Kunden-Projekt-Nummer gesucht ... 
+                    ' auuserdem wird dann ggf noch das Projekt angelegt ... 
 
                     Dim pNames As Collection = request.retrieveProjectNamesByPNRFromDB(projektKDNr)
 
-                    If pNames.Count = 1 Then
+                    ' greift die LookupTable ? 
+                    Dim considerLookUpTable As Boolean = False
+                    If Not IsNothing(lookupTable) Then
 
+                        If Not IsNothing(projektKDNr) Then
+                            If projektKDNr.Trim.Length > 0 Then
+                                considerLookUpTable = lookupTable.ContainsKey(projektKDNr)
+                            End If
+                        End If
+
+                    End If
+
+                    If pNames.Count = 1 Then
+                        ' in der Datenbank gibt es aktuell genau ein Projekt, dem diese Projekt-Kundennummer zugeordnet ist 
                         Dim visboDBname As String = pNames.Item(1)
 
                         If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
@@ -8064,11 +8415,12 @@ Public Module awinGeneralModules
                             projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                             fctResult = True
 
-                            ReDim logArray(3)
-                            logArray(0) = "erfolgreiches Mapping anhand P-Nr, PlanView, Visbo"
+                            ReDim logArray(4)
+                            logArray(0) = "erfolgreiches Mapping anhand Plan-View P-Nr -> Visbo DB P-Nr"
                             logArray(1) = projektKDNr
                             logArray(2) = pname
-                            logArray(3) = visboDBname
+                            logArray(3) = ""
+                            logArray(4) = visboDBname
 
                             Call logfileSchreiben(logArray)
 
@@ -8080,25 +8432,123 @@ Public Module awinGeneralModules
 
 
                     ElseIf pNames.Count > 1 Then
+                        ' in der Datenbank gibt es mehrere Projekte, denen diese Projekt-Kundennummer zugeordnet ist : Fehler ! 
                         ' Eintrag in Log-File 
-                        ReDim logArray(2 + pNames.Count)
-                        logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt: "
-                        logArray(1) = projektKDNr.ToString
+                        ReDim logArray(3 + pNames.Count)
+                        logArray(0) = "kein Import; Mehrfach Zuordnung P-Nr -> Projekt:  "
+                        logArray(1) = projektKDNr
+                        logArray(2) = ""
+                        logArray(3) = ""
 
-                        Dim ix As Integer = 0
+                        Dim ix As Integer = 1
                         For Each tmpName In pNames
-                            logArray(2 + ix) = tmpName
+                            logArray(3 + ix) = tmpName
                             ix = ix + 1
                         Next
 
                         Call logfileSchreiben(logArray)
 
                         fctResult = False
+
+
+                    ElseIf considerLookUpTable Then
+                        ' checken ob es in der LoopUpTable eine Projekt-Zuordnung gibt ... 
+
+                        Dim visboDBname As String = lookupTable.Item(projektKDNr)
+
+                        If visboDBname.Trim <> "" Then
+                            If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
+
+                                Dim rupiProj As clsProjekt = request.retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
+                                If Not IsNothing(rupiProj) Then
+                                    projektListe.Add(rupiProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                                    fctResult = True
+
+                                    ReDim logArray(4)
+                                    logArray(0) = "lookupTable: erfolgreiches Mapping"
+                                    logArray(1) = projektKDNr
+                                    logArray(2) = pname
+                                    logArray(3) = ""
+                                    logArray(4) = visboDBname
+
+                                    Call logfileSchreiben(logArray)
+
+                                    ' damit an der aufrufenden Stelle der richtige pName steht ...
+                                    pname = visboDBname
+                                Else
+                                    ' kann eigentlich nicht passieren ...
+                                    fctResult = False
+                                End If
+
+                            Else
+                                ReDim logArray(4)
+                                logArray(0) = "lookupTable: Name existiert nicht in initialer Projektliste"
+                                logArray(1) = projektKDNr
+                                logArray(2) = pname
+                                logArray(3) = ""
+                                logArray(4) = visboDBname
+
+                                Call logfileSchreiben(logArray)
+
+                                fctResult = False
+                            End If
+                        Else
+
+                            ReDim logArray(4)
+                            logArray(0) = "lookupTable: kein Name definiert für Projekt-Nummer"
+                            logArray(1) = projektKDNr
+                            logArray(2) = pname
+                            logArray(3) = ""
+                            logArray(4) = visboDBname
+
+                            Call logfileSchreiben(logArray)
+
+                            fctResult = False
+                        End If
+
+
+
+
+                    ElseIf createUnknownProject Then
+                        ' dann soll das Projekt angelegt werden ...
+                        Dim startDate As Date = CDate("01.01.2018")
+                        Dim endDate As Date = CDate("31.12.2018")
+                        oldProj = erstelleProjektAusVorlage(pname, "Projekt-Platzhalter", startDate, endDate, 0, 2, 5, 5, Nothing, "aus Planview Ist-Daten erzeugtes Projekt", "created")
+
+                        If Not IsNothing(oldProj) Then
+                            oldProj.kundenNummer = projektKDNr
+                            projektListe.Add(oldProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+                            fctResult = True
+
+                            ReDim logArray(4)
+                            logArray(0) = "neu angelegtes Projekt: "
+                            logArray(1) = projektKDNr
+                            logArray(2) = pname
+                            logArray(3) = ""
+                            logArray(4) = pname
+
+
+                            Call logfileSchreiben(logArray)
+
+
+                        Else
+                            fctResult = False
+                            ReDim logArray(4)
+                            logArray(0) = "Fehler beim Neu-Anlegen eines Projektes aus Istdaten:"
+                            logArray(1) = projektKDNr
+                            logArray(2) = pname
+                            logArray(3) = ""
+                            logArray(4) = pname
+
+                            Call logfileSchreiben(logArray)
+                        End If
+
                     Else
 
                         fctResult = False
 
                     End If
+
                 Else
                     fctResult = False
                 End If
@@ -8375,7 +8825,7 @@ Public Module awinGeneralModules
 
             If takeIntoAccount Then
 
-                ' jetzt das Import Datum setzen und dann in PortfolioProjektSummareis verschieben ...
+                ' jetzt das Import Datum setzen und dann in PortfolioProjektSummaries verschieben ...
                 impProjekt.timeStamp = importDate
 
                 Dim importKey As String = calcProjektKey(impProjekt)
@@ -8459,6 +8909,10 @@ Public Module awinGeneralModules
 
                 End If
 
+                ' wenn jetzt automatisch setzen des ActualdataDate gemacht werden soll
+                If awinSettings.autoSetActualDataDate Then
+                    impProjekt.actualDataUntil = importDate.AddMonths(-1)
+                End If
 
                 ' Aufnehmen in Constellation
                 Dim newCItem As New clsConstellationItem
@@ -11097,14 +11551,18 @@ Public Module awinGeneralModules
                         .Unprotect(Password:="x")       ' Blattschutz aufheben
 
 
-                        Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
+                        'Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
                         Dim oldrng = .Range("Phasen_des_Projekts")
+                        ' Änderung tk: es muss die Spalte der Rollen betrachtet werden , wenn die Spalte der Phasen betrachtet wird, werden bei der letzten Phase die Rollen nicht mitgenommen 
                         Dim columnOffset As Integer = oldrng.Column
-                        Dim lastrow As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
 
+                        ' es muss das Maximum aus den beiden Spalten Pahse und Ressourcen gesucht werden
+                        Dim lastrow1 As Integer = CInt(CType(.Cells(40000, columnOffset), Excel.Range).End(XlDirection.xlUp).Row)
+                        Dim lastRow2 As Integer = CInt(CType(.Cells(40000, columnOffset + 2), Excel.Range).End(XlDirection.xlUp).Row)
+                        Dim lastRow As Integer = System.Math.Max(lastrow1, lastRow2)
                         ' ´Verlängerung des Range "Phasen_des_Projekts" bis zur lastrow
-                        rng = wsRessourcen.Range(.Cells(oldrng.Row, oldrng.Column), .Cells(lastrow, oldrng.Column))
-                        rng.Name = "Phasen_des_Projekts"
+                        rng = wsRessourcen.Range(.Cells(oldrng.Row, oldrng.Column), .Cells(lastRow, oldrng.Column))
+                        'rng.Name = "Phasen_des_Projekts"
 
                         Dim testrange As Excel.Range = CType(.Cells(10, 2000), Excel.Range)
                         Dim gefundenRange As Excel.Range = testrange.Find(What:="Summe")
@@ -11139,10 +11597,10 @@ Public Module awinGeneralModules
                             'Next
                         End If
 
-                        Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
+                        Dim hstr As String = CStr(CType(rng.Cells(1), Excel.Range).Value)
                         hstr = elemNameOfElemID(rootPhaseName)
 
-                        If CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
+                        If CStr(CType(rng.Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
 
 
                             ' ProjektPhase wird hinzugefügt, sofern sie nich
@@ -12758,7 +13216,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                    End If
+                End If
 
             Next
 
@@ -13224,6 +13682,7 @@ Public Module awinGeneralModules
     ''' <param name="considerImportProjekte"></param>
     Public Function calcUnionProject(ByVal activeConstellation As clsConstellation,
                                      ByVal considerImportProjekte As Boolean,
+                                     ByVal storedAtOrBefore As Date,
                                 Optional ByVal budget As Double = 0.0,
                                 Optional ByVal description As String = "Summen Projekt eines Programmes / Portfolios",
                                 Optional ByVal ampel As Integer = 0,
@@ -13257,12 +13716,13 @@ Public Module awinGeneralModules
 
                 ' jetzt mit allen anderen aufsummieren ..
                 Dim isFirstProj As Boolean = True
+                Dim maxActualDate As Date = Date.MinValue
 
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
 
                     Dim hproj As clsProjekt = getProjektFromSessionOrDB(getPnameFromKey(kvp.Key),
                                                                         getVariantnameFromKey(kvp.Key),
-                                                                        projektListe, Date.Now)
+                                                                        projektListe, storedAtOrBefore)
 
 
                     If Not IsNothing(hproj) Then
@@ -13281,6 +13741,14 @@ Public Module awinGeneralModules
                             gesamtbudget = gesamtbudget + hproj.Erloes
                         End If
 
+                        ' hat eines der Projekte bereits eine Actualdata? 
+                        ' wenn ja, dann wird das größte auftretende hergenommen 
+                        If Not hproj.actualDataUntil = Date.MinValue Then
+                            If DateDiff(DateInterval.Month, maxActualDate, hproj.actualDataUntil) > 0 Then
+                                maxActualDate = hproj.actualDataUntil
+                            End If
+                        End If
+
                         unionProj.variantName = portfolioVName
                         unionProj = unionProj.unionizeWith(hproj)
 
@@ -13291,11 +13759,22 @@ Public Module awinGeneralModules
                 ' jetzt ggf die Attribute noch ergänzen 
                 With unionProj
                     .Erloes = gesamtbudget
-                    .Status = ProjektStatus(1)
+                    .Status = ProjektStatus(PTProjektStati.beauftragt)
                     .description = description
                     .ampelStatus = ampel
                     .ampelErlaeuterung = ampelbeschreibung
                     .leadPerson = responsible
+
+                    ' gibt es ein ActualDate ? 
+                    If Not maxActualDate = Date.MinValue Then
+                        .actualDataUntil = maxActualDate
+                    End If
+
+                    If Date.Now < storedAtOrBefore Then
+                        .timeStamp = Date.Now
+                    Else
+                        .timeStamp = storedAtOrBefore
+                    End If
                 End With
 
 
@@ -13369,7 +13848,7 @@ Public Module awinGeneralModules
                     oldBudget = curSummaryProj.Erloes
                 End If
 
-                curSummaryProj = calcUnionProject(kvp.Value, False, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
+                curSummaryProj = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
 
                 If showSummaryProject Then
                     ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
@@ -13392,8 +13871,8 @@ Public Module awinGeneralModules
 
                     End Try
                 Else
-                    ' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
-                    ' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
+                    '' die Summary Projekte können nicht in AlleProjekte eingetragen werden, weil das zu Konflikten mit den dort abgelegten Einzelprojekten führt
+                    '' deshalb werden in diesem Fall die SummaryProjekte  in AlleProjektSummaries eingetragen
                     If AlleProjektSummaries.Containskey(kvp.Key) Then
                         AlleProjektSummaries.Remove(kvp.Key, updateCurrentConstellation:=False)
                     End If
@@ -13406,10 +13885,13 @@ Public Module awinGeneralModules
                 End If
 
 
-
             Next
 
             If showSummaryProject Then
+                ' damit der Name des einen Portfolios übernommen wird ...
+                If constellationsToShow.Count = 1 Then
+                    activeSummaryConstellation.constellationName = constellationsToShow.Liste.ElementAt(0).Value.constellationName
+                End If
                 constellationsToShow.Liste.Clear()
                 constellationsToShow.Add(activeSummaryConstellation)
                 showSummaryProject = False
@@ -13492,6 +13974,11 @@ Public Module awinGeneralModules
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
+        ' wenn HistoryMode aktiv ist ... 
+        If demoModusHistory Then
+            DBtimeStamp = historicDate
+        End If
+
         ' jetzt müssen auch alle Projekte, die in der Constellation referenziert werden, aber noch nicht 
         ' in der Datenbank gespeichert sind, abgespeichert werden ... 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
@@ -13509,8 +13996,8 @@ Public Module awinGeneralModules
 
                 ' jetzt wird das Projekt bzw. Summary Projekt behandelt ... 
                 If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
-                        ' speichern des Projektes 
-                        hproj.timeStamp = DBtimeStamp
+                    ' speichern des Projektes 
+                    hproj.timeStamp = DBtimeStamp
                     If request.storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
@@ -13576,7 +14063,7 @@ Public Module awinGeneralModules
                 End If
 
 
-                End If
+            End If
 
 
         Next
@@ -13594,7 +14081,7 @@ Public Module awinGeneralModules
                 budget = oldSummaryP.budgetWerte.Sum
             End If
 
-            Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, budget:=budget)
+            Dim sproj As clsProjekt = calcUnionProject(currentConstellation, False, Date.Now, budget:=budget)
 
 
             Dim isIdentical As Boolean = False
@@ -15434,6 +15921,8 @@ Public Module awinGeneralModules
                                         hrole = RoleDefinitions.getRoledef(rolename)
                                         If Not IsNothing(hrole) Then
 
+                                            Dim defaultHrsPerdayForThisPerson As Double = 8 * hrole.defaultKapa / nrOfDaysMonth
+
                                             Dim iSp As Integer = firstUrlspalte
                                             Dim anzArbTage As Double = 0
                                             Dim anzArbStd As Double = 0
@@ -15457,7 +15946,7 @@ Public Module awinGeneralModules
                                                                     anzArbStd = anzArbStd + CDbl(CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Value)
                                                                 Else
                                                                     If awinSettings.englishLanguage Then
-                                                                        msgtxt = "Error reading the  amount of working hours of " & hrole.name & " ..."
+                                                                        msgtxt = "Error reading the amount of working hours of " & hrole.name & " ..."
                                                                     Else
                                                                         msgtxt = "Fehler beim Lesen der Anzahl zu leistenden Arbeitsstunden " & hrole.name & " ..."
                                                                     End If
@@ -15476,7 +15965,8 @@ Public Module awinGeneralModules
 
                                                                 ' Wenn das Feld nicht durch einen Diagonalen Strich gekennzeichnet ist
                                                                 If CType(currentWS.Cells(iZ, sp), Global.Microsoft.Office.Interop.Excel.Range).Borders(XlBordersIndex.xlDiagonalUp).ColorIndex = noColor Then
-                                                                    anzArbStd = anzArbStd + 8
+                                                                    'anzArbStd = anzArbStd + 8
+                                                                    anzArbStd = anzArbStd + defaultHrsPerdayForThisPerson
                                                                 Else
                                                                     ' freier Tag für Teilzeitbeschäftigte
                                                                 End If
@@ -15590,7 +16080,7 @@ Public Module awinGeneralModules
         enableOnUpdate = True
         kapaWB.Close(SaveChanges:=False)
 
-        Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Problem sind beim Lesen der Urlaubsplanung aufgetreten")
+        Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Probleme sind beim Lesen der Urlaubsplanung aufgetreten")
 
         ' ''If outPutCollection.Count > 0 Then
         ' ''    Call showOutPut(outPutCollection, _
@@ -17552,6 +18042,7 @@ Public Module awinGeneralModules
 
         If menueOption = PTmenue.visualisieren Or menueOption = PTmenue.einzelprojektReport Or
             menueOption = PTmenue.excelExport Or menueOption = PTmenue.multiprojektReport Or
+            menueOption = PTmenue.sessionFilterDefinieren Or menueOption = PTmenue.filterdefinieren Or
             menueOption = PTmenue.vorlageErstellen Or menueOption = PTmenue.meilensteinTrendanalyse Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
@@ -18036,27 +18527,30 @@ Public Module awinGeneralModules
             menuOption = PTmenue.sessionFilterDefinieren Or
             menuOption = PTmenue.filterAuswahl Then
 
-            If calledFromHry Then
-                Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
+            ' tk 10.9.18 nicht mehr notwednig 
+            ''If calledFromHry Then
+            ''    Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
 
-                If Not IsNothing(nameLastFilter) Then
-                    With nameLastFilter
-                        lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-                    End With
-                Else
-                    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''    If Not IsNothing(nameLastFilter) Then
+            ''        With nameLastFilter
+            ''            lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, fRole, fCost)
+            ''        End With
+            ''    Else
+            ''        lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''    End If
+
+
+            ''Else
+            ''    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''End If
+
+            lastFilter = New clsFilter(fName, fBU, fTyp,
                                       fPhase, fMilestone,
                                      fRole, fCost)
-                End If
-
-
-            Else
-                lastFilter = New clsFilter(fName, fBU, fTyp,
-                                      fPhase, fMilestone,
-                                     fRole, fCost)
-            End If
-
-
 
             filterDefinitions.storeFilter(fName, lastFilter)
 
@@ -18083,26 +18577,30 @@ Public Module awinGeneralModules
 
         Else        ' nicht menuOption = PTmenue.filterdefinieren
 
-            If calledFromHry Then
-                Dim nameLastFilter As clsFilter = selFilterDefinitions.retrieveFilter("Last")
+            ' tk 10.9.18 nicht mehr notwendig 
+            ''If calledFromHry Then
+            ''    Dim nameLastFilter As clsFilter = selFilterDefinitions.retrieveFilter("Last")
 
-                If Not IsNothing(nameLastFilter) Then
-                    With nameLastFilter
-                        lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-                    End With
-                Else
-                    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''    If Not IsNothing(nameLastFilter) Then
+            ''        With nameLastFilter
+            ''            lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, fRole, fCost)
+            ''        End With
+            ''    Else
+            ''        lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''    End If
+
+
+            ''Else
+            ''    lastFilter = New clsFilter(fName, fBU, fTyp,
+            ''                          fPhase, fMilestone,
+            ''                         fRole, fCost)
+            ''End If
+
+            lastFilter = New clsFilter(fName, fBU, fTyp,
                                       fPhase, fMilestone,
                                      fRole, fCost)
-                End If
-
-
-            Else
-                lastFilter = New clsFilter(fName, fBU, fTyp,
-                                      fPhase, fMilestone,
-                                     fRole, fCost)
-            End If
-
             selFilterDefinitions.storeFilter(fName, lastFilter)
 
             If Not noDB Then
@@ -22198,6 +22696,421 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' schreibt die Projekt-Details in eine Excel Datei
+    ''' dabei werden nur die Rollen / Kosten-Bedarfe rausgeschrieben, die in der myCollection angegeben sind
+    ''' Bei Rollen werden auch alle Rollen rausgeschrieben, die Kind oder Kindeskind einer angegebenen Rolle sind    ''' 
+    ''' </summary>
+    ''' <param name="von">Start-Monat (showrangeleft)</param>
+    ''' <param name="bis">Ende-Monat (showrangeright)</param>
+    ''' <param name="roleCostCollection"></param>
+    Public Sub writeProjektDetailsToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleCostCollection As Collection)
+
+        appInstance.EnableEvents = False
+
+        Dim projectsToWork As New Collection
+        Dim defDone As Boolean = False
+        If Not IsNothing(selectedProjekte) Then
+            If selectedProjekte.Count > 0 Then
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                    If Not projectsToWork.Contains(kvp.Key) Then
+                        projectsToWork.Add(kvp.Key, kvp.Key)
+                    End If
+                Next
+                defDone = True
+            End If
+        End If
+
+
+        If Not defDone And ShowProjekte.getMarkedProjects.Count > 0 Then
+            projectsToWork = ShowProjekte.getMarkedProjects
+            defDone = True
+        End If
+
+        If Not defDone Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                projectsToWork.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+
+        Dim newWB As Excel.Workbook
+
+        Dim considerAll As Boolean = (roleCostCollection.Count = 0)
+
+        Dim roleCollection As New Collection
+        Dim costCollection As New Collection
+
+        If Not considerAll Then
+            For Each itemName As String In roleCostCollection
+                If RoleDefinitions.containsName(itemName) Then
+                    If Not roleCollection.Contains(itemName) Then
+                        roleCollection.Add(itemName, itemName)
+                    End If
+                ElseIf CostDefinitions.containsName(itemName) Then
+                    If Not costCollection.Contains(itemName) Then
+                        costCollection.Add(itemName, itemName)
+                    End If
+                End If
+            Next
+            ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
+            considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
+        End If
+
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+        If roleCollection.Count > 0 Then
+            fNameExtension = roleCollection.Item(1)
+            If roleCollection.Count > 1 Or costCollection.Count > 0 Then
+                fNameExtension = fNameExtension & " etc"
+            End If
+
+            If fNameExtension = "" And costCollection.Count > 0 Then
+                fNameExtension = costCollection.Item(1)
+                If costCollection.Count > 1 Then
+                    fNameExtension = fNameExtension & " etc"
+                End If
+            End If
+        End If
+
+
+        Dim ressCostColumn As Integer
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\Details " & fNameExtension & ".xlsx"
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+
+            newWB = appInstance.Workbooks.Add()
+            CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+
+        Catch ex As Exception
+            Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
+            appInstance.EnableEvents = True
+            Exit Sub
+        End Try
+
+        ' jetzt schreiben der ersten Zeile 
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startSpalteDaten As Integer = 9
+        Dim roleCostNames As Excel.Range = Nothing
+        Dim roleCostInput As Excel.Range = Nothing
+
+        Dim tmpName As String = ""
+
+
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            Dim ersteZeile As Excel.Range
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
+
+            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
+            CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
+            CType(.Cells(1, 5), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 6), Excel.Range).Value = "Ress./Kostenart-Name"
+            CType(.Cells(1, 7), Excel.Range).Value = "Tagessatz"
+            CType(.Cells(1, 8), Excel.Range).Value = "Summe [PT]"
+            'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
+
+            ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
+            ressCostColumn = 6
+            ' jetzt wird die Zeile 1 geschrieben 
+            Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+
+            ' jetzt wird der Name hinzugefügt
+            Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
+            Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + bis - von), Global.Microsoft.Office.Interop.Excel.Range)
+            newWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
+            newWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
+
+            ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+            For m As Integer = 0 To bis - von
+                With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                    .Value = startMonat.AddMonths(m)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "[$-409]mmm yy;@"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ReadingOrder = Excel.Constants.xlContext
+                End With
+            Next
+
+
+        End With
+
+        zeile = 2
+
+        Dim schnittmenge() As Double
+        Dim zeilenWerte() As Double
+        Dim zeilensumme As Double
+        Dim pStart As Integer, pEnde As Integer
+
+        Dim editRange As Excel.Range
+
+        For Each pName As String In projectsToWork
+
+            If ShowProjekte.contains(pName) Then
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+
+                Dim atLeastOne As Boolean = False
+
+                pStart = getColumnOfDate(hproj.startDate)
+                pEnde = getColumnOfDate(hproj.endeDate)
+
+                For p = 1 To hproj.CountPhases
+
+                    Dim cphase As clsPhase = hproj.getPhase(p)
+                    Dim phaseNameID As String = cphase.nameID
+                    Dim phaseName As String = cphase.name
+                    Dim chckNameID As String = calcHryElemKey(phaseName, False)
+
+                    If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
+                        ' nur wenn die Phase überhaupt im betrachteten Zeitraum liegt, muss das berücksichtigt werden 
+
+                        ' jetzt müssen die Zellen, die zur Phase gehören , entsperrt werden  ...
+                        Dim ixZeitraum As Integer
+                        Dim ix As Integer, breite As Integer
+
+                        Call awinIntersectZeitraum(pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, ixZeitraum, ix, breite)
+
+
+                        For r = 1 To cphase.countRoles
+
+
+                            Dim role As clsRolle = cphase.getRole(r)
+                            Dim roleName As String = role.name
+                            Dim relevant As Boolean = False
+
+                            ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
+                            If roleCollection.Count = 0 Then
+                                relevant = True
+                            Else
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCollection) Then
+                                    relevant = True
+                                End If
+                            End If
+
+                            ' nur weitermachen, wenn es relevant ist ..
+                            If relevant Then
+
+                                Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                                Dim xValues() As Double = role.Xwerte
+                                Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
+
+                                'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                                ReDim zeilenWerte(bis - von)
+
+                                ' Schreiben der Projekt-Informationen 
+                                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                                    CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                                    CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = roleName
+                                    CType(.Cells(zeile, 7), Excel.Range).Value = tagessatz
+                                    CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
+
+                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                End With
+
+                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                For mis As Integer = 0 To bis - von
+                                    zeilenWerte(mis) = schnittmenge(mis)
+                                Next
+
+                                editRange.Value = zeilenWerte
+                                atLeastOne = True
+
+                                zeile = zeile + 1
+
+
+                            End If
+
+                        Next r
+
+                        For c = 1 To cphase.countCosts
+                            Dim cost As clsKostenart = cphase.getCost(c)
+                            Dim xValues() As Double = cost.Xwerte
+                            Dim costName As String = cost.name
+
+                            Dim relevant As Boolean = False
+
+                            ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
+                            If costCollection.Count = 0 Then
+                                relevant = True
+                            Else
+                                ' If CostDefinitions.hasAnyChildParentRelationsship(costName, costCollection) Then
+                                If costCollection.Contains(costName) Then
+                                    relevant = True
+                                End If
+
+                            End If
+
+                            ' nur weitermachen, wenn es relevant ist ..
+                            If relevant Then
+
+
+                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                zeilensumme = schnittmenge.Sum
+
+                                'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                                ReDim zeilenWerte(bis - von)
+
+                                ' Schreiben der Projekt-Informationen 
+                                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                                    CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                                    CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = costName
+                                    CType(.Cells(zeile, 7), Excel.Range).Value = ""
+                                    CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
+
+                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                End With
+
+                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                For mis As Integer = 0 To bis - von
+                                    zeilenWerte(mis) = schnittmenge(mis)
+                                    ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
+                                    'zeilenWerte(2 * mis) = schnittmenge(mis)
+                                    'zeilenWerte(2 * mis + 1) = 0
+                                Next
+
+                                'editRange.Value = schnittmenge
+                                editRange.Value = zeilenWerte
+                                atLeastOne = True
+
+                                zeile = zeile + 1
+
+                            End If
+
+                        Next c
+
+                    End If
+
+                Next p
+
+                If Not atLeastOne Then
+                    ' Schreiben der Projekt-Informationen 
+                    With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+
+                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                        CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                        CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                        CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                        CType(.Cells(zeile, 5), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, 6), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, 7), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, 8), Excel.Range).Value = "-"
+
+                        zeile = zeile + 1
+                    End With
+                End If
+
+            End If
+
+
+        Next
+
+        ' jetzt müssen die Spaltenbreiten und sonstigen Werte gesetzt werden ...
+        Dim letzteSpalte As Integer = 9 + bis - von
+        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+            For s As Integer = 1 To letzteSpalte
+
+                If s = 1 Then
+                    ' Projekt-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 54
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 2 Then
+                    ' Varianten-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 3 Then
+                    ' Projekt-Nummer
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                ElseIf s = 4 Then
+                    ' Verantwortlich
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 5 Then
+                    ' Phasen-Name
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 6 Then
+                    ' Rolle / Kostenart 
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                ElseIf s = 7 Then
+                    ' Tagessatz
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "#,##0.##"
+
+                ElseIf s = 8 Then
+                    ' Summe
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "#,##0.##"
+
+                Else
+                    ' die monatlichen Werte 
+                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 9
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 1
+                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "#,##0.##"
+                End If
+                ' 
+
+
+            Next
+
+            ' jetzt muss noch die erste Zeile formatiert werden 
+            CType(.Rows.Item(1), Excel.Range).RowHeight = 45
+            'CType(.Rows.Item(1), Excel.Range).VerticalAlignment = XlTopBottom.xlTop10Top
+            CType(.Rows.Item(1), Excel.Range).VerticalAlignment = XlVAlign.xlVAlignTop
+            CType(.Rows.Item(1), Excel.Range).Interior.Color = RGB(220, 220, 220)
+
+        End With
+
+        Try
+            ' jetzt die Autofilter aktivieren ... 
+            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            End If
+
+            newWB.Close(SaveChanges:=True)
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Speichern" & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Datei exportiert")
+
+
+    End Sub
+
+    ''' <summary>
     ''' schreibt eine Datei mit den monatlichen Zuordnungen Projekt/Phase - Rollenbedarfe / Kosten 
     ''' Diese Datei kann editiert werden , dann wieder importiert werden 
     ''' in Abhängigkeit vom Typ wird geschrieben: 
@@ -22215,7 +23128,7 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = False
 
         Dim newWB As Excel.Workbook
-        Dim ersteZeile As Excel.Range
+
         Dim ressCostColumn As Integer
 
         Dim expFName As String = exportOrdnerNames(PTImpExp.massenEdit) & "\EditNeeds_" &
@@ -22226,17 +23139,8 @@ Public Module awinGeneralModules
         Try
 
             newWB = appInstance.Workbooks.Add()
-
             CType(newWB.Worksheets.Item(1), Excel.Worksheet).Name = "VISBO"
-            If newWB.Worksheets.Count < 2 Then
-                newWB.Worksheets.Add(After:=newWB.Worksheets("VISBO"))
-                CType(appInstance.ActiveSheet, Excel.Worksheet).Name = "tmp"
-
-            Else
-                CType(newWB.Worksheets.Item(2), Excel.Worksheet).Name = "tmp"
-            End If
-
-            newWB.SaveAs(expFName)
+            newWB.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
 
         Catch ex As Exception
             Call MsgBox("Excel Datei konnte nicht erzeugt werden ... Abbruch ")
@@ -22248,63 +23152,25 @@ Public Module awinGeneralModules
         Dim zeile As Integer = 1
         Dim spalte As Integer = 1
 
-        'Dim startSpalteDaten As Integer = 8
-        Dim startSpalteDaten As Integer = 8
+        Dim startSpalteDaten As Integer = 9
         Dim roleCostNames As Excel.Range = Nothing
         Dim roleCostInput As Excel.Range = Nothing
 
         Dim tmpName As String = ""
 
-        ' hier werden jetzt erst mal die Ressourcen und Kostenarten geschrieben 
-        With CType(newWB.Worksheets("tmp"), Excel.Worksheet)
-
-            Dim sortedRCListe As New SortedList(Of String, String)
-            For iz As Integer = 1 To RoleDefinitions.Count
-                tmpName = RoleDefinitions.getRoledef(iz).name
-                If Not sortedRCListe.ContainsKey(tmpName) Then
-                    sortedRCListe.Add(tmpName, tmpName)
-                End If
-            Next
-            For iz As Integer = 1 To sortedRCListe.Count
-                tmpName = sortedRCListe.ElementAt(iz - 1).Value
-                CType(.Cells(iz, 1), Excel.Range).Value = tmpName
-            Next
-
-            Dim offz As Integer = sortedRCListe.Count
-            sortedRCListe.Clear()
-
-            For iz As Integer = 1 To CostDefinitions.Count - 1
-                tmpName = CostDefinitions.getCostdef(iz).name
-                If Not sortedRCListe.ContainsKey(tmpName) Then
-                    sortedRCListe.Add(tmpName, tmpName)
-                End If
-            Next
-
-            For iz As Integer = 1 To sortedRCListe.Count
-                tmpName = sortedRCListe.ElementAt(iz - 1).Value
-                CType(.Cells(iz + offz, 1), Excel.Range).Value = tmpName
-            Next
-
-            offz = offz + sortedRCListe.Count
-            roleCostNames = CType(.Range(.Cells(1, 1), .Cells(offz, 1)), Excel.Range)
-            newWB.Names.Add(Name:="RollenKostenNamen", RefersToR1C1:=roleCostNames)
-            CType(newWB.Worksheets("tmp"), Excel.Worksheet).Visible = False    ' Worksheet "tmp" ausblenden
-
-        End With
-
-
 
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-
+            Dim ersteZeile As Excel.Range
             ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, 6 + bis - von)), Excel.Range)
 
-            CType(.Cells(1, 1), Excel.Range).Value = "Business-Unit"
-            CType(.Cells(1, 2), Excel.Range).Value = "Projekt-Name"
-            CType(.Cells(1, 3), Excel.Range).Value = "Varianten-Name"
-            CType(.Cells(1, 4), Excel.Range).Value = "Phasen-Name"
-            CType(.Cells(1, 5), Excel.Range).Value = "Ress./Kostenart-Name"
-            CType(.Cells(1, 6), Excel.Range).Value = "Summe"
-            CType(.Cells(1, 7), Excel.Range).Value = "Proz."
+            CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
+            CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
+            CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
+            CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
+            CType(.Cells(1, 5), Excel.Range).Value = "Phasen-Name"
+            CType(.Cells(1, 6), Excel.Range).Value = "Ress./Kostenart-Name"
+            CType(.Cells(1, 7), Excel.Range).Value = "Tagessatz"
+            CType(.Cells(1, 8), Excel.Range).Value = "Summe [PT]"
             'CType(.Cells(1, 7), Excel.Range).Value = "Kostenart-Name"
 
             ' jetzt wird die Spalten-Nummer festgelegt, wo die Ressourcen/ Kosten später eingetragen werden
@@ -22320,7 +23186,7 @@ Public Module awinGeneralModules
 
             ' jetzt werden die Überschriften des Datenbereichs geschrieben 
             For m As Integer = 0 To bis - von
-                With CType(.Cells(1, startSpalteDaten + 2 * m), Global.Microsoft.Office.Interop.Excel.Range)
+                With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
                     .Value = startMonat.AddMonths(m)
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                     .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
@@ -22332,45 +23198,19 @@ Public Module awinGeneralModules
                     .ReadingOrder = Excel.Constants.xlContext
                 End With
 
-                With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
-                    .Value = ""
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                    .Orientation = 0
-                    .AddIndent = False
-                    .IndentLevel = 0
-                    .ReadingOrder = Excel.Constants.xlContext
-                End With
+                ' tk, 9.9.18 keine Ausgabe von Prz Werten mehr 
+                'With CType(.Cells(1, startSpalteDaten + 2 * m + 1), Global.Microsoft.Office.Interop.Excel.Range)
+                '    .Value = ""
+                '    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                '    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                '    .Orientation = 0
+                '    .AddIndent = False
+                '    .IndentLevel = 0
+                '    .ReadingOrder = Excel.Constants.xlContext
+                'End With
 
             Next
 
-            ' bevor die Prozentualen Anteile ergänzt wurden ... 
-            ' ''CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von - 1)
-            ' ''CType(.Cells(1, startSpalteDaten + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddMonths(von)
-            ' ''rng = .Range(.Cells(1, startSpalteDaten), .Cells(1, startSpalteDaten + 1))
-
-            ' '' '' Deutsches Format:
-            '' ''rng.NumberFormat = "[$-407]mmm yy;@"
-            '' '' Englisches Format:
-            ' ''rng.NumberFormat = "[$-409]mmm yy;@"
-
-            ' ''Dim destinationRange As Excel.Range = .Range(.Cells(1, 6), .Cells(1, 6 + bis - von))
-            ' ''With destinationRange
-            ' ''    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-            ' ''    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-            ' ''    '' Deutsches Format: 
-            ' ''    'rng.NumberFormat = "[$-407]mmm yy;@"
-            ' ''    ' Englische Format:
-            ' ''    .NumberFormat = "[$-409]mmm yy;@"
-            ' ''    .WrapText = False
-            ' ''    .Orientation = 90
-            ' ''    .AddIndent = False
-            ' ''    .IndentLevel = 0
-            ' ''    .ReadingOrder = Excel.Constants.xlContext
-            ' ''    .MergeCells = False
-            ' ''End With
-
-            ' ''rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
 
         End With
 
@@ -22388,14 +23228,15 @@ Public Module awinGeneralModules
         ' betrachteten Projekte ergeben; 
         ' es werden sowohl die Gesamt-Auslastungs Werte im Zeitraum betrachtet als auch der einzelne monats-spezifische Wert   
         ' dazu wird ein Array angelegt mit der Dimension (anzahlRollen-1, bis-von+1) 
-        Dim auslastungsArray(,) As Double
+        ' tk 9.9.18 braucht man nicht mehr ..
+        'Dim auslastungsArray(,) As Double
 
-        Try
-            auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
-            'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
-        Catch ex As Exception
-            ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
-        End Try
+        'Try
+        '    auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(Nothing, von, bis, awinSettings.mePrzAuslastung)
+        '    'auslastungsArray = ShowProjekte.getAuslastungsArray(von, bis)
+        'Catch ex As Exception
+        '    ReDim auslastungsArray(RoleDefinitions.Count - 1, bis - von + 1)
+        'End Try
 
 
 
@@ -22431,11 +23272,13 @@ Public Module awinGeneralModules
                         Dim roleName As String = role.name
                         Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
                         Dim xValues() As Double = role.Xwerte
+                        Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
 
                         schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                         zeilensumme = schnittmenge.Sum
 
-                        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                        'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                        ReDim zeilenWerte(bis - von)
 
                         ' Schreiben der Projekt-Informationen 
                         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
@@ -22458,16 +23301,19 @@ Public Module awinGeneralModules
                             End If
 
                             CType(.Cells(zeile, 5), Excel.Range).Value = roleName
-                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                            CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
-                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                            CType(.Cells(zeile, 6), Excel.Range).Value = tagessatz
+                            CType(.Cells(zeile, 7), Excel.Range).Value = zeilensumme.ToString("0")
+                            'CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                            ' editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                         End With
 
                         ' zusammenmischen von Schnittmenge und Prozentual-Werte 
                         For mis As Integer = 0 To bis - von
-                            zeilenWerte(2 * mis) = schnittmenge(mis)
+                            zeilenWerte(mis) = schnittmenge(mis)
                             ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
-                            zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
+                            'zeilenWerte(2 * mis) = schnittmenge(mis)
+                            'zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
                         Next
 
                         'editRange.Value = schnittmenge
@@ -22475,26 +23321,30 @@ Public Module awinGeneralModules
                         atLeastOne = True
                         ' die Zellen entsperren, die editiert werden dürfen ...
 
-                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                        ' tk 9.9.18 nicht mehr nötig 
+                        ''With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
 
-                            For l = 0 To bis - von
+                        ''    For l = 0 To bis - von
 
-                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
-                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
-                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                                Else
-                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-                                End If
+                        ''        If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                        ''            'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                        ''            CType(.Range(.Cells(zeile, l + startSpalteDaten),
+                        ''                         .Cells(zeile, l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                        ''            ' CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
+                        ''            '.Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
 
-                            Next
+                        ''        Else
+                        ''            CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                        ''        End If
 
-                            ' vorheriger Code
-                            ''For l As Integer = ixZeitraum To ixZeitraum + breite - 1
-                            ''    CType(.cell(zeile, l + 6), Excel.Range).Locked = False
-                            ''    CType(.cell(zeile, l + 6), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                            ''Next
-                        End With
+                        ''    Next
+
+                        ''    ' vorheriger Code
+                        ''    ''For l As Integer = ixZeitraum To ixZeitraum + breite - 1
+                        ''    ''    CType(.cell(zeile, l + 6), Excel.Range).Locked = False
+                        ''    ''    CType(.cell(zeile, l + 6), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                        ''    ''Next
+                        ''End With
 
 
                         ''With newWB.ActiveSheet
@@ -22514,7 +23364,8 @@ Public Module awinGeneralModules
                         schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
                         zeilensumme = schnittmenge.Sum
 
-                        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                        'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                        ReDim zeilenWerte(bis - von)
 
                         ' Schreiben der Projekt-Informationen 
                         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
@@ -22537,15 +23388,17 @@ Public Module awinGeneralModules
                             End If
 
                             CType(.Cells(zeile, 5), Excel.Range).Value = costName
-                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                            CType(.Cells(zeile, 7), Excel.Range).Value = zeilensumme.ToString("0")
+                            'editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                         End With
 
                         ' zusammenmischen von Schnittmenge und Prozentual-Werte 
                         For mis As Integer = 0 To bis - von
-                            zeilenWerte(2 * mis) = schnittmenge(mis)
+                            zeilenWerte(mis) = schnittmenge(mis)
                             ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung, spielt aber kein Kostenarten keine Rolle 
-                            zeilenWerte(2 * mis + 1) = 0
+                            'zeilenWerte(2 * mis) = schnittmenge(mis)
+                            'zeilenWerte(2 * mis + 1) = 0
                         Next
 
                         'editRange.Value = schnittmenge
@@ -22555,23 +23408,23 @@ Public Module awinGeneralModules
 
                         ' die Zellen entsperren, die editiert werden dürfen ...
 
-                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                        'With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
 
-                            For l = 0 To bis - von
+                        '    For l = 0 To bis - von
 
-                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
-                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
-                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
-                                Else
-                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-                                    CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
-                                End If
+                        '        If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                        '            'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                        '            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
+                        '                         .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                        '            CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                        '        Else
+                        '            CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                        '            CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
+                        '        End If
 
-                            Next
+                        '    Next
 
-                        End With
+                        'End With
 
                         zeile = zeile + 1
 
@@ -22603,25 +23456,26 @@ Public Module awinGeneralModules
                             CType(.Cells(zeile, 5), Excel.Range).Value = ""
                             CType(.Cells(zeile, 6), Excel.Range).Value = ""
                             CType(.Cells(zeile, 7), Excel.Range).Value = ""
-                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
+                            'editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von))), Excel.Range)
+                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                         End With
 
                         ' die Zellen entsperren, die editiert werden dürfen ...
-                        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                        'With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
 
-                            For l = 0 To bis - von
+                        '    For l = 0 To bis - von
 
-                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                    'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
-                                    CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
-                                                 .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                                Else
-                                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-                                End If
+                        '        If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                        '            'CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Locked = False
+                        '            CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
+                        '                         .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                        '        Else
+                        '            CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
+                        '        End If
 
-                            Next
+                        '    Next
 
-                        End With
+                        'End With
 
                         zeile = zeile + 1
 
@@ -22642,7 +23496,7 @@ Public Module awinGeneralModules
         Dim infoBlock As Excel.Range
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
             infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 1)), Excel.Range)
-            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+            infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
             infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
             infoBlock.AutoFit()
         End With
@@ -22650,21 +23504,26 @@ Public Module awinGeneralModules
         Dim tmpRange As Excel.Range
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
 
-            Dim isPrz As Boolean = False
-            For mis As Integer = 0 To 2 * (bis - von + 1) - 1
+            'Dim isPrz As Boolean = False
+            'For mis As Integer = 0 To 2 * (bis - von + 1) - 1
+            For mis As Integer = 0 To bis - von
                 tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
-                If isPrz Then
-                    tmpRange.Columns.ColumnWidth = 3.1
-                    tmpRange.Font.Size = 6
-                    tmpRange.NumberFormat = "0%"
-                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                Else
-                    tmpRange.Columns.ColumnWidth = 5
-                    tmpRange.Font.Size = 10
-                    tmpRange.NumberFormat = "0"
-                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                End If
-                isPrz = Not isPrz
+                ''If isPrz Then
+                ''    tmpRange.Columns.ColumnWidth = 3.1
+                ''    tmpRange.Font.Size = 6
+                ''    tmpRange.NumberFormat = "0%"
+                ''    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                ''Else
+                ''    tmpRange.Columns.ColumnWidth = 5
+                ''    tmpRange.Font.Size = 10
+                ''    tmpRange.NumberFormat = "0"
+                ''    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                ''End If
+                ''isPrz = Not isPrz
+                tmpRange.Columns.ColumnWidth = 8
+                'tmpRange.Font.Size = 10
+                tmpRange.NumberFormat = "#0.##"
+                tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
             Next
 
         End With
@@ -22672,30 +23531,30 @@ Public Module awinGeneralModules
 
 
         ' jetzt wird der RoleCostInput Bereich festgelegt 
-        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-            Dim maxRows As Integer = .Rows.Count
-            roleCostInput = CType(.Range(.Cells(2, ressCostColumn), .Cells(maxRows, ressCostColumn)), Excel.Range)
-        End With
+        'With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+        '    Dim maxRows As Integer = .Rows.Count
+        '    roleCostInput = CType(.Range(.Cells(2, ressCostColumn), .Cells(maxRows, ressCostColumn)), Excel.Range)
+        'End With
 
-        With roleCostInput
-            .Validation.Delete()
-            .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
-                                           Formula1:="=RollenKostenNamen")
-        End With
+        'With roleCostInput
+        '    .Validation.Delete()
+        '    .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop,
+        '                                   Formula1:="=RollenKostenNamen")
+        'End With
 
 
 
         Try
-            ' jetzt die Autofilter aktivieren ... 
-            If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
-                'CType(CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
-                CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
-            End If
+            '' jetzt die Autofilter aktivieren ... 
+            'If Not CType(newWB.Worksheets("VISBO"), Excel.Worksheet).AutoFilterMode = True Then
+            '    'CType(CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1), Excel.Range).Select()
+            '    CType(newWB.Worksheets("VISBO"), Excel.Worksheet).Cells(1, 1).AutoFilter()
+            'End If
 
             ' ExcelFile abspeichern und schließen
             newWB.Close(SaveChanges:=True)
         Catch ex As Exception
-            Throw New ArgumentException("Fehler beim Filtersetzen und Speichern" & ex.Message)
+            Throw New ArgumentException("Fehler beim Speichern" & ex.Message)
         End Try
 
         appInstance.EnableEvents = True
@@ -22705,19 +23564,74 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' schreibt eine Datei, die zur Priorisierung verwendet werdne kann 
+    ''' schreibt eine Datei, die zur Priorisierung / Analyse verwendet werden kann 
     ''' Diese Datei kann editiert werden , dann wieder importiert werden 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub writeProjektsForSequencing()
+    Public Sub writeProjektsForSequencing(ByVal roleCostCollection As Collection)
 
 
         appInstance.EnableEvents = False
 
         Dim newWB As Excel.Workbook
+        Dim considerAll As Boolean = (roleCostCollection.Count = 0)
 
-        Dim expFName As String = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
+        Dim roleCollection As New Collection
+        Dim costCollection As New Collection
+        Dim vorgabeValue As Double = 0.0
+        Dim aktuellValue As Double = 0.0
+        Dim vorgabeProj As clsProjekt = Nothing
+        Dim roleNames As String = ""
+        Dim costNames As String = ""
 
+        If Not considerAll Then
+            For Each itemName As String In roleCostCollection
+                If RoleDefinitions.containsName(itemName) Then
+                    If Not roleCollection.Contains(itemName) Then
+                        roleCollection.Add(itemName, itemName)
+                        If roleNames = "" Then
+                            roleNames = vbLf & itemName
+                        Else
+                            roleNames = roleNames & "; " & itemName
+                        End If
+                    End If
+                ElseIf CostDefinitions.containsName(itemName) Then
+                    If Not costCollection.Contains(itemName) Then
+                        costCollection.Add(itemName, itemName)
+                        If costNames = "" Then
+                            costNames = vbLf & itemName
+                        Else
+                            costNames = costNames & "; " & itemName
+                        End If
+                    End If
+                End If
+            Next
+            ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
+            considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
+        End If
+
+        Dim fNameExtension As String = ""
+        ' den Dateinamen bestimmen ...
+        If roleCollection.Count > 0 Then
+            fNameExtension = roleCollection.Item(1)
+            If roleCollection.Count > 1 Or costCollection.Count > 0 Then
+                fNameExtension = fNameExtension & " etc"
+            End If
+
+            If fNameExtension = "" And costCollection.Count > 0 Then
+                fNameExtension = costCollection.Item(1)
+                If costCollection.Count > 1 Then
+                    fNameExtension = fNameExtension & " etc"
+                End If
+            End If
+        End If
+
+        Dim expFName As String = ""
+        If considerAll Then
+            expFName = exportOrdnerNames(PTImpExp.scenariodefs) & "\" & currentConstellationName & "_Prio.xlsx"
+        Else
+            expFName = exportOrdnerNames(PTImpExp.massenEdit) & "\Overview " & fNameExtension & ".xlsx"
+        End If
         ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 
         Try
@@ -22737,92 +23651,310 @@ Public Module awinGeneralModules
         Dim spalte As Integer = 1
 
 
+        Dim startOfCustomFields As Integer = 15
+        Dim ersteZeile As Excel.Range
 
 
         With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
 
+
             If awinSettings.englishLanguage Then
                 CType(.Cells(1, 1), Excel.Range).Value = "Project-Name"
                 CType(.Cells(1, 2), Excel.Range).Value = "Variant-Name"
-                CType(.Cells(1, 3), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 4), Excel.Range).Value = "Budget"
-                CType(.Cells(1, 5), Excel.Range).Value = "Project-Start"
-                CType(.Cells(1, 6), Excel.Range).Value = "Project-End"
-                CType(.Cells(1, 7), Excel.Range).Value = "Sum Personnel-Cost [T€]"
-                CType(.Cells(1, 8), Excel.Range).Value = "Sum Other Cost [T€]"
-                CType(.Cells(1, 9), Excel.Range).Value = "Profit/Loss"
-                CType(.Cells(1, 10), Excel.Range).Value = "Strategye"
-                CType(.Cells(1, 11), Excel.Range).Value = "Risk"
+                CType(.Cells(1, 3), Excel.Range).Value = "Project-Nr"
+                CType(.Cells(1, 4), Excel.Range).Value = "Responsible"
+                CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 6), Excel.Range).Value = "Project-Start"
+                CType(.Cells(1, 7), Excel.Range).Value = "Project-End"
+
+                If considerAll Then
+                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Profit/Loss [T€]"
+                Else
+                    CType(.Cells(1, 8), Excel.Range).Value = "First Version [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Difference [T€]"
+                End If
+
+                CType(.Cells(1, 9), Excel.Range).Value = "Sum Personnel-Cost [T€]" & roleNames
+                CType(.Cells(1, 10), Excel.Range).Value = "Sum Other Cost [T€]" & costNames
+
+                CType(.Cells(1, 12), Excel.Range).Value = "Strategy"
+                CType(.Cells(1, 13), Excel.Range).Value = "Risk"
+                CType(.Cells(1, 14), Excel.Range).Value = "Description"
             Else
 
                 CType(.Cells(1, 1), Excel.Range).Value = "Projekt-Name"
                 CType(.Cells(1, 2), Excel.Range).Value = "Varianten-Name"
-                CType(.Cells(1, 3), Excel.Range).Value = "Business-Unit"
-                CType(.Cells(1, 4), Excel.Range).Value = "Budget"
-                CType(.Cells(1, 5), Excel.Range).Value = "Projekt-Start"
-                CType(.Cells(1, 6), Excel.Range).Value = "Projekt-Ende"
-                CType(.Cells(1, 7), Excel.Range).Value = "Summe Personalkosten [T€]"
-                CType(.Cells(1, 8), Excel.Range).Value = "Summe sonst. Kosten [T€]"
-                CType(.Cells(1, 9), Excel.Range).Value = "Profit/Loss"
-                CType(.Cells(1, 10), Excel.Range).Value = "Strategie"
-                CType(.Cells(1, 11), Excel.Range).Value = "Risiko"
+                CType(.Cells(1, 3), Excel.Range).Value = "Projekt-Nr"
+                CType(.Cells(1, 4), Excel.Range).Value = "Verantwortlich"
+                CType(.Cells(1, 5), Excel.Range).Value = "Business-Unit"
+                CType(.Cells(1, 6), Excel.Range).Value = "Projekt-Start"
+                CType(.Cells(1, 7), Excel.Range).Value = "Projekt-Ende"
 
-                spalte = 12
-                For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
-                    .Cells(zeile, spalte).value = cstField.Value.name
-                    spalte = spalte + 1
-                Next
+                If considerAll Then
+                    CType(.Cells(1, 8), Excel.Range).Value = "Budget [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Gewinn/Verlust [T€]"
+                Else
+                    CType(.Cells(1, 8), Excel.Range).Value = "Erste Planung [T€]"
+                    CType(.Cells(1, 11), Excel.Range).Value = "Differenz [T€]"
+                End If
+
+                CType(.Cells(1, 9), Excel.Range).Value = "Summe Personalkosten [T€]" & roleNames
+                CType(.Cells(1, 10), Excel.Range).Value = "Summe sonst. Kosten [T€]" & costNames
+
+                CType(.Cells(1, 12), Excel.Range).Value = "Strategie"
+                CType(.Cells(1, 13), Excel.Range).Value = "Risiko"
+                CType(.Cells(1, 14), Excel.Range).Value = "Beschreibung"
+
+
             End If
 
 
+
+            spalte = startOfCustomFields
+            For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
+                .Cells(zeile, spalte).value = cstField.Value.name
+                spalte = spalte + 1
+            Next
+
+            ersteZeile = CType(.Range(.Cells(1, 1), .Cells(1, startOfCustomFields + customFieldDefinitions.liste.Count - 1)), Excel.Range)
+
         End With
 
+
+        '' jetzt den AutoFit machen 
+        'Try
+        '    ersteZeile.AutoFit()
+        'Catch ex As Exception
+
+        'End Try
+
         zeile = 2
+        Dim hproj As clsProjekt = Nothing
+        Try
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                hproj = kvp.Value
+                Dim budget As Double, pk As Double, ok As Double, rk As Double, pl As Double
+                Dim alterPlanStand As Date = Date.MinValue
+
+                If considerAll Then
+                    Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
+                Else
+                    ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    vorgabeProj = request.retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
+                    Dim standVom As String = ""
+
+                    ' Berechnung budget/Vorgabe 
+                    budget = 0.0
+                    pk = 0.0
+                    ok = 0.0
+                    alterPlanStand = Date.MinValue
+
+                    If Not IsNothing(vorgabeProj) Then
+                        For Each itemName As String In roleCollection
+                            budget = budget + vorgabeProj.getPersonalKosten(itemName, True).Sum
+                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                        Next
+
+                        For Each itemName As String In costCollection
+                            budget = budget + vorgabeProj.getKostenBedarfNew(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                        Next
+
+                        ' welcher Planungs-Stand ist das ? 
+                        alterPlanStand = vorgabeProj.timeStamp
+                        standVom = alterPlanStand.ToShortDateString
+                    Else
+                        ' es gibt kein Vorgabe Proj
+                        budget = 0
+                        standVom = "n.a"
+
+                        For Each itemName As String In roleCollection
+                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                        Next
+
+                        For Each itemName As String In costCollection
+                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                        Next
+
+                    End If
+
+                    ' Berechnung Personalkosten
+                    pl = budget - (pk + ok)
+
+                End If
 
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                    CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.name
+                    CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
+                    CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.kundenNummer
+                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.leadPerson
+                    CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.businessUnit
+                    CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.startDate
+                    CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.endeDate
 
-            Dim budget As Double, pk As Double, ok As Double, rk As Double, pl As Double
+                    CType(.Cells(zeile, 8), Excel.Range).Value = budget
+                    CType(.Cells(zeile, 8), Excel.Range).NumberFormat = "0.00"
+                    If Not considerAll Then
+                        ' damit wird klar, von wann diese Version ist
+                        CType(.Cells(zeile, 8), Excel.Range).AddComment(alterPlanStand.ToLongDateString)
+                    End If
 
-            Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
 
+                    CType(.Cells(zeile, 9), Excel.Range).Value = pk
+                    CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 10), Excel.Range).Value = ok
+                    CType(.Cells(zeile, 10), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 11), Excel.Range).Value = pl
+                    CType(.Cells(zeile, 11), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 12), Excel.Range).Value = kvp.Value.StrategicFit
+                    CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.Risiko
+                    CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.fullDescription
+
+                    spalte = startOfCustomFields
+                    For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
+
+                        Dim qualifier As String = cstField.Value.name
+                        Dim ausgabe As String = ""
+                        If cstField.Value.type = ptCustomFields.Str Then
+                            ausgabe = kvp.Value.getCustomSField(qualifier)
+                        ElseIf cstField.Value.type = ptCustomFields.Dbl Then
+                            ausgabe = kvp.Value.getCustomDField(qualifier).ToString
+                        ElseIf cstField.Value.type = ptCustomFields.bool Then
+                            ausgabe = kvp.Value.getCustomBField(qualifier).ToString
+                        End If
+
+                        If IsNothing(ausgabe) Then
+                            ausgabe = ""
+                        End If
+
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = ausgabe
+                        spalte = spalte + 1
+                    Next
+
+                End With
+                zeile = zeile + 1
+            Next
+        Catch ex As Exception
+            Call MsgBox("Problems with " & hproj.name)
+        End Try
+
+
+        ' jetzt müssen die Spaltenbreiten und sonstigen Werte gesetzt werden ...
+        Dim letzteSpalte As Integer = startOfCustomFields + customFieldDefinitions.liste.Count - 1
+        Dim curSpalte As Integer = -1
+
+        Try
             With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-                CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.name
-                CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
-                CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.businessUnit
-                CType(.Cells(zeile, 4), Excel.Range).Value = budget
-                CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.startDate
-                CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.endeDate
-                CType(.Cells(zeile, 7), Excel.Range).Value = pk
-                CType(.Cells(zeile, 8), Excel.Range).Value = ok
-                CType(.Cells(zeile, 9), Excel.Range).Value = pl
-                CType(.Cells(zeile, 10), Excel.Range).Value = kvp.Value.StrategicFit
-                CType(.Cells(zeile, 11), Excel.Range).Value = kvp.Value.Risiko
+                For s As Integer = 1 To letzteSpalte
+                    curSpalte = s
+                    If s = 1 Then
+                        ' Projekt-Name
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 54
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 2 Then
+                        ' Varianten-Name
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 3 Then
+                        ' Projekt-Nummer
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    ElseIf s = 4 Then
+                        ' Verantwortlich
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 5 Then
+                        ' Business Unit
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 6 Then
+                        ' Projekt-Start
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    ElseIf s = 7 Then
+                        ' Projekt-Ende
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    ElseIf s = 8 Then
+                        ' Budget bzw. erste Planung 
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                    ElseIf s = 9 Then
+                        ' summe Personalkosten
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
 
-                spalte = 12
-                For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
-
-                    Dim qualifier As String = cstField.Value.name
-                    Dim ausgabe As String = ""
-                    If cstField.Value.type = ptCustomFields.Str Then
-                        ausgabe = kvp.Value.getCustomSField(qualifier)
-                    ElseIf cstField.Value.type = ptCustomFields.Dbl Then
-                        ausgabe = kvp.Value.getCustomDField(qualifier).ToString
-                    ElseIf cstField.Value.type = ptCustomFields.bool Then
-                        ausgabe = kvp.Value.getCustomBField(qualifier).ToString
+                    ElseIf s = 10 Then
+                        ' summe Sonst Kosten
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                    ElseIf s = 11 Then
+                        ' Profit/Loss bzw. Differenz
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                    ElseIf s = 12 Then
+                        ' Strategie 
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
+                    ElseIf s = 13 Then
+                        ' Risiko 
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
+                    ElseIf s = 14 Then
+                        ' Beschreibung
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    Else
+                        ' customFields
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
                     End If
+                    ' 
 
-                    If IsNothing(ausgabe) Then
-                        ausgabe = ""
-                    End If
 
-                    CType(.Cells(zeile, spalte), Excel.Range).Value = ausgabe
-                    spalte = spalte + 1
                 Next
 
+                ' jetzt muss noch die erste Zeile formatiert werden 
+                CType(.Rows.Item(1), Excel.Range).RowHeight = 45
+                CType(.Rows.Item(1), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignTop
+                CType(.Rows.Item(1), Excel.Range).Interior.Color = RGB(220, 220, 220)
+
             End With
-            zeile = zeile + 1
-        Next
+        Catch ex As Exception
+            Call MsgBox("Problem with Column: " & curSpalte)
+        End Try
+
+
+
 
 
         Try
@@ -25536,6 +26668,8 @@ Public Module awinGeneralModules
         End If
 
     End Function
+
+
     ''' <summary>
     ''' liest, falls vorhanden aus ProjectboardConfig.xml die Settings
     ''' wenn nicht vorhanden, gibt false zurück 
@@ -26128,6 +27262,12 @@ Public Module awinGeneralModules
 
         If Not (hproj Is Nothing) Then
 
+            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+            Dim tmpVariantName As String = ""
+            If hproj.projectType = ptPRPFType.portfolio Then
+                tmpVariantName = portfolioVName
+            End If
+
             With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentWsName), Excel.Worksheet)
                 Dim tmpArray() As String
                 Dim anzDiagrams As Integer
@@ -26166,13 +27306,17 @@ Public Module awinGeneralModules
 
                                         Case PTprdk.PersonalBalken
                                             Dim vglProj As clsProjekt = Nothing
+
+
                                             Try
-                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
+                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, "")
 
 
                                         Case PTprdk.PersonalPie
@@ -26186,7 +27330,7 @@ Public Module awinGeneralModules
 
                                             Dim vglProj As clsProjekt = Nothing
                                             Try
-                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try

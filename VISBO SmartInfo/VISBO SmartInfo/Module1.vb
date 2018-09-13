@@ -2040,7 +2040,14 @@ Module Module1
                             'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
                             Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pName, vName, chartTyp, auswahl)
 
+                            ' bestimme den Vname aus den Tags ...
+                            ' das ist insbesondere wichtig, um bei Summary-Projekten oder Projekt-Varianten die früheren / späteren Versionen holen zu können ...
+                            If pptShape.Tags.Item("VNM").Length > 0 Then
+                                vName = pptShape.Tags.Item("VNM")
+                            End If
+
                             If pName <> "" Then
+
                                 Dim pvName As String = calcProjektKey(pName, vName)
 
                                 ' damit auch eine andere Variante gezeigt werden kann ... 
@@ -2061,11 +2068,22 @@ Module Module1
                                     ' das neue Chart ..
                                     Dim newchtobj As xlNS.ChartObject = Nothing
 
+                                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                                    Dim tmpVariantName As String = ""
+                                    If tsProj.projectType = ptPRPFType.portfolio Then
+                                        tmpVariantName = portfolioVName
+                                    End If
+
+                                    Dim qualifier1 As String = pptShape.Tags.Item("Q1")
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+
                                     ' jetzt das bProj (Beauftragung) holen
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
                                     Catch ex As Exception
                                         bProj = Nothing
+                                        lProj = Nothing
                                     End Try
 
 
@@ -2089,12 +2107,16 @@ Module Module1
 
                                                     ' jetzt muss das chtobj aktualisiert werden ... 
                                                     Try
+                                                        Dim a As Integer = tsProj.dauerInDays
 
                                                         If prpfTyp = ptPRPFType.project Then
 
                                                             If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
-                                                                Dim a As Integer = tsProj.dauerInDays
-                                                                Call updatePPTBalkenOfProject(tsProj, bProj, newchtobj, prcTyp, auswahl)
+                                                                Call updatePPTBalkenOfProject(tsProj, bProj, newchtobj, prcTyp, auswahl, qualifier2)
+
+                                                            ElseIf chartTyp = PTprdk.PersonalBalken2 Or chartTyp = PTprdk.KostenBalken2 Then
+                                                                ' Aktualisieren der Personal- bzw. Kosten-Pies ...
+                                                                Call updatePPTBalkenOfProject(tsProj, lProj, newchtobj, prcTyp, auswahl, qualifier2)
 
                                                             ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
                                                                 ' Aktualisieren der Personal- bzw. Kosten-Pies ...
@@ -2103,22 +2125,33 @@ Module Module1
                                                                 ' Aktualisieren des Ergebnis Charts 
                                                                 Call updatePPTProjektErgebnis(tsProj, newchtobj)
 
-                                                            ElseIf chartTyp = PTprdk.StrategieRisiko Or _
-                                                                chartTyp = PTprdk.ZeitRisiko Or _
-                                                                chartTyp = PTprdk.FitRisikoVol Or _
+                                                            ElseIf chartTyp = PTprdk.StrategieRisiko Or
+                                                                chartTyp = PTprdk.ZeitRisiko Or
+                                                                chartTyp = PTprdk.FitRisikoVol Or
                                                                 chartTyp = PTprdk.ComplexRisiko Then
                                                                 ' Aktualisieren der Strategie-Charts
 
                                                                 Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
 
-                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or _
-                                                            chartTyp = PTprdk.SollIstPersonalkostenC Or _
-                                                            chartTyp = PTprdk.SollIstSonstKostenC Or _
-                                                            chartTyp = PTprdk.SollIstRolleC Or _
-                                                            chartTyp = PTprdk.SollIstKostenartC Then
+                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or
+                                                                chartTyp = PTprdk.SollIstPersonalkostenC Or
+                                                                chartTyp = PTprdk.SollIstSonstKostenC Or
+                                                                chartTyp = PTprdk.SollIstRolleC Or
+                                                                chartTyp = PTprdk.SollIstKostenartC Then
                                                                 ' Aktualisieren der Strategie-Charts
-                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, "", True)
+                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, qualifier2, True)
+
+                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC2 Or
+                                                                chartTyp = PTprdk.SollIstPersonalkostenC2 Or
+                                                                chartTyp = PTprdk.SollIstSonstKostenC2 Or
+                                                                chartTyp = PTprdk.SollIstRolleC2 Or
+                                                                chartTyp = PTprdk.SollIstKostenartC2 Then
+                                                                ' Aktualisieren der Strategie-Charts
+                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, lProj, auswahl, qualifier2, True)
+
                                                             End If
+
+
 
                                                         ElseIf prpfTyp = ptPRPFType.portfolio Then
 
@@ -2213,6 +2246,12 @@ Module Module1
 
                         If Not IsNothing(tsProj) Then
 
+                            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                            Dim tmpVariantName As String = ""
+                            If tsProj.projectType = ptPRPFType.portfolio Then
+                                tmpVariantName = portfolioVName
+                            End If
+
                             If bigType = ptReportBigTypes.components Then
                                 Call updatePPTComponent(tsProj, pptShape, detailID)
 
@@ -2223,8 +2262,8 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
-                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, curTimeStamp.AddHours(-1))
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
@@ -2238,12 +2277,13 @@ Module Module1
                                     Catch ex As Exception
                                         Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
                                         bProj = Nothing
+                                        lProj = Nothing
                                     End Try
 
                                 ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
-                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, curTimeStamp.AddHours(-1))
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
@@ -6261,6 +6301,15 @@ Module Module1
             End If
             'End If
 
+            ' jetzt noch das InfoPane aktualisieren
+            If Not IsNothing(selectedPlanShapes) Then
+                If selectedPlanShapes.Count >= 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    If isRelevantMSPHShape(tmpShape) Then
+                        Call aktualisiereInfoPane(tmpShape)
+                    End If
+                End If
+            End If
 
 
         End If

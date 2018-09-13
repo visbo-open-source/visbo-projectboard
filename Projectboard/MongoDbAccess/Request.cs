@@ -367,14 +367,15 @@ namespace MongoDbAccess
     
         /// <summary>
         /// holt die erste beauftragte Version des Projects 
-        /// immer mit Variant-Name = ""
+        /// muss bei Projekten aufgerufen werden mit "", bei Summary Projekten mit VPortfolioName
         /// </summary>
-        /// <param name="projectname"></param>
+        /// <param name="projectname">gibt den Projektnamen an </param>
+        /// <param name="variantName">gibt den Varianten-Namen an</param>
         /// <returns></returns>
-        public clsProjekt retrieveFirstContractedPFromDB(string projectname)
+        public clsProjekt retrieveFirstContractedPFromDB(string projectname, string variantName)
         {
-            var result = new clsProjektDB();
-            string searchstr = Projekte.calcProjektKeyDB(projectname, "");
+            var result = new clsProjektDB();                       
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
 
             
             var builder = Builders<clsProjektDB>.Filter;
@@ -411,15 +412,16 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// 
+        /// gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; bei Projekten muss variantNAme = "" sein, bei Summary Projekten VPortfolioName
         /// </summary>
         /// <param name="projectname">beuaftragte werden nur von Variant-Name "" gesucht </param>
         /// <param name="storedAtOrBefore"></param>
+        /// <param name="variantName"></param>
         /// <returns></returns>
-        public clsProjekt RetrieveLastContractedPFromDB(string projectname, DateTime storedAtOrBefore)
+        public clsProjekt RetrieveLastContractedPFromDB(string projectname, string variantName, DateTime storedAtOrBefore)
         {
             var result = new clsProjektDB();
-            string searchstr = Projekte.calcProjektKeyDB(projectname, "");
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
 
             if (storedAtOrBefore == null)
             {

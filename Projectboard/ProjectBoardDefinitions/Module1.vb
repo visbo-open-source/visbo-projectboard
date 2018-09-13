@@ -181,6 +181,8 @@ Public Module Module1
 
     ' diese Konstante bestimmt, welchen Varianten Namen Portfolios bzw. Programme bekommen 
     Public Const portfolioVName As String = "Portfolio/Prog."
+    ' diese Konstante bestimmt, wie die Variante heissen soll, die die Ist-Daten - zumindest temporär - aufnimmt 
+    Public Const istDatenVName As String = "ActualData"
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
@@ -232,6 +234,29 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum ptImportSettings
+        attributeNames1 = 0
+        attributeNamesCol1 = 1
+        roleCostNames1 = 2
+        roleCostNamesCol1 = 3
+        customFieldNames1 = 4
+        customFieldsNamesCol1 = 5
+        ' Werte für Import Typ 2
+        attributeNames2 = 6
+        attributeNamesCol2 = 7
+        roleCostNames2 = 8
+        roleCostNamesCol2 = 9
+        customFieldNames2 = 10
+        customFieldsNamesCol2 = 11
+        ' Werte für Import Typ 3
+        attributeNames3 = 12
+        attributeNamesCol3 = 13
+        roleCostNames3 = 14
+        roleCostNamesCol3 = 15
+        customFieldNames3 = 16
+        customFieldsNamesCol3 = 17
+
+    End Enum
 
     Public Enum ptReportBigTypes
         charts = 0
@@ -406,7 +431,7 @@ Public Module Module1
         MilestoneCategories = 22
     End Enum
 
-    ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 
+    ' Enumeration Projekt Diagramm Kennungen 
     Public Enum PTprdk
         PersonalBalken = 0
         PersonalPie = 1
@@ -428,6 +453,16 @@ Public Module Module1
         SollIstGesamtkostenC = 23
         SollIstRolleC = 24
         SollIstKostenartC = 25
+        PersonalBalken2 = 26
+        KostenBalken2 = 27
+        SollIstPersonalkosten2 = 28
+        SollIstSonstKosten2 = 29
+        SollIstGesamtkosten2 = 30
+        SollIstPersonalkostenC2 = 31
+        SollIstSonstKostenC2 = 32
+        SollIstGesamtkostenC2 = 33
+        SollIstRolleC2 = 34
+        SollIstKostenartC2 = 35
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
@@ -1177,8 +1212,30 @@ Public Module Module1
         If found Then
             Dim weitermachen As Boolean = False
             If istRollenDiagramm(chtObj) Then
+
+                ' tk 9.9.18 jetzt sollen alle Kinder- und Kindes-Kinder Rollen gekennzeichnet werden 
+                ' es sollen jetzt Sammelrollen durch alle ihre BasicRoles ersetzt werden ... 
+                Dim substituteCollection As New Collection
+
+                For Each roleName As String In myCollection
+                    If Not substituteCollection.Contains(roleName) Then
+                        substituteCollection.Add(roleName, roleName)
+
+                        Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName)
+                        For Each roleKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
+                            Dim childName As String = RoleDefinitions.getRoleDefByID(roleKvP.Key).name
+                            If Not substituteCollection.Contains(childName) Then
+                                substituteCollection.Add(childName, childName)
+                            End If
+                        Next
+                    End If
+
+                Next
+
+                'currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
+                '                                                myCollection, Nothing)
                 currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
-                                                                myCollection, Nothing)
+                                                                substituteCollection, Nothing)
                 weitermachen = True
 
 
@@ -4938,6 +4995,11 @@ Public Module Module1
         Try
             anzRoles = CInt(q1)
             anzCosts = CInt(q2)
+
+            If anzRoles = -1 And anzCosts = -1 Then
+                ' das ist das signal, dass erst die gemeinsame Liste bestimmt werden soll 
+                todoCollection = getCommonListOfRCNames(hproj, lproj, bproj, anzRoles, anzCosts)
+            End If
         Catch ex As Exception
 
         End Try
@@ -5010,13 +5072,14 @@ Public Module Module1
                         Dim faprValue As Double = -1.0 ' first approved version 
                         Dim laprValue As Double = -1.0 ' last approved version
 
-                        If anzRoles > 0 Then
-                            ' 
-                            'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
-                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-                        End If
+                        ' keine zusätzliche Zeile schreiben ... macht das ganze nur unübersichtlicher  
+                        'If anzRoles > 0 And anzCosts > 0 Then
+                        '    ' 
+                        '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                        '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
+                        '    tabelle.Rows.Add()
+                        '    tabellenzeile = tabellenzeile + 1
+                        'End If
 
                         For m As Integer = 1 To todoCollection.Count
 
@@ -5030,40 +5093,51 @@ Public Module Module1
 
                             If isRole Then
 
-                                curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                'curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                curValue = hproj.getPersonalKosten(curItem, True).Sum
 
                                 If considerLapr Then
-                                    laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    'laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    laprValue = lproj.getPersonalKosten(curItem, True).Sum
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    'faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    faprValue = bproj.getPersonalKosten(curItem, True).Sum
                                 End If
 
 
                             ElseIf isCost Then
 
-                                If firstCost Then
-                                    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
-                                    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(2)
-                                    tabelle.Rows.Add()
-                                    tabellenzeile = tabellenzeile + 1
-                                    firstCost = False
-                                End If
+                                'If firstCost Then
+                                '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
+                                '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(2)
+                                '    tabelle.Rows.Add()
+                                '    tabellenzeile = tabellenzeile + 1
+                                '    firstCost = False
+                                'End If
 
-                                curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                'curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                curValue = hproj.getKostenBedarfNew(curItem).Sum
 
                                 If considerLapr Then
-                                    laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
+                                    'laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                    'faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
                                 End If
 
                             End If
 
-                            Dim zeilenItem As String = "  " & curItem
+                            Dim zeilenItem As String = curItem
+                            'If anzRoles > 0 And anzCosts > 0 Then
+                            '    ' dann muss unterhalb Personalkosten und Sonstige Kosten eingerückt werden ... 
+                            '    zeilenItem = "  " & curItem
+                            'End If
+
                             Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
                                                           considerFapr, considerLapr)
                             tabelle.Rows.Add()
@@ -5080,14 +5154,14 @@ Public Module Module1
 
 
                         Dim tmpValue As Double
-                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), True)
+                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
 
                         If considerFapr Then
-                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), True)
+                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
                         End If
 
                         If considerLapr Then
-                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), True)
+                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
                         End If
 
 
@@ -5206,8 +5280,8 @@ Public Module Module1
 
         ' notwendig, solange keine repMessages in der Datenbank sind 
         Dim repmsg() As String
-        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
-
+        'repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
+        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
         If considerFapr Then
             deltaFMC = (curValue - faprValue).ToString(dblFormat)
         Else
@@ -5512,42 +5586,39 @@ Public Module Module1
             ' bestimme den Charttyp ...
             prpfTyp = ptPRPFType.project
 
-            chartTyp = CInt(tmpStr(1))
-
-            If chartTyp = PTprdk.KostenBalken Or
-                chartTyp = PTprdk.KostenPie Then
-                prcTyp = ptElementTypen.costs
-            ElseIf chartTyp = PTprdk.PersonalBalken Or
-                chartTyp = PTprdk.PersonalPie Then
-                prcTyp = ptElementTypen.roles
-            Else
-                prcTyp = ptElementTypen.ergebnis
-            End If
-
-
-            ' bestimme pName und vName 
-            Dim fullName As String = tmpStr(2)
-
-            If fullName.Contains("[") And fullName.Contains("]") Then
-                Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
-                pName = tmpstr1(0)
-                vName = tmpstr1(1)
-            Else
-                pName = fullName
-                vName = ""
-            End If
-
-            ' bestimme, um welche Auswahl es sich handelt ... 
-            auswahl = CInt(tmpStr(3))
         ElseIf tmpStr(0) = "pf" Then
-
             prpfTyp = ptPRPFType.portfolio
-            ' noch nicht implementiert ... 
         Else
 
         End If
 
+        chartTyp = CInt(tmpStr(1))
 
+        If chartTyp = PTprdk.KostenBalken Or
+            chartTyp = PTprdk.KostenPie Then
+            prcTyp = ptElementTypen.costs
+        ElseIf chartTyp = PTprdk.PersonalBalken Or
+            chartTyp = PTprdk.PersonalPie Then
+            prcTyp = ptElementTypen.roles
+        Else
+            prcTyp = ptElementTypen.ergebnis
+        End If
+
+
+        ' bestimme pName und vName 
+        Dim fullName As String = tmpStr(2)
+
+        If fullName.Contains("[") And fullName.Contains("]") Then
+            Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
+            pName = tmpstr1(0)
+            vName = tmpstr1(1)
+        Else
+            pName = fullName
+            vName = ""
+        End If
+
+        ' bestimme, um welche Auswahl es sich handelt ... 
+        auswahl = CInt(tmpStr(3))
 
 
     End Sub
@@ -5682,10 +5753,38 @@ Public Module Module1
 
             With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
                 For ix As Integer = 1 To anzSpalten
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
                     CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
                 Next
                 CType(.Cells(1, anzSpalten + 1), Excel.Range).Value = Date.Now
                 CType(.Cells(1, anzSpalten + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+            End With
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    Public Sub logfileSchreiben(ByVal text() As String, ByVal values() As Double)
+
+        Dim obj As Object
+        Try
+            Dim anzSpaltenText As Integer = text.Length
+            Dim anzSpaltenValues As Integer = values.Length
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                For ix As Integer = 1 To anzSpaltenText
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
+                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
+                Next
+
+                For ix As Integer = 1 To anzSpaltenValues
+                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 1)
+                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
+                Next
+                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
             End With
         Catch ex As Exception
 

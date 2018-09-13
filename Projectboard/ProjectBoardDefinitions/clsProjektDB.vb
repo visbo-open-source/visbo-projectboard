@@ -187,11 +187,20 @@ Public Class clsProjektDB
                 .kundenNummer = Me.kundenNummer
             End If
 
-            If IsNothing(Me.actualDataUntil) Then
-                .actualDataUntil = Date.MinValue
+            If awinSettings.autoSetActualDataDate Then
+
+                If Me.timestamp.AddMonths(-1) > Me.startDate Then
+                    .actualDataUntil = Me.timestamp.AddMonths(-1)
+                End If
+
             Else
-                .actualDataUntil = Me.actualDataUntil.ToLocalTime
+                If IsNothing(Me.actualDataUntil) Then
+                    .actualDataUntil = Date.MinValue
+                Else
+                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
+                End If
             End If
+
 
             If IsNothing(Me.variantDescription) Then
                 .variantDescription = ""

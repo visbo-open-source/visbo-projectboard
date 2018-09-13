@@ -361,13 +361,16 @@ Public Module testModule
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                         End If
 
-                        bproj = request.retrieveFirstContractedPFromDB(hproj.name)
-                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, storedAtOrBefore:=Date.Now)
-
-                        If lproj.timeStamp = bproj.timeStamp Then
-                            lproj = Nothing
+                        ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                        Dim tmpVariantName As String = ""
+                        If hproj.projectType = ptPRPFType.portfolio Then
+                            tmpVariantName = portfolioVName
                         End If
-                        ' tk , 17.10.17 , das holen der Beauftragung, unabhängig von der Variante ... 
+
+                        bproj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                        Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
+                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
+
 
                     Catch ex As Exception
                         projekthistorie.clear()
@@ -737,9 +740,13 @@ Public Module testModule
                         kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or
                         kennzeichnung = "Projektphasen" Or
                         kennzeichnung = "Personalbedarf" Or
+                        kennzeichnung = "Personalbedarf2" Or
                         kennzeichnung = "Personalkosten" Or
+                        kennzeichnung = "Personalkosten2" Or
                         kennzeichnung = "Sonstige Kosten" Or
+                        kennzeichnung = "Sonstige Kosten2" Or
                         kennzeichnung = "Gesamtkosten" Or
+                        kennzeichnung = "Gesamtkosten2" Or
                         kennzeichnung = "Trend Strategischer Fit/Risiko" Or
                         kennzeichnung = "Trend Kennzahlen" Or
                         kennzeichnung = "Fortschritt Personalkosten" Or
@@ -1790,69 +1797,96 @@ Public Module testModule
                                 Try
                                     ' wenn es im Qualifier angegebene Rollen und Kostenarten gibt, dann haben die Prio vor der interaktiven Auswahl 
                                     ' 
-                                    Dim sRoles As Collection = selectedRoles
-                                    Dim sCosts As Collection = selectedCosts
+                                    Dim sRoles As Collection = Nothing
+                                    Dim sCosts As Collection = Nothing
 
-                                    If Not IsNothing(qualifier2) Then
-                                        If qualifier2.Length > 0 Then
-                                            sRoles = New Collection
-                                            sCosts = New Collection
-                                            Dim tmpStr() As String = qualifier2.Split(New Char() {vbLf, vbCr})
-
-                                            For Each tmpRcName As String In tmpStr
-                                                ' es darf einen Namen nur entweder als Rolle oder als Kostenart geben ..
-                                                If RoleDefinitions.containsName(tmpRcName) Then
-                                                    If Not sRoles.Contains(tmpRcName) Then
-                                                        sRoles.Add(tmpRcName, tmpRcName)
-                                                    End If
-                                                ElseIf CostDefinitions.containsName(tmpRcName) Then
-                                                    If Not sCosts.Contains(tmpRcName) Then
-                                                        sCosts.Add(tmpRcName, tmpRcName)
-                                                    End If
-                                                End If
-                                            Next
-
-                                        End If
-                                    End If
-
-                                    ' jetzt kommt die Vorbereitung der  todoCollection .
-                                    If IsNothing(sRoles) Then
-                                        sRoles = New Collection
-                                    End If
-
-                                    If IsNothing(sCosts) Then
-                                        sCosts = New Collection
-                                    End If
-
-
-                                    Dim todoCollection As Collection = New Collection
+                                    Dim todoCollection As Collection = Nothing
                                     Dim q1 As String = "0"
                                     Dim q2 As String = "0"
 
-                                    If sRoles.Count + sCosts.Count = 0 Then
-                                        ' nichts tun, todoCollection ist schon leere Collection 
-                                    Else
-                                        ' jetzt wird die toDoCollection aufgebaut , es solle eine Liste aufgebaut werden, die die Reihenfolge beibehält 
-                                        For Each tmpName As String In sRoles
-                                            toDoCollection.Add(tmpName)
-                                        Next
+                                    ' es werden drei Fälle unterschieden
+                                    ' 1. qualifier2 = "" ->  die Budget, PK, SK, Ergebnis Übersicht  :todoCollection leer, q1= 0 , q2=0
+                                    ' 2. qualifier2 = %used% -> es wird die gemeinsame Liste ermittelt ; todoCollection leer oder mit Inhalt, q1=-1, q2= -1
+                                    ' 3. qualifier2 = Liste von Namen, todoCollection <> leer, q1 die Zahl der Rollen, q2 die Zahl der Kostenarten
 
-                                        For Each tmpName As String In sCosts
-                                            toDoCollection.Add(tmpName)
-                                        Next
+                                    Dim alreadyDone As Boolean = False
+                                    sRoles = selectedRoles
+                                    sCosts = selectedCosts
+                                    todoCollection = New Collection
+
+                                    If Not IsNothing(qualifier2) Then
+                                        If qualifier2.Length > 0 Then
+                                            If qualifier2.Trim = "%used%" Then
+                                                'Dim anzR As Integer, anzC As Integer
+                                                ' kann man sich hier sparen, weil die todoCollection ja im zeichneTableBudgetCostAPVCV erstellt wird
+                                                ' wichtig ist es, die q1, q2 auf -1 zu setzen 
+                                                'todoCollection = getCommonListOfRCNames(hproj, lproj, bproj, anzR, anzC)
+                                                q1 = "-1"
+                                                q2 = "-1"
+                                                alreadyDone = True
+
+                                            Else
+
+                                                sRoles = New Collection
+                                                sCosts = New Collection
+                                                Dim tmpStr() As String = qualifier2.Split(New Char() {vbLf, vbCr})
+
+                                                For Each tmpRcName As String In tmpStr
+                                                    ' es darf einen Namen nur entweder als Rolle oder als Kostenart geben ..
+                                                    tmpRcName = tmpRcName.Trim
+                                                    If RoleDefinitions.containsName(tmpRcName) Then
+
+                                                        sRoles.Add(tmpRcName)
+
+                                                    ElseIf CostDefinitions.containsName(tmpRcName) Then
+
+                                                        sCosts.Add(tmpRcName)
+
+                                                    End If
+                                                Next
+
+                                            End If
+
+
+                                        End If
+
                                     End If
 
-                                    ' in Q1 steht die Anzahl der Detail Rollen , in q2 steht die Anzahl der 
-                                    q1 = sRoles.Count.ToString
-                                    q2 = sCosts.Count.ToString
+                                    If Not alreadyDone Then
+                                        ' in Fall 1, 3
+                                        ' jetzt kommt die Vorbereitung der  todoCollection .
+                                        If IsNothing(sRoles) Then
+                                            sRoles = New Collection
+                                        End If
+
+                                        If IsNothing(sCosts) Then
+                                            sCosts = New Collection
+                                        End If
 
 
+                                        If sRoles.Count + sCosts.Count = 0 Then
+                                            ' nichts tun, todoCollection ist schon leere Collection 
+                                        Else
+                                            ' jetzt wird die toDoCollection aufgebaut , es solle eine Liste aufgebaut werden, die die Reihenfolge beibehält 
+                                            For Each tmpName As String In sRoles
+                                                todoCollection.Add(tmpName)
+                                            Next
+
+                                            For Each tmpName As String In sCosts
+                                                todoCollection.Add(tmpName)
+                                            Next
+                                        End If
+
+                                        ' in Q1 steht die Anzahl der Detail Rollen , in q2 steht die Anzahl der 
+                                        q1 = sRoles.Count.ToString
+                                        q2 = sCosts.Count.ToString
+
+                                    End If
 
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
-                                    ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Meilensteine angeben kann 
+                                    ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Werte / Identifier angeben kann 
                                     Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, todoCollection, q1, q2)
-                                    'Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones, qualifier, qualifier2)
 
 
                                 Catch ex As Exception
@@ -2028,7 +2062,15 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            If qualifier2 <> "" Then
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalbedarf: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -2036,13 +2078,15 @@ Public Module testModule
                                         compID = PTprdk.PersonalPie
                                     End If
 
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
-                                    Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
-                                        boxName = boxName & " (" & gesamtSumme.ToString &
-                                        " " & awinSettings.kapaEinheit & ")"
-                                    End If
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' immer den Text nehmen ..
+                                    ''If obj.Chart.HasTitle Then
+                                    ''    boxName = obj.Chart.ChartTitle.Text
+                                    ''Else
+                                    ''    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                    ''    boxName = boxName & " (" & gesamtSumme.ToString &
+                                    ''    " " & awinSettings.kapaEinheit & ")"
+                                    ''End If
 
 
                                     reportObj = obj
@@ -2055,6 +2099,57 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(233)
                                 End Try
 
+                            Case "Personalbedarf2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(159)
+                                End If
+
+
+                                Try
+                                    auswahl = 1
+
+                                    If qualifier.Length > 0 Then
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalPie
+                                        Else
+                                            If qualifier2 <> "" Then
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalbedarf: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            compID = PTprdk.PersonalBalken2
+                                        End If
+                                    Else
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.PersonalPie
+                                    End If
+
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' immer den Text nehmen ..
+                                    ''If obj.Chart.HasTitle Then
+                                    ''    boxName = obj.Chart.ChartTitle.Text
+                                    ''Else
+                                    ''    Dim gesamtSumme As Integer = CInt(hproj.getSummeRessourcen)
+                                    ''    boxName = boxName & " (" & gesamtSumme.ToString &
+                                    ''    " " & awinSettings.kapaEinheit & ")"
+                                    ''End If
+
+
+                                    reportObj = obj
+                                    notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+
+
+                                Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(233)
+                                End Try
 
                             Case "Personalkosten"
 
@@ -2072,7 +2167,21 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+
+                                            If qualifier2 <> "" Then
+                                                If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                                    qualifier2 = selectedRoles.Item(1)
+                                                End If
+
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
                                             compID = PTprdk.PersonalBalken
                                         End If
 
@@ -2081,13 +2190,71 @@ Public Module testModule
                                         compID = PTprdk.PersonalPie
                                     End If
 
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' tk 9.8.18
+                                    'If obj.Chart.HasTitle Then
+                                    '    boxName = obj.Chart.ChartTitle.Text
+                                    'Else
+                                    '    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                    '    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    'End If
 
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
+
+                                    reportObj = obj
+                                    notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+
+
+                                Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(162)
+                                End Try
+
+                            Case "Personalkosten2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(164)
+                                End If
+
+
+                                Try
+                                    auswahl = 2
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.PersonalPie
+                                        Else
+                                            If qualifier2 <> "" Then
+                                                If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                                    qualifier2 = selectedRoles.Item(1)
+                                                End If
+                                                If RoleDefinitions.containsName(qualifier2) Then
+                                                    ' alles ok
+                                                Else
+                                                    Call MsgBox("Chart Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                                    qualifier2 = ""
+                                                End If
+                                            End If
+
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            compID = PTprdk.PersonalBalken2
+                                        End If
+
                                     Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
-                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.PersonalPie
                                     End If
+
+                                    boxName = obj.Chart.ChartTitle.Text
+                                    ' tk 9.8.18
+                                    'If obj.Chart.HasTitle Then
+                                    '    boxName = obj.Chart.ChartTitle.Text
+                                    'Else
+                                    '    Dim gesamtSumme As Integer = CInt(hproj.getAllPersonalKosten.Sum)
+                                    '    boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    'End If
 
 
                                     reportObj = obj
@@ -2143,6 +2310,48 @@ Public Module testModule
 
                                 End Try
 
+                            Case "Sonstige Kosten2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(165)
+                                End If
+
+                                Try
+                                    auswahl = 1
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenPie
+                                        Else
+                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenBalken2
+                                        End If
+
+                                    Else
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.KostenPie
+                                    End If
+
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtAndereKosten.Sum)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    End If
+
+                                    reportObj = obj
+                                    notYetDone = True
+
+                                    bigType = ptReportBigTypes.charts
+
+                                Catch ex As Exception
+
+                                    '.TextFrame2.TextRange.Text = "Sonstige Kosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(163)
+
+                                End Try
 
                             Case "Gesamtkosten"
 
@@ -2167,6 +2376,51 @@ Public Module testModule
                                         Else
                                             Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken
+                                        End If
+
+                                    Else
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                    End If
+
+                                    If obj.Chart.HasTitle Then
+                                        boxName = obj.Chart.ChartTitle.Text
+                                    Else
+                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
+                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
+                                    End If
+
+                                    reportObj = obj
+                                    notYetDone = True
+                                    bigType = ptReportBigTypes.charts
+
+                                Catch ex As Exception
+                                    '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(168)
+                                End Try
+
+                            Case "Gesamtkosten2"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(166)
+                                End If
+
+
+                                'htop = 100
+                                'hleft = 100
+                                'hwidth = boxWidth * 14
+                                'hheight = boxHeight * 10
+
+                                Try
+                                    auswahl = 2
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenPie
+                                        Else
+                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            compID = PTprdk.KostenBalken2
                                         End If
 
                                     Else
@@ -2502,7 +2756,19 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist1C Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
+
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
@@ -2520,12 +2786,26 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist2C Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
+
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Personalkosten" & ke
                                     boxName = repMessages.getmsg(164) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstPersonalkostenC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
@@ -2596,14 +2876,16 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstSonstKostenC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
@@ -2672,13 +2954,15 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Gesamtkosten" & ke
                                     boxName = repMessages.getmsg(166) & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstGesamtkostenC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
@@ -2747,14 +3031,16 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Rolle " & qualifier & ze
                                     boxName = repMessages.getmsg(200) & qualifier & ze
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstRolleC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
@@ -2822,13 +3108,15 @@ Public Module testModule
 
                                 Try
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
+                                    Dim vglBaseline As Boolean = True
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Kostenart " & qualifier & ke
                                     boxName = repMessages.getmsg(203) & qualifier & ke
+                                    bigType = ptReportBigTypes.charts
+                                    compID = PTprdk.SollIstKostenartC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
@@ -3608,6 +3896,7 @@ Public Module testModule
                         kennzeichnung = "Phase" Or
                         kennzeichnung = "P-Category" Or
                         kennzeichnung = "Rolle" Or
+                        kennzeichnung = "TopBN" Or
                         kennzeichnung = "Kostenart" Or
                         kennzeichnung = "Meilenstein" Or
                         kennzeichnung = "M-Category" Or
@@ -3677,8 +3966,6 @@ Public Module testModule
 
 
                         End If
-
-
 
 
                     Catch ex As Exception
@@ -4271,7 +4558,8 @@ Public Module testModule
                                 End Try
 
                             Catch ex As Exception
-
+                                objectsDone = objectsToDo + 1
+                                Call MsgBox("Fehler bei Report-Erstellung ... Code X3678")
                             End Try
 
                         Case "Tabelle Portfolioliste"
@@ -4308,7 +4596,8 @@ Public Module testModule
                                 End Try
 
                             Catch ex As Exception
-
+                                objectsDone = objectsToDo + 1
+                                Call MsgBox("Fehler bei Report-Erstellung ... Code X3679")
                             End Try
 
 
@@ -5018,6 +5307,12 @@ Public Module testModule
                                 boxName = repMessages.getmsg(220)
                             End If
 
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
+                            If myCollection.Count = 0 Then
+                                myCollection = Nothing
+                            End If
+
                             boxName = boxName & repMessages.getmsg(218)
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -5027,7 +5322,7 @@ Public Module testModule
                             hheight = awinSettings.ChartHoehe2
                             hwidth = 340
                             obj = Nothing
-                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True)
+                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True, myCollection)
 
                             reportObj = obj
 
@@ -5424,6 +5719,81 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
                             End If
 
+                        Case "TopBN"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(200)
+                            End If
+
+                            myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
+
+                            ' jetzt muss die Liste an Bottleneck Rollen aufgebaut werden 
+                            Dim sortierteListe As SortedList(Of Double, String) = getSortedListOfCapaUtilization(myCollection, 1)
+
+                            ' in qualifier2 sollte jetzt die Nummer stehen ..
+                            Dim nrBn As Integer = 1
+                            If Not IsNothing(qualifier2) Then
+                                If IsNumeric(qualifier2) Then
+                                    If CInt(qualifier2) > 0 Then
+                                        nrBn = CInt(qualifier2)
+                                    End If
+                                End If
+                            End If
+
+                            ' jetzt wird die myCollection mit dem nrBN Bottleneck besetzt ...
+                            myCollection.Clear()
+
+                            Dim anzBottlenecks As Integer = sortierteListe.Count
+                            Dim aktRoleName As String = ""
+                            If nrBn > 0 And nrBn <= anzBottlenecks Then
+                                aktRoleName = sortierteListe.ElementAt(anzBottlenecks - nrBn).Value
+                                myCollection.Add(aktRoleName, aktRoleName)
+                            End If
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = chartHeight  ' height of all charts
+                                hwidth = chartWidth   ' width of all charts
+                                obj = Nothing
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
+
+                                reportObj = obj
+                                ' jetzt wird die Größe der Überschrift neu bestimmt ...
+                                With reportObj
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                ''reportObj.Copy()
+                                ''newShapeRange = pptSlide.Shapes.Paste
+                                newShapeRange = chartCopypptPaste(reportObj, pptSlide)
+
+                                With newShapeRange.Item(1)
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
+                                End With
+
+                                'Call awinDeleteChart(reportObj)
+                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                '.TextFrame2.TextRange.Text = repMessages.getmsg(111) & qualifier
+                                .TextFrame2.TextRange.Text = "keine weiteren Engpässe für " & qualifier
+
+                            End If
 
                         Case "Rolle"
 
@@ -5799,7 +6169,7 @@ Public Module testModule
                 Next
 
 
-                historicDate = historicDate.AddMonths(1)
+                historicDate = historicDate.AddMinutes(5)
                 If historicDate > Date.Now Then
                     historicDate = Date.Now
                 End If
@@ -9472,11 +9842,11 @@ Public Module testModule
     ''' <param name="steigendShape">das Shape, das für Darstellung steigender Werte verwendet wird </param>
     ''' <param name="fallendShape">das Shape, das zur Darstellung fallender Werte verwendet wird</param>
     ''' <remarks></remarks>
-    Sub zeichneTabelleProjektliste(ByVal pptSlide As pptNS.Slide, ByVal pptShape As pptNS.Shape, _
-                                   ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
-                                   ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef summenArray() As Double, _
-                                   Optional ByVal qualifier As String = "", _
-                                   Optional ByVal showPersonalBedarf As Boolean = True)
+    Sub zeichneTabelleProjektliste(ByVal pptSlide As pptNS.Slide, ByVal pptShape As pptNS.Shape,
+                                   ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape,
+                                   ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef summenArray() As Double,
+                                   Optional ByVal qualifier As String = "",
+                                   Optional ByVal showPersonalBedarf As Boolean = False)
         Dim tabelle As pptNS.Table
         Dim zaehler As Integer = 1
         Dim startItem As Integer = 1, endeItem As Integer = ShowProjekte.Count
@@ -9498,6 +9868,8 @@ Public Module testModule
         Dim vproj As clsProjekt = Nothing
         Dim zeile As Integer = 2
         Dim spalte As Integer = 9
+        Dim is12Col As Boolean = True
+
 
 
 
@@ -9516,27 +9888,46 @@ Public Module testModule
             Exit Sub
         End Try
 
-        If tabelle.Columns.Count < 12 Then
+        If tabelle.Columns.Count = 12 Or tabelle.Columns.Count = 10 Then
+            ' alles ok 
+            is12Col = (tabelle.Columns.Count = 12)
+        Else
             Throw New Exception(repMessages.getmsg(127))
         End If
 
+        Dim colDelta As Integer = 0
+        If Not is12Col Then
+            colDelta = 2
+        End If
+
         ' jetzt werden die HeaderZeilen entsprechend gesetzt 
+        Dim ix As Integer = 0
         For i As Integer = 1 To 11
-            Dim tmpMsg As String = repMessages.getmsg(262 + i).TrimEnd
-            CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpMsg
-            If i >= 8 And i <= 10 Then
-                ' 1. Buchstabe muss WingDings sein
-                Try
-                    Dim len As Integer = tmpMsg.Length
-                    Dim oldName As String = CType(tabelle.Cell(1, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Name
-
-                    CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Name = "Wingdings 3"
-                    CType(tabelle.Cell(1, i + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=2, Length:=len - 1).Font.Name = oldName
-                Catch ex As Exception
-
-                End Try
-
+            ix = i
+            If Not is12Col And i > 3 Then
+                ix = i - 2
             End If
+
+            Dim tmpMsg As String = repMessages.getmsg(262 + i).TrimEnd
+            If Not is12Col And (i = 2 Or i = 3) Then
+                ' nichts tun
+            Else
+                CType(tabelle.Cell(1, ix + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpMsg
+                If i >= 8 And i <= 10 Then
+                    ' 1. Buchstabe muss WingDings sein
+                    Try
+                        Dim len As Integer = tmpMsg.Length
+                        Dim oldName As String = CType(tabelle.Cell(1, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=len - 1, Length:=1).Font.Name
+
+                        CType(tabelle.Cell(1, ix + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=1, Length:=1).Font.Name = "Wingdings 3"
+                        CType(tabelle.Cell(1, ix + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Characters(Start:=2, Length:=len - 1).Font.Name = oldName
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+            End If
+
         Next
 
 
@@ -9643,26 +10034,30 @@ Public Module testModule
                 With tabelle
                     Select Case hproj.ampelStatus
                         Case 0
-                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 CInt(awinSettings.AmpelNichtBewertet)
                         Case 1
-                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 CInt(awinSettings.AmpelGruen)
                         Case 2
-                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 CInt(awinSettings.AmpelGelb)
                         Case 3
-                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 CInt(awinSettings.AmpelRot)
                         Case Else
-                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 CInt(awinSettings.AmpelNichtBewertet)
 
                     End Select
 
                     CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.getShapeText
-                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
-                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
+
+                    If is12Col Then
+                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.VorlagenName
+                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.businessUnit
+                    End If
+
 
                 End With
 
@@ -9685,11 +10080,12 @@ Public Module testModule
 
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    If awinSettings.compareWithStandardVariant Then
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="", _
+                    ' If awinSettings.compareWithStandardVariant Then
+                    If hproj.projectType = ptPRPFType.project And awinSettings.compareWithStandardVariant Then
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     Else
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     End If
 
@@ -9726,27 +10122,25 @@ Public Module testModule
                 summenArray(2) = summenArray(2) + hSonstKosten
                 summenArray(3) = summenArray(3) + hErgebnis
 
-
-
                 If IsNothing(vproj) Then
                     ' dieses Projekt hat noch keine Historie 
 
                     With tabelle
-                        CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
+                        CType(.Cell(zeile, 5 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
 
                         If showPersonalBedarf Then
-                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString(formatierung)
+                            CType(.Cell(zeile, 6 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hpersonalBedarf.ToString(formatierung)
                         Else
-                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString(formatierung)
+                            CType(.Cell(zeile, 6 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hPersKosten.ToString(formatierung)
                         End If
 
-                        CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
-                        CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
+                        CType(.Cell(zeile, 7 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
+                        CType(.Cell(zeile, 8 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
 
-                        CType(.Cell(zeile, 9), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
-                        CType(.Cell(zeile, 10), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
-                        CType(.Cell(zeile, 11), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
-                        CType(.Cell(zeile, 12), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
+                        CType(.Cell(zeile, 9 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        CType(.Cell(zeile, 10 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        CType(.Cell(zeile, 11 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+                        CType(.Cell(zeile, 12 - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "n.v."
                     End With
 
 
@@ -9765,25 +10159,27 @@ Public Module testModule
                     ' angezeigt werden nur positive oder negative Abweichungen 
 
                     'If System.Math.Abs(hErloes - vErloes) > 1 Then
+
+                    spalte = 5 - colDelta
                     If System.Math.Abs(hErloes - vErloes) > 0.5 Then
 
                         With tabelle
-                            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErloes.ToString(formatierung) & "/" & _
-                                    hErloes.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung) & "/" &
+                                    vErloes.ToString(formatierung)
                             'CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                         End With
 
                         If trendShapesAreDefined Then
                             If hErloes > vErloes Then
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, steigendShape, farbePositiv, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, steigendShape, farbePositiv, True)
                             Else
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 5, fallendShape, farbeNegativ, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, fallendShape, farbeNegativ, True)
                             End If
                         End If
 
                     Else
                         With tabelle
-                            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErloes.ToString(formatierung)
                         End With
 
                     End If
@@ -9798,71 +10194,74 @@ Public Module testModule
                         vValue = vPersKosten
                     End If
 
+                    spalte = 6 - colDelta
                     If System.Math.Abs(hValue - vValue) > 0.5 Then
 
                         With tabelle
-                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vValue.ToString(formatierung) & "/" & _
-                                    hValue.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString(formatierung) & "/" &
+                                    vValue.ToString(formatierung)
                             'CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                         End With
 
                         If trendShapesAreDefined Then
                             If hPersKosten > vPersKosten Then
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, steigendShape, farbeNegativ, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, steigendShape, farbeNegativ, True)
                             Else
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 6, fallendShape, farbePositiv, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, fallendShape, farbePositiv, True)
                             End If
                         End If
 
                     Else
 
                         With tabelle
-                            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hValue.ToString(formatierung)
                         End With
 
                     End If
 
+                    spalte = 7 - colDelta
                     If System.Math.Abs(hSonstKosten - vSonstKosten) > 0.5 Then
 
                         With tabelle
-                            CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vSonstKosten.ToString(formatierung) & "/" & _
-                                    hSonstKosten.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung) & "/" &
+                                    vSonstKosten.ToString(formatierung)
                             'CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                         End With
 
                         If trendShapesAreDefined Then
                             If hSonstKosten > vSonstKosten Then
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, steigendShape, farbeNegativ, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, steigendShape, farbeNegativ, True)
                             Else
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 7, fallendShape, farbePositiv, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, fallendShape, farbePositiv, True)
                             End If
                         End If
 
                     Else
                         With tabelle
-                            CType(.Cell(zeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hSonstKosten.ToString(formatierung)
                         End With
                     End If
 
+                    spalte = 8 - colDelta
                     If System.Math.Abs(hErgebnis - vErgebnis) > 0.5 Then
 
                         With tabelle
-                            CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vErgebnis.ToString(formatierung) & "/" & _
-                                    hErgebnis.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung) & "/" &
+                                    vErgebnis.ToString(formatierung)
                             'CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.MarginRight = 0.7 * rightMargin
                         End With
 
                         If trendShapesAreDefined Then
                             If hErgebnis > vErgebnis Then
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, steigendShape, farbePositiv, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, steigendShape, farbePositiv, True)
                             Else
-                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, 8, fallendShape, farbeNegativ, True)
+                                Call zeichneTrendSymbol(pptSlide, tabelle, zeile, spalte, fallendShape, farbeNegativ, True)
                             End If
                         End If
 
                     Else
                         With tabelle
-                            CType(.Cell(zeile, 8), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hErgebnis.ToString(formatierung)
                         End With
                     End If
 
@@ -9870,7 +10269,7 @@ Public Module testModule
 
                     With tabelle
                         ' Ergebnis-Delta ? 
-                        spalte = 9
+                        spalte = 9 - colDelta
                         deltaValue = hErgebnis - vErgebnis
 
                         summenArray(4) = summenArray(4) + deltaValue
@@ -9879,23 +10278,23 @@ Public Module testModule
 
                         If deltaValue > 0 Then
                             If deltaValue > 0.1 * hErloes Then
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 awinSettings.AmpelGruen
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB =
                                     RGB(249, 249, 249)
                                 CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                             End If
                         ElseIf deltaValue * -1 > 0.1 * hErloes Then
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 awinSettings.AmpelRot
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB =
                                     RGB(249, 249, 249)
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                         End If
 
                         ' Termin-Delta? 
-                        spalte = 10
+                        spalte = 10 - colDelta
                         deltaValue = DateDiff(DateInterval.Day, vproj.endeDate, hproj.endeDate)
                         CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
@@ -9905,9 +10304,9 @@ Public Module testModule
 
                             If deltaValue > 14 Then
 
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 awinSettings.AmpelRot
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB =
                                     RGB(249, 249, 249)
                                 CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
@@ -9915,9 +10314,9 @@ Public Module testModule
 
                         ElseIf deltaValue * -1 > 14 Then
 
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 awinSettings.AmpelGruen
-                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                            CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB =
                                     RGB(249, 249, 249)
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
@@ -9925,7 +10324,7 @@ Public Module testModule
 
 
                         ' Deliverables-Delta ?
-                        spalte = 11
+                        spalte = 11 - colDelta
                         Dim hAnzahl As Integer = hproj.getDeliverables.Count
                         Dim vAnzahl As Integer = vproj.getDeliverables.Count
                         deltaValue = hAnzahl - vAnzahl
@@ -9939,17 +10338,17 @@ Public Module testModule
                             CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaValue.ToString("#0")
 
                             If deltaValue > 0 Then
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                 awinSettings.AmpelGruen
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB =
                                     RGB(249, 249, 249)
                                 CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                             ElseIf deltaValue = 0 Then
                                 ' nichts tun ...
                             Else
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.Fill.ForeColor.RGB =
                                     awinSettings.AmpelRot
-                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = _
+                                CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB =
                                     RGB(249, 249, 249)
                                 CType(.Cell(zeile, spalte), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                             End If
@@ -9958,7 +10357,7 @@ Public Module testModule
 
 
                         ' TimeStamp des Vergleichsprojektes
-                        spalte = 12
+                        spalte = 12 - colDelta
                         If Not IsNothing(vproj) Then
                             Dim timeStamp As Date = vproj.timeStamp
                             If istVglMitKonkretemDatum Then
@@ -10012,16 +10411,16 @@ Public Module testModule
 
                     If i <= 3 Then
 
-                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
-                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
-                        CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                        CType(.Cell(zeile, 5 + i - coldelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+                        CType(.Cell(zeile, 5 + i - coldelta), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
+                        CType(.Cell(zeile, 5 + i - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                     ElseIf vergleichstyp <> PThis.current Then
 
                         If i <> 6 Or atLeastOneDeliverable Then
-                            CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
-                            CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
-                            CType(.Cell(zeile, 5 + i), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
+                            CType(.Cell(zeile, 5 + i - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+                            CType(.Cell(zeile, 5 + i - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
+                            CType(.Cell(zeile, 5 + i - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
                         End If
 
                     End If
