@@ -22735,12 +22735,12 @@ Public Module awinGeneralModules
 
         Dim newWB As Excel.Workbook
 
-        Dim considerAll As Boolean = (roleCostCollection.Count = 0)
+        Dim considerAll As Boolean = True
 
         Dim roleCollection As New Collection
         Dim costCollection As New Collection
 
-        If Not considerAll Then
+        If Not IsNothing(roleCostCollection) Then
             For Each itemName As String In roleCostCollection
                 If RoleDefinitions.containsName(itemName) Then
                     If Not roleCollection.Contains(itemName) Then
@@ -22822,11 +22822,6 @@ Public Module awinGeneralModules
             ' jetzt wird die Zeile 1 geschrieben 
             Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
 
-            ' jetzt wird der Name hinzugefügt
-            Dim tmpRange1 As Excel.Range = CType(.Cells(1, startSpalteDaten), Global.Microsoft.Office.Interop.Excel.Range)
-            Dim tmpRange2 As Excel.Range = CType(.Cells(1, startSpalteDaten + bis - von), Global.Microsoft.Office.Interop.Excel.Range)
-            newWB.Names.Add(Name:="StartData", RefersToR1C1:=tmpRange1)
-            newWB.Names.Add(Name:="EndData", RefersToR1C1:=tmpRange2)
 
             ' jetzt werden die Überschriften des Datenbereichs geschrieben 
             For m As Integer = 0 To bis - von
@@ -23737,6 +23732,7 @@ Public Module awinGeneralModules
                 hproj = kvp.Value
                 Dim budget As Double, pk As Double, ok As Double, rk As Double, pl As Double
                 Dim alterPlanStand As Date = Date.MinValue
+                Dim standVom As String = ""
 
                 If considerAll Then
                     Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
@@ -23744,7 +23740,6 @@ Public Module awinGeneralModules
                     ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
                     Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     vorgabeProj = request.retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
-                    Dim standVom As String = ""
 
                     ' Berechnung budget/Vorgabe 
                     budget = 0.0
@@ -23800,7 +23795,7 @@ Public Module awinGeneralModules
                     CType(.Cells(zeile, 8), Excel.Range).NumberFormat = "0.00"
                     If Not considerAll Then
                         ' damit wird klar, von wann diese Version ist
-                        CType(.Cells(zeile, 8), Excel.Range).AddComment(alterPlanStand.ToLongDateString)
+                        CType(.Cells(zeile, 8), Excel.Range).AddComment(standvom)
                     End If
 
 
