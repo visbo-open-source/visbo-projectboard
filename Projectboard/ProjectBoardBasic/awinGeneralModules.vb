@@ -23730,200 +23730,229 @@ Public Module awinGeneralModules
         'End Try
 
         zeile = 2
+        Dim hproj As clsProjekt = Nothing
+        Try
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                hproj = kvp.Value
+                Dim budget As Double, pk As Double, ok As Double, rk As Double, pl As Double
+                Dim alterPlanStand As Date = Date.MinValue
 
-            Dim budget As Double, pk As Double, ok As Double, rk As Double, pl As Double
-            Dim alterPlanStand As Date = Date.MinValue
+                If considerAll Then
+                    Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
+                Else
+                    ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
+                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    vorgabeProj = request.retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
+                    Dim standVom As String = ""
 
-            If considerAll Then
-                Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
-            Else
-                ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                vorgabeProj = request.retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
+                    ' Berechnung budget/Vorgabe 
+                    budget = 0.0
+                    pk = 0.0
+                    ok = 0.0
+                    alterPlanStand = Date.MinValue
 
+                    If Not IsNothing(vorgabeProj) Then
+                        For Each itemName As String In roleCollection
+                            budget = budget + vorgabeProj.getPersonalKosten(itemName, True).Sum
+                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                        Next
 
-                ' Berechnung budget/Vorgabe 
-                budget = 0.0
-                pk = 0.0
-                ok = 0.0
-                If Not IsNothing(vorgabeProj) Then
-                    For Each itemName As String In roleCollection
-                        budget = budget + vorgabeProj.getPersonalKosten(itemName, True).Sum
-                        pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
-                    Next
+                        For Each itemName As String In costCollection
+                            budget = budget + vorgabeProj.getKostenBedarfNew(itemName).Sum
+                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                        Next
 
-                    For Each itemName As String In costCollection
-                        budget = budget + vorgabeProj.getKostenBedarfNew(itemName).Sum
-                        ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
-                    Next
-                End If
+                        ' welcher Planungs-Stand ist das ? 
+                        alterPlanStand = vorgabeProj.timeStamp
+                        standVom = alterPlanStand.ToShortDateString
+                    Else
+                        ' es gibt kein Vorgabe Proj
+                        budget = 0
+                        standVom = "n.a"
 
-                ' Berechnung Personalkosten
-                pl = budget - (pk + ok)
+                        For Each itemName As String In roleCollection
+                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                        Next
 
-                ' welcher Planungs-Stand ist das ? 
-                alterPlanStand = vorgabeProj.timeStamp
+                        For Each itemName As String In costCollection
+                            ok = ok + kvp.Value.getKostenBedarfNew(itemName).Sum
+                        Next
 
-            End If
-
-
-            With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-                CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.name
-                CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
-                CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.kundenNummer
-                CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.leadPerson
-                CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.businessUnit
-                CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.startDate
-                CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.endeDate
-
-                CType(.Cells(zeile, 8), Excel.Range).Value = budget
-                CType(.Cells(zeile, 8), Excel.Range).NumberFormat = "0.00"
-                If Not considerAll Then
-                    ' damit wird klar, von wann diese Version ist
-                    CType(.Cells(zeile, 8), Excel.Range).AddComment(alterPlanStand.ToLongDateString)
-                End If
-
-
-                CType(.Cells(zeile, 9), Excel.Range).Value = pk
-                CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
-
-                CType(.Cells(zeile, 10), Excel.Range).Value = ok
-                CType(.Cells(zeile, 10), Excel.Range).NumberFormat = "0.00"
-
-                CType(.Cells(zeile, 11), Excel.Range).Value = pl
-                CType(.Cells(zeile, 11), Excel.Range).NumberFormat = "0.00"
-
-                CType(.Cells(zeile, 12), Excel.Range).Value = kvp.Value.StrategicFit
-                CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.Risiko
-                CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.fullDescription
-
-                spalte = startOfCustomFields
-                For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
-
-                    Dim qualifier As String = cstField.Value.name
-                    Dim ausgabe As String = ""
-                    If cstField.Value.type = ptCustomFields.Str Then
-                        ausgabe = kvp.Value.getCustomSField(qualifier)
-                    ElseIf cstField.Value.type = ptCustomFields.Dbl Then
-                        ausgabe = kvp.Value.getCustomDField(qualifier).ToString
-                    ElseIf cstField.Value.type = ptCustomFields.bool Then
-                        ausgabe = kvp.Value.getCustomBField(qualifier).ToString
                     End If
 
-                    If IsNothing(ausgabe) Then
-                        ausgabe = ""
+                    ' Berechnung Personalkosten
+                    pl = budget - (pk + ok)
+
+                End If
+
+
+                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                    CType(.Cells(zeile, 1), Excel.Range).Value = kvp.Value.name
+                    CType(.Cells(zeile, 2), Excel.Range).Value = kvp.Value.variantName
+                    CType(.Cells(zeile, 3), Excel.Range).Value = kvp.Value.kundenNummer
+                    CType(.Cells(zeile, 4), Excel.Range).Value = kvp.Value.leadPerson
+                    CType(.Cells(zeile, 5), Excel.Range).Value = kvp.Value.businessUnit
+                    CType(.Cells(zeile, 6), Excel.Range).Value = kvp.Value.startDate
+                    CType(.Cells(zeile, 7), Excel.Range).Value = kvp.Value.endeDate
+
+                    CType(.Cells(zeile, 8), Excel.Range).Value = budget
+                    CType(.Cells(zeile, 8), Excel.Range).NumberFormat = "0.00"
+                    If Not considerAll Then
+                        ' damit wird klar, von wann diese Version ist
+                        CType(.Cells(zeile, 8), Excel.Range).AddComment(alterPlanStand.ToLongDateString)
                     End If
 
-                    CType(.Cells(zeile, spalte), Excel.Range).Value = ausgabe
-                    spalte = spalte + 1
-                Next
 
-            End With
-            zeile = zeile + 1
-        Next
+                    CType(.Cells(zeile, 9), Excel.Range).Value = pk
+                    CType(.Cells(zeile, 9), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 10), Excel.Range).Value = ok
+                    CType(.Cells(zeile, 10), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 11), Excel.Range).Value = pl
+                    CType(.Cells(zeile, 11), Excel.Range).NumberFormat = "0.00"
+
+                    CType(.Cells(zeile, 12), Excel.Range).Value = kvp.Value.StrategicFit
+                    CType(.Cells(zeile, 13), Excel.Range).Value = kvp.Value.Risiko
+                    CType(.Cells(zeile, 14), Excel.Range).Value = kvp.Value.fullDescription
+
+                    spalte = startOfCustomFields
+                    For Each cstField As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
+
+                        Dim qualifier As String = cstField.Value.name
+                        Dim ausgabe As String = ""
+                        If cstField.Value.type = ptCustomFields.Str Then
+                            ausgabe = kvp.Value.getCustomSField(qualifier)
+                        ElseIf cstField.Value.type = ptCustomFields.Dbl Then
+                            ausgabe = kvp.Value.getCustomDField(qualifier).ToString
+                        ElseIf cstField.Value.type = ptCustomFields.bool Then
+                            ausgabe = kvp.Value.getCustomBField(qualifier).ToString
+                        End If
+
+                        If IsNothing(ausgabe) Then
+                            ausgabe = ""
+                        End If
+
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = ausgabe
+                        spalte = spalte + 1
+                    Next
+
+                End With
+                zeile = zeile + 1
+            Next
+        Catch ex As Exception
+            Call MsgBox("Problems with " & hproj.name)
+        End Try
+
 
         ' jetzt müssen die Spaltenbreiten und sonstigen Werte gesetzt werden ...
         Dim letzteSpalte As Integer = startOfCustomFields + customFieldDefinitions.liste.Count - 1
-        With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-            For s As Integer = 1 To letzteSpalte
+        Dim curSpalte As Integer = -1
 
-                If s = 1 Then
-                    ' Projekt-Name
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 54
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                ElseIf s = 2 Then
-                    ' Varianten-Name
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                ElseIf s = 3 Then
-                    ' Projekt-Nummer
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                ElseIf s = 4 Then
-                    ' Verantwortlich
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                ElseIf s = 5 Then
-                    ' Business Unit
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                ElseIf s = 6 Then
-                    ' Projekt-Start
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                ElseIf s = 7 Then
-                    ' Projekt-Ende
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                ElseIf s = 8 Then
-                    ' Budget bzw. erste Planung 
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                ElseIf s = 9 Then
-                    ' summe Personalkosten
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+        Try
+            With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                For s As Integer = 1 To letzteSpalte
+                    curSpalte = s
+                    If s = 1 Then
+                        ' Projekt-Name
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 54
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 2 Then
+                        ' Varianten-Name
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 3 Then
+                        ' Projekt-Nummer
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        'CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    ElseIf s = 4 Then
+                        ' Verantwortlich
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 5 Then
+                        ' Business Unit
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    ElseIf s = 6 Then
+                        ' Projekt-Start
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    ElseIf s = 7 Then
+                        ' Projekt-Ende
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                    ElseIf s = 8 Then
+                        ' Budget bzw. erste Planung 
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                    ElseIf s = 9 Then
+                        ' summe Personalkosten
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
 
-                ElseIf s = 10 Then
-                    ' summe Sonst Kosten
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                ElseIf s = 11 Then
-                    ' Profit/Loss bzw. Differenz
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
-                ElseIf s = 12 Then
-                    ' Strategie 
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
-                ElseIf s = 13 Then
-                    ' Risiko 
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
-                ElseIf s = 14 Then
-                    ' Beschreibung
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                Else
-                    ' customFields
-                    CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
-                    CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
-                End If
-                ' 
+                    ElseIf s = 10 Then
+                        ' summe Sonst Kosten
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 28
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                    ElseIf s = 11 Then
+                        ' Profit/Loss bzw. Differenz
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).IndentLevel = 2
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0.00"
+                    ElseIf s = 12 Then
+                        ' Strategie 
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
+                    ElseIf s = 13 Then
+                        ' Risiko 
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 12
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).NumberFormat = "0"
+                    ElseIf s = 14 Then
+                        ' Beschreibung
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 36
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    Else
+                        ' customFields
+                        CType(.Columns.Item(s), Excel.Range).ColumnWidth = 18
+                        CType(.Range(.Cells(2, s), .Cells(zeile - 1, s)), Excel.Range).WrapText = False
+                    End If
+                    ' 
 
 
-            Next
+                Next
 
-            ' jetzt muss noch die erste Zeile formatiert werden 
-            CType(.Rows.Item(1), Excel.Range).RowHeight = 45
-            CType(.Rows.Item(1), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignTop
-            CType(.Rows.Item(1), Excel.Range).Interior.Color = RGB(220, 220, 220)
+                ' jetzt muss noch die erste Zeile formatiert werden 
+                CType(.Rows.Item(1), Excel.Range).RowHeight = 45
+                CType(.Rows.Item(1), Excel.Range).VerticalAlignment = Excel.XlVAlign.xlVAlignTop
+                CType(.Rows.Item(1), Excel.Range).Interior.Color = RGB(220, 220, 220)
 
-        End With
+            End With
+        Catch ex As Exception
+            Call MsgBox("Problem with Column: " & curSpalte)
+        End Try
+
 
 
 
