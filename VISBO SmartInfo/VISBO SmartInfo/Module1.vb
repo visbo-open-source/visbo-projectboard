@@ -6301,6 +6301,15 @@ Module Module1
             End If
             'End If
 
+            ' jetzt noch das InfoPane aktualisieren
+            If Not IsNothing(selectedPlanShapes) Then
+                If selectedPlanShapes.Count >= 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    If isRelevantMSPHShape(tmpShape) Then
+                        Call aktualisiereInfoPane(tmpShape)
+                    End If
+                End If
+            End If
 
 
         End If
