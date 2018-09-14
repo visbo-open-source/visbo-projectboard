@@ -92,11 +92,11 @@ Public Class frmStoreReportProfil
     Private Sub defineFrmButtonVisibility()
 
         If awinSettings.englishLanguage Then
-            Me.Text = "Store as Report Profile"
+            Me.Text = "Save as Report Profile"
             Label1.Text = "please provide name and short description for the report profile"
             nameLabel.Text = "Name"
             descLabel.Text = "Description"
-            OKButton.Text = "Store"
+            OKButton.Text = "Save"
             AbbruchButton.Text = "Cancel"
 
         End If

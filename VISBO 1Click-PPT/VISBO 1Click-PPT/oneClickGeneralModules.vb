@@ -2043,9 +2043,9 @@ Module oneClickGeneralModules
                 If dbUsername = "" Or dbPasswort = "" Then
 
                     ' ur: 23.01.2015: Abfragen der Login-Informationen
-                    'loginErfolgreich = loginProzedur()
                     loginErfolgreich = logInToMongoDB(True)
 
+                    My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
                     If awinSettings.rememberUserPwd Then
                         My.Settings.userNamePWD = awinSettings.userNamePWD
                     Else
@@ -2069,19 +2069,37 @@ Module oneClickGeneralModules
 
                             If speichernInDBOk Then
                                 If messageZeigen Then
-                                    If Not identical Then
-                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                    If awinSettings.englishLanguage Then
+                                        If Not identical Then
+                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' stored" & vbLf & "version stored @ " & Date.Now.ToString)
+                                        Else
+                                            Call MsgBox("Project is identical to last database version" & vbLf & "no new version stored ")
+                                        End If
                                     Else
-                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                        If Not identical Then
+                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' gespeichert" & vbLf & "gespeicherte Version @ " & Date.Now.ToString)
+                                        Else
+                                            Call MsgBox("Projekt  ist identisch mit der aktuellen Version in der DB" & vbLf & "keine neue Version gespeichert")
+                                        End If
                                     End If
                                 End If
                             Else
-                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("Error saving this project")
+                                Else
+                                    Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                End If
+
                             End If
 
 
                         Catch ex As Exception
-                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                            If awinSettings.englishLanguage Then
+                                Throw New ArgumentException("Error saving the project: " & hproj.name)
+                            Else
+                                Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                            End If
+
                         End Try
 
                     End If
@@ -2100,21 +2118,42 @@ Module oneClickGeneralModules
                             If speichernInDBOk Then
 
                                 If messageZeigen Then
-                                    If Not identical Then
-                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' wurde erfolgreich in der Datenbank gespeichert")
+                                    If awinSettings.englishLanguage Then
+                                        If Not identical Then
+                                            Call MsgBox("Project '" & hproj.name & hprojVariante & "' stored" & vbLf & "version stored @ " & Date.Now.ToString)
+                                        Else
+                                            Call MsgBox("Project is identical to last database version" & vbLf & "no new version stored ")
+                                        End If
                                     Else
-                                        Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' ist identisch mit der aktuellen Version in der DB")
+                                        If Not identical Then
+                                            Call MsgBox("Projekt '" & hproj.name & hprojVariante & "' gespeichert" & vbLf & "gespeicherte Version @ " & Date.Now.ToString)
+                                        Else
+                                            Call MsgBox("Projekt  ist identisch mit der aktuellen Version in der DB" & vbLf & "keine neue Version gespeichert")
+                                        End If
                                     End If
                                 End If
 
                             Else
-                                Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("Error saving this project")
+                                Else
+                                    Call MsgBox("Fehler beim Speichern des aktuell geladenen Projektes")
+                                End If
                             End If
                         Catch ex As Exception
-                            Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                            If awinSettings.englishLanguage Then
+                                Throw New ArgumentException("Error saving the project: " & hproj.name)
+                            Else
+                                Throw New ArgumentException("Fehler beim Speichern von Projekt: " & hproj.name)
+                            End If
                         End Try
                     Else
-                        Call MsgBox("LOGIN fehlerhaft ...")
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("LOGIN failure ...")
+                        Else
+                            Call MsgBox("LOGIN fehlerhaft ...")
+                        End If
+
                     End If
 
                 End If

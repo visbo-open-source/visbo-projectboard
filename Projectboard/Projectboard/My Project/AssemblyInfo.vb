@@ -10,8 +10,8 @@ Imports System.Security
 ' Die Werte der Assemblyattribute überprüfen
 
 <Assembly: AssemblyTitle("ExcelWorkbook1")> 
-<Assembly: AssemblyDescription("")> 
-<Assembly: AssemblyCompany("")> 
+<Assembly: AssemblyDescription("")>
+<Assembly: AssemblyCompany("VISBO GmbH")>
 <Assembly: AssemblyProduct("ExcelWorkbook1")> 
 <Assembly: AssemblyCopyright("Copyright ©  2013")> 
 <Assembly: AssemblyTrademark("")> 

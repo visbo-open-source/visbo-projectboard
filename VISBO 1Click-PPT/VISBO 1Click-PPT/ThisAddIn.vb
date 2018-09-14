@@ -26,39 +26,41 @@ Public Class ThisAddIn
 
 
 
-        Try
+        ''Try
 
-            awinSettings.databaseURL = My.Settings.mongoDBURL
-            awinSettings.databaseName = My.Settings.mongoDBname
-            awinSettings.globalPath = My.Settings.globalPath
-            awinSettings.awinPath = My.Settings.awinPath
-            awinSettings.visboTaskClass = My.Settings.TaskClass
-            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-            awinSettings.visboAmpel = My.Settings.VISBOAmpel
-            awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
-            awinSettings.visboresponsible = My.Settings.VISBOresponsible
-            awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
-            awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-            awinSettings.visboDebug = My.Settings.VISBODebug
-            awinSettings.visboMapping = My.Settings.VISBOMapping
-            awinSettings.userNamePWD = My.Settings.userNamePWD
+        ''    awinSettings.databaseURL = My.Settings.mongoDBURL
+        ''    awinSettings.databaseName = My.Settings.mongoDBname
+        ''    awinSettings.globalPath = My.Settings.globalPath
+        ''    awinSettings.awinPath = My.Settings.awinPath
+        ''    awinSettings.visboTaskClass = My.Settings.TaskClass
+        ''    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+        ''    awinSettings.visboAmpel = My.Settings.VISBOAmpel
+        ''    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+        ''    awinSettings.visboresponsible = My.Settings.VISBOresponsible
+        ''    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+        ''    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+        ''    awinSettings.visboDebug = My.Settings.VISBODebug
+        ''    awinSettings.visboMapping = My.Settings.VISBOMapping
+        ''    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+        ''    If awinSettings.rememberUserPwd Then
+        ''        awinSettings.userNamePWD = My.Settings.userNamePWD
+        ''    End If
 
+        ''    dbUsername = ""
+        ''    dbPasswort = ""
 
-            dbUsername = ""
-            dbPasswort = ""
+        ''    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+        ''    Call awinsetTypen("BHTC")
 
-            '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-            Call awinsetTypen("BHTC")
+        ''    StartofCalendar = StartofCalendar.AddMonths(-12)
 
-            StartofCalendar = StartofCalendar.AddMonths(-12)
+        ''Catch ex As Exception
 
-        Catch ex As Exception
+        ''    Call MsgBox(ex.Message)
 
-            Call MsgBox(ex.Message)
+        ''Finally
 
-        Finally
-
-        End Try
+        ''End Try
 
     End Sub
 
@@ -71,10 +73,10 @@ Public Class ThisAddIn
                     ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
 
                     If awinSettings.visboDebug Then
-                        Call MsgBox("Anzahl Missing-Milestones: " & missingMilestoneDefinitions.Count & vbLf & _
+                        Call MsgBox("Anzahl Missing-Milestones: " & missingMilestoneDefinitions.Count & vbLf &
                                "Anzahl Missing-Phasen: " & missingPhaseDefinitions.Count)
                     End If
-                   
+
                     appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
                 End If
 
@@ -83,19 +85,25 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
                 If awinSettings.rememberUserPwd Then
                     My.Settings.userNamePWD = awinSettings.userNamePWD
                 Else
                     My.Settings.userNamePWD = ""
                 End If
-
+                My.Settings.Save()
 
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
 
             End If
         Catch ex As Exception
-            Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
+            If awinSettings.englishLanguage Then
+                Throw New ArgumentException("Error closing the Customization-Files")
+            Else
+                Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
+            End If
+
         End Try
     End Sub
 
@@ -119,17 +127,17 @@ Public Class ThisAddIn
                     Call logfileSchliessen()
                 End If
 
-                If awinSettings.rememberUserPwd Then
-                    My.Settings.userNamePWD = awinSettings.userNamePWD
-                Else
-                    My.Settings.userNamePWD = ""
-                End If
+
                 'appInstance.ScreenUpdating = True
                 'Application.Quit()
 
             End If
         Catch ex As Exception
-            Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
+            If awinSettings.englishLanguage Then
+                Throw New ArgumentException("Error closing the Customization-Files")
+            Else
+                Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
+            End If
         End Try
     End Sub
 End Class

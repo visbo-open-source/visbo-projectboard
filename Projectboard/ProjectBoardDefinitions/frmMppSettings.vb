@@ -14,7 +14,7 @@
             shwPhaseDate.Text = "annotate Phase-Date"
             useAbbrev.Text = "use Abbreviation"
             ShwMilestoneText.Text = "annotate Milestone-Name"
-            ShwMilestoneDate.Text = "annotate Milestone-Name"
+            ShwMilestoneDate.Text = "annotate Milestone-Date"
             KwInMilestone.Text = "annotate CW in Milestone"
             shwVerticals.Text = "draw vertical Lines"
             shwHorizontals.Text = "draw horizontal Lines"

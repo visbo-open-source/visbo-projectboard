@@ -84,7 +84,7 @@ Public Class frmNameSelection
 
                 Else
                     If awinSettings.englishLanguage Then
-                        .OKButton.Text = "Store"
+                        .OKButton.Text = "Save"
                     Else
                         .OKButton.Text = "Speichern"
                     End If

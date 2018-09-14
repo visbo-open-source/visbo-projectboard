@@ -11,8 +11,8 @@ Imports System.Security.Principal
 Imports System.Diagnostics
 Imports System.Drawing
 Imports System.Windows
-
-
+Imports System.Net
+Imports System.IO
 
 'TODO: Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
 
@@ -112,7 +112,7 @@ Imports System.Windows
 
         With storeConstellationFrm
             If awinSettings.englishLanguage Then
-                .Text = "store Portfolio(s) in Datenbase"
+                .Text = "save Portfolio(s) to Datenbase"
             Else
                 .Text = "Portfolio(s) in Datenbank speichern"
             End If
@@ -2077,7 +2077,7 @@ Imports System.Windows
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "letzte Report Definition als Vorlage speichern"
                 Else
-                    tmpLabel = "Store last Report definition as pre-defined"
+                    tmpLabel = "Save last Report definition as pre-defined"
                 End If
 
             Case "PT1G1B5" ' Report-Profil ausführen
@@ -2622,7 +2622,7 @@ Imports System.Windows
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Speichern in DB"
                 Else
-                    tmpLabel = "Store to Database"
+                    tmpLabel = "Save to Database"
                 End If
 
             Case "Pt5G2B1" ' Portfolio/s
@@ -2643,7 +2643,7 @@ Imports System.Windows
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Alles Speichern"
                 Else
-                    tmpLabel = "Store everything"
+                    tmpLabel = "Save everything"
                 End If
 
             Case "PT5G3" ' Löschen
@@ -12035,6 +12035,30 @@ Imports System.Windows
         enableOnUpdate = True
 
     End Sub
+    Public Sub PTWebRequest(control As IRibbonControl)
+        Dim bytearray() As Byte
+        Dim array As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
+        'Dim request As WebRequest = WebRequest.Create("http://visbo.myhome-server.de:3484/token/user/login")
+        Dim request As WebRequest = WebRequest.Create("http://localhost:3484/token/user/login")
+        request.Method = "POST"
+        request.ContentLength = array.Length
+        request.ContentType = "application/json"
+
+        ReDim bytearray(array.Length)
+        bytearray = UnicodeStringToBytes(array)
+        Try
+            Dim dataStream As Stream = request.GetRequestStream()
+            dataStream.Write(bytearray, 0, bytearray.Length)
+            dataStream.Close()
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+        End Try
+
+        Dim response As WebResponse = request.GetResponse()
+    End Sub
+    Private Function UnicodeStringToBytes(ByVal str As String) As Byte()
+        Return System.Text.Encoding.Unicode.GetBytes(str)
+    End Function
 #End Region
 
 #Region "Hilfsprogramme"

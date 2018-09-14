@@ -86,7 +86,7 @@
               <!--label="Import Excel"-->
               <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Folder 'Import\RPLAN-Excel' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
               <!--label="Import MS Project"-->
-              <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="false" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
+              <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
               <!--label="Import RPLAN RXF"-->
               <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
               <menuSeparator id="menuSeparator1"/>
@@ -415,10 +415,11 @@
           <!--label="Report Sprache"-->
           <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
           <!--label="Report Sprache"-->
-          <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>-->
+          <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
           <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
-          <!--<button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
-          <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />-->
+          <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
+          <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
+          <button id="PTWebRequest" label="Create Web-Request"  onAction ="PTWebRequest" />
         </group>
       </tab>
       <!--label="Help"-->

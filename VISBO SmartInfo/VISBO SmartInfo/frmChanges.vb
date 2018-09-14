@@ -1,5 +1,6 @@
 ﻿Public Class frmChanges
 
+    Friend changeliste As clsChangeListe
 
     Private Sub frmChanges_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
         changeFrm = Nothing
@@ -59,10 +60,17 @@
 
     End Sub
 
+    ''' <summary>
+    ''' baut die Liste für die Changes auf.
+    ''' </summary>
     Private Sub listeAufbauen()
+
+        ' auf die changeliste der aktuellen Slide setzen
+        changeliste = chgeLstListe(currentSlide.SlideID)
+
         Dim tmpPreviousVname As String = previousVariantName, tmpCurrentVname As String = currentVariantname
         Dim showVariantMode As Boolean = False
-        If currentVariantname <> previousVariantName And _
+        If currentVariantname <> previousVariantName And
             previousTimeStamp = currentTimestamp Then
 
             showVariantMode = True
@@ -84,9 +92,9 @@
                 changeListTable.Columns(3).HeaderText = "Version " & previousTimeStamp.ToShortDateString
             End If
         End If
-        
 
-        Dim anzChangeItems As Integer = changeListe.getChangeListCount
+
+        Dim anzChangeItems As Integer = changeliste.getChangeListCount
 
 
         If anzChangeItems > 0 Then
@@ -95,7 +103,7 @@
 
             For i As Integer = 0 To anzChangeItems - 1
 
-                Dim currentItem As clsChangeItem = changeListe.getExplanationFromChangeList(i + 1)
+                Dim currentItem As clsChangeItem = changeliste.getExplanationFromChangeList(i + 1)
 
                 With currentItem
                     If .vName = "" Then
@@ -121,7 +129,7 @@
                     changeListTable.Rows(i).Cells(4).Value = .diffInDays
                 End With
 
-                changeListTable.Rows(i).Tag = changeListe.getShapeNameFromChangeList(i + 1)
+                changeListTable.Rows(i).Tag = changeliste.getShapeNameFromChangeList(i + 1)
 
             Next
         End If

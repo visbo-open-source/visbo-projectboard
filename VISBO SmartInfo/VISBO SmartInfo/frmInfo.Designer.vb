@@ -36,32 +36,36 @@ Partial Class frmInfo
         Me.showAbbrev = New System.Windows.Forms.CheckBox()
         Me.writeText = New System.Windows.Forms.Button()
         Me.uniqueNameRequired = New System.Windows.Forms.CheckBox()
+        Me.showKW = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'positionDateButton
         '
         Me.positionDateButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_south
-        Me.positionDateButton.Location = New System.Drawing.Point(455, 64)
+        Me.positionDateButton.Location = New System.Drawing.Point(569, 80)
+        Me.positionDateButton.Margin = New System.Windows.Forms.Padding(4)
         Me.positionDateButton.Name = "positionDateButton"
-        Me.positionDateButton.Size = New System.Drawing.Size(30, 26)
+        Me.positionDateButton.Size = New System.Drawing.Size(38, 32)
         Me.positionDateButton.TabIndex = 58
         Me.positionDateButton.UseVisualStyleBackColor = True
         '
         'deleteDate
         '
         Me.deleteDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteDate.Location = New System.Drawing.Point(425, 64)
+        Me.deleteDate.Location = New System.Drawing.Point(531, 80)
+        Me.deleteDate.Margin = New System.Windows.Forms.Padding(4)
         Me.deleteDate.Name = "deleteDate"
-        Me.deleteDate.Size = New System.Drawing.Size(30, 26)
+        Me.deleteDate.Size = New System.Drawing.Size(38, 32)
         Me.deleteDate.TabIndex = 57
         Me.deleteDate.UseVisualStyleBackColor = True
         '
         'writeDate
         '
         Me.writeDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeDate.Location = New System.Drawing.Point(485, 64)
+        Me.writeDate.Location = New System.Drawing.Point(606, 80)
+        Me.writeDate.Margin = New System.Windows.Forms.Padding(4)
         Me.writeDate.Name = "writeDate"
-        Me.writeDate.Size = New System.Drawing.Size(30, 26)
+        Me.writeDate.Size = New System.Drawing.Size(38, 32)
         Me.writeDate.TabIndex = 56
         Me.writeDate.UseVisualStyleBackColor = True
         '
@@ -70,35 +74,39 @@ Partial Class frmInfo
         Me.elemDate.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.elemDate.Enabled = False
         Me.elemDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.elemDate.Location = New System.Drawing.Point(12, 65)
+        Me.elemDate.Location = New System.Drawing.Point(15, 81)
+        Me.elemDate.Margin = New System.Windows.Forms.Padding(4)
         Me.elemDate.Name = "elemDate"
-        Me.elemDate.Size = New System.Drawing.Size(407, 22)
+        Me.elemDate.Size = New System.Drawing.Size(508, 26)
         Me.elemDate.TabIndex = 55
         '
         'positionTextButton
         '
         Me.positionTextButton.Image = Global.VISBO_SmartInfo.My.Resources.Resources.layout_north
-        Me.positionTextButton.Location = New System.Drawing.Point(455, 32)
+        Me.positionTextButton.Location = New System.Drawing.Point(569, 40)
+        Me.positionTextButton.Margin = New System.Windows.Forms.Padding(4)
         Me.positionTextButton.Name = "positionTextButton"
-        Me.positionTextButton.Size = New System.Drawing.Size(30, 26)
+        Me.positionTextButton.Size = New System.Drawing.Size(38, 32)
         Me.positionTextButton.TabIndex = 54
         Me.positionTextButton.UseVisualStyleBackColor = True
         '
         'deleteText
         '
         Me.deleteText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.selection_delete
-        Me.deleteText.Location = New System.Drawing.Point(425, 32)
+        Me.deleteText.Location = New System.Drawing.Point(531, 40)
+        Me.deleteText.Margin = New System.Windows.Forms.Padding(4)
         Me.deleteText.Name = "deleteText"
-        Me.deleteText.Size = New System.Drawing.Size(30, 26)
+        Me.deleteText.Size = New System.Drawing.Size(38, 32)
         Me.deleteText.TabIndex = 53
         Me.deleteText.UseVisualStyleBackColor = True
         '
         'showOrginalName
         '
         Me.showOrginalName.AutoSize = True
-        Me.showOrginalName.Location = New System.Drawing.Point(250, 10)
+        Me.showOrginalName.Location = New System.Drawing.Point(309, 12)
+        Me.showOrginalName.Margin = New System.Windows.Forms.Padding(4)
         Me.showOrginalName.Name = "showOrginalName"
-        Me.showOrginalName.Size = New System.Drawing.Size(92, 17)
+        Me.showOrginalName.Size = New System.Drawing.Size(121, 21)
         Me.showOrginalName.TabIndex = 52
         Me.showOrginalName.Text = "Original-Name"
         Me.showOrginalName.UseVisualStyleBackColor = True
@@ -109,18 +117,20 @@ Partial Class frmInfo
         Me.elemName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.elemName.Enabled = False
         Me.elemName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.elemName.Location = New System.Drawing.Point(12, 33)
+        Me.elemName.Location = New System.Drawing.Point(15, 41)
+        Me.elemName.Margin = New System.Windows.Forms.Padding(4)
         Me.elemName.Name = "elemName"
         Me.elemName.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal
-        Me.elemName.Size = New System.Drawing.Size(407, 22)
+        Me.elemName.Size = New System.Drawing.Size(508, 26)
         Me.elemName.TabIndex = 49
         '
         'showAbbrev
         '
         Me.showAbbrev.AutoSize = True
-        Me.showAbbrev.Location = New System.Drawing.Point(12, 10)
+        Me.showAbbrev.Location = New System.Drawing.Point(15, 12)
+        Me.showAbbrev.Margin = New System.Windows.Forms.Padding(4)
         Me.showAbbrev.Name = "showAbbrev"
-        Me.showAbbrev.Size = New System.Drawing.Size(77, 17)
+        Me.showAbbrev.Size = New System.Drawing.Size(98, 21)
         Me.showAbbrev.TabIndex = 51
         Me.showAbbrev.Text = "Abkürzung"
         Me.showAbbrev.UseVisualStyleBackColor = True
@@ -128,28 +138,42 @@ Partial Class frmInfo
         'writeText
         '
         Me.writeText.Image = Global.VISBO_SmartInfo.My.Resources.Resources.pen_blue
-        Me.writeText.Location = New System.Drawing.Point(485, 32)
+        Me.writeText.Location = New System.Drawing.Point(606, 40)
+        Me.writeText.Margin = New System.Windows.Forms.Padding(4)
         Me.writeText.Name = "writeText"
-        Me.writeText.Size = New System.Drawing.Size(30, 26)
+        Me.writeText.Size = New System.Drawing.Size(38, 32)
         Me.writeText.TabIndex = 50
         Me.writeText.UseVisualStyleBackColor = True
         '
         'uniqueNameRequired
         '
         Me.uniqueNameRequired.AutoSize = True
-        Me.uniqueNameRequired.Location = New System.Drawing.Point(112, 10)
+        Me.uniqueNameRequired.Location = New System.Drawing.Point(132, 12)
+        Me.uniqueNameRequired.Margin = New System.Windows.Forms.Padding(4)
         Me.uniqueNameRequired.Name = "uniqueNameRequired"
-        Me.uniqueNameRequired.Size = New System.Drawing.Size(109, 17)
+        Me.uniqueNameRequired.Size = New System.Drawing.Size(142, 21)
         Me.uniqueNameRequired.TabIndex = 59
         Me.uniqueNameRequired.Text = "eindeutiger Name"
         Me.uniqueNameRequired.UseVisualStyleBackColor = True
         '
+        'showKW
+        '
+        Me.showKW.AutoSize = True
+        Me.showKW.Location = New System.Drawing.Point(458, 12)
+        Me.showKW.Margin = New System.Windows.Forms.Padding(4)
+        Me.showKW.Name = "showKW"
+        Me.showKW.Size = New System.Drawing.Size(70, 21)
+        Me.showKW.TabIndex = 60
+        Me.showKW.Text = "Week "
+        Me.showKW.UseVisualStyleBackColor = True
+        '
         'frmInfo
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(532, 101)
+        Me.ClientSize = New System.Drawing.Size(665, 126)
+        Me.Controls.Add(Me.showKW)
         Me.Controls.Add(Me.uniqueNameRequired)
         Me.Controls.Add(Me.positionDateButton)
         Me.Controls.Add(Me.deleteDate)
@@ -162,6 +186,7 @@ Partial Class frmInfo
         Me.Controls.Add(Me.showAbbrev)
         Me.Controls.Add(Me.writeText)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmInfo"
         Me.Text = "Beschriften"
         Me.TopMost = True
@@ -181,4 +206,5 @@ Partial Class frmInfo
     Friend WithEvents showAbbrev As System.Windows.Forms.CheckBox
     Friend WithEvents writeText As System.Windows.Forms.Button
     Friend WithEvents uniqueNameRequired As System.Windows.Forms.CheckBox
+    Friend WithEvents showKW As Windows.Forms.CheckBox
 End Class
