@@ -306,7 +306,7 @@ Public Class Request
             If projectname = "" Then
 
 
-                VRScache.VPsN = GETallVP(aktVCid)
+                VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
 
                 ' schleife über alle VisboProjects
                 For Each kvp As KeyValuePair(Of String, clsVP) In VRScache.VPsN
@@ -578,7 +578,7 @@ Public Class Request
             End If
 
             ' Cache aktualisieren
-            VRScache.VPsN = GETallVP(aktVCid)
+            VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
 
         Catch ex As Exception
             Throw New ArgumentException("storeProjectToDB:" & ex.Message)
@@ -840,13 +840,13 @@ Public Class Request
 
         Dim result As Boolean = False
 
-
         Try
-            ' TODO: ur: type muss im ReST-Server auf unsere Enumeration geändert werden: 
+            ' angepasst: 20180914: ur: type muss im ReST-Server auf unsere Enumeration geändert werden: 
             '           ptPRPFType.portfolio = 1
             '           ptPRPFType.project = 0
             '           ptPRPFType.projectTemplate = 2
-            type = 1
+
+            type = ptPRPFType.project
             Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, type)
 
             If wpItem.isProtected Then
@@ -874,7 +874,6 @@ Public Class Request
     Public Function getWriteProtection(ByVal pName As String, ByVal vName As String, Optional type As Integer = ptPRPFType.project) As clsWriteProtectionItem
         Dim result As New clsWriteProtectionItem
         Try
-            type = 1  ' TODO: aktuell in ReSTServer für Projekt
             Dim vp As clsVP = GETvpid(pName, type)
             result.pvName = calcProjektKey(pName, vName)
             result.isProtected = False
@@ -973,12 +972,14 @@ Public Class Request
         Dim timestamp As Date = Date.Now
         Dim c As New clsConstellation
 
-        intermediate = GETallVP(aktVCid)
+        intermediate = GETallVP(aktVCid, ptPRPFType.portfolio)
         For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
 
-            ' ur:TODO  vpType korrigieren, beim Server anders als im Client
-            'If kvp.Value.vpType = PTProjektType.portfolio Then
-            If kvp.Value.vpType = 2 Then
+            ' ur:20180914: angepasst:  vpType korrigieren, beim Server anders als im Client
+            '                           If kvp.Value.vpType = 2 Then
+
+            If kvp.Value.vpType = ptPRPFType.portfolio Then
+
 
                 Dim vpid As String = kvp.Value._id
                 Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp)
@@ -1025,9 +1026,10 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New List(Of clsVPf)
 
-            ' TODO: korrigieren, wenn ReST-Server geändert wurde
-            'cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
-            cVP = GETvpid(c.constellationName, vpType:=2)
+            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
+            '                       cVP = GETvpid(c.constellationName, vpType:=2)
+            cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
+
 
             cVPf = clsConst2clsVPf(c)
 
@@ -1046,9 +1048,6 @@ Public Class Request
                 cVP.vcid = aktVCid
                 ' VisboProject-Type - Portfolio
                 cVP.vpType = ptPRPFType.portfolio
-                ' ur:TODO: ??? darf nicht bleiben
-                '          aktuell ist im Server ProjektTemplate=0, Projekt=1, Portfolio=2
-                cVP.vpType = 2
 
                 ' Erzeugen des VisboPortfolios in der Collection visboproject im akt. VisboCenter
                 newVP = POSTOneVP(cVP)
@@ -1100,9 +1099,10 @@ Public Class Request
             Dim newVP As New List(Of clsVP)
             Dim newVPf As New SortedList(Of Date, clsVPf)
 
-            ' TODO: korrigieren, wenn ReST-Server geändert wurde
-            'cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
-            cVP = GETvpid(c.constellationName, vpType:=2)
+            ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
+            'cVP = GETvpid(c.constellationName, vpType:=2)
+            cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
+
             newVPf = GETallVPf(cVP._id, Date.Now)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
@@ -1188,7 +1188,7 @@ Public Class Request
             If VRScache.VPsN.Count > 0 Then
                 vplist = VRScache.VPsN
             Else
-                vplist = GETallVP(aktVCid)
+                vplist = GETallVP(aktVCid, Nothing)
             End If
 
             For Each kvp As KeyValuePair(Of String, clsVP) In vplist
@@ -1659,10 +1659,10 @@ Public Class Request
                         vpid = vp._id
                         aktvp = vp
                     Else
-                        VRScache.VPsN = GETallVP(aktVCid)
+                        VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
                     End If
                 Else
-                    VRScache.VPsN = GETallVP(aktVCid)
+                    VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
                 End If
 
                 anzLoop = anzLoop + 1
@@ -1698,8 +1698,14 @@ Public Class Request
                         ' pName zu angegebene vpid herausfinden
                         pName = VRScache.VPsId(vpid).name
                     Else
-                        VRScache.VPsN = GETallVP(aktVCid)
-                        pName = VRScache.VPsId(vpid).name
+                        VRScache.VPsN = GETallVP(aktVCid, 3)
+
+                        Try
+                            pName = VRScache.VPsId(vpid).name
+                        Catch ex As Exception
+                            pName = ""
+                        End Try
+
                     End If
 
                     anzLoop = anzLoop + 1
@@ -1811,7 +1817,7 @@ Public Class Request
     ''' <param name="vcid">vcid = "": es werden alle VisboProjects dieses Users geholt
     '''                    sonst die visboProjects vom Visbocenter vcid</param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
-    Private Function GETallVP(ByVal vcid As String) As SortedList(Of String, clsVP)
+    Private Function GETallVP(ByVal vcid As String, Optional ByVal vptype As Integer = ptPRPFType.project) As SortedList(Of String, clsVP)
 
         Dim result As New SortedList(Of String, clsVP)          ' sortiert nach pname
         Dim secondResult As New SortedList(Of String, clsVP)    ' sortiert nach vpid
@@ -1823,9 +1829,24 @@ Public Class Request
             ' URL zusammensetzen
             If vcid = "" Then
                 serverUriString = serverUriName & typeRequest
+
+                If vptype <> ptPRPFType.project And vptype <> ptPRPFType.portfolio Then
+                    '' kein bestimmter vp-Type gefragt
+                Else
+                    serverUriString = serverUriString & "?vpType=" & vptype.ToString
+                End If
+
             Else
                 serverUriString = serverUriName & typeRequest & "?vcid=" & vcid
+
+                If vptype <> ptPRPFType.project And vptype <> ptPRPFType.portfolio Then
+                    '' kein bestimmter vp-Type gefragt
+                Else
+                    serverUriString = serverUriString & "&vpType=" & vptype.ToString
+                End If
+
             End If
+
             Dim serverUri As New Uri(serverUriString)
 
             Dim datastr As String = ""
@@ -1842,28 +1863,70 @@ Public Class Request
             If webVPantwort.state = "success" Then
                 ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
 
-                ' die erhaltenen Projekte werden in einer sortierten Liste gecacht
-                For Each vp In webVPantwort.vp
+                Select Case vptype
 
-                    result.Add(vp.name, vp)
+                    Case ptPRPFType.portfolio
 
-                    ' VPs nach Id sortiert gecacht
-                    If Not VRScache.VPsId.ContainsKey(vp._id) Then
-                        VRScache.VPsId.Add(vp._id, vp)
-                    Else
-                        VRScache.VPsId.Remove(vp._id)
-                        VRScache.VPsId.Add(vp._id, vp)
-                    End If
+                        For Each vp In webVPantwort.vp
+                            result.Add(vp.name, vp)
+                        Next
 
 
-                    ' Cache-Struktur aufbauen für vpv, sortiert nach vpid
-                    If Not VRScache.VPvs.ContainsKey(vp._id) Then
-                        Dim leereListe As New SortedList(Of String, clsVarTs)
-                        VRScache.VPvs.Add(vp._id, leereListe)
+                    Case ptPRPFType.project
 
-                    End If
+                        ' die erhaltenen Projekte werden in einer sortierten Liste gecacht
+                        For Each vp In webVPantwort.vp
 
-                Next
+                            result.Add(vp.name, vp)
+
+                            ' VPs nach Id sortiert gecacht
+                            If Not VRScache.VPsId.ContainsKey(vp._id) Then
+                                VRScache.VPsId.Add(vp._id, vp)
+                            Else
+                                VRScache.VPsId.Remove(vp._id)
+                                VRScache.VPsId.Add(vp._id, vp)
+                            End If
+
+
+                            ' Cache-Struktur aufbauen für vpv, sortiert nach vpid
+                            If Not VRScache.VPvs.ContainsKey(vp._id) Then
+                                Dim leereListe As New SortedList(Of String, clsVarTs)
+                                VRScache.VPvs.Add(vp._id, leereListe)
+
+                            End If
+
+                        Next
+
+                    Case ptPRPFType.projectTemplate
+
+
+                    Case Else
+
+                        ' die erhaltenen Projekte/Portfolio-Projekte werden in einer sortierten Liste gecacht
+                        For Each vp In webVPantwort.vp
+
+                            result.Add(vp.name, vp)
+
+                            ' VPs nach Id sortiert gecacht
+                            If Not VRScache.VPsId.ContainsKey(vp._id) Then
+                                VRScache.VPsId.Add(vp._id, vp)
+                            Else
+                                VRScache.VPsId.Remove(vp._id)
+                                VRScache.VPsId.Add(vp._id, vp)
+                            End If
+
+
+                            ' Cache-Struktur aufbauen für vpv, sortiert nach vpid
+                            If Not VRScache.VPvs.ContainsKey(vp._id) Then
+                                Dim leereListe As New SortedList(Of String, clsVarTs)
+                                VRScache.VPvs.Add(vp._id, leereListe)
+
+                            End If
+
+                        Next
+
+
+                End Select
 
                 GETallVP = result
 
@@ -3069,9 +3132,11 @@ Public Class Request
             With result
                 .name = c.constellationName
                 ._id = ""
-                ' TODO: ReST-Server muss auf ptPRPFType-Enumeration angepasst werden
-                '.vpid = GETvpid(c.constellationName, vpType:=ptPRPFType.portfolio)._id
-                .vpid = GETvpid(c.constellationName, vpType:=2)._id
+
+                ' angepasst: 20180914: ReST-Server muss auf ptPRPFType-Enumeration angepasst werden
+                '.vpid = GETvpid(c.constellationName, vpType:=2)._id
+
+                .vpid = GETvpid(c.constellationName, vpType:=ptPRPFType.portfolio)._id
 
                 .timestamp = DateTimeToISODate(Date.Now)
 
