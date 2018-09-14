@@ -24596,8 +24596,8 @@ Public Module awinGeneralModules
 
                                     End With
 
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0.0")
-                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0")
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("##,##0.#")
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
 
@@ -24628,9 +24628,12 @@ Public Module awinGeneralModules
 
 
                                     If awinSettings.mePrzAuslastung Then
-                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0)
+                                        CType(.Cells(zeile, 7), Excel.Range).NumberFormat = "0%"
+
                                     Else
-                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0)
+                                        CType(.Cells(zeile, 7), Excel.Range).NumberFormat = "#,##0"
                                     End If
 
                                     editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
@@ -24784,8 +24787,8 @@ Public Module awinGeneralModules
 
                                     End With
 
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
-                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0  ")
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = "##,##0.0"
                                     If awinSettings.allowSumEditing Then
 
                                         With CType(.Cells(zeile, 6), Excel.Range)
@@ -24825,7 +24828,7 @@ Public Module awinGeneralModules
                                     End If
 
                                     editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
-                                    editRange.NumberFormat = Format("#####0.0")
+                                    editRange.NumberFormat = "##,##0.0"
                                 End With
 
                                 ' zusammenmischen von Schnittmenge und Prozentual-Werte 
@@ -24969,7 +24972,7 @@ Public Module awinGeneralModules
 
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
-                                            .NumberFormat = Format("######0.0  ")
+                                            .NumberFormat = "##,##0.0"
                                             .Value = ""
                                             If isProtectedbyOthers Then
                                             Else
@@ -25162,7 +25165,7 @@ Public Module awinGeneralModules
                         If awinSettings.mePrzAuslastung Then
                             tmpRange.NumberFormat = "0%"
                         Else
-                            tmpRange.NumberFormat = "######0.0"
+                            tmpRange.NumberFormat = "##,##0.#"
                         End If
 
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
@@ -25175,7 +25178,7 @@ Public Module awinGeneralModules
                             CType(tmpRange.Font, Excel.Font).Size = 9
                         End If
 
-                        tmpRange.NumberFormat = "######0.0"
+                        tmpRange.NumberFormat = "##,##0.#"
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     End If
                     isPrz = Not isPrz
