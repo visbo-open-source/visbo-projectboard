@@ -845,6 +845,7 @@ Module Module1
                     noDBAccessInPPT = True
                     awinSettings.databaseURL = .Tags.Item("DBURL")
                     awinSettings.databaseName = .Tags.Item("DBNAME")
+                    awinSettings.DBWithSSL = (.Tags.Item("DBSSL") = "True")
                 End If
 
 
@@ -1602,7 +1603,6 @@ Module Module1
                 End If
 
 
-
                 ' den Short Name behandeln ...
                 tmpName = tmpShape.Tags.Item("SN")
                 If tmpName.Trim.Length = 0 Then
@@ -1684,6 +1684,10 @@ Module Module1
                 End Try
 
             End If
+
+            ' Document Links behandeln ...
+            tmpName = tmpShape.Tags.Item("DUC")
+
 
             ' wurde das Element verschoben ? 
             ' SmartslideLists werden auch gleich mit aktualisiert ... 
@@ -2110,7 +2114,7 @@ Module Module1
         Dim detailID As Integer = -1
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim bProj As clsProjekt = Nothing ' nimmt das erste beauftragte Projekt auf ..
-
+        Dim lProj As clsProjekt = Nothing ' nimmt das zuletzt beauftragte Projekt auf 
 
         Try
 
@@ -2146,7 +2150,14 @@ Module Module1
                             'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
                             Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pName, vName, chartTyp, auswahl)
 
+                            ' bestimme den Vname aus den Tags ...
+                            ' das ist insbesondere wichtig, um bei Summary-Projekten oder Projekt-Varianten die früheren / späteren Versionen holen zu können ...
+                            If pptShape.Tags.Item("VNM").Length > 0 Then
+                                vName = pptShape.Tags.Item("VNM")
+                            End If
+
                             If pName <> "" Then
+
                                 Dim pvName As String = calcProjektKey(pName, vName)
 
                                 ' damit auch eine andere Variante gezeigt werden kann ... 
@@ -2167,11 +2178,22 @@ Module Module1
                                     ' das neue Chart ..
                                     Dim newchtobj As xlNS.ChartObject = Nothing
 
+                                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                                    Dim tmpVariantName As String = ""
+                                    If tsProj.projectType = ptPRPFType.portfolio Then
+                                        tmpVariantName = portfolioVName
+                                    End If
+
+                                    Dim qualifier1 As String = pptShape.Tags.Item("Q1")
+                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+
                                     ' jetzt das bProj (Beauftragung) holen
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name)
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
                                     Catch ex As Exception
                                         bProj = Nothing
+                                        lProj = Nothing
                                     End Try
 
 
@@ -2195,12 +2217,16 @@ Module Module1
 
                                                     ' jetzt muss das chtobj aktualisiert werden ... 
                                                     Try
+                                                        Dim a As Integer = tsProj.dauerInDays
 
                                                         If prpfTyp = ptPRPFType.project Then
 
                                                             If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
-                                                                Dim a As Integer = tsProj.dauerInDays
-                                                                Call updatePPTBalkenOfProject(tsProj, bProj, newchtobj, prcTyp, auswahl)
+                                                                Call updatePPTBalkenOfProject(tsProj, bProj, newchtobj, prcTyp, auswahl, qualifier2)
+
+                                                            ElseIf chartTyp = PTprdk.PersonalBalken2 Or chartTyp = PTprdk.KostenBalken2 Then
+                                                                ' Aktualisieren der Personal- bzw. Kosten-Pies ...
+                                                                Call updatePPTBalkenOfProject(tsProj, lProj, newchtobj, prcTyp, auswahl, qualifier2)
 
                                                             ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
                                                                 ' Aktualisieren der Personal- bzw. Kosten-Pies ...
@@ -2218,13 +2244,25 @@ Module Module1
                                                                 Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
 
                                                             ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or
-                                                            chartTyp = PTprdk.SollIstPersonalkostenC Or
-                                                            chartTyp = PTprdk.SollIstSonstKostenC Or
-                                                            chartTyp = PTprdk.SollIstRolleC Or
-                                                            chartTyp = PTprdk.SollIstKostenartC Then
+                                                                chartTyp = PTprdk.SollIstPersonalkostenC Or
+                                                                chartTyp = PTprdk.SollIstSonstKostenC Or
+                                                                chartTyp = PTprdk.SollIstRolleC Or
+                                                                chartTyp = PTprdk.SollIstKostenartC Then
+
                                                                 ' Aktualisieren der Strategie-Charts
-                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, "", True)
+                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, qualifier2, True)
+
+                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC2 Or
+                                                                chartTyp = PTprdk.SollIstPersonalkostenC2 Or
+                                                                chartTyp = PTprdk.SollIstSonstKostenC2 Or
+                                                                chartTyp = PTprdk.SollIstRolleC2 Or
+                                                                chartTyp = PTprdk.SollIstKostenartC2 Then
+                                                                ' Aktualisieren der Strategie-Charts
+                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, lProj, auswahl, qualifier2, True)
+
                                                             End If
+
+
 
                                                         ElseIf prpfTyp = ptPRPFType.portfolio Then
 
@@ -2319,13 +2357,58 @@ Module Module1
 
                         If Not IsNothing(tsProj) Then
 
+                            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                            Dim tmpVariantName As String = ""
+                            If tsProj.projectType = ptPRPFType.portfolio Then
+                                tmpVariantName = portfolioVName
+                            End If
+
                             If bigType = ptReportBigTypes.components Then
                                 Call updatePPTComponent(tsProj, pptShape, detailID)
 
                             ElseIf bigType = ptReportBigTypes.tables Then
 
-                                If detailID = ptReportTables.prMilestones Then
+                                If detailID = PTpptTableTypes.prZiele Then
                                     Call updatePPTProjektTabelleZiele(pptShape, tsProj)
+
+                                ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
+                                    Try
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+
+                                        Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
+
+                                        Dim q1 As String = pptShape.Tags.Item("Q1")
+                                        Dim q2 As String = pptShape.Tags.Item("Q2")
+                                        Dim nids As String = pptShape.Tags.Item("NIDS")
+
+                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
+                                                                         toDoCollection, q1, q2)
+
+                                    Catch ex As Exception
+                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                        bProj = Nothing
+                                        lProj = Nothing
+                                    End Try
+
+                                ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
+                                    Try
+                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
+
+                                        Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
+
+                                        Dim q1 As String = pptShape.Tags.Item("Q1")
+                                        Dim q2 As String = pptShape.Tags.Item("Q2")
+                                        Dim nids As String = pptShape.Tags.Item("NIDS")
+
+                                        Call zeichneTableMilestoneAPVCV(pptShape, tsProj, bProj, lProj,
+                                                                         toDoCollection, q1, q2)
+
+                                    Catch ex As Exception
+                                        Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
+                                        bProj = Nothing
+                                    End Try
                                 End If
 
                             End If
@@ -2815,7 +2898,8 @@ Module Module1
                             ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                             Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                       ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
-                                                      ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
+                                                      ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
+
                         End If
 
 
@@ -2847,7 +2931,8 @@ Module Module1
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                                 Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ms.shortName, ms.originalName, bsn, bln, Nothing,
                                                           ms.getDate, ms.getBewertung(1).colorIndex, ms.getBewertung(1).description,
-                                                          ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone)
+                                                          ms.getAllDeliverables("#"), ms.verantwortlich, ms.percentDone, ms.DocURL)
+
                             End If
 
 
@@ -2875,7 +2960,8 @@ Module Module1
                                 ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                                 Call addSmartPPTShapeInfo(tmpShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln, ph.getStartDate,
                                                              ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
-                                                             ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
+                                                             ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
+
                             End If
 
                         End If
@@ -5373,8 +5459,8 @@ Module Module1
                         Dim elemBC As String = origShape.Tags.Item("BC")
                         ' jetzt müssen die Tags-Informationen des Meilensteines gesetzt werden 
                         Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, cMilestone.shortName, cMilestone.originalName, bsn, bln, Nothing,
-                                                  shadowDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
-                                                  cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone)
+                                                  cMilestone.getDate, cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description,
+                                                  cMilestone.getAllDeliverables("#"), cMilestone.verantwortlich, cMilestone.percentDone, cMilestone.DocURL)
 
 
                         If Not versionAlreadyNotedAtMS Then
@@ -5402,7 +5488,8 @@ Module Module1
                         ' jetzt müssen die Tags-Informationen der Phase gesetzt werden 
                         Call addSmartPPTShapeInfo(shadowShape, elemBC, elemName, ph.shortName, ph.originalName, bsn, bln,
                                                   ph.getStartDate, ph.getEndDate, ph.ampelStatus, ph.ampelErlaeuterung,
-                                                  ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone)
+                                                  ph.getAllDeliverables("#"), ph.verantwortlich, ph.percentDone, ph.DocURL)
+
                     End If
 
                     If Not versionAlreadyNotedAtPH Then
@@ -5863,6 +5950,10 @@ Module Module1
                             .eleName.Text = bestimmeSymbolName(tmpShape)
                             .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
 
+                            ' Dokumenten Links ausblenden 
+                            .setLinksToVisible(False)
+                            .setLinkValues(tmpShape)
+
                         End With
                     Else
                         With ucPropertiesView
@@ -5899,6 +5990,11 @@ Module Module1
 
                             .eleRespons.Text = bestimmeElemVE(tmpShape)
 
+                            ' die Link Buttons grundsätzlich einblenden 
+                            .setLinksToVisible(True)
+                            .setLinkValues(tmpShape)
+
+
                         End With
                     End If
 
@@ -5922,6 +6018,14 @@ Module Module1
                         .eleAmpelText.Text = ""
                         .eleAmpel.BackColor = Drawing.Color.Silver
                         .percentDone.Text = ""
+
+                        .documentsLink = ""
+                        .myDocumentsLink = ""
+
+                        ' Dokumenten Links ausblenden 
+                        .setLinksToVisible(False)
+                        .setLinkValues(Nothing)
+
                     End With
 
                 End If
@@ -5935,6 +6039,10 @@ Module Module1
                     .eleAmpelText.Text = ""
                     .eleRespons.Text = ""
                     .percentDone.Text = ""
+
+                    .documentsLink = ""
+                    .myDocumentsLink = ""
+
                 End With
 
             End If
@@ -6483,6 +6591,15 @@ Module Module1
 
             End Try
 
+            ' jetzt noch das InfoPane aktualisieren
+            If Not IsNothing(selectedPlanShapes) Then
+                If selectedPlanShapes.Count >= 1 Then
+                    Dim tmpShape As PowerPoint.Shape = selectedPlanShapes.Item(1)
+                    If isRelevantMSPHShape(tmpShape) Then
+                        Call aktualisiereInfoPane(tmpShape)
+                    End If
+                End If
+            End If
 
 
         End If

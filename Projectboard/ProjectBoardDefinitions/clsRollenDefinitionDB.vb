@@ -1,5 +1,7 @@
 ﻿Public Class clsRollenDefinitionDB
     ' bei subRoleIDs eigentlich integer, string), muss wegen Mongo auf String geändert werden 
+    ' tk 29.5.18 in den SubroleID values steht jetzt im String nicht mehr der Name, der ist ohnehin redundant zur UID, sondern der Prozentsatz, wieviel die Rolle zur Kapa der Sammelrolle beiträgt 
+    ' wenn ein nicht als double interpretierbarer Wert drinsteht (=alte Speicherungen, dann wird der Wert auf 1.0 gesetzt 
     Public subRoleIDs As SortedList(Of String, String)
     Public uid As Integer
     Public name As String
@@ -23,7 +25,18 @@
                 ' wegen Mongo müssen die Keys in String Format sein ... 
                 Dim maxNr As Integer = 1000
                 For Each kvp As KeyValuePair(Of String, String) In Me.subRoleIDs
-                    .addSubRole(CInt(kvp.Key), kvp.Value, maxNr)
+                    Dim tmpValue As Double = 1.0
+                    If IsNumeric(kvp.Value) Then
+                        tmpValue = CDbl(kvp.Value)
+                        If tmpValue >= 0 And tmpValue <= 1.0 Then
+                            ' alles ok
+                        Else
+                            tmpValue = 1.0
+                        End If
+                    Else
+                        tmpValue = 1.0
+                    End If
+                    .addSubRole(CInt(kvp.Key), tmpValue)
                 Next
             End If
             .UID = Me.uid
@@ -170,8 +183,8 @@
         With roleDef
 
             If .getSubRoleCount >= 1 Then
-                For Each kvp As KeyValuePair(Of Integer, String) In .getSubRoleIDs
-                    Me.subRoleIDs.Add(CStr(kvp.Key), kvp.Value)
+                For Each kvp As KeyValuePair(Of Integer, Double) In .getSubRoleIDs
+                    Me.subRoleIDs.Add(CStr(kvp.Key), kvp.Value.ToString)
                 Next
             End If
 

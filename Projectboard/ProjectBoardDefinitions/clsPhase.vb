@@ -21,6 +21,12 @@ Public Class clsPhase
     Private _appearance As String
     Private _color As Integer
 
+    ' die Dokumenten Url für den Meilenstein
+    Private _docURL As String
+
+    ' die Applikations-ID mit der die Dok-Url geöffnet werden kann / soll
+    Private _docUrlAppID As String
+
     ' wer ist für die Phase, die Ergebnisse und Einhaltung der Ressourcen verantwortlich? 
     Private _verantwortlich As String
     ' wird benötigt, um bei Optimierungs-Läufen einen Tryout Wert zu haben ..
@@ -41,6 +47,92 @@ Public Class clsPhase
     Private _allMilestones As List(Of clsMeilenstein)
     Private _allRoles As List(Of clsRolle)
     Private _allCosts As List(Of clsKostenart)
+
+    ''' <summary>
+    ''' löscht alle Rollen der Phase
+    ''' </summary>
+    Public Sub clearRoles()
+        _allRoles.Clear()
+    End Sub
+
+    ''' <summary>
+    ''' entfernt die Rolle mit Name rolename aus der Phase
+    ''' wenn die nicht als Rollendefinition gar nicht existiert, gibt es eine Exception
+    ''' andernfalls, wenn Rolle nur nicht in der Phase vorkommt, gibt es keine Meldung 
+    ''' 
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    Public Sub deleteRole(ByVal roleName As String)
+
+        If RoleDefinitions.containsName(roleName) Then
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allRoles.Count - 1
+                If _allRoles.Item(ix).name = roleName Then
+                    found = True
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            If found Then
+                _allRoles.RemoveAt(ix)
+            End If
+        Else
+            'Fehler ...
+            Dim errmsg As String
+            If awinSettings.englishLanguage Then
+                errmsg = "role unknown: " & roleName
+            Else
+                errmsg = "unbekannte Rolle: " & roleName
+            End If
+            Throw New ArgumentException(errmsg)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt die Kostenart mit Name costname aus der Phase
+    ''' wenn die als Kostenartdefinition gar nicht existiert, gibt es eine Exception
+    ''' andernfalls, wenn Kostenart nur nicht in der Phase vorkommt, gibt es keine Meldung 
+    ''' </summary>
+    ''' <param name="costname"></param>
+    Public Sub deleteCost(ByVal costname As String)
+        If CostDefinitions.containsName(costname) Then
+            Dim ix As Integer = 0
+            Dim found As Boolean = False
+
+            While Not found And ix <= _allCosts.Count - 1
+                If _allCosts.Item(ix).name = costname Then
+                    found = True
+                Else
+                    ix = ix + 1
+                End If
+            End While
+
+            If found Then
+                _allCosts.RemoveAt(ix)
+            End If
+        Else
+            'Fehler ...
+            Dim errmsg As String
+            If awinSettings.englishLanguage Then
+                errmsg = "role unknown: " & costname
+            Else
+                errmsg = "unbekannte Rolle: " & costname
+            End If
+            Throw New ArgumentException(errmsg)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht alle Kostenbedarfe der Phase
+    ''' </summary>
+    Public Sub clearCosts()
+        _allCosts.Clear()
+    End Sub
 
     ''' <summary>
     ''' es wird eine PercentDone Regelung eingeführt , mit der beurteilt werden kann, wie wit die Ergebnisse bereits sind  
@@ -67,6 +159,39 @@ Public Class clsPhase
         End Set
     End Property
 
+    ''' <summary>
+    ''' liest schreibt den String, der eine Dokumenten URL darstellt, wo Dokumente abgelegt sind, die zum Meilenstein gehören 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property DocURL() As String
+        Get
+            DocURL = _docURL
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _docURL = value
+            Else
+                _docURL = ""
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liest schreibt den String, der die ID der Appliaktion darstellt, mit der auf die Dokumenten Url zugegriffen werden kann 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property DocUrlAppID() As String
+        Get
+            DocUrlAppID = _docUrlAppID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _docUrlAppID = value
+            Else
+                _docUrlAppID = ""
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' summiert die tValues ab dem Start-Element in die Phasen-Xvalues 
@@ -152,24 +277,26 @@ Public Class clsPhase
                         If Me.dauerInDays = .dauerInDays And _
                             Me.startOffsetinDays = .startOffsetinDays Then
 
-                            If Me.countCosts = .countCosts And _
-                                Me.countRoles = .countRoles And _
-                                Me.countDeliverables = .countDeliverables And _
-                                Me.countMilestones = .countMilestones And _
+                            If Me.countCosts = .countCosts And
+                                Me.countRoles = .countRoles And
+                                Me.countDeliverables = .countDeliverables And
+                                Me.countMilestones = .countMilestones And
+                                Me.DocURL = .DocURL And
+                                Me.DocUrlAppID = .DocUrlAppID And
                                 Me.percentDone = .percentDone Then
                                 'ur: 20180110 Me.bewertungsCount = .bewertungsCount Then
 
-                                If Me.ampelErlaeuterung = .ampelErlaeuterung And _
+                                If Me.ampelErlaeuterung = .ampelErlaeuterung And
                                     Me.ampelStatus = .ampelStatus Then
 
-                                    If Me.shortName = .shortName And _
-                                        Me.originalName = .originalName And _
+                                    If Me.shortName = .shortName And
+                                        Me.originalName = .originalName And
                                         Me.verantwortlich = .verantwortlich Then
 
-                                        If Me.appearance = .appearance And _
-                                            Me.individualColor = .individualColor And _
-                                            Me.earliestStart = .earliestStart And _
-                                            Me.latestStart = .latestStart And _
+                                        If Me.appearance = .appearance And
+                                            Me.individualColor = .individualColor And
+                                            Me.earliestStart = .earliestStart And
+                                            Me.latestStart = .latestStart And
                                             Me.offset = .offset Then
 
                                             stillOK = True
@@ -654,8 +781,8 @@ Public Class clsPhase
 
 
         Try
-
-            projektStartdate = Me.parentProject.startDate
+            ' Änderung tk, 20.6.18 .startDate.Date um zu normieren ..
+            projektStartdate = Me.parentProject.startDate.Date
             projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
@@ -795,8 +922,8 @@ Public Class clsPhase
 
 
         Try
-
-            projektStartdate = Me.parentProject.startDate
+            ' Änderung tk 20.6.18 .startDate.Date um zu normieren 
+            projektStartdate = Me.parentProject.startDate.Date
             projektstartColumn = Me.parentProject.Start
 
             If dauer = 0 And _relEnde > 0 Then
@@ -1484,10 +1611,144 @@ Public Class clsPhase
         End Get
     End Property
 
+    ''' <summary>
+    ''' erstellt eine neue Rolle, weist der Rolle monatliche Ressourcenbedarfe zu, deren Summe dem Wert der Variable summe entspricht  
+    ''' der RoleName muss in Roledefinitions existieren , sonst gibt es eine Fehlermeldung 
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="summe"></param>
+    ''' <param name="addToExisting"></param>
+    Public Sub AddRole(ByVal roleName As String, ByVal summe As Double, ByVal addToExisting As Boolean)
+
+        Dim rSum As Double()
+        ReDim rSum(0)
+        rSum(0) = summe
+
+        Dim tmpRole As clsRolle = Me.getRole(roleName)
+        Dim xWerte As Double() = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, rSum, 1.0)
+
+        If IsNothing(tmpRole) Then
+            ' die Rolle hat bisher noch nicht existiert ...
+            Dim dimension As Integer = Me.relEnde - Me.relStart
+            tmpRole = New clsRolle(dimension)
+
+            With tmpRole
+                .RollenTyp = RoleDefinitions.getRoledef(roleName).UID
+                .Xwerte = xWerte
+            End With
+
+            ' jetzt muss die Rolle ergänzt werden 
+            _allRoles.Add(tmpRole)
+
+        Else
+            ' die Rolle hat bereits existiert 
+            If addToExisting Then
+                If tmpRole.Xwerte.Length = xWerte.Length Then
+                    ' hier dann aufsummieren 
+                    Dim oldXwerte As Double() = tmpRole.Xwerte
+                    For i As Integer = 0 To oldXwerte.Length - 1
+                        xWerte(i) = xWerte(i) + oldXwerte(i)
+                    Next
+
+                Else
+                    ' darf eigentlich nicht sein 
+                    ' Test: 
+                    'Call MsgBox("Fehler in Rollen-Zuordnung")
+                    ' es wird dann einfach gar nichts gemacht 
+                End If
+            Else
+                ' nichts weiter tun 
+            End If
+
+            tmpRole.Xwerte() = xWerte
+        End If
+
+
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Try
+            Me.parentProject.rcLists.addRP(tmpRole.RollenTyp, Me.nameID)
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+
+    ''' <summary>
+    ''' fügt der Phase die Rollen und Kosten hinzu, wie angegeben
+    ''' </summary>
+    ''' <param name="roleNames">die Namen der Rollen</param>
+    ''' <param name="roleValues">die Werte der Rollen</param>
+    ''' <param name="costNames">die Namen der Kostenarten</param>
+    ''' <param name="costValues">die Werte der Kostenarten</param>
+    ''' <param name="prozentSatz">wenn nur ein bestimmter Prozentsatz auf die Phase verteilt werden sollen; by Default 1</param>
+    Public Sub addCostsAndRoles(ByVal roleNames() As String, ByVal roleValues() As Double,
+                                ByVal costNames() As String, ByVal costValues() As Double,
+                                ByVal Optional prozentSatz As Double = 1.0)
+        Dim anzRoles As Integer
+        Dim anzCosts As Integer
+
+        Dim tmpRCvalue As Double = 0.0
+        Dim tmpRCname As String
+
+        If IsNothing(roleNames) Then
+            anzRoles = 0
+        Else
+            anzRoles = roleNames.Length
+        End If
+
+        If IsNothing(costNames) Then
+            anzCosts = 0
+        Else
+            anzCosts = costNames.Length
+        End If
+
+        For r = 0 To anzRoles - 1
+            tmpRCvalue = prozentSatz * roleValues(r)
+            tmpRCname = roleNames(r)
+            If tmpRCvalue > 0 Then
+                Me.addCostRole(tmpRCname, tmpRCvalue, True, False)
+            End If
+
+        Next
+
+        For c = 0 To anzCosts - 1
+            tmpRCvalue = prozentSatz * costValues(c)
+            tmpRCname = costNames(c)
+            If tmpRCvalue > 0 Then
+                Me.addCostRole(tmpRCname, tmpRCvalue, False, False)
+            End If
+        Next
+
+    End Sub
+
+    ''' <summary>
+    ''' fügt der aktuellen Phase eine Rolle bzw. Kostenart hinzu
+    ''' </summary>
+    ''' <param name="rcName"></param>
+    ''' <param name="summe"></param>
+    ''' <param name="isrole"></param>
+    ''' <param name="addWhenExisting"></param>
+    Public Sub addCostRole(ByVal rcName As String, ByVal summe As Double,
+                              ByVal isrole As Boolean,
+                              ByVal addWhenExisting As Boolean)
+
+
+        If isrole Then
+            ' eine Rolle wird hinzugefügt 
+            Call Me.AddRole(rcName, summe, addWhenExisting)
+
+        Else
+            ' eine Kostenart wird hinzugefügt
+            Call Me.AddCost(rcName, summe, addWhenExisting)
+        End If
+
+
+    End Sub
 
     ''' <summary>
     ''' addRole fügt die Rollen Instanz hinzu, wenn sie nicht schon existiert
-    ''' summiert die Werte zu der shon existierenden ...
+    ''' wenn sie schon existiert, dann werden die Werte zu den schon existierenden Werten addiert ...
     ''' </summary>
     ''' <param name="role"></param>
     ''' <remarks></remarks>
@@ -1532,7 +1793,12 @@ Public Class clsPhase
         End If
 
         ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-        Me.parentProject.rcLists.addRP(role.RollenTyp, Me.nameID)
+        Try
+            Me.parentProject.rcLists.addRP(role.RollenTyp, Me.nameID)
+        Catch ex As Exception
+
+        End Try
+
 
         ' '' Code vor dem 8.7.16
         ''If Not _allRoles.Contains(role) Then
@@ -2225,6 +2491,68 @@ Public Class clsPhase
     End Sub
 
     ''' <summary>
+    ''' erstellt eine neue Kostenart, weist der Kostenart monatliche Bedarfe zu, deren Summe dem Wert der Variable summe entspricht  
+    ''' </summary>
+    ''' <param name="costName"></param>
+    ''' <param name="summe"></param>
+    ''' <param name="addToExisting"></param>
+    Public Sub AddCost(ByVal costName As String, ByVal summe As Double, ByVal addToExisting As Boolean)
+
+        Dim cSum As Double()
+        ReDim cSum(0)
+        cSum(0) = summe
+
+        Dim tmpCost As clsKostenart = Me.getCost(costName)
+        Dim xWerte As Double() = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, cSum, 1.0)
+
+        If IsNothing(tmpCost) Then
+            ' die Rolle hat bisher noch nicht existiert ...
+            Dim dimension As Integer = Me.relEnde - Me.relStart
+            tmpCost = New clsKostenart(dimension)
+
+            With tmpCost
+                .KostenTyp = CostDefinitions.getCostdef(costName).UID
+                .Xwerte = xWerte
+            End With
+
+            ' jetzt muss die Rolle ergänzt werden 
+            _allCosts.Add(tmpCost)
+
+        Else
+            ' die Rolle hat bereits existiert 
+            If addToExisting Then
+                If tmpCost.Xwerte.Length = xWerte.Length Then
+                    ' hier dann aufsummieren 
+                    Dim oldXwerte As Double() = tmpCost.Xwerte
+                    For i As Integer = 0 To oldXwerte.Length - 1
+                        xWerte(i) = xWerte(i) + oldXwerte(i)
+                    Next
+
+                Else
+                    ' darf eigentlich nicht sein 
+                    ' Test: 
+                    'Call MsgBox("Fehler in Rollen-Zuordnung")
+                    ' es wird dann einfach gar nichts gemacht 
+                End If
+            Else
+                ' nichts weiter tun 
+            End If
+
+            tmpCost.Xwerte() = xWerte
+        End If
+
+
+        ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
+        Try
+            Me.parentProject.rcLists.addCP(tmpCost.KostenTyp, Me.nameID)
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+
+    ''' <summary>
     ''' entfernt alle Rollen-Instanzen mit Rollen-Name aus der Phase
     ''' </summary>
     ''' <param name="costName"></param>
@@ -2317,6 +2645,10 @@ Public Class clsPhase
         _parentProject = parent
         _vorlagenParent = Nothing
 
+        ' Vorbesetzen der Dokumenten-URL und App-ID , mit der die Dokumente bearbeitet werden können 
+        _docURL = ""
+        _docUrlAppID = ""
+
         _percentDone = 0.0
         _deliverables = New List(Of String)
 
@@ -2369,6 +2701,10 @@ Public Class clsPhase
         _nameID = ""
         _parentProject = Nothing
         _vorlagenParent = parent
+
+        ' Vorbesetzen der Dokumenten-URL und App-ID , mit der die Dokumente bearbeitet werden können 
+        _docURL = ""
+        _docUrlAppID = ""
 
         _percentDone = 0.0
         _deliverables = New List(Of String)
@@ -2452,128 +2788,131 @@ Public Class clsPhase
     ''' <remarks></remarks>
     Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
                                ByVal corrFakt As Double, ByRef newValues() As Double)
-        Dim k As Integer
-        Dim newXwerte() As Double
-        Dim gesBedarf As Double
-        Dim Rest As Integer
-        Dim hDatum As Date
-        Dim anzDaysthisMonth As Double
+        'Dim k As Integer
+        'Dim newXwerte() As Double
+        'Dim gesBedarf As Double
+        'Dim Rest As Integer
+        'Dim hDatum As Date
+        'Dim anzDaysthisMonth As Double
 
-        Try
-            ReDim newXwerte(newValues.Length - 1)
+        newValues = Me.berechneBedarfeNew(startdate, endedate, oldXwerte, corrFakt)
 
-            If corrFakt <= 0 Then
-                corrFakt = 1.0
-            End If
+        ' Änderung tk 4.6.18 die berechneBedarfeNew verwendet 
+        'Try
+        '    ReDim newXwerte(newValues.Length - 1)
 
-            gesBedarf = oldXwerte.Sum
-            gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+        '    If corrFakt <= 0 Then
+        '        corrFakt = 1.0
+        '    End If
 
-
-            If newValues.Length = oldXwerte.Length Then
-
-                'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
-
-                'If gesBedarf = oldXwerte.Sum Then
-                If corrFakt = 1.0 Then
-                    newXwerte = oldXwerte
-                Else
-                    For i = 0 To newValues.Length - 1
-                        newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
-                    Next
-
-                    ' jetzt ggf die Reste verteilen 
-                    Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
-
-                    k = newXwerte.Length - 1
-                    While Rest <> 0
-
-                        If Rest > 0 Then
-                            newXwerte(k) = newXwerte(k) + 1
-                            Rest = Rest - 1
-                        Else
-
-                            If newXwerte(k) - 1 >= 0 Then
-                                newXwerte(k) = newXwerte(k) - 1
-                                Rest = Rest + 1
-                            End If
-
-                        End If
-                        k = k - 1
-                        If k < 0 Then
-                            k = newXwerte.Length - 1
-                        End If
-
-                    End While
-
-                End If
-
-            Else
-
-                Dim tmpSum As Double = 0
-                For k = 0 To newXwerte.Length - 1
-
-                    If k = 0 Then
-                        ' damit ist 00:00 des Startdates gemeint 
-                        hDatum = startdate
-
-                        anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
-
-                        'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-                        'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
-
-                    ElseIf k = newXwerte.Length - 1 Then
-                        ' damit hDatum das End-Datum um 23.00 Uhr
-
-                        anzDaysthisMonth = endedate.Day
-                        'hDatum = endedate.AddHours(23)
-                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
-
-                    Else
-                        hDatum = startdate
-                        anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
-                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
-                    End If
-
-                    newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
-                    tmpSum = tmpSum + anzDaysthisMonth
-                Next k
-
-                ' Kontrolle für Test ... aChck muss immer Null sein !
-                'Dim aChck As Double = Me.dauerInDays - tmpSum
+        '    gesBedarf = oldXwerte.Sum
+        '    gesBedarf = System.Math.Round(gesBedarf * corrFakt)
 
 
-                ' Rest wird auf alle newXwerte verteilt
+        '    If newValues.Length = oldXwerte.Length Then
 
-                Rest = CInt(gesBedarf - newXwerte.Sum)
+        '        'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
 
-                k = newXwerte.Length - 1
-                While Rest <> 0
-                    If Rest > 0 Then
-                        newXwerte(k) = newXwerte(k) + 1
-                        Rest = Rest - 1
-                    Else
-                        If newXwerte(k) - 1 >= 0 Then
-                            newXwerte(k) = newXwerte(k) - 1
-                            Rest = Rest + 1
-                        End If
-                    End If
-                    k = k - 1
-                    If k < 0 Then
-                        k = newXwerte.Length - 1
-                    End If
+        '        'If gesBedarf = oldXwerte.Sum Then
+        '        If corrFakt = 1.0 Then
+        '            newXwerte = oldXwerte
+        '        Else
+        '            For i = 0 To newValues.Length - 1
+        '                newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
+        '            Next
 
-                End While
+        '            ' jetzt ggf die Reste verteilen 
+        '            Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
 
-            End If
+        '            k = newXwerte.Length - 1
+        '            While Rest <> 0
 
-            newValues = newXwerte
+        '                If Rest > 0 Then
+        '                    newXwerte(k) = newXwerte(k) + 1
+        '                    Rest = Rest - 1
+        '                Else
 
-        Catch ex As Exception
+        '                    If newXwerte(k) - 1 >= 0 Then
+        '                        newXwerte(k) = newXwerte(k) - 1
+        '                        Rest = Rest + 1
+        '                    End If
 
-            Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
+        '                End If
+        '                k = k - 1
+        '                If k < 0 Then
+        '                    k = newXwerte.Length - 1
+        '                End If
 
-        End Try
+        '            End While
+
+        '        End If
+
+        '    Else
+
+        '        Dim tmpSum As Double = 0
+        '        For k = 0 To newXwerte.Length - 1
+
+        '            If k = 0 Then
+        '                ' damit ist 00:00 des Startdates gemeint 
+        '                hDatum = startdate
+
+        '                anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+        '                'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+        '                'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+        '            ElseIf k = newXwerte.Length - 1 Then
+        '                ' damit hDatum das End-Datum um 23.00 Uhr
+
+        '                anzDaysthisMonth = endedate.Day
+        '                'hDatum = endedate.AddHours(23)
+        '                'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+        '            Else
+        '                hDatum = startdate
+        '                anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+        '                'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+        '            End If
+
+        '            newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+        '            tmpSum = tmpSum + anzDaysthisMonth
+        '        Next k
+
+        '        ' Kontrolle für Test ... aChck muss immer Null sein !
+        '        'Dim aChck As Double = Me.dauerInDays - tmpSum
+
+
+        '        ' Rest wird auf alle newXwerte verteilt
+
+        '        Rest = CInt(gesBedarf - newXwerte.Sum)
+
+        '        k = newXwerte.Length - 1
+        '        While Rest <> 0
+        '            If Rest > 0 Then
+        '                newXwerte(k) = newXwerte(k) + 1
+        '                Rest = Rest - 1
+        '            Else
+        '                If newXwerte(k) - 1 >= 0 Then
+        '                    newXwerte(k) = newXwerte(k) - 1
+        '                    Rest = Rest + 1
+        '                End If
+        '            End If
+        '            k = k - 1
+        '            If k < 0 Then
+        '                k = newXwerte.Length - 1
+        '            End If
+
+        '        End While
+
+        '    End If
+
+        '    newValues = newXwerte
+
+        'Catch ex As Exception
+
+        '    Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
+
+        'End Try
 
 
 
@@ -2599,9 +2938,10 @@ Public Class clsPhase
         Dim Rest As Integer
         Dim hDatum As Date
         Dim anzDaysthisMonth As Double
-        Dim arrayLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+        Dim newLength As Integer = getColumnOfDate(endedate) - getColumnOfDate(startdate) + 1
+        Dim gesBedarfReal As Double = 0.0
 
-        ReDim newXwerte(arrayLength - 1)
+        ReDim newXwerte(newLength - 1)
 
         ' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
         ' andernfalls ist eh schon alles richtig 
@@ -2609,49 +2949,65 @@ Public Class clsPhase
 
             Try
 
+                gesBedarfReal = oldXwerte.Sum * corrFakt
+                gesBedarf = System.Math.Round(gesBedarfReal)
 
-                gesBedarf = oldXwerte.Sum
-                If awinSettings.propAnpassRess Then
-                    ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
-                    gesBedarf = System.Math.Round(gesBedarf * corrFakt)
-                End If
 
-                If arrayLength = oldXwerte.Length Then
+                If newLength = oldXwerte.Length Then
 
-                    'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
+                    'Bedarfe-Verteilung bleibt wie gehabt ... allerdings unter Berücksichtigung corrFakt
 
-                    If Not awinSettings.propAnpassRess Then
-                        newXwerte = oldXwerte
-                    Else
-                        For i = 0 To arrayLength - 1
-                            newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
-                        Next
 
-                        ' jetzt ggf die Reste verteilen 
-                        Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
+                    For i = 0 To newLength - 1
+                        newXwerte(i) = oldXwerte(i) * corrFakt
+                    Next
 
-                        k = newXwerte.Length - 1
-                        While Rest <> 0
+                    ' jetzt ggf die Reste verteilen 
+                    Rest = CInt(gesBedarf - newXwerte.Sum)
 
-                            If Rest > 0 Then
-                                newXwerte(k) = newXwerte(k) + 1
-                                Rest = Rest - 1
-                            Else
+                    k = newXwerte.Length - 1
+                    While Rest <> 0
 
-                                If newXwerte(k) - 1 >= 0 Then
-                                    newXwerte(k) = newXwerte(k) - 1
-                                    Rest = Rest + 1
-                                End If
+                        If Rest > 0 Then
+                            newXwerte(k) = newXwerte(k) + 1
+                            Rest = Rest - 1
+                        Else
 
+                            If newXwerte(k) - 1 >= 0 Then
+                                newXwerte(k) = newXwerte(k) - 1
+                                Rest = Rest + 1
                             End If
+
+                        End If
                             k = k - 1
                             If k < 0 Then
                                 k = newXwerte.Length - 1
                             End If
 
-                        End While
+                    End While
 
+                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+                    k = newXwerte.Length - 1
+                    If newXwerte.Sum <> gesBedarfReal Then
+                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+                            ' alles ok 
+
+                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+                                k = k - 1
+                            Loop
+                            ' jetzt ist ein k erreicht 
+                            newXwerte(k) = newXwerte(k) + RestDbl
+                            If newXwerte(k) < 0 Then
+                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+                            End If
+
+                        Else
+                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
+                        End If
                     End If
+
 
                 Else
 
@@ -2710,6 +3066,28 @@ Public Class clsPhase
 
                     End While
 
+                    ' letzter Test: wenn jetzt durch die Rundungen immer noch ein abs(Rest) von < 1 ist 
+                    k = newXwerte.Length - 1
+                    If newXwerte.Sum <> gesBedarfReal Then
+                        Dim RestDbl As Double = gesBedarfReal - newXwerte.Sum
+                        If Math.Abs(RestDbl) <= 1 And Math.Abs(RestDbl) >= 0 Then
+                            ' alles ok 
+
+                            ' positioniere auf ein k, dessen Wert größer ist als abs(restdbl) 
+                            Do While newXwerte(k) < Math.Abs(RestDbl) And k > 0
+                                k = k - 1
+                            Loop
+                            ' jetzt ist ein k erreicht 
+                            newXwerte(k) = newXwerte(k) + RestDbl
+                            If newXwerte(k) < 0 Then
+                                newXwerte(k) = 0.0 ' darf eigentlich nie passieren ..
+                            End If
+
+                        Else
+                            Dim a As Double = RestDbl ' kann / darf eigentlich nicht sein 
+                        End If
+                    End If
+
                 End If
 
 
@@ -2720,7 +3098,7 @@ Public Class clsPhase
 
         Else
             ' alles auf Null setzen 
-            For ix = 0 To arrayLength - 1
+            For ix = 0 To newLength - 1
                 newXwerte(ix) = 0
             Next
         End If

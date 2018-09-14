@@ -820,7 +820,7 @@ Public Module awinDiagrams
                             With .Format.Line
                                 .DashStyle = MsoLineDashStyle.msoLineSolid
                                 .ForeColor.RGB = XlRgbColor.rgbFireBrick
-                                .Weight = 1.5
+                                .Weight = 2.5
                             End With
 
                             nr_pts = CType(.Points, Excel.Points).Count
@@ -1814,7 +1814,8 @@ Public Module awinDiagrams
         Dim positiv As Boolean = True
 
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
-        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        'budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        budgetSum = System.Math.Round(projectConstellations.getBudgetOfLoadedPortfolios, mode:=MidpointRounding.ToEven)
         pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 
@@ -2311,9 +2312,10 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="calledfromReporting"></param>
     ''' <remarks></remarks>
-    Sub awinCreateAuslastungsDiagramm(ByRef repObj As Excel.ChartObject, _
-                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
-                                          ByVal calledfromReporting As Boolean)
+    Sub awinCreateAuslastungsDiagramm(ByRef repObj As Excel.ChartObject,
+                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double,
+                                          ByVal calledfromReporting As Boolean,
+                                          Optional ByVal roleCollection As Collection = Nothing)
 
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
@@ -2334,6 +2336,9 @@ Public Module awinDiagrams
         myCollection.Add("Auslastung")
         chtobjName = calcChartKennung("pf", PTpfdk.Auslastung, myCollection)
         myCollection.Clear()
+
+        Dim roleIDs As New SortedList(Of Integer, Double)
+        Dim anzRollen As Integer
 
         Dim currentSheetName As String
 
@@ -2359,7 +2364,7 @@ Public Module awinDiagrams
                         height = .height
                     End With
                 End If
-                
+
             Catch ex As Exception
 
 
@@ -2484,7 +2489,7 @@ Public Module awinDiagrams
 
                     .ChartTitle.text = diagramTitle
                     .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                                 titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
 
@@ -2518,6 +2523,29 @@ Public Module awinDiagrams
 
                 End With
 
+
+                ' das neue 
+
+                If IsNothing(roleCollection) Then
+                    roleIDs = RoleDefinitions.getAllIDs
+                Else
+
+                    For Each tmpRoleName As String In roleCollection
+                        Dim tmpRoleIds As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(tmpRoleName, type:=PTcbr.all)
+
+                        For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIds
+                            If Not roleIDs.ContainsKey(srKvP.Key) Then
+                                roleIDs.Add(srKvP.Key, srKvP.Value)
+                            End If
+                        Next
+
+                    Next
+
+                End If
+
+                anzRollen = roleIDs.Count
+
+                ' Ende des neuen 
 
                 ' myCollection wird jetzt über alle Rollen aufgebaut ..
                 myCollection.Clear()
@@ -4350,7 +4378,9 @@ Public Module awinDiagrams
         Dim positiv As Boolean = True
 
         ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
-        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+        'budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
+
+        budgetSum = System.Math.Round(projectConstellations.getBudgetOfLoadedPortfolios, mode:=MidpointRounding.ToEven)
         pCost = System.Math.Round(ShowProjekte.getCostGpValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
         oCost = System.Math.Round(ShowProjekte.getOtherCostValuesInMonth.Sum, mode:=MidpointRounding.ToEven)
 

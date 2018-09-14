@@ -257,7 +257,6 @@
         '
         'varianten_Tab
         '
-        Me.varianten_Tab.Enabled = False
         Me.varianten_Tab.Label = "Variants"
         Me.varianten_Tab.Name = "varianten_Tab"
         Me.varianten_Tab.Visible = False
@@ -311,6 +310,7 @@
     End Sub
 
     Private Sub Ribbon1_Close(sender As Object, e As EventArgs) Handles Me.Close
+
         My.Settings.Save()
     End Sub
 

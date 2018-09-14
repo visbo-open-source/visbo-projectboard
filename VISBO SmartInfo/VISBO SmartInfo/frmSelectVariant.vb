@@ -83,6 +83,7 @@ Public Class frmSelectVariant
                 changeFrm.neuAufbau()
             End If
 
+
             Me.UseWaitCursor = False
 
         Else

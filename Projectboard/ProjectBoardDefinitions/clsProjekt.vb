@@ -1,4 +1,5 @@
-﻿Imports System.Math
+﻿Imports System
+Imports System.Math
 
 Public Class clsProjekt
     Inherits clsProjektvorlage
@@ -9,10 +10,10 @@ Public Class clsProjekt
 
 
     'Private AllPhases As List(Of clsPhase)
-    Private _relStart As Integer
+    'Private _relStart As Integer
     Private _imarge As Double
     Private _uuid As Long
-    Private _iDauer As Integer
+
     Private _StartOffset As Integer
     Private _Start As Integer
     Private _earliestStart As Integer
@@ -33,6 +34,57 @@ Public Class clsProjekt
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
 
+    ' tk ergänzt am 12.6.18 eine Kundeninterne Nummer 
+    ' kann als eine vom Kunden vergebene Kundenspezifische Projekt-Nummer benutzt werden
+    Private _kundenNummer As String = ""
+    Public Property kundenNummer As String
+        Get
+            kundenNummer = _kundenNummer
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _kundenNummer = value
+            Else
+                _kundenNummer = ""
+            End If
+        End Set
+    End Property
+
+    ' tk ergänzt am 9.6.18 actualDataUntil 
+    ' gibt an, bis zu welchem Monat einschließlich die Ressourcen und Kostenbedarfs-Werte den Ist-Daten aus der Zeiterfassung entsprechen 
+    Private _actualDataUntil As Date
+    Public Property actualDataUntil As Date
+        Get
+            actualDataUntil = _actualDataUntil
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                _actualDataUntil = value
+            Else
+                _actualDataUntil = Date.MinValue
+            End If
+        End Set
+    End Property
+
+    ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
+    Private _projectType As Integer
+    Public Property projectType As Integer
+        Get
+            projectType = _projectType
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                If value >= 0 And value <= 2 Then
+                    _projectType = value
+                Else
+                    _projectType = ptPRPFType.project
+                End If
+            Else
+                _projectType = ptPRPFType.project
+            End If
+        End Set
+    End Property
+
     ' ergänzt am 20.8.17 
     ' Marker für Projekte, um anzuzeigen, dass es zu einer bestimmten Menge gehört ; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
     Private _marker As Boolean = False
@@ -52,9 +104,9 @@ Public Class clsProjekt
             movable = _movable
         End Get
         Set(value As Boolean)
-            If _Status = ProjektStatus(PTProjektStati.geplant) Or _
-                _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or _
-                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or _
+            If _Status = ProjektStatus(PTProjektStati.geplant) Or
+                _Status = ProjektStatus(PTProjektStati.ChangeRequest) Or
+                (_Status = ProjektStatus(PTProjektStati.beauftragt) And _variantName <> "") Or
                 value = False Then
                 _movable = value
 
@@ -250,7 +302,7 @@ Public Class clsProjekt
             Dim key As String = calcProjektKey(Me.name, Me.variantName)
             currentSessionConstellation.updateTFzeile(key, _tfZeile)
 
-            Dim tmpConst As clsConstellation = _
+            Dim tmpConst As clsConstellation =
                 projectConstellations.getConstellation(currentConstellationName)
             If Not IsNothing(tmpConst) Then
                 tmpConst.updateTFzeile(key, _tfZeile)
@@ -409,43 +461,48 @@ Public Class clsProjekt
             Try
                 With vProj
 
-                    If Me.name = .name And _
-                        Me.variantName = .variantName And _
-                        Me.variantDescription = .variantDescription And _
-                        Me.description = .description Then
+                    If Me.name = .name And
+                        Me.variantName = .variantName And
+                        Me.variantDescription = .variantDescription And
+                        Me.description = .description And
+                        Me.projectType = .projectType And
+                        Me.kundenNummer = .kundenNummer Then
 
-                        If Me.startDate.Date = .startDate.Date And _
+                        If Me.startDate.Date = .startDate.Date And
                             Me.endeDate.Date = .endeDate.Date Then
 
-                            If Me.ampelStatus = .ampelStatus And _
+                            If Me.ampelStatus = .ampelStatus And
                                 Me.ampelErlaeuterung = .ampelErlaeuterung Then
 
-                                If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And _
-                                   Me.Erloes = .Erloes Then
+                                ' es soll nur auf Budget Gelichheit geprüft werden , die Verteilun g macht doch an der Stelle gar keinen Sinn .. . 
+                                ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
+                                If Me.Erloes = .Erloes Then
+                                    ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
+                                    'Me.Erloes = .Erloes Then
 
-                                    If Me.businessUnit = .businessUnit And _
-                                        Me.complexity = .complexity And _
-                                        Me.Status = .Status And _
-                                        Me.StrategicFit = .StrategicFit And _
-                                        Me.Risiko = .Risiko And _
-                                        Me.VorlagenName = .VorlagenName And _
-                                        Me.volume = .volume And _
+                                    If Me.businessUnit = .businessUnit And
+                                        Me.complexity = .complexity And
+                                        Me.Status = .Status And
+                                        Me.StrategicFit = .StrategicFit And
+                                        Me.Risiko = .Risiko And
+                                        Me.VorlagenName = .VorlagenName And
+                                        Me.volume = .volume And
                                         Me.leadPerson = .leadPerson Then
 
-                                        stillOK = True
+                                            stillOK = True
 
-                                        ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
-                                        'Me.earliestStartDate = .earliestStartDate And _
-                                        'Me.latestStartDate = .latestStartDate And _
+                                            ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
+                                            'Me.earliestStartDate = .earliestStartDate And _
+                                            'Me.latestStartDate = .latestStartDate And _
+
+                                        End If
+
 
                                     End If
-
 
                                 End If
 
                             End If
-
-                        End If
 
                     End If
 
@@ -470,9 +527,9 @@ Public Class clsProjekt
                     End If
 
                     ' jetzt die Custom Fields prüfen 
-                    If stillOK And _
-                        Me.customBoolFields.Count = .customBoolFields.Count And _
-                        Me.customDblFields.Count = .customDblFields.Count And _
+                    If stillOK And
+                        Me.customBoolFields.Count = .customBoolFields.Count And
+                        Me.customDblFields.Count = .customDblFields.Count And
                         Me.customStringFields.Count = .customStringFields.Count Then
                         ' alle sind gleich , detaillierte Überprüfung lohnt 
 
@@ -551,7 +608,7 @@ Public Class clsProjekt
     ''' <param name="maxDate"></param>
     ''' <param name="durationInDays"></param>
     ''' <remarks></remarks>
-    Public Sub getMinMaxDatesAndDuration(ByVal selPhases As Collection, ByVal selMilestones As Collection, _
+    Public Sub getMinMaxDatesAndDuration(ByVal selPhases As Collection, ByVal selMilestones As Collection,
                                              ByRef minDate As Date, ByRef maxDate As Date, ByRef durationInDays As Long)
 
         Dim earliestDate As Date = Me.endeDate.AddMonths(1)
@@ -576,8 +633,8 @@ Public Class clsProjekt
             Dim pvName As String = ""
             Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb, type, pvName)
 
-            If type = -1 Or _
-                (type = PTProjektType.projekt And pvName = Me.name) Or _
+            If type = -1 Or
+                (type = PTProjektType.projekt And pvName = Me.name) Or
                 (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                 Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(phaseName, breadcrumb)
@@ -660,8 +717,8 @@ Public Class clsProjekt
             Dim pvName As String = ""
             Call splitHryFullnameTo2(fullMsName, msName, breadcrumb, type, pvName)
 
-            If type = -1 Or _
-                (type = PTProjektType.projekt And pvName = Me.name) Or _
+            If type = -1 Or
+                (type = PTProjektType.projekt And pvName = Me.name) Or
                 (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                 Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
@@ -783,7 +840,7 @@ Public Class clsProjekt
                         ' es handelt sich um eine Phase
                         Dim cPhase As clsPhase = Me.getPhaseByID(tmpID)
                         If Not IsNothing(cPhase) Then
-                            If phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde, _
+                            If phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde,
                                                      showRangeLeft, showRangeRight) Then
                                 Try
                                     ' da es eigentlich gar nicht vorkommen kann, dass es bereits enthalten ist, wird auf den contains Aufruf verzichtet
@@ -915,12 +972,12 @@ Public Class clsProjekt
         End Get
     End Property
 
-        ''' <summary>
-        ''' stellt sicher, daß variantName niemals Nothing sein kann
-        ''' </summary>
-        ''' <value></value>
-        ''' <returns></returns>
-        ''' <remarks></remarks>
+    ''' <summary>
+    ''' stellt sicher, daß variantName niemals Nothing sein kann
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property variantName As String
         Get
             If IsNothing(_variantName) Then
@@ -1002,7 +1059,7 @@ Public Class clsProjekt
     Public ReadOnly Property getShapeText() As String
         Get
             If Not IsNothing(Me.variantName) Then
-                If Me.variantName.Length > 0 Then
+                If Me.variantName.Length > 0 And Me.variantName <> portfolioVName Then
                     getShapeText = Me.name & "[ " & Me.variantName & " ]"
                 Else
                     getShapeText = Me.name
@@ -1094,8 +1151,8 @@ Public Class clsProjekt
 
     End Property
 
-    Public Overrides Sub AddPhase(ByVal phase As clsPhase, _
-                                  Optional ByVal origName As String = "", _
+    Public Overrides Sub AddPhase(ByVal phase As clsPhase,
+                                  Optional ByVal origName As String = "",
                                   Optional ByVal parentID As String = "")
 
         Dim phaseEnde As Double
@@ -1190,6 +1247,214 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' trägt die Liste von clsCustomFields, die in der Collection sind, in das Projekt ein
+    ''' </summary>
+    ''' <param name="listOfCustomFields"></param>
+    Public Sub addListOfCustomFields(ByVal listOfCustomFields As Collection)
+        If Not IsNothing(listOfCustomFields) Then
+
+            If listOfCustomFields.Count > 0 Then
+
+                For Each cfObj As clsCustomField In listOfCustomFields
+
+                    Try
+                        Dim uniqueID As Integer = CInt(cfObj.uid)
+                        Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+
+                        Select Case cfType
+
+                            Case ptCustomFields.Str
+                                Me.addSetCustomSField(uniqueID, CStr(cfObj.wert))
+                            Case ptCustomFields.Dbl
+                                Me.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
+                            Case ptCustomFields.bool
+                                Me.addSetCustomBField(uniqueID, CBool(cfObj.wert))
+                            Case Else
+
+                        End Select
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+            End If
+
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' setzt das Budget auf den Wert, der sich aus den Ressourcen- und Kostenbedarfen ergibt
+    ''' </summary>
+    Public Sub setBudgetAsNeeded()
+
+        Try
+            Dim a As Integer = Me.dauerInDays
+            Dim neededBudget As Double = 0.0, tmpERL As Double, tmpPK As Double, tmpOK As Double, tmpRK As Double, tmpERG As Double
+            Call Me.calculateRoundedKPI(tmpERL, tmpPK, tmpOK, tmpRK, tmpERG)
+            If tmpERG < 0 Then
+                neededBudget = -1 * tmpERG
+            End If
+            Me.Erloes = neededBudget
+        Catch ex As Exception
+
+            If awinSettings.visboDebug Then
+                Call MsgBox("Fehler in Projekt anlegen, Name: " & Me.name)
+            End If
+
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' fügt dem aktuellen Projekt Me  , der existierenden Phase nameID die Rolle bzw Kostenart zu;
+    ''' wenn addWhenexisting true, wird addiert, andernfalls replaced 
+    ''' Vorbedingung: alle Plausibilitätsbedingungen wurden im Vorfeld abgeklärt, also Phase existiert, Rolle/Kostenart existiert und Summe ist positiv 
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcName"></param>(
+    ''' <param name="summe"></param>
+    ''' <param name="addWhenExisting"></param>
+    Public Sub addCostRoleToPhase(ByVal phaseNameID As String, ByVal rcName As String, ByVal summe As Double,
+                              ByVal isrole As Boolean,
+                              ByVal addWhenExisting As Boolean)
+
+        ' es werden die Plausibilitätsprüfungen gemacht 
+        Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
+
+        If Not IsNothing(cphase) Then
+            If isrole Then
+                ' eine Rolle wird hinzugefügt 
+                Call cphase.AddRole(rcName, summe, addWhenExisting)
+
+            Else
+                ' eine Kostenart wird hinzugefügt
+                Call cphase.AddCost(rcName, summe, addWhenExisting)
+            End If
+        Else
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht in allen Phasen alle vorkommenden Rollen und Kosten
+    ''' 
+    ''' </summary>
+    Public Sub deleteAllRolesCosts()
+
+        For ip As Integer = 1 To Me.CountPhases
+            Dim cPhase As clsPhase = Me.getPhase(ip)
+            With cPhase
+
+            End With
+        Next
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt ein PRojekt zurück, wo die angegebenen Rollen , ggf. inkl Kinder, und die Kosten gelöscht werden 
+    ''' </summary>
+    ''' <param name="rolesToBeDeleted"></param>
+    ''' <param name="costsToBedeleted"></param>
+    ''' <param name="includingChilds"></param>
+    ''' <returns></returns>
+    Public Function deleteRolesAndCosts(ByVal rolesToBeDeleted As Collection,
+                                        ByVal costsToBedeleted As Collection,
+                                        ByVal includingChilds As Boolean) As clsProjekt
+
+        Dim newProj As clsProjekt = Me.createVariant("$delete$", "")
+
+        ' hier passiert das jetzt 
+        Dim roleIDs As New SortedList(Of Integer, Double)
+
+        If Not IsNothing(rolesToBeDeleted) Then
+            For Each roleName As String In rolesToBeDeleted
+
+                If includingChilds Then
+                    Dim tmpRoleIDS As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
+                    For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIDS
+                        If roleIDs.ContainsKey(srKvP.Key) Then
+                            ' muss nichts getan werden - ist schon in der Liste  
+                        Else
+                            ' der Value entspricht dem Anteil der Kapa der Subrole in der übergeordneten Sammelrolle, 
+                            ' das ist hier aber irrerelevant .. deswegen immer auf 1 setzen 
+                            roleIDs.Add(srKvP.Key, 1.0)
+                        End If
+                    Next
+                Else
+
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+                    If Not IsNothing(tmpRole) Then
+                        If Not roleIDs.ContainsKey(tmpRole.UID) Then
+                            roleIDs.Add(tmpRole.UID, 1.0)
+                        End If
+                    End If
+
+                End If
+
+            Next
+        End If
+
+
+        ' jetzt sind alle RoleIds, die gelöscht werden sollen in der Liste  roleIDs 
+        ' jetzt werden einfach alle Phasen durchgegangen, ob sie eine der  Rollen enthalten 
+        For ip = 1 To newProj.CountPhases
+            Dim cPhase As clsPhase = newProj.getPhase(ip)
+
+            If Not IsNothing(rolesToBeDeleted) Then
+                If roleIDs.Count > 0 Then
+                    Dim delCollection As New Collection
+                    For dx As Integer = 1 To cPhase.countRoles
+                        Dim tmpRole As clsRolle = cPhase.getRole(dx)
+                        If roleIDs.ContainsKey(tmpRole.RollenTyp) Then
+                            ' löschen 
+                            If Not delCollection.Contains(tmpRole.name) Then
+                                delCollection.Add(tmpRole.name, tmpRole.name)
+                            End If
+                        End If
+                    Next
+
+                    ' jetzt müssen alle delCollection Einträge gelöscht werden 
+                    For Each item As String In delCollection
+                        If item <> "" Then
+                            cPhase.removeRoleByName(item)
+                        End If
+                    Next
+
+                End If
+            End If
+
+            If Not IsNothing(costsToBedeleted) Then
+                ' jetzt kommen die Kosten dran 
+                If costsToBedeleted.Count > 0 Then
+                    Dim delCollection As New Collection
+                    For cx As Integer = 1 To cPhase.countCosts
+                        Dim tmpCost As clsKostenart = cPhase.getCost(cx)
+                        If costsToBedeleted.Contains(tmpCost.name) Then
+                            If Not delCollection.Contains(tmpCost.name) Then
+                                delCollection.Add(tmpCost.name, tmpCost.name)
+                            End If
+                        End If
+                    Next
+
+                    ' jetzt müssen alle delCollection Einträge gelöscht werden 
+                    For Each item As String In delCollection
+                        If item <> "" Then
+                            cPhase.removeCostByName(item)
+                        End If
+                    Next
+                End If
+            End If
+
+
+        Next
+
+        ' ende Aktionen
+        newProj.variantName = Me.variantName
+        deleteRolesAndCosts = newProj
+
+    End Function
+    ''' <summary>
     ''' Methode prüft auf Identität mit einem Vergleichsprojekt 
     ''' es wird verglichen: Startdatum, Endedatum (nur type=0), Phasen, Milestones, Personalkosten, Sonstige Kosten, Ergebnis, Attribute, Projekt-Ampel, Milestone-Ampeln, 
     ''' Deliverables, CustomFields, Projekt-Typ verglichen  
@@ -1209,8 +1474,8 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property listOfDifferences(ByVal vglproj As clsProjekt, ByVal absolut As Boolean, ByVal type As Integer, _
-                                               Optional strongRoleIdentity As Boolean = False, _
+    Public ReadOnly Property listOfDifferences(ByVal vglproj As clsProjekt, ByVal absolut As Boolean, ByVal type As Integer,
+                                               Optional strongRoleIdentity As Boolean = False,
                                                Optional strongCostIdentity As Boolean = False) As Collection
         Get
 
@@ -1367,7 +1632,7 @@ Public Class clsProjekt
                     End If
 
                     ' prüfen, ob die Attribute identisch sind
-                    If Me.StrategicFit <> vglproj.StrategicFit Or _
+                    If Me.StrategicFit <> vglproj.StrategicFit Or
                                 Me.Risiko <> vglproj.Risiko Then
                         Try
                             tmpCollection.Add(CInt(PThcc.fitrisk).ToString, CInt(PThcc.fitrisk).ToString)
@@ -1525,8 +1790,8 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestoneDate(ByVal milestoneName As String, _
-                                              Optional breadCrumb As String = "", _
+    Public ReadOnly Property getMilestoneDate(ByVal milestoneName As String,
+                                              Optional breadCrumb As String = "",
                                               Optional lfdNr As Integer = 1) As Date
         Get
             Dim found As Boolean = False
@@ -1883,7 +2148,7 @@ Public Class clsProjekt
 
             ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
             ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
-            If (differenzInTagen <> 0 And Me.movable) And _
+            If (differenzInTagen <> 0 And Me.movable) And
                 (_Status = ProjektStatus(0) Or _variantName <> "") Then
                 _startDate = value
                 _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
@@ -2122,7 +2387,7 @@ Public Class clsProjekt
                     Else
                         ' Behandlung von Phasen
                         Dim cphase As clsPhase = Me.getPhaseByID(elemID)
-                        If Me._Start + cphase.relStart - 1 > bis Or _
+                        If Me._Start + cphase.relStart - 1 > bis Or
                             Me._Start + cphase.relEnde - 1 < von Then
                             ' nichts tun 
                         Else
@@ -2160,7 +2425,7 @@ Public Class clsProjekt
             If bis - von < 1 Then
                 tmpResult = True
             Else
-                tmpResult = Not (getColumnOfDate(Me.startDate) > bis Or _
+                tmpResult = Not (getColumnOfDate(Me.startDate) > bis Or
                     getColumnOfDate(Me.endeDate) < von)
             End If
             isWithinTimeFrame = tmpResult
@@ -2206,6 +2471,7 @@ Public Class clsProjekt
 
 
     End Sub
+
 
 
     Public Sub clearBewertungen()
@@ -2286,6 +2552,7 @@ Public Class clsProjekt
             .volume = Me.volume
             .complexity = Me.complexity
             .businessUnit = Me.businessUnit
+            .projectType = Me.projectType
             .StartOffset = _StartOffset
             .startDate = _startDate
             .earliestStartDate = _earliestStartDate
@@ -2446,6 +2713,480 @@ Public Class clsProjekt
         End Get
     End Property
 
+    Public Function createVariant(ByVal variantName As String, ByVal variantDescription As String) As clsProjekt
+
+        Dim newproj As New clsProjekt
+        Me.copyTo(newproj)
+
+        If newproj.dauerInDays <> Me.dauerInDays Then
+            Throw New ArgumentException("Variant-Creation failed ...")
+        End If
+
+        With newproj
+            .name = Me.name
+            .timeStamp = Date.Now
+            .shpUID = Me.shpUID
+            .tfZeile = Me.tfZeile
+            .variantName = variantName
+            .variantDescription = variantDescription
+        End With
+
+        createVariant = newproj
+
+    End Function
+
+    ''' <summary>
+    ''' gibt ein Projekt zurück, das um die Ressourcen und Kostenbedarfe des otherproj reduziert wurde 
+    ''' das otherproj darf nicht vor dem Me-Projekt starten od er enden. Ein Fehler wird mit Exception beendet  
+    ''' </summary>
+    ''' <param name="otherproj"></param>
+    ''' <returns></returns>
+    Public Function subtractProject(ByVal otherproj As clsProjekt) As clsProjekt
+
+        Dim ok As Boolean = True
+        Dim myLength As Integer = Me.anzahlRasterElemente
+        Dim otherLength As Integer = otherproj.anzahlRasterElemente
+
+        Dim myStartColumn As Integer = getColumnOfDate(Me.startDate)
+        Dim otherStartColumn As Integer = getColumnOfDate(otherproj.startDate)
+        Dim otherIndexStart As Integer = 0
+
+        ' ist es überhaupt zulässig ? 
+
+        Dim newProj As clsProjekt = Me.createVariant("$Subtract$", "")
+
+        If myStartColumn <= otherStartColumn Then
+            otherIndexStart = otherStartColumn - myStartColumn
+        Else
+            ok = False
+        End If
+
+        If myStartColumn + myLength < otherStartColumn + otherLength Then
+            ok = False
+        End If
+
+        If Not ok Then
+            Throw New ArgumentException("hier kann keine Subtraktion vorgenommen werden ...")
+        Else
+            ' jetzt kann die Subtraktion beginnen ..
+
+            ' es wird nur in der cphase(1) abgezogen
+            Dim mycPhase As clsPhase = newProj.getPhase(1)
+            If IsNothing(mycPhase) Then
+                Throw New ArgumentException("es gibt keine Projekt-Phase im Projekt ...")
+            Else
+                Dim myRoleNames As Collection = newProj.getRoleNames
+                Dim otherRoleNames As Collection = otherproj.getRoleNames
+
+                For Each tmpRoleName As String In otherRoleNames
+                    If myRoleNames.Contains(tmpRoleName) Then
+                        Dim myTmpRole As clsRolle = mycPhase.getRole(tmpRoleName)
+                        Dim myValues() As Double = myTmpRole.Xwerte
+                        Dim tmpValues() As Double = otherproj.getRessourcenBedarfNew(tmpRoleName)
+                        For i As Integer = otherStartColumn To otherLength - 1
+                            myValues(otherStartColumn) = myValues(otherStartColumn) - tmpValues(i - otherStartColumn)
+                        Next
+                    Else
+                        Throw New ArgumentException("Rolle existiert nicht : " & tmpRoleName)
+                    End If
+
+                Next
+
+            End If
+
+        End If
+
+        ' jetzt wieder den Me-Variant-Name einstellen 
+        newProj.variantName = Me.variantName
+        subtractProject = newProj
+
+    End Function
+
+    ''' <summary>
+    ''' für AllianzImport  
+    ''' </summary>
+    ''' <param name="rolePhaseValues"></param>
+    ''' <param name="phaseNameIDs"></param>
+    ''' <returns></returns>
+    Public Function merge(ByVal rolePhaseValues As SortedList(Of String, Double()),
+                          ByVal phaseNameIDs As String(),
+                          ByVal addWhenexisting As Boolean) As clsProjekt
+
+        Dim newProj As clsProjekt = Me.createVariant("$merge$", "")
+        ' hier passiert das jetzt 
+        Dim anzPhasen As Integer = phaseNameIDs.Length
+
+        For ip = 1 To anzPhasen
+
+            Dim cphase As clsPhase = newProj.getPhaseByID(phaseNameIDs(ip - 1))
+            If Not IsNothing(cphase) Then
+
+                ' jetzt dieser Phase die Rollen und entsprechenden Werte zuordnen 
+                For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+
+                    Dim roleSumme As Double = kvp.Value(ip - 1)
+                    If roleSumme > 0 Then
+                        Call cphase.addCostRole(kvp.Key, roleSumme, True, addWhenexisting)
+                    End If
+
+                Next
+
+            End If
+        Next
+
+        ' ende Aktionen
+        newProj.variantName = Me.variantName
+        merge = newProj
+    End Function
+
+
+    ''' <summary>
+    ''' gibt ein Projekt zurück, das die Vereinigung der beiden Projekte darstellt. 
+    ''' Das Me Projekt muss ein Union Projekt sein
+    ''' Es werden die Ressourcenbedarfe vereinigt. Wenn die Projekte zu unterschiedlichen Zeiten beginnen und unterschiedlich lang sind, so wird das 
+    ''' ebenfalls berücksichtigt - im Vergleich zu addProject. Das neue Projekt hat keinerlei Phasen-Struktur
+    ''' </summary>
+    ''' <param name="otherProj"></param>
+    ''' <returns></returns>
+    Public Function unionizeWith(ByVal otherProj As clsProjekt) As clsProjekt
+
+        Dim newStartdate As Date
+        Dim newEndeDate As Date
+
+
+        If Me.startDate <= otherProj.startDate Then
+            newStartdate = Me.startDate
+        Else
+            newStartdate = otherProj.startDate
+        End If
+
+        If Me.endeDate >= otherProj.endeDate Then
+            newEndeDate = Me.endeDate
+        Else
+            newEndeDate = otherProj.endeDate
+        End If
+
+        Dim newProj As New clsProjekt(Me.name, True, newStartdate, newEndeDate)
+
+        ' jetzt werden die Attribute neu gesetzt ...
+        With newProj
+
+            .farbe = Me.farbe
+            .Schrift = Me.Schrift
+            .Schriftfarbe = Me.Schriftfarbe
+            .VorlagenName = portfolioVName
+            .Risiko = Me.Risiko
+            .StrategicFit = Me.StrategicFit
+            .Erloes = Me.Erloes + otherProj.Erloes
+            .description = Me.description
+            .variantName = Me.variantName
+            .variantDescription = Me.variantDescription
+
+            .businessUnit = Me.businessUnit
+
+            .startDate = newStartdate
+            '.earliestStartDate = _earliestStartDate
+            '.latestStartDate = _latestStartDate
+            '.earliestStart = _earliestStart
+            '.latestStart = _latestStart
+            .leadPerson = Me.leadPerson
+            .Status = Me.Status
+            .extendedView = Me.extendedView
+            .movable = Me.movable
+
+
+
+
+        End With
+
+        ' ------------------------------------------------------------------------------------------------------
+        ' Holen der Rootphase - die wurde ja bereits mit dem New oben angelegt ... 
+        ' ------------------------------------------------------------------------------------------------------
+        Dim cPhase As clsPhase = newProj.getPhase(1)
+
+        Dim myLength As Integer = Me.anzahlRasterElemente
+        Dim otherLength As Integer = otherProj.anzahlRasterElemente
+        Dim newLength As Integer = newProj.anzahlRasterElemente
+
+        Dim myStartColumn As Integer = getColumnOfDate(Me.startDate)
+        Dim otherStartColumn As Integer = getColumnOfDate(otherProj.startDate)
+        Dim myIndexStart As Integer, otherIndexStart As Integer
+
+        If myStartColumn <= otherStartColumn Then
+            myIndexStart = 0
+            otherIndexStart = otherStartColumn - myStartColumn
+        Else
+            otherIndexStart = 0
+            myIndexStart = myStartColumn - otherStartColumn
+        End If
+
+        ' jetzt werden die Role-Values von me übertragen , an dieser stelle gibt es noch keine Rollen im neuen Projekt!
+        Dim tmpRoles As Collection = Me.getRoleNames
+        Dim newValues() As Double
+
+        For Each tmpRole As String In tmpRoles
+            ' zurücksetzen 
+            ReDim newValues(newLength - 1)
+
+            Dim myValues() As Double = Me.getRessourcenBedarfNew(tmpRole)
+            Dim newRole As New clsRolle(newLength - 1)
+
+            With newRole
+                .RollenTyp = RoleDefinitions.getRoledef(tmpRole).UID
+                For ix As Integer = myIndexStart To myIndexStart + myLength - 1
+                    newValues(ix) = myValues(ix - myIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            cPhase.addRole(newRole)
+
+        Next
+
+        ' jetzt werden die Cost-Values von me übertragen , an dieser stelle gibt es noch keine Kosten im neuen Projekt!
+        Dim tmpCosts As Collection = Me.getCostNames
+
+        For Each tmpCost As String In tmpCosts
+            ' zurücksetzen 
+            ReDim newValues(newLength - 1)
+
+            Dim myValues() As Double = Me.getKostenBedarfNew(tmpCost)
+            Dim newCost As New clsKostenart(newLength - 1)
+
+            With newCost
+                .KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
+                For ix As Integer = myIndexStart To myIndexStart + myLength - 1
+                    newValues(ix) = myValues(ix - myIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            cPhase.AddCost(newCost)
+
+        Next
+
+        ' jetzt werden die Role-Values von otherProj übertragen , an dieser stelle gibt es evtl bereits diese Rolle im neuen Projekt!
+        tmpRoles = otherProj.getRoleNames
+
+        For Each tmpRole As String In tmpRoles
+            ' zurücksetzen 
+            Dim newRole As clsRolle = newProj.getPhase(1).getRole(tmpRole)
+            Dim roleDidExist As Boolean = True
+
+            If IsNothing(newRole) Then
+                roleDidExist = False
+                newRole = New clsRolle(newLength - 1)
+                newRole.RollenTyp = RoleDefinitions.getRoledef(tmpRole).UID
+            End If
+
+            newValues = newRole.Xwerte
+
+            Dim otherValues() As Double = otherProj.getRessourcenBedarfNew(tmpRole)
+
+
+            With newRole
+                For ix As Integer = otherIndexStart To otherIndexStart + otherLength - 1
+                    newValues(ix) = newValues(ix) + otherValues(ix - otherIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            If Not roleDidExist Then
+                cPhase.addRole(newRole)
+            End If
+
+        Next
+
+        ' jetzt werden die Cost-Values von me übertragen , an dieser stelle gibt es noch keine Kosten im neuen Projekt!
+        tmpCosts = otherProj.getCostNames
+
+        For Each tmpCost As String In tmpCosts
+            ' zurücksetzen
+            Dim newCost As clsKostenart = newProj.getPhase(1).getCost(tmpCost)
+            Dim costDidExist As Boolean = True
+
+            If IsNothing(newCost) Then
+                costDidExist = False
+                newCost = New clsKostenart(newLength - 1)
+                newCost.KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
+            End If
+
+            newValues = newCost.Xwerte
+
+            Dim otherValues() As Double = otherProj.getKostenBedarfNew(tmpCost)
+
+            With newCost
+                .KostenTyp = CostDefinitions.getCostdef(tmpCost).UID
+                For ix As Integer = otherIndexStart To otherIndexStart + otherLength - 1
+                    newValues(ix) = newValues(ix) + otherValues(ix - otherIndexStart)
+                Next
+                .Xwerte = newValues
+            End With
+
+            If Not costDidExist Then
+                cPhase.AddCost(newCost)
+            End If
+
+
+        Next
+
+        unionizeWith = newProj
+    End Function
+
+    ''' <summary>
+    ''' merged die angegebenen Ist-Values für die Rolle in das Projekt 
+    ''' Werte werden ersetzt ; Rahmenbedingung: die actualValues werden von vorne in die Rolle reingeschrieben 
+    ''' </summary>
+    ''' <param name="phNameID"></param>
+    ''' <param name="actualValues"></param>
+    Public Sub mergeActualValues(ByVal phNameID As String, ByVal actualValues As SortedList(Of String, Double()))
+
+        Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
+
+        If Not IsNothing(cPhase) Then
+
+            Dim roleXwerte() As Double
+            Dim dimension As Integer = cPhase.relEnde - cPhase.relStart
+
+
+            For Each rvkvp As KeyValuePair(Of String, Double()) In actualValues
+
+                Dim hroleDef As clsRollenDefinition = RoleDefinitions.getRoledef(rvkvp.Key)
+                ReDim roleXwerte(dimension)
+
+                ' nur wenn die Rolle existiert und ausserdem Werte von größer Null hat, soll sie angelegt werden ..
+                If Not IsNothing(hroleDef) And rvkvp.Value.Sum > 0 Then
+
+                    Dim ixEnde As Integer = System.Math.Min(rvkvp.Value.Length - 1, dimension)
+                    For ix As Integer = 0 To ixEnde
+                        roleXwerte(ix) = rvkvp.Value(ix)
+                    Next
+
+                    Dim curRoleName As String = hroleDef.name
+                    Dim curRole As clsRolle = New clsRolle(cPhase.relEnde - cPhase.relStart)
+
+                    With curRole
+                        .RollenTyp = hroleDef.UID
+                        .Xwerte = roleXwerte
+                    End With
+                    ' wenn es schon existiert, werden die Werte addiert ...
+                    cPhase.addRole(curRole)
+
+                End If
+
+            Next
+
+        Else
+            Throw New ArgumentException("Merge Failed: Phase does not exist " & phNameID)
+        End If
+    End Sub
+    ''' <summary>
+    ''' liest den geldwerten Betrag der Rollen bis zum Monat , ggf werden sie in Abhängigkeit von resetValuesToNull auf Null gesetzt 
+    ''' setzt die Werte all der Rollen / SammelRollen bis einschließlich untilMonthIncl auf Null, die in der roleCostCollection verzeichnet sind   
+    ''' </summary>
+    ''' <param name="roleCostCollection"></param>
+    ''' <param name="relMonthCol"></param>
+    ''' <param name="resetValuesToNull">gibt an, ob die entsprechenden Werte dann auf Null gesetzt werden sollen</param>
+    ''' <returns></returns>
+    Public Function getSetRoleCostUntil(ByVal roleCostCollection As Collection, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
+
+        Dim usedRoles As Collection = Me.getRoleNames
+        Dim usedCosts As Collection = Me.getCostNames
+
+        Dim actualValue As Double = 0.0
+
+        For Each roleName As String In usedRoles
+            If isRelevantForNulling(roleName, roleCostCollection) Then
+                actualValue = actualValue + Me.getSetRoleValuesUntil(roleName, relMonthCol, resetValuesToNull)
+            End If
+        Next
+
+        getSetRoleCostUntil = actualValue
+
+    End Function
+
+    Private Function isRelevantForNulling(ByVal roleCostName As String, ByVal roleCostCollection As Collection) As Boolean
+        Dim tmpResult As Boolean = False
+
+        Dim isRole As Boolean = (RoleDefinitions.containsName(roleCostName))
+
+        Dim isCost As Boolean = False
+
+        If Not isRole Then
+            isCost = (CostDefinitions.containsName(roleCostName))
+        End If
+
+        If isRole Then
+            If RoleDefinitions.hasAnyChildParentRelationsship(roleCostName, roleCostCollection) Then
+                tmpResult = True
+            End If
+        Else
+            ' ist Kostenart - Vergleich auf Namensgleichheit reicht; es gibt noch keine Hierarchien
+            tmpResult = roleCostCollection.Contains(roleCostName)
+        End If
+
+        isRelevantForNulling = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' setzt die Werte all der Rollen / Kostenarten bis einschließlich untilMonth auf Null
+    ''' der geldwerte Betrag all der Werte, die auf Null gesetzt werden, wird im Return zurückgegeben
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="relMonthCol"></param>
+    ''' <returns></returns>
+    Public Function getSetRoleValuesUntil(ByVal roleName As String, ByVal relMonthCol As Integer, ByVal resetValuesToNull As Boolean) As Double
+
+        Dim tmpValue As Double = 0.0
+        Dim currentRoleDef As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+
+        If Not IsNothing(currentRoleDef) Then
+            Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+            Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+
+            Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
+
+            For Each phNameID As String In listOfPhases
+
+                Dim cPhase As clsPhase = Me.getPhaseByID(phNameID)
+                If Not IsNothing(cPhase) Then
+                    With cPhase
+
+                        If .relStart <= relMonthCol Then
+                            ' jetzt die Werte auslesen und ggf. auf Null setzen 
+                            Dim cRole As clsRolle = .getRole(roleName)
+
+                            If Not IsNothing(cRole) Then
+                                Dim oldSum As Double = 0.0
+                                Dim ende As Integer = System.Math.Min(.relEnde, relMonthCol)
+
+                                For ix As Integer = 0 To ende - .relStart
+                                    oldSum = oldSum + cRole.Xwerte(ix)
+
+                                    ' hier werden ggf die Werte zurückgesetzt 
+                                    If resetValuesToNull Then
+                                        cRole.Xwerte(ix) = 0
+                                    End If
+
+                                Next
+
+                                tmpValue = tmpValue + oldSum * tagessatz
+                            End If
+
+                        End If
+
+                    End With
+
+                End If
+            Next
+
+        End If
+
+
+        getSetRoleValuesUntil = tmpValue
+
+    End Function
+
 
     ''' <summary>
     ''' gibt die Bedarfe (Phasen / Rollen / Kostenarten / Ergebnis pro Monat zurück 
@@ -2455,7 +3196,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBedarfeInMonths(ByVal mycollection As Collection, ByVal type As String) As Double()
+    Public ReadOnly Property getBedarfeInMonths(ByVal mycollection As Collection, ByVal type As String, Optional ByVal inclSubRoles As Boolean = False) As Double()
         Get
             Dim i As Integer, k As Integer, projektDauer As Integer = Me.anzahlRasterElemente
             Dim valueArray() As Double
@@ -2492,11 +3233,11 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getRessourcenBedarf(itemName)
+                            valueArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles)
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getRessourcenBedarf(itemName)
+                                tempArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next
@@ -2506,12 +3247,12 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getKostenBedarf(itemName)
+                            valueArray = Me.getKostenBedarfNew(itemName)
 
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getKostenBedarf(itemName)
+                                tempArray = Me.getKostenBedarfNew(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next
@@ -2745,7 +3486,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBedarfeInMonth(mycollection As Collection, type As String, monat As Integer) As Double
+    Public ReadOnly Property getBedarfeInMonth(mycollection As Collection, type As String, monat As Integer, Optional ByVal inclSubRoles As Boolean = False) As Double
 
 
         Get
@@ -2759,7 +3500,7 @@ Public Class clsProjekt
             Else
                 If projektDauer > 0 Then
                     ReDim valueArray(projektDauer - 1)
-                    valueArray = Me.getBedarfeInMonths(mycollection, type)
+                    valueArray = Me.getBedarfeInMonths(mycollection, type, inclSubRoles)
                     If monat >= start And monat <= start + projektDauer - 1 Then
                         tmpValue = valueArray(monat - start)
                     Else
@@ -5064,9 +5805,9 @@ Public Class clsProjekt
 
         AllPhases = New List(Of clsPhase)
         _extendedView = False
-        _relStart = 1
+        '_relStart = 1
         _leadPerson = ""
-        _iDauer = 0
+
         _StartOffset = 0
         _Start = 0
         _startDate = NullDatum
@@ -5075,6 +5816,9 @@ Public Class clsProjekt
         _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
+        _projectType = ptPRPFType.project
+        _actualDataUntil = Date.MinValue
+        _kundenNummer = ""
 
         _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing istshow 
         _variantDescription = ""
@@ -5089,13 +5833,76 @@ Public Class clsProjekt
 
     End Sub
 
+    ''' <summary>
+    ''' legt ein initiales Projekt mit rootphase con startDate bis EndeDate an, ggf als Union PRojekt ..
+    ''' </summary>
+    ''' <param name="unionizedP"></param>
+    ''' <param name="startDatum"></param>
+    ''' <param name="endeDatum"></param>
+    Public Sub New(ByVal pName As String,
+                   ByVal unionizedP As Boolean,
+                   startDatum As Date, endeDatum As Date)
+
+        _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, startDatum) + 1)
+        _startDate = startDatum
+
+        AllPhases = New List(Of clsPhase)
+        Dim cphase As New clsPhase(parent:=Me)
+        Dim projektdauer As Integer = calcDauerIndays(startDatum, endeDatum)
+
+        With cphase
+            .nameID = rootPhaseName
+            .changeStartandDauerPhase1(0, projektdauer)
+        End With
+
+        Me.AddPhase(cphase)
+        If unionizedP Then
+            _projectType = ptPRPFType.portfolio
+        Else
+            _projectType = ptPRPFType.project
+        End If
+
+        _actualDataUntil = Date.MinValue
+        _kundenNummer = ""
+
+        _extendedView = False
+        '_relStart = 1
+
+        _StartOffset = 0
+
+        _earliestStart = 0
+        _latestStart = 0
+
+        _earliestStartDate = _startDate.AddMonths(_earliestStart)
+        _latestStartDate = _startDate.AddMonths(_latestStart)
+
+        _Status = ProjektStatus(PTProjektStati.geplant)
+        _shpUID = ""
+        _timeStamp = Date.Now
+
+        _name = pName
+        _variantName = ""
+        _variantDescription = ""
+
+        If unionizedP Then
+            _description = "Summary Project of Program / Portfolio"
+        Else
+            _description = ""
+        End If
+
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
+
+    End Sub
+
     Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
 
         AllPhases = New List(Of clsPhase)
         _extendedView = False
-        _relStart = 1
+        '_relStart = 1
         _leadPerson = ""
-        _iDauer = 0
+
         _StartOffset = 0
 
         _Start = projektStart
@@ -5109,6 +5916,9 @@ Public Class clsProjekt
         _Status = ProjektStatus(PTProjektStati.geplant)
         _shpUID = ""
         _timeStamp = Date.Now
+        _projectType = ptPRPFType.project
+        _actualDataUntil = Date.MinValue
+        _kundenNummer = ""
 
         _variantName = ""
         _variantDescription = ""
@@ -5125,9 +5935,9 @@ Public Class clsProjekt
 
         AllPhases = New List(Of clsPhase)
         extendedView = False
-        _relStart = 1
+        '_relStart = 1
         _leadPerson = ""
-        _iDauer = 0
+
         _StartOffset = 0
 
         _startDate = startDate
@@ -5140,6 +5950,10 @@ Public Class clsProjekt
 
         _Status = ProjektStatus(PTProjektStati.geplant)
         _timeStamp = Date.Now
+
+        _projectType = ptPRPFType.project
+        _actualDataUntil = Date.MinValue
+        _kundenNummer = ""
 
         _variantName = ""
         _variantDescription = ""

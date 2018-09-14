@@ -67,21 +67,11 @@
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Office.PIARedist.2007">
-      <Visible>False</Visible>
-      <ProductName>Microsoft Office 2007 Primary Interop Assemblies</ProductName>
-      <Install>true</Install>
+      <Install>false</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.VSTORuntime.4.0">
       <Visible>False</Visible>
       <ProductName>Microsoft Visual Studio 2010-Tools für Office-Laufzeit %28x86 und x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
@@ -184,11 +174,7 @@
     <Reference Include="ProjectBoardDefinitions">
       <HintPath>..\..\Projectboard\ProjectBoardDefinitions\bin\Debug\ProjectBoardDefinitions.dll</HintPath>
     </Reference>
-    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
@@ -245,6 +231,12 @@
       <DependentUpon>frmChanges.vb</DependentUpon>
     </Compile>
     <Compile Include="frmChanges.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmEditLink.Designer.vb">
+      <DependentUpon>frmEditLink.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmEditLink.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmPPTTimeMachine.Designer.vb">
@@ -314,6 +306,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmChanges.resx">
       <DependentUpon>frmChanges.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmEditLink.resx">
+      <DependentUpon>frmEditLink.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmPPTTimeMachine.resx">
       <DependentUpon>frmPPTTimeMachine.vb</DependentUpon>
@@ -462,6 +457,15 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+    <COMReference Include="Microsoft.Office.Interop.PowerPoint">
+      <Guid>{91493440-5A91-11CF-8700-00AA0060263B}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>10</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\first Version.png" />
@@ -500,6 +504,30 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\undo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\documents.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\camera.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\surveillance_camera.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\3d.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\documents-plus.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\camera-plus.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\surveillance_camera-plus.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\3d-plus.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

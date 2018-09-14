@@ -113,10 +113,7 @@ namespace MongoDbAccess
             else
             {
                 var connectionString = "";
-
-                //var connectionString = "mongodb://tk:philden30.@cluster0-shard-00-00-5rtga.mongodb.net:27017,cluster0-shard-00-01-5rtga.mongodb.net:27017,cluster0-shard-00-02-5rtga.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
-                //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
-
+                
                 if (Module1.awinSettings.DBWithSSL)
                 {
                      connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "? ssl = true";
@@ -125,7 +122,7 @@ namespace MongoDbAccess
                 {
                      connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
                 }
-                
+                                
 
                 Client = new MongoClient(connectionString);
                      
@@ -139,8 +136,7 @@ namespace MongoDbAccess
   
             // neu 3.0 
             Database = Client.GetDatabase(databaseName);
-            
-                      
+                                  
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionTrashProjects = Database.GetCollection<clsProjektDB>("trashprojects");
             CollectionRoles = Database.GetCollection<clsRollenDefinitionDB>("roledefinitions");
@@ -362,14 +358,15 @@ namespace MongoDbAccess
     
         /// <summary>
         /// holt die erste beauftragte Version des Projects 
-        /// immer mit Variant-Name = ""
+        /// muss bei Projekten aufgerufen werden mit "", bei Summary Projekten mit VPortfolioName
         /// </summary>
-        /// <param name="projectname"></param>
+        /// <param name="projectname">gibt den Projektnamen an </param>
+        /// <param name="variantName">gibt den Varianten-Namen an</param>
         /// <returns></returns>
-        public clsProjekt retrieveFirstContractedPFromDB(string projectname)
+        public clsProjekt retrieveFirstContractedPFromDB(string projectname, string variantName)
         {
-            var result = new clsProjektDB();
-            string searchstr = Projekte.calcProjektKeyDB(projectname, "");
+            var result = new clsProjektDB();                       
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
 
             
             var builder = Builders<clsProjektDB>.Filter;
@@ -403,6 +400,60 @@ namespace MongoDbAccess
                 return projekt;
             }
             
+        }
+
+        /// <summary>
+        /// gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; bei Projekten muss variantNAme = "" sein, bei Summary Projekten VPortfolioName
+        /// </summary>
+        /// <param name="projectname">beuaftragte werden nur von Variant-Name "" gesucht </param>
+        /// <param name="storedAtOrBefore"></param>
+        /// <param name="variantName"></param>
+        /// <returns></returns>
+        public clsProjekt RetrieveLastContractedPFromDB(string projectname, string variantName, DateTime storedAtOrBefore)
+        {
+            var result = new clsProjektDB();
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
+
+            if (storedAtOrBefore == null)
+            {
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime();
+            }
+            else
+            {                
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime();
+            }
+
+            var builder = Builders<clsProjektDB>.Filter;
+
+            var filter = builder.Eq("name", searchstr) & builder.Eq("status", "beauftragt") & builder.Lte("timestamp", storedAtOrBefore);
+            // das folgende könnte auch gemacht werden 
+            // var filter = builder.Eq(c => c.name, searchstr) & builder.Lte(c => c.timestamp, storedAtOrBefore);
+
+            var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
+
+            try
+            {
+                result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
+            }
+            catch
+            {
+                result = null;
+            }
+
+            //TODO: rückumwandeln
+            if (result == null)
+            {
+
+                return null;
+            }
+            else
+            {
+                var projekt = new clsProjekt();
+                result.copyto(ref projekt);
+                int a = projekt.dauerInDays;
+                return projekt;
+            }
+
         }
 
         /// <summary>
@@ -1146,14 +1197,26 @@ namespace MongoDbAccess
             // deshalb muss hier umgerechnet werden 
             storedatOrBefore = storedatOrBefore.ToUniversalTime();
             
-            int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
             
-                
+            int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
+                            
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore)
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore && c.projectType != 1 && c.projectType != 2)
                             .Select(c => c.name)
                             .Distinct()
                             .ToList();
+
+            // tk 29.5.18
+            // wurde eingeführt, weil in Datenbank wo noch kein isUnion Attribut steckt , sonst die leere Liste rauskommt ...
+            // 
+            if (prequery.Count == 0)
+                {
+                 prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart && c.timestamp <= storedatOrBefore )
+                            .Select(c => c.name)
+                            .Distinct()
+                            .ToList();
+            }
 
             foreach (string name in prequery)
                 {
@@ -1315,6 +1378,38 @@ namespace MongoDbAccess
                             .Where(c => c.name.Contains(searchstr))
                             .OrderBy(c => c.variantName)
                             .Select(c => c.variantName)
+                            .ToList()
+                            .Distinct();
+
+            foreach (string vName in prequery)
+            {
+                result.Add(vName);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pNR"></param>
+        /// <returns></returns>
+        public Collection retrieveProjectNamesByPNRFromDB(string pNR)
+        {
+            var result = new Collection();
+
+            
+            //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
+            //var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
+            //               where e.name.Contains(searchstr)
+            //               select e.variantName
+            //               .Distinct();
+
+
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.kundenNummer == pNR)
+                            .OrderBy(c => c.name)
+                            .Select(c => c.name)
                             .ToList()
                             .Distinct();
 

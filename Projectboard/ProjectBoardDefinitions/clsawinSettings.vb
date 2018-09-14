@@ -120,6 +120,8 @@ Public Class clsawinSettings
     ' für gleichlautende Geschwisternamen generiert werden  
     Public Property createUniqueSiblingNames As Boolean
 
+    Public Property readCostRolesFromDB As Boolean
+
     Public Property readWriteMissingDefinitions As Boolean = False
 
     ' Settings für ToleranzKorridor TimeCost
@@ -231,15 +233,30 @@ Public Class clsawinSettings
 
     Public Property isChangePortfolioFrmActive As Boolean
 
-    
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
     Public Property visboDebug As Boolean
+    ' wird für den Import von Excel Projekt-Dateien benötigt 
+    Public Property importSettings As String()
 
+    ' wird für den Import der Allianz Delete Roles im Import Type 2 benötigt
+    ' gibt an , welche Rollen gelöscht werden sollen, bevor die anderen importiert werden 
+    Public Property allianzI2DelRoles As String = ""
 
+    ' das ist ein Setting, das bewirkt, das zu jedem Projekt das ActualDataDate auf einen Monat vor dem aktuellem Timestamp gesetzt wird
+    ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
+    ' im Produktivbetrieb, wenn tatsächlich mit Ist-Werte gearbeitet wird, die eingelesen werden, sollte das immer auf false stehen ; 
+    ' unbedingt beachten: kann im Konflikt mit actzalDataMonth stehen ;
+    Public Property autoSetActualDataDate As Boolean = False
+
+    ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
+    Public Property actualDataMonth As Date = Date.MinValue
 
     Sub New()
+
+        ReDim _importSettings(17)
+        _allianzI2DelRoles = ""
 
         ' Chart Settings
         _fontsizeTitle = 10
@@ -304,6 +321,9 @@ Public Class clsawinSettings
         _importUnknownNames = True
         _createUniqueSiblingNames = True
 
+        ' Rollen und Kosten aus DB lesen
+        _readCostRolesFromDB = False
+
         ' sollen die MissingDefinitions rausgeschrieben werden ...
         _readWriteMissingDefinitions = False
 
@@ -350,7 +370,7 @@ Public Class clsawinSettings
         _meAuslastungIsInclExt = True
         _meExtendedColumnsView = False
 
-        _considerCategories = True
+        _considerCategories = False
 
 
         ' Settings für den Schutz von Projekten 
@@ -379,7 +399,7 @@ Public Class clsawinSettings
         _useHierarchy = True
         _isHryNameFrmActive = False
         _isChangePortfolioFrmActive = False
-   
+
         _visboDebug = False
 
 

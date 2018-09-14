@@ -16,6 +16,12 @@ Public Class clsMeilenstein
     Private _appearance As String
     Private _color As Integer
 
+    ' die Dokumenten Url für den Meilenstein
+    Private _docURL As String
+
+    ' die Applikations-ID mit der die Dok-Url geöffnet werden kann / soll
+    Private _docUrlAppID As String
+
     Private _verantwortlich As String
 
     ' das Datum eines Meilensteines errechnet sich aus dem Phasen-Start und dem Offset ..
@@ -49,6 +55,39 @@ Public Class clsMeilenstein
         End Set
     End Property
 
+    ''' <summary>
+    ''' liest schreibt den String, der eine Dokumenten URL darstellt, wo Dokumente abgelegt sind, die zum Meilenstein gehören 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property DocURL() As String
+        Get
+            DocURL = _docURL
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _docURL = value
+            Else
+                _docURL = ""
+            End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liest schreibt den String, der die ID der Appliaktion darstellt, mit der auf die Dokumenten Url zugegriffen werden kann 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Property DocUrlAppID() As String
+        Get
+            DocUrlAppID = _docUrlAppID
+        End Get
+        Set(value As String)
+            If Not IsNothing(value) Then
+                _docUrlAppID = value
+            Else
+                _docUrlAppID = ""
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' prüft zwei Meilensteine auf Identität 
@@ -64,14 +103,16 @@ Public Class clsMeilenstein
 
             With vglMS
                 ' prüfen auf allgemeine Attribute ... 
-                If Me.nameID = .nameID And _
-                    Me.shortName = .shortName And _
-                    Me.originalName = .originalName And _
-                    Me.appearance = .appearance And _
-                    Me.verantwortlich = .verantwortlich And _
-                    Me.offset = .offset And _
-                    Me.countDeliverables = .countDeliverables And _
-                    Me.bewertungsCount = .bewertungsCount And _
+                If Me.nameID = .nameID And
+                    Me.shortName = .shortName And
+                    Me.originalName = .originalName And
+                    Me.appearance = .appearance And
+                    Me.verantwortlich = .verantwortlich And
+                    Me.offset = .offset And
+                    Me.countDeliverables = .countDeliverables And
+                    Me.bewertungsCount = .bewertungsCount And
+                    Me.DocURL = .DocURL And
+                    Me.DocUrlAppID = .DocUrlAppID And
                     Me.percentDone = .percentDone Then
                     stillOK = True
 
@@ -546,15 +587,17 @@ Public Class clsMeilenstein
 
         Set(value As Date)
 
-            Dim projektStartDate As Date = Me.Parent.parentProject.startDate
+            ' Änderung tk, 20.6.18 .startdate.Date, um zu normieren  
+            Dim projektStartDate As Date = Me.Parent.parentProject.startDate.Date
             Dim phasenOffset As Integer = Me.Parent.startOffsetinDays
 
-            If DateDiff(DateInterval.Day, projektStartDate, value) < 0 Then
+            If DateDiff(DateInterval.Day, projektStartDate, value.Date) < 0 Then
                 Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString)
 
             Else
                 Try
-                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset), value)
+                    ' Änderung tk, 20.6.18 value.date , um zu normieren ...
+                    _offset = DateDiff(DateInterval.Day, projektStartDate.AddDays(phasenOffset), value.Date)
                 Catch ex As Exception
                     Throw New Exception("ungültiges Datum für Meilenstein " & value.ToShortDateString & vbLf & _
                                         ex.Message)
@@ -722,6 +765,10 @@ Public Class clsMeilenstein
 
         _nameID = ""
         _parentPhase = parent
+
+        ' Vorbesetzen der Dokumenten-URL und App-ID , mit der die Dokumente bearbeitet werden können 
+        _docURL = ""
+        _docUrlAppID = ""
 
         _percentDone = 0.0
         _bewertungen = New SortedList(Of String, clsBewertung)

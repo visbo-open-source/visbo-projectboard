@@ -11,6 +11,10 @@ Public Class clsPhaseDB
     Public percentDone As Double
     Public responsible As String
 
+    ' Ergänzungen 8.5.18 wegen Dokumenten Urls
+    Public docURL As String
+    Public docUrlAppID As String
+
     Public deliverables As List(Of String)
 
     Public ampelStatus As Integer
@@ -58,6 +62,10 @@ Public Class clsPhaseDB
             Me.shortName = .shortName
             Me.originalName = .originalName
             Me.appearance = .appearance
+
+            ' Dokumenten-Url und Applikation
+            Me.docURL = .DocURL
+            Me.docUrlAppID = .DocUrlAppID
 
             Me.responsible = .verantwortlich
             Me.percentDone = .percentDone
@@ -138,6 +146,15 @@ Public Class clsPhaseDB
             .latestStart = Me.latestStart
             '.minDauer = Me.minDauer
             '.maxDauer = Me.maxDauer
+
+            ' jetzt kommen die Doumenten Folder und AppIDs
+            If Not IsNothing(Me.docURL) Then
+                .DocURL = Me.docURL
+            End If
+
+            If Not IsNothing(Me.docUrlAppID) Then
+                .DocUrlAppID = Me.docUrlAppID
+            End If
 
             If Not IsNothing(Me.responsible) Then
                 .verantwortlich = Me.responsible
@@ -311,6 +328,9 @@ Public Class clsPhaseDB
         shortName = ""
         originalName = ""
         appearance = ""
+
+        docURL = ""
+        docUrlAppID = ""
 
     End Sub
 End Class

@@ -64,7 +64,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO/Configuration")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\epcm\")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -73,7 +73,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("visbo")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("epcm")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -169,22 +169,22 @@ Partial Public NotInheritable Class MySettings
             Return CType(Me("VISBOMapping"),String)
         End Get
     End Property
-    
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+
+    <Global.System.Configuration.UserScopedSettingAttribute(),
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+     Global.System.Configuration.DefaultSettingValueAttribute("")>
     Public Property userNamePWD() As String
         Get
-            Return CType(Me("userNamePWD"),String)
+            Return CType(Me("userNamePWD"), String)
         End Get
         Set
             Me("userNamePWD") = value
         End Set
     End Property
-    
+
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
     Public Property rememberUserPWD() As Boolean
         Get
             Return CType(Me("rememberUserPWD"),Boolean)

@@ -122,6 +122,8 @@ Imports System.IO
             .lblStandvom.Visible = False
             .requiredDate.Visible = False
             .addToSession.Visible = False
+            .loadAsSummary.Visible = False
+
         End With
 
         Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog
@@ -215,42 +217,105 @@ Imports System.IO
 
         If returnValue = DialogResult.OK Then
 
+            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
+            Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
+
             appInstance.ScreenUpdating = False
 
             If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
-                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value)
+                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
             Else
                 storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
 
             Dim constellationsToDo As New clsConstellations
 
+
+
+            If clearBoard Then
+                'currentSessionConstellation.Liste.Clear()
+                AlleProjekte.Clear(updateCurrentConstellation:=True)
+                projectConstellations.clearLoadedPortfolios()
+            End If
+
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
-                Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
-                If Not IsNothing(constellation) Then
-                    If Not constellationsToDo.Contains(constellation.constellationName) Then
-                        constellationsToDo.Add(constellation)
-                    End If
-                Else
-                    constellation = dbConstellations.getConstellation(tmpName)
-                    If Not IsNothing(constellation) Then
-                        If Not constellationsToDo.Contains(constellation.constellationName) Then
-                            constellationsToDo.Add(constellation)
+                ' Plausibilitätsprüfung: darf das geladen werden 
+                Try
+                    Dim ok As Boolean = False
+                    If (Not AlleProjekte.containsAnySummaryProject _
+                        And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
+                        And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
+                        ' alles in Ordnung 
+                        ok = True
+                    Else
+                        If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            ok = True
                         End If
-                        projectConstellations.Add(constellation)
                     End If
 
-                End If
+                    If ok Then
+                        ' aufnehmen ...
+                        Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+
+                        If Not IsNothing(constellation) Then
+                            If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                constellationsToDo.Add(constellation)
+                            End If
+                        Else
+                            constellation = dbConstellations.getConstellation(tmpName)
+                            If Not IsNothing(constellation) Then
+                                If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                    constellationsToDo.Add(constellation)
+                                End If
+                                projectConstellations.Add(constellation)
+                            End If
+
+                        End If
+
+                        ' tk jetzt muss für jedes der items, das ein Portfolio ist, dieses in die Liste eintragen 
+                        'If constellation.containsAnySummaryProject Then
+                        '    For Each spKvP As KeyValuePair(Of String, clsConstellationItem) In constellation.Liste
+                        '        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(spKvP.Value.projectName, spKvP.Value.variantName, AlleProjekte, Date.Now)
+                        '        If Not IsNothing(tmpProj) Then
+                        '            If Not AlleProjekte.Containskey(spKvP.Key) Then
+                        '                AlleProjekte.Add(tmpProj, )
+                        '            End If
+                        '        End If
+                        '        If spKvP.Value.variantName = portfolioVName Then
+                        '            projectConstellations.addToLoadedSessionPortfolios(spKvP.Key)
+                        '        End If
+                        '    Next
+                        'Else
+                        '    If Not IsNothing(constellation) Then
+                        '        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                        '    End If
+                        'End If
+
+                        ' war vorher ..
+                        If Not IsNothing(constellation) Then
+                            projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                        End If
+
+
+
+                    Else
+                        ' Meldung, un dann nicht aufnehmen 
+                        Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
+                                     "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
+                    End If
+                Catch ex As Exception
+                    Dim tstmsg As String = ex.Message
+                End Try
+
+
 
             Next
 
-
-            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
-            'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
+            'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
-                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore)
+                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProjects)
             End If
 
             ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
@@ -892,6 +957,15 @@ Imports System.IO
         Dim abbruch As Boolean = False
 
 
+        ' check ob auch keine Summary Projects selektiert sind ...
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
+
+
+
+        ' hier geht es los , wenn ok ... 
         Try
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
@@ -1178,6 +1252,12 @@ Imports System.IO
 
         Call projektTafelInit()
 
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
+
         enableOnUpdate = False
 
         Try
@@ -1225,6 +1305,12 @@ Imports System.IO
         Dim i As Integer
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         enableOnUpdate = False
 
@@ -1288,6 +1374,12 @@ Imports System.IO
         Dim i As Integer
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         enableOnUpdate = False
 
@@ -1368,6 +1460,12 @@ Imports System.IO
         Dim key As String
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
 
         enableOnUpdate = False
@@ -1890,6 +1988,13 @@ Imports System.IO
                     tmpLabel = "Strategy/Risk"
                 End If
 
+            Case "PT2G1M2B3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Budget ändern"
+                Else
+                    tmpLabel = "Modify budget"
+                End If
+
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Strategie/Risiko/Abhängigkeiten"
@@ -2231,6 +2336,27 @@ Imports System.IO
                     tmpLabel = "Ändern von Attributen"
                 Else
                     tmpLabel = "Modify Attributes"
+                End If
+
+            Case "PT4G2M3" ' Export to Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export Projekte in Excel"
+                Else
+                    tmpLabel = "Export Projects to Excel"
+                End If
+
+            Case "PT4G2M3B1" ' Projekte mit einer Übersichtszeile in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Übersicht"
+                Else
+                    tmpLabel = "Overview"
+                End If
+
+            Case "PT4G2M3B2" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Details"
+                Else
+                    tmpLabel = "Details"
                 End If
 
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
@@ -3009,8 +3135,13 @@ Imports System.IO
         End If
     End Function
 
+    ''' <summary>
+    ''' es werden nur Projekte an MassEdit übergeben ... sollten Summary Projekte in der Selection sein, werden die erst durch ihre Projekte, die im Show sind, ersetzt 
+    ''' </summary>
+    ''' <param name="meModus"></param>
     Private Sub massEditRcTeAt(ByVal meModus As Integer)
         Dim todoListe As New Collection
+        Dim projektTodoliste As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
@@ -3045,10 +3176,6 @@ Imports System.IO
 
             If todoListe.Count > 0 Then
 
-                ' jetzt aufbauen der dbCacheProjekte
-                Call buildCacheProjekte(todoListe)
-
-
                 ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' alles ok , bereits gesetzt 
@@ -3078,10 +3205,22 @@ Imports System.IO
                     enableOnUpdate = False
 
                     If meModus = ptModus.massEditRessCost Then
-                        Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
+                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
+
+                        Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight)
+
                     ElseIf meModus = ptModus.massEditTermine Then
-                        Call writeOnlineMassEditTermine(todoListe)
+                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
+                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
+
+                        Call writeOnlineMassEditTermine(projektTodoliste)
+
                     ElseIf meModus = ptModus.massEditAttribute Then
+                        ' jetzt aufbauen der dbCacheProjekte, names are pNames
+                        Call buildCacheProjekte(todoListe, namesArePvNames:=False)
                         Call writeOnlineMassEditAttribute(todoListe)
                     Else
                         Exit Sub
@@ -3232,167 +3371,13 @@ Imports System.IO
     End Sub
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
-        Call massEditRcTeAt(ptModus.massEditRessCost)
-        ' das unten stehende wird jetzt durch den Aufruf oben gemacht 
-        'Dim todoListe As New Collection
-        'Dim outputFenster As New frmOutputWindow
-        'Dim outputCollection As New Collection
-        'Dim outPutLine As String = ""
-
-        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-        '' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
-        '' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
-
-        'Call projektTafelInit()
-
-        'enableOnUpdate = False
-        '' jetzt auf alle Fälle wieder das MPT Window aktivieren ...
-        'projectboardWindows(PTwindows.mpt).Activate()
-
-        'If ShowProjekte.Count > 0 Then
-
-        '    ' neue Methode 
-        '    todoListe = getProjectSelectionList(True)
-
-        '    ' check, ob wirklich alle Projekte editiert werden sollen ... 
-        '    If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
-        '        Dim yesNo As Integer
-        '        yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
-        '        If yesNo = MsgBoxResult.No Then
-        '            enableOnUpdate = True
-        '            Exit Sub
-        '        End If
-        '    End If
-
-
-
-        '    If todoListe.Count > 0 Then
-
-        '        ' jetzt aufbauen der dbCacheProjekte
-        '        Call buildCacheProjekte(todoListe)
-
-
-        '        ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
-        '        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-        '            ' alles ok , bereits gesetzt 
-
-        '        Else
-
-        '            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-        '            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-        '            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-        '        End If
-
-
-        '        Call enableControls(ptModus.massEditRessCost)
-
-        '        ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
-        '        ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
-        '        'Call saveProjectsToBackup(todoListe)
-
-        '        ' hier wird die aktuelle Zusammenstellung an Windows gespeichert ...
-        '        'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
-
-        '        ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
-        '        appInstance.ScreenUpdating = False
-
-        '        Try
-        '            enableOnUpdate = False
-
-        '            Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
-
-        '            appInstance.EnableEvents = True
-
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
-        '                    projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
-        '                Else
-        '                    projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-        '                End If
-
-        '            Catch ex As Exception
-        '                projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-        '            End Try
-
-        '            ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
-        '            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
-        '                .Activate()
-        '            End With
-
-        '            With projectboardWindows(PTwindows.massEdit)
-        '                .WindowState = Excel.XlWindowState.xlMaximized
-        '                .SplitRow = 1
-        '                .SplitColumn = 6
-        '                .FreezePanes = True
-        '                .DisplayFormulas = False
-        '                .DisplayHeadings = False
-        '                .DisplayGridlines = True
-        '                .GridlineColor = RGB(220, 220, 220)
-        '                .DisplayWorkbookTabs = False
-        '                .Caption = bestimmeWindowCaption(PTwindows.massEdit)
-        '            End With
-
-
-        '            ' jetzt das Multiprojekt Window ausblenden ...
-        '            projectboardWindows(PTwindows.mpt).Visible = False
-
-        '            ' jetzt auch alle anderen ggf offenen pr und pf Windows unsichtbar machen ... 
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-        '                    projectboardWindows(PTwindows.mptpf).Visible = False
-        '                End If
-        '            Catch ex As Exception
-
-        '            End Try
-
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-        '                    projectboardWindows(PTwindows.mptpr).Visible = False
-        '                End If
-        '            Catch ex As Exception
-
-        '            End Try
-
-
-
-        '        Catch ex As Exception
-        '            Call MsgBox("Fehler: " & ex.Message)
-        '            If appInstance.EnableEvents = False Then
-        '                appInstance.EnableEvents = True
-        '            End If
-        '            If appInstance.ScreenUpdating = False Then
-        '                appInstance.ScreenUpdating = True
-        '            End If
-        '        End Try
-
-        '    Else
-        '        enableOnUpdate = True
-        '        If appInstance.EnableEvents = False Then
-        '            appInstance.EnableEvents = True
-        '        End If
-        '        If awinSettings.englishLanguage Then
-        '            Call MsgBox("no projects apply to criterias ...")
-        '        Else
-        '            Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
-        '        End If
-        '    End If
-
-
-        'Else
-        '    enableOnUpdate = True
-        '    If appInstance.EnableEvents = False Then
-        '        appInstance.EnableEvents = True
-        '    End If
-
-        '    If awinSettings.englishLanguage Then
-        '        Call MsgBox("no active projects ...")
-        '    Else
-        '        Call MsgBox("Es gibt keine aktiven Projekte ...")
-        '    End If
-
-        'End If
+        ' check ob auch keine Summary Projects selektiert sind ...
+        Dim nameCollection As New Collection
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        Else
+            Call massEditRcTeAt(ptModus.massEditRessCost)
+        End If
 
 
 
@@ -4336,6 +4321,11 @@ Imports System.IO
 
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Call projektTafelInit()
 
@@ -4413,6 +4403,12 @@ Imports System.IO
         Dim atleastOne As Boolean = False
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4492,6 +4488,13 @@ Imports System.IO
         Dim atleastOne As Boolean = False
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        ' ein Unmark darf auf Summary Projekte gemacht werden 
+        'If Not noSummaryProjectsareSelected(nameCollection) Then
+        '    Exit Sub
+        'End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4575,6 +4578,12 @@ Imports System.IO
         Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4872,7 +4881,7 @@ Imports System.IO
                     Call importiereMassenEdit()
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, True)
+                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, noComparison:=True)
 
                     ' ''If wasNotEmpty Then
                     ' ''    Call awinClearPlanTafel()
@@ -4927,6 +4936,7 @@ Imports System.IO
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
         ' Übernahme 
 
+        Dim noScenarioCreation As Boolean = False
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
@@ -4959,6 +4969,9 @@ Imports System.IO
                 dateiName = getInventurImport.selectedDateiName
 
                 Try
+                    ' jetzt das Logfile öffnen 
+                    Call logfileOpen()
+                    Dim logmsg() As String
 
                     If My.Computer.FileSystem.FileExists(dateiName) Then
 
@@ -4970,45 +4983,123 @@ Imports System.IO
                         End If
 
                         appInstance.Workbooks.Open(dateiName)
-                        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
-                        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+
+                        Dim scenarioNameP As String = appInstance.ActiveWorkbook.Name
+                        Dim scenarioNameS As String = scenarioNameP & " (programs)"
+                        Dim positionIX As Integer = scenarioNameP.IndexOf(".xls") - 1
                         Dim tmpName As String = ""
                         For ih As Integer = 0 To positionIX
-                            tmpName = tmpName & scenarioName.Chars(ih)
+                            tmpName = tmpName & scenarioNameP.Chars(ih)
                         Next
-                        scenarioName = tmpName.Trim
+                        scenarioNameP = tmpName.Trim
 
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
+                        Dim isAllianzImport1 As Boolean = False
 
+                        If scenarioNameP.StartsWith("Allianz-Typ 1") Then
+                            Dim startdate As Date = CDate("1.1.2018")
+                            Dim enddate As Date = CDate("31.12.2018")
 
-                        Call awinImportProjektInventur()
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                            isAllianzImport1 = True
+                            Call importAllianzType1(startdate, enddate)
 
-                        Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
 
-                        ' ''If wasNotEmpty Then
-                        ' ''    Call awinClearPlanTafel()
-                        ' ''End If
+                            noScenarioCreation = True
+                            Call importAllianzType2()
 
-                        '' ''Call awinZeichnePlanTafel(True)
-                        ' ''Call awinZeichnePlanTafel(False)
-                        ' ''Call awinNeuZeichnenDiagramme(2)
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
+                            ' immer zwei Monate zurück gehen 
+                            ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
+                            Dim monat As Integer = Date.Now.Month - 1
 
-                        If sessionConstellation.count > 0 Then
-
-                            If projectConstellations.Contains(scenarioName) Then
-                                projectConstellations.Remove(scenarioName)
+                            If awinSettings.actualDataMonth <> Date.MinValue Then
+                                monat = awinSettings.actualDataMonth.Month
                             End If
 
-                            projectConstellations.Add(sessionConstellation)
-                            Call loadSessionConstellation(scenarioName, False, False, True)
+                            If monat >= 1 And monat <= 12 Then
+                                'Call ImportAllianzType3(monat)
+                                Call ImportAllianzType3(monat, readAll:=True, createUnknown:=True)
+                            End If
+
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
+                            Call importAllianzType4()
+
                         Else
-                            Call MsgBox("keine PRojekte importiert ...")
+                            Call awinImportProjektInventur()
                         End If
 
-                        'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                        'Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                        'sessionConstellationP enthält alle Projekte aus dem Import 
+                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+                        Dim sessionConstellationS As clsConstellation = Nothing
+                        If isAllianzImport1 Then
+                            sessionConstellationS = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
+                        End If
+
+                        'Call sessionConstellationP.calcUnionProject(False)
+                        'Call sessionConstellationS.calcUnionProject(False)
+
+                        ' Testen ..
+                        ' test
+                        If isAllianzImport1 Then
+                            Dim everythingOK As Boolean = testUProjandSingleProjs(sessionConstellationP, False)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = sessionConstellationP.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
+                            ' ende test
+
+
+                            ' test
+                            everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = sessionConstellationP.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
+                            ' ende test
+                        End If
+
+
+                        If isAllianzImport1 Then
+                            If sessionConstellationS.count > 0 Then
+
+                                If projectConstellations.Contains(scenarioNameS) Then
+                                    projectConstellations.Remove(scenarioNameS)
+                                End If
+
+                                projectConstellations.Add(sessionConstellationS)
+                                ' jetzt auf Projekt-Tafel anzeigen 
+                                Call loadSessionConstellation(scenarioNameS, False, False, True)
+
+                            Else
+                                Call MsgBox("keine Programmlinien importiert ...")
+                            End If
+                        Else
+                            If sessionConstellationP.count > 0 Then
+
+                                If projectConstellations.Contains(scenarioNameP) Then
+                                    projectConstellations.Remove(scenarioNameP)
+                                End If
+
+                                projectConstellations.Add(sessionConstellationP)
+                                ' jetzt auf Projekt-Tafel anzeigen 
+                                Call loadSessionConstellation(scenarioNameP, False, False, True)
+
+                            Else
+                                Call MsgBox("keine Projekte importiert ...")
+                            End If
+                        End If
+
+
+
 
                         If ImportProjekte.Count > 0 Then
                             ImportProjekte.Clear(False)
@@ -5018,8 +5109,11 @@ Imports System.IO
                         Call MsgBox("bitte Datei auswählen ...")
                     End If
 
+                    Call logfileSchliessen()
 
                 Catch ex As Exception
+                    Call logfileSchliessen()
+
                     appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                     Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
                 End Try
@@ -5028,6 +5122,8 @@ Imports System.IO
             End If
 
         End If
+
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -5620,7 +5716,7 @@ Imports System.IO
 
                             Try
                                 Dim keyStr As String = calcProjektKey(hproj)
-                                ImportProjekte.Add(hproj, False)
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                                 myCollection.Add(calcProjektKey(hproj))
                             Catch ex2 As Exception
                                 Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
@@ -5721,6 +5817,8 @@ Imports System.IO
             ' alle Import Projekte erstmal löschen
             ImportProjekte.Clear(False)
 
+            '' Cursor auf HourGlass setzen
+            Cursor.Current = Cursors.WaitCursor
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
             Dim i As Integer
@@ -5751,12 +5849,12 @@ Imports System.IO
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
-                        ImportProjekte.Add(hproj, False)
+                        ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                         myCollection.Add(calcProjektKey(hproj))
 
                         If Not IsNothing(mapProj) Then
                             keyStr = calcProjektKey(mapProj)
-                            ImportProjekte.Add(mapProj, False)
+                            ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
                             myCollection.Add(calcProjektKey(mapProj))
 
                         End If
@@ -5773,6 +5871,9 @@ Imports System.IO
                 End Try
 
             Next i
+
+            '' Cursor auf Default setzen
+            Cursor.Current = Cursors.Default
 
 
             ' '' ''End If
@@ -5925,15 +6026,21 @@ Imports System.IO
 
     End Sub
 
+    ''' <summary>
+    ''' schreibt die Prio Liste 
+    ''' </summary>
+    ''' <param name="control"></param>
     Public Sub awinWritePrioList(control As IRibbonControl)
+
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
+        Dim roleCostCollection As New Collection
         Try
-            Call writeProjektsForSequencing()
+            Call writeProjektsForSequencing(roleCostCollection)
         Catch ex As Exception
             Call MsgBox(ex.Message)
         End Try
@@ -5942,6 +6049,96 @@ Imports System.IO
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+    End Sub
+
+    ''' <summary>
+    ''' schreibt pro Projekt eine Zeile ...
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub exportExcelSumme(control As IRibbonControl)
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+
+            Dim myCollection As Collection = frmMERoleCost.ergItems
+
+            Try
+                Call writeProjektsForSequencing(myCollection)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt pro Projekt alle ausgewählten Rollen / Kosten weg 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub exportExcelDetails(control As IRibbonControl)
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+
+            Dim myCollection As Collection = frmMERoleCost.ergItems
+
+            Try
+                Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollection)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
     End Sub
 
     ''' <summary>
@@ -6857,6 +7054,12 @@ Imports System.IO
 
         If ok And Not IsNothing(hproj) Then
 
+            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+            Dim tmpVariantName As String = ""
+            If hproj.projectType = ptPRPFType.portfolio Then
+                tmpVariantName = portfolioVName
+            End If
+
             Dim repObj As Excel.ChartObject
             appInstance.EnableEvents = False
             appInstance.ScreenUpdating = False
@@ -6883,7 +7086,7 @@ Imports System.IO
                                                          top, left, width, height, False)
 
                 Try
-                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
@@ -6970,6 +7173,12 @@ Imports System.IO
 
                 If ok Then
 
+                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                    Dim tmpVariantName As String = ""
+                    If hproj.projectType = ptPRPFType.portfolio Then
+                        tmpVariantName = portfolioVName
+                    End If
+
                     Dim repObj As Excel.ChartObject
                     appInstance.EnableEvents = False
                     appInstance.ScreenUpdating = False
@@ -6989,7 +7198,7 @@ Imports System.IO
                     Try
 
                         Try
-                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
@@ -7000,7 +7209,8 @@ Imports System.IO
                         Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+                        'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                         repObj = Nothing
                         Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
@@ -7076,6 +7286,11 @@ Imports System.IO
                     Exit Sub
                 End Try
 
+                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                Dim tmpVariantName As String = ""
+                If hproj.projectType = ptPRPFType.portfolio Then
+                    tmpVariantName = portfolioVName
+                End If
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -7091,7 +7306,7 @@ Imports System.IO
 
                 Try
                     Try
-                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                     Catch ex As Exception
                         vglProj = Nothing
                     End Try
@@ -7102,7 +7317,8 @@ Imports System.IO
                     Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False)
 
                     ' jetzt wird das Pie-Diagramm gezeichnet 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                    'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     repObj = Nothing
                     Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
@@ -7617,6 +7833,7 @@ Imports System.IO
         Dim vglName As String = " "
         Dim pName As String = ";"
         Dim variantName As String = ""
+        Dim bproj As clsProjekt = Nothing
 
         Call projektTafelInit()
 
@@ -7644,38 +7861,49 @@ Imports System.IO
                     Exit Sub
                 End Try
 
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.getShapeText
-                    End If
-                Else
-                    projekthistorie = New clsProjektHistorie
+                ' tk, 7.8.18 wird nicht mehr gebraucht .... wurde ersetzt durch retrieveFirstContracted ...
+                ''If Not projekthistorie Is Nothing Then
+                ''    If projekthistorie.Count > 0 Then
+                ''        vglName = projekthistorie.First.getShapeText
+                ''    End If
+                ''Else
+                ''    projekthistorie = New clsProjektHistorie
+                ''End If
+
+                ''With hproj
+                ''    pName = .name
+                ''    variantName = .variantName
+                ''End With
+
+                ''If vglName <> hproj.getShapeText Then
+                ''    If request.pingMongoDb() Then
+                ''        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                ''        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
+                ''                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                ''        projekthistorie.Add(Date.Now, hproj)
+                ''    Else
+                ''        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+                ''        projekthistorie.clear()
+                ''    End If
+
+                ''Else
+                ''    ' der aktuelle Stand hproj muss hinzugefügt werden 
+                ''    Dim lastElem As Integer = projekthistorie.Count - 1
+                ''    projekthistorie.RemoveAt(lastElem)
+                ''    projekthistorie.Add(Date.Now, hproj)
+                ''End If
+                ''Dim nrSnapshots As Integer = projekthistorie.Count
+
+                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                Dim tmpVariantName As String = ""
+                If hproj.projectType = ptPRPFType.portfolio Then
+                    tmpVariantName = portfolioVName
                 End If
 
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                End With
+                ' das bproj bestimmen 
+                bproj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
 
-                If vglName <> hproj.getShapeText Then
-                    If request.pingMongoDb() Then
-                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                        projekthistorie.Add(Date.Now, hproj)
-                    Else
-                        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
-                        projekthistorie.clear()
-                    End If
 
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    Dim lastElem As Integer = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, hproj)
-                End If
-
-                Dim nrSnapshots As Integer = projekthistorie.Count
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -7688,7 +7916,7 @@ Imports System.IO
                     Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     If typ = "Curve" Then
-                        Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstCurveOfProject(hproj, bproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
                         Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width, False)
                     End If
@@ -8561,7 +8789,9 @@ Imports System.IO
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8642,9 +8872,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8661,7 +8891,9 @@ Imports System.IO
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8736,9 +8968,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8963,7 +9195,10 @@ Imports System.IO
         End If
 
         If relevanteProjekte.Count > 0 Then
-            If showRangeRight - showRangeLeft >= minColumns - 1 Then
+
+            Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+            If ok Then
 
                 ' betrachte sowohl Vergangenheit als auch Gegenwart
                 future = 0
@@ -9016,7 +9251,7 @@ Imports System.IO
 
                 pieChartZieleV.Show()
             Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+                Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
             End If
 
         Else
@@ -9046,8 +9281,8 @@ Imports System.IO
 
         Call projektTafelInit()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9111,9 +9346,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load project/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -9375,19 +9610,26 @@ Imports System.IO
 
         visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
 
+        ' in Abhängigkeit von der Resolution soll jetzt mehr oder weniger prozentualer Platz spendiert werden 
+        Dim teilungsfaktor As Double = 0.7
+        If maxScreenHeight < 520 Then
+            teilungsfaktor = 0.6
+        End If
+
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.massEdit)
             .Top = 0
             .Left = 1.0
-            .Height = 3 / 4 * maxScreenHeight
+            '.Height = 3 / 4 * maxScreenHeight
+            .Height = teilungsfaktor * maxScreenHeight
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.meChart)
-            .Top = 3 / 4 * maxScreenHeight + 3
+            .Top = teilungsfaktor * maxScreenHeight + 1
             .Left = 1.0
-            .Height = 1 / 4 * maxScreenHeight - 3
+            .Height = (1 - teilungsfaktor) * maxScreenHeight - 1
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 
@@ -9413,7 +9655,7 @@ Imports System.IO
             Dim chLeft As Double = 2
             Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
             Dim chWidth As Double = stdBreite
-            Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 6
+            Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 2
             Dim chTop As Double = 5
 
             If ShowProjekte.contains(pName) Then
@@ -9909,9 +10151,9 @@ Imports System.IO
 
         Call projektTafelInit()
 
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9971,9 +10213,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte erst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -11192,14 +11434,18 @@ Imports System.IO
 
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
-        Dim timeZoneWasOff As Boolean = False
+        Dim timeZoneWasOff As Boolean = (showRangeLeft = 0 Or showRangeRight = 0)
         getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
 
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
-        If showRangeRight - showRangeLeft >= minColumns - 1 Then
+        If ok Then
 
             If ShowProjekte.Count > 0 Then
 
@@ -11211,16 +11457,11 @@ Imports System.IO
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
         Else
-            ' automatisch bestimmen 
-            timeZoneWasOff = True
-            If selectedProjekte.Count > 0 Then
-                showRangeLeft = selectedProjekte.getMinMonthColumn
-                showRangeRight = selectedProjekte.getMaxMonthColumn
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/portfoliso first ...")
             Else
-                showRangeLeft = ShowProjekte.getMinMonthColumn
-                showRangeRight = ShowProjekte.getMaxMonthColumn
+                Call MsgBox("bitte erst Projekt/Portfolios laden ...")
             End If
-            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
         End If
 
