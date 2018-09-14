@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\BHTC\</Value>
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Task Class - local</Value>
@@ -18,7 +18,7 @@
       <Value Profile="(Default)">VISBO Ampel</Value>
     </Setting>
     <Setting Name="mongoDBURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">DESKTOP-HAC7VHA</Value>
+      <Value Profile="(Default)">DESKTOP-7HACVHA</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
       <Value Profile="(Default)">bhtcrel</Value>
@@ -27,16 +27,16 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Indicators</Value>
+      <Value Profile="(Default)">Indikatoren</Value>
     </Setting>
     <Setting Name="VISBOdeliverables" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Deliverables</Value>
     </Setting>
     <Setting Name="VISBOresponsible" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Responsible</Value>
+      <Value Profile="(Default)">Kontaktperson</Value>
     </Setting>
     <Setting Name="VISBOpercentDone" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">% Work complete</Value>
+      <Value Profile="(Default)">% Abgeschlossen</Value>
     </Setting>
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
       <Value Profile="(Default)">TMS_View_local</Value>

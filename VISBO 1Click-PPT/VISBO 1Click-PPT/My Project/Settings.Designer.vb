@@ -64,7 +64,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\BHTC\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\BHTC\")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -100,7 +100,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("DESKTOP-HAC7VHA")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("DESKTOP-7HACVHA")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -127,7 +127,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Indicators")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Indikatoren")>  _
     Public ReadOnly Property VISBOAmpelText() As String
         Get
             Return CType(Me("VISBOAmpelText"),String)
@@ -145,7 +145,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Responsible")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Kontaktperson")>  _
     Public ReadOnly Property VISBOresponsible() As String
         Get
             Return CType(Me("VISBOresponsible"),String)
@@ -154,7 +154,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("% Work complete")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("% Abgeschlossen")>  _
     Public ReadOnly Property VISBOpercentDone() As String
         Get
             Return CType(Me("VISBOpercentDone"),String)

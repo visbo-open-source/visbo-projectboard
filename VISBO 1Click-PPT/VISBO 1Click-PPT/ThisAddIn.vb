@@ -97,6 +97,22 @@ Public Class ThisAddIn
                 'Application.Quit()
 
             End If
+
+            Try
+                appInstance.Quit()
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                ' die Excel Instanz zumachen
+                pseudoappInstance.DisplayAlerts = False
+                pseudoappInstance.Quit()
+
+            Catch ex As Exception
+
+            End Try
+
         Catch ex As Exception
             If awinSettings.englishLanguage Then
                 Throw New ArgumentException("Error closing the Customization-Files")
