@@ -364,7 +364,7 @@ Public Class clsawinSettings
 
         ' Settings für online MassenEdit 
         _mePrzAuslastung = True
-        _meAutoReduce = True
+        _meAutoReduce = False
         _meDontAskWhenAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True

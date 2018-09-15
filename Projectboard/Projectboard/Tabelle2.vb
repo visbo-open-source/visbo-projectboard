@@ -6,8 +6,8 @@ Imports Microsoft.Office.Interop.Excel
 
 Public Class Tabelle2
 
-    Private columnStartData As Integer = 8
-    Private columnEndData As Integer = 30
+    Private columnStartData As Integer = 7
+    Private columnEndData As Integer = 18
     Private columnRC As Integer = 5
     Private oldColumn As Integer = 5
     Private oldRow As Integer = 2
@@ -340,6 +340,7 @@ Public Class Tabelle2
         Dim former_EE As Boolean = appInstance.EnableEvents
 
         appInstance.EnableEvents = True
+
         Dim currentCell As Excel.Range = Target
 
         ' die Rechtsklick-Behandlung soll auf alle Fälle abgeschaltet werden 
@@ -418,7 +419,7 @@ Public Class Tabelle2
                                     'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
                                     If Not IsNumeric(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value) Then
                                         If CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = "" Then
-                                            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
+                                            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0
                                         End If
                                     End If
 
@@ -589,6 +590,7 @@ Public Class Tabelle2
 
         ' damit nicht eine immerwährende Event Orgie durch Änderung in den Zellen abgeht ...
         appInstance.EnableEvents = False
+
         Dim currentCell As Excel.Range = Target
 
         Try
@@ -602,6 +604,7 @@ Public Class Tabelle2
             Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
 
             If Target.Cells.Count = 1 Then
+
 
                 Dim roleCostNames As New Collection
 
@@ -632,30 +635,30 @@ Public Class Tabelle2
                             Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
 
                             ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
-                            Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
-                            Dim anzahlRollen As Integer = RoleDefinitions.Count
-                            Dim rcValidation() As String
-                            ' in rcValidation(0) steht der Name "alleKosten" für den Validation-String für alle Kosten
-                            ' in rcValidation(i) steht der Name des Validation-String für Rolle mit UID i 
-                            ReDim rcValidation(anzahlRollen + 1)
+                            'Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
+                            'Dim anzahlRollen As Integer = RoleDefinitions.Count
+                            'Dim rcValidation() As String
+                            '' in rcValidation(0) steht der Name "alleKosten" für den Validation-String für alle Kosten
+                            '' in rcValidation(i) steht der Name des Validation-String für Rolle mit UID i 
+                            'ReDim rcValidation(anzahlRollen + 1)
 
-                            rcValidation(0) = "alleKosten"
-                            rcValidation(anzahlRollen + 1) = "alles"
+                            'rcValidation(0) = "alleKosten"
+                            'rcValidation(anzahlRollen + 1) = "alles"
 
-                            For i As Integer = 1 To anzahlRollen
-                                Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-                                If tmprole.isCombinedRole Then
-                                    rcValidation(i) = tmprole.name
-                                Else
-                                    Dim parentrole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
-                                    If IsNothing(parentrole) Then
-                                        rcValidation(i) = "alleRollen"
-                                    Else
-                                        rcValidation(i) = parentrole.name
-                                    End If
+                            'For i As Integer = 1 To anzahlRollen
+                            '    Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
+                            '    If tmprole.isCombinedRole Then
+                            '        rcValidation(i) = tmprole.name
+                            '    Else
+                            '        Dim parentrole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
+                            '        If IsNothing(parentrole) Then
+                            '            rcValidation(i) = "alleRollen"
+                            '        Else
+                            '            rcValidation(i) = parentrole.name
+                            '        End If
 
-                                End If
-                            Next
+                            '    End If
+                            'Next
                             ' Ende Preparation für Validierungs-Strings
 
 
@@ -702,27 +705,27 @@ Public Class Tabelle2
 
                                         With currentCell
 
-                                            Try
-                                                If Not IsNothing(.Validation) Then
-                                                    .Validation.Delete()
-                                                End If
-                                                ' jetzt wird die ValidationList aufgebaut 
-                                                Dim tmpVal As String = validationStrings.Item(rcValidation(newRoleID))
+                                            'Try
+                                            '    If Not IsNothing(.Validation) Then
+                                            '        .Validation.Delete()
+                                            '    End If
+                                            '    ' jetzt wird die ValidationList aufgebaut 
+                                            '    Dim tmpVal As String = validationStrings.Item(rcValidation(newRoleID))
 
-                                                '' ur: 28.09.2017
-                                                ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                                ''                               Formula1:=tmpVal)
+                                            '    '' ur: 28.09.2017
+                                            '    ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                            '    ''                               Formula1:=tmpVal)
 
-                                                ' wenn es sich um die Projekt-Phase handelt
-                                                If phaseNameID = rootPhaseName Then
-                                                    tmpVal = tmpVal & ";" &
-                                                                validationStrings.Item(rcValidation(0))
-                                                    Call updateEmptyRcCellValidations(pName, tmpVal)
-                                                End If
+                                            '    ' wenn es sich um die Projekt-Phase handelt
+                                            '    If phaseNameID = rootPhaseName Then
+                                            '        tmpVal = tmpVal & ";" &
+                                            '                    validationStrings.Item(rcValidation(0))
+                                            '        Call updateEmptyRcCellValidations(pName, tmpVal)
+                                            '    End If
 
-                                            Catch ex As Exception
+                                            'Catch ex As Exception
 
-                                            End Try
+                                            'End Try
                                         End With
 
                                         If Not awinSettings.meEnableSorting Then
@@ -752,6 +755,7 @@ Public Class Tabelle2
                                             If Not roleCostNames.Contains(visboZustaende.oldValue) Then
                                                 roleCostNames.Add(visboZustaende.oldValue, visboZustaende.oldValue)
                                             End If
+
                                             Dim tmpSummaryNames As Collection = RoleDefinitions.getSummaryRoles(visboZustaende.oldValue)
                                             For sr As Integer = 1 To tmpSummaryNames.Count
                                                 Dim srName As String = CStr(tmpSummaryNames.Item(sr))
@@ -1012,7 +1016,7 @@ Public Class Tabelle2
                             visboZustaende.oldValue = "0"
                         End Try
 
-                        Dim monthCol As Integer = showRangeLeft + CInt(((Target.Column - columnStartData) / 2))
+                        Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
 
                         Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
 
@@ -1128,7 +1132,7 @@ Public Class Tabelle2
 
 
                 If auslastungChanged And awinSettings.meExtendedColumnsView Then
-                    Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
+                    'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
                 End If
 
                 ' das Folgende ist eigentlich eine Test Routine , die normalerweise gar nicht nötig ist 
@@ -1166,6 +1170,7 @@ Public Class Tabelle2
                 End Try
 
             Else
+                'appInstance.Undo()
                 Call MsgBox("bitte nur eine Zelle selektieren ...")
                 Target.Cells(1, 1).value = visboZustaende.oldValue
             End If
@@ -1374,7 +1379,7 @@ Public Class Tabelle2
                             'die Monatszahl und dann die Summe updaten ... 
                             '' ''Dim testdbl As Double = xWerte(xWerteIndex + offset + i)
                             '' ''Call MsgBox(" testdbl = " & testdbl.ToString)
-                            CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
+                            CType(meWS.Cells(zeileOFSummaryRole, targetColumn + i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
 
                         Next i
 
@@ -1396,9 +1401,9 @@ Public Class Tabelle2
                                         newValue = newValue + xWerte(xWerteIndex + offset + i)
 
                                         ' jetzt muss der newDblValue in das Feld geschrieben werden 
-                                        CType(meWS.Cells(targetRow, targetColumn + 2 * i), Excel.Range).Value = newValue
+                                        CType(meWS.Cells(targetRow, targetColumn + i), Excel.Range).Value = newValue
                                         ' die Monatszahl und dann die Summe updaten ... 
-                                        CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = 0
+                                        CType(meWS.Cells(zeileOFSummaryRole, targetColumn + i), Excel.Range).Value = 0
 
                                         difference = -xWerte(xWerteIndex + offset + i)
                                         Exit For
@@ -1427,7 +1432,7 @@ Public Class Tabelle2
                                 ' die Monatszahl und dann die Summe updaten ... 
                                 '' ''Dim testdbl As Double = xWerte(xWerteIndex + offset + i)
                                 '' ''Call MsgBox(" testdbl = " & testdbl.ToString)
-                                CType(meWS.Cells(zeileOFSummaryRole, targetColumn + 2 * i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
+                                CType(meWS.Cells(zeileOFSummaryRole, targetColumn + i), Excel.Range).Value = xWerte(xWerteIndex + offset + i)
 
                             Next i
 
@@ -1891,8 +1896,8 @@ Public Class Tabelle2
                                       ByVal phStart As Integer, ByVal phEnd As Integer,
                                       ByVal xWerte() As Double)
         Dim schnittmenge() As Double
-        Dim zeilenWerte() As Double
-        Dim zeilensumme As Double
+        'Dim zeilenWerte() As Double
+        'Dim zeilensumme As Double
         Dim editRange As Excel.Range
 
 
@@ -1917,9 +1922,9 @@ Public Class Tabelle2
         If isRole Then
             roleUID = RoleDefinitions.getRoledef(rcName).UID
             roleCollection.Add(rcName)
-            If awinSettings.meExtendedColumnsView Then
-                auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(roleCollection, von, bis, awinSettings.mePrzAuslastung)
-            End If
+            'If awinSettings.meExtendedColumnsView Then
+            '    auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(roleCollection, von, bis, awinSettings.mePrzAuslastung)
+            'End If
 
         End If
 
@@ -1930,79 +1935,25 @@ Public Class Tabelle2
         Call awinIntersectZeitraum(phStart, phEnd, ixZeitraum, ix, breite)
 
         schnittmenge = calcArrayIntersection(von, bis, phStart, phEnd, xWerte)
-        zeilensumme = schnittmenge.Sum
-
-        ReDim zeilenWerte(2 * (bis - von + 1) - 1)
 
         With CType(appInstance.ActiveSheet, Excel.Worksheet)
-            If isRole Then
-                If awinSettings.meExtendedColumnsView Then
-                    If awinSettings.mePrzAuslastung Then
-                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
-                    Else
-                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
-                    End If
-                Else
-                    CType(.Cells(zeile, 7), Excel.Range).Value = ""
-                End If
-
-            Else
-                CType(.Cells(zeile, 7), Excel.Range).Value = ""
-            End If
-
-            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
+            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
         End With
 
-        ' zusammenmischen von Schnittmenge und Prozentual-Werte 
-        For mis As Integer = 0 To bis - von
-            zeilenWerte(2 * mis) = schnittmenge(mis)
-            ' in auslastungsarray(r, 0) steht die Gesamt-Auslastung
-            If isRole And awinSettings.meExtendedColumnsView Then
-                zeilenWerte(2 * mis + 1) = auslastungsArray(roleUID - 1, mis + 1)
-            Else
-                zeilenWerte(2 * mis + 1) = 0
-            End If
-
-        Next
-
-        If awinSettings.meExtendedColumnsView Then
-            editRange.Value = zeilenWerte
-        Else
-            For mis As Integer = 0 To bis - von
-                With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                    CType(.Cells(zeile, startSpalteDaten + 2 * mis), Excel.Range).Value = zeilenWerte(2 * mis)
-                    CType(.Cells(zeile, startSpalteDaten + 2 * mis + 1), Excel.Range).Value = zeilenWerte(2 * mis + 1)
-                End With
-            Next
-        End If
-
-
-        ' jetzt werden die Zellenwerte noch gelöscht , die nicht zur Phase gehören ...  
-        With CType(appInstance.ActiveSheet, Excel.Worksheet)
+        If schnittmenge.Sum > 0 Then
             For l As Integer = 0 To bis - von
 
                 If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                    If isRole Then
-                        ' nichts tun 
-                    Else
-                        ' Auslastung auf Blank setzen 
-                        If awinSettings.meExtendedColumnsView Then
-                            CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
-                        End If
-
-                    End If
+                    editRange.Cells(1, l + 1).value = schnittmenge(l)
                 Else
-                    ' diese Werte löschen, sie gehören nicht zum Zeitraum der Phase  
-                    CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range).Value = ""
-
-                    If awinSettings.meExtendedColumnsView Then
-                        CType(.Cells(zeile, 2 * l + startSpalteDaten + 1), Excel.Range).Value = ""
-                    End If
-
+                    editRange.Cells(1, l + 1).value = ""
                 End If
 
             Next
-        End With
+        Else
+            editRange.Value = ""
+        End If
+
 
         appInstance.EnableEvents = formerEE
 

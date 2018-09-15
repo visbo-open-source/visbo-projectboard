@@ -3682,129 +3682,11 @@ Imports System.IO
 
         Call massEditZeileEinfügen(control.Id)
 
-        ' ''Dim currentCell As Excel.Range
-        ' ''appInstance.EnableEvents = False
-
-        ' ''Try
-
-        ' ''    ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
-        ' ''    Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
-
-        ' ''    currentCell = CType(appInstance.ActiveCell, Excel.Range)
-
-        ' ''    'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-
-        ' ''    Dim columnEndData As Integer = visboZustaende.meColED
-        ' ''    Dim columnStartData As Integer = visboZustaende.meColSD
-
-        ' ''    Dim columnRC As Integer = visboZustaende.meColRC
-
-        ' ''    Dim hoehe As Double = CDbl(currentCell.Height)
-        ' ''    currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
-        ' ''    Dim zeile As Integer = currentCell.Row
-
-        ' ''    ' Blattschutz aufheben ... 
-        ' ''    If Not awinSettings.meEnableSorting Then
-        ' ''        ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
-        ' ''        With CType(appInstance.ActiveSheet, Excel.Worksheet)
-        ' ''            .Unprotect(Password:="x")
-        ' ''        End With
-        ' ''    End If
+        If Not appInstance.EnableEvents = True Then
+            appInstance.EnableEvents = True
+        End If
 
 
-
-        ' ''    With CType(appInstance.ActiveSheet, Excel.Worksheet)
-
-        ' ''        If Not awinSettings.meExtendedColumnsView Then
-        ' ''            appInstance.ScreenUpdating = False
-        ' ''            ' einblenden ... 
-        ' ''            .Range("MahleInfo").EntireColumn.Hidden = False
-        ' ''        End If
-
-
-        ' ''        Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
-        ' ''        Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
-        ' ''        copySource.Copy(Destination:=copyDestination)
-
-        ' ''        CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
-
-        ' ''        For c As Integer = columnStartData - 3 To columnEndData + 1
-        ' ''            CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
-        ' ''        Next
-
-        ' ''        ' jetzt wieder ausblenden ... 
-        ' ''        If Not awinSettings.meExtendedColumnsView Then
-        ' ''            ' ausblenden ... 
-        ' ''            .Range("MahleInfo").EntireColumn.Hidden = True
-        ' ''            appInstance.ScreenUpdating = True
-        ' ''        End If
-        ' ''    End With
-
-        ' ''    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-        ' ''    CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
-
-        ' ''    With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range)
-
-        ' ''        ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
-
-        ' ''        Try
-        ' ''            If Not IsNothing(.Validation) Then
-        ' ''                .Validation.Delete()
-        ' ''            End If
-        ' ''            ' jetzt wird die ValidationList aufgebaut
-        ' ''            ' ist es eine Rolle ? 
-        ' ''            If control.Id = "PT2G1M2B4" Then
-        ' ''                ' Rollen
-        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-        ' ''                                       Formula1:=validationStrings.Item("alleRollen"))
-        ' ''            ElseIf control.Id = "PT2G1M2B7" Then
-        ' ''                ' Kosten
-        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-        ' ''                                                               Formula1:=validationStrings.Item("alleKosten"))
-        ' ''            Else
-        ' ''                ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
-        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-        ' ''                                       Formula1:=validationStrings.Item("alles"))
-        ' ''            End If
-
-        ' ''        Catch ex As Exception
-
-        ' ''        End Try
-
-        ' ''    End With
-
-        ' ''    ' jetzt wird der Old-Value gesetzt 
-        ' ''    With visboZustaende
-        ' ''        If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
-        ' ''            Call MsgBox("Fehler 099 in PTzeileEinfügen")
-        ' ''        End If
-        ' ''        .oldValue = ""
-        ' ''        .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
-        ' ''    End With
-
-
-        ' ''    ' jetzt den Blattschutz wiederherstellen ... 
-        ' ''    If Not awinSettings.meEnableSorting Then
-        ' ''        ' es muss der Blattschutz wieder aktiviert werden ... 
-        ' ''        With CType(appInstance.ActiveSheet, Excel.Worksheet)
-        ' ''            .Protect(Password:="x", UserInterfaceOnly:=True, _
-        ' ''                     AllowFormattingCells:=True, _
-        ' ''                     AllowInsertingColumns:=False,
-        ' ''                     AllowInsertingRows:=True, _
-        ' ''                     AllowDeletingColumns:=False, _
-        ' ''                     AllowDeletingRows:=True, _
-        ' ''                     AllowSorting:=True, _
-        ' ''                     AllowFiltering:=True)
-        ' ''            .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
-        ' ''            .EnableAutoFilter = True
-        ' ''        End With
-        ' ''    End If
-
-        ' ''Catch ex As Exception
-        ' ''    Call MsgBox("Fehler beim Kopieren einer Zeile ...")
-        ' ''End Try
-
-        ' ''appInstance.EnableEvents = True
 
     End Sub
 
@@ -6620,7 +6502,7 @@ Imports System.IO
 
         If awinSettings.meExtendedColumnsView Then
             'Call deleteColorFormatMassEdit()
-            Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+            'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
             'Call colorFormatMassEditRC()
         End If
 
