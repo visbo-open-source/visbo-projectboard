@@ -24463,6 +24463,16 @@ Public Module awinGeneralModules
 
                 If Not IsNothing(hproj) Then
 
+                    ' jetzt wird geprüft, ob es bereits Ist-Daten gibt 
+                    Dim projectWithActualData As Boolean = (hproj.actualDataUntil > hproj.startDate)
+                    Dim actualDataRelColumn As Integer = -1
+                    Dim summeEditierenErlaubt As Boolean = awinSettings.allowSumEditing
+
+                    If projectWithActualData Then
+                        actualDataRelColumn = getColumnOfDate(hproj.actualDataUntil) - von
+                        summeEditierenErlaubt = awinSettings.allowSumEditing And actualDataRelColumn < 0
+                    End If
+
                     ' ist das Projekt geschützt ? 
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
@@ -24478,6 +24488,14 @@ Public Module awinGeneralModules
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
 
+                    End If
+
+                    If actualDataRelColumn >= 0 And Not isProtectedbyOthers Then
+                        If awinSettings.englishLanguage Then
+                            protectionText = "Actual Data until " & hproj.actualDataUntil.Month & "/" & hproj.actualDataUntil.Year
+                        Else
+                            protectionText = "Ist-Daten bis " & hproj.actualDataUntil.Month & "/" & hproj.actualDataUntil.Year
+                        End If
                     End If
 
 
@@ -24535,14 +24553,19 @@ Public Module awinGeneralModules
                                     ' Name schreiben
                                     CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
                                     ' wenn es protected ist, entsprechend markieren 
-                                    If isProtectedbyOthers Then
-                                        'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
-                                        CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+
+                                    If isProtectedbyOthers Or actualDataRelColumn >= 0 Then
+
+                                        If isProtectedbyOthers Then
+                                            CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                        End If
+
                                         ' Kommentar einfügen 
                                         cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
                                         If Not IsNothing(cellComment) Then
                                             CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
                                         End If
+
                                         CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
                                         CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
                                     End If
@@ -24572,7 +24595,8 @@ Public Module awinGeneralModules
                                         If maxRCLengthVorkommen < roleName.Length Then
                                             maxRCLengthVorkommen = roleName.Length
                                         End If
-                                        If isProtectedbyOthers Then
+                                        If isProtectedbyOthers Or actualDataRelColumn >= 0 Then
+                                            ' es darf nichts geändert werden ... kein Name der Rolle oder Kostenart
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -24598,7 +24622,8 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
                                     CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("##,##0.#")
-                                    If awinSettings.allowSumEditing Then
+
+                                    If summeEditierenErlaubt Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
 
                                             If isProtectedbyOthers Then
@@ -24663,7 +24688,7 @@ Public Module awinGeneralModules
 
                                             With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
 
-                                                If isProtectedbyOthers Then
+                                                If isProtectedbyOthers Or l <= actualDataRelColumn Then
                                                 Else
                                                     .Locked = False
                                                     Try
@@ -24687,7 +24712,7 @@ Public Module awinGeneralModules
 
                                             End With
                                             ' erlaubter Eingabebereich grau markieren, aber nur wenn nicht protected 
-                                            If isProtectedbyOthers Then
+                                            If isProtectedbyOthers Or l <= actualDataRelColumn Then
                                             Else
                                                 CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
                                                          .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -24710,7 +24735,10 @@ Public Module awinGeneralModules
 
                             Next r
 
+                            ' jetzt kommt die Behandlung der Kostenarten
+
                             For c = 1 To cphase.countCosts
+
                                 Dim cost As clsKostenart = cphase.getCost(c)
                                 Dim xValues() As Double = cost.Xwerte
                                 Dim costName As String = cost.name
@@ -24725,14 +24753,19 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                     CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                    If isProtectedbyOthers Then
-                                        'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
-                                        CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+
+                                    If isProtectedbyOthers Or actualDataRelColumn >= 0 Then
+                                        If isProtectedbyOthers Then
+                                            CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                        End If
+
                                         ' Kommentar einfügen 
                                         cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
+
                                         If Not IsNothing(cellComment) Then
                                             CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
                                         End If
+
                                         CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
                                         CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
                                     End If
@@ -24748,6 +24781,7 @@ Public Module awinGeneralModules
                                     If Not IsNothing(cellComment) Then
                                         CType(.Cells(zeile, 4), Excel.Range).Comment.Delete()
                                     End If
+
                                     If chckNameID = phaseNameID Then
                                         ' nichts weiter tun ... 
                                         ' denn dann kann die PhaseNameID aus der PhaseName konstruiert werden
@@ -24760,11 +24794,12 @@ Public Module awinGeneralModules
                                     With CType(.Cells(zeile, 5), Excel.Range)
                                         .Value = costName
                                         ' maximal vorkommende Länge 
+
                                         If maxRCLengthVorkommen < costName.Length Then
                                             maxRCLengthVorkommen = costName.Length
                                         End If
 
-                                        If isProtectedbyOthers Then
+                                        If isProtectedbyOthers Or actualDataRelColumn >= 0 Then
                                         Else
                                             .Locked = False
                                             .Interior.Color = awinSettings.AmpelNichtBewertet
@@ -24789,7 +24824,8 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
                                     CType(.Cells(zeile, 6), Excel.Range).NumberFormat = "##,##0.0"
-                                    If awinSettings.allowSumEditing Then
+
+                                    If summeEditierenErlaubt Then
 
                                         With CType(.Cells(zeile, 6), Excel.Range)
                                             If isProtectedbyOthers Then
@@ -24852,7 +24888,7 @@ Public Module awinGeneralModules
                                         If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                             With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                                If isProtectedbyOthers Then
+                                                If isProtectedbyOthers Or l <= actualDataRelColumn Then
                                                 Else
                                                     .Locked = False
                                                     Try
@@ -24874,7 +24910,7 @@ Public Module awinGeneralModules
                                             CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
                                             ' nur die Zelle grau markieren , um in der Logik konsistent zu sein 
-                                            If isProtectedbyOthers Then
+                                            If isProtectedbyOthers Or l <= actualDataRelColumn Then
                                             Else
                                                 CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
                                                          .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
@@ -24915,14 +24951,18 @@ Public Module awinGeneralModules
 
                                     CType(.Cells(zeile, 1), Excel.Range).Value = hproj.businessUnit
                                     CType(.Cells(zeile, 2), Excel.Range).Value = hproj.name
-                                    If isProtectedbyOthers Then
-                                        'CType(.Cells(zeile, 2), Excel.Range).Interior.Color = awinSettings.protectedByOtherColor
-                                        CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                    If isProtectedbyOthers Or actualDataRelColumn >= 0 Then
+
+                                        If isProtectedbyOthers Then
+                                            CType(.Cells(zeile, 2), Excel.Range).Font.Color = awinSettings.protectedByOtherColor
+                                        End If
+
                                         ' Kommentar einfügen 
                                         cellComment = CType(.Cells(zeile, 2), Excel.Range).Comment
                                         If Not IsNothing(cellComment) Then
                                             CType(.Cells(zeile, 2), Excel.Range).Comment.Delete()
                                         End If
+
                                         CType(.Cells(zeile, 2), Excel.Range).AddComment(Text:=protectionText)
                                         CType(.Cells(zeile, 2), Excel.Range).Comment.Visible = False
                                     End If
@@ -24970,7 +25010,7 @@ Public Module awinGeneralModules
 
                                     End With
 
-                                    If awinSettings.allowSumEditing Then
+                                    If summeEditierenErlaubt Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
                                             .NumberFormat = "##,##0.0"
                                             .Value = ""
@@ -25013,7 +25053,7 @@ Public Module awinGeneralModules
                                         If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
 
                                             With CType(.Cells(zeile, 2 * l + startSpalteDaten), Excel.Range)
-                                                If isProtectedbyOthers Then
+                                                If isProtectedbyOthers Or l <= actualDataRelColumn Then
                                                 Else
                                                     .Locked = False
 
@@ -25036,7 +25076,7 @@ Public Module awinGeneralModules
 
                                             CType(.Cells(zeile, 2 * l + 1 + startSpalteDaten), Excel.Range).Value = ""
 
-                                            If isProtectedbyOthers Then
+                                            If isProtectedbyOthers Or l <= actualDataRelColumn Then
                                             Else
                                                 CType(.Range(.Cells(zeile, 2 * l + startSpalteDaten),
                                                          .Cells(zeile, 2 * l + 1 + startSpalteDaten)), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
