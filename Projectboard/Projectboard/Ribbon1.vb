@@ -3262,44 +3262,50 @@ Imports System.IO
                     With projectboardWindows(PTwindows.massEdit)
                         'With appInstance.ActiveWindow
 
-                        .FreezePanes = False
-                        .Split = False
+                        Try
+                            .FreezePanes = False
+                            .Split = False
 
-                        If meModus = ptModus.massEditRessCost Then
+                            If meModus = ptModus.massEditRessCost Then
 
-                            If awinSettings.meExtendedColumnsView = True Then
-                                .SplitRow = 1
-                                .SplitColumn = 7
-                                .FreezePanes = True
-                            Else
+                                If awinSettings.meExtendedColumnsView = True Then
+                                    .SplitRow = 1
+                                    .SplitColumn = 7
+                                    .FreezePanes = True
+                                Else
+                                    .SplitRow = 1
+                                    .SplitColumn = 6
+                                    .FreezePanes = True
+                                End If
+                                .DisplayHeadings = False
+
+                            ElseIf meModus = ptModus.massEditTermine Then
                                 .SplitRow = 1
                                 .SplitColumn = 6
                                 .FreezePanes = True
+                                .DisplayHeadings = True
+
+                            ElseIf meModus = ptModus.massEditAttribute Then
+                                .SplitRow = 1
+                                .SplitColumn = 5
+                                .FreezePanes = True
+                                .DisplayHeadings = True
+
+                            Else
+                                Exit Sub
                             End If
-                            .DisplayHeadings = False
 
-                        ElseIf meModus = ptModus.massEditTermine Then
-                            .SplitRow = 1
-                            .SplitColumn = 6
-                            .FreezePanes = True
-                            .DisplayHeadings = True
+                            .DisplayFormulas = False
+                            .DisplayGridlines = True
+                            '.GridlineColor = RGB(220, 220, 220)
+                            .GridlineColor = Excel.XlRgbColor.rgbBlack
+                            .DisplayWorkbookTabs = False
+                            .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
+                            .WindowState = Excel.XlWindowState.xlMaximized
+                        Catch ex As Exception
+                            Call MsgBox("Fehler in massEditRcTeAt")
+                        End Try
 
-                        ElseIf meModus = ptModus.massEditAttribute Then
-                            .SplitRow = 1
-                            .SplitColumn = 5
-                            .FreezePanes = True
-                            .DisplayHeadings = True
-
-                        Else
-                            Exit Sub
-                        End If
-
-                        .DisplayFormulas = False
-                        .DisplayGridlines = True
-                        .GridlineColor = RGB(220, 220, 220)
-                        .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
-                        .WindowState = Excel.XlWindowState.xlMaximized
 
                     End With
 

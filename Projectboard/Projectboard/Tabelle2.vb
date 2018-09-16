@@ -137,6 +137,14 @@ Public Class Tabelle2
 
         End Try
 
+        ' jetzt die Gridline zeigen
+
+        With appInstance.ActiveWindow
+            .DisplayGridlines = True
+            .GridlineColor = Excel.XlRgbColor.rgbBlack
+        End With
+
+
         Application.EnableEvents = formerEE
         If Application.ScreenUpdating = False Then
             Application.ScreenUpdating = True
@@ -970,7 +978,7 @@ Public Class Tabelle2
 
 
 
-                Else
+                ElseIf Target.Column > columnRC + 1 Then
 
                     ' es handelt sich um eine Datenänderung
                     Dim newDblValue As Double
@@ -1126,7 +1134,8 @@ Public Class Tabelle2
                         Target.Cells(1, 1).value = visboZustaende.oldValue
                     End If
 
-
+                Else
+                    ' es wurde die Business Unit selektiert ..
 
                 End If
 
@@ -1250,6 +1259,7 @@ Public Class Tabelle2
             Else
                 ' der Monatswert muss in der parentRole geändert werden 
                 xWerte = parentRole.Xwerte
+
                 If xWerteIndex + offset >= 0 And xWerteIndex + offset <= xWerte.Length - 1 Then
                     Dim alterWert As Double = xWerte(xWerteIndex + offset)
                     Dim savDifferenz As Double = difference
@@ -1730,6 +1740,7 @@ Public Class Tabelle2
 
         With visboZustaende
             pname = CStr(CType(appInstance.ActiveSheet.Cells(Target.Row, visboZustaende.meColpName), Excel.Range).Value)
+
             If IsNothing(.lastProject) Then
                 ' es wurde bisher kein lastProject geladen 
                 If ShowProjekte.contains(pname) Then
@@ -1737,6 +1748,7 @@ Public Class Tabelle2
                     .lastProjectDB = dbCacheProjekte.getProject(calcProjektKey(pname, .lastProject.variantName))
                     pNameChanged = True
                 End If
+
             ElseIf pname <> .lastProject.name Then
                 ' muss neu geholt werden 
                 If ShowProjekte.contains(pname) Then
@@ -1838,28 +1850,29 @@ Public Class Tabelle2
                 result = False
             Else
                 ' wenn es sich um ein geschütztes Projekt handelt, dann ist Spalte 2 = FarbeProtected, also ungleich dem 
-                Dim chckCell As Excel.Range = CType(appInstance.ActiveSheet.Cells(rng.Row, visboZustaende.meColpName), Excel.Range)
+                'Dim chckCell As Excel.Range = CType(appInstance.ActiveSheet.Cells(rng.Row, visboZustaende.meColpName), Excel.Range)
 
-                If CInt(chckCell.Interior.ColorIndex) <> XlColorIndex.xlColorIndexNone Then
-                    result = False
-                Else
-                    If rng.Row >= 2 And rng.Row <= visboZustaende.meMaxZeile Then
-                        If rng.Column = columnRC Or (rng.Column = columnRC + 1 And awinSettings.allowSumEditing) Then
-                            result = True
+                'If CInt(chckCell.Interior.ColorIndex) <> XlColorIndex.xlColorIndexNone Then
+                '    result = False
+                'Else
 
-                        ElseIf rng.Column >= columnStartData And rng.Column <= columnEndData Then
-                            Dim diff As Integer = rng.Column - columnStartData
-                            Dim rest As Integer
-                            Dim tmpValue As Integer = System.Math.DivRem(diff, 2, rest)
+                'End If
+                ' tk, 16.9.18 das war vorher in dem Else-Zweig 
+                If rng.Row >= 2 And rng.Row <= visboZustaende.meMaxZeile Then
 
-                            If rest = 0 Then
-                                If rng.Interior.ColorIndex = XlColorIndex.xlColorIndexNone Then
-                                    result = False
-                                Else
-                                    result = True
-                                End If
-                            Else
+                    If rng.Column = columnRC Or (rng.Column = columnRC + 1 And awinSettings.allowSumEditing) Then
+                        result = True
+
+                    ElseIf rng.Column >= columnStartData And rng.Column <= columnEndData Then
+                        Dim diff As Integer = rng.Column - columnStartData
+                        Dim rest As Integer
+                        Dim tmpValue As Integer = System.Math.DivRem(diff, 2, rest)
+
+                        If rest = 0 Then
+                            If rng.Interior.ColorIndex = XlColorIndex.xlColorIndexNone Then
                                 result = False
+                            Else
+                                result = True
                             End If
                         Else
                             result = False
@@ -1867,6 +1880,8 @@ Public Class Tabelle2
                     Else
                         result = False
                     End If
+                Else
+                    result = False
                 End If
 
             End If

@@ -24243,35 +24243,7 @@ Public Module awinGeneralModules
             Dim ressCostColumn As Integer
             Dim tmpName As String
 
-            '' Validation ? 
-            '' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
-            'Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
-            'Dim anzahlRollen As Integer = RoleDefinitions.Count
-            'Dim rcValidation() As String
-            '' in rcValidation(0) steht der Name "alleKosten" für den Validation-String für alle Kosten
-            '' in rcValidation(i) steht der Name des Validation-String für Rolle mit UID i 
-            'ReDim rcValidation(anzahlRollen + 1)
 
-            'rcValidation(0) = "alleKosten"
-            'rcValidation(anzahlRollen + 1) = "alles"
-
-            'For i As Integer = 1 To anzahlRollen
-            '    Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-            '    If tmprole.isCombinedRole Then
-            '        rcValidation(i) = tmprole.name
-            '    Else
-            '        Dim parentRole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
-            '        If IsNothing(parentRole) Then
-            '            rcValidation(i) = "alleRollen"
-            '        Else
-            '            rcValidation(i) = parentRole.name
-            '        End If
-
-            '    End If
-            'Next
-
-            ' hier muss jetzt das entsprechende File aufgemacht werden ...
-            ' das File 
             Try
                 currentWB = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
                 currentWS = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
@@ -24291,7 +24263,7 @@ Public Module awinGeneralModules
                     With CType(currentWS.Cells, Excel.Range)
                         .Clear()
                         .Value = Nothing
-                        .Interior.Color = RGB(242, 242, 242)
+                        '.Interior.Color = RGB(242, 242, 242)
                     End With
                 Catch ex As Exception
 
@@ -24414,9 +24386,9 @@ Public Module awinGeneralModules
                     Dim actualDataRelColumn As Integer = -1
                     Dim summeEditierenErlaubt As Boolean = awinSettings.allowSumEditing
 
+                    ' ist Summe Editieren erlaubt ? 
                     If projectWithActualData Then
                         actualDataRelColumn = getColumnOfDate(hproj.actualDataUntil) - von
-                        summeEditierenErlaubt = awinSettings.allowSumEditing And actualDataRelColumn < 0
                     End If
 
                     ' ist das Projekt geschützt ? 
@@ -24456,6 +24428,12 @@ Public Module awinGeneralModules
                         Dim phaseName As String = cphase.name
                         Dim chckNameID As String = calcHryElemKey(phaseName, False)
 
+                        ' ist Summe Editieren erlaubt ? 
+                        If projectWithActualData Then
+                            summeEditierenErlaubt = (awinSettings.allowSumEditing And actualDataRelColumn < 0) Or
+                                                    ((awinSettings.allowSumEditing And actualDataRelColumn >= 0 And actualDataRelColumn < getColumnOfDate(cphase.getStartDate) - von))
+                        End If
+
                         Dim indentlevel As Integer = hproj.hierarchy.getIndentLevel(phaseNameID)
 
                         If phaseWithinTimeFrame(pStart, cphase.relStart, cphase.relEnde, von, bis) Then
@@ -24493,10 +24471,25 @@ Public Module awinGeneralModules
                                         editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                                     End With
 
-                                    editRange.Value = schnittmenge
+                                    If schnittmenge.Sum > 0 Then
+                                        For l As Integer = 0 To bis - von
+
+                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                            Else
+                                                editRange.Cells(1, l + 1).value = ""
+                                            End If
+
+                                        Next
+                                    Else
+                                        editRange.Value = ""
+                                    End If
+
                                     atLeastOne = True
 
                                     zeile = zeile + 1
+                                Else
+                                    Call MsgBox("not ok")
                                 End If
 
                             Next r
@@ -24524,10 +24517,25 @@ Public Module awinGeneralModules
                                         editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
                                     End With
 
-                                    editRange.Value = schnittmenge
+                                    If schnittmenge.Sum > 0 Then
+                                        For l As Integer = 0 To bis - von
+
+                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                            Else
+                                                editRange.Cells(1, l + 1).value = ""
+                                            End If
+
+                                        Next
+                                    Else
+                                        editRange.Value = ""
+                                    End If
+
                                     atLeastOne = True
 
                                     zeile = zeile + 1
+                                Else
+                                    Call MsgBox("not ok")
                                 End If
 
                             Next c
@@ -24542,6 +24550,8 @@ Public Module awinGeneralModules
 
                                 If ok Then
                                     zeile = zeile + 1
+                                Else
+                                    Call MsgBox("not ok")
                                 End If
 
                             End If
@@ -24554,6 +24564,15 @@ Public Module awinGeneralModules
 
             Next
 
+            ' für Testzwecke only 
+            ' last Check - jetzt letzte
+            ''Dim checkRange As Excel.Range = currentWS.UsedRange
+            ''Dim anzZ As Integer = checkRange.Rows.Count
+            ''Dim anzSp As Integer = checkRange.Columns.Count
+
+            ''CType(currentWS.Cells(anzZ + 1, 1), Range).Value = "Anzahl Zeilen " & anzZ.ToString
+            ''CType(currentWS.Cells(1, anzSp + 1), Range).Value = "Anzahl Spalten " & anzSp.ToString
+            ' Ende für Testzwecke only 
 
             ' tk 7.12.16 kommt immer auf Fehler, weil nur 1 Zeile und eine Auswahl von Spalten .... 
             '' jetzt die erste Zeile so groß wie nötig machen 
@@ -24564,123 +24583,164 @@ Public Module awinGeneralModules
             'End Try
 
             ' jetzt die Größe der Spalten für BU, pName, vName, Phasen-Name, RC-Name anpassen 
+
             Dim infoBlock As Excel.Range
             Dim infoDatablock As Excel.Range
 
-            With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 2)), Excel.Range)
-                infoDatablock = CType(.Range(.Cells(2, 1), .Cells(zeile, startSpalteDaten - 2)), Excel.Range)
+            Try
 
-                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
-                infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                With CType(currentWS, Excel.Worksheet)
+                    infoBlock = CType(.Range(.Columns(1), .Columns(startSpalteDaten - 2)), Excel.Range)
+                    infoDatablock = CType(.Range(.Cells(2, 1), .Cells(zeile, startSpalteDaten - 2)), Excel.Range)
 
-                ' hier prüfen, ob es bereits Werte für massColValues gibt ..
-                If massColFontValues(0, 0) > 4 Then
-                    ' diese Werte übernehmen 
-                    infoDatablock.Font.Size = CInt(massColFontValues(0, 0))
-                    For ik As Integer = 1 To 5
-                        CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(0, ik)
-                    Next
+                    infoDatablock.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                    infoDatablock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
 
-
-                Else
-                    ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
-                    infoBlock.AutoFit()
-
-                    Try
-                        'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
-                        'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
-                        Dim availableScreenWidth As Double = maxScreenWidth
-                        If infoBlock.Width > 0.6 * availableScreenWidth Then
-
-                            infoDatablock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
-                            ' BU bekommt 5%
-                            'CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
-                            CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
-                            ' pName bekomt 30%
-                            'CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                            CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 16
-                            ' vName bekomt 5%
-                            'CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
-                            CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 3
-                            ' phaseName bekomt 30%
-                            'CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                            CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 16
-                            ' RoleCost Name bekomt 30%
-                            'CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
-                            CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 16
-                        End If
-                    Catch ex As Exception
-
-                    End Try
-
-                    ' Werte setzen ...
-                    massColFontValues(0, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
-                    For ik As Integer = 1 To 5
-                        massColFontValues(0, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
-                    Next
-
-                End If
+                    ' hier prüfen, ob es bereits Werte für massColValues gibt ..
+                    If massColFontValues(0, 0) > 4 Then
+                        ' diese Werte übernehmen 
+                        infoDatablock.Font.Size = CInt(massColFontValues(0, 0))
+                        For ik As Integer = 1 To 5
+                            CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth = massColFontValues(0, ik)
+                        Next
 
 
-
-            End With
-
-            ' Summe 
-            With CType(currentWS, Excel.Worksheet)
-                infoBlock = CType(.Columns(startSpalteDaten - 1), Excel.Range)
-                infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                infoBlock.Font.Size = CInt(massColFontValues(0, 0))
-                infoBlock.ColumnWidth = 14
-                'infoBlock.AutoFit()
-            End With
-
-            Dim tmpRange As Excel.Range
-            With CType(currentWS, Excel.Worksheet)
-
-                For mis As Integer = 0 To bis - von
-                    tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
-
-                    tmpRange.Columns.ColumnWidth = 5
-                    'tmpRange.Font.Size = 10
-                    If CInt(massColFontValues(0, 0)) > 3 Then
-                        CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0) - 1)
                     Else
-                        CType(tmpRange.Font, Excel.Font).Size = 9
+                        ' hier jetzt prüfen, ob nicht zu viel Platz eingenommen wird
+                        infoBlock.AutoFit()
+
+                        Try
+                            'Dim availableScreenWidth As Double = appInstance.ActiveWindow.UsableWidth
+                            'Dim availableScreenWidth As Double = CType(projectboardWindows(PTwindows.massEdit), Window).UsableWidth
+                            Dim availableScreenWidth As Double = maxScreenWidth
+                            If infoBlock.Width > 0.6 * availableScreenWidth Then
+
+                                infoDatablock.Font.Size = CInt(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size) - 2
+                                ' BU bekommt 5%
+                                'CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                                CType(infoBlock.Columns(1), Excel.Range).ColumnWidth = 3
+                                ' pName bekomt 30%
+                                'CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                                CType(infoBlock.Columns(2), Excel.Range).ColumnWidth = 16
+                                ' vName bekomt 5%
+                                'CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 0.05 * 0.4 * availableScreenWidth
+                                CType(infoBlock.Columns(3), Excel.Range).ColumnWidth = 3
+                                ' phaseName bekomt 30%
+                                'CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                                CType(infoBlock.Columns(4), Excel.Range).ColumnWidth = 16
+                                ' RoleCost Name bekomt 30%
+                                'CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 0.3 * 0.4 * availableScreenWidth
+                                CType(infoBlock.Columns(5), Excel.Range).ColumnWidth = 16
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                        ' Werte setzen ...
+                        massColFontValues(0, 0) = CDbl(CType(infoBlock.Cells(2, 2), Excel.Range).Font.Size)
+                        For ik As Integer = 1 To 5
+                            massColFontValues(0, ik) = CType(infoBlock.Columns(ik), Excel.Range).ColumnWidth
+                        Next
+
                     End If
 
-                    tmpRange.NumberFormat = "##,##0.#"
-                    tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-
-                Next
 
 
-                Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
-                ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+                End With
+            Catch ex As Exception
 
-                For m As Integer = 0 To bis - von
-                    With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
-                        .Value = startMonat.AddMonths(m)
-                        If massColFontValues(0, 0) > 4 Then
-                            .Font.Size = CInt(massColFontValues(0, 0))
+            End Try
+
+
+            ' die Breite der Summen-Spalte festlegen 
+            Try
+                With CType(currentWS, Excel.Worksheet)
+                    ' nur die Überschrift der Summe ...
+                    infoBlock = CType(.Columns(startSpalteDaten - 1), Excel.Range)
+                    infoBlock.ColumnWidth = 14
+                    'infoBlock.AutoFit()
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                With CType(currentWS, Excel.Worksheet)
+                    ' nur die Überschrift der Summe ...
+                    infoBlock = CType(.Cells(1, startSpalteDaten - 1), Excel.Range)
+                    infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    'infoBlock.AutoFit()
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                With CType(currentWS, Excel.Worksheet)
+                    ' nur den Datenbereich der Summe ...
+                    infoBlock = CType(.Range(.Cells(2, startSpalteDaten - 1), .Cells(zeile, startSpalteDaten - 1)), Excel.Range)
+                    infoBlock.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                    infoBlock.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    infoBlock.Font.Size = CInt(massColFontValues(0, 0))
+                    'infoBlock.AutoFit()
+                End With
+            Catch ex As Exception
+
+            End Try
+            ' Summe Datenbereich formatieren 
+
+
+            ' die Breite der Daten festlegen 
+            Try
+                Dim tmpRange As Excel.Range
+                With CType(currentWS, Excel.Worksheet)
+
+                    For mis As Integer = 0 To bis - von
+                        tmpRange = CType(.Range(.Cells(2, startSpalteDaten + mis), .Cells(zeile, startSpalteDaten + mis)), Excel.Range)
+
+                        tmpRange.Columns.ColumnWidth = 5
+                        'tmpRange.Font.Size = 10
+                        If CInt(massColFontValues(0, 0)) > 3 Then
+                            CType(tmpRange.Font, Excel.Font).Size = CInt(massColFontValues(0, 0) - 1)
                         Else
-                            .Font.Size = 10
+                            CType(tmpRange.Font, Excel.Font).Size = 9
                         End If
 
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                        .NumberFormat = "[$-409]mmm yy;@"
-                        .WrapText = False
-                        .Orientation = 90
-                        .ShrinkToFit = False
-                        .AddIndent = False
-                        .IndentLevel = 0
-                        .ReadingOrder = Excel.Constants.xlContext
-                    End With
+                        tmpRange.NumberFormat = "##,##0.#"
+                        tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
 
-                Next
+                    Next
 
-            End With
+
+                    Dim startMonat As Date = StartofCalendar.AddMonths(von - 1)
+                    ' jetzt werden die Überschriften des Datenbereichs geschrieben 
+
+                    For m As Integer = 0 To bis - von
+                        With CType(.Cells(1, startSpalteDaten + m), Global.Microsoft.Office.Interop.Excel.Range)
+                            .Value = startMonat.AddMonths(m)
+                            If massColFontValues(0, 0) > 4 Then
+                                .Font.Size = CInt(massColFontValues(0, 0))
+                            Else
+                                .Font.Size = 10
+                            End If
+
+                            .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                            .NumberFormat = "[$-409]mmm yy;@"
+                            .WrapText = False
+                            .Orientation = 90
+                            .ShrinkToFit = False
+                            .AddIndent = False
+                            .IndentLevel = 0
+                            .ReadingOrder = Excel.Constants.xlContext
+                        End With
+
+                    Next
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
 
             appInstance.EnableEvents = True
 
@@ -24738,9 +24798,6 @@ Public Module awinGeneralModules
             ' Schreiben der Projekt-Informationen 
             With CType(currentWS, Excel.Worksheet)
 
-                ''' jetzt wird die Zeile komplett gelöscht 
-                ''CType(.Rows(zeile), Excel.Range).Interior.Color = RGB(242, 242, 242)
-                ''CType(.Rows(zeile), Excel.Range).Value = Nothing
 
                 Dim cellComment As Excel.Comment
 
@@ -24800,8 +24857,10 @@ Public Module awinGeneralModules
                     End If
 
                     If rcName = "" Then
-                        ' man muss ggf einen eingeben können 
-                        If Not isProtectedbyOthers And Not (actualdataRelColumn >= 0 And actualdataRelColumn < getColumnOfDate(cphase.getEndDate)) Then
+                        ' man muss ggf einen eingeben können , auch wenn der Phasen-Anfang schon mit Istdaten geschützt ist, 
+                        ' man muss ja noch Werte für die letzten Monate eingeben können
+                        If Not isProtectedbyOthers And ((actualdataRelColumn >= 0 And actualdataRelColumn < getColumnOfDate(cphase.getEndDate) - von) Or
+                                                          actualdataRelColumn < 0) Then
                             .Locked = False
                             Try
                                 If Not IsNothing(.Validation) Then
@@ -24833,8 +24892,7 @@ Public Module awinGeneralModules
                 If summeEditierenErlaubt Then
                     With CType(.Cells(zeile, 6), Excel.Range)
 
-                        If isProtectedbyOthers Then
-                        Else
+                        If Not isProtectedbyOthers Then
                             .Locked = False
                             '.Interior.Color = awinSettings.AmpelNichtBewertet
                             Try
@@ -24866,22 +24924,11 @@ Public Module awinGeneralModules
 
                 For spix = 0 To bis - von
 
-                    If spix >= ixZeitraum And spix <= ixZeitraum + breite - 1 Then
+                    With CType(.Cells(zeile, spix + startSpalteDaten), Excel.Range)
+                        If spix >= ixZeitraum And spix <= ixZeitraum + breite - 1 Then
 
-                        With CType(.Cells(zeile, spix + startSpalteDaten), Excel.Range)
-
-                            If isProtectedbyOthers Or spix <= actualdataRelColumn Then
-
-                                If spix <= actualdataRelColumn Then
-                                    .Interior.Color = awinSettings.AmpelNichtBewertet
-                                    .Font.Color = XlRgbColor.rgbBlack
-                                End If
-
-                            Else
+                            If (Not isProtectedbyOthers) And (spix > actualdataRelColumn) Then
                                 .Locked = False
-                                .Interior.Color = visboFarbeBlau
-                                .Font.Color = XlRgbColor.rgbWhite
-
                                 Try
                                     If Not IsNothing(.Validation) Then
                                         .Validation.Delete()
@@ -24893,17 +24940,21 @@ Public Module awinGeneralModules
                                 Catch ex As Exception
 
                                 End Try
-
                             End If
 
+                            ' jetzt kommt die Farbsetzung ... die hängt nur von actualDataRelColumn ab
+                            If spix <= actualdataRelColumn Then
+                                .Interior.Color = awinSettings.AmpelNichtBewertet
+                                .Font.Color = XlRgbColor.rgbBlack
+                            Else
+                                .Interior.Color = visboFarbeBlau
+                                .Font.Color = XlRgbColor.rgbWhite
+                            End If
 
-                        End With
-
-                    Else
-                        .Interior.Color = RGB(242, 242, 242)
-                        .Font.Color = XlRgbColor.rgbBlack
-                        CType(.Cells(zeile, spix + startSpalteDaten), Excel.Range).Value = ""
-                    End If
+                        Else
+                            ' hier muss nichts getan werden ...
+                        End If
+                    End With
 
                 Next
 
