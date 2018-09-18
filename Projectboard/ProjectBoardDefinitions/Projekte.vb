@@ -4379,9 +4379,9 @@ Public Module Projekte
                 'kennung = "Rolle " & qualifier
                 kennung = calcChartKennung("pr", PTprdk.SollIstRolleC, tmpCollection)
                 Try
-                    werteB = beauftragung.getPersonalKosten(qualifier, True)
-                    werteL = lastPlan.getPersonalKosten(qualifier, True)
-                    werteC = hproj.getPersonalKosten(qualifier, True)
+                    werteB = beauftragung.getRessourcenBedarfNew(qualifier, True)
+                    werteL = lastPlan.getRessourcenBedarfNew(qualifier, True)
+                    werteC = hproj.getRessourcenBedarfNew(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -4889,10 +4889,10 @@ Public Module Projekte
 
                 Try
                     If vglBaseline Then
-                        werteB = vProj.getPersonalKosten(qualifier, True)
+                        werteB = vProj.getRessourcenBedarfNew(qualifier, True)
                     End If
 
-                    werteC = hproj.getPersonalKosten(qualifier, True)
+                    werteC = hproj.getRessourcenBedarfNew(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
