@@ -265,6 +265,7 @@ Public Module Module1
         project = 0
         portfolio = 1
         projectTemplate = 2
+        all = 3
     End Enum
 
     ''' <summary>

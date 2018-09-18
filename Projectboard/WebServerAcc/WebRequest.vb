@@ -66,6 +66,7 @@ Public Class Request
         'Dim typeRequest As String = "/token/user/signup"
         Dim serverUri As New Uri(ServerURL & typeRequest)
         Dim loginOK As Boolean = False
+        Dim httpresp_sav As HttpWebResponse
 
         Try
             Dim user As New clsUserLoginSignup
@@ -83,6 +84,7 @@ Public Class Request
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
+                httpresp_sav = httpresp     ' sichern der Server-Antwort
                 loginAntwort = JsonConvert.DeserializeObject(Of clsWebTokenUserLoginSignup)(Antwort)
             End Using
 
@@ -100,6 +102,10 @@ Public Class Request
                 token = ""
                 serverUriName = ServerURL
                 aktUser = Nothing
+                If awinSettings.visboDebug Then
+                    Call MsgBox("( " & CType(httpresp_sav.StatusCode, Integer).ToString & ") : " & httpresp_sav.StatusDescription & " : " & loginAntwort.message)
+                End If
+
             End If
 
 
@@ -1031,14 +1037,14 @@ Public Class Request
             cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
 
 
-            cVPf = clsConst2clsVPf(c)
+            'cVPf = clsConst2clsVPf(c)
 
             If cVP._id = "" Then
                 '' ur: war nur zu Testzwecken: 
                 '' Call MsgBox("es ist noch kein VisboPortfolio angelegt")
 
                 ' Portfolio-Name
-                cVP.name = cVPf.name
+                cVP.name = c.constellationName
                 ' berechtiger User
                 Dim user As New clsUser
                 user.email = aktUser.email
@@ -1054,10 +1060,12 @@ Public Class Request
                 If newVP.Count > 0 Then
                     cVP._id = newVP.Item(0)._id
                 Else
-
+                    Throw New ArgumentException("FEHLER beim erstellen des VisboPortfolioProject")
                 End If
 
             End If
+
+            cVPf = clsConst2clsVPf(c)
 
             cVPf.vpid = cVP._id
 
@@ -1573,35 +1581,33 @@ Public Class Request
     ''' <returns></returns>
     Private Function ReadResponseContent(ByRef httpresp As HttpWebResponse) As String
         'Private Function ReadResponseContent(ByRef resp As HttpWebResponse) As String
+        Dim result As String = ""
         Try
 
             If IsNothing(httpresp) Then
                 Throw New ArgumentNullException("HttpWebResponse ist Nothing")
             Else
                 Dim statcode As HttpStatusCode = httpresp.StatusCode
+
                 Try
                     Using sr As New StreamReader(httpresp.GetResponseStream)
-                        Return sr.ReadToEnd()
+
+                        result = sr.ReadToEnd()
+
                     End Using
 
                 Catch ex As Exception
 
                 End Try
 
-                If statcode <> HttpStatusCode.OK Then
-
-                    Call MsgBox("( " & CType(statcode, Integer).ToString & ") : " & httpresp.StatusDescription)
-                    Throw New ArgumentException(statcode.ToString & ":" & httpresp.StatusDescription)
-                Else
-                    Using sr As New StreamReader(httpresp.GetResponseStream)
-                        Return sr.ReadToEnd()
-                    End Using
-                End If
             End If
 
         Catch ex As Exception
             Throw New ArgumentException("ReadResponseContent:" & ex.Message)
         End Try
+
+        Return result
+
     End Function
 
 
@@ -1659,10 +1665,10 @@ Public Class Request
                         vpid = vp._id
                         aktvp = vp
                     Else
-                        VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
+                        VRScache.VPsN = GETallVP(aktVCid, vpType)
                     End If
                 Else
-                    VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
+                    VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
                 End If
 
                 anzLoop = anzLoop + 1
@@ -1677,7 +1683,7 @@ Public Class Request
     End Function
 
     ''' <summary>
-    ''' holt zu dem Projekt mit der Id vpid den zugehörigen Projektnamen vom Server
+    ''' holt zu dem Projekt/Portfolio mit der Id vpid den zugehörigen Projekt/Portfolio-Namen vom Server
     ''' </summary>
     ''' <param name="vpid"></param>
     ''' <returns></returns>
@@ -1698,7 +1704,7 @@ Public Class Request
                         ' pName zu angegebene vpid herausfinden
                         pName = VRScache.VPsId(vpid).name
                     Else
-                        VRScache.VPsN = GETallVP(aktVCid, 3)
+                        VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
 
                         Try
                             pName = VRScache.VPsId(vpid).name
@@ -1821,6 +1827,7 @@ Public Class Request
 
         Dim result As New SortedList(Of String, clsVP)          ' sortiert nach pname
         Dim secondResult As New SortedList(Of String, clsVP)    ' sortiert nach vpid
+        Dim errmsg As String = ""
 
         Try
             Dim serverUriString As String
@@ -1830,7 +1837,9 @@ Public Class Request
             If vcid = "" Then
                 serverUriString = serverUriName & typeRequest
 
+                'If vptype <> ptPRPFType.portfolio Then
                 If vptype <> ptPRPFType.project And vptype <> ptPRPFType.portfolio Then
+
                     '' kein bestimmter vp-Type gefragt
                 Else
                     serverUriString = serverUriString & "?vpType=" & vptype.ToString
@@ -1839,7 +1848,9 @@ Public Class Request
             Else
                 serverUriString = serverUriName & typeRequest & "?vcid=" & vcid
 
+                'If vptype <> ptPRPFType.portfolio Then
                 If vptype <> ptPRPFType.project And vptype <> ptPRPFType.portfolio Then
+
                     '' kein bestimmter vp-Type gefragt
                 Else
                     serverUriString = serverUriString & "&vpType=" & vptype.ToString
@@ -1857,6 +1868,7 @@ Public Class Request
             Dim webVPantwort As clsWebVP = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
+                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
                 webVPantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
             End Using
 
@@ -1936,7 +1948,7 @@ Public Class Request
                     Throw New ArgumentException(webVPantwort.message)
                     'Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 Else
-                    Call MsgBox(webVPantwort.message)
+                    Call MsgBox(errmsg & " : " & webVPantwort.message)
                 End If
             End If
 
@@ -2432,7 +2444,7 @@ Public Class Request
     Private Function POSTOneVCrole(ByVal vcid As String, ByVal role As clsVCrole) As Boolean
 
         Dim result As Boolean
-
+        Dim errmsg As String = ""
         Try
             Dim serverUriString As String
             Dim typeRequest As String = "/vc"
@@ -2453,6 +2465,7 @@ Public Class Request
             Dim webVCroleantwort As clsWebVCrole = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
+                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription & " : "
                 webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
             End Using
 
@@ -2461,7 +2474,9 @@ Public Class Request
 
                 result = True
             Else
-                Call MsgBox("Fehler in POSTOneVCrole: " & webVCroleantwort.message)
+                If awinSettings.visboDebug Then
+                    Call MsgBox("Fehler in POSTOneVCrole: " & errmsg & webVCroleantwort.message)
+                End If
             End If
 
         Catch ex As Exception
@@ -2694,6 +2709,7 @@ Public Class Request
 
 
         Dim result As Boolean = False
+        Dim errmsg As String = ""
 
         Try
             ' URL zusammensetzen
@@ -2759,7 +2775,7 @@ Public Class Request
                 ' Lock wurde richtig durchgeführt, wenn auch die Anzahl Lock im Cache-Speicher übereinstimmt
                 result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
             Else
-                Call MsgBox(webVPLockantwort.message)
+                Call MsgBox(errmsg & " : " & webVPLockantwort.message)
 
             End If
 
@@ -2782,6 +2798,7 @@ Public Class Request
     Private Function DELETEVPLock(ByVal vpid As String, Optional ByVal variantName As String = "") As Boolean
 
         Dim result As Boolean = False
+        Dim errmsg As String = ""
 
         Try
             ' URL zusammensetzen
@@ -2816,6 +2833,7 @@ Public Class Request
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                 Antwort = ReadResponseContent(httpresp)
                 webVPLockantwort = JsonConvert.DeserializeObject(Of clsWebVPlock)(Antwort)
+                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription & " : " & webVPLockantwort.message
             End Using
 
             If webVPLockantwort.state = "success" Then
@@ -2842,7 +2860,7 @@ Public Class Request
                 result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
 
             Else
-                Call MsgBox(webVPLockantwort.message)
+                Call MsgBox(errmsg & " : " & webVPLockantwort.message)
             End If
 
 
@@ -2864,6 +2882,7 @@ Public Class Request
 
 
         Dim result As Boolean = False
+        Dim errmsg As String = ""
         Dim webVPVar As clsWebVPVariant
         Dim Data() As Byte
         Try
@@ -2882,6 +2901,7 @@ Public Class Request
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, Data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 webVPVar = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
+                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
             End Using
 
             If webVPVar.state = "success" Then
@@ -2892,7 +2912,7 @@ Public Class Request
                 End If
                 result = True
             Else
-                Call MsgBox(webVPVar.message)
+                Call MsgBox(errmsg & " : " & webVPVar.message)
             End If
 
         Catch ex As Exception
@@ -2977,6 +2997,7 @@ Public Class Request
     Private Function POSTOneVP(ByVal vp As clsVP) As List(Of clsVP)
 
         Dim result As New List(Of clsVP)
+        Dim errmsg As String = ""
 
         Try
             Dim serverUriString As String = ""
@@ -2992,15 +3013,17 @@ Public Class Request
             Dim webVPantwort As clsWebVP = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
+                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription & " : "
                 webVPantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
             End Using
 
             If webVPantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
 
                 result = webVPantwort.vp
             Else
-                Call MsgBox(webVPantwort.message)
+                If awinSettings.visboDebug Then
+                    Call MsgBox(errmsg & webVPantwort.message)
+                End If
             End If
 
         Catch ex As Exception
@@ -3019,6 +3042,7 @@ Public Class Request
     Private Function POSTOneVPf(ByVal vpf As clsVPf) As List(Of clsVPf)
 
         Dim result As New List(Of clsVPf)
+        Dim errmsg As String = ""
 
         Try
             Dim serverUriString As String = ""
@@ -3039,15 +3063,19 @@ Public Class Request
             Dim webVPfantwort As clsWebVPf = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
+                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription & " : "
                 webVPfantwort = JsonConvert.DeserializeObject(Of clsWebVPf)(Antwort)
             End Using
 
             If webVPfantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
 
                 result = webVPfantwort.vpf
             Else
-                Call MsgBox(webVPfantwort.message)
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox(errmsg & webVPfantwort.message)
+                End If
+
             End If
 
         Catch ex As Exception
