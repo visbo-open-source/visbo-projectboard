@@ -38,7 +38,7 @@
     <OldToolsVersion>12.0</OldToolsVersion>
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
+    <PublishUrl>sftp://home448168182.1and1-data.host:22/fptData/VISBO SmartInfo Powerpoint AddIn/</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
     <ApplicationVersion>2.1.0.36</ApplicationVersion>
@@ -50,7 +50,7 @@
     <PublisherName>VISBO GmbH</PublisherName>
     <SupportUrl />
     <FriendlyName>VISBO SmartInfo</FriendlyName>
-    <OfficeApplicationDescription />
+    <OfficeApplicationDescription>aktualisiert VISBO Powerpoint Dateien </OfficeApplicationDescription>
     <LoadBehavior>3</LoadBehavior>
   </PropertyGroup>
   <ItemGroup>

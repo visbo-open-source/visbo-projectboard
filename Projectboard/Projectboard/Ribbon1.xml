@@ -332,7 +332,7 @@
               <!--label="Budget/Kosten/Auslastung"--><!--
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Meilenstein-Ampeln"-->
-              <button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
+              <!--<button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>-->
               <!--label="Custom"-->
               <button id="PTcustom" label ="Custom" enabled="false"/>
               <menuSeparator id="PTXG1s4"/>
