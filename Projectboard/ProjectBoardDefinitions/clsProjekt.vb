@@ -2562,6 +2562,7 @@ Public Class clsProjekt
             .leadPerson = _leadPerson
             .Status = _Status
             .extendedView = Me.extendedView
+            .actualDataUntil = Me.actualDataUntil
             Try
                 .movable = Me.movable
             Catch ex As Exception
