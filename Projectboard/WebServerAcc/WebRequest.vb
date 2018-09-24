@@ -547,9 +547,11 @@ Public Class Request
 
             ' wenn Variante noch nicht vorhanden, so muss sie angelegt werden
             If Not storedVPVariant Then
-
-                storedVPVariant = POSTVPVariant(vpid, vname)
-
+                If vname <> "" Then
+                    storedVPVariant = POSTVPVariant(vpid, vname)
+                Else
+                    ' zu diesem Projekt gibt es nur die Standardvariante = > nichts tun
+                End If
             End If
 
             ' Projekt ist bereits in VisboProjects Collection gespeichert, es existiert eine vpid
@@ -1736,7 +1738,6 @@ Public Class Request
 
         Dim vcid As String = ""
 
-
         Try
             ' Alle VisboProjects über Server von WebServer/DB holen
             Dim anzLoop As Integer = 0
@@ -1777,7 +1778,7 @@ Public Class Request
 
         Dim result As New List(Of clsVC)
         Dim errmsg As String = ""
-
+        Dim errcode As Integer
         Try
             Dim serverUriString As String
             Dim typeRequest As String = "/vc"
@@ -1794,21 +1795,18 @@ Public Class Request
             Dim webVCantwort As clsWebVC
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVCantwort = JsonConvert.DeserializeObject(Of clsWebVC)(Antwort)
             End Using
 
-            If webVCantwort.state = "success" Then
+            If errcode = 200 Then           'success
                 ' Call MsgBox(webVCantwort.message & vbCrLf & "es existieren " & webVCantwort.vc.Count & "VisboCenters")
                 result = webVCantwort.vc
             Else
-                If webVCantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVCantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox(errmsg & " : " & webVCantwort.message)
-                End If
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallVC", errcode, errmsg & " : " & webVCantwort.message)
 
             End If
 
@@ -1833,7 +1831,7 @@ Public Class Request
         Dim result As New SortedList(Of String, clsVP)          ' sortiert nach pname
         Dim secondResult As New SortedList(Of String, clsVP)    ' sortiert nach vpid
         Dim errmsg As String = ""
-
+        Dim errcode As Integer
         Try
             Dim serverUriString As String
             Dim typeRequest As String = "/vp"
@@ -1873,12 +1871,12 @@ Public Class Request
             Dim webVPantwort As clsWebVP = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
             End Using
 
-            If webVPantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+            If errcode = 200 Then
 
                 Select Case vptype
 
@@ -1948,13 +1946,8 @@ Public Class Request
                 GETallVP = result
 
             Else
-                If webVPantwort.message.Contains("Token is dead") Then
-                    token = ""
-                    Throw New ArgumentException(webVPantwort.message)
-                    'Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Else
-                    Call MsgBox(errmsg & " : " & webVPantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallVP", errcode, errmsg & " : " & webVPantwort.message)
             End If
 
         Catch ex As Exception
@@ -1981,6 +1974,7 @@ Public Class Request
         Dim nothingToDo As Boolean = True
         Dim result As New List(Of clsProjektWebShort)
         Dim errmsg As String = ""
+        Dim errcode As Integer = 200
 
         Try
             ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
@@ -2055,11 +2049,14 @@ Public Class Request
                 Dim webVPvAntwort As clsWebVPv
                 Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                     Antwort = ReadResponseContent(httpresp)
-                    errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                    errcode = CType(httpresp.StatusCode, Integer)
+                    errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                     webVPvAntwort = JsonConvert.DeserializeObject(Of clsWebVPv)(Antwort)
                 End Using
 
-                If webVPvAntwort.state = "success" Then
+                'If webVPvAntwort.state = "success" Then
+                If errcode = 200 Then
+
                     ' Call MsgBox(webVPvAntwort.message & vbCrLf & "aktueller User hat " & webVPvAntwort.vpv.Count & " VisboProjectsVersions")
                     result = webVPvAntwort.vpv
 
@@ -2070,16 +2067,9 @@ Public Class Request
 
 
                 Else
-                    If webVPvAntwort.message.Contains("Token is dead") Then
-                        token = ""
-                        Throw New ArgumentException(webVPvAntwort.message)
-                        'Dim loginerfolgreich As Boolean = login(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    Else
-                        If awinSettings.visboDebug Then
-                            Call MsgBox(errmsg & " : " & webVPvAntwort.message)
-                        End If
 
-                    End If
+                    ' Fehlerbehandlung je nach errcode
+                    Dim statError As Boolean = errorHandling_withBreak("GETallVPvShort", errcode, errmsg & " : " & webVPvAntwort.message)
 
                 End If
 
@@ -2111,6 +2101,7 @@ Public Class Request
         Dim result As New List(Of clsProjektWebLong)
         Dim nothingToDo As Boolean = True
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
@@ -2189,12 +2180,14 @@ Public Class Request
                 Dim webVPvAntwort As clsWebLongVPv
                 Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                     Antwort = ReadResponseContent(httpresp)
-                    errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                    ' speichern von Error-Code und -Message für error-Handling
+                    errcode = CType(httpresp.StatusCode, Integer)
+                    errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                     webVPvAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
                 End Using
 
-                If webVPvAntwort.state = "success" Then
-                    ' Call MsgBox(webVPvAntwort.message & vbCrLf & "aktueller User hat " & webVPvAntwort.vpv.Count & " VisboProjectsVersions")
+                If errcode = 200 Then
+
                     result = webVPvAntwort.vpv
 
                     ' cache soll nur befüllt werden, wenn nicht explizit mit VisboProjectVersion-Id aufgerufen
@@ -2204,13 +2197,9 @@ Public Class Request
                     End If
 
                 Else
-                    If webVPvAntwort.message = "Token is dead" Then
-                        token = ""
-                        Throw New ArgumentException(webVPvAntwort.message)
-                    End If
-                    If awinSettings.visboDebug Then
-                        Call MsgBox(errmsg & " : " & webVPvAntwort.message)
-                    End If
+
+                    ' Fehlerbehandlung je nach errcode
+                    Dim statError As Boolean = errorHandling_withBreak("GETallVPvLong", errcode, errmsg & " : " & webVPvAntwort.message)
 
                 End If
 
@@ -2237,6 +2226,7 @@ Public Class Request
         Dim result As New SortedList(Of Date, clsVPf)          ' sortiert nach datum
         Dim secondResult As New SortedList(Of String, clsVPf)    ' sortiert nach vpid
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String
@@ -2254,12 +2244,12 @@ Public Class Request
             Dim webVPfantwort As clsWebVPf = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPfantwort = JsonConvert.DeserializeObject(Of clsWebVPf)(Antwort)
             End Using
 
-            If webVPfantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+            If errcode = 200 Then
 
                 'die PortfolioVersionen werden nach Timestamp sortiert
                 For Each vpf In webVPfantwort.vpf
@@ -2275,13 +2265,8 @@ Public Class Request
                 GETallVPf = result
 
             Else
-                If webVPfantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVPfantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox(errmsg & " : " & webVPfantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallVPf", errcode, errmsg & " : " & webVPfantwort.message)
 
             End If
 
@@ -2303,6 +2288,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             ' URL zusammensetzen
@@ -2326,20 +2312,15 @@ Public Class Request
             Dim webantwort As clsWebOutput = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webantwort = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
             End Using
 
-            If webantwort.state = "success" Then
+            If errcode = 200 Then
                 result = True
             Else
-                If webantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox(errmsg & " : " & webantwort.message)
-                End If
+                Dim statError As Boolean = errorHandling_withBreak("DELETEOneVPv", errcode, errmsg & " : " & webantwort.message)
             End If
 
         Catch ex As Exception
@@ -2361,6 +2342,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             ' URL zusammensetzen
@@ -2384,20 +2366,16 @@ Public Class Request
             Dim webantwort As clsWebVP = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
             End Using
 
-            If webantwort.state = "success" Then
+            If errcode = 200 Then
                 result = True
             Else
-                If webantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox(errmsg & " : " & webantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("DELETEOneVPf", errcode, errmsg & " : " & webantwort.message)
             End If
 
         Catch ex As Exception
@@ -2418,6 +2396,7 @@ Public Class Request
 
         Dim result As New List(Of clsVCrole)
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String
@@ -2441,12 +2420,12 @@ Public Class Request
             Dim webVCroleantwort As clsWebVCrole = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
             End Using
 
-            If webVCroleantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+            If errcode = 200 Then
 
                 result = webVCroleantwort.vcrole
 
@@ -2460,13 +2439,8 @@ Public Class Request
                 Next
 
             Else
-                If webVCroleantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVCroleantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in GETallVCrole: " & errmsg & " : " & webVCroleantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETallVCrole", errcode, errmsg & " : " & webVCroleantwort.message)
 
             End If
 
@@ -2491,6 +2465,7 @@ Public Class Request
 
         Dim result As Boolean
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String
@@ -2512,22 +2487,16 @@ Public Class Request
             Dim webVCroleantwort As clsWebVCrole = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription & " : "
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
             End Using
 
-            If webVCroleantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
-
+            If errcode = 200 Then
                 result = True
             Else
-                If webVCroleantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVCroleantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in POSTOneVCrole: " & errmsg & webVCroleantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVCrole", errcode, errmsg & " : " & webVCroleantwort.message)
             End If
 
         Catch ex As Exception
@@ -2550,6 +2519,7 @@ Public Class Request
 
         Dim result As Boolean
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String
@@ -2571,22 +2541,17 @@ Public Class Request
             Dim webVCroleantwort As clsWebVCrole = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
             End Using
 
-            If webVCroleantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+            If errcode = 200 Then
 
                 result = True
             Else
-                If webVCroleantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVCroleantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in PUTOneVCrole: " & errmsg & " : " & webVCroleantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("PUTOneVCrole", errcode, errmsg & " : " & webVCroleantwort.message)
 
             End If
 
@@ -2607,6 +2572,7 @@ Public Class Request
 
         Dim result As New List(Of clsVCcost)
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String
@@ -2630,22 +2596,17 @@ Public Class Request
             Dim webVCcostantwort As clsWebVCcost = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
             End Using
 
-            If webVCcostantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+            If errcode = 200 Then
 
                 result = webVCcostantwort.vccost
             Else
-                If webVCcostantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVCcostantwort.message)
-                End If
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in GETallVCcost: " & errmsg & " : " & webVCcostantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETalVCcost", errcode, errmsg & " : " & webVCcostantwort.message)
             End If
 
         Catch ex As Exception
@@ -2667,6 +2628,7 @@ Public Class Request
 
         Dim result As New List(Of clsVP)
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String = ""
@@ -2686,23 +2648,20 @@ Public Class Request
             Dim webVPantwort As clsWebVP = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
             End Using
 
-            If webVPantwort.state = "success" Then
+            If errcode = 200 Then
 
                 result = webVPantwort.vp
 
             Else
-                If webVPantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVPantwort.message)
-                End If
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in PUTOneVP: " & errmsg & " : " & webVPantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("PUTOneVP", errcode, errmsg & " : " & webVPantwort.message)
+
             End If
 
         Catch ex As Exception
@@ -2725,6 +2684,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             ' URL zusammensetzen
@@ -2750,11 +2710,13 @@ Public Class Request
 
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVP = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
             End Using
 
-            If webVP.state = "success" Then
+            If errcode = 200 Then
+
                 Dim pname As String = GETpName(vpid)
 
                 If VRScache.VPsId.ContainsKey(vpid) Then
@@ -2766,14 +2728,10 @@ Public Class Request
                 End If
                 result = True
             Else
-                If webVP.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVP.message)
-                End If
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in DELETEOneVP: " & errmsg & " : " & webVP.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("DELETEOneVP", errcode, errmsg & " : " & webVP.message)
+
             End If
 
 
@@ -2796,6 +2754,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             ' URL zusammensetzen
@@ -2822,12 +2781,13 @@ Public Class Request
             Dim webVPLockantwort As clsWebVPLock = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPLockantwort = JsonConvert.DeserializeObject(Of clsWebVPlock)(Antwort)
             End Using
 
-            If webVPLockantwort.state = "success" Then
-                ' Call MsgBox(webVPantwort.message & vbCrLf & "aktueller User hat " & webVPantwort.vp.Count & "VisboProjects")
+            If errcode = 200 Then
+
                 Dim pname As String = GETpName(vpid)
 
                 Dim newLock As clsVPLock = webVPLockantwort.lock.ElementAt(0)
@@ -2863,14 +2823,9 @@ Public Class Request
                 result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
 
             Else
-                If webVPLockantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVPLockantwort.message)
-                End If
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in POSTVPLock: " & errmsg & " : " & webVPLockantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTVPLock", errcode, errmsg & " : " & webVPLockantwort.message)
 
             End If
 
@@ -2894,6 +2849,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             ' URL zusammensetzen
@@ -2927,11 +2883,13 @@ Public Class Request
 
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPLockantwort = JsonConvert.DeserializeObject(Of clsWebVPlock)(Antwort)
             End Using
 
-            If webVPLockantwort.state = "success" Then
+            If errcode = 200 Then
+
                 Dim pname As String = GETpName(vpid)
 
                 Dim anzLock As Integer = webVPLockantwort.lock.Count
@@ -2955,14 +2913,8 @@ Public Class Request
                 result = VRScache.VPsId(vpid).lock.Count = VRScache.VPsN(pname).lock.Count
 
             Else
-                If webVPLockantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVPLockantwort.message)
-                End If
-
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in DELETEVPLock: " & errmsg & " : " & webVPLockantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("DELETEVPLock", errcode, errmsg & " : " & webVPLockantwort.message)
             End If
 
 
@@ -2985,6 +2937,8 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim errcode As Integer
+
         Dim webVPVar As clsWebVPVariant
         Dim Data() As Byte
 
@@ -3003,26 +2957,23 @@ Public Class Request
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, Data, "POST")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPVar = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
             End Using
 
-            If webVPVar.state = "success" Then
+            If errcode = 200 Then
+
                 ' Variante variantName in Cache mitaufnehmen
                 var = webVPVar.Variant.ElementAt(0)
                 If Not VRScache.VPsId(vpid).Variant.Contains(var) Then
                     VRScache.VPsId(vpid).Variant.Add(var)
                 End If
                 result = True
-            Else
-                If webVPVar.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVPVar.message)
-                End If
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in POSTVPVariant: " & errmsg & " : " & webVPVar.message)
-                End If
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTVPVariant", errcode, errmsg & " : " & webVPVar.message)
             End If
 
         Catch ex As Exception
@@ -3044,6 +2995,7 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             ' URL zusammensetzen
@@ -3070,11 +3022,13 @@ Public Class Request
 
                 Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DELETE")
                     Antwort = ReadResponseContent(httpresp)
-                    errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription
+                    errcode = CType(httpresp.StatusCode, Integer)
+                    errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                     webVPVarAntwort = JsonConvert.DeserializeObject(Of clsWebVPVariant)(Antwort)
                 End Using
 
-                If webVPVarAntwort.state = "success" Then
+                If errcode = 200 Then
+
                     Dim anzvar As Integer = webVPVarAntwort.Variant.Count
                     If anzvar = 0 Then
                         VRScache.VPsId(vpid).Variant.Clear()
@@ -3087,14 +3041,8 @@ Public Class Request
                     result = VRScache.VPsId(vpid).Variant.Count = VRScache.VPsN(pname).Variant.Count
 
                 Else
-                    If webVPVarAntwort.message = "Token is dead" Then
-                        token = ""
-                        Throw New ArgumentException(webVPVarAntwort.message)
-                    End If
-
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("Fehler in DELETEVPVariant: " & errmsg & " : " & webVPVarAntwort.message)
-                    End If
+                    ' Fehlerbehandlung je nach errcode
+                    Dim statError As Boolean = errorHandling_withBreak("DELETEVPVariant", errcode, errmsg & " : " & webVPVarAntwort.message)
                 End If
 
             End If    ' ende von if vpid <> ""
@@ -3117,6 +3065,7 @@ Public Class Request
 
         Dim result As New List(Of clsVP)
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String = ""
@@ -3132,22 +3081,17 @@ Public Class Request
             Dim webVPantwort As clsWebVP = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription & " : "
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPantwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
             End Using
 
-            If webVPantwort.state = "success" Then
+            If errcode = 200 Then
 
                 result = webVPantwort.vp
             Else
-                If webVPantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVPantwort.message)
-                End If
-
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in POSTOneVP: " & errmsg & " : " & webVPantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVP", errcode, errmsg & " : " & webVPantwort.message)
 
             End If
 
@@ -3168,6 +3112,7 @@ Public Class Request
 
         Dim result As New List(Of clsVPf)
         Dim errmsg As String = ""
+        Dim errcode As Integer
 
         Try
             Dim serverUriString As String = ""
@@ -3188,22 +3133,17 @@ Public Class Request
             Dim webVPfantwort As clsWebVPf = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
-                errmsg = "( " & CType(httpresp.StatusCode, Integer).ToString & ") : " & httpresp.StatusDescription & " : "
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 webVPfantwort = JsonConvert.DeserializeObject(Of clsWebVPf)(Antwort)
             End Using
 
-            If webVPfantwort.state = "success" Then
+            If errcode = 200 Then
 
                 result = webVPfantwort.vpf
             Else
-                If webVPfantwort.message = "Token is dead" Then
-                    token = ""
-                    Throw New ArgumentException(webVPfantwort.message)
-                End If
-
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Fehler in POSTOneVPf: " & errmsg & " : " & webVPfantwort.message)
-                End If
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVPf", errcode, errmsg & " : " & webVPfantwort.message)
 
             End If
 
@@ -3383,6 +3323,96 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="RestCall">RestCall-Routine für besser Fehler-Lokalisation</param>
+    ''' <param name="errcode">RestCall-Error 2xx, 3xx, 4xx, 5xx</param>
+    ''' <param name="webAntwortMsg">Message</param>
+    ''' <param name="withBreak"></param>
+    ''' <returns></returns>
+    Public Function errorHandling_withBreak(ByVal restCall As String, ByVal errcode As Integer,
+                                            ByVal webAntwortMsg As String, Optional ByVal withBreak As Boolean = False) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+
+            Select Case errcode
+
+                Case 400        ' Bad Request
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+                    If withBreak Then
+                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+
+
+                Case 401        ' Unauthorized
+
+                    token = ""
+                    Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+
+                Case 402        'Payment Required
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+                    If withBreak Then
+                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+
+                Case 403        ' Forbidden
+
+                    'Call MsgBox("Fehler in GETallVPvShort: " & errmsg & " : " & webVPvAntwort.message)
+                    Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+
+                Case 404 To 408
+
+                Case 409        ' Conflict
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+                    If withBreak Then
+                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+
+                Case 410 To 499
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+                    If withBreak Then
+                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+
+                Case 300 To 399
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+                    If withBreak Then
+                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+
+                Case 500 To 599     ' ServerIssue (internal Server Error)
+
+                    Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+
+                Case Else
+
+            End Select
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        errorHandling_withBreak = result
+
+    End Function
     '---------------------------------------------------------------------------------------------------------------
     '
     ' TODO: ur: Funktionen die für den Zugriff auf DB über ReST-Server noch fehlern
