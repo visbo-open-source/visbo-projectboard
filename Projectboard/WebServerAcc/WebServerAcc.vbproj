@@ -140,10 +140,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProjectBoardBasic\ProjectBoardBasic.vbproj">
-      <Project>{ecdec86c-6f2f-436a-99f5-98c1958cf08b}</Project>
-      <Name>ProjectBoardBasic</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
       <Name>ProjectBoardDefinitions</Name>
