@@ -188,6 +188,8 @@
     ''' <remarks></remarks>
     Private Sub performBtnAction(ByVal newdate As Date)
 
+        ' Versuch den Undo-Stack zurückzusetzen
+        pptAPP.StartNewUndoEntry()
 
         If newdate <> currentTimestamp Then
 
@@ -397,9 +399,6 @@
 
                     '' jetzt die Checkbox anzeigen ... 
                     Me.showChangeList.Visible = True
-
-                    ' clear changelist 
-                    Call changeListe.clearChangeList()
 
                     previousVariantName = currentVariantname
                     previousTimeStamp = currentTimestamp

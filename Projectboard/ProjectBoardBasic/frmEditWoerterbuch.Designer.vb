@@ -257,7 +257,7 @@ Partial Class frmEditWoerterbuch
         '
         Me.storeButton.Enabled = False
         Me.storeButton.Location = New System.Drawing.Point(676, 502)
-        Me.storeButton.Name = "storeButton"
+        Me.storeButton.Name = "saveButton"
         Me.storeButton.Size = New System.Drawing.Size(75, 23)
         Me.storeButton.TabIndex = 22
         Me.storeButton.Text = "Speichern"

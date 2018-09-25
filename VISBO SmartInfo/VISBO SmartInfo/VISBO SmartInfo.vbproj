@@ -37,11 +37,11 @@
     </UpgradeBackupLocation>
     <OldToolsVersion>12.0</OldToolsVersion>
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\Koytek\Documents\Publish Folder SmartInfo\</PublishUrl>
+    <BootstrapperEnabled>false</BootstrapperEnabled>
+    <PublishUrl>C:\publish\VISBO Smartinfo REST\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>2.1.0.27</ApplicationVersion>
+    <ApplicationVersion>3.0.0.1</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -162,6 +162,10 @@
     This section specifies references for the project.
   -->
   <ItemGroup>
+    <Reference Include="DBAccLayer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Projectboard\DBAccLayer\bin\Debug\DBAccLayer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -195,6 +199,9 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="WebServerAcc">
+      <HintPath>..\..\Projectboard\WebServerAcc\bin\Debug\WebServerAcc.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Office.Tools.Common.v4.0.Utilities, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -235,16 +242,16 @@
     <Compile Include="clsLanguages.vb" />
     <Compile Include="clsPPTTimeMachine.vb" />
     <Compile Include="clsSmartSlideListen.vb" />
+    <Compile Include="frmCalendar.Designer.vb">
+      <DependentUpon>frmCalendar.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCalendar.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmChanges.Designer.vb">
       <DependentUpon>frmChanges.vb</DependentUpon>
     </Compile>
     <Compile Include="frmChanges.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmEditLink.Designer.vb">
-      <DependentUpon>frmEditLink.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmEditLink.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmPPTTimeMachine.Designer.vb">
@@ -309,11 +316,11 @@
     <Compile Include="ucSearch.vb">
       <SubType>UserControl</SubType>
     </Compile>
+    <EmbeddedResource Include="frmCalendar.resx">
+      <DependentUpon>frmCalendar.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmChanges.resx">
       <DependentUpon>frmChanges.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmEditLink.resx">
-      <DependentUpon>frmEditLink.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmPPTTimeMachine.resx">
       <DependentUpon>frmPPTTimeMachine.vb</DependentUpon>
@@ -492,30 +499,6 @@
   <ItemGroup>
     <None Include="Resources\find.png" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\documents.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\camera.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\surveillance_camera.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\3d.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\documents-plus.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\camera-plus.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\surveillance_camera-plus.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\3d-plus.png" />
-  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -537,7 +520,11 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>06A1E789552A35A634B26DD6CE7A5566D0999EB8</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>5BF50AEDE775D76824A6A17DEE5DD2D00ACFE12A</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestTimestampUrl>
+    </ManifestTimestampUrl>
   </PropertyGroup>
   <!-- Include the build rules for a Visual Basic project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

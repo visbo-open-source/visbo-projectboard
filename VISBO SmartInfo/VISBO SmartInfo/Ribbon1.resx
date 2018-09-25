@@ -117,4 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="btnPrevious.SuperTip" xml:space="preserve">
+    <value>all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and tables  are synchronized with the version shown just before; With this button you may toggle two versions in the database</value>
+  </data>
+  <data name="btnFreeze.SuperTip" xml:space="preserve">
+    <value>all milestones, tasks, VISBO charts and tables shown on this slide of the VISBO report will not change the version with any of the action buttons like forward, backward and so on. This slide will be frozen.</value>
+  </data>
 </root>

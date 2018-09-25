@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -398,9 +398,9 @@
       <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
       <Name>ClassLibrary1</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
-      <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
-      <Name>MongoDbAccess</Name>
+    <ProjectReference Include="..\DBAccLayer\DBAccLayer.vbproj">
+      <Project>{68c4cab8-fc59-47b1-bdd7-68aa31fbb63f}</Project>
+      <Name>DBAccLayer</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>

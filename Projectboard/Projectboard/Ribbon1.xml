@@ -417,17 +417,52 @@
           <!--label="Report Sprache"-->
           <button id="PTeinstG1B1" getLabel ="bestimmeLabel" onAction="PTVisboSettings" supertip="allgemeine Einstellungen, gültig für die ganze Sitzung von ProjectBoard"/>
           <!--label="Report Sprache"-->
-          <button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>
+          <!--<button id="PTeinstG1B2" label="Namen-Dictionary" onAction="PT5editDictionary" supertip ="hiermit kann bestimmt werden, welche Phasen und Meilenstein-Bezeichner ggf. auf anderen Namen abgebildet werden sollen"/>-->
           <!--<button id="PTeinstG1B3" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>-->
           <button id="PTDemoHistory" label="demo-funktion historie"  onAction ="PTTestFunktion5" />
           <button id="PTDemoAmpel" label="create demo ampel value"  onAction ="PTTestFunktion4" />
         </group>
       </tab>
       <!--label="Help"-->
-      <!--<tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+      <tab id="PThelp" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXG1" > 
         </group>
-      </tab>-->
+      </tab>
+      <!--label="WEBServer-Funktionen"-->
+      <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
+        <group id ="PTXIG1" > 
+          <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
+          <!--<button id="_token_user_signup" label="SignUp"  onAction ="PTWebRequestLogin" />
+          <separator id="PTXIG1s1"/> 
+          <button id="PUT_user_profile" label="Update User Profile"  onAction ="PTWebRequestPUTUserProfile"/>
+          <button id="GET_user_profile" label="Get own Profile"  onAction ="PTWebRequestGETUserProfile"/>
+          <separator id="PTXIG1s2"/> 
+          <button id="_vc" label="All VisboCenter"  onAction ="PTWebRequestGETallVC" />
+          <button id="PTPOSTOneVC" label="POST one VC"  onAction ="PTPOSTOneVC" />
+          <button id="GET_vc_" label="GET one VC"  onAction ="PTGETOneVC" />
+          <separator id="PTXIG1s3"/> 
+          <button id="PUT_vc_" label="Update one VC"  onAction ="PTPUTOneVC" />
+          <button id="DEL_vc_" label="Delete one VC"  onAction ="PTDELETEOneVC" />
+          <separator id="PTXIG1s4"/>          
+          <button id="_vp" label="All VisboProjects"  onAction ="PTWebRequestGETallVP" />
+          <button id="PTPOSTOneVP" label="POST one VP"  onAction ="PTPOSTOneVP" />
+          <button id="GET_vp_" label="GET one VP"  onAction ="PTGETOneVP" />
+          <separator id="PTXIG1s5"/>         
+          <button id="PUT_vp_" label="Update one VP"  onAction ="PTPUTOneVP" />
+          <button id="DEL_vp_" label="Delete one VP"  onAction ="PTDELETEOneVP" />
+              <separator id="PTXIG1s6"/>          
+          <button id="_vpv" label="All VisboProjectsVersions"  onAction ="PTWebRequestGETallVPv" />
+          <button id="PTPOSTOneVPv" label="POST one VPv"  onAction ="PTPOSTOneVPv" />
+          <button id="GET_vpv_" label="GET one VPv"  onAction ="PTGETOneVPv" />
+          <separator id="PTXIG1s7"/>         
+          <button id="PUT_vpv_" label="Update one VPv"  onAction ="PTPUTOneVPv" />
+          <button id="DEL_vpv_" label="Delete one VPv"  onAction ="PTDELETEOneVPv" />
+           <separator id="PTXIG1s8"/> 
+          <button id="PTJsonWrite" label="WRITE Json"  onAction ="PTJsonWrite" />
+          <button id="PTJsonRead" label="READ Json"  onAction ="PTJsonRead" />
+          <button id="hierarchy" label="Hierarchy"  onAction ="PTJsonReadHierarchy" />-->
+         </group>
+      </tab>
       <!--label="Lizenzen"-->
       <!--<tab id="PTlizenz" getVisible="chckVisibility" getLabel ="bestimmeLabel">
           <group id ="PT6G6" label ="Licensierung">

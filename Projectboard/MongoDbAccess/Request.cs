@@ -105,17 +105,21 @@ namespace MongoDbAccess
             {
 
                 //var connectionString = "mongodb://" + databaseURL + "?connectTimeoutMS=30&SocketTimeoutMS=10";
-                var connectionString = "mongodb://" + databaseURL; 
+                //var connectionString = "mongodb://" + databaseURL; 
 
-                //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
+                //var connectionString = "mongodb://@ds034198.mlab.com:34198";
+                var connectionString = "mongodb://ute:Mopsi@cluster0-shard-00-00-5rtga.mongodb.net:27017,cluster0-shard-00-01-5rtga.mongodb.net:27017,cluster0-shard-00-02-5rtga.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
+                //var connectionString = "mongodb://ute:test@cluster0-shard-00-00-kpmhq.mongodb.net:27017,cluster0-shard-00-01-kpmhq.mongodb.net:27017,cluster0-shard-00-02-kpmhq.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
                 Client = new MongoClient(connectionString);
             }
             else
-
             {
+                
+
 
                 // wird nicht mehr verwendet , führt ggf zu Problemen bei zu schnellem Timeout 
                 // var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
+
 
                 var connectionString = "";
                 
@@ -126,11 +130,7 @@ namespace MongoDbAccess
                 else
                 {
                      connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
-                }
-                
-                //var connectionString = "mongodb://tk:philden30.@cluster0-shard-00-00-5rtga.mongodb.net:27017,cluster0-shard-00-01-5rtga.mongodb.net:27017,cluster0-shard-00-02-5rtga.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
-
-                //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
+                }                
                 
 
                 Client = new MongoClient(connectionString);
@@ -529,6 +529,8 @@ namespace MongoDbAccess
             }
             else
             {
+                //var projektID = "";
+                //projektID = result.vpid.ToString;
                 var projekt = new clsProjekt();
                 result.copyto(ref projekt);
                 int a = projekt.dauerInDays;
@@ -627,6 +629,8 @@ namespace MongoDbAccess
 
                 
             }
+
+            result.buildTopNodes();
 
             return result;
         }
@@ -1205,6 +1209,8 @@ namespace MongoDbAccess
             // in der Datenbank sind die Zeiten als Universal time gespeichert .. 
             // deshalb muss hier umgerechnet werden 
             storedatOrBefore = storedatOrBefore.ToUniversalTime();
+            zeitraumStart = zeitraumStart.ToUniversalTime();
+            zeitraumEnde = zeitraumEnde.ToUniversalTime();
             
             
             int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
@@ -1277,6 +1283,8 @@ namespace MongoDbAccess
             // deshalb muss hier umgerechnet werden 
             storedLatest = storedLatest.ToUniversalTime();
             storedEarliest = storedEarliest.ToUniversalTime();
+            zeitraumStart = zeitraumStart.ToUniversalTime();
+            zeitraumEnde = zeitraumEnde.ToUniversalTime();
 
             if (onlyLatest)
             {
@@ -1550,6 +1558,8 @@ namespace MongoDbAccess
         public bool storeRoleDefinitionToDB(clsRollenDefinition role, bool insertNewDate, DateTime ts)
         {
             bool tmpResult = true;
+            ts = ts.ToUniversalTime();
+
             try
             {
                 var roleDB = new clsRollenDefinitionDB();
@@ -1648,6 +1658,8 @@ namespace MongoDbAccess
         public bool storeCostDefinitionToDB(clsKostenartDefinition cost, bool insertNewDate, DateTime ts)
         {
             bool tmpResult = true;
+            ts = ts.ToUniversalTime();
+
             try
             {
                 var costDefDB = new clsKostenartDefinitionDB();

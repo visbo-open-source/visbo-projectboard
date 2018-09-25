@@ -41,6 +41,7 @@
     'Nehmen Sie keine Änderungen mit dem Code-Editor vor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Ribbon1))
         Me.Tab1 = Me.Factory.CreateRibbonTab
         Me.Tab2 = Me.Factory.CreateRibbonTab
         Me.Group2 = Me.Factory.CreateRibbonGroup
@@ -48,13 +49,16 @@
         Me.Group3 = Me.Factory.CreateRibbonGroup
         Me.btnStart = Me.Factory.CreateRibbonButton
         Me.btnFastBack = Me.Factory.CreateRibbonButton
-        Me.btnShowChanges = Me.Factory.CreateRibbonButton
+        Me.btnDate = Me.Factory.CreateRibbonButton
         Me.btnFastForward = Me.Factory.CreateRibbonButton
         Me.btnEnd2 = Me.Factory.CreateRibbonButton
+        Me.btnPrevious = Me.Factory.CreateRibbonButton
         Me.Group4 = Me.Factory.CreateRibbonGroup
+        Me.btnShowChanges = Me.Factory.CreateRibbonButton
         Me.activateSearch = Me.Factory.CreateRibbonButton
         Me.activateInfo = Me.Factory.CreateRibbonButton
         Me.activateTab = Me.Factory.CreateRibbonButton
+        Me.btnFreeze = Me.Factory.CreateRibbonButton
         Me.SmartInfo = Me.Factory.CreateRibbonGroup
         Me.settingsTab = Me.Factory.CreateRibbonButton
         Me.varianten_Tab = Me.Factory.CreateRibbonButton
@@ -96,16 +100,17 @@
         Me.btnUpdate.Name = "btnUpdate"
         Me.btnUpdate.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnUpdate.ShowImage = True
-        Me.btnUpdate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the latest version in the database; "
+        Me.btnUpdate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and" &
+    " tables  are synchronized with the the latest version in the database; "
         '
         'Group3
         '
         Me.Group3.Items.Add(Me.btnStart)
         Me.Group3.Items.Add(Me.btnFastBack)
-        Me.Group3.Items.Add(Me.btnShowChanges)
+        Me.Group3.Items.Add(Me.btnDate)
         Me.Group3.Items.Add(Me.btnFastForward)
         Me.Group3.Items.Add(Me.btnEnd2)
+        Me.Group3.Items.Add(Me.btnPrevious)
         Me.Group3.Label = "Time Machine"
         Me.Group3.Name = "Group3"
         '
@@ -117,37 +122,36 @@
         Me.btnStart.Name = "btnStart"
         Me.btnStart.ScreenTip = "VISBO Time-Machine: synchronize with first version"
         Me.btnStart.ShowImage = True
-        Me.btnStart.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the first version in the database; "
+        Me.btnStart.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and" &
+    " tables  are synchronized with the the first version in the database; "
         '
         'btnFastBack
         '
         Me.btnFastBack.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
         Me.btnFastBack.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_left1
-        Me.btnFastBack.Label = "Previous"
+        Me.btnFastBack.Label = "Backward"
         Me.btnFastBack.Name = "btnFastBack"
         Me.btnFastBack.ScreenTip = "VISBO Time-Machine: synchronize with version 1 month earlier"
         Me.btnFastBack.ShowImage = True
         Me.btnFastBack.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the version 1 month earlier in the databas" &
-    "e; "
+    "and tables  are synchronized with the version 1 month earlier in the database; "
         '
-        'btnShowChanges
+        'btnDate
         '
-        Me.btnShowChanges.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnShowChanges.Image = Global.VISBO_SmartInfo.My.Resources.Resources.shape_triangle
-        Me.btnShowChanges.Label = "Difference"
-        Me.btnShowChanges.Name = "btnShowChanges"
-        Me.btnShowChanges.ScreenTip = "VISBO Time-Machine: show differences"
-        Me.btnShowChanges.ShowImage = True
-        Me.btnShowChanges.SuperTip = "shows differences in milestone and task dates between currant version and last ac" &
-    "tive version. "
+        Me.btnDate.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnDate.Image = Global.VISBO_SmartInfo.My.Resources.Resources.calendar
+        Me.btnDate.Label = "Date"
+        Me.btnDate.Name = "btnDate"
+        Me.btnDate.ShowImage = True
+        Me.btnDate.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and" &
+    " tables  are synchronized with the version of the selected date and time in the " &
+    "database"
         '
         'btnFastForward
         '
         Me.btnFastForward.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
         Me.btnFastForward.Image = Global.VISBO_SmartInfo.My.Resources.Resources.navigate_right1
-        Me.btnFastForward.Label = "Next"
+        Me.btnFastForward.Label = "Foreward"
         Me.btnFastForward.Name = "btnFastForward"
         Me.btnFastForward.ScreenTip = "VISBO Time-Machine: synchronize with version 1 month later"
         Me.btnFastForward.ShowImage = True
@@ -164,15 +168,37 @@
         Me.btnEnd2.ScreenTip = "VISBO Time-Machine: synchronize with latest version"
         Me.btnEnd2.ShowImage = True
         Me.btnEnd2.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
-    "and tables  are synchronized with the the latest version in the database; "
+    "and tables  are synchronized with the latest version in the database; "
+        '
+        'btnPrevious
+        '
+        Me.btnPrevious.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnPrevious.Image = Global.VISBO_SmartInfo.My.Resources.Resources.undo
+        Me.btnPrevious.Label = "Previous"
+        Me.btnPrevious.Name = "btnPrevious"
+        Me.btnPrevious.ShowImage = True
+        Me.btnPrevious.SuperTip = resources.GetString("btnPrevious.SuperTip")
         '
         'Group4
         '
+        Me.Group4.Items.Add(Me.btnShowChanges)
         Me.Group4.Items.Add(Me.activateSearch)
         Me.Group4.Items.Add(Me.activateInfo)
         Me.Group4.Items.Add(Me.activateTab)
+        Me.Group4.Items.Add(Me.btnFreeze)
         Me.Group4.Label = "Actions"
         Me.Group4.Name = "Group4"
+        '
+        'btnShowChanges
+        '
+        Me.btnShowChanges.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnShowChanges.Image = Global.VISBO_SmartInfo.My.Resources.Resources.shape_triangle
+        Me.btnShowChanges.Label = "Difference"
+        Me.btnShowChanges.Name = "btnShowChanges"
+        Me.btnShowChanges.ScreenTip = "VISBO Time-Machine: show differences"
+        Me.btnShowChanges.ShowImage = True
+        Me.btnShowChanges.SuperTip = "shows differences in milestone and task dates between current version and last ac" &
+    "tive version in the database"
         '
         'activateSearch
         '
@@ -207,6 +233,15 @@
         Me.activateTab.ShowImage = True
         Me.activateTab.SuperTip = "annotates all selected milestones and tasks with name and/or date"
         '
+        'btnFreeze
+        '
+        Me.btnFreeze.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnFreeze.Image = Global.VISBO_SmartInfo.My.Resources.Resources.snowflake
+        Me.btnFreeze.Label = "Freeze/Defreeze"
+        Me.btnFreeze.Name = "btnFreeze"
+        Me.btnFreeze.ShowImage = True
+        Me.btnFreeze.SuperTip = resources.GetString("btnFreeze.SuperTip")
+        '
         'SmartInfo
         '
         Me.SmartInfo.Items.Add(Me.settingsTab)
@@ -216,6 +251,7 @@
         '
         'settingsTab
         '
+        Me.settingsTab.Enabled = False
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
@@ -223,13 +259,16 @@
         '
         Me.varianten_Tab.Label = "Variants"
         Me.varianten_Tab.Name = "varianten_Tab"
+        Me.varianten_Tab.Visible = False
         '
         'Button1
         '
+        Me.Button1.Enabled = False
         Me.Button1.Label = "Smartify Chart"
         Me.Button1.Name = "Button1"
         Me.Button1.ScreenTip = "embeds information about data source in Chart and uploads timestamped data source" &
     ""
+        Me.Button1.Visible = False
         '
         'Ribbon1
         '
@@ -255,20 +294,15 @@
 
     Friend WithEvents Tab1 As Microsoft.Office.Tools.Ribbon.RibbonTab
     Friend WithEvents Tab2 As Microsoft.Office.Tools.Ribbon.RibbonTab
-    Friend WithEvents activateSearch As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Group2 As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents btnUpdate As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Group3 As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents btnStart As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnFastBack As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnShowChanges As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents btnFastForward As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents btnEnd2 As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents Group4 As Microsoft.Office.Tools.Ribbon.RibbonGroup
-    Friend WithEvents activateInfo As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents SmartInfo As Microsoft.Office.Tools.Ribbon.RibbonGroup
     Friend WithEvents settingsTab As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents varianten_Tab As Microsoft.Office.Tools.Ribbon.RibbonButton
 
     Protected Overrides Sub Finalize()
@@ -281,6 +315,14 @@
     End Sub
 
     Friend WithEvents Button1 As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnDate As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnFastForward As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnEnd2 As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents activateSearch As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents activateInfo As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnFreeze As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnPrevious As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

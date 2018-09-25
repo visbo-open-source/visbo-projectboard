@@ -4,7 +4,6 @@ Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
 Imports ProjectBoardDefinitions
-Imports MongoDbAccess
 
 
 Public Class frmSettings
@@ -46,6 +45,7 @@ Public Class frmSettings
         If englishLanguage Then
 
             With Me
+                .Text = "Settings"
                 .TabControl1.TabPages.Item(0).Text = "Basics"
                 .TabControl1.TabPages.Item(1).Text = "Protection"
                 .TabControl1.TabPages.Item(2).Text = "Language I/E"

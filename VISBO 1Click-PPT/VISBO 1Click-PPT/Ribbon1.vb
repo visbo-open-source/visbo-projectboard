@@ -9,6 +9,55 @@ Public Class Ribbon1
 
 
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
+        Try
+
+            pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+
+            awinSettings.databaseURL = My.Settings.mongoDBURL
+            awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.globalPath = My.Settings.globalPath
+            awinSettings.awinPath = My.Settings.awinPath
+            awinSettings.visboTaskClass = My.Settings.TaskClass
+            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+            awinSettings.visboAmpel = My.Settings.VISBOAmpel
+            awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+            awinSettings.visboresponsible = My.Settings.VISBOresponsible
+            awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+            awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+            awinSettings.visboDebug = My.Settings.VISBODebug
+            awinSettings.visboMapping = My.Settings.VISBOMapping
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If awinSettings.rememberUserPwd Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            End If
+
+            dbUsername = ""
+            dbPasswort = ""
+
+            '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
+            Call awinsetTypen("BHTC")
+
+            StartofCalendar = StartofCalendar.AddMonths(-12)
+
+
+            If awinSettings.englishLanguage Then
+                DBspeichern.Label = "Save to DB"
+                EinzelprojektReport.Label = "Report of one Project"
+                Einstellung.Label = "Settings"
+            Else
+                DBspeichern.Label = "Speichern in DB"
+                EinzelprojektReport.Label = "Einzelprojekt Report"
+                Einstellung.Label = "Einstellungen"
+            End If
+
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+
+        Finally
+
+        End Try
 
     End Sub
 
@@ -16,7 +65,14 @@ Public Class Ribbon1
 
         Try
             If fehlerBeimLoad Then
-                Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
+                If awinSettings.englishLanguage Then
+
+                    Call MsgBox("Report of one single project is not executable,  " & vbLf & " 'VISBO 1Click-PPT AddIn' couldn't be loaded correctly!")
+                Else
+
+                    Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
+                End If
+
             Else
 
 
@@ -47,7 +103,6 @@ Public Class Ribbon1
                     '' Set cursor as hourglass
                     Cursor.Current = Cursors.WaitCursor
 
-
                     'Call MsgBox("EPReport_Click")
 
                     ' Laden des aktuell geladenen Projektes
@@ -58,7 +113,12 @@ Public Class Ribbon1
                             Try
                                 Call speichereProjektToDB(hproj)
                             Catch ex As Exception
-                                Call MsgBox("Fehler beim Speichern in DB")
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("Error saving the project to DB ")
+                                Else
+                                    Call MsgBox("Fehler beim Speichern in DB")
+                                End If
+
                             End Try
                         End If
                     End If
@@ -71,7 +131,11 @@ Public Class Ribbon1
                             Try
                                 Call speichereProjektToDB(mapProj)
                             Catch ex As Exception
-                                Call MsgBox("Fehler beim Speichern in DB")
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("Error saving the project to DB ")
+                                Else
+                                    Call MsgBox("Fehler beim Speichern in DB")
+                                End If
                             End Try
                         End If
 
@@ -90,8 +154,14 @@ Public Class Ribbon1
                     End If
 
                 Else
-                    Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("User " & myWindowsName & " doesn't have any License!" _
+                                    & vbLf & " Please, contact your system administrator")
+                    Else
+                        Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
                                 & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+
+                    End If
 
                 End If
 
@@ -101,8 +171,14 @@ Public Class Ribbon1
 
 
         Catch ex As Exception
-            Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
-            Throw New ArgumentException(" Bitte kontaktieren Sie ihren Systemadministrator")
+            If awinSettings.englishLanguage Then
+                Call MsgBox(" Please, contact your system administrator")
+                Throw New ArgumentException(" Please, contact your system administrator")
+            Else
+                Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
+                Throw New ArgumentException(" Bitte kontaktieren Sie ihren Systemadministrator")
+            End If
+
 
         End Try
     End Sub
@@ -112,7 +188,14 @@ Public Class Ribbon1
 
 
             If fehlerBeimLoad Then
-                Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
+                If awinSettings.englishLanguage Then
+
+                    Call MsgBox("Report of one single project cannot be executed,  " & vbLf & " 'VISBO 1Click-PPT AddIn' couldn't be loaded correctly!")
+                Else
+
+                    Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
+                End If
+
             Else
 
 
@@ -151,7 +234,11 @@ Public Class Ribbon1
                                 End If
 
                             Catch ex As Exception
-                                Call MsgBox("Fehler beim Speichern von OriginalProjekt in DB")
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("Error saving of the original project to DB ")
+                                Else
+                                    Call MsgBox("Fehler beim Speichern des Original Projektes in DB")
+                                End If
                             End Try
                         End If
                     End If
@@ -161,8 +248,20 @@ Public Class Ribbon1
                             Try
                                 Call speichereProjektToDB(mapProj, True)
                             Catch ex As Exception
-                                Call MsgBox("Fehler beim Speichern des MappedProjekt in DB")
+                                If awinSettings.englishLanguage Then
+                                    Call MsgBox("Error saving of the mapped project to DB ")
+                                Else
+                                    Call MsgBox("Fehler beim Speichern des Mapping Projektes in DB")
+                                End If
                             End Try
+                        End If
+                    Else
+                        If awinSettings.visboMapping <> "" Then
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("Error mapping the project: no TMS - project created")
+                            Else
+                                Call MsgBox("Fehler beim  Mapping dieses Projektes: Kein TMS-project erstellt")
+                            End If
                         End If
                     End If
 
@@ -170,8 +269,11 @@ Public Class Ribbon1
                     Cursor.Current = Cursors.Default
 
                 Else
-                    Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                                & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox(" Please, contact your system administrator")
+                    Else
+                        Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
+                    End If
 
                 End If
 
@@ -179,7 +281,12 @@ Public Class Ribbon1
 
         Catch ex As Exception
 
-            Call MsgBox("Fehler mit Message:  " & ex.Message)
+            If awinSettings.englishLanguage Then
+                Call MsgBox("Error with message:  " & ex.Message)
+            Else
+                Call MsgBox("Fehler mit Message:  " & ex.Message)
+            End If
+
         End Try
 
     End Sub

@@ -162,7 +162,7 @@ Public Class clsCommandBarEvents
                                 zeile = calcYCoordToZeile(shpelement.Top)
 
 
-                                If zeile = 0 Or shpelement.Rotation <> 0 And _
+                                If zeile = 0 Or shpelement.Rotation <> 0 And
                                     (shapeType = PTshty.projektC Or shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
                                     ' ins Noshow stecken ... 
                                     movedToNoshow = True
