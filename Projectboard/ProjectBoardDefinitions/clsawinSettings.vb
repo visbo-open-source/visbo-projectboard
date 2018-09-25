@@ -248,15 +248,22 @@ Public Class clsawinSettings
     ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
     ' im Produktivbetrieb, wenn tatsächlich mit Ist-Werte gearbeitet wird, die eingelesen werden, sollte das immer auf false stehen ; 
     ' unbedingt beachten: kann im Konflikt mit actzalDataMonth stehen ;
-    Public Property autoSetActualDataDate As Boolean = False
+    Public Property autoSetActualDataDate As Boolean
 
     ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
-    Public Property actualDataMonth As Date = Date.MinValue
+    Public Property actualDataMonth As Date
+
+    ' das ist ein Setting, das im Istdaten Import bestimmt, ob nur die Vergangenheitswerte (false) gelesen werden oder auch die Zukunfts-Werte (true)
+    Public Property readAllFromActualData As Boolean = False
 
     Sub New()
 
         ReDim _importSettings(17)
         _allianzI2DelRoles = ""
+
+        _autoSetActualDataDate = False
+        _actualDataMonth = Date.MinValue
+        _readAllFromActualData = False
 
         ' Chart Settings
         _fontsizeTitle = 10

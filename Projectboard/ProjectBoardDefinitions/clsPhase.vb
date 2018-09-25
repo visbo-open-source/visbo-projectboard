@@ -2943,6 +2943,13 @@ Public Class clsPhase
 
         ReDim newXwerte(newLength - 1)
 
+        Dim hasActualData As Boolean = Me.parentProject.actualDataUntil <> Date.MinValue
+        Dim actualDataColumn As Integer = -1
+
+        If hasActualData Then
+            actualDataColumn = getColumnOfDate(Me.parentProject.actualDataUntil)
+        End If
+
         ' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
         ' andernfalls ist eh schon alles richtig 
         If oldXwerte.Sum > 0 Then

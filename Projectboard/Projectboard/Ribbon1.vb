@@ -4908,7 +4908,7 @@ Imports System.IO
 
                             If monat >= 1 And monat <= 12 Then
                                 'Call ImportAllianzType3(monat)
-                                Call ImportAllianzType3(monat, readAll:=True, createUnknown:=True)
+                                Call ImportAllianzType3(monat, createUnknown:=False)
                             End If
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
