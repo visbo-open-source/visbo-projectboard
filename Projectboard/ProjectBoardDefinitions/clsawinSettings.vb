@@ -48,7 +48,6 @@ Public Class clsawinSettings
 
     Public Property databaseName As String
     Public Property databaseURL As String
-    Public Property DBWithSSL As Boolean
     Public Property userNamePWD As String
     Public Property rememberUserPwd As Boolean
     Public Property DBWithSSL As Boolean
@@ -296,7 +295,6 @@ Public Class clsawinSettings
         _zeitEinheit = "PM"
         _databaseName = ""
         _databaseURL = ""
-        _DBWithSSL = False
         _rememberUserPwd = False
         _DBWithSSL = False
         _awinPath = ""
