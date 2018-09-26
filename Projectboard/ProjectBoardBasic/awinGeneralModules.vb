@@ -132,8 +132,6 @@ Public Module awinGeneralModules
     Public Function substitutePortfolioByProjects(ByVal todoListe As Collection,
                                                   Optional ByVal noNeedtoBeInShowProjekte As Boolean = False) As Collection
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
         Dim tmpCollection As New Collection
         Dim key As String = ""
 
@@ -166,9 +164,9 @@ Public Module awinGeneralModules
                                         Dim dbVName As String = getVariantnameFromKey(kvp.Key)
 
                                         ' wenn es in der DB existiert, dann im Cache aufbauen 
-                                        If request.projectNameAlreadyExists(dbPName, dbVName, Date.Now) Then
+                                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(dbPName, dbVName, Date.Now) Then
                                             ' jetzt aus datenbank holen und in AlleProjekte eintragen 
-                                            pproj = request.retrieveOneProjectfromDB(dbPName, dbVName, Date.Now)
+                                            pproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(dbPName, dbVName, Date.Now)
                                             If Not IsNothing(pproj) Then
                                                 If Not AlleProjekte.Containskey(kvp.Key) Then
                                                     AlleProjekte.Add(pproj, False)
@@ -8441,11 +8439,11 @@ Public Module awinGeneralModules
 
             Else
                 ' ist es in der Datenbank? wenn ja, in AlleProjekte holen ... 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 Dim storedAtOrBefore = Date.Now
 
-                If request.projectNameAlreadyExists(pname, "", storedAtOrBefore) Then
-                    oldProj = request.retrieveOneProjectfromDB(pname, "", storedAtOrBefore)
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pname, "", storedAtOrBefore) Then
+                    oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pname, "", storedAtOrBefore)
                 End If
 
                 If Not IsNothing(oldProj) Then
@@ -8462,7 +8460,7 @@ Public Module awinGeneralModules
                     ' jetzt wird noch über die Kunden-Projekt-Nummer gesucht ... 
                     ' auuserdem wird dann ggf noch das Projekt angelegt ... 
 
-                    Dim pNames As Collection = request.retrieveProjectNamesByPNRFromDB(projektKDNr)
+                    Dim pNames As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
 
                     ' greift die LookupTable ? 
                     Dim considerLookUpTable As Boolean = False
@@ -8480,8 +8478,8 @@ Public Module awinGeneralModules
                         ' in der Datenbank gibt es aktuell genau ein Projekt, dem diese Projekt-Kundennummer zugeordnet ist 
                         Dim visboDBname As String = pNames.Item(1)
 
-                        If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
-                            oldProj = request.retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
+                            oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
                         End If
 
                         If Not IsNothing(oldProj) Then
@@ -8530,9 +8528,9 @@ Public Module awinGeneralModules
                         Dim visboDBname As String = lookupTable.Item(projektKDNr)
 
                         If visboDBname.Trim <> "" Then
-                            If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
 
-                                Dim rupiProj As clsProjekt = request.retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
+                                Dim rupiProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
                                 If Not IsNothing(rupiProj) Then
                                     projektListe.Add(rupiProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                                     fctResult = True
@@ -13479,7 +13477,6 @@ Public Module awinGeneralModules
         Dim tryZeile As Integer
         Dim nvErrorMessage As String = ""
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         If AlleProjekte.Containskey(key) Then
             ' Projekt ist bereits im Hauptspeicher geladen
@@ -13611,7 +13608,6 @@ Public Module awinGeneralModules
     ''' <returns></returns>
     Public Function getProjektFromSessionOrDB(ByVal pName As String, ByVal vName As String, ByVal projektliste As clsProjekteAlle, ByVal storedAt As Date) As clsProjekt
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim key As String = calcProjektKey(pName, vName)
         Dim hproj As clsProjekt = Nothing
         Try
@@ -13620,8 +13616,8 @@ Public Module awinGeneralModules
 
             If IsNothing(hproj) Then
 
-                If request.projectNameAlreadyExists(pName, vName, storedAt) Then
-                    hproj = request.retrieveOneProjectfromDB(pName, vName, storedAt)
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt) Then
+                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAt)
                 End If
             End If
         Catch ex As Exception
@@ -23440,8 +23436,8 @@ Public Module awinGeneralModules
                     Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
                 Else
                     ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    vorgabeProj = request.retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
 
                     ' Berechnung budget/Vorgabe 
                     budget = 0.0

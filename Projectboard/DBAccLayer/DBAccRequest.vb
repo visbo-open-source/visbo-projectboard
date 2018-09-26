@@ -428,16 +428,16 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectname"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstContractedPFromDB(ByVal projectname As String) As clsProjekt
+    Public Function retrieveFirstContractedPFromDB(ByVal projectname As String, ByVal variantname As String) As clsProjekt
 
         Dim result As New clsProjekt
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname)
+                result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname)
 
             Else 'es wird eine MongoDB direkt adressiert
-                result = CType(DBAcc, MongoDbAccess.Request).retrieveFirstContractedPFromDB(projectname)
+                result = CType(DBAcc, MongoDbAccess.Request).retrieveFirstContractedPFromDB(projectname, variantname)
             End If
 
         Catch ex As Exception

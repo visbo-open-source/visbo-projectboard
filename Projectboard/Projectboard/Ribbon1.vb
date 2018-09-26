@@ -7924,7 +7924,7 @@ Imports System.ServiceModel.Web
                 End If
 
                 ' das bproj bestimmen 
-                bproj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
 
 
 

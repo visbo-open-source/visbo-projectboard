@@ -367,9 +367,9 @@ Public Module testModule
                             tmpVariantName = portfolioVName
                         End If
 
-                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name)
+                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
+                        lproj = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
 
 
 
