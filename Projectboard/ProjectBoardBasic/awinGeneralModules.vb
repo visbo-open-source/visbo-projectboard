@@ -1,4 +1,5 @@
-﻿Imports ProjectBoardDefinitions
+﻿
+Imports ProjectBoardDefinitions
 Imports MongoDbAccess
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop
@@ -2451,11 +2452,6 @@ Public Module awinGeneralModules
                     awinSettings.actualDataMonth = Date.MinValue
                 End Try
 
-                Try
-                    awinSettings.readAllFromActualData = CBool(.Range("readPastAndFutureFromActualData").Value)
-                Catch ex As Exception
-                    awinSettings.readAllFromActualData = False
-                End Try
 
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
@@ -7549,8 +7545,9 @@ Public Module awinGeneralModules
     ''' importiert die Ist-Datensätze zu allen Projekten, die identifiziert werden können  
     ''' </summary>
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
+    ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
     ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer, Optional createUnknown As Boolean = False)
+    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean)
 
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
@@ -7579,7 +7576,7 @@ Public Module awinGeneralModules
         ' nimmt auf, zu welcher Orga-Einheit die Ist-Daten erfasst werden ... 
         Dim referatsCollection As New Collection
 
-        Dim readAll As Boolean = awinSettings.readAllFromActualData
+
 
         Dim lastValidMonth As Integer = monat
         If readAll Then

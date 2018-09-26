@@ -2,7 +2,7 @@
 Imports ProjectBoardBasic
 Imports ClassLibrary1
 Imports MongoDbAccess
-Imports WPFPieChart
+'Imports WPFPieChart
 Imports Microsoft.Office.Core
 'Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
@@ -4900,16 +4900,21 @@ Imports System.IO
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
                             ' immer zwei Monate zurück gehen 
                             ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
-                            Dim monat As Integer = Date.Now.Month - 1
 
-                            If awinSettings.actualDataMonth <> Date.MinValue Then
-                                monat = awinSettings.actualDataMonth.Month
+                            Dim editActualDataMonth As New frmProvideActualDataMonth
+
+                            If editActualDataMonth.ShowDialog = DialogResult.OK Then
+
+                                Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
+
+                                Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
+                                Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+
+
+                                Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects)
+
                             End If
 
-                            If monat >= 1 And monat <= 12 Then
-                                'Call ImportAllianzType3(monat)
-                                Call ImportAllianzType3(monat, createUnknown:=False)
-                            End If
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
                             Call importAllianzType4()

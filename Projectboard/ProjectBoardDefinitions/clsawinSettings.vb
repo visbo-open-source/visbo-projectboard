@@ -253,8 +253,6 @@ Public Class clsawinSettings
     ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
     Public Property actualDataMonth As Date
 
-    ' das ist ein Setting, das im Istdaten Import bestimmt, ob nur die Vergangenheitswerte (false) gelesen werden oder auch die Zukunfts-Werte (true)
-    Public Property readAllFromActualData As Boolean = False
 
     Sub New()
 
@@ -263,7 +261,6 @@ Public Class clsawinSettings
 
         _autoSetActualDataDate = False
         _actualDataMonth = Date.MinValue
-        _readAllFromActualData = False
 
         ' Chart Settings
         _fontsizeTitle = 10
