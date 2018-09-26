@@ -55,7 +55,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("mongo01.visbo.net")>  _
     Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
@@ -64,7 +64,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\epcm\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Public\Templates\VISBO\VISBO Konfiguration")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -73,7 +73,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("epcm")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("allianz18")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -169,19 +169,28 @@ Partial Public NotInheritable Class MySettings
             Return CType(Me("VISBOMapping"),String)
         End Get
     End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(),
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
-     Global.System.Configuration.DefaultSettingValueAttribute("")>
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("")>  _
     Public Property userNamePWD() As String
         Get
-            Return CType(Me("userNamePWD"), String)
+            Return CType(Me("userNamePWD"),String)
         End Get
         Set
             Me("userNamePWD") = value
         End Set
     End Property
-
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
+    Public ReadOnly Property mongoDBWithSSL() As Boolean
+        Get
+            Return CType(Me("mongoDBWithSSL"),Boolean)
+        End Get
+    End Property
+    
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
@@ -192,15 +201,6 @@ Partial Public NotInheritable Class MySettings
         Set
             Me("rememberUserPWD") = value
         End Set
-    End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
-    Public ReadOnly Property mongoDBWithSSL() As Boolean
-        Get
-            Return CType(Me("mongoDBWithSSL"),Boolean)
-        End Get
     End Property
 End Class
 

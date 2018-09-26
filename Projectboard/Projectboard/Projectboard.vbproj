@@ -17,10 +17,10 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
+    <PublishUrl>C:\publish\VISBO Visual Board\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.5.1.2</ApplicationVersion>
+    <ApplicationVersion>3.5.1.3</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -376,7 +376,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>06A1E789552A35A634B26DD6CE7A5566D0999EB8</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>948304CA05C417C8BAE256427C4A2E3337FEFE96</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
