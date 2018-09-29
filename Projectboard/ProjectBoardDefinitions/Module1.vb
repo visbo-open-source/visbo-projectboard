@@ -388,6 +388,7 @@ Public Module Module1
         TrafficLight = 11
         TLExplanation = 12
         DocUrl = 13
+        Deliv = 14
     End Enum
 
 

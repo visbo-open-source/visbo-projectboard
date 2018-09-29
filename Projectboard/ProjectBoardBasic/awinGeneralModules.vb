@@ -939,7 +939,7 @@ Public Module awinGeneralModules
                 ' Speziell für Pilot-Kunden
                 ' -----------------------------------------------------
 
-                Dim pilot As Date = "31.08.2018"
+                Dim pilot As Date = "15.11.2018"
 
                 If Date.Now > pilot Then
 
@@ -2754,7 +2754,9 @@ Public Module awinGeneralModules
                                 Dim ok As Boolean
                                 Dim hproj As clsProjekt = Nothing
 
-                                Call bmwImportProjekteITO15(myCollection, True)
+
+                                Call planExcelImport(myCollection, True, dateiName)
+                                'Call bmwImportProjekteITO15(myCollection, True)
 
                                 ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
                                 For Each pName As String In myCollection
@@ -18985,13 +18987,14 @@ Public Module awinGeneralModules
         Dim colTrafficLight As Integer = -1
         Dim colTLExplanation As Integer = -1
         Dim colDocUrl As Integer = -1
+        Dim colDeliv As Integer = -1
 
         Dim pDescription As String = ""
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(13) As String
+        Dim suchstr(14) As String
         suchstr(ptPlanNamen.Name) = "Name"
         suchstr(ptPlanNamen.Anfang) = "Start"
         suchstr(ptPlanNamen.Ende) = "End"
@@ -19006,6 +19009,7 @@ Public Module awinGeneralModules
         suchstr(ptPlanNamen.TrafficLight) = "traffic light"
         suchstr(ptPlanNamen.TLExplanation) = "Explanation"
         suchstr(ptPlanNamen.DocUrl) = "Document-Link"
+        suchstr(ptPlanNamen.Deliv) = "Deliverables"
 
         zeile = 2
         spalte = 5
@@ -19110,6 +19114,12 @@ Public Module awinGeneralModules
 
         Try
             colDocUrl = firstZeile.Find(What:=suchstr(ptPlanNamen.DocUrl), LookAt:=XlLookAt.xlWhole).Column
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            colDeliv = firstZeile.Find(What:=suchstr(ptPlanNamen.Deliv), LookAt:=XlLookAt.xlWhole).Column
         Catch ex As Exception
 
         End Try
