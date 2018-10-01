@@ -1330,20 +1330,23 @@ Public Class Request
 
             Dim role As New clsVCrole
             role.copyFrom(roleDef)
+            role.timestamp = timestamp
 
             If insertNewDate Then
                 result = POSTOneVCrole(aktVCid, role)
             Else
-                Dim roleid As String = VRScache.VCrole(role.name)._id
-                role._id = roleid
-                result = PUTOneVCrole(aktVCid, role)
+                If VRScache.VCrole.ContainsKey(role.name) Then
+                    role._id = VRScache.VCrole(role.name)._id
+                    result = PUTOneVCrole(aktVCid, role)
+                End If
+
                 If result = False Then ' Rolle ist noch nicht vorhanden im VisboCenter, also neu erzeugen
                     result = POSTOneVCrole(aktVCid, role)
                 End If
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         storeRoleDefinitionToDB = result
@@ -1456,20 +1459,24 @@ Public Class Request
 
             Dim cost As New clsVCcost
             cost.copyFrom(costDef)
+            cost.timestamp = timestamp
 
             If insertNewDate Then
                 result = POSTOneVCcost(aktVCid, cost)
             Else
-                Dim costId As String = VRScache.VCcost(cost.name)._id
-                cost._id = costId
-                result = PUTOneVCcost(aktVCid, cost)
-                If result = False Then ' Kostenart ist noch nicht vorhanden im VisboCenter, also neu erzeugen
+
+                If VRScache.VCcost.ContainsKey(cost.name) Then
+                    cost._id = VRScache.VCcost(cost.name)._id
+                    result = PUTOneVCcost(aktVCid, cost)
+                End If
+
+                If result = False Then  ' Kostenart ist noch nicht vorhanden im VisboCenter, also neu erzeugen
                     result = POSTOneVCcost(aktVCid, cost)
                 End If
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
 
