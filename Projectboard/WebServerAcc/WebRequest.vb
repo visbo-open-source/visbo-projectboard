@@ -492,6 +492,9 @@ Public Class Request
     Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String) As Boolean
 
         Dim result As Boolean = False
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
         Try
 
             Dim webVP As New clsWebVP
@@ -518,6 +521,8 @@ Public Class Request
                 VP.users.Add(user)
                 VP.name = pname
                 VP.vcid = aktVCid
+                VP.vpPublic = True
+                VP.vpType = ptPRPFType.project
 
                 vpErg = POSTOneVP(VP)
 
@@ -575,12 +580,22 @@ Public Class Request
                     Dim Antwort As String
                     Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                         Antwort = ReadResponseContent(httpresp)
+                        errcode = CType(httpresp.StatusCode, Integer)
+                        errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                         storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
                     End Using
 
+                    If errcode = 200 Then
 
-                    Call MsgBox(storeAntwort.message)
-                    result = (storeAntwort.state = "success")
+                        result = (storeAntwort.state = "success")
+                        result = True
+
+                    Else
+
+                        ' Fehlerbehandlung je nach errcode
+                        Dim statError As Boolean = errorHandling_withBreak("POSTOneVP", errcode, errmsg & " : " & storeAntwort.message)
+
+                    End If
 
                 End If
             End If
@@ -651,6 +666,15 @@ Public Class Request
             zeitraumStart = zeitraumStart.ToUniversalTime()
             zeitraumEnde = zeitraumEnde.ToUniversalTime()
 
+            ''Dim intermediate As New SortedList(Of String, clsVP)
+
+            ''intermediate = GETallVP(aktVCid, ptPRPFType.project)
+
+            ''For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
+
+            ''    Dim vpid As String = kvp.Value._id
+            ''    If kvp.Value.Variant.Count >= 0 Then
+
             ' holt alle Projekte/Variante/versionen mit ReferenzDatum storedatOrBefore
             Dim vpvListe As New List(Of clsProjektWebShort)
             vpvListe = GETallVPvShort("", "", storedAtOrBefore)
@@ -658,14 +682,44 @@ Public Class Request
             For Each vpv As clsProjektWebShort In vpvListe
 
                 If vpv.startDate <= zeitraumEnde And
-                   vpv.endDate >= zeitraumStart Then
+                    vpv.endDate >= zeitraumStart Then
 
                     Dim pName As String = GETpName(vpv.vpid)
                     Dim pvname As String = calcProjektKey(pName, vpv.variantName)
-                    result.Add(pvname, pvname)
+                    If Not result.ContainsKey(pvname) Then
+                        result.Add(pvname, pvname)
+                    End If
 
                 End If
             Next
+
+            'End If
+
+            '    If kvp.Value.Variant.Count > 0 Then
+
+            '        For Each var As clsVPvariant In kvp.Value.Variant
+
+            '            ' holt alle Projekte/Variante/versionen mit ReferenzDatum storedatOrBefore
+            '            Dim vpvListe As New List(Of clsProjektWebShort)
+            '            vpvListe = GETallVPvShort(vpid, var.variantName, storedAtOrBefore)
+
+            '            For Each vpv As clsProjektWebShort In vpvListe
+
+            '                If vpv.startDate <= zeitraumEnde And
+            '                   vpv.endDate >= zeitraumStart Then
+
+            '                    Dim pName As String = GETpName(vpv.vpid)
+            '                    Dim pvname As String = calcProjektKey(pName, vpv.variantName)
+            '                    If Not result.ContainsKey(pvname) Then
+            '                        result.Add(pvname, pvname)
+            '                    End If
+
+            '                End If
+            '            Next
+            '        Next
+            '    End If
+
+            'Next 'von intermediate-Schleife
 
         Catch ex As Exception
 
@@ -1270,24 +1324,29 @@ Public Class Request
     Public Function storeRoleDefinitionToDB(ByVal roleDef As clsRollenDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
 
         Dim result As Boolean = False
-        Dim webRoles As New clsWebVCrole
 
         Try
             Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
 
             Dim role As New clsVCrole
             role.copyFrom(roleDef)
+            role.timestamp = timestamp
 
             If insertNewDate Then
                 result = POSTOneVCrole(aktVCid, role)
             Else
-                Dim roleid As String = VRScache.VCrole(role.name)._id
-                role._id = roleid
-                result = PUTOneVCrole(aktVCid, role)
+                If VRScache.VCrole.ContainsKey(role.name) Then
+                    role._id = VRScache.VCrole(role.name)._id
+                    result = PUTOneVCrole(aktVCid, role)
+                End If
+
+                If result = False Then ' Rolle ist noch nicht vorhanden im VisboCenter, also neu erzeugen
+                    result = POSTOneVCrole(aktVCid, role)
+                End If
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         storeRoleDefinitionToDB = result
@@ -1387,14 +1446,39 @@ Public Class Request
     '''  wenn insertNewDate = True: speichere eine neue Timestamp-Instanz 
     '''  andernfalls wird die Kostenart Replaced, sofern sie sich geändert hat  
     ''' </summary>
-    ''' <param name="cost"></param>
+    ''' <param name="costDef"></param>
     ''' <param name="insertNewDate"></param>
     ''' <param name="ts"></param>
     ''' <returns></returns>
-    Public Function storeCostDefinitionToDB(ByVal cost As clsKostenartDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
+    Public Function storeCostDefinitionToDB(ByVal costDef As clsKostenartDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
 
         Dim result As Boolean = False
-        ts = ts.ToUniversalTime
+
+        Try
+            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
+
+            Dim cost As New clsVCcost
+            cost.copyFrom(costDef)
+            cost.timestamp = timestamp
+
+            If insertNewDate Then
+                result = POSTOneVCcost(aktVCid, cost)
+            Else
+
+                If VRScache.VCcost.ContainsKey(cost.name) Then
+                    cost._id = VRScache.VCcost(cost.name)._id
+                    result = PUTOneVCcost(aktVCid, cost)
+                End If
+
+                If result = False Then  ' Kostenart ist noch nicht vorhanden im VisboCenter, also neu erzeugen
+                    result = POSTOneVCcost(aktVCid, cost)
+                End If
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
 
         storeCostDefinitionToDB = result
 
@@ -2013,8 +2097,9 @@ Public Class Request
 
                 If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> "" Then
                     serverUriString = serverUriString & "?"
+                    serverUriString = serverUriString & "vcid=" & aktVCid
                     If vpid <> "" Then
-                        serverUriString = serverUriString & "vpid=" & vpid
+                        serverUriString = serverUriString & "&vpid=" & vpid
 
                         If storedAtorBefore > Date.MinValue Then
                             serverUriString = serverUriString & "&refDate=" & refDate
@@ -2025,13 +2110,13 @@ Public Class Request
                         End If
                     Else
                         If storedAtorBefore > Date.MinValue Then
-                            serverUriString = serverUriString & "refDate=" & refDate
+                            serverUriString = serverUriString & "&refDate=" & refDate
                             If variantName <> "" Then
                                 serverUriString = serverUriString & "&variantName=" & variantName
                             End If
                         Else
                             If variantName <> "" Then
-                                serverUriString = serverUriString & "variantName=" & variantName
+                                serverUriString = serverUriString & "&variantName=" & variantName
                             End If
                         End If
 
@@ -2137,8 +2222,9 @@ Public Class Request
 
                 If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> "" Then
                     serverUriString = serverUriString & "?"
+                    serverUriString = serverUriString & "vcid=" & aktVCid
                     If vpid <> "" Then
-                        serverUriString = serverUriString & "vpid=" & vpid
+                        serverUriString = serverUriString & "&vpid=" & vpid
 
                         If storedAtorBefore > Date.MinValue Then
                             serverUriString = serverUriString & "&refDate=" & refDate
@@ -2149,13 +2235,13 @@ Public Class Request
                         End If
                     Else
                         If storedAtorBefore > Date.MinValue Then
-                            serverUriString = serverUriString & "refDate=" & refDate
+                            serverUriString = serverUriString & "&refDate=" & refDate
                             If variantName <> "" Then
                                 serverUriString = serverUriString & "&variantName=" & variantName
                             End If
                         Else
                             If variantName <> "" Then
-                                serverUriString = serverUriString & "variantName=" & variantName
+                                serverUriString = serverUriString & "&variantName=" & variantName
                             End If
                         End If
 
@@ -2164,8 +2250,11 @@ Public Class Request
                     ' es wird die Long-Version einer VisboProjectVersion angefordert
                     serverUriString = serverUriString & "&longList"
                 Else
-                    ' es wird die Long-Version einer VisboProjectVersion angefordert
-                    serverUriString = serverUriString & "?longList"
+
+                    serverUriString = serverUriString & "?"
+                    serverUriString = serverUriString & "vcid=" & aktVCid
+                    ' Long-Version  angefordert
+                    serverUriString = serverUriString & "&longList"
 
                 End If
 
@@ -2510,7 +2599,7 @@ Public Class Request
 
 
     ''' <summary>
-    ''' erzeugt die Rolle role im VisboCenter vcid
+    ''' ändert die Rolle role im VisboCenter vcid
     ''' </summary>
     ''' <param name="vcid"></param>
     ''' <param name="role"></param>
@@ -2614,6 +2703,115 @@ Public Class Request
         End Try
 
         GETallVCcost = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' erzeugt die Kostenart cost im VisboCenter vcid
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="cost"></param>
+    ''' <returns></returns>
+    Private Function POSTOneVCcost(ByVal vcid As String, ByVal cost As clsVCcost) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/cost"
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(cost, "")
+
+
+            Dim Antwort As String
+            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVCcost", errcode, errmsg & " : " & webVCcostantwort.message)
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in POSTOneVCcost: " & ex.Message)
+        End Try
+
+        POSTOneVCcost = result
+
+    End Function
+
+
+
+    ''' <summary>
+    ''' ändert die Kostenart cost im VisboCenter vcid
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="cost"></param>
+    ''' <returns></returns>
+    Private Function PUTOneVCcost(ByVal vcid As String, ByVal cost As clsVCcost) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/cost/" & cost._id
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(cost, "")
+
+
+            Dim Antwort As String
+            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("PUTOneVCcost", errcode, errmsg & " : " & webVCcostantwort.message)
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in PUTOneVCrole: " & ex.Message)
+        End Try
+
+        PUTOneVCcost = result
 
     End Function
 

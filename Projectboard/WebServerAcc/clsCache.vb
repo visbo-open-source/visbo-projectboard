@@ -5,6 +5,7 @@
 
     Public Property VPvs As SortedList(Of String, SortedList(Of String, clsVarTs))
     Public Property VCrole As SortedList(Of String, clsVCrole)
+    Public Property VCcost As SortedList(Of String, clsVCcost)
     Public Property updateDelay As Long
     'Public Property varTsListe As SortedList(Of String, clsVarTs)
     Public Sub New()
@@ -12,6 +13,7 @@
         _VPsId = New SortedList(Of String, clsVP)
         _VPvs = New SortedList(Of String, SortedList(Of String, clsVarTs))
         _VCrole = New SortedList(Of String, clsVCrole)
+        _VCcost = New SortedList(Of String, clsVCcost)
         _updateDelay = 60
     End Sub
 
