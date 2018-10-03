@@ -88,7 +88,10 @@ Public Class Request
                 loginAntwort = JsonConvert.DeserializeObject(Of clsWebTokenUserLoginSignup)(Antwort)
             End Using
 
-            Call MsgBox(loginAntwort.message)
+            If awinSettings.visboDebug Then
+                Call MsgBox(loginAntwort.message)
+            End If
+
             loginOK = (loginAntwort.state = "success")
 
             If loginOK Then
@@ -262,7 +265,8 @@ Public Class Request
 
                 For i As Integer = sl.Count - 1 To 0 Step -1
                     Dim kvp As KeyValuePair(Of DateTime, DateTime) = sl.ElementAt(i)
-                    ergebnisCollection.Add(kvp.Value.ToUniversalTime)
+                    '???: ergebnisCollection.Add(kvp.Value.ToUniversalTime)
+                    ergebnisCollection.Add(kvp.Value.ToLocalTime)
                 Next i
 
             End If
@@ -761,7 +765,7 @@ Public Class Request
 
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
                 For Each vpv In allVPv
-                    If storedEarliest < vpv.timestamp And vpv.timestamp < storedLatest Then
+                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
                         'zwischenResult.Add(vpv.timestamp, vpv)
                         Dim hproj As New clsProjekt
                         vpv.copyto(hproj)

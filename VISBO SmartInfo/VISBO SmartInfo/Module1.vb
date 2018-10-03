@@ -2326,7 +2326,7 @@ Module Module1
                         If Not IsNothing(tsProj) Then
 
                             If bigType = ptReportBigTypes.components Then
-                                Call updatePPTComponent(tsProj, pptShape, detailID)
+                                Call updatePPTComponent(tsProj, pptShape, detailID, curTimeStamp)
 
                             ElseIf bigType = ptReportBigTypes.tables Then
 
@@ -2915,10 +2915,18 @@ Module Module1
 
         If IsNothing(tsMsgBox) Then
             ' erstellen ...
+            'tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+            '                          200, 5, 70, 20)
             tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
-                                      200, 5, 70, 20)
+                                      100, 5, 70, 20)
             With tsMsgBox
-                .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                If currentTimestamp.Hour = 23 And currentTimestamp.Minute = 59 Then
+                    ' nur Datum anzeigen
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToShortDateString
+                Else
+                    ' auch Zeit anzeigen, da nicht 23:59
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                End If
                 .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse + 6)
                 .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = trafficLightColors(3)
                 .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
@@ -2933,9 +2941,21 @@ Module Module1
         Else
             With tsMsgBox
                 If englishLanguage Then
-                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                    If currentTimestamp.Hour = 23 And currentTimestamp.Minute = 59 Then
+                        ' nur Datum anzeigen
+                        .TextFrame2.TextRange.Text = currentTimestamp.ToShortDateString
+                    Else
+                        ' auch Zeit anzeigen, da nicht 23:59
+                        .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                    End If
                 Else
-                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                    If currentTimestamp.Hour = 23 And currentTimestamp.Minute = 59 Then
+                        ' nur Datum anzeigen
+                        .TextFrame2.TextRange.Text = currentTimestamp.ToShortDateString
+                    Else
+                        ' auch Zeit anzeigen, da nicht 23:59
+                        .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                    End If
                 End If
 
             End With
@@ -6158,10 +6178,10 @@ Module Module1
                         tmpIndex = varPPTTM.timeStamps.Count - 1
                     End If
 
-                    If currentTimestamp.AddMonths(1) < varPPTTM.timeStamps.Last.Key Then
+                    If currentTimestamp.AddMonths(1) <= Date.Now Then
                         tmpDate = currentTimestamp.AddMonths(1)
                     Else
-                        tmpDate = varPPTTM.timeStamps.Last.Key
+                        tmpDate = Date.Now
                     End If
 
                     'If smartSlideLists.countProjects = 1 Then
@@ -6223,17 +6243,17 @@ Module Module1
 
                 If varPPTTM.timeStamps.Count > 0 Then
 
-                    If specDate > varPPTTM.timeStamps.First.Key And specDate < varPPTTM.timeStamps.Last.Key Then
+                    If specDate > varPPTTM.timeStamps.First.Key And specDate < Date.Now Then
 
                         tmpDate = specDate
                     Else
-                        If specDate > varPPTTM.timeStamps.Last.Key Then
+                        If specDate > Date.Now Then
                             tmpIndex = varPPTTM.timeStamps.Count - 1
-                            tmpDate = varPPTTM.timeStamps.Last.Key
+                            tmpDate = Date.Now
                         End If
                         If specDate < varPPTTM.timeStamps.First.Key Then
                             tmpIndex = 0
-                            tmpDate = currentTimestamp
+                            tmpDate = varPPTTM.timeStamps.First.Key
                         End If
                     End If
 

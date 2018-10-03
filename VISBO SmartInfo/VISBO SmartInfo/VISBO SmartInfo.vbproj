@@ -30,7 +30,7 @@
     <DefineConstants>VSTO40</DefineConstants>
     <StartupObject>
     </StartupObject>
-    <IsWebBootstrapper>False</IsWebBootstrapper>
+    <IsWebBootstrapper>True</IsWebBootstrapper>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -38,10 +38,10 @@
     <OldToolsVersion>12.0</OldToolsVersion>
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>false</BootstrapperEnabled>
-    <PublishUrl>C:\publish\VISBO Smartinfo REST\</PublishUrl>
-    <InstallUrl />
+    <PublishUrl>ftp://u71697779-exchange%40home448168182.1and1-data.host/VISBO Smartinfo REST/</PublishUrl>
+    <InstallUrl>http://home448168182.1and1-data.host/VISBO Smartinfo REST/</InstallUrl>
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.0.0.2</ApplicationVersion>
+    <ApplicationVersion>3.0.0.7</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
