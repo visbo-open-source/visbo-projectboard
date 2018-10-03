@@ -2918,15 +2918,9 @@ Module Module1
             'tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
             '                          200, 5, 70, 20)
             tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
-                                      100, 5, 70, 20)
+                                      75, 5, 70, 20)
             With tsMsgBox
-                If currentTimestamp.Hour = 23 And currentTimestamp.Minute = 59 Then
-                    ' nur Datum anzeigen
-                    .TextFrame2.TextRange.Text = currentTimestamp.ToShortDateString
-                Else
-                    ' auch Zeit anzeigen, da nicht 23:59
-                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
-                End If
+                .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse + 6)
                 .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = trafficLightColors(3)
                 .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
@@ -2941,21 +2935,11 @@ Module Module1
         Else
             With tsMsgBox
                 If englishLanguage Then
-                    If currentTimestamp.Hour = 23 And currentTimestamp.Minute = 59 Then
-                        ' nur Datum anzeigen
-                        .TextFrame2.TextRange.Text = currentTimestamp.ToShortDateString
-                    Else
-                        ' auch Zeit anzeigen, da nicht 23:59
-                        .TextFrame2.TextRange.Text = currentTimestamp.ToString
-                    End If
+                    ' auch Zeit anzeigen, da nicht 23:59
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 Else
-                    If currentTimestamp.Hour = 23 And currentTimestamp.Minute = 59 Then
-                        ' nur Datum anzeigen
-                        .TextFrame2.TextRange.Text = currentTimestamp.ToShortDateString
-                    Else
-                        ' auch Zeit anzeigen, da nicht 23:59
-                        .TextFrame2.TextRange.Text = currentTimestamp.ToString
-                    End If
+                    ' auch Zeit anzeigen, da nicht 23:59
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
                 End If
 
             End With
