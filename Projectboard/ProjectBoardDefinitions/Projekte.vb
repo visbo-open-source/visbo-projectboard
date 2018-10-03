@@ -12351,18 +12351,6 @@ Public Module Projekte
         Dim key As String = pname & "#"
         Dim referenceBudget As Double = 0.0
 
-        'Const extCost As String = "Kosten Externe"
-        Dim extCost As String
-        If CostDefinitions.Count > 1 Then
-            extCost = CostDefinitions.getCostdef(1).name
-        ElseIf CostDefinitions.Count = 1 And CostDefinitions.getCostdef(1).name = "Kosten Externe" Then
-            ' Mahle ...
-            extCost = "Kosten Externe"
-        Else
-            extCost = "undefined"
-        End If
-
-
         '
         ' ein neues Projekt wird als Objekt angelegt ....
         '

@@ -2754,48 +2754,55 @@ Public Module awinGeneralModules
                                 Dim ok As Boolean
                                 Dim hproj As clsProjekt = Nothing
 
+                                Try
+                                    Call planExcelImport(myCollection, True, dateiName)
+                                    'Call bmwImportProjekteITO15(myCollection, True)
 
-                                Call planExcelImport(myCollection, True, dateiName)
-                                'Call bmwImportProjekteITO15(myCollection, True)
+                                    ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
+                                    For Each pName As String In myCollection
 
-                                ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
-                                For Each pName As String In myCollection
+                                        ok = True
 
-                                    ok = True
+                                        Try
 
-                                    Try
+                                            hproj = ImportProjekte.getProject(pName)
 
-                                        hproj = ImportProjekte.getProject(pName)
+                                        Catch ex As Exception
+                                            Call MsgBox("Projekt " & pName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                                            ok = False
+                                        End Try
 
-                                    Catch ex As Exception
-                                        Call MsgBox("Projekt " & pName & " ist kein gültiges Projekt ... es wird ignoriert ...")
-                                        ok = False
-                                    End Try
+                                        If ok Then
 
-                                    If ok Then
+                                            ' hier müssen die Werte für die Vorlage übergeben werden.
+                                            ' Änderung tk 19.4.15 Übernehmen der Hierarchie 
+                                            Dim projVorlage As New clsProjektvorlage
+                                            projVorlage.VorlagenName = hproj.name
+                                            projVorlage.Schrift = hproj.Schrift
+                                            projVorlage.Schriftfarbe = hproj.Schriftfarbe
+                                            projVorlage.farbe = hproj.farbe
+                                            projVorlage.earliestStart = -6
+                                            projVorlage.latestStart = 6
+                                            projVorlage.AllPhases = hproj.AllPhases
 
-                                        ' hier müssen die Werte für die Vorlage übergeben werden.
-                                        ' Änderung tk 19.4.15 Übernehmen der Hierarchie 
-                                        Dim projVorlage As New clsProjektvorlage
-                                        projVorlage.VorlagenName = hproj.name
-                                        projVorlage.Schrift = hproj.Schrift
-                                        projVorlage.Schriftfarbe = hproj.Schriftfarbe
-                                        projVorlage.farbe = hproj.farbe
-                                        projVorlage.earliestStart = -6
-                                        projVorlage.latestStart = 6
-                                        projVorlage.AllPhases = hproj.AllPhases
+                                            projVorlage.hierarchy = hproj.hierarchy
 
-                                        projVorlage.hierarchy = hproj.hierarchy
+                                            If isModulVorlage Then
+                                                ModulVorlagen.Add(projVorlage)
+                                            Else
+                                                Projektvorlagen.Add(projVorlage)
+                                            End If
 
-                                        If isModulVorlage Then
-                                            ModulVorlagen.Add(projVorlage)
-                                        Else
-                                            Projektvorlagen.Add(projVorlage)
                                         End If
 
-                                    End If
+                                    Next
+                                Catch ex As Exception
 
-                                Next
+                                    Call MsgBox(ex.Message & vbLf & dateiName)
+
+                                End Try
+
+
 
 
                             End If
@@ -19347,11 +19354,16 @@ Public Module awinGeneralModules
 
                     ' prüfen, ob das Projekt überhaupt vollständig im Kalender liegt 
                     ' wenn nein, dann nicht importieren 
-                    If DateDiff(DateInterval.Day, StartofCalendar, startDate) < 0 Then
+                    If DateDiff(DateInterval.Day, StartofCalendar, startDate) < 0 And Not isVorlage Then
 
+                        Dim errMsg As String
+                        If awinSettings.englishLanguage Then
+                            errMsg = "project start is earlier than start of calendar in Visual Board ... No Import ... "
+                        Else
+                            errMsg = "Projekt liegt vor dem Kalender-Anfang und wird deshalb nicht importiert"
+                        End If
 
-                        Call MsgBox("Projekt liegt vor dem Kalender-Anfang und wird deshalb nicht importiert")
-
+                        Throw New ArgumentException(errMsg)
 
                     Else
                         '
