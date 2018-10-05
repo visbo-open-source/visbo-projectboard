@@ -159,6 +159,7 @@ Module Module1
         vorher = 3
         individual = 4
         previous = 5
+        update = 6
     End Enum
 
 
@@ -6218,6 +6219,14 @@ Module Module1
                 If varPPTTM.timeStamps.Count > 0 Then
                     tmpIndex = varPPTTM.timeStamps.Count - 1
                     tmpDate = varPPTTM.timeStamps.Last.Key
+
+                End If
+
+            Case ptNavigationButtons.update
+
+                If varPPTTM.timeStamps.Count > 0 Then
+                    tmpIndex = varPPTTM.timeStamps.Count - 1
+                    tmpDate = Date.Now
                 End If
 
             Case ptNavigationButtons.individual

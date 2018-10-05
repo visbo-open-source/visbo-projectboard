@@ -399,7 +399,8 @@ Public Class Ribbon1
                         And (sld.Tags.Item("SMART") = "visbo") Then
                         Call pptAPP_UpdateOneSlide(sld)
                         formerCurrentTimestamp = currentTimestamp
-                        Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
+                        'Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
+                        Call visboUpdate(ptNavigationButtons.update, newdate, False)
                         If formerCurrentTimestamp = newdate Then
                             newestVersion = True
                         End If
