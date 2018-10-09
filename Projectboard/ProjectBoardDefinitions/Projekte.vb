@@ -10748,8 +10748,8 @@ Public Module Projekte
     ''' <param name="pptShape"></param>
     ''' <param name="detailID"></param>
     ''' <remarks></remarks>
-    Public Sub updatePPTComponent(ByVal hproj As clsProjekt, ByRef pptShape As PowerPoint.Shape, _
-                                      ByVal detailID As Integer)
+    Public Sub updatePPTComponent(ByVal hproj As clsProjekt, ByRef pptShape As PowerPoint.Shape,
+                                      ByVal detailID As Integer, ByVal curTimeStamp As Date)
         Try
             Select Case detailID
 
@@ -10845,7 +10845,8 @@ Public Module Projekte
                 Case ptReportComponents.prStand
                     If Not IsNothing(hproj) Then
                         Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
+                        'pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & hproj.timeStamp.ToShortDateString
+                        pptShape.TextFrame2.TextRange.Text = qualifier2 & " " & curTimeStamp.ToShortDateString
                     End If
 
                 Case ptReportComponents.prDescription
@@ -10855,7 +10856,8 @@ Public Module Projekte
                         Dim initialText As String = hproj.description
 
                         If hproj.variantDescription.Length > 0 Then
-                            initialText = initialText & vbLf & vbLf &
+
+                            pptShape.TextFrame2.TextRange.Text = initialText & vbLf & vbLf &
                                 "Varianten-Beschreibung: " & hproj.variantDescription
                         End If
                         pptShape.TextFrame2.TextRange.Text = initialText
@@ -10892,7 +10894,7 @@ Public Module Projekte
         Catch ex As Exception
 
         End Try
-        
+
 
     End Sub
 

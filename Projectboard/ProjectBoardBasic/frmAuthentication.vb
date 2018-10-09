@@ -171,16 +171,27 @@ Public Class frmAuthentication
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
+
+            If awinSettings.visboServer Then
+                pwforgotten.Visible = True
+                pwforgotten.Enabled = True
+            Else
+                pwforgotten.Visible = False
+                pwforgotten.Enabled = False
+            End If
+
             If awinSettings.englishLanguage Then
                 Label2.Text = "Username"
                 Label3.Text = "Password"
                 chbx_remember.Text = "Remember Me"
                 abbrButton.Text = "Cancel"
+                pwforgotten.Text = "Password forgotten"
             Else
                 Label2.Text = "Benutzername"
                 Label3.Text = "Passwort"
                 chbx_remember.Text = "Passwort speichern"
                 abbrButton.Text = "Abbrechen"
+                pwforgotten.Text = "Passwort vergessen"
             End If
 
             Dim cipherText As String = awinSettings.userNamePWD
@@ -219,6 +230,51 @@ Public Class frmAuthentication
     End Sub
 
     Private Sub benutzer_TextChanged(sender As Object, e As EventArgs) Handles benutzer.TextChanged
+
+    End Sub
+
+    Private Sub pwforgotten_Click(sender As Object, e As EventArgs) Handles pwforgotten.Click
+        Try
+
+            Dim hrequest As New DBAccLayer.Request
+            databaseAcc = hrequest
+            Dim pwd As String
+            Dim user As String
+
+            user = benutzer.Text
+            pwd = maskedPwd.Text
+
+            If user = "" Then
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Please enter your username")
+                Else
+                    Call MsgBox("Bitte geben Sie den Benutzer ein")
+                End If
+
+            Else
+
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).pwforgotten(awinSettings.databaseURL, awinSettings.databaseName, user)
+
+                If ok Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("You'll receive an email with the link to reset your password!")
+                    Else
+                        Call MsgBox("Sie erhalten eine Email mit dem Link zum Reset Ihres Passwortes")
+                    End If
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error: Please contact your administrator")
+                    Else
+                        Call MsgBox("Fehler: Bitte kontaktieren Sie ihren Administrator")
+                    End If
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
 
     End Sub
 End Class
