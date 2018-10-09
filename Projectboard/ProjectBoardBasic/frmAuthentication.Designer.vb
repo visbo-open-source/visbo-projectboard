@@ -33,6 +33,7 @@ Partial Class frmAuthentication
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.chbx_remember = New System.Windows.Forms.CheckBox()
+        Me.pwforgotten = New System.Windows.Forms.Label()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -70,7 +71,7 @@ Partial Class frmAuthentication
         '
         Me.benutzer.BackColor = System.Drawing.Color.WhiteSmoke
         Me.benutzer.Location = New System.Drawing.Point(121, 150)
-        Me.benutzer.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.benutzer.Margin = New System.Windows.Forms.Padding(4)
         Me.benutzer.Name = "benutzer"
         Me.benutzer.Size = New System.Drawing.Size(345, 22)
         Me.benutzer.TabIndex = 4
@@ -79,7 +80,7 @@ Partial Class frmAuthentication
         '
         Me.maskedPwd.BackColor = System.Drawing.Color.WhiteSmoke
         Me.maskedPwd.Location = New System.Drawing.Point(121, 198)
-        Me.maskedPwd.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.maskedPwd.Margin = New System.Windows.Forms.Padding(4)
         Me.maskedPwd.Name = "maskedPwd"
         Me.maskedPwd.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
         Me.maskedPwd.Size = New System.Drawing.Size(345, 22)
@@ -101,7 +102,7 @@ Partial Class frmAuthentication
         '
         Me.abbrButton.DialogResult = System.Windows.Forms.DialogResult.Abort
         Me.abbrButton.Location = New System.Drawing.Point(339, 289)
-        Me.abbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.abbrButton.Margin = New System.Windows.Forms.Padding(4)
         Me.abbrButton.Name = "abbrButton"
         Me.abbrButton.Size = New System.Drawing.Size(128, 28)
         Me.abbrButton.TabIndex = 8
@@ -113,7 +114,7 @@ Partial Class frmAuthentication
         Me.PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), System.Drawing.Image)
         Me.PictureBox1.InitialImage = Nothing
         Me.PictureBox1.Location = New System.Drawing.Point(20, 33)
-        Me.PictureBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.PictureBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.PictureBox1.Name = "PictureBox1"
         Me.PictureBox1.Size = New System.Drawing.Size(257, 90)
         Me.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -123,7 +124,7 @@ Partial Class frmAuthentication
         'OKButton
         '
         Me.OKButton.Location = New System.Drawing.Point(121, 289)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(136, 28)
         Me.OKButton.TabIndex = 10
@@ -141,6 +142,17 @@ Partial Class frmAuthentication
         Me.chbx_remember.Text = "Remember Me     "
         Me.chbx_remember.UseVisualStyleBackColor = True
         '
+        'pwforgotten
+        '
+        Me.pwforgotten.AutoSize = True
+        Me.pwforgotten.Font = New System.Drawing.Font("Microsoft Sans Serif", 7.8!, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.pwforgotten.ForeColor = System.Drawing.SystemColors.Highlight
+        Me.pwforgotten.Location = New System.Drawing.Point(336, 246)
+        Me.pwforgotten.Name = "pwforgotten"
+        Me.pwforgotten.Size = New System.Drawing.Size(130, 17)
+        Me.pwforgotten.TabIndex = 12
+        Me.pwforgotten.Text = "Password forgotten"
+        '
         'frmAuthentication
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
@@ -148,6 +160,7 @@ Partial Class frmAuthentication
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.ClientSize = New System.Drawing.Size(520, 327)
         Me.ControlBox = False
+        Me.Controls.Add(Me.pwforgotten)
         Me.Controls.Add(Me.chbx_remember)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.PictureBox1)
@@ -159,7 +172,7 @@ Partial Class frmAuthentication
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
         Me.ForeColor = System.Drawing.SystemColors.ControlText
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmAuthentication"
         Me.Text = "LOGIN"
         Me.TopMost = True
@@ -178,4 +191,5 @@ Partial Class frmAuthentication
     Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
     Friend WithEvents chbx_remember As Windows.Forms.CheckBox
+    Friend WithEvents pwforgotten As Windows.Forms.Label
 End Class

@@ -3837,6 +3837,11 @@ Public Module Module1
                     End If
                     .Tags.Add("REST", awinSettings.visboServer.ToString)
 
+                    If .Tags.Item("DBSSL").Length > 0 Then
+                        .Tags.Delete("DBSSL")
+                    End If
+                    .Tags.Add("DBSSL", awinSettings.DBWithSSL.ToString)
+
                 End If
 
             End With

@@ -101,6 +101,17 @@ Public Class Request
                 ' VisboCenterID mit Name = databaseName wird gespeichert
                 aktVCid = GETvcid(databaseName)
 
+                If aktVCid = "" Then
+                    loginOK = False
+                    token = ""
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("User don't have access to this VisboCenter!" & vbLf & "Please contact your administrator")
+                    Else
+                        Call MsgBox("User hat keinen Zugriff zu diesem VisboCenter!" & vbLf & " Bitte kontaktieren Sie ihren Administrator")
+                    End If
+
+                End If
+
             Else
                 token = ""
                 serverUriName = ServerURL
@@ -138,6 +149,23 @@ Public Class Request
         End Try
 
         pingMongoDb = result
+    End Function
+
+    ''' <summary>
+    ''' über Email setzen einen neuen Passwortes; geht nur beim Server
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function pwforgotten(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String) As Boolean
+
+        Dim result As Boolean = False
+        Try
+            result = POSTpwforgotten(ServerURL, databaseName, username)
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        pwforgotten = result
     End Function
 
     ''' <summary>
@@ -3354,6 +3382,54 @@ Public Class Request
         End Try
 
         POSTOneVPf = result
+
+    End Function
+
+    Private Function POSTpwforgotten(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String) As Boolean
+
+        Dim result As Boolean = False
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+            Dim serverUriString As String = ""
+            Dim typeRequest As String = "/token/user/pwforgotten"
+
+
+            ' URL zusammensetzen
+            serverUriName = ServerURL
+            serverUriString = serverUriName & typeRequest
+            Dim serverUri As New Uri(serverUriString)
+
+            ' user-email in Struktur zum übergeben
+            Dim user As New clsUserLoginSignup
+            user.email = username
+
+            Dim data As Byte() = serverInputDataJson(user, "")
+
+            Dim Antwort As String
+            Dim webantwort As clsWebOutput = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                'webantwort = JsonConvert.DeserializeObject(Of clsWeboutput)(Antwort)
+            End Using
+
+            If errcode = 200 Then
+
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTpwforgotten", errcode, errmsg & " : " & webantwort.message)
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in POSTOneVPf: " & ex.Message)
+        End Try
+
+        POSTpwforgotten = result
 
     End Function
 

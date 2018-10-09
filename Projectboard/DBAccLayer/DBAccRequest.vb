@@ -90,6 +90,33 @@ Public Class Request
         pingMongoDb = result
     End Function
 
+
+    ''' <summary>
+    ''' Wenn ein ReST-Server adressiert wird, so kann mit dieser Routine über Email-aufforderung ein neues Passwort gesetzt werden.
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function pwforgotten(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String) As Boolean
+
+        Dim result As Boolean = False
+        Try
+            If usedWebServer Then
+
+                Dim access As New WebServerAcc.Request
+                result = access.pwforgotten(ServerURL:=ServerURL, databaseName:=databaseName, username:=username)
+
+            Else 'es wird eine MongoDB direkt adressiert, hier gibt es kein Password forgotten
+
+                result = False
+
+            End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+        pwforgotten = result
+    End Function
+
     ''' <summary>
     ''' prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
     ''' falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
