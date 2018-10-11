@@ -2076,7 +2076,9 @@ Public Module testModule
                                                 End If
                                             End If
 
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -2135,7 +2137,9 @@ Public Module testModule
                                             End If
 
 
-                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken2)
                                             compID = PTprdk.PersonalBalken2
                                         End If
                                     Else
@@ -2194,7 +2198,9 @@ Public Module testModule
                                                 End If
                                             End If
 
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken)
                                             compID = PTprdk.PersonalBalken
                                         End If
 
@@ -2251,7 +2257,9 @@ Public Module testModule
                                                 End If
                                             End If
 
-                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken2)
                                             compID = PTprdk.PersonalBalken2
                                         End If
 

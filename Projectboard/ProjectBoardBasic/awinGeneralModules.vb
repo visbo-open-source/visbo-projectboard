@@ -7681,7 +7681,7 @@ Public Module awinGeneralModules
             Dim firstZeile As Excel.Range = currentWS.Rows(1)
 
             If Not isCorrectAllianzImportStructure(firstZeile, 3) Then
-                Call MsgBox("Datei hat nicht den für Typ 3 (= Istdaten-Import) erforderlichen Spalten-Aufbau!")
+                Call MsgBox("Datei hat nicht den für den Istdaten-Import erforderlichen Spalten-Aufbau!")
                 Exit Sub
             End If
 
@@ -8322,7 +8322,7 @@ Public Module awinGeneralModules
             Case 2
             Case 3
                 Dim headerCheck() As String = {"Referat", "Projekttyp", "Projektnummer", "Projekt", "Vorgang/Aktivität", "Intern/Extern", "Ressource/Planungsebene", "Jahr", "Monat", "IST", "(PT)"}
-                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 11}
+                Dim colCheck() As Integer = {1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10}
 
                 Try
                     tmpResult = True ' initiale Vorbesetzung 
@@ -26954,7 +26954,8 @@ Public Module awinGeneralModules
                                 Dim typID As Integer = -1
                                 Dim auswahl As Integer = -1
                                 Dim chartPname As String = ""
-                                Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, chartPname)
+                                Dim roleCostName As String = ""
+                                Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, chartPname, roleCostName)
 
                                 If replaceProj Or (chartPname.Trim = vglName) Then
                                     Select Case typID
@@ -26985,8 +26986,21 @@ Public Module awinGeneralModules
 
                                             'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
                                             ' an der letzten Stelle stelle steht wenn dann die Rolle 
-                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, "")
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
 
+                                        Case PTprdk.PersonalBalken2
+                                            Dim vglProj As clsProjekt = Nothing
+
+
+                                            Try
+                                                vglProj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                                            Catch ex As Exception
+                                                vglProj = Nothing
+                                            End Try
+
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
+                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
 
                                         Case PTprdk.PersonalPie
 
@@ -27006,6 +27020,16 @@ Public Module awinGeneralModules
 
                                             Call updateCostBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
 
+                                        Case PTprdk.KostenBalken2
+
+                                            Dim vglProj As clsProjekt = Nothing
+                                            Try
+                                                vglProj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                                            Catch ex As Exception
+                                                vglProj = Nothing
+                                            End Try
+
+                                            Call updateCostBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj)
 
                                         Case PTprdk.KostenPie
 

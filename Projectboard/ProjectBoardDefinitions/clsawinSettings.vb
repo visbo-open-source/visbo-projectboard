@@ -304,7 +304,7 @@ Public Class clsawinSettings
         _milestoneFreeFloat = True
         _autoCorrectBedarfe = True
         _propAnpassRess = False
-        _phasesProzentual = True
+        _phasesProzentual = False
         _drawphases = False
         _showValuesOfSelected = False
         _applyFilter = False

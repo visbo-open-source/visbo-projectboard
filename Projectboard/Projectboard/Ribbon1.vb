@@ -4897,7 +4897,7 @@ Imports System.IO
                             noScenarioCreation = True
                             Call importAllianzType2()
 
-                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
+                        ElseIf scenarioNameP.StartsWith("Istdaten") Then
                             ' immer zwei Monate zurück gehen 
                             ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
 
@@ -9339,7 +9339,21 @@ Imports System.IO
             Dim obj As Excel.ChartObject = Nothing
             chLeft = chLeft + chWidth + 2
             chWidth = stdBreite
-            Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
+
+            ' hier muss jetzt das lproj bestimmt werden 
+            Dim lproj As clsProjekt = Nothing
+
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            lproj = request.RetrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now)
+            Dim vglBaseline As Boolean = Not IsNothing(lproj)
+            Dim reportObj As Excel.ChartObject = Nothing
+            Dim qualifier2 As String = ""
+
+            Call createRessBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, True,
+                                           roleName:=qualifier2,
+                                           vglTyp:=PTprdk.PersonalBalken2)
+            ' bisher ...
+            'Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
 
         Else
