@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports ClassLibrary1
 Imports DBAccLayer
 Imports ProjectBoardBasic
 Imports xlNS = Microsoft.Office.Interop.Excel
@@ -2192,8 +2193,11 @@ Module Module1
                                             ' das Workbook wird aktiviert ... 
 
                                             ' dann muss das Shape in Excel kopiert werden 
-                                            pptShape.Copy()
-                                            ws.Paste()
+                                            '  ??? ur:10.10.2018 
+                                            '   pptShape.Copy()
+                                            '   ws.Paste()
+
+                                            ws = pptCopychartPaste(pptShape, ws)
                                             Dim anzCharts As Integer = CType(ws.ChartObjects, Excel.ChartObjects).Count
 
                                             If anzCharts > 0 Then
@@ -2239,17 +2243,20 @@ Module Module1
                                                         End If
 
                                                     Catch ex As Exception
-
+                                                        Call MsgBox(ex.Message)
                                                     End Try
 
 
                                                 End If
 
                                                 ' jetzt wird das aktualisierte Excel-Chart kopiert
-                                                newchtobj.Copy()
+                                                ' ??? ur:10.10.2018 
+                                                '     newchtobj.Copy()
 
                                                 ' dann muss das Excel-Shape wieder zurück in PPT kopiert werden 
-                                                Dim newShapeRange As PowerPoint.ShapeRange = currentSlide.Shapes.Paste()
+                                                Dim newShapeRange As PowerPoint.ShapeRange = chartCopypptPaste(newchtobj, currentSlide)
+                                                ' ??? ur: 10.10.2018
+                                                '     Dim newShapeRange As PowerPoint.ShapeRange = currentSlide.Shapes.Paste()
                                                 Dim newPPTShape As PowerPoint.Shape = newShapeRange.Item(1)
 
                                                 ' dann mus das Powerpoint Shape aktualisiert werden ...
@@ -2290,7 +2297,7 @@ Module Module1
 
                                         End If
                                     Catch ex As Exception
-
+                                        Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
                                     End Try
 
                                 End If
@@ -2350,6 +2357,7 @@ Module Module1
             End If
 
         Catch ex As Exception
+            Call MsgBox("UpdateVisboComponent: " & ex.Message)
             Dim a As Integer = 1
         End Try
     End Sub

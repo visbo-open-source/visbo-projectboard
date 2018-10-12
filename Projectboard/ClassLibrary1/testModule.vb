@@ -20724,6 +20724,60 @@ Public Module testModule
             'Call MsgBox("pptCopypptPaste erfolgreich")
         End If
     End Function
+    ''' <summary>
+    ''' copiert ein Powerpoint-Shape in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcShape"></param>
+    ''' <param name="ws"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pptCopychartPaste(ByVal srcShape As pptNS.Shape, ByVal ws As xlNS.Worksheet) As xlNS.Worksheet
+
+        pptCopychartPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+                'srcShape.Copy()
+
+                While Not ok2 And j < 100
+                    Try
+                        srcShape.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+                If Not ok2 Then
+                    Call MsgBox("pptCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("pptCopy timeout")
+                    End If
+                End If
+
+                ws.Paste()
+                pptCopychartPaste = ws
+                ok1 = True
+
+            Catch ex As Exception
+                'Call MsgBox("pptCopychartPaste catch")
+                pptCopychartPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("pptCopychartPaste Timeout oder i=" & i.ToString)
+            Throw New ArgumentException("pptCopychartPaste timeout")
+
+        Else
+            'Call MsgBox("pptCopychartPaste erfolgreich")
+        End If
+    End Function
 
 
     ''' <summary>
