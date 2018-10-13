@@ -166,6 +166,9 @@ Public Class clsawinSettings
     ' Settings für Massen-Edit Funktionen 
     ' Anzeigen der prozentualen Auslastung bzw. der absoluten "freien" bzw. "überbelegten" Kapazitäten 
     Public Property mePrzAuslastung As Boolean
+    ' soll im MassenEdit das Chart mit dem ersten oder dem letzten Beauftragungs-Stand verglichen werden ? 
+    ' ersetzt im Formular das mePrzAuslastung
+    Public Property meCompareWithLastVersion As Boolean
     ' sollen Zuweisungen zu Rollen automatisch ggf vorhandene Sammelrollen Zuweisungen ersetzen  
     Public Property meAutoReduce As Boolean
     ' soll im Massen-Edit bei nicht nachgefragt werden wenn AutoReduce = true
@@ -252,6 +255,9 @@ Public Class clsawinSettings
 
     ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
     Public Property actualDataMonth As Date
+
+    ' ist notwendig, um ggf die Sicht-Rechte auf eine Teil-Organisation zu beschränken ..
+    Public Property isRestrictedToOrgUnit As String
 
 
     Sub New()
@@ -368,6 +374,7 @@ Public Class clsawinSettings
 
         ' Settings für online MassenEdit 
         _mePrzAuslastung = True
+        _meCompareWithLastVersion = False
         _meAutoReduce = False
         _meDontAskWhenAutoReduce = True
         _meEnableSorting = False
@@ -403,6 +410,8 @@ Public Class clsawinSettings
         _useHierarchy = True
         _isHryNameFrmActive = False
         _isChangePortfolioFrmActive = False
+
+        _isRestrictedToOrgUnit = "D-BOSV-KB2"
 
         _visboDebug = False
 

@@ -24479,43 +24479,61 @@ Public Module awinGeneralModules
                                 Dim role As clsRolle = cphase.getRole(r)
                                 Dim roleName As String = role.name
                                 Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
+                                Dim validRole As Boolean = True
 
-                                Dim xValues() As Double = role.Xwerte
+                                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                                    ' prüfen, ob es eine gültige Restriction ist 
 
-                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                zeilensumme = schnittmenge.Sum
-
-                                'ReDim zeilenWerte(bis - von)
-
-                                Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, roleName, protectionText, von, bis,
-                                                         actualDataRelColumn, summeEditierenErlaubt, ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
-
-                                If ok Then
-
-                                    With currentWS
-                                        CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                    End With
-
-                                    If schnittmenge.Sum > 0 Then
-                                        For l As Integer = 0 To bis - von
-
-                                            If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
-                                                editRange.Cells(1, l + 1).value = schnittmenge(l)
-                                            Else
-                                                editRange.Cells(1, l + 1).value = ""
-                                            End If
-
-                                        Next
-                                    Else
-                                        editRange.Value = ""
+                                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
+                                        Dim tmpCollection As New Collection
+                                        tmpCollection.Add(tmpRole.name)
+                                        If RoleDefinitions.hasAnyChildParentRelationsship(roleName, tmpCollection) Then
+                                            validRole = True
+                                        Else
+                                            validRole = False
+                                        End If
                                     End If
+                                End If
 
-                                    atLeastOne = True
+                                If validRole Then
+                                    Dim xValues() As Double = role.Xwerte
 
-                                    zeile = zeile + 1
-                                Else
-                                    Call MsgBox("not ok")
+                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                    zeilensumme = schnittmenge.Sum
+
+                                    'ReDim zeilenWerte(bis - von)
+
+                                    Dim ok As Boolean = massEditWrite1Zeile(currentWS.Name, hproj, cphase, indentlevel, isProtectedbyOthers, zeile, roleName, protectionText, von, bis,
+                                                             actualDataRelColumn, summeEditierenErlaubt, ixZeitraum, breite, startSpalteDaten, maxRCLengthVorkommen)
+
+                                    If ok Then
+
+                                        With currentWS
+                                            CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
+                                            editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                        End With
+
+                                        If schnittmenge.Sum > 0 Then
+                                            For l As Integer = 0 To bis - von
+
+                                                If l >= ixZeitraum And l <= ixZeitraum + breite - 1 Then
+                                                    editRange.Cells(1, l + 1).value = schnittmenge(l)
+                                                Else
+                                                    editRange.Cells(1, l + 1).value = ""
+                                                End If
+
+                                            Next
+                                        Else
+                                            editRange.Value = ""
+                                        End If
+
+                                        atLeastOne = True
+
+                                        zeile = zeile + 1
+                                    Else
+                                        Call MsgBox("not ok")
+                                    End If
                                 End If
 
                             Next r
@@ -26973,6 +26991,10 @@ Public Module awinGeneralModules
                                                 Call updatePhasesBalken(hproj, chtobj, auswahl, replaceProj)
                                             End If
 
+                                        Case PTprdk.KostenBalken
+
+                                        Case PTprdk.KostenBalken2
+
 
                                         Case PTprdk.PersonalBalken
                                             Dim vglProj As clsProjekt = Nothing
@@ -26990,7 +27012,6 @@ Public Module awinGeneralModules
 
                                         Case PTprdk.PersonalBalken2
                                             Dim vglProj As clsProjekt = Nothing
-
 
                                             Try
                                                 vglProj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)

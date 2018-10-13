@@ -5750,6 +5750,7 @@ Public Module Projekte
 
         If anzRollen = 0 Then
             'Throw New Exception("keine Ressourcen Bedarfe definiert")
+            appInstance.EnableEvents = formerEE
             Throw New Exception(repMessages.getmsg(161))
         End If
 
@@ -6796,10 +6797,11 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks></remarks>
-    Public Sub createCostBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, _
-                                         ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                            ByVal top As Double, left As Double, height As Double, width As Double, _
-                                            ByVal calledFromReporting As Boolean)
+    Public Sub createCostBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                         ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer,
+                                         ByVal top As Double, left As Double, height As Double, width As Double,
+                                         ByVal calledFromReporting As Boolean,
+                                         ByVal comparisontype As Integer)
 
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
@@ -6849,7 +6851,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
+        kennung = calcChartKennung("pr", comparisontype, tmpcollection)
 
 
 
@@ -7000,7 +7002,8 @@ Public Module Projekte
 
                     ' jetzt die Istdaten zeichnen 
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(194)
                         '.Interior.Color = visboFarbeBlau
                         .Interior.Color = awinSettings.SollIstFarbeArea
                         .Values = istDatenReihe
@@ -7015,7 +7018,8 @@ Public Module Projekte
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     ' sonstige Kosten
                     '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(38)
                     '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                     .Interior.Color = visboFarbeBlau
                     '.Interior.Color = visboFarbeYellow
@@ -7035,7 +7039,7 @@ Public Module Projekte
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(273) & " " & vglProj.timeStamp.ToShortDateString
                         '.Interior.Color = 0
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
@@ -7117,7 +7121,7 @@ Public Module Projekte
             With newChtObj.Chart
                 .ChartTitle.Text = diagramTitle
                 .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End With
 
@@ -7434,7 +7438,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
+
 
 
         Dim ErgebnisListeK As Collection
@@ -7536,7 +7540,8 @@ Public Module Projekte
 
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(194)
                     '.Interior.Color = visboFarbeBlau
                     .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
@@ -7551,7 +7556,8 @@ Public Module Projekte
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 ' Stand vom sonstige Kosten
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                .Name = repMessages.getmsg(38)
                 '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                 .Interior.Color = visboFarbeBlau
                 '.Interior.Color = visboFarbeYellow
@@ -7572,7 +7578,7 @@ Public Module Projekte
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(273) & " " & vglProj.timeStamp.ToShortDateString
                     '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
@@ -7661,7 +7667,6 @@ Public Module Projekte
 
         End With
 
-        chtobj.Name = kennung
 
         appInstance.EnableEvents = formerEE
         'appInstance.ScreenUpdating = formerSU

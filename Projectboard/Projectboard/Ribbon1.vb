@@ -2400,6 +2400,13 @@ Imports System.IO
                     tmpLabel = "Show Header"
                 End If
 
+            Case "PT6G2B8" ' Compare with Last Version
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "mit letzter Version vergleichen"
+                Else
+                    tmpLabel = "compare with last version"
+                End If
+
             Case "PTfreezeB1" ' Fixieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Fixieren"
@@ -6500,6 +6507,22 @@ Imports System.IO
         awinSettings.phasesProzentual = pressed
     End Sub
 
+    Public Function PTCompareLast(control As IRibbonControl) As Boolean
+        PTCompareLast = awinSettings.meCompareWithLastVersion
+    End Function
+
+    Sub awinCompareLast(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.meCompareWithLastVersion = pressed
+
+        ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
+        visboZustaende.clearAuslastungsArray()
+
+        ' jetzt müssen die Charts aktualisiert werden 
+        Call aktualisiereCharts(visboZustaende.lastProject, False)
+
+    End Sub
+
     Public Function PTProzAuslastung(control As IRibbonControl) As Boolean
         PTProzAuslastung = awinSettings.mePrzAuslastung
     End Function
@@ -6978,8 +7001,18 @@ Imports System.IO
                 Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current,
                                                          top, left, width, height, False)
 
+
+                Dim compareWithLast As Boolean = awinSettings.meCompareWithLastVersion
+                Dim compareTyp As Integer
                 Try
-                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                    If compareWithLast Then
+                        vglProjekt = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                        compareTyp = PTprdk.PersonalBalken2
+                    Else
+                        vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                        compareTyp = PTprdk.PersonalBalken
+                    End If
+
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
@@ -6988,14 +7021,19 @@ Imports System.IO
                 'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                 auswahl = 1 ' zeige Personalbedarfe
-                Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
+                Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, vglTyp:=compareTyp)
 
                 ' Kosten-Balken
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
                 'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                 auswahl = 1 ' zeige Sonstige Kosten
-                Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
+                If compareWithLast Then
+                    compareTyp = PTprdk.KostenBalken2
+                Else
+                    compareTyp = PTprdk.KostenBalken
+                End If
+                Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, compareTyp)
 
                 ' Strategie / Risiko / Marge
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
@@ -7089,9 +7127,17 @@ Imports System.IO
                     End Try
 
                     Try
-
+                        Dim compareLast As Boolean = awinSettings.meCompareWithLastVersion
+                        Dim compareTyp As Integer
                         Try
-                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                            If compareLast Then
+                                vglProjekt = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                                compareTyp = PTprdk.PersonalBalken2
+                            Else
+                                vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                                compareTyp = PTprdk.PersonalBalken
+                            End If
+
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
@@ -7099,7 +7145,7 @@ Imports System.IO
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
                         'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
-                        Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
+                        Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, vglTyp:=compareTyp)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
                         'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
@@ -7197,17 +7243,30 @@ Imports System.IO
 
                 End Try
 
+
                 Try
-                    Try
-                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
-                    Catch ex As Exception
-                        vglProj = Nothing
-                    End Try
+
 
                     Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
                     'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
-                    Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False)
+                    Dim compareWithLast As Boolean = awinSettings.meCompareWithLastVersion
+                    Dim compareTyp As Integer
+
+                    Try
+                        If compareWithLast Then
+                            vglProj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                            compareTyp = PTprdk.KostenBalken2
+                        Else
+                            vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                            compareTyp = PTprdk.KostenBalken
+                        End If
+                    Catch ex As Exception
+                        vglProj = Nothing
+                    End Try
+
+
+                    Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False, compareTyp)
 
                     ' jetzt wird das Pie-Diagramm gezeichnet 
                     'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
@@ -9344,14 +9403,50 @@ Imports System.IO
             Dim lproj As clsProjekt = Nothing
 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            lproj = request.RetrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now)
-            Dim vglBaseline As Boolean = Not IsNothing(lproj)
-            Dim reportObj As Excel.ChartObject = Nothing
+            Dim comparisonTyp As Integer
             Dim qualifier2 As String = ""
 
-            Call createRessBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, True,
-                                           roleName:=qualifier2,
-                                           vglTyp:=PTprdk.PersonalBalken2)
+            If awinSettings.meCompareWithLastVersion Then
+                lproj = request.RetrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now)
+                comparisonTyp = PTprdk.KostenBalken2
+
+                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                        comparisonTyp = PTprdk.PersonalBalken2
+                        qualifier2 = awinSettings.isRestrictedToOrgUnit
+                    End If
+                End If
+
+            Else
+                lproj = request.retrieveFirstContractedPFromDB(hproj.name, hproj.variantName)
+                comparisonTyp = PTprdk.KostenBalken
+
+                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                        comparisonTyp = PTprdk.PersonalBalken
+                        qualifier2 = awinSettings.isRestrictedToOrgUnit
+                    End If
+                End If
+            End If
+
+            Dim vglBaseline As Boolean = Not IsNothing(lproj)
+            Dim reportObj As Excel.ChartObject = Nothing
+
+
+            Try
+                If qualifier2 = "" Then
+                    Call createCostBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, False, comparisonTyp)
+                Else
+                    Call createRessBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, True,
+                                               roleName:=qualifier2,
+                                               vglTyp:=comparisonTyp)
+                End If
+
+
+            Catch ex As Exception
+
+            End Try
+
             ' bisher ...
             'Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 

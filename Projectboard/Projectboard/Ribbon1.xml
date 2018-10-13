@@ -349,19 +349,19 @@
           <!--<button id="PTOPTB2" label ="Spielraum nutzen" enabled ="true" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>-->
           <separator id="PT0G1s8"/>
           <!--- Cockpit-->
-          <splitButton id="PT0G1split" size="large">
+          <!--<splitButton id="PT0G1split" size="large">-->
           <!--label="Save Cockpit"-->
-          <button id="PT0G1B"  imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
-            <menu id="PT0G1M">
-              <!--label="Save Cockpit"-->
+          <!--<button id="PT0G1B"  imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>-->
+            <!--<menu id="PT0G1M">
+              --><!--label="Save Cockpit"--><!--
               <button id="PT0G1M3B2" imageMso="ChartSaveTemplates" enabled ="true" getLabel ="bestimmeLabel" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
-              <!--label="Load Cockpit"-->
+              --><!--label="Load Cockpit"--><!--
               <button id="PT0G1M3B1" imageMso="ChartWall" getLabel ="bestimmeLabel" onAction="PT0ShowCockpit" supertip="aus einer Liste von Cockpits eines auswählen und anzeigen"/>
-            </menu>
-           </splitButton>
+            </menu>-->
+           <!--</splitButton>-->
             <!--label="Ergebnis"--><!--
             <button id="PT0G1B7" getLabel ="bestimmeLabel"  onAction="Tom2G2M1B7Ergebnis" supertip="Zu dem selektierten Projekt wird ein „Wasserfall“ Diagramm angezeigt, das das prognostizierte Projekt-Ergebnis anzeigt"/>-->
-          <separator id="PT0G1sX"/>
+          <!--<separator id="PT0G1sX"/>-->
           <!--label="Charts löschen"-->
           <button id="PT0G1BX" size="large" imageMso="Delete" getLabel ="bestimmeLabel"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
         </group>
@@ -465,13 +465,15 @@
       <tab id="PTMECsettings" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id="PTMECsettingsG1">
           <!--label="Änderungen verwerfen"-->
-          <checkBox id="PT2G1M2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>
+          <!--<checkBox id="PT2G1M2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTSkipChanges" onAction="awinPTSkipChanges" supertip ="alle Änderungen, die im Massen-Edit Fenster gemacht wurden, werden bei Rückkehr zur grafischen Ansicht verworfen"/>-->
           <!--label="prozentuale Auslastungs-Werte anzeigen"-->
-          <checkBox id="PT6G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>
+          <!--<checkBox id="PT6G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTProzAuslastung" onAction ="awinPTProzAuslastung" supertip ="wenn gesetzt, wird die prozentuale Auslastung gezeigt. Andernfalls werden die absoluten Werte in Personentagen angezeigt, die in diesem Monat noch frei sind bzw. in dem Monat bereits über der Kapazität liegen."/>-->
+          <!--label="Compare With Last Version"-->
+          <!--<checkBox id="PT6G2B8" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTCompareLast" onAction ="awinCompareLast" supertip ="wenn gesetzt, wird das Soll-Ist Vergleichs-chart mit dem letzten beauftragten Stand verglichen; andernfalls mit dem ersten"/>-->
           <!--label="Platzhalter Rollen automatisch reduzieren"-->
-          <checkBox id="PT6G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>
+          <!--<checkBox id="PT6G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTautomaticReduce" onAction ="awinPTautomaticReduce" supertip ="wenn gesetzt, werden beim Zuordnen von einfachen Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; allerdings wird die Sammelrolle höchstens bis zum Wert Null reduziert"/>-->
           <!--label="nachfrage, ob in Folgemonaten oder Vorgängermonaten reduziert werden soll"-->
-          <checkBox id="PT6G2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTdontAskWhenAutoReduce" onAction ="awinPTdontAskWhenAutoReduce" supertip ="wenn gesetzt, werden beim Zuordnen von  Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; ohne erneutes Nachfragen"/>
+          <!--<checkBox id="PT6G2B6" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTdontAskWhenAutoReduce" onAction ="awinPTdontAskWhenAutoReduce" supertip ="wenn gesetzt, werden beim Zuordnen von  Rollen die zugeordneten übergeordneten Sammelrollen um den gleichen Wert reduziert bzw. erhöht; ohne erneutes Nachfragen"/>-->
           <separator id="PT6G2s1"></separator>
           <!--label="Sortierung ermöglichen"-->
           <checkBox id="PT6G2B5" getVisible="chckVisibility" getLabel ="bestimmeLabel" getPressed="PTenableSorting" onAction ="awinPTenableSorting" supertip ="wenn gesetzt, können die Filter-Felder auch sortiert werden, allerdings sind dann alle Felder selektierbar , auch die nicht editierbaren. Andernfalls können nicht editierbare Felder gar nicht selektiert werden."/>
