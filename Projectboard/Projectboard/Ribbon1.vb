@@ -9410,23 +9410,29 @@ Imports System.IO
                 lproj = request.RetrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now)
                 comparisonTyp = PTprdk.KostenBalken2
 
-                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
-                        comparisonTyp = PTprdk.PersonalBalken2
-                        qualifier2 = awinSettings.isRestrictedToOrgUnit
+                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                            comparisonTyp = PTprdk.PersonalBalken2
+                            qualifier2 = awinSettings.isRestrictedToOrgUnit
+                        End If
                     End If
                 End If
+
 
             Else
                 lproj = request.retrieveFirstContractedPFromDB(hproj.name, hproj.variantName)
                 comparisonTyp = PTprdk.KostenBalken
 
-                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
-                        comparisonTyp = PTprdk.PersonalBalken
-                        qualifier2 = awinSettings.isRestrictedToOrgUnit
+                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                            comparisonTyp = PTprdk.PersonalBalken
+                            qualifier2 = awinSettings.isRestrictedToOrgUnit
+                        End If
                     End If
                 End If
+
             End If
 
             Dim vglBaseline As Boolean = Not IsNothing(lproj)

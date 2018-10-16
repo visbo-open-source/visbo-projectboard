@@ -2452,6 +2452,16 @@ Public Module awinGeneralModules
                     awinSettings.actualDataMonth = Date.MinValue
                 End Try
 
+                Try
+                    awinSettings.isRestrictedToOrgUnit = CStr(.Range("roleAccessIsRestrictedTo").Value)
+
+                    If IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                        awinSettings.isRestrictedToOrgUnit = ""
+                    End If
+                Catch ex As Exception
+                    awinSettings.isRestrictedToOrgUnit = ""
+                End Try
+
 
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
@@ -24481,20 +24491,23 @@ Public Module awinGeneralModules
                                 Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
                                 Dim validRole As Boolean = True
 
-                                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-                                    ' prüfen, ob es eine gültige Restriction ist 
+                                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                                        ' prüfen, ob es eine gültige Restriction ist 
 
-                                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
-                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
-                                        Dim tmpCollection As New Collection
-                                        tmpCollection.Add(tmpRole.name)
-                                        If RoleDefinitions.hasAnyChildParentRelationsship(roleName, tmpCollection) Then
-                                            validRole = True
-                                        Else
-                                            validRole = False
+                                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
+                                            Dim tmpCollection As New Collection
+                                            tmpCollection.Add(tmpRole.name)
+                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleName, tmpCollection) Then
+                                                validRole = True
+                                            Else
+                                                validRole = False
+                                            End If
                                         End If
                                     End If
                                 End If
+
 
                                 If validRole Then
                                     Dim xValues() As Double = role.Xwerte

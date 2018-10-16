@@ -5193,16 +5193,21 @@ Public Class frmHierarchySelection
             'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-            If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
 
-                If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+            If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
 
-                    topNodes.Clear()
-                    topNodes.Add(RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit).UID)
+                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+
+                        topNodes.Clear()
+                        topNodes.Add(RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit).UID)
+
+                    End If
 
                 End If
-
             End If
+
+
 
 
             For i = 0 To topNodes.Count - 1

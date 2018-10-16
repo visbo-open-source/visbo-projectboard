@@ -6614,8 +6614,10 @@ Public Module Module1
 
             With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
 
-                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
+                ' wenn eine neue Zeile eingefügt ist und Ist-Spalten existieren , dann müssen die jetzt wieder auf frei gesetzt werden 
+                .Locked = False
 
+                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
                 Try
                     If Not IsNothing(.Validation) Then
                         .Validation.Delete()

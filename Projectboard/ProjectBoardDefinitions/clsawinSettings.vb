@@ -411,7 +411,7 @@ Public Class clsawinSettings
         _isHryNameFrmActive = False
         _isChangePortfolioFrmActive = False
 
-        _isRestrictedToOrgUnit = "D-BOSV-KB2"
+        _isRestrictedToOrgUnit = ""
 
         _visboDebug = False
 
