@@ -291,10 +291,6 @@
       <Project>{a6876837-dd60-4e0d-bcbc-de9a0d6f8de3}</Project>
       <Name>WebServerAcc</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WPFPieChart\WPFPieChart.csproj">
-      <Project>{59210896-68d1-4a34-91cc-8d015eca7061}</Project>
-      <Name>WPFPieChart</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Pfeil links 32x32.png" />

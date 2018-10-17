@@ -2,7 +2,6 @@
 Imports ProjectBoardBasic
 Imports ClassLibrary1
 Imports DBAccLayer
-Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Excel = Microsoft.Office.Interop.Excel
 Imports System.Security.Principal
@@ -8893,106 +8892,107 @@ Imports System.Web
 
     ' '' ''End Sub
 
-    Sub PT0ShowZieleUebersicht(control As IRibbonControl)
+    ' tk 17.10.18 wurde jetzt auskommentiert, weil WPFChart rausgeflogen ist
+    'Sub PT0ShowZieleUebersicht(control As IRibbonControl)
 
-        Dim ControlID As String = control.Id
-        Dim relevanteProjekte As clsProjekte
-        Dim chtObject As Excel.ChartObject = Nothing
-        'Dim top As Double, left As Double, width As Double, height As Double
-        Dim future As Integer = 0
-        Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
-        'awinSettings.mppShowAmpel = True
+    '    Dim ControlID As String = control.Id
+    '    Dim relevanteProjekte As clsProjekte
+    '    Dim chtObject As Excel.ChartObject = Nothing
+    '    'Dim top As Double, left As Double, width As Double, height As Double
+    '    Dim future As Integer = 0
+    '    Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
+    '    'awinSettings.mppShowAmpel = True
 
 
-        Dim myCollection As New Collection
-        myCollection.Add("Ziele")
+    '    Dim myCollection As New Collection
+    '    myCollection.Add("Ziele")
 
-        Call projektTafelInit()
+    '    Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-        If ControlID = "PT0G1B2" Then
-            relevanteProjekte = selectedProjekte
-        Else
-            Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
-            relevanteProjekte = ShowProjekte
-        End If
+    '    appInstance.EnableEvents = False
+    '    enableOnUpdate = False
+    '    If ControlID = "PT0G1B2" Then
+    '        relevanteProjekte = selectedProjekte
+    '    Else
+    '        Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
+    '        relevanteProjekte = ShowProjekte
+    '    End If
 
-        If relevanteProjekte.Count > 0 Then
+    '    If relevanteProjekte.Count > 0 Then
 
-            Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+    '        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
-            If ok Then
+    '        If ok Then
 
-                ' betrachte sowohl Vergangenheit als auch Gegenwart
-                future = 0
+    '            ' betrachte sowohl Vergangenheit als auch Gegenwart
+    '            future = 0
 
-                Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
-                Dim valueItem As New clsWPFPieValues
+    '            Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
+    '            Dim valueItem As New clsWPFPieValues
 
-                ' Nicht bewertet 
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(0, future).Sum
-                    .name = "nicht bewertet"
-                    .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            ' Nicht bewertet 
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(0, future).Sum
+    '                .name = "nicht bewertet"
+    '                .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                valueItem = New clsWPFPieValues
-                ' Grün bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(1, future).Sum
-                    .name = "OK"
-                    .color = CType(awinSettings.AmpelGruen, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            valueItem = New clsWPFPieValues
+    '            ' Grün bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(1, future).Sum
+    '                .name = "OK"
+    '                .color = CType(awinSettings.AmpelGruen, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                valueItem = New clsWPFPieValues
-                ' Gelb bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(2, future).Sum
-                    .name = "nicht vollständig"
-                    .color = CType(awinSettings.AmpelGelb, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            valueItem = New clsWPFPieValues
+    '            ' Gelb bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(2, future).Sum
+    '                .name = "nicht vollständig"
+    '                .color = CType(awinSettings.AmpelGelb, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                valueItem = New clsWPFPieValues
-                ' Rot bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(3, future).Sum
-                    .name = "Zielverfehlung"
-                    .color = CType(awinSettings.AmpelRot, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            valueItem = New clsWPFPieValues
+    '            ' Rot bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(3, future).Sum
+    '                .name = "Zielverfehlung"
+    '                .color = CType(awinSettings.AmpelRot, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                Dim pieChartZieleV As New PieChartWindow(wpfInput)
+    '            Dim pieChartZieleV As New PieChartWindow(wpfInput)
 
-                With pieChartZieleV
-                    .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
-                    '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
-                    '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
-                End With
+    '            With pieChartZieleV
+    '                .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
+    '                '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
+    '                '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
+    '            End With
 
-                pieChartZieleV.Show()
-            Else
-                Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
-            End If
+    '            pieChartZieleV.Show()
+    '        Else
+    '            Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
+    '        End If
 
-        Else
-            If ControlID = "PT0G1B2" Then
-                Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
-            Else
-                Call MsgBox("Es sind keine Projekte geladen!")
-            End If
+    '    Else
+    '        If ControlID = "PT0G1B2" Then
+    '            Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
+    '        Else
+    '            Call MsgBox("Es sind keine Projekte geladen!")
+    '        End If
 
-        End If
+    '    End If
 
-        'awinSettings.mppShowAmpel = formerAmpelSetting
+    '    'awinSettings.mppShowAmpel = formerAmpelSetting
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+    '    appInstance.EnableEvents = True
+    '    enableOnUpdate = True
 
-    End Sub
+    'End Sub
 
 
 
