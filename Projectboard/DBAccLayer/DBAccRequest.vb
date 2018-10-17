@@ -238,6 +238,28 @@ Public Class Request
     End Function
 
 
+    Public Function retrieveProjectNamesByPNRFromDB(ByVal projektKDNr As String) As Collection
+
+        Dim result As New Collection
+
+        Try
+
+            If usedWebServer Then
+                result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveProjectNamesByPNRFromDB = result
+
+    End Function
+
     ''' <summary>
     ''' liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName), das zum angegebenen Zeitpunkt das aktuelle war
     ''' falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
@@ -476,6 +498,36 @@ Public Class Request
         retrieveFirstContractedPFromDB = result
 
     End Function
+
+    ''' <summary>
+    ''' gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; bei Projekten muss variantNAme = "" sein, bei Summary Projekten VPortfolioName
+    ''' </summary>
+    ''' <param name="projectname"></param>
+    ''' <param name="variantname"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
+    Public Function retrieveLastContractedPFromDB(ByVal projectname As String, ByVal variantname As String, ByVal storedAtOrBefore As DateTime) As clsProjekt
+        Dim result As New clsProjekt
+        Try
+
+            If usedWebServer Then
+                result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = CType(DBAcc, MongoDbAccess.Request).RetrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
+            End If
+
+        Catch ex As Exception
+
+            result = Nothing
+            Throw New ArgumentException("retrieveLastContractedPFromDB: " & ex.Message)
+        End Try
+
+        retrieveLastContractedPFromDB = result
+
+    End Function
+
+
 
     ''' <summary>
     ''' überprüft, ob der User userName für das Projekt pvname vom Typ type 

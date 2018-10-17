@@ -10,6 +10,7 @@
 
     Public Property variantName As String
     Public Property ampelStatus As String
+    Public Property kundennummer As String
 
     Public Sub New()
         _id = ""
@@ -22,5 +23,6 @@
         _status = ""
         _variantName = ""
         _ampelStatus = ""
+        _kundennummer = ""
     End Sub
 End Class

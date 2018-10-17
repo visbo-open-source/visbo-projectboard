@@ -761,6 +761,46 @@ Public Class Request
 
     End Function
 
+    ''' <summary>
+    ''' holt Projekt-Namen über Angabe der Projekt-Nummer beim Kunden; 
+    ''' kann Null, ein oder mehrere Ergebnis-Einträge enthalten; Liste kommt sortiert nach Projekt-Namen zurück
+    ''' </summary>
+    ''' <param name="pNRatKD"></param>
+    ''' <returns></returns>
+    Public Function retrieveProjectNamesByPNRFromDB(ByVal pNRatKD As String) As Collection
+
+        Dim result As New Collection
+        Dim interimResult As New SortedList(Of String, String)
+
+        Try
+
+            ' holt alle Projekte/Variante/versionen 
+            Dim vpvListe As New List(Of clsProjektWebShort)
+            vpvListe = GETallVPvShort("")
+
+            For Each vpv As clsProjektWebShort In vpvListe
+
+                If vpv.kundennummer = pNRatKD Then
+                    If Not interimResult.ContainsKey(vpv.name) Then
+                        interimResult.Add(vpv.name, vpv.name)
+                    Else
+                    End If
+                End If
+            Next
+
+            For Each kvp As KeyValuePair(Of String, String) In interimResult
+                result.Add(kvp.Key)
+            Next
+
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveProjectNamesByPNRFromDB = result
+
+    End Function
+
 
     ''' <summary>
     ''' gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
@@ -866,25 +906,27 @@ Public Class Request
 
     ''' <summary>
     ''' holt die erste beauftragte Version des Projects 
-    ''' immer mit Variant-Name = ""
+    ''' immer mit Variant-Name = variantname
     ''' </summary>
     ''' <param name="projectname"></param>
+    ''' <param name="variantname"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstContractedPFromDB(ByVal projectname As String) As clsProjekt
+    Public Function retrieveFirstContractedPFromDB(ByVal projectname As String, ByVal variantname As String) As clsProjekt
 
         Dim hproj As New clsProjekt
 
         Try
             Dim vpid As String = ""
+            Dim vp As clsVP = GETvpid(projectname)
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectname)._id
+            vpid = vp._id
 
             If vpid <> "" Then
 
                 Dim resultColl As New SortedList(Of DateTime, String)
                 Dim allVPv As New List(Of clsProjektWebShort)
-                allVPv = GETallVPvShort(vpid)
+                allVPv = GETallVPvShort(vpid, variantname)
 
                 For Each vpv As clsProjektWebShort In allVPv
                     If vpv.status = ProjektStatus(PTProjektStati.beauftragt) Then
@@ -919,6 +961,76 @@ Public Class Request
         retrieveFirstContractedPFromDB = hproj
 
     End Function
+    ''' <summary>
+    ''' gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; bei Projekten muss variantNAme = "" sein, bei Summary Projekten VPortfolioName
+    ''' </summary>
+    ''' <param name="projectname"></param>
+    ''' <param name="variantname"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <returns></returns>
+    Public Function retrieveLastContractedPFromDB(ByVal projectname As String,
+                                                  ByVal variantname As String,
+                                                  ByVal storedAtOrBefore As DateTime) As clsProjekt
+
+        Dim hproj As New clsProjekt
+
+        Try
+            If (storedAtOrBefore = Date.MinValue) Then
+                storedAtOrBefore = DateTime.Now.AddDays(1).ToUniversalTime()
+            Else
+                storedAtOrBefore = storedAtOrBefore.ToUniversalTime()
+            End If
+
+            Dim vpid As String = ""
+            Dim vp As clsVP = GETvpid(projectname)
+
+            If Not IsNothing(vp) Then
+
+                ' VPID zu Projekt projectName holen vom WebServer/DB
+                vpid = vp._id
+
+                If vpid <> "" Then
+                    Dim resultColl As New SortedList(Of DateTime, String)
+                    Dim allVPv As New List(Of clsProjektWebShort)
+                    allVPv = GETallVPvShort(vpid, variantname)
+
+                    For Each vpv As clsProjektWebShort In allVPv
+                        ' es werden alle beauftragten Timestamps in resultColl gesammelt
+                        If vpv.status = ProjektStatus(PTProjektStati.beauftragt) And (vpv.timestamp < storedAtOrBefore) Then
+                            resultColl.Add(vpv.timestamp, vpv._id)
+                        End If
+                    Next
+                    ' get specific VisboProjectVersion vpvid
+                    Dim hresult As New List(Of clsProjektWebLong)
+                    Dim vpvid As String = ""
+                    If resultColl.Count >= 0 Then
+                        vpvid = resultColl.Last.Value
+                    End If
+
+                    hresult = GETallVPvLong(vpid:=vpid, vpvid:=vpvid)
+                    If hresult.Count >= 0 Then
+                        hresult.Item(0).copyto(hproj)
+                    Else
+                        hproj = Nothing
+                    End If
+
+                Else
+                    hproj = Nothing
+                End If
+
+            Else
+                hproj = Nothing
+            End If
+
+        Catch ex As Exception
+            hproj = Nothing
+        End Try
+
+        retrieveLastContractedPFromDB = hproj
+
+    End Function
+
+
 
     ''' <summary>
     ''' überprüft, ob der User userName für das Projekt pvname vom Typ type 

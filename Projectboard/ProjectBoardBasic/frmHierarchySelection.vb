@@ -5042,7 +5042,7 @@ Public Class frmHierarchySelection
 
                 Call buildHryTreeViewNew(PTProjektType.nameList)
 
-                ''' clear Listbox1 
+                '' ' clear Listbox1 
                 ''If awinSettings.englishLanguage Then
                 ''    headerLine.Text = "Business Units"
                 ''Else
@@ -5051,7 +5051,7 @@ Public Class frmHierarchySelection
 
                 ''filterBox.Text = ""
 
-                ''' jetzt nur die Kosten anbieten, die auch vorkommen 
+                '' ' jetzt nur die Kosten anbieten, die auch vorkommen 
                 ''If Me.menuOption = PTmenue.sessionFilterDefinieren Then
                 ''    ' immer die ShowProjekte hernehmen 
                 ''    If selectedProjekte.Count > 0 Then
@@ -5155,7 +5155,7 @@ Public Class frmHierarchySelection
 
                 Call buildHryTreeViewNew(PTProjektType.nameList)
 
-                ''' clear Listbox1 
+                '' ' clear Listbox1 
                 ''If awinSettings.englishLanguage Then
                 ''    headerLine.Text = "Business Units"
                 ''Else
@@ -5164,7 +5164,7 @@ Public Class frmHierarchySelection
 
                 ''filterBox.Text = ""
 
-                ''' jetzt nur die Kosten anbieten, die auch vorkommen 
+                '' ' jetzt nur die Kosten anbieten, die auch vorkommen 
                 ''If Me.menuOption = PTmenue.sessionFilterDefinieren Then
                 ''    ' immer die ShowProjekte hernehmen 
                 ''    If selectedProjekte.Count > 0 Then

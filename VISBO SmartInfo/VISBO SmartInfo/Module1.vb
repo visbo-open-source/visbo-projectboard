@@ -2314,8 +2314,8 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
-                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                        bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
@@ -2334,8 +2334,8 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
                                     Try
-                                        bProj = request.retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
-                                        lProj = request.RetrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
+                                        bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 

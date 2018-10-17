@@ -386,6 +386,7 @@ namespace MongoDbAccess
 
             var sort = Builders<clsProjektDB>.Sort.Descending("timestamp");
 
+
             try
             {
                 result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
@@ -1407,21 +1408,15 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// 
+        /// holt Projekt-Namen über Angabe der Projekt-Nummer beim Kunden; 
+        /// kann Null, ein oder mehrere Ergebnis-Einträge enthalten; Liste kommt sortiert nach Projekt-Namen zurück
         /// </summary>
         /// <param name="pNR"></param>
         /// <returns></returns>
         public Collection retrieveProjectNamesByPNRFromDB(string pNR)
         {
             var result = new Collection();
-
             
-            //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
-            //var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
-            //               where e.name.Contains(searchstr)
-            //               select e.variantName
-            //               .Distinct();
-
 
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
                             .Where(c => c.kundenNummer == pNR)

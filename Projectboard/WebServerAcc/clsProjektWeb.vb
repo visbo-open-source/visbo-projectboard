@@ -63,6 +63,10 @@ Public Class clsProjektWeb
     Public description As String
     Public businessUnit As String
 
+    ' ergänzt am 9.6.18 
+    Public actualDataUntil As Date = Date.MinValue
+
+
     ''' <summary>
     ''' kopiert den Inhalt des Projektes (clsProjekt) in clsProjektWeb
     ''' </summary>
@@ -97,6 +101,14 @@ Public Class clsProjektWeb
             Me.variantName = .variantName
             Me.variantDescription = .variantDescription
 
+            If Not IsNothing(.kundenNummer) Then
+                Me.kundennummer = .kundenNummer
+            Else
+                Me.kundennummer = ""
+            End If
+
+            Me.actualDataUntil = .actualDataUntil.ToUniversalTime
+
             Me.Risiko = .Risiko
             Me.StrategicFit = .StrategicFit
             Me.Erloes = .Erloes
@@ -122,6 +134,10 @@ Public Class clsProjektWeb
             Me.complexity = .complexity
             Me.description = .description
             Me.businessUnit = .businessUnit
+            ' ergänzt am 17.10.18
+            Me.actualDataUntil = .actualDataUntil
+            ' ergänzt am 17.10.18
+            Me.kundenNummer = .kundenNummer
 
             Me.hierarchy.copyFrom(projekt.hierarchy)
 
@@ -180,6 +196,28 @@ Public Class clsProjektWeb
 
             .variantName = Me.variantName
 
+            ' ergänzt am 17.10.18
+            If IsNothing(Me.kundennummer) Then
+                .kundenNummer = ""
+            Else
+                .kundenNummer = Me.kundennummer
+            End If
+
+            ' ergänzt am 17.10.18
+            If awinSettings.autoSetActualDataDate Then
+
+                If Me.timestamp.AddMonths(-1) > Me.startDate Then
+                    .actualDataUntil = Me.timestamp.AddMonths(-1)
+                End If
+
+            Else
+                If IsNothing(Me.actualDataUntil) Then
+                    .actualDataUntil = Date.MinValue
+                Else
+                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
+                End If
+            End If
+
             If IsNothing(Me.variantDescription) Then
                 .variantDescription = ""
             Else
@@ -209,6 +247,8 @@ Public Class clsProjektWeb
             .complexity = Me.complexity
             .description = Me.description
             .businessUnit = Me.businessUnit
+
+
 
             ' Änderung notwendig, weil mal in der Datenbank Schrift mit -10 stand
             If .Schrift < 0 Then
