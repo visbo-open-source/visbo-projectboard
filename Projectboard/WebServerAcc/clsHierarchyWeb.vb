@@ -1,7 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Public Class clsHierarchyWeb
 
-    Public allNodes As List(Of clsHryAllnodesWeb)
+    Public allNodes As List(Of clsHryNodeWeb)
 
     ''' <summary>
     ''' kopiert aus einem HSP-Element in ein Web-Element
@@ -10,7 +10,7 @@ Public Class clsHierarchyWeb
     ''' <remarks></remarks>
     Sub copyFrom(ByVal hry As clsHierarchy)
 
-        Dim hryNodeWeb As clsHryAllnodesWeb
+        Dim hryNodeWeb As clsHryNodeWeb
 
         Dim hryNode As clsHierarchyNode
         Dim elemID As String
@@ -18,7 +18,7 @@ Public Class clsHierarchyWeb
 
         For i = 1 To hry.count
 
-            hryNodeWeb = New clsHryAllnodesWeb
+            hryNodeWeb = New clsHryNodeWeb
 
             elemID = hry.getIDAtIndex(i)
             If elemID = rootPhaseName Then
@@ -51,7 +51,7 @@ Public Class clsHierarchyWeb
         Dim hryNodeDB As clsHierarchyNodeDB
 
         'For i = 1 To Me.allNodes.Count
-        For Each node As clsHryAllnodesWeb In Me.allNodes
+        For Each node As clsHryNodeWeb In Me.allNodes
 
             hryNode = New clsHierarchyNode
 
@@ -74,6 +74,6 @@ Public Class clsHierarchyWeb
     End Sub
     Sub New()
         'allNodes = New Dictionary(Of String, clsHierarchyNodeDB)
-        allNodes = New List(Of clsHryAllnodesWeb)
+        allNodes = New List(Of clsHryNodeWeb)
     End Sub
 End Class

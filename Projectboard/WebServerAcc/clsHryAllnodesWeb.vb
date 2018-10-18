@@ -1,5 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
-Public Class clsHryAllnodesWeb
+Public Class clsHryNodeWeb
     Public Property hryNodeKey As String
     Public Property hryNode As clsHierarchyNodeDB
     Public Sub New()
