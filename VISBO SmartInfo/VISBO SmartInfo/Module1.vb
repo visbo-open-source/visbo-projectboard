@@ -514,11 +514,39 @@ Module Module1
             languages = xml_deserialize(langXMLstring)
 
         End If
+
         ' Anlegen einer leeren changeliste für jede Slide in der activePresentation
         For Each slide As PowerPoint.Slide In pptAPP.ActivePresentation.Slides
             Dim chgelst As New clsChangeListe
             chgeLstListe.Add(slide.SlideID, chgelst)
         Next
+
+        ' tk 17.10.18 jetzt muss geprüft werden, ob eine der Slides smart-Infos enthält, wenigstens eine Slide nicht frozen ist und das aktuelle Datum der Slide vor dem heutigen Tag liegt 
+        Dim atleastOne As Boolean = False
+        Dim anzSlides As Integer = Pres.Slides.Count
+        Dim ix As Integer = 1
+
+        Do While ix <= anzSlides And Not atleastOne
+
+            atleastOne = isSlideWithNeedToBeUpdated(Pres.Slides.Item(ix))
+            ix = ix + 1
+
+        Loop
+
+        ' wenn evtl wenigstens eine Slide ge-updated werden muss
+        ' die muss genau dann aktualisiert werden, wenn sie smart-Elements enthält, nicht bereits heute aktualisiert wurde und nicht frozen ist
+        If atleastOne Then
+            Dim msgtxt As String = "VISBO smart slides found!" & vbLf & vbLf & "Do you want to update?"
+
+            If MsgBox(msgtxt, MsgBoxStyle.OkCancel, "Update?") = MsgBoxResult.Ok Then
+                ' jetzt soll das gleiche passieren wie beim Drücken auf den Update Button ..
+                Call btnUpdateAction(ptNavigationButtons.update)
+            End If
+
+
+
+
+        End If
 
 
     End Sub
@@ -4556,6 +4584,32 @@ Module Module1
     End Function
 
     ''' <summary>
+    ''' prüft, ob eine Slide geupdated werden sollte. 
+    ''' ja, wenn gilt:  Slide enthält VISBO smart Elements And Not Frozen and LastUpdateDate ist ungleich  Heute 
+    ''' </summary>
+    ''' <param name="curSlide"></param>
+    ''' <returns></returns>
+    Public Function isSlideWithNeedToBeUpdated(ByVal curSlide As PowerPoint.Slide) As Boolean
+        Dim tmpResult As Boolean = False
+
+        With curSlide
+            If .Tags.Item("SMART").Length > 0 Then
+                If .Tags.Item("FROZEN").Length = 0 Then
+                    If .Tags.Item("CRD").Length > 0 Then
+                        Dim slideDate As Date = CDate(.Tags.Item("CRD"))
+                        If DateDiff(DateInterval.Day, slideDate, Date.Now) <> 0 Then
+                            tmpResult = True
+                        End If
+                    End If
+                End If
+
+            End If
+
+        End With
+
+    End Function
+
+    ''' <summary>
     ''' prüft, ob ein Shape ein Text oder Datums-Annotation-Shape ist 
     ''' </summary>
     ''' <param name="curShape"></param>
@@ -6428,6 +6482,46 @@ Module Module1
 
 
     End Sub
+
+    ''' <summary>
+    ''' führt die Time-Machine Action aus, übergeben wird lediglich die Kennzeichnung um welchen Time-Machine Button es sich handelt 
+    ''' wird aufgerufen direkt aus den Buttons des Ribbon1
+    ''' </summary>
+    ''' <param name="ptNavType"></param>
+    Public Sub btnUpdateAction(ByVal ptNavType As Integer)
+
+        Try
+
+            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            Dim formerSlide As PowerPoint.Slide = currentSlide
+
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) _
+                        And (sld.Tags.Item("SMART") = "visbo") Then
+                        Call pptAPP_UpdateOneSlide(sld)
+                        Call visboUpdate(ptNavType, , False)
+                    End If
+                End If
+            Next
+
+            currentSlide = formerSlide
+            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            ' tk 22.8.18
+            Call pptAPP_UpdateOneSlide(currentSlide)
+            'Call buildSmartSlideLists()
+
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
 
     ''' <summary>
     ''' führt die Button Action der Time-Machine aus 
