@@ -72,6 +72,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="clsCache.vb" />
+    <Compile Include="clsHierarchyWeb.vb" />
+    <Compile Include="clsHryAllnodesWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
     <Compile Include="clsVarTs.vb" />

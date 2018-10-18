@@ -43,6 +43,11 @@ Public Class frmAuthentication
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
                 'Dim ok As Boolean = Request.createIndicesOnce()
 
+                If IsNothing(databaseAcc) Then
+                    Dim hrequest As New DBAccLayer.Request
+                    databaseAcc = hrequest
+                End If
+
                 Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
 
                 If Not ok Then
@@ -113,8 +118,11 @@ Public Class frmAuthentication
         Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
             'Dim ok As Boolean = Request.createIndicesOnce()
-            Dim hrequest As New DBAccLayer.Request
-            databaseAcc = hrequest
+
+            If IsNothing(databaseAcc) Then
+                Dim hrequest As New DBAccLayer.Request
+                databaseAcc = hrequest
+            End If
 
             Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
 
