@@ -54,7 +54,7 @@ Public Class clsProjektWeb
     Public VorlagenName As String
     Public Dauer As Integer
     Public AllPhases As List(Of clsPhaseDB)
-    Public hierarchy As clsHierarchyDB
+    Public hierarchy As clsHierarchyWeb
     Public Id As String
 
     ' ergänzt am 16.11.13
@@ -273,6 +273,7 @@ Public Class clsProjektWeb
             Me.hierarchy.copyTo(projekt.hierarchy)
 
             '.Dauer = Me.Dauer
+
             For i = 1 To Me.AllPhases.Count
                 Dim newPhase As New clsPhase(projekt)
                 AllPhases.Item(i - 1).copyto(newPhase, i)
@@ -311,7 +312,7 @@ Public Class clsProjektWeb
     Public Sub New()
 
         AllPhases = New List(Of clsPhaseDB)
-        hierarchy = New clsHierarchyDB
+        hierarchy = New clsHierarchyWeb
 
         customDblFields = New SortedList(Of String, Double)
         customStringFields = New SortedList(Of String, String)
