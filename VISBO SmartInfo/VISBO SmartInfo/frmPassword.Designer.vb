@@ -22,6 +22,7 @@ Partial Class frmPassword
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmPassword))
         Me.Label1 = New System.Windows.Forms.Label()
         Me.pwdText = New System.Windows.Forms.TextBox()
         Me.btnOK = New System.Windows.Forms.Button()
@@ -57,10 +58,12 @@ Partial Class frmPassword
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.ClientSize = New System.Drawing.Size(261, 105)
         Me.Controls.Add(Me.btnOK)
         Me.Controls.Add(Me.pwdText)
         Me.Controls.Add(Me.Label1)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmPassword"
         Me.Text = "Passwort eingeben"
         Me.ResumeLayout(False)

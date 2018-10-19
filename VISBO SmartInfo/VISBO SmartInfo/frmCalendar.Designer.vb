@@ -35,10 +35,10 @@ Partial Class frmCalendar
         Me.Panel1.Controls.Add(Me.OKButton)
         Me.Panel1.Controls.Add(Me.DateTimePicker2)
         Me.Panel1.Controls.Add(Me.DateTimePicker1)
-        Me.Panel1.Location = New System.Drawing.Point(12, 12)
-        Me.Panel1.Margin = New System.Windows.Forms.Padding(3, 2, 3, 2)
+        Me.Panel1.Location = New System.Drawing.Point(9, 10)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(349, 94)
+        Me.Panel1.Size = New System.Drawing.Size(262, 76)
         Me.Panel1.TabIndex = 4
         '
         'OKButton
@@ -46,10 +46,10 @@ Partial Class frmCalendar
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.OKButton.AutoSize = True
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.OKButton.Location = New System.Drawing.Point(139, 47)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(3, 2, 3, 2)
+        Me.OKButton.Location = New System.Drawing.Point(104, 38)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(75, 33)
+        Me.OKButton.Size = New System.Drawing.Size(56, 27)
         Me.OKButton.TabIndex = 5
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -61,12 +61,12 @@ Partial Class frmCalendar
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DateTimePicker2.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.DateTimePicker2.Format = System.Windows.Forms.DateTimePickerFormat.Time
-        Me.DateTimePicker2.Location = New System.Drawing.Point(259, 0)
-        Me.DateTimePicker2.Margin = New System.Windows.Forms.Padding(3, 2, 3, 2)
+        Me.DateTimePicker2.Location = New System.Drawing.Point(194, 0)
+        Me.DateTimePicker2.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.DateTimePicker2.Name = "DateTimePicker2"
         Me.DateTimePicker2.RightToLeft = System.Windows.Forms.RightToLeft.Yes
         Me.DateTimePicker2.ShowUpDown = True
-        Me.DateTimePicker2.Size = New System.Drawing.Size(87, 22)
+        Me.DateTimePicker2.Size = New System.Drawing.Size(66, 20)
         Me.DateTimePicker2.TabIndex = 4
         Me.DateTimePicker2.Value = New Date(2018, 10, 3, 23, 59, 0, 0)
         '
@@ -75,19 +75,20 @@ Partial Class frmCalendar
         Me.DateTimePicker1.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.DateTimePicker1.Dock = System.Windows.Forms.DockStyle.Left
         Me.DateTimePicker1.Location = New System.Drawing.Point(0, 0)
-        Me.DateTimePicker1.Margin = New System.Windows.Forms.Padding(3, 2, 3, 2)
+        Me.DateTimePicker1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.DateTimePicker1.Name = "DateTimePicker1"
-        Me.DateTimePicker1.Size = New System.Drawing.Size(253, 22)
+        Me.DateTimePicker1.Size = New System.Drawing.Size(191, 20)
         Me.DateTimePicker1.TabIndex = 3
         '
         'frmCalendar
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(371, 117)
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.ClientSize = New System.Drawing.Size(278, 95)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(3, 2, 3, 2)
+        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Name = "frmCalendar"
         Me.Text = "Choose date"
         Me.Panel1.ResumeLayout(False)

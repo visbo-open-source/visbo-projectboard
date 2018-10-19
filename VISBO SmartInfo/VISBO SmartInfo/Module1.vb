@@ -135,6 +135,13 @@ Module Module1
         width = 2
         height = 3
     End Enum
+    ' wird verwendet um in SlideSelectionChange wieder zu bestimmen, ob es eine TodayLine und ein Version-Field gibt
+    Public Enum ptImportantShapes
+        todayline = 0
+        version = 1
+    End Enum
+
+    Public importantShapes() As PowerPoint.Shape
 
     Friend languages As New clsLanguages
 
@@ -503,7 +510,6 @@ Module Module1
         ' ein ggf. vorhandener Schutz  muss wieder aktiviert werden ... 
         protectionSolved = False
 
-
         ' gibt es eine Sprachen-Tabelle ? 
         Dim langGUID As String = pptAPP.ActivePresentation.Tags.Item("langGUID")
         If langGUID.Length > 0 Then
@@ -533,17 +539,44 @@ Module Module1
 
         Loop
 
+
+
         ' wenn evtl wenigstens eine Slide ge-updated werden muss
         ' die muss genau dann aktualisiert werden, wenn sie smart-Elements enthält, nicht bereits heute aktualisiert wurde und nicht frozen ist
         If atleastOne Then
-            Dim msgtxt As String = "VISBO smart slides found!" & vbLf & vbLf & "Do you want to update?"
 
-            If MsgBox(msgtxt, MsgBoxStyle.OkCancel, "Update?") = MsgBoxResult.Ok Then
-                ' jetzt soll das gleiche passieren wie beim Drücken auf den Update Button ..
-                Call btnUpdateAction(ptNavigationButtons.update)
+            currentSlide = Pres.Slides.Item(ix - 1)
+            Try
+                currentSlide.Select()
+            Catch ex As Exception
+
+            End Try
+
+            Dim lastDate As Date = Date.MinValue
+            Try
+                lastDate = CDate(currentSlide.Tags.Item("CRD"))
+            Catch ex As Exception
+
+            End Try
+
+            Dim msgtxt As String = "VISBO smart slides found!" & vbLf & "Do you want to update?"
+
+            If lastDate <> Date.MinValue Then
+                msgtxt = "there might be a newer Version" & vbLf & "than " & lastDate.ToShortDateString & "." & vbLf & vbLf & "Do you want to update?"
+            Else
+                msgtxt = "there might be a newer Version." & vbLf & vbLf & "Do you want to update?"
             End If
 
+            Dim updateFrm As New frmUpdateInfo
+            With updateFrm
+                .updateMsg.Text = msgtxt
+                Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
 
+                If diagResult = Windows.Forms.DialogResult.OK Then
+                    Dim tmpDate As Date = Date.MinValue
+                    Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+                End If
+            End With
 
 
         End If
@@ -638,7 +671,7 @@ Module Module1
         ' die aktuelle Slide setzen 
         If SldRange.Count = 1 Then
 
-            Dim afterSlide As Integer = SldRange.SlideID ' aktuell selektierte SlideID
+            Dim afterSlide As Integer = SldRange.Item(1).SlideID ' aktuell selektierte SlideID
             Dim beforeSlide As Integer = 0               ' zuvor selektierte SlideID
 
             If Not IsNothing(currentSlide) Then
@@ -649,7 +682,6 @@ Module Module1
                 End Try
 
             End If
-
 
 
             Call pptAPP_UpdateOneSlide(SldRange.Item(1))
@@ -859,6 +891,21 @@ Module Module1
 
         Dim aktSlideId As Integer = currentSlide.SlideID
 
+        '
+        ' Definition der importantShapes und der entsprechenden Enumertaion in Module 1 
+        ReDim importantShapes(1)
+        '
+        ' zurücksetzen der importantShapes 
+        importantShapes(ptImportantShapes.todayline) = Nothing
+        importantShapes(ptImportantShapes.version) = Nothing
+
+        ' jetzt todayLine suchen ...
+        Try
+            importantShapes(ptImportantShapes.todayline) = currentSlide.Shapes.Item("todayLine")
+        Catch ex As Exception
+            importantShapes(ptImportantShapes.todayline) = Nothing
+        End Try
+
 
         With currentSlide
             If .Tags.Item("CRD").Length > 0 Then
@@ -905,7 +952,14 @@ Module Module1
             Try
                 Dim tmpShape As PowerPoint.Shape = currentSlide.Shapes.Item(tmpShpName)
                 If Not IsNothing(tmpShape) Then
+
+
                     If tmpShape.Tags.Item("BID").Length > 0 And tmpShape.Tags.Item("DID").Length > 0 Then
+
+                        ' handelt es sich um das Version Field Shape? 
+                        If tmpShape.Tags.Item("BID") = ptReportBigTypes.components And (tmpShape.Tags.Item("DID") = ptReportComponents.prStand Or tmpShape.Tags.Item("DID") = ptReportComponents.pfStand) Then
+                            importantShapes(ptImportantShapes.version) = tmpShape
+                        End If
 
                         'Dim bigID As Integer = CInt(tmpShape.Tags.Item("BID"))
                         'Dim detailID As Integer = CInt(tmpShape.Tags.Item("DID"))
@@ -2890,6 +2944,20 @@ Module Module1
     Friend Sub showTSMessage(ByVal currentTimestamp As Date)
 
         Dim tsMsgBox As PowerPoint.Shape
+        Dim left As Single = 75, top As Single = 7, width As Single = 70, height As Single = 20
+
+        ' handelt es sich um 23:59 Uhr , dann soll nämlich ohne Time gezeigt werden ... 
+        Dim showTimeAndDate = (DateDiff(DateInterval.Minute, currentTimestamp.Date.AddHours(23).AddMinutes(59), currentTimestamp) <> 0)
+
+        ' ' gibt es eine todayLine? 
+        Dim todayLineShape As PowerPoint.Shape = Nothing
+        Try
+            todayLineShape = importantShapes(ptImportantShapes.todayline)
+        Catch ex As Exception
+            todayLineShape = Nothing
+        End Try
+
+        Dim tsMsgDidAlreadyExist As Boolean = False
 
         Try
             tsMsgBox = currentSlide.Shapes.Item("TimeStampInfo")
@@ -2897,14 +2965,20 @@ Module Module1
             tsMsgBox = Nothing
         End Try
 
-        If IsNothing(tsMsgBox) Then
+        If IsNothing(tsMsgBox) And (Not IsNothing(importantShapes(ptImportantShapes.todayline)) Or IsNothing(importantShapes(ptImportantShapes.version))) Then
             ' erstellen ...
             'tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
             '                          200, 5, 70, 20)
             tsMsgBox = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
                                       75, 5, 70, 20)
             With tsMsgBox
-                .TextFrame2.TextRange.Text = currentTimestamp.ToString
+
+                If showTimeAndDate Then
+                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                Else
+                    .TextFrame2.TextRange.Text = currentTimestamp.Date.ToShortDateString
+                End If
+
                 .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse + 6)
                 .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = trafficLightColors(3)
                 .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
@@ -2915,19 +2989,58 @@ Module Module1
                 .TextFrame2.MarginTop = 0
                 .Name = "TimeStampInfo"
                 .TextFrame2.WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-            End With
-        Else
-            With tsMsgBox
-                If englishLanguage Then
-                    ' auch Zeit anzeigen, da nicht 23:59
-                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
-                Else
-                    ' auch Zeit anzeigen, da nicht 23:59
-                    .TextFrame2.TextRange.Text = currentTimestamp.ToString
-                End If
+                .Fill.ForeColor.RGB = RGB(255, 255, 255)
 
             End With
+        Else
+            If IsNothing(tsMsgBox) Then
+                ' nichts tun ...
+            Else
+                tsMsgDidAlreadyExist = True
+                With tsMsgBox
+                    If englishLanguage Then
+                        If showTimeAndDate Then
+                            .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                        Else
+                            .TextFrame2.TextRange.Text = currentTimestamp.Date.ToShortDateString
+                        End If
+
+
+                    Else
+                        If showTimeAndDate Then
+                            .TextFrame2.TextRange.Text = currentTimestamp.ToString
+                        Else
+                            .TextFrame2.TextRange.Text = currentTimestamp.Date.ToShortDateString
+                        End If
+                    End If
+
+
+                End With
+            End If
+
         End If
+
+        ' jetzt muss positioniert werden
+        If Not IsNothing(todayLineShape) Then
+
+            ' am unteren Ende der todayLineShape zentriert positionieren 
+            If Not IsNothing(tsMsgBox) Then
+                With tsMsgBox
+                    ' die Farbe angleichen
+
+                    If Not tsMsgDidAlreadyExist Then
+                        .Top = todayLineShape.Top + todayLineShape.Height
+                        .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = todayLineShape.Line.ForeColor.RGB
+                    Else
+                        ' andernfalls bleibt das auf der Höhe wo der User es hingeschoben  hat 
+                    End If
+
+                    .Left = todayLineShape.Left - 0.5 * tsMsgBox.Width
+                End With
+            End If
+
+        End If
+
     End Sub
 
 
@@ -4607,6 +4720,8 @@ Module Module1
 
         End With
 
+        isSlideWithNeedToBeUpdated = tmpResult
+
     End Function
 
     ''' <summary>
@@ -6172,7 +6287,7 @@ Module Module1
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function getNextNavigationDate(ByVal kennung As Integer,
-                                          Optional ByVal specDate As Date = Nothing,
+                                          ByVal specDate As Date,
                                           Optional ByVal justForInformation As Boolean = False
                                           ) As Date
 
@@ -6199,15 +6314,8 @@ Module Module1
                         tmpDate = Date.Now
                     End If
 
-                    'If smartSlideLists.countProjects = 1 Then
-                    '    tmpDate = varPPTTM.timeStamps.ElementAt(tmpIndex).Key
-                    'Else
-                    '    If currentTimestamp.AddMonths(1) < varPPTTM.timeStamps.Last.Key Then
-                    '        tmpDate = currentTimestamp.AddMonths(1)
-                    '    Else
-                    '        tmpDate = varPPTTM.timeStamps.Last.Key
-                    '    End If
-                    'End If
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+
                 End If
 
             Case ptNavigationButtons.vorher
@@ -6225,15 +6333,9 @@ Module Module1
                         tmpDate = varPPTTM.timeStamps.First.Key
                     End If
 
-                    'If smartSlideLists.countProjects = 1 Then
-                    '    tmpDate = varPPTTM.timeStamps.ElementAt(tmpIndex).Key
-                    'Else
-                    '    If currentTimestamp.AddMonths(-1) > varPPTTM.timeStamps.First.Key Then
-                    '        tmpDate = currentTimestamp.AddMonths(-1)
-                    '    Else
-                    '        tmpDate = varPPTTM.timeStamps.First.Key
-                    '    End If
-                    'End If
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+
+
                 End If
 
 
@@ -6242,6 +6344,8 @@ Module Module1
                 If varPPTTM.timeStamps.Count > 0 Then
                     tmpIndex = 0
                     tmpDate = varPPTTM.timeStamps.First.Key
+
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                 End If
 
             Case ptNavigationButtons.letzter
@@ -6250,6 +6354,7 @@ Module Module1
                     tmpIndex = varPPTTM.timeStamps.Count - 1
                     tmpDate = varPPTTM.timeStamps.Last.Key
 
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                 End If
 
             Case ptNavigationButtons.update
@@ -6257,6 +6362,8 @@ Module Module1
                 If varPPTTM.timeStamps.Count > 0 Then
                     tmpIndex = varPPTTM.timeStamps.Count - 1
                     tmpDate = Date.Now
+
+                    tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                 End If
 
             Case ptNavigationButtons.individual
@@ -6278,6 +6385,7 @@ Module Module1
                             tmpIndex = 0
                             tmpDate = varPPTTM.timeStamps.First.Key
                         End If
+                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                     End If
 
                 End If
@@ -6295,11 +6403,8 @@ Module Module1
                         tmpDate = smartSlideLists.prevDate
                     Else
                         tmpDate = varPPTTM.timeStamps.First.Key
-                        'If englishLanguage Then
-                        '    Call MsgBox("Previous TimeStamp does not exist")
-                        'Else
-                        '    Call MsgBox("Vorheriger TimeStamp existiert nicht")
-                        'End If
+                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+
 
                     End If
 
@@ -6488,7 +6593,7 @@ Module Module1
     ''' wird aufgerufen direkt aus den Buttons des Ribbon1
     ''' </summary>
     ''' <param name="ptNavType"></param>
-    Public Sub btnUpdateAction(ByVal ptNavType As Integer)
+    Public Sub btnUpdateAction(ByVal ptNavType As Integer, ByVal specDate As Date)
 
         Try
 
@@ -6501,7 +6606,7 @@ Module Module1
                     If Not (sld.Tags.Item("FROZEN").Length > 0) _
                         And (sld.Tags.Item("SMART") = "visbo") Then
                         Call pptAPP_UpdateOneSlide(sld)
-                        Call visboUpdate(ptNavType, , False)
+                        Call visboUpdate(ptNavType, specDate, False)
                     End If
                 End If
             Next
@@ -6550,15 +6655,7 @@ Module Module1
             Call setPreviousTimestampInSlide(previousTimeStamp)
 
             Call showTSMessage(currentTimestamp)
-
-
-            ''    das Formular ggf, also wenn aktiv, updaten 
-            '    If IsNothing(changeFrm) Then
-            '        Nichts tun, user soll ja explizit aufschalten ..
-            '    Else
-            '        changeFrm.neuAufbau()
-            '    End If
-
+            
             Try
                 If Not IsNothing(selectedPlanShapes) Then
 
@@ -6743,8 +6840,8 @@ Module Module1
     ''' führt den Code gehe-zum-letzten bzw Visbo-Update aus 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub visboUpdate(Optional ByVal updateModus As Integer = ptNavigationButtons.letzter,
-                           Optional ByRef specDate As Date = Nothing,
+    Public Sub visboUpdate(ByVal updateModus As Integer,
+                           ByRef specDate As Date,
                            Optional ByVal showMessage As Boolean = True)
 
         Dim newDate As Date

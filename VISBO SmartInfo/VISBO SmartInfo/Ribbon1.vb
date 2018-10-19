@@ -217,8 +217,8 @@ Public Class Ribbon1
 
         Try
 
-
-            Call btnUpdateAction(ptNavigationButtons.nachher)
+            Dim tmpDate As Date = Date.MinValue
+            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -280,8 +280,8 @@ Public Class Ribbon1
     Private Sub btnFastForward_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastForward.Click
 
         Try
-
-            Call btnUpdateAction(ptNavigationButtons.nachher)
+            Dim tmpDate As Date = Date.MinValue
+            Call btnUpdateAction(ptNavigationButtons.nachher, tmpDate)
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -325,8 +325,8 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
         Try
-
-            Call btnUpdateAction(ptNavigationButtons.vorher)
+            Dim tmpDate As Date = Date.MinValue
+            Call btnUpdateAction(ptNavigationButtons.vorher, tmpDate)
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -366,8 +366,8 @@ Public Class Ribbon1
     ''' <remarks></remarks>
     Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
         Try
-
-            Call btnUpdateAction(ptNavigationButtons.erster)
+            Dim tmpDate As Date = Date.MinValue
+            Call btnUpdateAction(ptNavigationButtons.erster, tmpDate)
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -401,8 +401,8 @@ Public Class Ribbon1
     End Sub
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
         Try
-
-            Call btnUpdateAction(ptNavigationButtons.update)
+            Dim tmpDate As Date = Date.MinValue
+            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
 
             ' durch obigen Aufruf ersetzt ... 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -529,46 +529,48 @@ Public Class Ribbon1
 
             If userResult = Windows.Forms.DialogResult.OK Then
                 Dim specDate As Date = calendarFrm.DateTimePicker1.Value
+                Call btnUpdateAction(ptNavigationButtons.individual, specDate)
 
-                Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
-                Dim formerSlide As PowerPoint.Slide = currentSlide
+                ' tk 18.10.18 ersetzt durch obigen Aufruf ... 
+                'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+                'Dim formerSlide As PowerPoint.Slide = currentSlide
 
-                For i As Integer = 1 To pres.Slides.Count
-                    Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
-                    If Not IsNothing(sld) Then
-                        If Not (sld.Tags.Item("FROZEN").Length > 0) _
-                            And (sld.Tags.Item("SMART") = "visbo") Then
-                            Call pptAPP_UpdateOneSlide(sld)
-                            Call visboUpdate(ptNavigationButtons.individual, specDate, False)
-                        End If
-                    End If
-                Next
-                If specDate > Date.Now Then
-                    If englishLanguage Then
-                        Call MsgBox("Last Version in Database: (" & varPPTTM.timeStamps.Last.Key.ToLongDateString & " " & varPPTTM.timeStamps.Last.Key.TimeOfDay.ToString & ")")
-                    Else
-                        Call MsgBox("aktuellster Stand in der Datenbank:  (" & varPPTTM.timeStamps.Last.Key.ToLongDateString & " " & varPPTTM.timeStamps.Last.Key.TimeOfDay.ToString & ")")
-                    End If
-                End If
-                If specDate < varPPTTM.timeStamps.First.Key Then
-                    If englishLanguage Then
-                        Call MsgBox("First Version in Database: (" & varPPTTM.timeStamps.First.Key.ToLongDateString & " " & varPPTTM.timeStamps.First.Key.TimeOfDay.ToString & ")")
-                    Else
-                        Call MsgBox("erster Stand in der Datenbank:  (" & varPPTTM.timeStamps.First.Key.ToLongDateString & " " & varPPTTM.timeStamps.First.Key.TimeOfDay.ToString & ")")
-                    End If
-                End If
+                'For i As Integer = 1 To pres.Slides.Count
+                '    Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                '    If Not IsNothing(sld) Then
+                '        If Not (sld.Tags.Item("FROZEN").Length > 0) _
+                '            And (sld.Tags.Item("SMART") = "visbo") Then
+                '            Call pptAPP_UpdateOneSlide(sld)
+                '            Call visboUpdate(ptNavigationButtons.individual, specDate, False)
+                '        End If
+                '    End If
+                'Next
+                'If specDate > Date.Now Then
+                '    If englishLanguage Then
+                '        Call MsgBox("Last Version in Database: (" & varPPTTM.timeStamps.Last.Key.ToLongDateString & " " & varPPTTM.timeStamps.Last.Key.TimeOfDay.ToString & ")")
+                '    Else
+                '        Call MsgBox("aktuellster Stand in der Datenbank:  (" & varPPTTM.timeStamps.Last.Key.ToLongDateString & " " & varPPTTM.timeStamps.Last.Key.TimeOfDay.ToString & ")")
+                '    End If
+                'End If
+                'If specDate < varPPTTM.timeStamps.First.Key Then
+                '    If englishLanguage Then
+                '        Call MsgBox("First Version in Database: (" & varPPTTM.timeStamps.First.Key.ToLongDateString & " " & varPPTTM.timeStamps.First.Key.TimeOfDay.ToString & ")")
+                '    Else
+                '        Call MsgBox("erster Stand in der Datenbank:  (" & varPPTTM.timeStamps.First.Key.ToLongDateString & " " & varPPTTM.timeStamps.First.Key.TimeOfDay.ToString & ")")
+                '    End If
+                'End If
 
 
-                currentSlide = formerSlide
-                ' smartSlideLists für die aktuelle currentslide wieder aufbauen
-                ' tk 22.8.18
-                Call pptAPP_UpdateOneSlide(currentSlide)
-                'Call buildSmartSlideLists()
+                'currentSlide = formerSlide
+                '' smartSlideLists für die aktuelle currentslide wieder aufbauen
+                '' tk 22.8.18
+                'Call pptAPP_UpdateOneSlide(currentSlide)
+                ''Call buildSmartSlideLists()
 
-                ' das Formular ggf, also wenn aktiv,  updaten 
-                If Not IsNothing(changeFrm) Then
-                    changeFrm.neuAufbau()
-                End If
+                '' das Formular ggf, also wenn aktiv,  updaten 
+                'If Not IsNothing(changeFrm) Then
+                '    changeFrm.neuAufbau()
+                'End If
 
             End If
 
@@ -581,32 +583,35 @@ Public Class Ribbon1
     Private Sub btnToggle_Click(sender As Object, e As RibbonControlEventArgs) Handles btnToggle.Click
         Try
 
-            Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
-            Dim formerSlide As PowerPoint.Slide = currentSlide
+
+            Dim tmpDate As Date = Date.MinValue
+            Call btnUpdateAction(ptNavigationButtons.previous, tmpDate)
+
+            ' tk , jetzt durch obigen Aufruf ersetzt 
+            'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
+            'Dim formerSlide As PowerPoint.Slide = currentSlide
+            'For i As Integer = 1 To pres.Slides.Count
+            '    Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+            '    If Not IsNothing(sld) Then
+            '        If Not (sld.Tags.Item("FROZEN").Length > 0) _
+            '            And (sld.Tags.Item("SMART") = "visbo") Then
+            '            Call pptAPP_UpdateOneSlide(sld)
+            '            Call visboUpdate(ptNavigationButtons.previous, tmpDate, False)
+            '        End If
+            '    End If
+            'Next
 
 
-            For i As Integer = 1 To pres.Slides.Count
-                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
-                If Not IsNothing(sld) Then
-                    If Not (sld.Tags.Item("FROZEN").Length > 0) _
-                        And (sld.Tags.Item("SMART") = "visbo") Then
-                        Call pptAPP_UpdateOneSlide(sld)
-                        Call visboUpdate(ptNavigationButtons.previous, Nothing, False)
-                    End If
-                End If
-            Next
+            'currentSlide = formerSlide
+            '' smartSlideLists für die aktuelle currentslide wieder aufbauen
+            '' tk 22.8.18
+            'Call pptAPP_UpdateOneSlide(currentSlide)
+            ''Call buildSmartSlideLists()
 
-
-            currentSlide = formerSlide
-            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
-            ' tk 22.8.18
-            Call pptAPP_UpdateOneSlide(currentSlide)
-            'Call buildSmartSlideLists()
-
-            ' das Formular ggf, also wenn aktiv,  updaten 
-            If Not IsNothing(changeFrm) Then
-                changeFrm.neuAufbau()
-            End If
+            '' das Formular ggf, also wenn aktiv,  updaten 
+            'If Not IsNothing(changeFrm) Then
+            '    changeFrm.neuAufbau()
+            'End If
 
         Catch ex As Exception
 
