@@ -6372,7 +6372,7 @@ Public Module testModule
                 End Try
 
             Catch ex As Exception
-                Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & ex.Message)
                 'Call MsgBox(" Fehler beim Speichern in die Datenbank")
             End Try
         Else

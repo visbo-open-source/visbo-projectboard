@@ -1,15 +1,14 @@
-﻿''' <summary>
-''' Vorsicht !!! 
-''' bei allen Änderungen in clsProjektDB und in clsPhaseDB, da für den ReST-Server-Zugriff separate Klassen existieren, die aber fast gleich sind.
-''' 
-''' Klassen-Definition für eine Phase bzw Sammel-Task in MongoDB
+﻿Imports ProjectBoardDefinitions
+''' <summary>
+''' Klassen-Definition für eine Phase bzw Sammel-Task für ReST-Server und MongoDB
 ''' </summary>
 ''' <remarks></remarks>
-Public Class clsPhaseDB
+Public Class clsPhaseWeb
     Public AllRoles As List(Of clsRolleDB)
     Public AllCosts As List(Of clsKostenartDB)
     Public AllResults As List(Of clsResultDB)
-    Public AllBewertungen As SortedList(Of String, clsBewertungDB)
+    ' ur: 19.10.2018:  geändert gegenüber clsPhaseDB
+    Public AllBewertungen As List(Of clsBewertungWeb)
 
     Public percentDone As Double
     Public responsible As String
@@ -121,12 +120,15 @@ Public Class clsPhaseDB
             Next
 
 
-            ' jetzt evtl vorhandene Bewertungen abspeichern ... 
+            ' jetzt evtl vorhandene Bewertungen (bereits sortiert in bewertungsliste) abspeichern ... 
             Try
-                For i = 1 To .bewertungsCount
-                    Dim newb As New clsBewertungDB
-                    newb.Copyfrom(.getBewertung(i))
-                    Me.addBewertung(newb)
+                For Each kvp As KeyValuePair(Of String, clsBewertung) In .bewertungsListe
+
+                    Dim bWeb As New clsBewertungWeb
+                    bWeb.bewertung.Copyfrom(.getBewertung(i))
+                    bWeb.key = kvp.Key
+                    Me.AllBewertungen.Add(bWeb)
+
                 Next
             Catch ex As Exception
 
@@ -145,6 +147,7 @@ Public Class clsPhaseDB
         Dim dauer As Integer, startoffset As Integer
 
         With phase
+
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
             '.minDauer = Me.minDauer
@@ -277,48 +280,50 @@ Public Class clsPhaseDB
 
             ' evtl vorhandene Bewertungen kopieren .... 
             For b As Integer = 1 To Me.AllBewertungen.Count
+
                 Dim newb As New clsBewertung
-                Me.AllBewertungen.ElementAt(b - 1).Value.CopyTo(newb)
+                Dim hBew As clsBewertungDB = Me.AllBewertungen.ElementAt(b - 1).bewertung
+                Dim hBewkey As String = Me.AllBewertungen.ElementAt(b - 1).key
+                hBew.CopyTo(newb)
 
                 Try
                     .addBewertung(newb)
+                    '.bewertungsListe.Add(hBewkey, newb)
                 Catch ex As Exception
 
                 End Try
 
             Next
 
-
-
-
         End With
 
     End Sub
+    '' ur:19.10.2018: nicht mehr erforderlich, da keine sortedList mehr
+    ''Friend Sub addBewertung(ByVal bWeb As clsBewertungWeb)
+    ''    Dim key As String
+    ''    Dim b As clsBewertungDB = bWeb.bewertung
 
-    Friend Sub addBewertung(ByVal b As clsBewertungDB)
-        Dim key As String
+    ''    If Not IsNothing(b.bewerterName) Then
+    ''        key = b.bewerterName.Trim & "#" & b.datum.ToString("MMM yy")
+    ''    Else
+    ''        key = "#" & b.datum.ToString("MMM yy")
+    ''    End If
 
-        If Not IsNothing(b.bewerterName) Then
-            key = b.bewerterName.Trim & "#" & b.datum.ToString("MMM yy")
-        Else
-            key = "#" & b.datum.ToString("MMM yy")
-        End If
+    ''    Try
+    ''        Me.AllBewertungen.Add(key, b)
+    ''    Catch ex As Exception
 
-        Try
-            Me.AllBewertungen.Add(key, b)
-        Catch ex As Exception
+    ''        Throw New ArgumentException("Bewertung wurde bereits vergeben ..")
 
-            Throw New ArgumentException("Bewertung wurde bereits vergeben ..")
+    ''    End Try
 
-        End Try
-
-    End Sub
+    ''End Sub
 
     Sub New()
         AllRoles = New List(Of clsRolleDB)
         AllCosts = New List(Of clsKostenartDB)
         AllResults = New List(Of clsResultDB)
-        AllBewertungen = New SortedList(Of String, clsBewertungDB)
+        AllBewertungen = New List(Of clsBewertungWeb)
 
         deliverables = New List(Of String)
 

@@ -1,4 +1,5 @@
 ﻿Public Class clsWebVPlock
+
     Inherits clsWebOutput
     Public Property lock As List(Of clsVPLock)
     Sub New()

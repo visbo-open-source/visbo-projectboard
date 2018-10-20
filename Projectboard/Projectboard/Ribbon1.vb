@@ -541,6 +541,9 @@ Imports System.ServiceModel.Web
             End If
         Catch ex As Exception
 
+            ' Mouse wieder auf Normalmodus setzen
+            appInstance.Cursor = Excel.XlMousePointer.xlDefault
+
             Call MsgBox(ex.Message)
         End Try
 

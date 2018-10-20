@@ -1,9 +1,14 @@
-﻿Imports System
-Imports System.Globalization
+﻿
 Imports ProjectBoardDefinitions
-Imports WebServerAcc
 
 
+
+''' <summary>
+''' ''' Vorsicht !!! 
+''' bei allen Änderungen in clsProjektWeb und in clsPhaseWeb, da für den MongoDB-Zugriff separate Klassen existieren, die aber fast gleich sind.
+''' 
+''' Klasse, in der alle Definitionen enthalten sind, die die clsProjektDB für den MongoDB auch enthält, nur passend für ReST-Server-Zugriff
+''' </summary>
 Public Class clsProjektWeb
 
     Inherits clsProjektWebShort
@@ -33,9 +38,9 @@ Public Class clsProjektWeb
     Public StrategicFit As Double
 
     ' Änderung tk: die CustomFields ergänzt ...
-    Public customDblFields As SortedList(Of String, Double)
-    Public customStringFields As SortedList(Of String, String)
-    Public customBoolFields As SortedList(Of String, Boolean)
+    Public customDblFields As List(Of clsStringDouble)
+    Public customStringFields As List(Of clsStringString)
+    Public customBoolFields As List(Of clsStringBoolean)
 
 
     Public leadPerson As String
@@ -53,9 +58,9 @@ Public Class clsProjektWeb
     Public Schriftfarbe As Object
     Public VorlagenName As String
     Public Dauer As Integer
-    Public AllPhases As List(Of clsPhaseDB)
+    Public AllPhases As List(Of clsPhaseWeb)
     Public hierarchy As clsHierarchyWeb
-    Public Id As String
+
 
     ' ergänzt am 16.11.13
     Public volumen As Double
@@ -87,9 +92,9 @@ Public Class clsProjektWeb
                 Me.timestamp = Date.UtcNow
             End If
             ' ur: 28.05.2018: mit Server wurde umgestellt: id wird von Mongo vergeben
-            If Not IsNothing(.Id) Then
-                Me.Id = .Id
-            End If
+            'If Not IsNothing(.Id) Then
+            '    Me.Id = .Id
+            'End If
 
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
@@ -137,27 +142,30 @@ Public Class clsProjektWeb
             ' ergänzt am 17.10.18
             Me.actualDataUntil = .actualDataUntil
             ' ergänzt am 17.10.18
-            Me.kundenNummer = .kundenNummer
+            Me.kundennummer = .kundenNummer
 
             Me.hierarchy.copyFrom(projekt.hierarchy)
 
             For i = 1 To .CountPhases
-                Dim newPhase As New clsPhaseDB
+                Dim newPhase As New clsPhaseWeb
                 newPhase.copyFrom(.getPhase(i), .farbe)
                 AllPhases.Add(newPhase)
             Next
 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
             For Each kvp As KeyValuePair(Of Integer, String) In projekt.customStringFields
-                Me.customStringFields.Add(CStr(kvp.Key), kvp.Value)
+                Dim hvar As New clsStringString(CStr(kvp.Key), kvp.Value)
+                Me.customStringFields.Add(hvar)
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Double) In projekt.customDblFields
-                Me.customDblFields.Add(CStr(kvp.Key), kvp.Value)
+                Dim hvar As New clsStringDouble(CStr(kvp.Key), kvp.Value)
+                Me.customDblFields.Add(hvar)
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Boolean) In projekt.customBoolFields
-                Me.customBoolFields.Add(CStr(kvp.Key), kvp.Value)
+                Dim hvar As New clsStringBoolean(CStr(kvp.Key), kvp.Value)
+                Me.customBoolFields.Add(hvar)
             Next
 
 
@@ -176,7 +184,6 @@ Public Class clsProjektWeb
 
         With projekt
             .timeStamp = Me.timestamp.ToLocalTime
-            .Id = Me.Id
 
             ' jetzt muss der Datenbank Name aufgesplittet werden in name und variant-Name
             If Me.variantName <> "" And Me.variantName.Trim.Length > 0 Then
@@ -288,18 +295,18 @@ Public Class clsProjektWeb
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
 
             If Not IsNothing(Me.customStringFields) Then
-                For Each kvp As KeyValuePair(Of String, String) In Me.customStringFields
-                    projekt.customStringFields.Add(CInt(kvp.Key), kvp.Value)
+                For Each hvar As clsStringString In Me.customStringFields
+                    projekt.customStringFields.Add(CInt(hvar.strkey), hvar.strvalue)
                 Next
             End If
             If Not IsNothing(Me.customDblFields) Then
-                For Each kvp As KeyValuePair(Of String, Double) In Me.customDblFields
-                    projekt.customDblFields.Add(CInt(kvp.Key), kvp.Value)
+                For Each hvar As clsStringDouble In Me.customDblFields
+                    projekt.customDblFields.Add(CInt(hvar.str), hvar.dbl)
                 Next
             End If
             If Not IsNothing(Me.customBoolFields) Then
-                For Each kvp As KeyValuePair(Of String, Boolean) In Me.customBoolFields
-                    projekt.customBoolFields.Add(CInt(kvp.Key), kvp.Value)
+                For Each hvar As clsStringBoolean In Me.customBoolFields
+                    projekt.customBoolFields.Add(CInt(hvar.str), hvar.bool)
                 Next
             End If
 
@@ -311,12 +318,12 @@ Public Class clsProjektWeb
 
     Public Sub New()
 
-        AllPhases = New List(Of clsPhaseDB)
+        AllPhases = New List(Of clsPhaseWeb)
         hierarchy = New clsHierarchyWeb
 
-        customDblFields = New SortedList(Of String, Double)
-        customStringFields = New SortedList(Of String, String)
-        customBoolFields = New SortedList(Of String, Boolean)
+        customDblFields = New List(Of clsStringDouble)
+        customStringFields = New List(Of clsStringString)
+        customBoolFields = New List(Of clsStringBoolean)
 
     End Sub
     '''''<Serializable()>

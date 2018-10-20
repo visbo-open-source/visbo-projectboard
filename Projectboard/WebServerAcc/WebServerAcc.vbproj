@@ -71,11 +71,16 @@
     <Import Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsBewertungWeb.vb" />
     <Compile Include="clsCache.vb" />
     <Compile Include="clsHierarchyWeb.vb" />
-    <Compile Include="clsHryAllnodesWeb.vb" />
+    <Compile Include="clsHryNodeWeb.vb" />
+    <Compile Include="clsPhaseWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
+    <Compile Include="clsStringBoolean.vb" />
+    <Compile Include="clsStringDouble.vb" />
+    <Compile Include="clsStringString.vb" />
     <Compile Include="clsVarTs.vb" />
     <Compile Include="clsUserAddress.vb" />
     <Compile Include="clsUserLoginSignup.vb" />

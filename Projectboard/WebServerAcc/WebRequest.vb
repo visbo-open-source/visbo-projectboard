@@ -406,7 +406,7 @@ Public Class Request
 
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveProjectsFromDB = result
@@ -625,7 +625,7 @@ Public Class Request
                     Else
 
                         ' Fehlerbehandlung je nach errcode
-                        Dim statError As Boolean = errorHandling_withBreak("POSTOneVP", errcode, errmsg & " : " & storeAntwort.message)
+                        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
 
                     End If
 
@@ -636,7 +636,7 @@ Public Class Request
             VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
 
         Catch ex As Exception
-            Throw New ArgumentException("storeProjectToDB:" & ex.Message)
+            Throw New ArgumentException(ex.Message & ": storeProjectToDB")
         End Try
 
         storeProjectToDB = result
@@ -2039,7 +2039,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in GETallVC: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         GETallVC = result
@@ -2179,7 +2179,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in GETallVP: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         GETallVP = result
@@ -2303,7 +2303,7 @@ Public Class Request
                 End If
 
             Catch ex As Exception
-                Throw New ArgumentException("Fehler in GETallVPvShort: " & ex.Message)
+                Throw New ArgumentException(ex.Message)
             End Try
 
         End If
@@ -2437,7 +2437,7 @@ Public Class Request
                 End If
 
             Catch ex As Exception
-                Throw New ArgumentException("Fehler in GETallVPvLong: " & ex.Message)
+                Throw New ArgumentException(ex.Message)
             End Try
 
         End If
@@ -2504,7 +2504,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in GETallVPf: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         GETallVPf = result
@@ -2557,7 +2557,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in DELETEOneVPv: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         DELETEOneVPv = result
@@ -2612,7 +2612,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in DELETEOneVPf: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         DELETEOneVPf = result
@@ -2678,7 +2678,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in GETallVCrole: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         GETallVCrole = result
@@ -2733,7 +2733,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in POSTOneVCrole: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         POSTOneVCrole = result
@@ -2789,7 +2789,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in PUTOneVCrole: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         PUTOneVCrole = result
@@ -2843,7 +2843,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in GETallVCcost: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         GETallVCcost = result
@@ -2896,7 +2896,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in POSTOneVCcost: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         POSTOneVCcost = result
@@ -2952,7 +2952,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in PUTOneVCrole: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         PUTOneVCcost = result
@@ -3007,7 +3007,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in PUTOneVP: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         PUTOneVP = result
@@ -3078,7 +3078,7 @@ Public Class Request
 
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in DELETEOneVP: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         DELETEOneVP = result
@@ -3172,7 +3172,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in POSTVPLock: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         POSTVPLock = result
@@ -3261,7 +3261,7 @@ Public Class Request
 
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in DELETEVPLock: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         DELETEVPLock = result
@@ -3319,7 +3319,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in POSTVPVariant: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         POSTVPVariant = result
@@ -3390,7 +3390,7 @@ Public Class Request
             End If    ' ende von if vpid <> ""
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in DELETEVPVariant: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         DELETEVPVariant = result
@@ -3438,7 +3438,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in POSTOneVP: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         POSTOneVP = result
@@ -3490,7 +3490,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in POSTOneVPf: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         POSTOneVPf = result
@@ -3538,7 +3538,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in POSTOneVPf: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         POSTpwforgotten = result
@@ -3736,14 +3736,14 @@ Public Class Request
                         Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
                     If withBreak Then
-                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
 
 
                 Case 401        ' Unauthorized
 
                     token = ""
-                    Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
 
                 Case 402        'Payment Required
 
@@ -3751,13 +3751,13 @@ Public Class Request
                         Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
                     If withBreak Then
-                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
 
                 Case 403        ' Forbidden
 
                     'Call MsgBox("Fehler in GETallVPvShort: " & errmsg & " : " & webVPvAntwort.message)
-                    Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
 
                 Case 404 To 408
 
@@ -3767,7 +3767,7 @@ Public Class Request
                         Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
                     If withBreak Then
-                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
 
                 Case 410 To 499
@@ -3776,7 +3776,7 @@ Public Class Request
                         Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
                     If withBreak Then
-                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
 
                 Case 300 To 399
@@ -3785,12 +3785,12 @@ Public Class Request
                         Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
                     If withBreak Then
-                        Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
 
                 Case 500 To 599     ' ServerIssue (internal Server Error)
 
-                    Throw New ArgumentException("Fehler in " & restCall & " : " & webAntwortMsg)
+                    Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
 
                 Case Else
 

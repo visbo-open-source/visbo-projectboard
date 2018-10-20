@@ -13218,132 +13218,144 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Sub awinProjekteImZeitraumLaden(ByVal databaseName As String, ByVal filter As clsFilter)
 
-        Dim zeitraumVon As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
-        Dim zeitraumbis As Date = StartofCalendar.AddMonths(showRangeRight - 1)
-        Dim storedHeute As Date = Now
-        Dim storedGestern As Date = storedHeute.AddDays(-1)
-        Dim pname As String = ""
-        Dim variantName As String = ""
+        Try
+            Dim zeitraumVon As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+            Dim zeitraumbis As Date = StartofCalendar.AddMonths(showRangeRight - 1)
+            Dim storedHeute As Date = Now
+            Dim storedGestern As Date = storedHeute.AddDays(-1)
+            Dim pname As String = ""
+            Dim variantName As String = ""
 
-        Dim lastConstellation As New clsConstellation
-        Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
-        Dim projektHistorie As New clsProjektHistorie
-
-
-        Dim ok As Boolean = True
-        Dim filterIsActive As Boolean
-        Dim toShowListe As New SortedList(Of Double, String)
+            Dim lastConstellation As New clsConstellation
+            Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
+            Dim projektHistorie As New clsProjektHistorie
 
 
-        ' wurde ein definierter Filter mit übergeben ?
-        If IsNothing(filter) Then
-            filterIsActive = False
-        Else
-            If filter.isEmpty Then
+            Dim ok As Boolean = True
+            Dim filterIsActive As Boolean
+            Dim toShowListe As New SortedList(Of Double, String)
+
+
+            ' wurde ein definierter Filter mit übergeben ?
+            If IsNothing(filter) Then
                 filterIsActive = False
             Else
-                filterIsActive = True
-            End If
-        End If
-
-        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-            projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-        Else
-            Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-        End If
-
-        If AlleProjekte.Count > 0 Then
-            ' es sind bereits Projekte geladen 
-            Dim atleastOne As Boolean = False
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
-
-                If filterIsActive Then
-                    ok = filter.doesNotBlock(kvp.Value)
+                If filter.isEmpty Then
+                    filterIsActive = False
                 Else
-                    ok = True
+                    filterIsActive = True
                 End If
+            End If
 
-                If ok Then
-                    ' Ist das Projekt bereits in AlleProjekte ? 
-                    If AlleProjekte.Containskey(kvp.Key) Then
-                        ' das Projekt soll nicht überschrieben werden ...
-                        ' also nichts tun 
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+            End If
+
+            If AlleProjekte.Count > 0 Then
+                ' es sind bereits Projekte geladen 
+                Dim atleastOne As Boolean = False
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
+
+                    If filterIsActive Then
+                        ok = filter.doesNotBlock(kvp.Value)
                     Else
-                        ' Workaround: 
-                        Dim tmpValue As Integer = kvp.Value.dauerInDays
-                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                        ' Call awinCreateBudgetWerte(kvp.Value)
-                        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
-                            AlleProjekte.Add(kvp.Value)
-                            If ShowProjekte.contains(kvp.Value.name) Then
-                                ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
-                            Else
-                                ShowProjekte.Add(kvp.Value)
-                                atleastOne = True
+                        ok = True
+                    End If
+
+                    If ok Then
+                        ' Ist das Projekt bereits in AlleProjekte ? 
+                        If AlleProjekte.Containskey(kvp.Key) Then
+                            ' das Projekt soll nicht überschrieben werden ...
+                            ' also nichts tun 
+                        Else
+                            ' Workaround: 
+                            Dim tmpValue As Integer = kvp.Value.dauerInDays
+                            ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                            ' Call awinCreateBudgetWerte(kvp.Value)
+                            If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
+                                AlleProjekte.Add(kvp.Value)
+                                If ShowProjekte.contains(kvp.Value.name) Then
+                                    ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
+                                Else
+                                    ShowProjekte.Add(kvp.Value)
+                                    atleastOne = True
+                                End If
                             End If
+
                         End If
 
                     End If
 
+                Next
+
+                ' jetzt ist Showprojekte und AlleProjekte aufgebaut ... 
+                ' jetzt muss ClearPlanTafel kommen 
+                If atleastOne Then
+                    Call awinClearPlanTafel()
+                    Call awinZeichnePlanTafel(True)
                 End If
 
-            Next
+            Else
 
-            ' jetzt ist Showprojekte und AlleProjekte aufgebaut ... 
-            ' jetzt muss ClearPlanTafel kommen 
-            If atleastOne Then
-                Call awinClearPlanTafel()
-                Call awinZeichnePlanTafel(True)
-            End If
+                ShowProjekte.Clear()
+                ' ShowProjekte aufbauen
 
-        Else
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
 
-            ShowProjekte.Clear()
-            ' ShowProjekte aufbauen
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
-
-                If filterIsActive Then
-                    ok = filter.doesNotBlock(kvp.Value)
-                Else
-                    ok = True
-                End If
-
-                If ok Then
-
-                    Dim tmpValue As Integer = kvp.Value.dauerInDays
-                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                    ' Call awinCreateBudgetWerte(kvp.Value)
-
-                    If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
-
-                        AlleProjekte.Add(kvp.Value)
-
-                        Try
-                            ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
-                            If ShowProjekte.contains(kvp.Value.name) Then
-                                If kvp.Value.variantName = "" Then
-                                    ShowProjekte.Remove(kvp.Value.name)
-                                    ShowProjekte.Add(kvp.Value)
-                                End If
-                            Else
-                                ShowProjekte.Add(kvp.Value)
-                            End If
-
-                        Catch ex As Exception
-                            Call MsgBox(ex.Message)
-                        End Try
+                    If filterIsActive Then
+                        ok = filter.doesNotBlock(kvp.Value)
+                    Else
+                        ok = True
                     End If
 
-                End If
+                    If ok Then
 
-            Next
+                        Dim tmpValue As Integer = kvp.Value.dauerInDays
+                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                        ' Call awinCreateBudgetWerte(kvp.Value)
 
-            Call awinZeichnePlanTafel(True)
+                        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
 
-        End If
+                            AlleProjekte.Add(kvp.Value)
+
+                            Try
+                                ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
+                                If ShowProjekte.contains(kvp.Value.name) Then
+                                    If kvp.Value.variantName = "" Then
+                                        ShowProjekte.Remove(kvp.Value.name)
+                                        ShowProjekte.Add(kvp.Value)
+                                    End If
+                                Else
+                                    ShowProjekte.Add(kvp.Value)
+                                End If
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+                        End If
+
+                    End If
+
+                Next
+
+                Call awinZeichnePlanTafel(True)
+
+            End If
+
+
+        Catch ex As Exception
+            Dim hstr() As String = Split(ex.Message, ":")
+            If CInt(hstr(0)) = 401 Then
+                Call MsgBox("neuer Login erforderlich")
+                loginErfolgreich = logInToMongoDB(True)
+            Else
+                Throw New ArgumentException(ex.Message)
+            End If
+        End Try
 
 
     End Sub

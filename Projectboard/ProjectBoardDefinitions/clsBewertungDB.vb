@@ -12,7 +12,7 @@ Public Class clsBewertungDB
     Public bewerterName As String
     Public datum As Date
 
-    Friend Sub CopyTo(ByRef newB As clsBewertung)
+    Public Sub CopyTo(ByRef newB As clsBewertung)
 
         With newB
             .colorIndex = Me.color
@@ -24,7 +24,7 @@ Public Class clsBewertungDB
 
     End Sub
 
-    Friend Sub Copyfrom(ByVal b As clsBewertung)
+    Public Sub Copyfrom(ByVal b As clsBewertung)
 
         Me.color = b.colorIndex
         Me.description = b.description

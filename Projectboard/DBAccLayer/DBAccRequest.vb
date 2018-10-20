@@ -85,6 +85,7 @@ Public Class Request
 
         Catch ex As Exception
             Call MsgBox(ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         pingMongoDb = result
@@ -230,7 +231,7 @@ Public Class Request
 
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveProjectsFromDB = result
