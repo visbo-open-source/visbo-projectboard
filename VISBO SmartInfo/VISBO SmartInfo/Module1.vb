@@ -6353,10 +6353,17 @@ Module Module1
                         End If
                         Call MsgBox(msg)
                     Else
-                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                        Try
 
-                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                            ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+
+                            RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                            CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
 
                     End If
 
@@ -6376,8 +6383,22 @@ Module Module1
                             Dim pName As String = getPnameFromKey(tmpName)
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
-                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB(pvName)
+
+                            Dim tsCollection As New Collection
+                            Try
+                                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                                tsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB(pvName)
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                                Dim hstr() As String = Split(ex.Message, ":")
+                                If CInt(hstr(0)) = 401 Then
+                                    Call MsgBox("neuer Login erforderlich")
+                                    loginErfolgreich = logInToMongoDB(True)
+                                Else
+                                    Throw New ArgumentException(ex.Message)
+                                End If
+                            End Try
+
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 

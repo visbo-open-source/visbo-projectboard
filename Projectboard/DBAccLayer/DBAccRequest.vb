@@ -25,6 +25,10 @@ Public Class Request
 
     Private usedWebServer As Boolean = awinSettings.visboServer
     Private DBAcc As Object
+    Private dbname As String
+    Private dburl As String
+    Private uname As String
+    Private pwd As String
 
 
     ''' <summary>
@@ -46,6 +50,10 @@ Public Class Request
                 loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort)
                 If loginOK Then
                     DBAcc = access
+                    dbname = databaseName
+                    dburl = URL
+                    uname = username
+                    pwd = dbPasswort
                 End If
 
             Else  'es wird eine MongoDB direkt adressiert
@@ -74,8 +82,21 @@ Public Class Request
         Dim result As Boolean = False
         Try
             If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
 
-                result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
 
             Else 'es wird eine MongoDB direkt adressiert
 
@@ -84,7 +105,6 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Call MsgBox(ex.Message)
             Throw New ArgumentException(ex.Message)
         End Try
 
@@ -133,7 +153,24 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore)
+
+                Catch ex As Exception
+
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                             ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore)
@@ -159,14 +196,31 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB()
+                Try
+                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB()
+
+                Catch ex As Exception
+
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB()
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 resultCollection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB()
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveZeitstempelFromDB = resultCollection
@@ -185,14 +239,31 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName)
+                Try
+
+                    ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName)
+
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 ergebnisCollection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB(pvName)
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveZeitstempelFromDB = ergebnisCollection
@@ -223,7 +294,27 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName, zeitraumStart, zeitraumEnde, storedEarliest, storedLatest, onlyLatest)
+
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
+                                                                                       zeitraumStart, zeitraumEnde,
+                                                                                       storedEarliest, storedLatest, onlyLatest)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
+                                                                                               zeitraumStart, zeitraumEnde,
+                                                                                               storedEarliest, storedLatest, onlyLatest)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectsFromDB(projectname, variantName, zeitraumStart, zeitraumEnde, storedEarliest, storedLatest, onlyLatest)
@@ -246,7 +337,22 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
+                Catch ex As Exception
+
+                    'Call MsgBox(ex.Message)
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
@@ -277,7 +383,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore)
+
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore)
@@ -308,7 +428,21 @@ Public Class Request
 
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).renameProjectsInDB(oldName, newName, userName)
@@ -337,7 +471,21 @@ Public Class Request
         Dim result As Boolean = False
         Try
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).storeProjectToDB(projekt, userName)
@@ -364,7 +512,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName)
+                Try
+                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 resultCollection = CType(DBAcc, MongoDbAccess.Request).retrieveVariantNamesFromDB(projectName)
@@ -398,7 +560,21 @@ Public Class Request
 
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore)
@@ -429,7 +605,23 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName, storedEarliest, storedLatest)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
+                                                                                             storedEarliest, storedLatest)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
+                                                                                                     storedEarliest, storedLatest)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectHistoryFromDB(projectname, variantName, storedEarliest, storedLatest)
@@ -457,7 +649,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName)
@@ -484,7 +690,20 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveFirstContractedPFromDB(projectname, variantname)
@@ -508,11 +727,27 @@ Public Class Request
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
     Public Function retrieveLastContractedPFromDB(ByVal projectname As String, ByVal variantname As String, ByVal storedAtOrBefore As DateTime) As clsProjekt
+
         Dim result As New clsProjekt
+
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).RetrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
@@ -547,7 +782,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, type)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, type)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, type)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).checkChgPermission(pName, vName, userName, type)
@@ -578,7 +827,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, type)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, type)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, type)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).getWriteProtection(pName, vName, type)
@@ -607,7 +870,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).setWriteProtection(wpItem)
@@ -635,7 +912,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB()
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB()
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB()
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveConstellationsFromDB()
@@ -662,7 +953,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).storeConstellationToDB(c)
@@ -688,7 +993,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).removeConstellationFromDB(c)
@@ -769,7 +1088,21 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
@@ -796,7 +1129,19 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user)
+                        End If
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).cancelWriteProtections(user)
@@ -874,7 +1219,19 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore)
+                        End If
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(storedAtOrBefore)
@@ -902,7 +1259,19 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore)
+                        End If
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(storedAtOrBefore)
@@ -933,7 +1302,20 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts)
+
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts)
+
+                        End If
+                    End If
+                End Try
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).storeRoleDefinitionToDB(role, insertNewDate, ts)
@@ -961,7 +1343,19 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts)
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts)
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts)
+                        End If
+                    End If
+                End Try
+
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).storeCostDefinitionToDB(cost, insertNewDate, ts)

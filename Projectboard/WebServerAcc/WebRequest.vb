@@ -207,7 +207,7 @@ Public Class Request
 
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         projectNameAlreadyExists = result
@@ -245,7 +245,7 @@ Public Class Request
             Next i
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveZeitstempelFromDB = resultCollection
@@ -260,7 +260,7 @@ Public Class Request
     Public Function retrieveZeitstempelFromDB(ByVal pvName As String) As Collection
 
         Dim ergebnisCollection As New Collection
-
+        'token = ""
         Try
 
             Dim projectName As String = ""
@@ -300,7 +300,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveZeitstempelFromDB = ergebnisCollection
@@ -447,7 +447,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
         retrieveOneProjectfromDB = result
 
@@ -670,7 +670,7 @@ Public Class Request
 
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveVariantNamesFromDB = ergebnisCollection
@@ -754,7 +754,7 @@ Public Class Request
             'Next 'von intermediate-Schleife
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveProjectVariantNamesFromDB = result
@@ -794,7 +794,7 @@ Public Class Request
 
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveProjectNamesByPNRFromDB = result
@@ -843,8 +843,9 @@ Public Class Request
 
             End If
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
+
         retrieveProjectHistoryFromDB = result
 
     End Function
@@ -891,7 +892,7 @@ Public Class Request
 
                 End If
             Catch ex As Exception
-
+                Throw New ArgumentException(ex.Message)
             End Try
         Else
 
@@ -956,6 +957,7 @@ Public Class Request
 
         Catch ex As Exception
             hproj = Nothing
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveFirstContractedPFromDB = hproj
@@ -1024,6 +1026,7 @@ Public Class Request
 
         Catch ex As Exception
             hproj = Nothing
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveLastContractedPFromDB = hproj
@@ -1062,7 +1065,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         checkChgPermission = result
@@ -1111,7 +1114,7 @@ Public Class Request
 
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in getWriteProtection: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         getWriteProtection = result
@@ -1157,7 +1160,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in setWriteProtection: " & ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         setWriteProtection = result
@@ -1173,44 +1176,47 @@ Public Class Request
     Public Function retrieveConstellationsFromDB() As clsConstellations
 
         Dim result As New clsConstellations
+        Try
 
-        Dim intermediate As New SortedList(Of String, clsVP)
-        Dim timestamp As Date = Date.Now
-        Dim c As New clsConstellation
+            Dim intermediate As New SortedList(Of String, clsVP)
+            Dim timestamp As Date = Date.Now
+            Dim c As New clsConstellation
 
-        intermediate = GETallVP(aktVCid, ptPRPFType.portfolio)
-        For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
-
-            ' ur:20180914: angepasst:  vpType korrigieren, beim Server anders als im Client
-            '                           If kvp.Value.vpType = 2 Then
-
-            If kvp.Value.vpType = ptPRPFType.portfolio Then
+            intermediate = GETallVP(aktVCid, ptPRPFType.portfolio)
+            For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
 
 
-                Dim vpid As String = kvp.Value._id
-                Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp)
-                If portfolioVersions.Count > 0 Then
+                If kvp.Value.vpType = ptPRPFType.portfolio Then
 
-                    Dim aktPortfolio As clsVPf = portfolioVersions.Last.Value
 
-                    c = clsVPf2clsConstellation(aktPortfolio)
+                    Dim vpid As String = kvp.Value._id
+                    Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp)
+                    If portfolioVersions.Count > 0 Then
 
-                    If Not IsNothing(c) Then
+                        Dim aktPortfolio As clsVPf = portfolioVersions.Last.Value
 
-                        If Not result.Contains(c.constellationName) Then
-                            result.Add(c)
+                        c = clsVPf2clsConstellation(aktPortfolio)
+
+                        If Not IsNothing(c) Then
+
+                            If Not result.Contains(c.constellationName) Then
+                                result.Add(c)
+                            End If
+
                         End If
 
                     End If
 
+                Else
+                    ' es gibt keine Portfolios
+
                 End If
 
-            Else
-                ' es gibt keine Portfolios
+            Next
 
-            End If
-
-        Next
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
 
         retrieveConstellationsFromDB = result
     End Function
@@ -1284,7 +1290,8 @@ Public Class Request
 
             End If
         Catch ex As Exception
-            Call MsgBox(ex.Message)
+            'Call MsgBox(ex.Message)
+            Throw New ArgumentException(ex.Message)
         End Try
 
         storeConstellationToDB = result
@@ -1342,7 +1349,7 @@ Public Class Request
                 result = DELETEOneVP(cVP._id)
             End If
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         removeConstellationFromDB = result
@@ -1373,7 +1380,7 @@ Public Class Request
 
             Next
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
 
@@ -1411,7 +1418,7 @@ Public Class Request
             Next
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in cancelWriteProtections:" & ex.Message)
+            Throw New ArgumentException(ex.Message & "Fehler in cancelWriteProtections:")
         End Try
 
         cancelWriteProtections = result
@@ -1450,7 +1457,7 @@ Public Class Request
             result.buildTopNodes()
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
         retrieveRolesFromDB = result
 
@@ -1496,93 +1503,6 @@ Public Class Request
         storeRoleDefinitionToDB = result
     End Function
 
-    ''{
-    ''    bool tmpResult = True;
-    ''    Try
-    ''    {
-    ''        var roleDB = New clsRollenDefinitionDB();
-    ''        roleDB.copyFrom(role);
-
-    ''        If (insertNewDate)
-    ''        {
-    ''            roleDB.timestamp = ts;
-    ''            CollectionRoles.InsertOne(roleDB);
-    ''        }
-    ''        Else
-    ''        {
-
-    ''            var filter = Builders < clsRollenDefinitionDB > .Filter.Eq("uid", role.UID);
-    ''            var sort = Builders < clsRollenDefinitionDB > .Sort.Ascending("timestamp");
-
-    ''            Try
-    ''            {
-
-    ''                If (CollectionRoles == null)
-    ''                {
-    ''                    CollectionRoles.InsertOne(roleDB);
-    ''                }
-    ''                Else
-    ''                {
-    ''                    Try
-    ''                    {
-    ''                        clsRollenDefinitionDB tmpRole = CollectionRoles.Find(filter).Sort(sort).ToList().Last();
-    ''                        If (tmpRole == null)
-    ''                        {
-    ''                            // existiert noch nicht 
-    ''                            CollectionRoles.InsertOne(roleDB);
-    ''                        }
-    ''                        Else
-    ''                        {
-    ''                            // existiert bereits , soll also ersetzt werden , aber mit dem bisherigen TimeStamp 
-    ''                            // und das nur, wenn es nicht identisch ist mit der bereits existierenden 
-    ''                            If (!tmpRole.get_isIdenticalTo(roleDB))
-    ''                            {
-    ''                                roleDB.timestamp = tmpRole.timestamp;
-
-    ''                                var builder = Builders < clsRollenDefinitionDB > .Filter;
-    ''                                filter = builder.Eq("uid", role.UID) & builder.Eq("timestamp", tmpRole.timestamp);
-
-    ''                                var rResult = CollectionRoles.ReplaceOne(filter, roleDB);
-    ''                                tmpResult = rResult.IsAcknowledged;
-
-    ''                            }
-    ''                            Else
-    ''                            {
-    ''                                // nichts tun
-    ''                            }
-
-    ''                        }
-    ''                    }
-    ''                    Catch (Exception)
-    ''                    {
-
-    ''                         // es gibt noch überhaupt keine Elemente in der Collection 
-    ''                        CollectionRoles.InsertOne(roleDB);
-    ''                    }
-
-
-
-    ''                }
-
-
-
-    ''            }
-    ''            Catch (Exception)
-    ''            {
-
-    ''                tmpResult = false;
-    ''            }
-    ''         }       
-
-
-    ''    }
-    ''    Catch (Exception)
-    ''    {
-    ''        tmpResult =  false;
-    ''    }
-
-    ''    Return tmpResult;
-    ''}
 
 
     ''' <summary>
@@ -1627,90 +1547,7 @@ Public Class Request
         storeCostDefinitionToDB = result
 
     End Function
-    ''{
-    ''    bool tmpResult = True;
-    ''    Try
-    ''    {
-    ''        var costDefDB = New clsKostenartDefinitionDB();
-    ''        costDefDB.copyFrom(cost);
 
-    ''        If (insertNewDate)
-    ''        {
-    ''            costDefDB.timestamp = ts;
-    ''            CollectionCosts.InsertOne(costDefDB);
-    ''        }
-    ''        Else
-    ''        {
-
-    ''            var filter = Builders < clsKostenartDefinitionDB > .Filter.Eq("uid", cost.UID);
-    ''            var sort = Builders < clsKostenartDefinitionDB > .Sort.Ascending("timestamp");
-
-    ''            Try
-    ''            {
-
-    ''                If (CollectionCosts == null)
-    ''                {
-    ''                    // existiert noch nicht 
-    ''                    CollectionCosts.InsertOne(costDefDB);
-    ''                }
-    ''                Else
-    ''                {
-
-    ''                    Try
-    ''                    {
-    ''                        clsKostenartDefinitionDB tmpCost = CollectionCosts.Find(filter).Sort(sort).ToList().Last();
-    ''                        If (tmpCost == null)
-    ''                        {
-    ''                            // existiert noch nicht 
-    ''                            CollectionCosts.InsertOne(costDefDB);
-    ''                        }
-    ''                        Else
-    ''                        {
-    ''                            // existiert bereits , soll also ersetzt werden , dann mit dem bisherigen TimeStamp 
-    ''                            // aber nur, wenn es nicht identisch ist mit der bereits existierenden 
-    ''                            If (!tmpCost.get_isIdenticalTo(costDefDB))
-    ''                            {
-    ''                                costDefDB.timestamp = tmpCost.timestamp;
-
-    ''                                var builder = Builders < clsKostenartDefinitionDB > .Filter;
-    ''                                filter = builder.Eq("uid", cost.UID) & builder.Eq("timestamp", tmpCost.timestamp);
-
-    ''                                var rResult = CollectionCosts.ReplaceOne(filter, costDefDB);
-    ''                                tmpResult = rResult.IsAcknowledged;
-
-    ''                            }
-    ''                            Else
-    ''                            {
-    ''                                // nichts tun
-    ''                            }
-
-    ''                        }
-    ''                    }
-    ''                    Catch (Exception)
-    ''                    {
-    ''                        // existiert noch nicht 
-    ''                        CollectionCosts.InsertOne(costDefDB);
-    ''                    }
-
-    ''                }
-
-    ''            }
-    ''            Catch (Exception)
-    ''            {
-
-    ''                tmpResult = false;
-    ''            }
-    ''        }
-
-
-    ''    }
-    ''    Catch (Exception)
-    ''    {
-    ''        tmpResult = false;
-    ''    }
-
-    ''    Return tmpResult;
-    ''}
 
 
     ''' <summary>
@@ -1740,7 +1577,7 @@ Public Class Request
 
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         retrieveCostsFromDB = result
@@ -1905,7 +1742,7 @@ Public Class Request
             End While
 
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         GETvpid = aktvp
