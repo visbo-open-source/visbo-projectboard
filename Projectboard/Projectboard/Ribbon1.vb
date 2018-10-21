@@ -2,7 +2,6 @@
 Imports ProjectBoardBasic
 Imports ClassLibrary1
 Imports DBAccLayer
-Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Excel = Microsoft.Office.Interop.Excel
 Imports System.Security.Principal
@@ -11,13 +10,10 @@ Imports System.Drawing
 Imports System.Windows
 Imports System.Net
 Imports System
-Imports Newtonsoft.Json
-Imports Newtonsoft.Json.Linq
 Imports System.IO
 Imports System.Globalization
 Imports Microsoft.VisualBasic
 Imports System.Web
-Imports System.ServiceModel.Web
 
 
 
@@ -8899,106 +8895,107 @@ Imports System.ServiceModel.Web
 
     ' '' ''End Sub
 
-    Sub PT0ShowZieleUebersicht(control As IRibbonControl)
+    ' tk 17.10.18 wurde jetzt auskommentiert, weil WPFChart rausgeflogen ist
+    'Sub PT0ShowZieleUebersicht(control As IRibbonControl)
 
-        Dim ControlID As String = control.Id
-        Dim relevanteProjekte As clsProjekte
-        Dim chtObject As Excel.ChartObject = Nothing
-        'Dim top As Double, left As Double, width As Double, height As Double
-        Dim future As Integer = 0
-        Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
-        'awinSettings.mppShowAmpel = True
+    '    Dim ControlID As String = control.Id
+    '    Dim relevanteProjekte As clsProjekte
+    '    Dim chtObject As Excel.ChartObject = Nothing
+    '    'Dim top As Double, left As Double, width As Double, height As Double
+    '    Dim future As Integer = 0
+    '    Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
+    '    'awinSettings.mppShowAmpel = True
 
 
-        Dim myCollection As New Collection
-        myCollection.Add("Ziele")
+    '    Dim myCollection As New Collection
+    '    myCollection.Add("Ziele")
 
-        Call projektTafelInit()
+    '    Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-        If ControlID = "PT0G1B2" Then
-            relevanteProjekte = selectedProjekte
-        Else
-            Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
-            relevanteProjekte = ShowProjekte
-        End If
+    '    appInstance.EnableEvents = False
+    '    enableOnUpdate = False
+    '    If ControlID = "PT0G1B2" Then
+    '        relevanteProjekte = selectedProjekte
+    '    Else
+    '        Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
+    '        relevanteProjekte = ShowProjekte
+    '    End If
 
-        If relevanteProjekte.Count > 0 Then
+    '    If relevanteProjekte.Count > 0 Then
 
-            Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+    '        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
-            If ok Then
+    '        If ok Then
 
-                ' betrachte sowohl Vergangenheit als auch Gegenwart
-                future = 0
+    '            ' betrachte sowohl Vergangenheit als auch Gegenwart
+    '            future = 0
 
-                Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
-                Dim valueItem As New clsWPFPieValues
+    '            Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
+    '            Dim valueItem As New clsWPFPieValues
 
-                ' Nicht bewertet 
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(0, future).Sum
-                    .name = "nicht bewertet"
-                    .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            ' Nicht bewertet 
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(0, future).Sum
+    '                .name = "nicht bewertet"
+    '                .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                valueItem = New clsWPFPieValues
-                ' Grün bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(1, future).Sum
-                    .name = "OK"
-                    .color = CType(awinSettings.AmpelGruen, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            valueItem = New clsWPFPieValues
+    '            ' Grün bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(1, future).Sum
+    '                .name = "OK"
+    '                .color = CType(awinSettings.AmpelGruen, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                valueItem = New clsWPFPieValues
-                ' Gelb bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(2, future).Sum
-                    .name = "nicht vollständig"
-                    .color = CType(awinSettings.AmpelGelb, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            valueItem = New clsWPFPieValues
+    '            ' Gelb bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(2, future).Sum
+    '                .name = "nicht vollständig"
+    '                .color = CType(awinSettings.AmpelGelb, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                valueItem = New clsWPFPieValues
-                ' Rot bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(3, future).Sum
-                    .name = "Zielverfehlung"
-                    .color = CType(awinSettings.AmpelRot, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            valueItem = New clsWPFPieValues
+    '            ' Rot bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(3, future).Sum
+    '                .name = "Zielverfehlung"
+    '                .color = CType(awinSettings.AmpelRot, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                Dim pieChartZieleV As New PieChartWindow(wpfInput)
+    '            Dim pieChartZieleV As New PieChartWindow(wpfInput)
 
-                With pieChartZieleV
-                    .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
-                    '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
-                    '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
-                End With
+    '            With pieChartZieleV
+    '                .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
+    '                '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
+    '                '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
+    '            End With
 
-                pieChartZieleV.Show()
-            Else
-                Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
-            End If
+    '            pieChartZieleV.Show()
+    '        Else
+    '            Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
+    '        End If
 
-        Else
-            If ControlID = "PT0G1B2" Then
-                Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
-            Else
-                Call MsgBox("Es sind keine Projekte geladen!")
-            End If
+    '    Else
+    '        If ControlID = "PT0G1B2" Then
+    '            Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
+    '        Else
+    '            Call MsgBox("Es sind keine Projekte geladen!")
+    '        End If
 
-        End If
+    '    End If
 
-        'awinSettings.mppShowAmpel = formerAmpelSetting
+    '    'awinSettings.mppShowAmpel = formerAmpelSetting
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+    '    appInstance.EnableEvents = True
+    '    enableOnUpdate = True
 
-    End Sub
+    'End Sub
 
 
 
@@ -11817,703 +11814,6 @@ Imports System.ServiceModel.Web
 
         End Try
     End Sub
-
-
-    '''''' <summary>
-    '''''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /token/user/login
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTWebRequestLogin(control As IRibbonControl)
-
-    '''    'Dim typeRequest As String = "/token/user/login"
-    '''    'Dim typeRequest As String = "/token/user/signup"
-    '''    Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''    Dim serverUri As New Uri(serverUriName & typeRequest)
-
-    '''    Try
-
-    '''        Dim user As New clsUserLoginSignup
-    '''        user.email = "markus.seyfried@visbo.de"
-    '''        user.password = "visbo123"
-
-    '''        'Dim user As New clsUserLoginSignup
-    '''        'user.email = "ute.rittinghaus-koytek@visbo.de"
-    '''        'user.password = "visbo123"
-
-
-    '''        ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''        Dim data() As Byte
-    '''        data = serverInputDataJson(user, typeRequest)
-
-    '''        Dim token As String = ""
-    '''        Dim loginAntwort As clsWebTokenUserLoginSignup
-    '''        Dim Antwort As String
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            loginAntwort = JsonConvert.DeserializeObject(Of clsWebTokenUserLoginSignup)(Antwort)
-    '''        End Using
-
-    '''        Call MsgBox(loginAntwort.message)
-    '''        If loginAntwort.state = "success" Then
-    '''            token = loginAntwort.token
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTWebRequestLogin" & typeRequest & ": " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-
-    '''Public Sub PTWebRequestPUTUserProfile(control As IRibbonControl)
-
-    '''    Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''    Dim hstr() As String = Split(typeRequest, "PUT")
-    '''    typeRequest = hstr(hstr.Length - 1)
-    '''    'Dim typeRequest As String = "/user/profile"
-
-    '''    Dim serverUri As New Uri(serverUriName & typeRequest)
-
-    '''    Try
-    '''        ''Dim user As New clsInputSignupLogin
-    '''        ''user.name = "Markus Seyfried"
-    '''        ''user.email = "markus.seyfried@visbo.de"
-    '''        ''user.password = "visbo123"
-    '''        ''user.phone = "08024-xxxxx"
-    '''        ''user.company = "keine AG"
-
-    '''        Dim user As New clsUserLoginSignup
-    '''        user.email = "ute.rittinghaus-koytek@visbo.de"
-    '''        user.password = "visbo123"
-    '''        user.profile.address.street = "Kurt-Koch-Str"
-    '''        user.profile.address.city = "Hoki"
-    '''        user.profile.address.country = "Germany"
-    '''        user.profile.address.state = "Bayern"
-    '''        user.profile.address.zip = "83607"
-
-    '''        ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''        Dim data() As Byte
-    '''        data = serverInputDataJson(user, typeRequest)
-
-    '''        Dim Antwort As String
-    '''        Dim userProfileAntwort As clsWebUser
-
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            userProfileAntwort = JsonConvert.DeserializeObject(Of clsWebUser)(Antwort)
-    '''        End Using
-
-    '''        If userProfileAntwort.state = "success" Then
-    '''            Dim newName As String = userProfileAntwort.user.profile.firstname & " " & userProfileAntwort.user.profile.lastname
-    '''            Call MsgBox(userProfileAntwort.message & ": " & newName)
-    '''        Else
-    '''            Throw New ArgumentException(userProfileAntwort.state & ": " & userProfileAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTWebPUTRequestUserProfile" & typeRequest & ": " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-
-    '''Public Sub PTWebRequestGETUserProfile(control As IRibbonControl)
-
-    '''    Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''    Dim hstr() As String = Split(typeRequest, "GET")
-    '''    typeRequest = hstr(hstr.Length - 1)
-    '''    'Dim typeRequest As String = "/user/profile"
-
-    '''    Dim serverUri As New Uri(serverUriName & typeRequest)
-
-    '''    Try
-    '''        Dim datastr As String = ""
-    '''        Dim encoding As New System.Text.UTF8Encoding()
-    '''        Dim data As Byte() = encoding.GetBytes(datastr)
-
-    '''        Dim Antwort As String
-    '''        Dim webUserAntwort As clsWebUser
-    '''        'Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webUserAntwort = JsonConvert.DeserializeObject(Of clsWebUser)(Antwort)
-    '''        End Using
-
-    '''        If webUserAntwort.state = "success" Then
-    '''            Dim aktName As String = webUserAntwort.user.profile.firstname & " " & webUserAntwort.user.profile.lastname
-    '''            Call MsgBox(webUserAntwort.message & ": " & aktName)
-    '''        Else
-    '''            Throw New ArgumentException(webUserAntwort.state & ": " & webUserAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTWebGETRequest" & typeRequest & ": " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-    '''''' <summary>
-    '''''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /token/user/login
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTWebRequestGETallVC(control As IRibbonControl)
-
-    '''    Try
-    '''        'Dim typeRequest As String = "/vc"
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest)
-
-    '''        Dim datastr As String = ""
-    '''        Dim encoding As New System.Text.UTF8Encoding()
-    '''        Dim data As Byte() = encoding.GetBytes(datastr)
-
-    '''        Dim webVCAntwort As clsWebVC
-    '''        Dim Antwort As String
-    '''        'Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVCAntwort = JsonConvert.DeserializeObject(Of clsWebVC)(Antwort)
-    '''        End Using
-
-    '''        If webVCAntwort.state = "success" Then
-    '''            Call MsgBox(webVCAntwort.message & vbCrLf & "aktueller User hat " & webVCAntwort.vc.Count & "Visbo Centers")
-    '''            ' hier erfolgen nun die weiteren Aktionen mit den angeforderten Daten
-    '''            webVCs = webVCAntwort
-    '''        Else
-    '''            Call MsgBox(webVCAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-
-
-
-    '''''' <summary>
-    '''''' Per WebServer ein VisboCenter erzeugen
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTPOSTOneVC(control As IRibbonControl)
-
-    '''    Try
-    '''        'Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim typeRequest As String = "/vc"
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest)
-
-    '''        Dim oneVC As New clsVC
-    '''        Dim user As New clsUser
-
-    '''        oneVC.name = "New VC (Ute)"
-    '''        user.email = "ute.rittinghaus-koytek@visbo.de"
-    '''        user.role = "Admin"
-    '''        oneVC.users.Add(user)
-
-    '''        Dim user1 As New clsUser
-    '''        user1.email = "ute.rittinghaus-koytek@visbo.de"
-    '''        user1.role = "User"
-    '''        oneVC.users.Add(user1)
-
-    '''        ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''        Dim data() As Byte
-    '''        data = serverInputDataJson(oneVC, typeRequest)
-
-    '''        Dim Antwort As String
-    '''        Dim webVCAntwort As clsWebVC
-
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVCAntwort = JsonConvert.DeserializeObject(Of clsWebVC)(Antwort)
-    '''        End Using
-
-    '''        If webVCAntwort.state = "success" Then
-    '''            aktVC = webVCAntwort
-    '''            Call MsgBox(webVCAntwort.message & ": " & "neues und aktuelles VC ist nun: " & aktVC.vc.ElementAt(0).name)
-    '''        Else
-    '''            Throw New ArgumentException(webVCAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTPOSTOneVC " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-    '''''' <summary>
-    '''''' Per Server ein VisboCenter vom Server holen
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTGETOneVC(control As IRibbonControl)
-
-    '''    Try
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim hstr() As String = Split(typeRequest, "GET")
-    '''        typeRequest = hstr(hstr.Length - 1)
-    '''        'Dim typeRequest As String = "/vc/"
-
-
-    '''        Dim vcID As String = webVCs.vc.ElementAt(1)._id
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest & vcID)
-
-    '''        Dim datastr As String = ""
-    '''        Dim encoding As New System.Text.UTF8Encoding()
-    '''        Dim data As Byte() = encoding.GetBytes(datastr)
-
-    '''        Dim Antwort As String
-    '''        Dim webVCAntwort As clsWebVC
-
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVCAntwort = JsonConvert.DeserializeObject(Of clsWebVC)(Antwort)
-    '''        End Using
-
-    '''        If webVCAntwort.state = "success" Then
-    '''            aktVC = webVCAntwort
-    '''            Call MsgBox(webVCAntwort.message & ": " & "aktuelles VC ist nun: " & aktVC.vc.ElementAt(0).name & "vom " & aktVC.vc.ElementAt(0).createdAt)
-    '''        Else
-    '''            Throw New ArgumentException(webVCAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTOneVC " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-
-    '''''' <summary>
-    '''''' Ändern eines VisboCenters über PUT am Server
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTPUTOneVC(control As IRibbonControl)
-
-    '''    Try
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim hstr() As String = Split(typeRequest, "PUT")
-    '''        typeRequest = hstr(hstr.Length - 1)
-    '''        'Dim typeRequest As String = "/vc/"
-
-    '''        'Dim typeRequest As String = "/vc/"
-
-    '''        Dim vc As clsVC = webVCs.vc.ElementAt(1)
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest & vc._id)
-
-    '''        vc.name = "NewNAME"
-    '''        ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''        Dim data() As Byte
-    '''        data = serverInputDataJson(vc, typeRequest)
-
-    '''        Dim Antwort As String
-    '''        Dim webVCAntwort As clsWebVC
-    '''        'Using httpresp As HttpWebResponse = GetPUTResponse(serverUri, data, Nothing)
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVCAntwort = JsonConvert.DeserializeObject(Of clsWebVC)(Antwort)
-    '''        End Using
-
-
-    '''        If webVCAntwort.state = "success" Then
-    '''            aktVC = webVCAntwort
-    '''            Call MsgBox(webVCAntwort.message & ": " & "neuer Name für aktuelle vcid: " & vbCrLf &
-    '''                        aktVC.vc.ElementAt(0).name & " für " & aktVC.vc.ElementAt(0)._id)
-    '''        Else
-    '''            Throw New ArgumentException(webVCAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTupdateOneVC " & ex.Message)
-    '''    End Try
-    '''End Sub
-
-
-    '''''' <summary>
-    '''''' Es wird ein Request an den Server gesendet zum Löschen eines VisboCenters
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTDELETEOneVC(control As IRibbonControl)
-
-    '''    Try
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim hstr() As String = Split(typeRequest, "DEL")
-    '''        typeRequest = hstr(hstr.Length - 1)
-    '''        'Dim typeRequest As String = "/vc/"
-
-    '''        ' zu löschende VC bestimmen aus Liste aller meiner VCs (webVCs)
-    '''        Dim vc As clsVC = Nothing
-    '''        Dim i As Integer
-    '''        For i = 0 To webVCs.vc.Count - 1
-    '''            If webVCs.vc.ElementAt(i).name = "Fifth VC (Ute)" Then
-    '''                vc = webVCs.vc.ElementAt(i)
-    '''                Exit For
-    '''            End If
-    '''        Next i
-
-    '''        If Not IsNothing(vc) Then
-
-    '''            Dim serverUri As New Uri(serverUriName & typeRequest & vc._id)
-
-    '''            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''            Dim data() As Byte
-    '''            data = serverInputDataJson(vc, typeRequest)
-
-
-    '''            Dim Antwort As String
-    '''            Dim webOutputAntwort As clsWebOutput
-    '''            'Using httpresp As HttpWebResponse = GetDELResponse(serverUri, data, Nothing)
-    '''            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DEL")
-    '''                Antwort = ReadResponseContent(httpresp)
-    '''                webOutputAntwort = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
-    '''            End Using
-
-    '''            If webOutputAntwort.state = "success" Then
-    '''                Call MsgBox(webOutputAntwort.state & ": " & webOutputAntwort.message & ": " & vc._id & ":" & vc.name)
-    '''            Else
-    '''                Throw New ArgumentException(webOutputAntwort.message)
-    '''            End If
-
-    '''        Else
-    '''            Throw New ArgumentException("zu löschendes VC existiert nicht!")
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTDELETEOneVC: " & ex.Message)
-    '''    End Try
-    '''End Sub
-
-    '''''' <summary>
-    '''''' Per WebServer ein VisboProjekt erzeugen
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTPOSTOneVP(control As IRibbonControl)
-
-    '''    Try
-    '''        'Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim typeRequest As String = "/vp"
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest)
-
-    '''        Dim oneVP As New clsVP
-    '''        Dim user As New clsUser
-
-    '''        oneVP.name = "Neu 18_002"
-    '''        oneVP.vcid = aktVC.vc.ElementAt(0)._id
-    '''        user.email = "ute.rittinghaus-koytek@visbo.de"
-    '''        user.role = "Admin"
-    '''        oneVP.users.Add(user)
-
-    '''        Dim user1 As New clsUser
-    '''        user1.email = "ute.rittinghaus-koytek@visbo.de"
-    '''        user1.role = "User"
-    '''        oneVP.users.Add(user1)
-
-    '''        ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''        Dim data() As Byte
-    '''        data = serverInputDataJson(oneVP, typeRequest)
-
-    '''        Dim Antwort As String
-    '''        Dim webVPAntwort As clsWebVP
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVPAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
-    '''        End Using
-
-    '''        If webVPAntwort.state = "success" Then
-    '''            aktVP = webVPAntwort
-    '''            Call MsgBox(webVPAntwort.message & ": " & "neues und aktuelles VisboProject ist nun: " & aktVP.vp.ElementAt(0).name)
-    '''        Else
-    '''            Throw New ArgumentException(webVPAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTPOSTOneVP " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-    '''''' <summary>
-    '''''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /vp
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTWebRequestGETallVP(control As IRibbonControl)
-
-    '''    Try
-    '''        'Dim typeRequest As String = "/vp"
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim vcid As String = webVCs.vc.ElementAt(2)._id
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest & "?vcid=" & vcid)
-
-    '''        Dim datastr As String = ""
-    '''        Dim encoding As New System.Text.UTF8Encoding()
-    '''        Dim data As Byte() = encoding.GetBytes(datastr)
-
-    '''        Dim Antwort As String
-    '''        Dim webVPAntwort As clsWebVP
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVPAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
-    '''        End Using
-
-    '''        If webVPAntwort.state = "success" Then
-    '''            Call MsgBox(webVPAntwort.message & vbCrLf & "aktueller User hat " & webVPAntwort.vp.Count & "VisboProjects")
-    '''            ' hier erfolgen nun die weiteren Aktionen mit den angeforderten Daten
-    '''            webVPs = webVPAntwort
-    '''        Else
-    '''            Call MsgBox(webVPAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-    '''''' <summary>
-    '''''' Per Server ein VisboProject vom Server holen
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTGETOneVP(control As IRibbonControl)
-
-    '''    Try
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim hstr() As String = Split(typeRequest, "GET")
-    '''        typeRequest = hstr(hstr.Length - 1)
-    '''        'Dim typeRequest As String = "/vp/"
-
-
-    '''        Dim vpID As String = webVPs.vp.ElementAt(0)._id
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest & vpID)
-
-    '''        Dim datastr As String = ""
-    '''        Dim encoding As New System.Text.UTF8Encoding()
-    '''        Dim data As Byte() = encoding.GetBytes(datastr)
-
-
-    '''        Dim Antwort As String
-    '''        Dim webVPAntwort As clsWebVP
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVPAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
-    '''        End Using
-
-    '''        If webVPAntwort.state = "success" Then
-    '''            aktVP = webVPAntwort
-    '''            Call MsgBox(webVPAntwort.message & ": " & "aktuelles VP ist: " & aktVP.vp.ElementAt(0).name)
-    '''        Else
-    '''            Throw New ArgumentException(webVPAntwort.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTOneVC " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-
-    '''''' <summary>
-    '''''' Ändern eines VisboProjects über PUT am Server
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTPUTOneVP(control As IRibbonControl)
-
-    '''    Try
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim hstr() As String = Split(typeRequest, "PUT")
-    '''        typeRequest = hstr(hstr.Length - 1)
-    '''        'Dim typeRequest As String = "/vp/"
-
-
-    '''        Dim vp As clsVP = webVPs.vp.ElementAt(0)
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest & vp._id)
-
-    '''        vp.name = "my first VisboProject Renamed"
-    '''        ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''        Dim data() As Byte
-    '''        data = serverInputDataJson(vp, typeRequest)
-
-    '''        Dim Antwort As String
-    '''        Dim webVPAntwort As clsWebVP
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVPAntwort = JsonConvert.DeserializeObject(Of clsWebVP)(Antwort)
-    '''        End Using
-
-
-    '''        If webVPAntwort.state = "success" Then
-    '''            aktVP = webVPAntwort
-    '''            Call MsgBox(webVPAntwort.message & ": " & "neuer Name für aktuelle vpid: " & vbCrLf &
-    '''                        aktVP.vp.ElementAt(0).name & " für " & aktVP.vp.ElementAt(0)._id)
-    '''        Else
-    '''            Throw New ArgumentException(webVPAntwort.message)
-    '''        End If
-
-    '''        ''Dim Antwort2 As String
-    '''        ''Using httpresp As HttpWebResponse = GetGETResponse(serverUri, data, Nothing)
-    '''        ''    Antwort2 = ReadResponseContent(httpresp)
-    '''        ''End Using
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTupdateOneVP " & ex.Message)
-    '''    End Try
-    '''End Sub
-
-
-    '''''' <summary>
-    '''''' Es wird ein Request an den Server gesendet zum Löschen eines VisboProjects
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTDELETEOneVP(control As IRibbonControl)
-
-    '''    Try
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim hstr() As String = Split(typeRequest, "DEL")
-    '''        typeRequest = hstr(hstr.Length - 1)
-    '''        'Dim typeRequest As String = "/vp/"
-
-    '''        ' zu löschende VP bestimmen aus Liste aller meiner VPs (webVPs)
-    '''        Dim vp As clsVP = Nothing
-    '''        Dim i As Integer
-    '''        For i = 0 To webVPs.vp.Count - 1
-    '''            If webVPs.vp.ElementAt(i).name = "Neu 18_001" Then
-    '''                vp = webVPs.vp.ElementAt(i)
-    '''                Exit For
-    '''            End If
-    '''        Next i
-
-    '''        If Not IsNothing(vp) Then
-
-    '''            Dim serverUri As New Uri(serverUriName & typeRequest & vp._id)
-
-    '''            ' Konvertiere die erforderlichen Inputdaten des Requests vom Typ typeRequest (von der Struktur cls??) in ein Json-ByteArray
-    '''            Dim data() As Byte
-    '''            data = serverInputDataJson(vp, typeRequest)
-
-    '''            Dim Antwort As String
-    '''            Dim webOutputAntwort As clsWebOutput
-    '''            'Using httpresp As HttpWebResponse = GetDELResponse(serverUri, data, Nothing)
-    '''            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "DEL")
-    '''                Antwort = ReadResponseContent(httpresp)
-    '''                webOutputAntwort = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
-    '''            End Using
-
-    '''            If webOutputAntwort.state = "success" Then
-    '''                Call MsgBox(webOutputAntwort.state & ": " & webOutputAntwort.message & ": " & vp._id & ":" & vp.name)
-    '''            Else
-    '''                Throw New ArgumentException(webOutputAntwort.message)
-    '''            End If
-
-    '''        Else
-    '''            Throw New ArgumentException("zu löschendes VP existiert nicht!")
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTDELETEOneVP: " & ex.Message)
-    '''    End Try
-    '''End Sub
-
-    '''''' <summary>
-    '''''' Es wird ein Request an den Server mit der URI serverUri gesendet hier /vp
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTWebRequestGETallVPv(control As IRibbonControl)
-
-    '''    Try
-    '''        'Dim typeRequest As String = "/vpv"
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim vpid As String = webVPs.vp.ElementAt(7)._id
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest & "?vpid=" & vpid)
-
-    '''        Dim datastr As String = ""
-    '''        Dim encoding As New System.Text.UTF8Encoding()
-    '''        Dim data As Byte() = encoding.GetBytes(datastr)
-
-    '''        Dim Antwort As String
-    '''        Dim webVPvAntwort As clsWebVPv
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webVPvAntwort = JsonConvert.DeserializeObject(Of clsWebVPv)(Antwort)
-    '''        End Using
-
-    '''        If webVPvAntwort.state = "success" Then
-
-    '''            Call MsgBox(webVPvAntwort.message & vbCrLf & "aktueller User hat " & webVPvAntwort.vpv.Count & " VisboProjectsVersions")
-    '''            ' hier erfolgen nun die weiteren Aktionen mit den angeforderten Daten
-
-    '''            webVPvs = webVPvAntwort
-    '''            Dim vp As clsProjektWebShort = Nothing
-    '''            'Dim vpOrig As clsProjekt = Nothing
-    '''            'Dim hproj As clsProjekt = Nothing
-
-    '''            'projekthistorie.clear()
-
-    '''            For Each vp In webVPvs.vpv
-    '''                'vpOrig = New clsProjekt
-    '''                'vp.copyto(vpOrig)
-    '''                'projekthistorie.Add(vpOrig.timeStamp, vpOrig)
-    '''                'If Not ShowProjekte.contains(vpOrig.name) Then
-    '''                '    ShowProjekte.Add(vpOrig)
-    '''                '    hproj = vpOrig
-    '''                'End If
-
-    '''            Next
-
-    '''            'Dim tmpCollection As New Collection
-    '''            'Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
-    '''        Else
-    '''            Call MsgBox(webVPvs.message)
-    '''        End If
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTWebRequest: " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-
-    '''''' <summary>
-    '''''' Per Server ein VisboProject (eine spezielle Version) vom Server holen
-    '''''' </summary>
-    '''''' <param name="control"></param>
-    '''Public Sub PTGETOneVPv(control As IRibbonControl)
-
-    '''    Try
-    '''        Dim typeRequest As String = control.Id.Replace("_", "/")
-    '''        Dim hstr() As String = Split(typeRequest, "GET")
-    '''        typeRequest = hstr(hstr.Length - 1)
-    '''        'Dim typeRequest As String = "/vpv/"
-
-    '''        Dim vpvID As String = webVPvs.vpv.ElementAt(0)._id
-    '''        Dim serverUri As New Uri(serverUriName & typeRequest & vpvID)
-
-    '''        Dim datastr As String = ""
-    '''        Dim encoding As New System.Text.UTF8Encoding()
-    '''        Dim data As Byte() = encoding.GetBytes(datastr)
-
-    '''        Dim Antwort As String
-    '''        Dim webOneVPvAntwort As clsWebLongVPv
-    '''        Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
-    '''            Antwort = ReadResponseContent(httpresp)
-    '''            webOneVPvAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
-    '''        End Using
-
-    '''        If webOneVPvAntwort.state = "success" Then
-    '''            aktVPv = webOneVPvAntwort
-
-    '''            Dim message As String = ""
-    '''            'Dim oneVPv As clsWebOneVPv = CType(DeserializeJson(Antwort2, "/vpv/"), clsWebOneVPv)
-    '''            For Each elehry As KeyValuePair(Of String, clsHierarchyNodeDB) In aktVPv.vpv.ElementAt(0).hierarchy.allNodes
-
-    '''                message = message & vbCrLf & ("projekt gelesen" _
-    '''                            & vbCrLf & aktVPv.vpv.ElementAt(0).name & ":" _
-    '''                            & elehry.Key & ":" _
-    '''                            & aktVPv.vpv.ElementAt(0).hierarchy.allNodes.ElementAt(0).Value.elemName & "!!!")
-
-    '''            Next
-    '''            Call MsgBox(message)
-    '''        Else
-    '''            Call MsgBox(webOneVPvAntwort.message)
-    '''            Throw New ArgumentException("Exception Occured: " & webOneVPvAntwort.message)
-    '''        End If
-
-
-    '''    Catch ex As Exception
-    '''        Call MsgBox("Fehler in PTGETOneVPv " & ex.Message)
-    '''    End Try
-
-    '''End Sub
-
-
-
 
 
 #End Region

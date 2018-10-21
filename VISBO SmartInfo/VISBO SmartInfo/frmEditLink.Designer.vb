@@ -22,6 +22,7 @@ Partial Class frmEditLink
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmEditLink))
         Me.okBtn = New System.Windows.Forms.Button()
         Me.clearBtn = New System.Windows.Forms.Button()
         Me.linkValue = New System.Windows.Forms.TextBox()
@@ -60,12 +61,16 @@ Partial Class frmEditLink
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.ClientSize = New System.Drawing.Size(455, 104)
         Me.Controls.Add(Me.linkValue)
         Me.Controls.Add(Me.clearBtn)
         Me.Controls.Add(Me.okBtn)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.MaximizeBox = False
         Me.Name = "frmEditLink"
         Me.Text = "Provide Link"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

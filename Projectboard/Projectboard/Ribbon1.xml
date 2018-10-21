@@ -332,7 +332,7 @@
               <!--label="Budget/Kosten/Auslastung"--><!--
               <button id="PTFKB2" getLabel ="bestimmeLabel"  onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
               <!--label="Meilenstein-Ampeln"-->
-              <button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>
+              <!--<button id="PTXG1B2" getLabel ="bestimmeLabel" enabled="false" onAction="PT0ShowZieleUebersicht" supertip ="es wird eine interaktive Grafik angezeigt, die die Anzahl der roten, gelben, grünen und nicht bewerteten Meilensteine anzeigt."/>-->
               <!--label="Custom"-->
               <button id="PTcustom" label ="Custom" enabled="false"/>
               <menuSeparator id="PTXG1s4"/>
@@ -432,35 +432,6 @@
       <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
-          <!--<button id="_token_user_signup" label="SignUp"  onAction ="PTWebRequestLogin" />
-          <separator id="PTXIG1s1"/> 
-          <button id="PUT_user_profile" label="Update User Profile"  onAction ="PTWebRequestPUTUserProfile"/>
-          <button id="GET_user_profile" label="Get own Profile"  onAction ="PTWebRequestGETUserProfile"/>
-          <separator id="PTXIG1s2"/> 
-          <button id="_vc" label="All VisboCenter"  onAction ="PTWebRequestGETallVC" />
-          <button id="PTPOSTOneVC" label="POST one VC"  onAction ="PTPOSTOneVC" />
-          <button id="GET_vc_" label="GET one VC"  onAction ="PTGETOneVC" />
-          <separator id="PTXIG1s3"/> 
-          <button id="PUT_vc_" label="Update one VC"  onAction ="PTPUTOneVC" />
-          <button id="DEL_vc_" label="Delete one VC"  onAction ="PTDELETEOneVC" />
-          <separator id="PTXIG1s4"/>          
-          <button id="_vp" label="All VisboProjects"  onAction ="PTWebRequestGETallVP" />
-          <button id="PTPOSTOneVP" label="POST one VP"  onAction ="PTPOSTOneVP" />
-          <button id="GET_vp_" label="GET one VP"  onAction ="PTGETOneVP" />
-          <separator id="PTXIG1s5"/>         
-          <button id="PUT_vp_" label="Update one VP"  onAction ="PTPUTOneVP" />
-          <button id="DEL_vp_" label="Delete one VP"  onAction ="PTDELETEOneVP" />
-              <separator id="PTXIG1s6"/>          
-          <button id="_vpv" label="All VisboProjectsVersions"  onAction ="PTWebRequestGETallVPv" />
-          <button id="PTPOSTOneVPv" label="POST one VPv"  onAction ="PTPOSTOneVPv" />
-          <button id="GET_vpv_" label="GET one VPv"  onAction ="PTGETOneVPv" />
-          <separator id="PTXIG1s7"/>         
-          <button id="PUT_vpv_" label="Update one VPv"  onAction ="PTPUTOneVPv" />
-          <button id="DEL_vpv_" label="Delete one VPv"  onAction ="PTDELETEOneVPv" />
-           <separator id="PTXIG1s8"/> 
-          <button id="PTJsonWrite" label="WRITE Json"  onAction ="PTJsonWrite" />
-          <button id="PTJsonRead" label="READ Json"  onAction ="PTJsonRead" />
-          <button id="hierarchy" label="Hierarchy"  onAction ="PTJsonReadHierarchy" />-->
          </group>
       </tab>
       <!--label="Lizenzen"-->
