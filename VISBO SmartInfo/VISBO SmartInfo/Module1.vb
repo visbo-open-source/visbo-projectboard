@@ -2151,7 +2151,7 @@ Module Module1
                                     Try
                                         Call createNewHiddenExcel()
 
-                                        Dim newWay As Boolean = True
+                                        Dim newWay As Boolean = False
 
                                         If Not IsNothing(updateWorkbook) Then
 
@@ -2163,13 +2163,20 @@ Module Module1
                                             'pptShape.Copy()
                                             'ws.Paste()
 
-                                            ws = pptCopychartPaste(pptShape, ws)
-                                            Dim anzCharts As Integer = CType(ws.ChartObjects, Excel.ChartObjects).Count
+                                            Dim anzCharts As Integer = 0
+                                            If Not newWay Then
+                                                ws = pptCopychartPaste(pptShape, ws)
+                                                anzCharts = CType(ws.ChartObjects, Excel.ChartObjects).Count
+                                            End If
 
-                                            If anzCharts > 0 Then
-                                                newchtobj = CType(ws.ChartObjects(anzCharts), Excel.ChartObject)
+                                            If anzCharts > 0 Or newWay Then
 
-                                                If Not IsNothing(newchtobj) Then
+                                                If Not newWay Then
+                                                    newchtobj = CType(ws.ChartObjects(anzCharts), Excel.ChartObject)
+                                                End If
+
+
+                                                If Not IsNothing(newchtobj) Or newWay Then
 
                                                     ' jetzt muss das chtobj aktualisiert werden ... 
                                                     Try
@@ -2991,6 +2998,7 @@ Module Module1
 
                 xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
             End If
+
             updateWorkbook = xlApp.ActiveWorkbook
             With updateWorkbook
                 .Worksheets.Item(1).name = "table1"
