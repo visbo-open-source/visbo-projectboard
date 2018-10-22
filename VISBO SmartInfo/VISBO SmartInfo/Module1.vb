@@ -567,16 +567,16 @@ Module Module1
                 msgtxt = "there might be a newer Version." & vbLf & vbLf & "Do you want to update?"
             End If
 
-            Dim updateFrm As New frmUpdateInfo
-            With updateFrm
-                .updateMsg.Text = msgtxt
-                Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
+            'Dim updateFrm As New frmUpdateInfo
+            'With updateFrm
+            '    .updateMsg.Text = msgtxt
+            '    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
 
-                If diagResult = Windows.Forms.DialogResult.OK Then
-                    Dim tmpDate As Date = Date.MinValue
-                    Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
-                End If
-            End With
+            '    If diagResult = Windows.Forms.DialogResult.OK Then
+            '        Dim tmpDate As Date = Date.MinValue
+            '        Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            '    End If
+            'End With
 
 
         End If
