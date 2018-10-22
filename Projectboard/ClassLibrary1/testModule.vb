@@ -21348,6 +21348,7 @@ Public Module testModule
                     End Try
                     j = j + 1
                 End While
+
                 If Not ok2 Then
                     Call MsgBox("pptCopy timeout oder j=" & j.ToString)
                     If Not ok2 Then
@@ -21390,7 +21391,7 @@ Public Module testModule
         Dim ok2 As Boolean = False
         Dim i As Integer = 1
         Dim j As Integer = 1
-        
+
 
         While Not ok1 And i < 100
             Try

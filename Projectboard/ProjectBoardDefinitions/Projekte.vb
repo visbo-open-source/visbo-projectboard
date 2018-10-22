@@ -6088,7 +6088,8 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub updatePPTBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
                                         ByRef chtobj As Excel.ChartObject,
-                                             ByVal prcTyp As Integer, ByVal auswahl As Integer, ByVal rcName As String)
+                                        ByVal prcTyp As Integer, ByVal auswahl As Integer, ByVal rcName As String,
+                                        ByVal curWS As Excel.Worksheet)
 
         Dim xlsChart As Excel.Chart = chtobj.Chart
         Dim kennung As String = chtobj.Name
@@ -6116,6 +6117,12 @@ Public Module Projekte
 
         Dim chartType As Excel.XlChartType
         Dim curmaxScale As Double
+        Dim considerIstDaten As Boolean = False
+
+        ' für das SetSourceData 
+        Dim myRange As Excel.Range = Nothing
+        Dim usedRange As Excel.Range = curWS.UsedRange
+        ' Ende setsource Vorbereitungen 
 
         ' die Settings herauslesen ...
         Dim chartTyp As String = ""
@@ -6151,6 +6158,8 @@ Public Module Projekte
             repmsg(6) = "Ist-Werte"
         End If
 
+        Dim series1Name As String = repmsg(1)
+        Dim series2Name As String = "-"
 
         ' die ganzen Vor-Klärungen machen ...
         With xlsChart
@@ -6232,8 +6241,7 @@ Public Module Projekte
             End Try
 
             'Dim series1Name As String = repmsg(1) & " " & hproj.timeStamp.ToShortDateString ' Stand vom 
-            Dim series1Name As String = repmsg(1)
-            Dim series2Name As String = "-"
+
             If Not IsNothing(vglProj) Then
                 series2Name = repmsg(3) & " " & vglProj.timeStamp.ToShortDateString ' erste Beauftragung vom 
             End If
@@ -6293,7 +6301,7 @@ Public Module Projekte
 
             Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
 
-            Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+            considerIstDaten = hproj.actualDataUntil > hproj.startDate
             Dim actualdataIndex As Integer = -1
 
             If considerIstDaten Then
@@ -6455,6 +6463,59 @@ Public Module Projekte
 
 
         End With
+
+        ' tk 21.10.18
+        ' jetzt wird myRange gesetzt und setSourceData gesetzt 
+        Dim fZeile As Integer = usedRange.Rows.Count + 1
+        Dim anzSpalten As Integer = plen + 1
+        Dim anzRows As Integer = 0
+
+        With curWS
+
+            .Cells(fZeile, 1).value = ""
+            .Range(.Cells(fZeile, 2), .Cells(fZeile, anzSpalten)).Value = Xdatenreihe
+
+            If considerIstDaten Then
+
+                anzRows = 3
+
+                .Cells(fZeile + 1, 1).value = repmsg(6)
+                .Range(.Cells(fZeile + 1, 2), .Cells(fZeile + 1, anzSpalten)).Value = istDatenReihe
+
+                .Cells(fZeile + 2, 1).value = series1Name
+                .Range(.Cells(fZeile + 2, 2), .Cells(fZeile + 2, anzSpalten)).Value = prognoseDatenReihe
+
+                If Not IsNothing(vglProj) Then
+
+                    anzRows = 4
+                    .Cells(fZeile + 3, 1).value = series2Name
+                    .Range(.Cells(fZeile + 3, 2), .Cells(fZeile + 3, anzSpalten)).Value = vdatenreihe
+
+                End If
+
+            Else
+
+                anzRows = 2
+
+                .Cells(fZeile + 1, 1).value = series1Name
+                .Range(.Cells(fZeile + 1, 2), .Cells(fZeile + 1, anzSpalten)).Value = prognoseDatenReihe
+
+                If Not IsNothing(vglProj) Then
+                    anzRows = 3
+
+                    .Cells(fZeile + 2, 1).value = series2Name
+                    .Range(.Cells(fZeile + 2, 2), .Cells(fZeile + 2, anzSpalten)).Value = vdatenreihe
+
+                End If
+
+            End If
+
+            myRange = curWS.Range(.Cells(fZeile, 1), .Cells(fZeile + anzRows - 1, anzSpalten))
+
+        End With
+
+        chtobj.Chart.SetSourceData(Source:=myRange)
+
 
 
 
