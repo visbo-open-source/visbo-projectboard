@@ -2977,6 +2977,12 @@ Module Module1
             Try
                 xlApp = CreateObject("Excel.Application")
                 xlApp.Visible = False
+                xlApp.Workbooks.Add()
+
+                updateWorkbook = xlApp.ActiveWorkbook
+                With updateWorkbook
+                    .Worksheets.Item(1).name = "visboupdate"
+                End With
 
                 'xlApp.ScreenUpdating = False
                 '' prüft, ob bereits Powerpoint geöffnet ist 
@@ -2987,22 +2993,19 @@ Module Module1
                 Exit Sub
             End Try
 
-            Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.Temp, "visboupdate.xlsx")
+            'Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.Temp, "visboupdate.xlsx")
 
-            If My.Computer.FileSystem.FileExists(fullPathName) Then
-                ' öffnen
-                xlApp.Workbooks.Open(fullPathName)
+            'If My.Computer.FileSystem.FileExists(fullPathName) Then
+            '    ' öffnen
+            '    xlApp.Workbooks.Open(fullPathName)
 
-            Else
-                xlApp.Workbooks.Add()
+            'Else
+            '    xlApp.Workbooks.Add()
 
-                xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-            End If
+            '    xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+            'End If
 
-            updateWorkbook = xlApp.ActiveWorkbook
-            With updateWorkbook
-                .Worksheets.Item(1).name = "table1"
-            End With
+
         Else
             ' existiert schon, also existiert auch xlApp bereits ...
         End If
