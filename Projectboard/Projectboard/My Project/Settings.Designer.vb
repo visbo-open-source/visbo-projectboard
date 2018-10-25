@@ -55,7 +55,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Koytek\Documents\Project-Tafel Folder\IT-Projekte 2018\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Tom\Documents\Projekt-Tafel Folder\DemoVC\")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -64,7 +64,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("IT Projekte 2018")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Demo Visbo Center")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -109,7 +109,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("False")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("True")>  _
     Public ReadOnly Property VISBODebug() As Boolean
         Get
             Return CType(Me("VISBODebug"),Boolean)

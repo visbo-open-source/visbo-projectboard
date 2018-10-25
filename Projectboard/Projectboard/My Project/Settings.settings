@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\IT-Projekte 2018\</Value>
+      <Value Profile="(Default)">C:\Users\Tom\Documents\Projekt-Tafel Folder\DemoVC\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">IT Projekte 2018</Value>
+      <Value Profile="(Default)">Demo Visbo Center</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
@@ -21,7 +21,7 @@
       <Value Profile="(Default)">VISBO Ampel</Value>
     </Setting>
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Indicators</Value>

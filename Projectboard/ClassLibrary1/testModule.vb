@@ -20767,6 +20767,7 @@ Public Module testModule
                             End If
 
 
+
                         End With
 
                         curHeight = pptCurrentPresentation.PageSetup.SlideHeight
