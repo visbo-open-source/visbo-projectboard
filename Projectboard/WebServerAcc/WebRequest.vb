@@ -2205,44 +2205,53 @@ Public Class Request
                 Dim typeRequest As String = "/vpv"
                 Dim serverUriString As String = serverUriName & typeRequest
 
-                'Dim refDate As String = DateTimeToISODate(storedAtorBefore.AddMinutes(1.0))
-                Dim refDate As String = DateTimeToISODate(storedAtorBefore)
+                If vpvid <> "" Then
+                    serverUriString = serverUriString & "/" & vpvid
+                Else
 
-                If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> "" Then
-                    serverUriString = serverUriString & "?"
-                    serverUriString = serverUriString & "vcid=" & aktVCid
-                    If vpid <> "" Then
-                        serverUriString = serverUriString & "&vpid=" & vpid
+                    'Dim refDate As String = DateTimeToISODate(storedAtorBefore.AddMinutes(1.0))
+                    Dim refDate As String = DateTimeToISODate(storedAtorBefore)
 
-                        If storedAtorBefore > Date.MinValue Then
-                            serverUriString = serverUriString & "&refDate=" & refDate
-                        End If
 
-                        If variantName <> "" Then
-                            serverUriString = serverUriString & "&variantName=" & variantName
-                        End If
-                    Else
-                        If storedAtorBefore > Date.MinValue Then
-                            serverUriString = serverUriString & "&refDate=" & refDate
+                    If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> "" Then
+                        serverUriString = serverUriString & "?"
+                        serverUriString = serverUriString & "vcid=" & aktVCid
+                        If vpid <> "" Then
+                            serverUriString = serverUriString & "&vpid=" & vpid
+
+                            If storedAtorBefore > Date.MinValue Then
+                                serverUriString = serverUriString & "&refDate=" & refDate
+                            End If
+
                             If variantName <> "" Then
                                 serverUriString = serverUriString & "&variantName=" & variantName
                             End If
                         Else
-                            If variantName <> "" Then
-                                serverUriString = serverUriString & "&variantName=" & variantName
+                            If storedAtorBefore > Date.MinValue Then
+                                serverUriString = serverUriString & "&refDate=" & refDate
+                                If variantName <> "" Then
+                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                End If
+                            Else
+                                If variantName <> "" Then
+                                    serverUriString = serverUriString & "&variantName=" & variantName
+                                End If
                             End If
+
                         End If
+
+                        ' es wird die Long-Version einer VisboProjectVersion angefordert
+                        serverUriString = serverUriString & "&longList"
+
+                    Else
+
+                        serverUriString = serverUriString & "?"
+                        serverUriString = serverUriString & "vcid=" & aktVCid
+                        ' Long-Version  angefordert
+                        serverUriString = serverUriString & "&longList"
 
                     End If
 
-                    ' es wird die Long-Version einer VisboProjectVersion angefordert
-                    serverUriString = serverUriString & "&longList"
-                Else
-
-                    serverUriString = serverUriString & "?"
-                    serverUriString = serverUriString & "vcid=" & aktVCid
-                    ' Long-Version  angefordert
-                    serverUriString = serverUriString & "&longList"
 
                 End If
 
