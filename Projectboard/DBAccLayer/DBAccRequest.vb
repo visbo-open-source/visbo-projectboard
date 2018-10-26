@@ -82,21 +82,24 @@ Public Class Request
         Dim result As Boolean = False
         Try
             If usedWebServer Then
-                Try
-                    result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
+                '' ur: 24.10.2018 nach Mail von MS: Test, da es eigentlich nichts nützt, kann trotzdem schief gehen
+                ''Try
+                ''    result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
 
-                Catch ex As Exception
+                ''Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then
-                        loginErfolgreich = login(dburl, dbname, uname, pwd)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
-                    End If
-                End Try
+                ''    Dim hstr() As String = Split(ex.Message, ":")
+                ''    If CInt(hstr(0)) = 401 Then
+                ''        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                ''        If loginErfolgreich Then
+                ''            result = CType(DBAcc, WebServerAcc.Request).pingMongoDb()
+                ''        End If
+                ''    Else
+                ''        Throw New ArgumentException(ex.Message)
+                ''    End If
+                ''End Try
+
+                result = True
 
             Else 'es wird eine MongoDB direkt adressiert
 

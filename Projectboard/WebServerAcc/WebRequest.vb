@@ -940,13 +940,16 @@ Public Class Request
                 ' get specific VisboProjectVersion vpvid
                 Dim hresult As New List(Of clsProjektWebLong)
                 Dim vpvid As String = ""
-                If resultColl.Count >= 0 Then
+                If resultColl.Count > 0 Then
+                    ' erste VPV holen
                     vpvid = resultColl.ElementAt(0).Value
-                End If
 
-                hresult = GETallVPvLong(vpid:=vpid, vpvid:=vpvid)
-                If hresult.Count >= 0 Then
-                    hresult.Item(0).copyto(hproj)
+                    hresult = GETallVPvLong(vpid:=vpid, vpvid:=vpvid)
+                    If hresult.Count >= 0 Then
+                        hresult.Item(0).copyto(hproj)
+                    Else
+                        hproj = Nothing
+                    End If
                 Else
                     hproj = Nothing
                 End If
@@ -1005,17 +1008,20 @@ Public Class Request
                     ' get specific VisboProjectVersion vpvid
                     Dim hresult As New List(Of clsProjektWebLong)
                     Dim vpvid As String = ""
-                    If resultColl.Count >= 0 Then
-                        vpvid = resultColl.Last.Value
-                    End If
 
-                    hresult = GETallVPvLong(vpid:=vpid, vpvid:=vpvid)
-                    If hresult.Count >= 0 Then
-                        hresult.Item(0).copyto(hproj)
+                    If resultColl.Count > 0 Then
+                        ' letzte VPV holen
+                        vpvid = resultColl.Last.Value
+
+                        hresult = GETallVPvLong(vpid:=vpid, vpvid:=vpvid)
+                        If hresult.Count >= 0 Then
+                            hresult.Item(0).copyto(hproj)
+                        Else
+                            hproj = Nothing
+                        End If
                     Else
                         hproj = Nothing
                     End If
-
                 Else
                     hproj = Nothing
                 End If
@@ -2041,6 +2047,7 @@ Public Class Request
         Dim errmsg As String = ""
         Dim errcode As Integer = 200
 
+
         Try
             ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
             nothingToDo = VRScache.existsInCache(vpid, variantName, , False)
@@ -2072,13 +2079,13 @@ Public Class Request
 
                 Dim typeRequest As String = "/vpv"
                 Dim serverUriString As String = serverUriName & typeRequest
+                serverUriString = serverUriString & "?"
+                serverUriString = serverUriString & "vcid=" & aktVCid
 
-                'Dim refDate As String = DateTimeToISODate(storedAtorBefore.AddMinutes(1.0))
                 Dim refDate As String = DateTimeToISODate(storedAtorBefore)
 
                 If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> "" Then
-                    serverUriString = serverUriString & "?"
-                    serverUriString = serverUriString & "vcid=" & aktVCid
+
                     If vpid <> "" Then
                         serverUriString = serverUriString & "&vpid=" & vpid
 
