@@ -2,6 +2,16 @@
 
     Friend changeliste As clsChangeListe
 
+    Public Sub New()
+
+        ' Dieser Aufruf ist für den Designer erforderlich.
+        InitializeComponent()
+        changeliste = New clsChangeListe
+
+        ' Fügen Sie Initialisierungen nach dem InitializeComponent()-Aufruf hinzu.
+
+    End Sub
+
     Private Sub frmChanges_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
         changeFrm = Nothing
 
@@ -66,7 +76,17 @@
     Private Sub listeAufbauen()
 
         ' auf die changeliste der aktuellen Slide setzen
-        changeliste = chgeLstListe(currentSlide.SlideID)
+        Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+
+        changeliste = Nothing
+
+        If chgeLstListe.ContainsKey(hwind) Then
+            If chgeLstListe.Item(hwind).ContainsKey(currentSlide.SlideID) Then
+                changeliste = chgeLstListe.Item(hwind).Item(currentSlide.SlideID)
+            End If
+        End If
+
+        'changeliste = chgeLstListe(currentSlide.SlideID)
 
         Dim tmpPreviousVname As String = previousVariantName, tmpCurrentVname As String = currentVariantname
         Dim showVariantMode As Boolean = False
@@ -93,53 +113,57 @@
             End If
         End If
 
+        If Not IsNothing(changeliste) Then
 
-        Dim anzChangeItems As Integer = changeliste.getChangeListCount
+            Dim anzChangeItems As Integer = changeliste.getChangeListCount
 
+            If anzChangeItems > 0 Then
 
-        If anzChangeItems > 0 Then
+                changeListTable.Rows.Add(anzChangeItems)
 
-            changeListTable.Rows.Add(anzChangeItems)
+                For i As Integer = 0 To anzChangeItems - 1
 
-            For i As Integer = 0 To anzChangeItems - 1
+                    Dim currentItem As clsChangeItem = changeliste.getExplanationFromChangeList(i + 1)
 
-                Dim currentItem As clsChangeItem = changeliste.getExplanationFromChangeList(i + 1)
+                    With currentItem
+                        If .vName = "" Then
+                            changeListTable.Rows(i).Cells(0).Value = .pName
+                        Else
+                            changeListTable.Rows(i).Cells(0).Value = .pName & " [" & .vName & "]"
+                        End If
 
-                With currentItem
-                    If .vName = "" Then
-                        changeListTable.Rows(i).Cells(0).Value = .pName
-                    Else
-                        changeListTable.Rows(i).Cells(0).Value = .pName & " [" & .vName & "]"
-                    End If
-
-                    changeListTable.Rows(i).Cells(1).Value = .bestElemName
-                    If showVariantMode Then
-                        changeListTable.Rows(i).Cells(2).Value = .oldValue
-                        changeListTable.Rows(i).Cells(3).Value = .newValue
-                    Else
-                        If previousTimeStamp < currentTimestamp Then
+                        changeListTable.Rows(i).Cells(1).Value = .bestElemName
+                        If showVariantMode Then
                             changeListTable.Rows(i).Cells(2).Value = .oldValue
                             changeListTable.Rows(i).Cells(3).Value = .newValue
                         Else
-                            changeListTable.Rows(i).Cells(2).Value = .newValue
-                            changeListTable.Rows(i).Cells(3).Value = .oldValue
+                            If previousTimeStamp < currentTimestamp Then
+                                changeListTable.Rows(i).Cells(2).Value = .oldValue
+                                changeListTable.Rows(i).Cells(3).Value = .newValue
+                            Else
+                                changeListTable.Rows(i).Cells(2).Value = .newValue
+                                changeListTable.Rows(i).Cells(3).Value = .oldValue
+                            End If
                         End If
-                    End If
 
-                    changeListTable.Rows(i).Cells(4).Value = .diffInDays
-                End With
+                        changeListTable.Rows(i).Cells(4).Value = .diffInDays
+                    End With
 
-                changeListTable.Rows(i).Tag = changeliste.getShapeNameFromChangeList(i + 1)
+                    changeListTable.Rows(i).Tag = changeliste.getShapeNameFromChangeList(i + 1)
 
-            Next
+                Next
+            End If
+
+            If anzChangeItems = 1 Then
+                ' es muss eine zusätzliche Zeile hinzugefügt werden, sonst ist diese eine Zeile nicht zu selektieren 
+                changeListTable.Rows.Add(1)
+                changeListTable.Rows.Item(0).Selected = False
+                changeListTable.Rows.Item(1).Selected = True
+            End If
+
         End If
 
-        If anzChangeItems = 1 Then
-            ' es muss eine zusätzliche Zeile hinzugefügt werden, sonst ist diese eine Zeile nicht zu selektieren 
-            changeListTable.Rows.Add(1)
-            changeListTable.Rows.Item(0).Selected = False
-            changeListTable.Rows.Item(1).Selected = True
-        End If
+
     End Sub
 
     Friend Sub neuAufbau()

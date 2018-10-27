@@ -1830,8 +1830,6 @@ Public Module Projekte
 
         ReDim tempArray(anzBubbles - 1)
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
 
         ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
 

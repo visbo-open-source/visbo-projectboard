@@ -64,14 +64,15 @@ Public Class Ribbon1
         ' tk 11.1217 nur aktiv machen, wenn man Slides zur Weitergabe komplett strippen möchte ... um zu verhindern, dass die Re-Engineering machen ...
         'Call stripOffAllSmartInfo()
 
-        If userIsEntitled(msg) Then
-            Dim settingsfrm As New frmSettings
+        ' tk 27.10.18 hier soll kein DB login erfolgen ...
+        'If userIsEntitled(msg) Then
+        Dim settingsfrm As New frmSettings
             With settingsfrm
                 Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
             End With
-        Else
-            Call MsgBox(msg)
-        End If
+        'Else
+        '    Call MsgBox(msg)
+        'End If
 
     End Sub
 
@@ -80,18 +81,19 @@ Public Class Ribbon1
     Private Sub activateTab_Click(sender As Object, e As RibbonControlEventArgs) Handles activateTab.Click
 
         Dim msg As String = ""
-        If userIsEntitled(msg) Then
 
-            ' wird das Formular aktuell angezeigt ? 
-            If IsNothing(infoFrm) And Not formIsShown Then
+        'If userIsEntitled(msg) Then
+
+        ' wird das Formular aktuell angezeigt ? 
+        If IsNothing(infoFrm) And Not formIsShown Then
                 infoFrm = New frmInfo
                 formIsShown = True
                 infoFrm.Show()
             End If
 
-        Else
-            Call MsgBox(msg)
-        End If
+        'Else
+        '    Call MsgBox(msg)
+        'End If
 
     End Sub
 
@@ -190,13 +192,30 @@ Public Class Ribbon1
     Private Sub btnShowChanges_Click(sender As Object, e As RibbonControlEventArgs) Handles btnShowChanges.Click
 
         Try
+            Dim hwind As Integer = pptAPP.ActiveWindow.HWND
             ' das Formular aufschalten 
             If IsNothing(changeFrm) Then
                 changeFrm = New frmChanges
-                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
+                changeFrm.changeliste = Nothing
+
+                If chgeLstListe.ContainsKey(hwind) Then
+                    If chgeLstListe.Item(hwind).ContainsKey(currentSlide.SlideID) Then
+                        changeFrm.changeliste = chgeLstListe.Item(hwind).Item(currentSlide.SlideID)
+                    End If
+                End If
+
+                'changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
                 changeFrm.Show()
             Else
-                changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
+
+                changeFrm.changeliste.clearChangeList()
+
+                If chgeLstListe.ContainsKey(hwind) Then
+                    If chgeLstListe.Item(hwind).ContainsKey(currentSlide.SlideID) Then
+                        changeFrm.changeliste = chgeLstListe.Item(hwind).Item(currentSlide.SlideID)
+                    End If
+                End If
+
                 changeFrm.neuAufbau()
             End If
         Catch ex As Exception
@@ -218,7 +237,16 @@ Public Class Ribbon1
         Try
 
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            Dim msg As String = ""
+
+            ' Prüfen, ob Login noch passt ...
+            If userIsEntitled(msg) Then
+                Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            Else
+                Call MsgBox(msg)
+            End If
+
+
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -281,7 +309,16 @@ Public Class Ribbon1
 
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.nachher, tmpDate)
+            Dim msg As String = ""
+
+            ' Prüfen, ob Login noch passt ...
+            If userIsEntitled(msg) Then
+                Call btnUpdateAction(ptNavigationButtons.nachher, tmpDate)
+            Else
+                Call MsgBox(msg)
+            End If
+
+
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -326,7 +363,16 @@ Public Class Ribbon1
     Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.vorher, tmpDate)
+            Dim msg As String = ""
+
+            ' Prüfen, ob Login noch passt ...
+            If userIsEntitled(msg) Then
+                Call btnUpdateAction(ptNavigationButtons.vorher, tmpDate)
+            Else
+                Call MsgBox(msg)
+            End If
+
+
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -367,7 +413,15 @@ Public Class Ribbon1
     Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.erster, tmpDate)
+            Dim msg As String = ""
+
+            ' Prüfen, ob Login noch passt ...
+            If userIsEntitled(msg) Then
+                Call btnUpdateAction(ptNavigationButtons.erster, tmpDate)
+            Else
+                Call MsgBox(msg)
+            End If
+
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -402,7 +456,15 @@ Public Class Ribbon1
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            Dim msg As String = ""
+
+            ' Prüfen, ob Login noch passt ...
+            If userIsEntitled(msg) Then
+                Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            Else
+                Call MsgBox(msg)
+            End If
+
 
             ' durch obigen Aufruf ersetzt ... 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -453,32 +515,34 @@ Public Class Ribbon1
     Private Sub varianten_Tab_Click(sender As Object, e As RibbonControlEventArgs) Handles varianten_Tab.Click
         Dim msg As String = ""
 
+
         If userIsEntitled(msg) Then
             Dim anzahlProjekte As Integer = smartSlideLists.countProjects
             ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
             If anzahlProjekte > 0 Then
 
                 ' muss noch eingeloggt werden ? 
-                If noDBAccessInPPT Then
+                ' wird inzwischen in isUserIsEntitled gemacht ... 
+                'If noDBAccessInPPT Then
 
-                    noDBAccessInPPT = Not logInToMongoDB(True)
+                '    noDBAccessInPPT = Not logInToMongoDB(True)
 
-                    If noDBAccessInPPT Then
-                        If englishLanguage Then
-                            msg = "no database access ... "
-                        Else
-                            msg = "kein Datenbank Zugriff ... "
-                        End If
-                        Call MsgBox(msg)
-                    Else
+                '    If noDBAccessInPPT Then
+                '        If englishLanguage Then
+                '            msg = "no database access ... "
+                '        Else
+                '            msg = "kein Datenbank Zugriff ... "
+                '        End If
+                '        Call MsgBox(msg)
+                '    Else
 
-                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                '        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                '        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                '        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
-                    End If
+                '    End If
 
-                End If
+                'End If
 
                 If Not noDBAccessInPPT Then
 
@@ -529,7 +593,16 @@ Public Class Ribbon1
 
             If userResult = Windows.Forms.DialogResult.OK Then
                 Dim specDate As Date = calendarFrm.DateTimePicker1.Value
-                Call btnUpdateAction(ptNavigationButtons.individual, specDate)
+
+                Dim msg As String = ""
+
+                ' Prüfen, ob Login noch passt ...
+                If userIsEntitled(msg) Then
+                    Call btnUpdateAction(ptNavigationButtons.individual, specDate)
+                Else
+                    Call MsgBox(msg)
+                End If
+
 
                 ' tk 18.10.18 ersetzt durch obigen Aufruf ... 
                 'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
@@ -585,7 +658,15 @@ Public Class Ribbon1
 
 
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.previous, tmpDate)
+            Dim msg As String = ""
+
+            ' Prüfen, ob Login noch passt ...
+            If userIsEntitled(msg) Then
+                Call btnUpdateAction(ptNavigationButtons.previous, tmpDate)
+            Else
+                Call MsgBox(msg)
+            End If
+
 
             ' tk , jetzt durch obigen Aufruf ersetzt 
             'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation

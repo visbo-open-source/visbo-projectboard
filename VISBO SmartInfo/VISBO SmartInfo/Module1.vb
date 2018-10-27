@@ -34,13 +34,26 @@ Module Module1
     Friend VisboProtected As Boolean = False
     Friend protectionSolved As Boolean = False
 
+    ' damit wird ermittelt, ob im SlideSelctionChange tatsächlich von einer Slide auf eine weitere gewechselt wurde
+    ' der Event wird nämlich auch ausgelöst, wenn man Presentation öffnet und im Navi-Fenster auf 3 Folie wecshelt, dann in der Folie auf ein Element klickt ...
+    ' ausserdem muss in dem Event unterschieden werden können, wenn man von Presentation1.SlideID=285 au presentation2.slideID=285 wechselt ...
+    Friend beforeSlideKennung As String = ""
+
     Friend thereIsNoVersionFieldOnSlide As Boolean = True
     ' bestimmt, ob in englisch oder auf deutsch ..
     Friend englishLanguage As Boolean = True
 
+    ' in der Liste werden für jede Präsentation die beiden Timestamps Previous und current gemerkt 
+    ' 0 = previous, 1 = current
+    Friend rememberListOfCPTimeStamps As SortedList(Of Integer, Date()) = Nothing
+
     ' was ist der aktuelle Timestamp der Slide 
     Friend currentTimestamp As Date = Date.MinValue
     Friend previousTimeStamp As Date = Date.MinValue
+
+    ' in der Liste werden für jede Präsentation die beiden Varianten-Namen Previous und current gemerkt 
+    ' 0 = previous, 1 = current
+    Friend rememberListOfCPVariantNames As SortedList(Of Integer, String()) = Nothing
 
     Friend currentVariantname As String = ""
     Friend previousVariantName As String = noVariantName
@@ -68,7 +81,7 @@ Module Module1
     ' globale Variable, die anzeigt, ob Orginal Name gezeigt werden soll 
     Friend showOrigName As Boolean = False
     ' globale Varianle, die angibt, ob der Best-Name, also der eindeutige Name gezeigt werden soll 
-    Friend showBestName As Boolean = False
+    Friend showBestName As Boolean = True
     ' globale Variable, die angibt, ob für Meilenstein und/oder Phase mit KW beschriftet wird
     Friend showWeek As Boolean = False
 
@@ -103,8 +116,8 @@ Module Module1
     ' diese Liste enthält die Veränderungen nach einem TimeStamp oder Varianten Wechsel 
     'Friend changeListe As New clsChangeListe
 
-    ' diese Liste enthält für jede Slide der Presentation die changeListe, sortiert nach SlideNr.
-    Friend chgeLstListe As New SortedList(Of Integer, clsChangeListe)
+    ' diese Liste enthält für jede Slide der Presentation die changeListe, sortiert nach WindowID und dann nach SlideNr.
+    Friend chgeLstListe As New SortedList(Of Integer, SortedList(Of Integer, clsChangeListe))
 
     ' dieses Formular gibt die Changes, die sich bei den Elementen ergeben haben 
     Friend changeFrm As frmChanges = Nothing
@@ -393,104 +406,135 @@ Module Module1
 
         Dim tmpResult As Boolean = False
 
-        If userhasValidLicence Then
+        ' tk 27.10.18 rausgenommen, weil smartInfo keine Lizenz benötigt
+        'If userHasValidLicence() Then
 
-            If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Or _
-            pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Or _
-            pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
+        If noDBAccessInPPT Then
 
-                VisboProtected = True
+            noDBAccessInPPT = Not logInToMongoDB(True)
 
-                If Not protectionSolved Then
-                    If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
+            If noDBAccessInPPT Then
 
-                        Dim pwdFormular As New frmPassword
-                        If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
-                            If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
-                                ' in allen Slides den Sicht Schutz aufheben 
-                                protectionSolved = True
-                                Call makeVisboShapesVisible(True)
-                            End If
-                        Else
-                            If englishLanguage Then
-                                msg = "wrong password ..."
-                            Else
-                                msg = "Password falsch ..."
-                            End If
-
-                            tmpResult = False
-                        End If
-
-                    ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
-                        Dim userName As String = My.Computer.Name
-                        If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
-                            ' in allen Slides den Sicht Schutz aufheben 
-                            protectionSolved = True
-                            Call makeVisboShapesVisible(True)
-                        Else
-                            tmpResult = False
-                            If englishLanguage Then
-                                msg = "computer / user not entitled ..."
-                            Else
-                                msg = "nicht berechtigter Computer bzw. User ..."
-                            End If
-
-                        End If
-
-                    ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
-                        ' die Login Maske aufschalten ... 
-                        ' muss noch eingeloggt werden ? 
-                        If noDBAccessInPPT Then
-                            ' jetzt die Login Maske aufrufen ... 
-
-                            If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
-
-                                noDBAccessInPPT = Not logInToMongoDB(True)
-
-                                If noDBAccessInPPT Then
-                                    If englishLanguage Then
-                                        msg = "no database access ... "
-                                    Else
-                                        msg = "kein Datenbank Zugriff ... "
-                                    End If
-                                    Call MsgBox(msg)
-                                Else
-
-                                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                                    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                                    CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
-
-                                    ' in allen Slides den Sicht Schutz aufheben 
-                                    protectionSolved = True
-                                    Call makeVisboShapesVisible(True)
-                                End If
-
-
-                            End If
-
-                        End If
-
-                    End If
+                tmpResult = False
+                If englishLanguage Then
+                    msg = "no database access ... "
+                Else
+                    msg = "kein Datenbank Zugriff ... "
                 End If
-
-                If protectionSolved Then
-                    tmpResult = True
-                End If
+                Call MsgBox(msg)
             Else
                 tmpResult = True
+
+                ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+
+                ' in allen Slides den Sicht Schutz aufheben 
+                protectionSolved = True
+                Call makeVisboShapesVisible(True)
             End If
 
         Else
-            tmpResult = False
-            If englishLanguage Then
-                msg = "no valid licence ... please contact your system-administrator"
-            Else
-                msg = "keine gültige Lizenz ... bitte kontaktieren Sie Ihren System-Administrator"
-            End If
-
+            tmpResult = True
         End If
 
-        
+        ' tk 27.10.18 - ggf später wieder aktivieren ... aktuell geht es nur darum, heraus zu finden, ob der User schon eingeloggt ist ... 
+        'If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Or _
+        'pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Or _
+        'pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
+
+        '    VisboProtected = True
+
+        '    If Not protectionSolved Then
+        '        If pptAPP.ActivePresentation.Tags.Item(protectionTag) = "PWD" Then
+
+        '            Dim pwdFormular As New frmPassword
+        '            If pwdFormular.ShowDialog() = Windows.Forms.DialogResult.OK Then
+        '                If pwdFormular.pwdText.Text = pptAPP.ActivePresentation.Tags.Item(protectionValue) Then
+        '                    ' in allen Slides den Sicht Schutz aufheben 
+        '                    protectionSolved = True
+        '                    Call makeVisboShapesVisible(True)
+        '                End If
+        '            Else
+        '                If englishLanguage Then
+        '                    msg = "wrong password ..."
+        '                Else
+        '                    msg = "Password falsch ..."
+        '                End If
+
+        '                tmpResult = False
+        '            End If
+
+        '        ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "COMPUTER" Then
+        '            Dim userName As String = My.Computer.Name
+        '            If pptAPP.ActivePresentation.Tags.Item(protectionValue) = userName Then
+        '                ' in allen Slides den Sicht Schutz aufheben 
+        '                protectionSolved = True
+        '                Call makeVisboShapesVisible(True)
+        '            Else
+        '                tmpResult = False
+        '                If englishLanguage Then
+        '                    msg = "computer / user not entitled ..."
+        '                Else
+        '                    msg = "nicht berechtigter Computer bzw. User ..."
+        '                End If
+
+        '            End If
+
+        '        ElseIf pptAPP.ActivePresentation.Tags.Item(protectionTag) = "DATABASE" Then
+        '            ' die Login Maske aufschalten ... 
+        '            ' muss noch eingeloggt werden ? 
+        '            If noDBAccessInPPT Then
+        '                ' jetzt die Login Maske aufrufen ... 
+
+        '                If awinSettings.databaseURL <> "" And awinSettings.databaseName <> "" Then
+
+        '                    noDBAccessInPPT = Not logInToMongoDB(True)
+
+        '                    If noDBAccessInPPT Then
+        '                        If englishLanguage Then
+        '                            msg = "no database access ... "
+        '                        Else
+        '                            msg = "kein Datenbank Zugriff ... "
+        '                        End If
+        '                        Call MsgBox(msg)
+        '                    Else
+
+        '                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+        '                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+        '                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+
+        '                        ' in allen Slides den Sicht Schutz aufheben 
+        '                        protectionSolved = True
+        '                        Call makeVisboShapesVisible(True)
+        '                    End If
+
+
+        '                End If
+
+        '            End If
+
+        '        End If
+        '    End If
+
+        '    If protectionSolved Then
+        '        tmpResult = True
+        '    End If
+        'Else
+        '    tmpResult = True
+        'End If
+
+        'Else
+        '    tmpResult = False
+        '    If englishLanguage Then
+        '        msg = "no valid licence ... please contact your system-administrator"
+        '    Else
+        '        msg = "keine gültige Lizenz ... bitte kontaktieren Sie Ihren System-Administrator"
+        '    End If
+
+        'End If
+
+
 
         userIsEntitled = tmpResult
 
@@ -521,11 +565,18 @@ Module Module1
 
         End If
 
+        ' Erweitern der 
+
         ' Anlegen einer leeren changeliste für jede Slide in der activePresentation
+        Dim slideChgListe As New SortedList(Of Integer, clsChangeListe)
+
         For Each slide As PowerPoint.Slide In pptAPP.ActivePresentation.Slides
             Dim chgelst As New clsChangeListe
-            chgeLstListe.Add(slide.SlideID, chgelst)
+            slideChgListe.Add(slide.SlideID, chgelst)
         Next
+
+        ' jetzt muss die chgListe ergänz werden 
+        chgeLstListe.Add(pptAPP.ActiveWindow.HWND, slideChgListe)
 
         ' tk 17.10.18 jetzt muss geprüft werden, ob eine der Slides smart-Infos enthält, wenigstens eine Slide nicht frozen ist und das aktuelle Datum der Slide vor dem heutigen Tag liegt 
         Dim atleastOne As Boolean = False
@@ -590,6 +641,11 @@ Module Module1
         ' Id des aktiven Windows
         Dim hWinID As Integer = pptAPP.ActiveWindow.HWND
 
+        ' die chgeliste aktualisieren , das heisst die 
+        If chgeLstListe.ContainsKey(hWinID) Then
+            chgeLstListe.Remove(hWinID)
+        End If
+
         ' globale Variablen für Eigenschaften Pane und das Pane selbst löschen
         If listOfucProperties.ContainsKey(hWinID) Then
             listOfucProperties.Remove(hWinID)
@@ -615,12 +671,14 @@ Module Module1
         If My.Settings.rememberUserPWD Then
             My.Settings.userNamePWD = awinSettings.userNamePWD
         End If
-        My.Settings.Save()
-        Try
-            Call closeExcelAPP()
-        Catch ex As Exception
 
-        End Try
+        ' das passiert jetzt, wenn der Ribbon1 beendet wird, also wenn Powerpoint beendet wird
+        ''My.Settings.Save()
+        ''Try
+        ''    Call closeExcelAPP()
+        ''Catch ex As Exception
+
+        ''End Try
 
         If VisboProtected Then
             Call makeVisboShapesVisible(False)
@@ -672,19 +730,24 @@ Module Module1
         If SldRange.Count = 1 Then
 
             Dim afterSlide As Integer = SldRange.Item(1).SlideID ' aktuell selektierte SlideID
+            Dim afterSlideKennung As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name & afterSlide.ToString
+
             Dim beforeSlide As Integer = 0               ' zuvor selektierte SlideID
 
             If Not IsNothing(currentSlide) Then
                 Try
                     beforeSlide = currentSlide.SlideID
+                    beforeSlideKennung = CType(currentSlide.Parent, PowerPoint.Presentation).Name & beforeSlide.ToString
                 Catch ex As Exception
 
                 End Try
 
             End If
 
+            If beforeSlideKennung <> afterSlideKennung Then
+                Call pptAPP_UpdateOneSlide(SldRange.Item(1))
+            End If
 
-            Call pptAPP_UpdateOneSlide(SldRange.Item(1))
 
             '' ur:20180710: die auskommentierten Zeilen sind nun in pptAPP_UpdateSpecSlide - Defninition enthalten
 
@@ -802,11 +865,23 @@ Module Module1
             ''    End If
 
             ' nur wenn die SlideID gewechselt hat, muss agiert werden
-            If beforeSlide <> afterSlide Then
+            ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
+            If beforeSlideKennung <> afterSlideKennung Then
                 Try
-                    ' das Formular aufschalten 
+                    ' das Change-Formular aktualisieren, wenn es gezeigt wird  
+                    Dim hwind As Integer = pptAPP.ActiveWindow.HWND
                     If Not IsNothing(changeFrm) Then
-                        changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
+
+                        changeFrm.changeliste.clearChangeList()
+
+                        If chgeLstListe.ContainsKey(hwind) Then
+                            If chgeLstListe.Item(hwind).ContainsKey(currentSlide.SlideID) Then
+                                changeFrm.changeliste = chgeLstListe.Item(hwind).Item(currentSlide.SlideID)
+                            Else
+                                ' eine Liste für die neue SlideID einfügen ..
+                            End If
+                        End If
+
                         changeFrm.neuAufbau()
                     End If
                 Catch ex As Exception
@@ -1061,6 +1136,52 @@ Module Module1
         ' Id des aktiven DocumentWindow
         Dim hwinid As Integer = Wn.HWND
 
+        Try
+            '
+            ' setzen der current und previous timestamps 
+            If IsNothing(rememberListOfCPTimeStamps) Then
+                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                rememberListOfCPTimeStamps = New SortedList(Of Integer, Date())
+                Dim tmpDates(1) As Date
+                tmpDates(0) = previousTimeStamp
+                tmpDates(1) = currentTimestamp
+                rememberListOfCPTimeStamps.Add(hwinid, tmpDates)
+            Else
+                If rememberListOfCPTimeStamps.ContainsKey(hwinid) Then
+                    previousTimeStamp = rememberListOfCPTimeStamps.Item(hwinid)(0)
+                    currentTimestamp = rememberListOfCPTimeStamps.Item(hwinid)(1)
+                Else
+                    ' das setzen, was initial gesetzt wird ... 
+                    currentTimestamp = Date.MinValue
+                    previousTimeStamp = Date.MinValue
+                End If
+            End If
+
+            '
+            ' setzen der current und previous VariantNames  
+            If IsNothing(rememberListOfCPVariantNames) Then
+                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                rememberListOfCPVariantNames = New SortedList(Of Integer, String())
+                Dim tmpVnames(1) As String
+                tmpVnames(0) = previousVariantName
+                tmpVnames(1) = currentVariantname
+                rememberListOfCPVariantNames.Add(hwinid, tmpVnames)
+            Else
+                If rememberListOfCPVariantNames.ContainsKey(hwinid) Then
+                    previousVariantName = rememberListOfCPVariantNames.Item(hwinid)(0)
+                    currentVariantname = rememberListOfCPVariantNames.Item(hwinid)(1)
+                Else
+                    ' das setzen, was initial gesetzt wird ...
+                    currentVariantname = ""
+                    previousVariantName = noVariantName
+                End If
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
         ' globale Variablen für Eigenschaften Pane umsetzen
         If listOfucProperties.ContainsKey(Wn.HWND) Then
             propertiesPane = listOfucProperties.Item(Wn.HWND)
@@ -1081,6 +1202,61 @@ Module Module1
 
     Private Sub pptAPP_WindowDeactivate(Pres As PowerPoint.Presentation, Wn As PowerPoint.DocumentWindow) Handles pptAPP.WindowDeactivate
 
+        Dim hwinid As Integer = Wn.HWND
+
+        Try
+            ' setzen der current und previous timestamps 
+            If Not IsNothing(rememberListOfCPTimeStamps) Then
+                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                If rememberListOfCPTimeStamps.ContainsKey(hwinid) Then
+                    rememberListOfCPTimeStamps.Item(hwinid)(0) = previousTimeStamp
+                    rememberListOfCPTimeStamps.Item(hwinid)(1) = currentTimestamp
+                Else
+                    ' einfügen 
+                    Dim tmpDates(1) As Date
+                    tmpDates(0) = previousTimeStamp
+                    tmpDates(1) = currentTimestamp
+                    rememberListOfCPTimeStamps.Add(hwinid, tmpDates)
+                End If
+
+            Else
+                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                rememberListOfCPTimeStamps = New SortedList(Of Integer, Date())
+                Dim tmpDates(1) As Date
+                tmpDates(0) = previousTimeStamp
+                tmpDates(1) = currentTimestamp
+                rememberListOfCPTimeStamps.Add(hwinid, tmpDates)
+            End If
+
+            '
+            ' setzen der current und previous VariantNames  
+            If Not IsNothing(rememberListOfCPVariantNames) Then
+                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                If rememberListOfCPVariantNames.ContainsKey(hwinid) Then
+                    rememberListOfCPVariantNames.Item(hwinid)(0) = previousVariantName
+                    rememberListOfCPVariantNames.Item(hwinid)(1) = currentVariantname
+                Else
+                    ' einfügen 
+                    Dim tmpVnames(1) As String
+                    tmpVnames(0) = previousVariantName
+                    tmpVnames(1) = currentVariantname
+                    rememberListOfCPVariantNames.Add(hwinid, tmpVnames)
+                End If
+
+            Else
+                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                rememberListOfCPVariantNames = New SortedList(Of Integer, String())
+                Dim tmpVnames(1) As String
+                tmpVnames(0) = previousVariantName
+                tmpVnames(1) = currentVariantname
+                rememberListOfCPVariantNames.Add(hwinid, tmpVnames)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        ' wenn geschützt, dann unsichtbar machen der relecanten Shapes 
         If VisboProtected Then
             Call makeVisboShapesVisible(False)
         End If
@@ -2977,12 +3153,13 @@ Module Module1
             Try
                 xlApp = CreateObject("Excel.Application")
                 xlApp.Visible = False
-                xlApp.Workbooks.Add()
 
-                updateWorkbook = xlApp.ActiveWorkbook
-                With updateWorkbook
-                    .Worksheets.Item(1).name = "visboupdate"
-                End With
+                'xlApp.Workbooks.Add()
+
+                'updateWorkbook = xlApp.ActiveWorkbook
+                'With updateWorkbook
+                '    .Worksheets.Item(1).name = "visboupdate"
+                'End With
 
                 'xlApp.ScreenUpdating = False
                 '' prüft, ob bereits Powerpoint geöffnet ist 
@@ -2993,18 +3170,19 @@ Module Module1
                 Exit Sub
             End Try
 
-            'Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.Temp, "visboupdate.xlsx")
+            Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
 
-            'If My.Computer.FileSystem.FileExists(fullPathName) Then
-            '    ' öffnen
-            '    xlApp.Workbooks.Open(fullPathName)
+            If My.Computer.FileSystem.FileExists(fullPathName) Then
+                ' öffnen
+                xlApp.Workbooks.Open(fullPathName)
 
-            'Else
-            '    xlApp.Workbooks.Add()
+            Else
+                xlApp.Workbooks.Add()
 
-            '    xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-            'End If
+                xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+            End If
 
+            updateWorkbook = xlApp.ActiveWorkbook
 
         Else
             ' existiert schon, also existiert auch xlApp bereits ...
@@ -3384,12 +3562,21 @@ Module Module1
         Call faerbeShapes(PTfarbe.yellow, True)
         Call faerbeShapes(PTfarbe.red, True)
 
-        If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
-            chgeLstListe.Remove(currentSlide.SlideID)
-            chgeLstListe.Add(currentSlide.SlideID, changeliste)
+        Dim presChgListe As SortedList(Of Integer, clsChangeListe)
+        Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+
+        If chgeLstListe.ContainsKey(hwind) Then
+            presChgListe = chgeLstListe.Item(hwind)
+        Else
+            presChgListe = New SortedList(Of Integer, clsChangeListe)
+        End If
+
+        If presChgListe.ContainsKey(currentSlide.SlideID) Then
+            presChgListe.Remove(currentSlide.SlideID)
+            presChgListe.Add(currentSlide.SlideID, changeliste)
             'chgeLstListe(currentSlide.SlideID) = changeliste
         Else
-            chgeLstListe.Add(currentSlide.SlideID, changeliste)
+            presChgListe.Add(currentSlide.SlideID, changeliste)
         End If
 
     End Sub
@@ -6511,11 +6698,21 @@ Module Module1
 
     Friend Sub closeExcelAPP()
         Try
+
+
             If Not IsNothing(xlApp) Then
                 For Each tmpWB As Excel.Workbook In CType(xlApp.Workbooks, Excel.Workbooks)
                     tmpWB.Close(SaveChanges:=False)
                 Next
                 xlApp.Quit()
+            End If
+
+            Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
+
+            If My.Computer.FileSystem.FileExists(fullPathName) Then
+                ' löschen ...
+                My.Computer.FileSystem.DeleteFile(fullPathName)
+
             End If
 
             updateWorkbook = Nothing
@@ -6597,7 +6794,7 @@ Module Module1
                             ' positioniert die Darstellungs-Elemente entsprechend
                             '.symbolMode(False)
 
-                            .eleName.Text = bestimmeElemText(tmpShape, False, True, showBestName)
+                            .eleName.Text = bestimmeElemText(tmpShape, False, False, showBestName)
 
                             .eleDatum.Text = bestimmeElemDateText(tmpShape, False, False)
 
@@ -7023,26 +7220,27 @@ Module Module1
             If smartSlideLists.countProjects > 0 Then
 
                 ' muss noch eingeloggt werden ? 
-                If noDBAccessInPPT Then
+                ' das wird ja schon im userISEntitled gemacht 
+                'If noDBAccessInPPT Then
 
-                    noDBAccessInPPT = Not logInToMongoDB(True)
+                '    noDBAccessInPPT = Not logInToMongoDB(True)
 
-                    If noDBAccessInPPT Then
-                        If englishLanguage Then
-                            msg = "no database access ... "
-                        Else
-                            msg = "kein Datenbank Zugriff ... "
-                        End If
-                        Call MsgBox(msg)
-                    Else
-                        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                '    If noDBAccessInPPT Then
+                '        If englishLanguage Then
+                '            msg = "no database access ... "
+                '        Else
+                '            msg = "kein Datenbank Zugriff ... "
+                '        End If
+                '        Call MsgBox(msg)
+                '    Else
+                '        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
 
-                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                '        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                '        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
-                    End If
+                '    End If
 
-                End If
+                'End If
 
                 If Not noDBAccessInPPT Then
 
@@ -7331,69 +7529,70 @@ Module Module1
                         If currentSlide.Tags.Item("SMART").Length > 0 Then
 
                             ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
+                            ' damit festgestellt werden kann, ob bei einem notwendigen Login 
                             Call getDBsettings()
 
                             Dim msg As String = ""
-                            If userIsEntitled(msg) Then
+                            'If userIsEntitled(msg) Then
 
-                                ' die HomeButtonRelevanz setzen 
-                                homeButtonRelevance = False
-                                changedButtonRelevance = False
+                            ' die HomeButtonRelevanz setzen 
+                            homeButtonRelevance = False
+                            changedButtonRelevance = False
 
-                                slideHasSmartElements = True
+                            slideHasSmartElements = True
 
-                                Try
+                            Try
 
-                                    slideCoordInfo = New clsPPTShapes
-                                    slideCoordInfo.pptSlide = currentSlide
+                                slideCoordInfo = New clsPPTShapes
+                                slideCoordInfo.pptSlide = currentSlide
 
-                                    With currentSlide
+                                With currentSlide
 
-                                        ' currentTimeStamp setzen 
-                                        If .Tags.Item("CRD").Length > 0 Then
-                                            currentTimestamp = CDate(.Tags.Item("CRD"))
-                                        End If
+                                    ' currentTimeStamp setzen 
+                                    If .Tags.Item("CRD").Length > 0 Then
+                                        currentTimestamp = CDate(.Tags.Item("CRD"))
+                                    End If
 
-                                        If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-                                            Dim tmpSD As String = .Tags.Item("CALL")
-                                            Dim tmpED As String = .Tags.Item("CALR")
-                                            slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-                                        End If
+                                    If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
+                                        Dim tmpSD As String = .Tags.Item("CALL")
+                                        Dim tmpED As String = .Tags.Item("CALR")
+                                        slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                                    End If
 
-                                        If .Tags.Item("SOC").Length > 0 Then
-                                            StartofCalendar = CDate(.Tags.Item("SOC"))
-                                        End If
-
-
-
-                                    End With
-
-                                Catch ex As Exception
-                                    slideCoordInfo = Nothing
-                                End Try
+                                    If .Tags.Item("SOC").Length > 0 Then
+                                        StartofCalendar = CDate(.Tags.Item("SOC"))
+                                    End If
 
 
-                                Call buildSmartSlideLists()
 
-                                ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-                                initialHomeButtonRelevance = homeButtonRelevance
-                                initialChangedButtonRelevance = changedButtonRelevance
+                                End With
 
-                                If Not IsNothing(searchPane) Then
-                                    If searchPane.Visible Then
+                            Catch ex As Exception
+                                slideCoordInfo = Nothing
+                            End Try
 
-                                        If slideHasSmartElements Then
 
-                                            ucSearchView.fülltListbox(showTrafficLights)
+                            Call buildSmartSlideLists()
 
-                                        End If
+                            ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                            initialHomeButtonRelevance = homeButtonRelevance
+                            initialChangedButtonRelevance = changedButtonRelevance
+
+                            If Not IsNothing(searchPane) Then
+                                If searchPane.Visible Then
+
+                                    If slideHasSmartElements Then
+
+                                        ucSearchView.fülltListbox(showTrafficLights)
+
                                     End If
                                 End If
-
-
-                            Else
-                                Call MsgBox(msg)
                             End If
+
+
+                            'Else
+                            '    Call MsgBox(msg)
+                            'End If
 
                         End If
                     Catch ex As Exception
