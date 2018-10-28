@@ -192,15 +192,15 @@ Public Class Ribbon1
     Private Sub btnShowChanges_Click(sender As Object, e As RibbonControlEventArgs) Handles btnShowChanges.Click
 
         Try
-            Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+            Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
             ' das Formular aufschalten 
             If IsNothing(changeFrm) Then
                 changeFrm = New frmChanges
                 changeFrm.changeliste = Nothing
 
-                If chgeLstListe.ContainsKey(hwind) Then
-                    If chgeLstListe.Item(hwind).ContainsKey(currentSlide.SlideID) Then
-                        changeFrm.changeliste = chgeLstListe.Item(hwind).Item(currentSlide.SlideID)
+                If chgeLstListe.ContainsKey(key) Then
+                    If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
+                        changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
                     End If
                 End If
 
@@ -210,9 +210,9 @@ Public Class Ribbon1
 
                 changeFrm.changeliste.clearChangeList()
 
-                If chgeLstListe.ContainsKey(hwind) Then
-                    If chgeLstListe.Item(hwind).ContainsKey(currentSlide.SlideID) Then
-                        changeFrm.changeliste = chgeLstListe.Item(hwind).Item(currentSlide.SlideID)
+                If chgeLstListe.ContainsKey(key) Then
+                    If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
+                        changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
                     End If
                 End If
 
@@ -237,14 +237,17 @@ Public Class Ribbon1
         Try
 
             Dim tmpDate As Date = Date.MinValue
-            Dim msg As String = ""
+            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
 
-            ' Prüfen, ob Login noch passt ...
-            If userIsEntitled(msg) Then
-                Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
-            Else
-                Call MsgBox(msg)
-            End If
+
+            'Dim msg As String = ""
+
+            '' Prüfen, ob Login noch passt ...
+            'If userIsEntitled(msg) Then
+            '    Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            'Else
+            '    Call MsgBox(msg)
+            'End If
 
 
 
@@ -309,14 +312,16 @@ Public Class Ribbon1
 
         Try
             Dim tmpDate As Date = Date.MinValue
-            Dim msg As String = ""
+            Call btnUpdateAction(ptNavigationButtons.nachher, tmpDate)
 
-            ' Prüfen, ob Login noch passt ...
-            If userIsEntitled(msg) Then
-                Call btnUpdateAction(ptNavigationButtons.nachher, tmpDate)
-            Else
-                Call MsgBox(msg)
-            End If
+            'Dim msg As String = ""
+
+            '' Prüfen, ob Login noch passt ...
+            'If userIsEntitled(msg) Then
+            '    Call btnUpdateAction(ptNavigationButtons.nachher, tmpDate)
+            'Else
+            '    Call MsgBox(msg)
+            'End If
 
 
 
@@ -363,14 +368,16 @@ Public Class Ribbon1
     Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Dim msg As String = ""
+            Call btnUpdateAction(ptNavigationButtons.vorher, tmpDate)
 
-            ' Prüfen, ob Login noch passt ...
-            If userIsEntitled(msg) Then
-                Call btnUpdateAction(ptNavigationButtons.vorher, tmpDate)
-            Else
-                Call MsgBox(msg)
-            End If
+            'Dim msg As String = ""
+
+            '' Prüfen, ob Login noch passt ...
+            'If userIsEntitled(msg) Then
+            '    Call btnUpdateAction(ptNavigationButtons.vorher, tmpDate)
+            'Else
+            '    Call MsgBox(msg)
+            'End If
 
 
 
@@ -413,14 +420,17 @@ Public Class Ribbon1
     Private Sub btnStart_Click(sender As Object, e As RibbonControlEventArgs) Handles btnStart.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Dim msg As String = ""
 
-            ' Prüfen, ob Login noch passt ...
-            If userIsEntitled(msg) Then
-                Call btnUpdateAction(ptNavigationButtons.erster, tmpDate)
-            Else
-                Call MsgBox(msg)
-            End If
+            Call btnUpdateAction(ptNavigationButtons.erster, tmpDate)
+
+            'Dim msg As String = ""
+
+            '' Prüfen, ob Login noch passt ...
+            'If userIsEntitled(msg) Then
+            '    Call btnUpdateAction(ptNavigationButtons.erster, tmpDate)
+            'Else
+            '    Call MsgBox(msg)
+            'End If
 
 
             ' tk 18.10.18 durch obigen Aufruf ersetzt 
@@ -456,14 +466,16 @@ Public Class Ribbon1
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Dim msg As String = ""
+            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
 
-            ' Prüfen, ob Login noch passt ...
-            If userIsEntitled(msg) Then
-                Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
-            Else
-                Call MsgBox(msg)
-            End If
+            'Dim msg As String = ""
+
+            '' Prüfen, ob Login noch passt ...
+            'If userIsEntitled(msg) Then
+            '    Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            'Else
+            '    Call MsgBox(msg)
+            'End If
 
 
             ' durch obigen Aufruf ersetzt ... 
@@ -593,15 +605,16 @@ Public Class Ribbon1
 
             If userResult = Windows.Forms.DialogResult.OK Then
                 Dim specDate As Date = calendarFrm.DateTimePicker1.Value
+                Call btnUpdateAction(ptNavigationButtons.individual, specDate)
 
-                Dim msg As String = ""
+                'Dim msg As String = ""
 
-                ' Prüfen, ob Login noch passt ...
-                If userIsEntitled(msg) Then
-                    Call btnUpdateAction(ptNavigationButtons.individual, specDate)
-                Else
-                    Call MsgBox(msg)
-                End If
+                '' Prüfen, ob Login noch passt ...
+                'If userIsEntitled(msg) Then
+                '    Call btnUpdateAction(ptNavigationButtons.individual, specDate)
+                'Else
+                '    Call MsgBox(msg)
+                'End If
 
 
                 ' tk 18.10.18 ersetzt durch obigen Aufruf ... 
@@ -658,14 +671,16 @@ Public Class Ribbon1
 
 
             Dim tmpDate As Date = Date.MinValue
-            Dim msg As String = ""
+            Call btnUpdateAction(ptNavigationButtons.previous, tmpDate)
 
-            ' Prüfen, ob Login noch passt ...
-            If userIsEntitled(msg) Then
-                Call btnUpdateAction(ptNavigationButtons.previous, tmpDate)
-            Else
-                Call MsgBox(msg)
-            End If
+            'Dim msg As String = ""
+
+            '' Prüfen, ob Login noch passt ...
+            'If userIsEntitled(msg) Then
+            '    Call btnUpdateAction(ptNavigationButtons.previous, tmpDate)
+            'Else
+            '    Call MsgBox(msg)
+            'End If
 
 
             ' tk , jetzt durch obigen Aufruf ersetzt 

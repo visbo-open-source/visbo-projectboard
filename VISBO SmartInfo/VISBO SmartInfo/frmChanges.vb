@@ -1,4 +1,5 @@
-﻿Public Class frmChanges
+﻿Imports ProjectBoardDefinitions
+Public Class frmChanges
 
     Friend changeliste As clsChangeListe
 
@@ -23,10 +24,17 @@
         frmCoord(PTfrm.changes, PTpinfo.width) = Me.Width
         frmCoord(PTfrm.changes, PTpinfo.height) = Me.Height
 
-        Call faerbeShapes(0, showTrafficLights(0))
-        Call faerbeShapes(1, showTrafficLights(0))
-        Call faerbeShapes(2, showTrafficLights(0))
-        Call faerbeShapes(3, showTrafficLights(0))
+
+        'Call faerbeShapes(0, showTrafficLights(0))
+        'Call faerbeShapes(1, showTrafficLights(0))
+        'Call faerbeShapes(2, showTrafficLights(0))
+        'Call faerbeShapes(3, showTrafficLights(0))
+
+        ' tk 28.10.18 es sollen die gelben und roten weiterhin gezeigt werden .. 
+        Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
+        Call faerbeShapes(PTfarbe.green, showTrafficLights(PTfarbe.green))
+        Call faerbeShapes(PTfarbe.yellow, True)
+        Call faerbeShapes(PTfarbe.red, True)
 
 
 
@@ -52,7 +60,7 @@
         'If Me.Height > changeListTable.Height + 38 Then
         '    Me.Height = changeListTable.Height + 38
         'End If
-        
+
 
     End Sub
 
@@ -77,12 +85,13 @@
 
         ' auf die changeliste der aktuellen Slide setzen
         Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+        Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
 
         changeliste = Nothing
 
-        If chgeLstListe.ContainsKey(hwind) Then
-            If chgeLstListe.Item(hwind).ContainsKey(currentSlide.SlideID) Then
-                changeliste = chgeLstListe.Item(hwind).Item(currentSlide.SlideID)
+        If chgeLstListe.ContainsKey(key) Then
+            If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
+                changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
             End If
         End If
 
@@ -190,7 +199,7 @@
                     End If
                 End If
             End If
-            
+
         Next
 
         anzSelected = tmpCollection.Count
@@ -234,6 +243,6 @@
 
     End Sub
 
-   
-    
+
+
 End Class

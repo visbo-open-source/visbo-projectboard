@@ -313,7 +313,12 @@
 
     Private Sub Ribbon1_Close(sender As Object, e As EventArgs) Handles Me.Close
 
-        My.Settings.Save()
+        Try
+            My.Settings.Save()
+        Catch ex As Exception
+
+        End Try
+
         Try
             Call closeExcelAPP()
         Catch ex As Exception

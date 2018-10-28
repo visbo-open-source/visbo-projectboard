@@ -51,9 +51,24 @@ Public Class ThisAddIn
             Call makeVisboShapesVisible(False)
         End If
 
+        Try
+            My.Settings.Save()
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            Call closeExcelAPP()
+        Catch ex As Exception
+
+        End Try
+
+
     End Sub
 
     Private Sub Application_OpenPresentation(Pres As Presentation) Handles Application.AfterPresentationOpen, Application.AfterNewPresentation
+
+        ' bitte nicht benutzen siehe Module1.vb Sub defineAndManagePanes
 
         Dim hsearchPane As Microsoft.Office.Tools.CustomTaskPane
         Dim hPropPane As Microsoft.Office.Tools.CustomTaskPane
