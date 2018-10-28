@@ -1,18 +1,21 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
 Imports ClassLibrary1
-Imports MongoDbAccess
-Imports WPFPieChart
+Imports DBAccLayer
 Imports Microsoft.Office.Core
-'Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
-'Imports MSProject = Microsoft.Office.Interop.MSProject
 Imports System.Security.Principal
 Imports System.Diagnostics
 Imports System.Drawing
 Imports System.Windows
 Imports System.Net
+Imports System
 Imports System.IO
+Imports System.Globalization
+Imports Microsoft.VisualBasic
+Imports System.Web
+
+
 
 'TODO: Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
 
@@ -104,7 +107,7 @@ Imports System.IO
     Sub PTStoreKonstellationsToDB(control As IRibbonControl)
 
         Dim storeConstellationFrm As New frmLoadConstellation
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim DBtimeStamp As Date = Date.Now
 
         Dim outPutCollection As New Collection
@@ -122,6 +125,8 @@ Imports System.IO
             .lblStandvom.Visible = False
             .requiredDate.Visible = False
             .addToSession.Visible = False
+            .loadAsSummary.Visible = False
+
         End With
 
         Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog
@@ -156,7 +161,8 @@ Imports System.IO
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -164,12 +170,12 @@ Imports System.IO
 
         If (ControlID = load1FromDatenbank Or ControlID = load2FromDatenbank) And Not noDB Then
 
-            If request.pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                dbConstellations = request.retrieveConstellationsFromDB()
+                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
 
                 Try
-                    timeStampsCollection = request.retrieveZeitstempelFromDB()
+                    timeStampsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
                     'Dim heute As String = Date.Now.ToString
                     If timeStampsCollection.Count > 0 Then
                         With loadConstellationFrm
@@ -215,47 +221,110 @@ Imports System.IO
 
         If returnValue = DialogResult.OK Then
 
+            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
+            Dim showSummaryProjects As Boolean = loadConstellationFrm.loadAsSummary.Checked
+
             appInstance.ScreenUpdating = False
 
             If Not IsNothing(loadConstellationFrm.requiredDate.Value) Then
-                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value)
+                storedAtOrBefore = CDate(loadConstellationFrm.requiredDate.Value).Date.AddHours(23).AddMinutes(59)
             Else
                 storedAtOrBefore = Date.Now.Date.AddHours(23).AddMinutes(59)
             End If
 
             Dim constellationsToDo As New clsConstellations
 
+
+
+            If clearBoard Then
+                'currentSessionConstellation.Liste.Clear()
+                AlleProjekte.Clear(updateCurrentConstellation:=True)
+                projectConstellations.clearLoadedPortfolios()
+            End If
+
             For Each tmpName As String In loadConstellationFrm.ListBox1.SelectedItems
 
-                Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
-                If Not IsNothing(constellation) Then
-                    If Not constellationsToDo.Contains(constellation.constellationName) Then
-                        constellationsToDo.Add(constellation)
-                    End If
-                Else
-                    constellation = dbConstellations.getConstellation(tmpName)
-                    If Not IsNothing(constellation) Then
-                        If Not constellationsToDo.Contains(constellation.constellationName) Then
-                            constellationsToDo.Add(constellation)
+                ' Plausibilitätsprüfung: darf das geladen werden 
+                Try
+                    Dim ok As Boolean = False
+                    If (Not AlleProjekte.containsAnySummaryProject _
+                        And Not projectConstellations.getConstellation(tmpName).containsAnySummaryProject _
+                        And Not loadConstellationFrm.loadAsSummary.Checked) Or clearBoard Then
+                        ' alles in Ordnung 
+                        ok = True
+                    Else
+                        If Not AlleProjekte.hasAnyConflictsWith(tmpName, True) Then
+                            ok = True
                         End If
-                        projectConstellations.Add(constellation)
                     End If
 
-                End If
+                    If ok Then
+                        ' aufnehmen ...
+                        Dim constellation As clsConstellation = projectConstellations.getConstellation(tmpName)
+
+                        If Not IsNothing(constellation) Then
+                            If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                constellationsToDo.Add(constellation)
+                            End If
+                        Else
+                            constellation = dbConstellations.getConstellation(tmpName)
+                            If Not IsNothing(constellation) Then
+                                If Not constellationsToDo.Contains(constellation.constellationName) Then
+                                    constellationsToDo.Add(constellation)
+                                End If
+                                projectConstellations.Add(constellation)
+                            End If
+
+                        End If
+
+                        ' tk jetzt muss für jedes der items, das ein Portfolio ist, dieses in die Liste eintragen 
+                        'If constellation.containsAnySummaryProject Then
+                        '    For Each spKvP As KeyValuePair(Of String, clsConstellationItem) In constellation.Liste
+                        '        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(spKvP.Value.projectName, spKvP.Value.variantName, AlleProjekte, Date.Now)
+                        '        If Not IsNothing(tmpProj) Then
+                        '            If Not AlleProjekte.Containskey(spKvP.Key) Then
+                        '                AlleProjekte.Add(tmpProj, )
+                        '            End If
+                        '        End If
+                        '        If spKvP.Value.variantName = portfolioVName Then
+                        '            projectConstellations.addToLoadedSessionPortfolios(spKvP.Key)
+                        '        End If
+                        '    Next
+                        'Else
+                        '    If Not IsNothing(constellation) Then
+                        '        projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                        '    End If
+                        'End If
+
+                        ' war vorher ..
+                        If Not IsNothing(constellation) Then
+                            projectConstellations.addToLoadedSessionPortfolios(constellation.constellationName)
+                        End If
+
+
+
+                    Else
+                        ' Meldung, un dann nicht aufnehmen 
+                        Call MsgBox("Konflikte zwischen Summary Projekten und Projekten ... doppelte Nennungen ..." & vbLf &
+                                     "vermeiden Sie es, Platzhalter Summary Projekte und Projekte, die bereits in den Summary Projekten referenziert sind")
+                    End If
+                Catch ex As Exception
+                    Dim tstmsg As String = ex.Message
+                End Try
+
+
 
             Next
 
-
-            Dim clearBoard As Boolean = Not loadConstellationFrm.addToSession.Checked
-            'Dim clearSession As Boolean = ((ControlID = loadFromDatenbank) And clearBoard)
+            'Dim clearSession As Boolean = (((ControlID = load1FromDatenbank) Or (ControlID = load2FromDatenbank)) And clearBoard)
             Dim clearSession As Boolean = False
             If constellationsToDo.Count > 0 Then
-                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore)
+                Call showConstellations(constellationsToDo, clearBoard, clearSession, storedAtOrBefore, showSummaryProjects)
             End If
 
             ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
             If Not noDB Then
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             appInstance.ScreenUpdating = True
@@ -293,9 +362,9 @@ Imports System.IO
             removeConstFilterFrm.frmOption = "ProjConstellation"
             removeFromDB = True
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If request.pingMongoDb() Then
-                projectConstellations = request.retrieveConstellationsFromDB()
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -309,9 +378,9 @@ Imports System.IO
             removeConstFilterFrm.frmOption = "DBFilter"
             removeFromDB = True
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If request.pingMongoDb() Then
-                filterDefinitions.filterListe = request.retrieveAllFilterFromDB(False)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                filterDefinitions.filterListe = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -326,13 +395,15 @@ Imports System.IO
         returnValue = removeConstFilterFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            If ControlID = deleteDatenbank Or _
+            If ControlID = deleteDatenbank Or
                 ControlID = deleteFromSession Then
 
                 constFilterName = removeConstFilterFrm.ListBox1.Text
 
-                Call awinRemoveConstellation(constFilterName, removeFromDB)
-                Call MsgBox(constFilterName & " wurde gelöscht ...")
+                If (awinRemoveConstellation(constFilterName, removeFromDB) = True) Then
+                    Call MsgBox(constFilterName & " wurde gelöscht ...")
+                End If
+
 
                 If constFilterName = currentConstellationName Then
 
@@ -354,12 +425,12 @@ Imports System.IO
 
                 filter = filterDefinitions.retrieveFilter(constFilterName)
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If request.pingMongoDb() Then
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     ' Filter muss aus der Datenbank gelöscht werden.
 
-                    removeOK = request.removeFilterFromDB(filter)
+                    removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
                     If removeOK = False Then
                         Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
                     Else
@@ -466,6 +537,9 @@ Imports System.IO
             End If
         Catch ex As Exception
 
+            ' Mouse wieder auf Normalmodus setzen
+            appInstance.Cursor = Excel.XlMousePointer.xlDefault
+
             Call MsgBox(ex.Message)
         End Try
 
@@ -525,13 +599,13 @@ Imports System.IO
         Else
 
             Call clearCompleteSession()
-            
+
         End If
 
     End Sub
 
     Sub PTXHealingCustomFieldsOfVariants(control As IRibbonControl)
-        
+
 
     End Sub
 
@@ -543,7 +617,7 @@ Imports System.IO
     Sub PT6DeleteBeschriftung(control As IRibbonControl)
 
         Dim todoList As New Collection
-        
+
         Call projektTafelInit()
 
 
@@ -574,7 +648,7 @@ Imports System.IO
         Catch ex As Exception
             Dim a As String = ex.Message
         End Try
-        
+
 
         appInstance.ScreenUpdating = True
 
@@ -772,7 +846,7 @@ Imports System.IO
                     '' ''If thereAreAnyCharts(PTwindows.mptpr) Then
                     '' ''    Call showVisboWindow(PTwindows.mptpr)
                     '' ''End If
-               
+
                 Catch ex As Exception
                     appInstance.ScreenUpdating = True
                     Call MsgBox("Fehler beim Laden ..")
@@ -837,9 +911,9 @@ Imports System.IO
                 vglWert = calcYCoordToZeile(singleShp.Top)
                 curCoord = projectboardShapes.getCoord(singleShp.Name)
 
-                ausgabeString = ausgabeString & hproj.name & ": " & hproj.tfZeile.ToString & _
-                                 " - " & vglWert.ToString & "; " & _
-                                 calcXCoordToDate(singleShp.Left).ToShortDateString & " vs. " & hproj.startDate.ToShortDateString & _
+                ausgabeString = ausgabeString & hproj.name & ": " & hproj.tfZeile.ToString &
+                                 " - " & vglWert.ToString & "; " &
+                                 calcXCoordToDate(singleShp.Left).ToShortDateString & " vs. " & hproj.startDate.ToShortDateString &
                                  " vs. " & calcXCoordToDate(curCoord(1)).ToShortDateString & singleShp.Left.ToString & vbLf
 
 
@@ -853,7 +927,7 @@ Imports System.IO
 
         enableOnUpdate = True
 
-        
+
 
     End Sub
 
@@ -892,8 +966,17 @@ Imports System.IO
         Dim abbruch As Boolean = False
 
 
+        ' check ob auch keine Summary Projects selektiert sind ...
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
+
+
+
+        ' hier geht es los , wenn ok ... 
         Try
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
             Call projektTafelInit()
 
@@ -937,10 +1020,10 @@ Imports System.IO
 
                                 ' jetzt wird in der Datenbank umbenannt 
                                 Try
-                                    If request.projectNameAlreadyExists(pName, "", Date.Now) Or _
-                                        request.projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
+                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now) Or
+                                        CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
 
-                                        ok = request.renameProjectsInDB(pName, newName, dbUsername)
+                                        ok = CType(databaseAcc, DBAccLayer.Request).renameProjectsInDB(pName, newName, dbUsername)
                                         If Not ok Then
                                             If awinSettings.englishLanguage Then
                                                 Call MsgBox("rename cancelled: there is at least one write-protected variant for Project " & pName)
@@ -948,7 +1031,7 @@ Imports System.IO
                                                 Call MsgBox("Rename nicht durchgeführt: es gibt mindestens eine schreibgeschützte Variante im Projekt " & pName)
                                             End If
                                         Else
-                                            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
                                         End If
                                     End If
                                 Catch ex As Exception
@@ -1075,8 +1158,7 @@ Imports System.IO
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Call projektTafelInit()
 
         enableOnUpdate = False
@@ -1096,17 +1178,17 @@ Imports System.IO
 
                 If Not noDB Then
 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    If request.pingMongoDb() Then
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                        If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
+                        If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
 
                             ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
 
-                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor, _
+                            Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor,
                                                CStr(""), buName)
                         Else
                             Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
@@ -1117,9 +1199,9 @@ Imports System.IO
                         appInstance.ScreenUpdating = True
 
                         ' Projekt soll trotzdem angezeigt werden
-                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor, _
+                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                               CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                               CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor,
                                                CStr(""), buName)
 
                     End If
@@ -1129,9 +1211,9 @@ Imports System.IO
                     appInstance.ScreenUpdating = True
 
                     ' Projekt soll trotzdem angezeigt werden
-                    Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor, _
+                    Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart),
+                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile,
+                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), profitUserAskedFor,
                                            CStr(""), buName)
 
                 End If
@@ -1177,6 +1259,12 @@ Imports System.IO
         Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         enableOnUpdate = False
 
@@ -1225,6 +1313,12 @@ Imports System.IO
         Dim i As Integer
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         enableOnUpdate = False
 
@@ -1288,6 +1382,12 @@ Imports System.IO
         Dim i As Integer
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         enableOnUpdate = False
 
@@ -1369,6 +1469,12 @@ Imports System.IO
 
         Call projektTafelInit()
 
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
+
 
         enableOnUpdate = False
 
@@ -1410,7 +1516,7 @@ Imports System.IO
                             Dim oldStatus As String = getStatusOfBaseVariant(hproj.name, hproj.Status)
                             ' Plausibilitätsprüfung, es dürfen keine abgebrochenen / abgeschlossenen Projekte überschrieben werden   
 
-                            If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And _
+                            If oldStatus <> ProjektStatus(PTProjektStati.abgebrochen) And
                                 oldStatus <> ProjektStatus(PTProjektStati.abgeschlossen) Then
 
                                 ' nur dann darf die Variante übernommen werden ... 
@@ -1464,11 +1570,11 @@ Imports System.IO
                     Else
                         ' ist nicht erlaubt ... 
                         If awinSettings.englishLanguage Then
-                            Call MsgBox("The base variant of project " & hproj.name & " is protected" & vbLf & _
+                            Call MsgBox("The base variant of project " & hproj.name & " is protected" & vbLf &
                                         "and cannot be replaced by another variant")
 
                         Else
-                            Call MsgBox("Projekt " & hproj.name & " ist in der Standard-Variante geschützt" & vbLf & _
+                            Call MsgBox("Projekt " & hproj.name & " ist in der Standard-Variante geschützt" & vbLf &
                                         "und kann daher nicht von einer anderen Variante überschrieben werden")
                         End If
                     End If
@@ -1581,7 +1687,7 @@ Imports System.IO
 
     End Sub
 
-    
+
     ''' <summary>
     ''' aktiviert , je nach Modus die entsprechenden Ribbon Controls 
     ''' </summary>
@@ -1888,6 +1994,13 @@ Imports System.IO
                     tmpLabel = "Strategie/Risiko"
                 Else
                     tmpLabel = "Strategy/Risk"
+                End If
+
+            Case "PT2G1M2B3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Budget ändern"
+                Else
+                    tmpLabel = "Modify budget"
                 End If
 
             Case "PT0G1B4" ' Strategie/Risiko/Abhängigkeiten
@@ -2231,6 +2344,27 @@ Imports System.IO
                     tmpLabel = "Ändern von Attributen"
                 Else
                     tmpLabel = "Modify Attributes"
+                End If
+
+            Case "PT4G2M3" ' Export to Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export Projekte in Excel"
+                Else
+                    tmpLabel = "Export Projects to Excel"
+                End If
+
+            Case "PT4G2M3B1" ' Projekte mit einer Übersichtszeile in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Übersicht"
+                Else
+                    tmpLabel = "Overview"
+                End If
+
+            Case "PT4G2M3B2" ' Projekte mit Details in Excel
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Details"
+                Else
+                    tmpLabel = "Details"
                 End If
 
             Case "PTMECsettings" ' Einstellungen beim Editieren Ressourcen
@@ -2773,6 +2907,12 @@ Imports System.IO
                 Else
                     tmpLabel = "Help"
                 End If
+            Case "PTWebServer"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "WebServer"
+                Else
+                    tmpLabel = "WebServer"
+                End If
             Case "PTlizenz"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Lizenzen"
@@ -2925,6 +3065,8 @@ Imports System.IO
                     chckVisibility = False
                 Case "PThelp"
                     chckVisibility = False
+                Case "PTWebServer"
+                    chckVisibility = False
                 Case "PTTestfunktionen"
                     chckVisibility = False
                 Case "PTlizenz"
@@ -3009,8 +3151,13 @@ Imports System.IO
         End If
     End Function
 
+    ''' <summary>
+    ''' es werden nur Projekte an MassEdit übergeben ... sollten Summary Projekte in der Selection sein, werden die erst durch ihre Projekte, die im Show sind, ersetzt 
+    ''' </summary>
+    ''' <param name="meModus"></param>
     Private Sub massEditRcTeAt(ByVal meModus As Integer)
         Dim todoListe As New Collection
+        Dim projektTodoliste As New Collection
         Dim outputFenster As New frmOutputWindow
         Dim outputCollection As New Collection
         Dim outPutLine As String = ""
@@ -3045,10 +3192,6 @@ Imports System.IO
 
             If todoListe.Count > 0 Then
 
-                ' jetzt aufbauen der dbCacheProjekte
-                Call buildCacheProjekte(todoListe)
-
-
                 ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
                 If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' alles ok , bereits gesetzt 
@@ -3078,10 +3221,22 @@ Imports System.IO
                     enableOnUpdate = False
 
                     If meModus = ptModus.massEditRessCost Then
-                        Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
+                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
+                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
+
+                        Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight)
+
                     ElseIf meModus = ptModus.massEditTermine Then
-                        Call writeOnlineMassEditTermine(todoListe)
+                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' jetzt aufbauen der dbCacheProjekte, names are pvnames
+                        Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
+
+                        Call writeOnlineMassEditTermine(projektTodoliste)
+
                     ElseIf meModus = ptModus.massEditAttribute Then
+                        ' jetzt aufbauen der dbCacheProjekte, names are pNames
+                        Call buildCacheProjekte(todoListe, namesArePvNames:=False)
                         Call writeOnlineMassEditAttribute(todoListe)
                     Else
                         Exit Sub
@@ -3232,167 +3387,13 @@ Imports System.IO
     End Sub
     Sub Tom2G2MassEdit(control As IRibbonControl)
 
-        Call massEditRcTeAt(ptModus.massEditRessCost)
-        ' das unten stehende wird jetzt durch den Aufruf oben gemacht 
-        'Dim todoListe As New Collection
-        'Dim outputFenster As New frmOutputWindow
-        'Dim outputCollection As New Collection
-        'Dim outPutLine As String = ""
-
-        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-        '' die DB Cache Projekte werden hier weder zurückgesetzt, noch geholt ... das kostet nur Antwortzeit auf Vorhalt
-        '' sie werden ggf im MassenEdit geholt, wenn es notwendig ist .... 
-
-        'Call projektTafelInit()
-
-        'enableOnUpdate = False
-        '' jetzt auf alle Fälle wieder das MPT Window aktivieren ...
-        'projectboardWindows(PTwindows.mpt).Activate()
-
-        'If ShowProjekte.Count > 0 Then
-
-        '    ' neue Methode 
-        '    todoListe = getProjectSelectionList(True)
-
-        '    ' check, ob wirklich alle Projekte editiert werden sollen ... 
-        '    If todoListe.Count = ShowProjekte.Count And todoListe.Count > 30 Then
-        '        Dim yesNo As Integer
-        '        yesNo = MsgBox("Wollen Sie wirklich alle Projekte editieren?", MsgBoxStyle.YesNo)
-        '        If yesNo = MsgBoxResult.No Then
-        '            enableOnUpdate = True
-        '            Exit Sub
-        '        End If
-        '    End If
-
-
-
-        '    If todoListe.Count > 0 Then
-
-        '        ' jetzt aufbauen der dbCacheProjekte
-        '        Call buildCacheProjekte(todoListe)
-
-
-        '        ' jetzt muss ggf noch showrangeLeft und showrangeRight geholt werden 
-        '        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-        '            ' alles ok , bereits gesetzt 
-
-        '        Else
-
-        '            showRangeLeft = ShowProjekte.getMinMonthColumn(todoListe)
-        '            showRangeRight = ShowProjekte.getMaxMonthColumn(todoListe)
-
-        '            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
-        '        End If
-
-
-        '        Call enableControls(ptModus.massEditRessCost)
-
-        '        ' hier sollen jetzt die Projekte der todoListe in den Backup Speicher kopiert werden , um 
-        '        ' darauf zugreifen zu können, wenn beim Massen-Edit die Option alle Änderungen verwerfen gewählt wird. 
-        '        'Call saveProjectsToBackup(todoListe)
-
-        '        ' hier wird die aktuelle Zusammenstellung an Windows gespeichert ...
-        '        'projectboardViews(PTview.mpt) = CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).CustomViews, Excel.CustomViews).Add("View" & CStr(PTview.mpt))
-
-        '        ' jetzt soll ScreenUpdating auf False gesetzt werden, weil jetzt Windows erzeugt und gewechselt werden 
-        '        appInstance.ScreenUpdating = False
-
-        '        Try
-        '            enableOnUpdate = False
-
-        '            Call writeOnlineMassEditRessCost(todoListe, showRangeLeft, showRangeRight)
-
-        '            appInstance.EnableEvents = True
-
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mpt)) Then
-        '                    projectboardWindows(PTwindows.massEdit) = projectboardWindows(PTwindows.mpt).NewWindow
-        '                Else
-        '                    projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-        '                End If
-
-        '            Catch ex As Exception
-        '                projectboardWindows(PTwindows.massEdit) = appInstance.ActiveWindow.NewWindow
-        '            End Try
-
-        '            ' jetzt das Massen-Edit Sheet Ressourcen / Kosten aktivieren 
-        '            With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
-        '                .Activate()
-        '            End With
-
-        '            With projectboardWindows(PTwindows.massEdit)
-        '                .WindowState = Excel.XlWindowState.xlMaximized
-        '                .SplitRow = 1
-        '                .SplitColumn = 6
-        '                .FreezePanes = True
-        '                .DisplayFormulas = False
-        '                .DisplayHeadings = False
-        '                .DisplayGridlines = True
-        '                .GridlineColor = RGB(220, 220, 220)
-        '                .DisplayWorkbookTabs = False
-        '                .Caption = bestimmeWindowCaption(PTwindows.massEdit)
-        '            End With
-
-
-        '            ' jetzt das Multiprojekt Window ausblenden ...
-        '            projectboardWindows(PTwindows.mpt).Visible = False
-
-        '            ' jetzt auch alle anderen ggf offenen pr und pf Windows unsichtbar machen ... 
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mptpf)) Then
-        '                    projectboardWindows(PTwindows.mptpf).Visible = False
-        '                End If
-        '            Catch ex As Exception
-
-        '            End Try
-
-        '            Try
-        '                If Not IsNothing(projectboardWindows(PTwindows.mptpr)) Then
-        '                    projectboardWindows(PTwindows.mptpr).Visible = False
-        '                End If
-        '            Catch ex As Exception
-
-        '            End Try
-
-
-
-        '        Catch ex As Exception
-        '            Call MsgBox("Fehler: " & ex.Message)
-        '            If appInstance.EnableEvents = False Then
-        '                appInstance.EnableEvents = True
-        '            End If
-        '            If appInstance.ScreenUpdating = False Then
-        '                appInstance.ScreenUpdating = True
-        '            End If
-        '        End Try
-
-        '    Else
-        '        enableOnUpdate = True
-        '        If appInstance.EnableEvents = False Then
-        '            appInstance.EnableEvents = True
-        '        End If
-        '        If awinSettings.englishLanguage Then
-        '            Call MsgBox("no projects apply to criterias ...")
-        '        Else
-        '            Call MsgBox("Es gibt keine Projekte, die zu der Auswahl passen ...")
-        '        End If
-        '    End If
-
-
-        'Else
-        '    enableOnUpdate = True
-        '    If appInstance.EnableEvents = False Then
-        '        appInstance.EnableEvents = True
-        '    End If
-
-        '    If awinSettings.englishLanguage Then
-        '        Call MsgBox("no active projects ...")
-        '    Else
-        '        Call MsgBox("Es gibt keine aktiven Projekte ...")
-        '    End If
-
-        'End If
+        ' check ob auch keine Summary Projects selektiert sind ...
+        Dim nameCollection As New Collection
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        Else
+            Call massEditRcTeAt(ptModus.massEditRessCost)
+        End If
 
 
 
@@ -3534,16 +3535,16 @@ Imports System.IO
                             '
                         Else
                             ' den temporären Schutz von mir zurücknehmen 
-                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
-                                                       dbUsername, dbPasswort)
+                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
+                            'dbUsername, dbPasswort)
                             Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
                                                                       dbUsername, False, False)
-                            If request.setWriteProtection(wpItem) Then
+                            If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
                                 ' erfolgreich
                                 writeProtections.upsert(wpItem)
                             Else
                                 ' nicht erfolgreich
-                                wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                 writeProtections.upsert(wpItem)
                             End If
                         End If
@@ -4336,6 +4337,11 @@ Imports System.IO
 
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Call projektTafelInit()
 
@@ -4413,6 +4419,12 @@ Imports System.IO
         Dim atleastOne As Boolean = False
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4492,6 +4504,13 @@ Imports System.IO
         Dim atleastOne As Boolean = False
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        ' ein Unmark darf auf Summary Projekte gemacht werden 
+        'If Not noSummaryProjectsareSelected(nameCollection) Then
+        '    Exit Sub
+        'End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4575,6 +4594,12 @@ Imports System.IO
         Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
+
+        Dim nameCollection As New Collection
+
+        If Not noSummaryProjectsareSelected(nameCollection) Then
+            Exit Sub
+        End If
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4872,7 +4897,7 @@ Imports System.IO
                     Call importiereMassenEdit()
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, True)
+                    Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName, noComparison:=True)
 
                     ' ''If wasNotEmpty Then
                     ' ''    Call awinClearPlanTafel()
@@ -4927,6 +4952,7 @@ Imports System.IO
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
         ' Übernahme 
 
+        Dim noScenarioCreation As Boolean = False
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
@@ -4959,6 +4985,9 @@ Imports System.IO
                 dateiName = getInventurImport.selectedDateiName
 
                 Try
+                    ' jetzt das Logfile öffnen 
+                    Call logfileOpen()
+                    Dim logmsg() As String
 
                     If My.Computer.FileSystem.FileExists(dateiName) Then
 
@@ -4970,45 +4999,123 @@ Imports System.IO
                         End If
 
                         appInstance.Workbooks.Open(dateiName)
-                        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
-                        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+
+                        Dim scenarioNameP As String = appInstance.ActiveWorkbook.Name
+                        Dim scenarioNameS As String = scenarioNameP & " (programs)"
+                        Dim positionIX As Integer = scenarioNameP.IndexOf(".xls") - 1
                         Dim tmpName As String = ""
                         For ih As Integer = 0 To positionIX
-                            tmpName = tmpName & scenarioName.Chars(ih)
+                            tmpName = tmpName & scenarioNameP.Chars(ih)
                         Next
-                        scenarioName = tmpName.Trim
+                        scenarioNameP = tmpName.Trim
 
                         ' alle Import Projekte erstmal löschen
                         ImportProjekte.Clear(False)
+                        Dim isAllianzImport1 As Boolean = False
 
+                        If scenarioNameP.StartsWith("Allianz-Typ 1") Then
+                            Dim startdate As Date = CDate("1.1.2018")
+                            Dim enddate As Date = CDate("31.12.2018")
 
-                        Call awinImportProjektInventur()
-                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                            isAllianzImport1 = True
+                            Call importAllianzType1(startdate, enddate)
 
-                        Dim sessionConstellation As clsConstellation = verarbeiteImportProjekte(scenarioName)
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
 
-                        ' ''If wasNotEmpty Then
-                        ' ''    Call awinClearPlanTafel()
-                        ' ''End If
+                            noScenarioCreation = True
+                            Call importAllianzType2()
 
-                        '' ''Call awinZeichnePlanTafel(True)
-                        ' ''Call awinZeichnePlanTafel(False)
-                        ' ''Call awinNeuZeichnenDiagramme(2)
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
+                            ' immer zwei Monate zurück gehen 
+                            ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
+                            Dim monat As Integer = Date.Now.Month - 1
 
-                        If sessionConstellation.count > 0 Then
-
-                            If projectConstellations.Contains(scenarioName) Then
-                                projectConstellations.Remove(scenarioName)
+                            If awinSettings.actualDataMonth <> Date.MinValue Then
+                                monat = awinSettings.actualDataMonth.Month
                             End If
 
-                            projectConstellations.Add(sessionConstellation)
-                            Call loadSessionConstellation(scenarioName, False, False, True)
+                            If monat >= 1 And monat <= 12 Then
+                                'Call ImportAllianzType3(monat)
+                                Call ImportAllianzType3(monat, readAll:=True, createUnknown:=True)
+                            End If
+
+                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
+                            Call importAllianzType4()
+
                         Else
-                            Call MsgBox("keine PRojekte importiert ...")
+                            Call awinImportProjektInventur()
                         End If
 
-                        'Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-                        'Call importProjekteEintragen(importDate, ProjektStatus(1))
+
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                        'sessionConstellationP enthält alle Projekte aus dem Import 
+                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+                        Dim sessionConstellationS As clsConstellation = Nothing
+                        If isAllianzImport1 Then
+                            sessionConstellationS = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
+                        End If
+
+                        'Call sessionConstellationP.calcUnionProject(False)
+                        'Call sessionConstellationS.calcUnionProject(False)
+
+                        ' Testen ..
+                        ' test
+                        If isAllianzImport1 Then
+                            Dim everythingOK As Boolean = testUProjandSingleProjs(sessionConstellationP, False)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = sessionConstellationP.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
+                            ' ende test
+
+
+                            ' test
+                            everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
+                            If Not everythingOK Then
+                                ReDim logmsg(1)
+                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                logmsg(1) = sessionConstellationP.constellationName
+                                Call logfileSchreiben(logmsg)
+                            End If
+                            ' ende test
+                        End If
+
+
+                        If isAllianzImport1 Then
+                            If sessionConstellationS.count > 0 Then
+
+                                If projectConstellations.Contains(scenarioNameS) Then
+                                    projectConstellations.Remove(scenarioNameS)
+                                End If
+
+                                projectConstellations.Add(sessionConstellationS)
+                                ' jetzt auf Projekt-Tafel anzeigen 
+                                Call loadSessionConstellation(scenarioNameS, False, False, True)
+
+                            Else
+                                Call MsgBox("keine Programmlinien importiert ...")
+                            End If
+                        Else
+                            If sessionConstellationP.count > 0 Then
+
+                                If projectConstellations.Contains(scenarioNameP) Then
+                                    projectConstellations.Remove(scenarioNameP)
+                                End If
+
+                                projectConstellations.Add(sessionConstellationP)
+                                ' jetzt auf Projekt-Tafel anzeigen 
+                                Call loadSessionConstellation(scenarioNameP, False, False, True)
+
+                            Else
+                                Call MsgBox("keine Projekte importiert ...")
+                            End If
+                        End If
+
+
+
 
                         If ImportProjekte.Count > 0 Then
                             ImportProjekte.Clear(False)
@@ -5018,8 +5125,11 @@ Imports System.IO
                         Call MsgBox("bitte Datei auswählen ...")
                     End If
 
+                    Call logfileSchliessen()
 
                 Catch ex As Exception
+                    Call logfileSchliessen()
+
                     appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                     Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
                 End Try
@@ -5028,6 +5138,8 @@ Imports System.IO
             End If
 
         End If
+
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -5052,7 +5164,7 @@ Imports System.IO
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' Aktion durchführen ...
         getScenarioImport.menueAswhl = PTImpExp.scenariodefs
@@ -5116,7 +5228,7 @@ Imports System.IO
 
                         ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
                         If Not noDB Then
-                            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
                         End If
 
                     Else
@@ -5544,7 +5656,7 @@ Imports System.IO
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
         If Not noDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
@@ -5620,7 +5732,7 @@ Imports System.IO
 
                             Try
                                 Dim keyStr As String = calcProjektKey(hproj)
-                                ImportProjekte.Add(hproj, False)
+                                ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                                 myCollection.Add(calcProjektKey(hproj))
                             Catch ex2 As Exception
                                 Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
@@ -5674,7 +5786,7 @@ Imports System.IO
     Public Sub Tom2G4M2ImportMSProject(control As IRibbonControl)
 
         If Not noDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         End If
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
@@ -5721,6 +5833,8 @@ Imports System.IO
             ' alle Import Projekte erstmal löschen
             ImportProjekte.Clear(False)
 
+            '' Cursor auf HourGlass setzen
+            Cursor.Current = Cursors.WaitCursor
 
             ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
             Dim i As Integer
@@ -5751,12 +5865,12 @@ Imports System.IO
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
-                        ImportProjekte.Add(hproj, False)
+                        ImportProjekte.Add(hproj, updateCurrentConstellation:=False)
                         myCollection.Add(calcProjektKey(hproj))
 
                         If Not IsNothing(mapProj) Then
                             keyStr = calcProjektKey(mapProj)
-                            ImportProjekte.Add(mapProj, False)
+                            ImportProjekte.Add(mapProj, updateCurrentConstellation:=False)
                             myCollection.Add(calcProjektKey(mapProj))
 
                         End If
@@ -5773,6 +5887,9 @@ Imports System.IO
                 End Try
 
             Next i
+
+            '' Cursor auf Default setzen
+            Cursor.Current = Cursors.Default
 
 
             ' '' ''End If
@@ -5925,15 +6042,21 @@ Imports System.IO
 
     End Sub
 
+    ''' <summary>
+    ''' schreibt die Prio Liste 
+    ''' </summary>
+    ''' <param name="control"></param>
     Public Sub awinWritePrioList(control As IRibbonControl)
+
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
+        Dim roleCostCollection As New Collection
         Try
-            Call writeProjektsForSequencing()
+            Call writeProjektsForSequencing(roleCostCollection)
         Catch ex As Exception
             Call MsgBox(ex.Message)
         End Try
@@ -5942,6 +6065,96 @@ Imports System.IO
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+    End Sub
+
+    ''' <summary>
+    ''' schreibt pro Projekt eine Zeile ...
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub exportExcelSumme(control As IRibbonControl)
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+
+            Dim myCollection As Collection = frmMERoleCost.ergItems
+
+            Try
+                Call writeProjektsForSequencing(myCollection)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt pro Projekt alle ausgewählten Rollen / Kosten weg 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub exportExcelDetails(control As IRibbonControl)
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        Call projektTafelInit()
+
+        Dim frmMERoleCost As New frmMEhryRoleCost
+        With frmMERoleCost
+            .hproj = Nothing
+            .phaseName = ""
+            .phaseNameID = rootPhaseName
+            .pName = ""
+            .vName = ""
+            .rcName = ""
+        End With
+
+        Dim returnValue As DialogResult = frmMERoleCost.ShowDialog()
+
+        If returnValue = DialogResult.OK Then
+
+            appInstance.EnableEvents = False
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
+
+
+            Dim myCollection As Collection = frmMERoleCost.ergItems
+
+            Try
+                Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollection)
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+            enableOnUpdate = True
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+
+        End If
+
     End Sub
 
     ''' <summary>
@@ -6805,7 +7018,7 @@ Imports System.IO
         Call projektTafelInit()
 
         ' wird für das LEsen des Vergleichs-Projekts gebraucht ... 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim vglProjekt As clsProjekt = Nothing
         enableOnUpdate = False
 
@@ -6857,6 +7070,12 @@ Imports System.IO
 
         If ok And Not IsNothing(hproj) Then
 
+            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+            Dim tmpVariantName As String = ""
+            If hproj.projectType = ptPRPFType.portfolio Then
+                tmpVariantName = portfolioVName
+            End If
+
             Dim repObj As Excel.ChartObject
             appInstance.EnableEvents = False
             appInstance.ScreenUpdating = False
@@ -6883,7 +7102,7 @@ Imports System.IO
                                                          top, left, width, height, False)
 
                 Try
-                    vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+                    vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
@@ -6940,7 +7159,7 @@ Imports System.IO
         Dim top As Double, left As Double, width As Double, height As Double
 
         ' wird für das LEsen des Vergleichs-Projekts gebraucht ... 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim vglProjekt As clsProjekt = Nothing
 
         Call projektTafelInit()
@@ -6970,6 +7189,12 @@ Imports System.IO
 
                 If ok Then
 
+                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                    Dim tmpVariantName As String = ""
+                    If hproj.projectType = ptPRPFType.portfolio Then
+                        tmpVariantName = portfolioVName
+                    End If
+
                     Dim repObj As Excel.ChartObject
                     appInstance.EnableEvents = False
                     appInstance.ScreenUpdating = False
@@ -6989,7 +7214,9 @@ Imports System.IO
                     Try
 
                         Try
-                            vglProjekt = request.retrieveFirstContractedPFromDB(hproj.name)
+
+                            vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+
                         Catch ex As Exception
                             vglProjekt = Nothing
                         End Try
@@ -7000,7 +7227,8 @@ Imports System.IO
                         Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
-                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+                        'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
+                        Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                         repObj = Nothing
                         Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
@@ -7049,7 +7277,7 @@ Imports System.IO
         Dim auswahl As Integer = 1 ' das steuert , dass die sonstigen Kosten angezeigt werden  
         Dim top As Double, left As Double, width As Double, height As Double
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -7076,6 +7304,11 @@ Imports System.IO
                     Exit Sub
                 End Try
 
+                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                Dim tmpVariantName As String = ""
+                If hproj.projectType = ptPRPFType.portfolio Then
+                    tmpVariantName = portfolioVName
+                End If
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -7091,7 +7324,9 @@ Imports System.IO
 
                 Try
                     Try
-                        vglProj = request.retrieveFirstContractedPFromDB(hproj.name)
+
+                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+
                     Catch ex As Exception
                         vglProj = Nothing
                     End Try
@@ -7102,7 +7337,8 @@ Imports System.IO
                     Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False)
 
                     ' jetzt wird das Pie-Diagramm gezeichnet 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                    'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     repObj = Nothing
                     Call createCostPieOfProject(hproj, repObj, auswahl, top, left, height, width, False)
@@ -7607,7 +7843,7 @@ Imports System.IO
     ''' <param name="typ"></param>
     ''' <remarks></remarks>
     Private Sub awinSollIstVergleich(ByVal auswahl As Integer, ByVal typ As String, ByVal vglBaseline As Boolean)
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -7617,6 +7853,7 @@ Imports System.IO
         Dim vglName As String = " "
         Dim pName As String = ";"
         Dim variantName As String = ""
+        Dim bproj As clsProjekt = Nothing
 
         Call projektTafelInit()
 
@@ -7644,38 +7881,51 @@ Imports System.IO
                     Exit Sub
                 End Try
 
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.getShapeText
-                    End If
-                Else
-                    projekthistorie = New clsProjektHistorie
+                ' tk, 7.8.18 wird nicht mehr gebraucht .... wurde ersetzt durch retrieveFirstContracted ...
+                ''If Not projekthistorie Is Nothing Then
+                ''    If projekthistorie.Count > 0 Then
+                ''        vglName = projekthistorie.First.getShapeText
+                ''    End If
+                ''Else
+                ''    projekthistorie = New clsProjektHistorie
+                ''End If
+
+                ''With hproj
+                ''    pName = .name
+                ''    variantName = .variantName
+                ''End With
+
+
+                ''If vglName <> hproj.getShapeText Then
+                ''    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                ''        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                ''        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
+                ''                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                ''        projekthistorie.Add(Date.Now, hproj)
+                ''    Else
+                ''        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+                ''        projekthistorie.clear()
+                ''    End If
+
+
+                ''Else
+                ''    ' der aktuelle Stand hproj muss hinzugefügt werden 
+                ''    Dim lastElem As Integer = projekthistorie.Count - 1
+                ''    projekthistorie.RemoveAt(lastElem)
+                ''    projekthistorie.Add(Date.Now, hproj)
+                ''End If
+                ''Dim nrSnapshots As Integer = projekthistorie.Count
+
+                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
+                Dim tmpVariantName As String = ""
+                If hproj.projectType = ptPRPFType.portfolio Then
+                    tmpVariantName = portfolioVName
                 End If
 
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                End With
+                ' das bproj bestimmen 
+                bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
 
-                If vglName <> hproj.getShapeText Then
-                    If request.pingMongoDb() Then
-                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:="",
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                        projekthistorie.Add(Date.Now, hproj)
-                    Else
-                        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
-                        projekthistorie.clear()
-                    End If
 
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    Dim lastElem As Integer = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, hproj)
-                End If
-
-                Dim nrSnapshots As Integer = projekthistorie.Count
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -7688,7 +7938,7 @@ Imports System.IO
                     Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
 
                     If typ = "Curve" Then
-                        Call createSollIstCurveOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
+                        Call createSollIstCurveOfProject(hproj, bproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width)
                     Else
                         Call createSollIstOfProject(hproj, reportobj, heute, auswahl, qualifier, vglBaseline, top, left, height, width, False)
                     End If
@@ -7737,7 +7987,7 @@ Imports System.IO
     ''' </param>
     ''' <remarks></remarks>
     Private Sub awinStatusAnzeige(ByVal compareTyp As Integer, ByVal auswahl As Integer, ByVal qualifier As String)
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -7860,302 +8110,6 @@ Imports System.IO
 
 
     End Sub
-    '' '' '' '' '' '' ''' ur: 13.09.2016: wurde durch  ersetzt
-    ' '' '' '' '' '' ''' <summary>
-    ' '' '' '' '' '' ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
-    ' '' '' '' '' '' ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
-    ' '' '' '' '' '' ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
-    ' '' '' '' '' '' ''' wenn nichts selektiert ist: Fehler MEldung 
-    ' '' '' '' '' '' ''' </summary>
-    ' '' '' '' '' '' ''' <param name="control"></param>
-    ' '' '' '' '' '' ''' <remarks></remarks>
-    ' '' '' '' '' ''Sub PTShowMilestonesByName(control As IRibbonControl)
-
-
-
-    ' '' '' '' '' ''    Dim listOfItems As New Collection
-    ' '' '' '' '' ''    Dim nameList As New Collection
-    ' '' '' '' '' ''    Dim title As String = "Meilensteine visualisieren"
-
-    ' '' '' '' '' ''    Dim repObj As Object = Nothing
-
-    ' '' '' '' '' ''    Dim singleShp As Excel.Shape
-    ' '' '' '' '' ''    Dim myCollection As New Collection
-    ' '' '' '' '' ''    Dim hproj As clsProjekt
-    ' '' '' '' '' ''    Dim awinSelection As Excel.ShapeRange
-    ' '' '' '' '' ''    Dim selektierteProjekte As New clsProjekte
-
-    ' '' '' '' '' ''    Call projektTafelInit()
-
-    ' '' '' '' '' ''    Try
-    ' '' '' '' '' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-    ' '' '' '' '' ''    Catch ex As Exception
-    ' '' '' '' '' ''        awinSelection = Nothing
-    ' '' '' '' '' ''    End Try
-
-    ' '' '' '' '' ''    If Not awinSelection Is Nothing Then
-
-    ' '' '' '' '' ''        ' jetzt die Aktion durchführen ...
-
-    ' '' '' '' '' ''        For Each singleShp In awinSelection
-
-    ' '' '' '' '' ''            Try
-    ' '' '' '' '' ''                hproj = ShowProjekte.getProject(singleShp.Name, True)
-    ' '' '' '' '' ''                selektierteProjekte.Add(hproj)
-    ' '' '' '' '' ''            Catch ex As Exception
-    ' '' '' '' '' ''                Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-    ' '' '' '' '' ''            End Try
-
-    ' '' '' '' '' ''        Next
-
-    ' '' '' '' '' ''        nameList = selektierteProjekte.getMilestoneNames
-
-    ' '' '' '' '' ''        If nameList.Count > 0 Then
-
-    ' '' '' '' '' ''            For Each tmpName As String In nameList
-    ' '' '' '' '' ''                listOfItems.Add(tmpName)
-    ' '' '' '' '' ''            Next
-
-    ' '' '' '' '' ''            ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-    ' '' '' '' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
-
-
-    ' '' '' '' '' ''            With auswahlFenster
-
-    ' '' '' '' '' ''                .chTyp = DiagrammTypen(5)
-
-    ' '' '' '' '' ''            End With
-    ' '' '' '' '' ''            auswahlFenster.Show()
-
-    ' '' '' '' '' ''        Else
-    ' '' '' '' '' ''            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-    ' '' '' '' '' ''        End If
-
-
-    ' '' '' '' '' ''    Else
-    ' '' '' '' '' ''        Call MsgBox("Bitte mindestens ein Projekt selektieren ... ")
-    ' '' '' '' '' ''        Exit Sub
-    ' '' '' '' '' ''    End If
-
-
-
-
-
-
-
-    ' '' '' '' '' ''End Sub
-    '' '' '' '' '' '' ''' ur: 13.09.2016: wurde durch ersetzt
-    ' '' '' '' '' '' ''' <summary>
-    ' '' '' '' '' '' ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
-    ' '' '' '' '' '' ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
-    ' '' '' '' '' '' ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
-    ' '' '' '' '' '' ''' wenn nichts selektiert ist: zeige die Namen der Meilensteine aus allen Projekten  
-    ' '' '' '' '' '' ''' </summary>
-    ' '' '' '' '' '' ''' <param name="control"></param>
-    ' '' '' '' '' '' ''' <remarks></remarks>
-    ' '' '' '' '' ''Public Sub PTShowAllMilestonesByName(Control As IRibbonControl)
-
-    ' '' '' '' '' ''    Dim listOfItems As New Collection
-    ' '' '' '' '' ''    Dim nameList As New Collection
-    ' '' '' '' '' ''    Dim title As String = "Meilensteine visualisieren"
-
-    ' '' '' '' '' ''    Dim repObj As Object = Nothing
-
-    ' '' '' '' '' ''    Call projektTafelInit()
-    ' '' '' '' '' ''    Call awinDeSelect()
-
-    ' '' '' '' '' ''    If ShowProjekte.Count > 0 Then
-    ' '' '' '' '' ''        If showRangeRight - showRangeLeft > 5 Then
-
-    ' '' '' '' '' ''            nameList = ShowProjekte.getMilestoneNames
-
-    ' '' '' '' '' ''            If nameList.Count > 0 Then
-
-    ' '' '' '' '' ''                For Each tmpName As String In nameList
-    ' '' '' '' '' ''                    listOfItems.Add(tmpName)
-    ' '' '' '' '' ''                Next
-
-    ' '' '' '' '' ''                ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-    ' '' '' '' '' ''                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
-
-
-    ' '' '' '' '' ''                With auswahlFenster
-
-    ' '' '' '' '' ''                    .chTyp = DiagrammTypen(5)
-
-    ' '' '' '' '' ''                End With
-    ' '' '' '' '' ''                auswahlFenster.Show()
-
-    ' '' '' '' '' ''            Else
-    ' '' '' '' '' ''                Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-    ' '' '' '' '' ''            End If
-    ' '' '' '' '' ''        Else
-    ' '' '' '' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-    ' '' '' '' '' ''        End If
-    ' '' '' '' '' ''    Else
-    ' '' '' '' '' ''        Call MsgBox("Es sind keine Projekte geladen!")
-    ' '' '' '' '' ''    End If
-
-
-
-    ' '' '' '' '' ''End Sub
-
-    '' '' '' '' '' '' ''' ur: 10.7.2015: wurde durch awinShowMilestoneTrend ersetzt
-    '' '' '' '' '' '' ''' <summary>
-    '' '' '' '' '' '' ''' zeigt zu dem ausgewählten Projekt die Meilenstein Trendanalyse an 
-    '' '' '' '' '' '' ''' dazu wird erst ein Fenster aufgeschaltet, aus dem der oder die Namen des betreffenden Meilensteins ausgewählt werden können 
-    '' '' '' '' '' '' ''' </summary>
-    '' '' '' '' '' '' ''' <param name="control"></param>
-    '' '' '' '' '' '' ''' <remarks></remarks>
-    '' '' '' '' '' ''Sub PTShowMilestoneTrend(control As IRibbonControl)
-
-    '' '' '' '' '' ''    Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-    '' '' '' '' '' ''    Dim singleShp As Excel.Shape
-    '' '' '' '' '' ''    Dim listOfItems As New Collection
-    '' '' '' '' '' ''    Dim listOfMSNames As New Collection
-    '' '' '' '' '' ''    Dim nameList As New SortedList(Of Date, String)
-    '' '' '' '' '' ''    Dim title As String = "Meilensteine auswählen"
-    '' '' '' '' '' ''    Dim hproj As clsProjekt
-    '' '' '' '' '' ''    Dim awinSelection As Excel.ShapeRange
-    '' '' '' '' '' ''    Dim selektierteProjekte As New clsProjekte
-    '' '' '' '' '' ''    Dim top As Double, left As Double, height As Double, width As Double
-    '' '' '' '' '' ''    Dim repObj As Excel.ChartObject = Nothing
-
-    '' '' '' '' '' ''    Dim pName As String, vglName As String = " "
-    '' '' '' '' '' ''    Dim variantName As String
-
-    '' '' '' '' '' ''    Call projektTafelInit()
-
-    '' '' '' '' '' ''    Try
-    '' '' '' '' '' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-    '' '' '' '' '' ''    Catch ex As Exception
-    '' '' '' '' '' ''        awinSelection = Nothing
-    '' '' '' '' '' ''    End Try
-    '' '' '' '' '' ''    If request.pingMongoDb() Then
-
-    '' '' '' '' '' ''        If Not awinSelection Is Nothing Then
-
-    '' '' '' '' '' ''            ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
-    '' '' '' '' '' ''            If awinSelection.Count = 1 Then
-
-    '' '' '' '' '' ''                ' Aktion durchführen ...
-
-    '' '' '' '' '' ''                singleShp = awinSelection.Item(1)
-
-    '' '' '' '' '' ''                Try
-    '' '' '' '' '' ''                    hproj = ShowProjekte.getProject(singleShp.Name)
-    '' '' '' '' '' ''                    nameList = hproj.getMilestones
-
-    '' '' '' '' '' ''                    ' jetzt muss die ProjektHistorie aufgebaut werden 
-    '' '' '' '' '' ''                    With hproj
-    '' '' '' '' '' ''                        pName = .name
-    '' '' '' '' '' ''                        variantName = .variantName
-    '' '' '' '' '' ''                    End With
-
-    '' '' '' '' '' ''                    If Not projekthistorie Is Nothing Then
-    '' '' '' '' '' ''                        If projekthistorie.Count > 0 Then
-    '' '' '' '' '' ''                            vglName = projekthistorie.First.getShapeText
-    '' '' '' '' '' ''                        End If
-    '' '' '' '' '' ''                    Else
-    '' '' '' '' '' ''                        projekthistorie = New clsProjektHistorie
-    '' '' '' '' '' ''                    End If
-
-    '' '' '' '' '' ''                    If vglName <> hproj.getShapeText Then
-
-    '' '' '' '' '' ''                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-    '' '' '' '' '' ''                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-    '' '' '' '' '' ''                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-    '' '' '' '' '' ''                        projekthistorie.Add(Date.Now, hproj)
-
-
-    '' '' '' '' '' ''                    Else
-    '' '' '' '' '' ''                        ' der aktuelle Stand hproj muss hinzugefügt werden 
-    '' '' '' '' '' ''                        Dim lastElem As Integer = projekthistorie.Count - 1
-    '' '' '' '' '' ''                        projekthistorie.RemoveAt(lastElem)
-    '' '' '' '' '' ''                        projekthistorie.Add(Date.Now, hproj)
-    '' '' '' '' '' ''                    End If
-
-    '' '' '' '' '' ''                    If nameList.Count > 0 Then
-
-
-    '' '' '' '' '' ''                        appInstance.EnableEvents = False
-    '' '' '' '' '' ''                        enableOnUpdate = False
-
-    '' '' '' '' '' ''                        repObj = Nothing
-
-
-
-    '' '' '' '' '' ''                        For Each kvp As KeyValuePair(Of Date, String) In nameList
-
-    '' '' '' '' '' ''                            Dim msname As String = ""
-    '' '' '' '' '' ''                            msname = elemNameOfElemID(kvp.Value)
-    '' '' '' '' '' ''                            listOfMSNames.Add(msname)
-    '' '' '' '' '' ''                            listOfItems.Add(kvp.Value)
-    '' '' '' '' '' ''                        Next
-
-    '' '' '' '' '' ''                        With singleShp
-    '' '' '' '' '' ''                            top = .Top + boxHeight + 5
-    '' '' '' '' '' ''                            left = .Left - 5
-    '' '' '' '' '' ''                        End With
-
-    '' '' '' '' '' ''                        height = 2 * ((nameList.Count - 1) * 20 + 110)
-    '' '' '' '' '' ''                        width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
-
-    '' '' '' '' '' ''                        'Try
-
-    '' '' '' '' '' ''                        '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
-
-    '' '' '' '' '' ''                        'Catch ex As Exception
-
-    '' '' '' '' '' ''                        '    Call MsgBox(ex.Message)
-
-    '' '' '' '' '' ''                        'End Try
-
-
-
-    '' '' '' '' '' ''                        ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-    '' '' '' '' '' ''                        Dim auswahlFenster As New ListSelectionWindow(listOfMSNames, title)
-
-
-    '' '' '' '' '' ''                        With auswahlFenster
-
-    '' '' '' '' '' ''                            .kennung = " "
-    '' '' '' '' '' ''                            .chTyp = DiagrammTypen(6)
-    '' '' '' '' '' ''                            .chTop = top
-    '' '' '' '' '' ''                            .chLeft = left
-    '' '' '' '' '' ''                            .chWidth = width
-    '' '' '' '' '' ''                            .chHeight = height
-
-    '' '' '' '' '' ''                        End With
-    '' '' '' '' '' ''                        auswahlFenster.Show()
-
-    '' '' '' '' '' ''                    Else
-    '' '' '' '' '' ''                        Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-    '' '' '' '' '' ''                    End If
-
-    '' '' '' '' '' ''                Catch ex As Exception
-    '' '' '' '' '' ''                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-    '' '' '' '' '' ''                End Try
-
-    '' '' '' '' '' ''            Else
-    '' '' '' '' '' ''                Call MsgBox("bitte nur ein Projekt selektieren ...")
-    '' '' '' '' '' ''            End If
-    '' '' '' '' '' ''        Else
-    '' '' '' '' '' ''            Call MsgBox("vorher ein Projekt selektieren ...")
-    '' '' '' '' '' ''        End If
-
-    '' '' '' '' '' ''    Else
-    '' '' '' '' '' ''        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
-    '' '' '' '' '' ''        'projekthistorie.clear()
-    '' '' '' '' '' ''    End If
-    '' '' '' '' '' ''    enableOnUpdate = True
-    '' '' '' '' '' ''    appInstance.EnableEvents = True
-
-
-
-
-
-    '' '' '' '' '' ''End Sub
 
     Sub PT0ShowProjektStatus(control As IRibbonControl)
 
@@ -8561,7 +8515,9 @@ Imports System.IO
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8642,9 +8598,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8661,7 +8617,9 @@ Imports System.IO
 
         Call projektTafelInit()
 
-        If showRangeLeft > 0 And (showRangeRight - showRangeLeft >= 1) Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+        If ok Then
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -8736,9 +8694,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -8937,103 +8895,107 @@ Imports System.IO
 
     ' '' ''End Sub
 
-    Sub PT0ShowZieleUebersicht(control As IRibbonControl)
+    ' tk 17.10.18 wurde jetzt auskommentiert, weil WPFChart rausgeflogen ist
+    'Sub PT0ShowZieleUebersicht(control As IRibbonControl)
 
-        Dim ControlID As String = control.Id
-        Dim relevanteProjekte As clsProjekte
-        Dim chtObject As Excel.ChartObject = Nothing
-        'Dim top As Double, left As Double, width As Double, height As Double
-        Dim future As Integer = 0
-        Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
-        'awinSettings.mppShowAmpel = True
+    '    Dim ControlID As String = control.Id
+    '    Dim relevanteProjekte As clsProjekte
+    '    Dim chtObject As Excel.ChartObject = Nothing
+    '    'Dim top As Double, left As Double, width As Double, height As Double
+    '    Dim future As Integer = 0
+    '    Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
+    '    'awinSettings.mppShowAmpel = True
 
 
-        Dim myCollection As New Collection
-        myCollection.Add("Ziele")
+    '    Dim myCollection As New Collection
+    '    myCollection.Add("Ziele")
 
-        Call projektTafelInit()
+    '    Call projektTafelInit()
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-        If ControlID = "PT0G1B2" Then
-            relevanteProjekte = selectedProjekte
-        Else
-            Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
-            relevanteProjekte = ShowProjekte
-        End If
+    '    appInstance.EnableEvents = False
+    '    enableOnUpdate = False
+    '    If ControlID = "PT0G1B2" Then
+    '        relevanteProjekte = selectedProjekte
+    '    Else
+    '        Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
+    '        relevanteProjekte = ShowProjekte
+    '    End If
 
-        If relevanteProjekte.Count > 0 Then
-            If showRangeRight - showRangeLeft >= minColumns - 1 Then
+    '    If relevanteProjekte.Count > 0 Then
 
-                ' betrachte sowohl Vergangenheit als auch Gegenwart
-                future = 0
+    '        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
-                Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
-                Dim valueItem As New clsWPFPieValues
+    '        If ok Then
 
-                ' Nicht bewertet 
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(0, future).Sum
-                    .name = "nicht bewertet"
-                    .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            ' betrachte sowohl Vergangenheit als auch Gegenwart
+    '            future = 0
 
-                valueItem = New clsWPFPieValues
-                ' Grün bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(1, future).Sum
-                    .name = "OK"
-                    .color = CType(awinSettings.AmpelGruen, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
+    '            Dim valueItem As New clsWPFPieValues
 
-                valueItem = New clsWPFPieValues
-                ' Gelb bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(2, future).Sum
-                    .name = "nicht vollständig"
-                    .color = CType(awinSettings.AmpelGelb, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            ' Nicht bewertet 
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(0, future).Sum
+    '                .name = "nicht bewertet"
+    '                .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                valueItem = New clsWPFPieValues
-                ' Rot bewertet
-                With valueItem
-                    .value = relevanteProjekte.getColorsInMonth(3, future).Sum
-                    .name = "Zielverfehlung"
-                    .color = CType(awinSettings.AmpelRot, UInt32)
-                End With
-                wpfInput.Add(valueItem.name, valueItem)
+    '            valueItem = New clsWPFPieValues
+    '            ' Grün bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(1, future).Sum
+    '                .name = "OK"
+    '                .color = CType(awinSettings.AmpelGruen, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                Dim pieChartZieleV As New PieChartWindow(wpfInput)
+    '            valueItem = New clsWPFPieValues
+    '            ' Gelb bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(2, future).Sum
+    '                .name = "nicht vollständig"
+    '                .color = CType(awinSettings.AmpelGelb, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                With pieChartZieleV
-                    .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
-                    '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
-                    '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
-                End With
+    '            valueItem = New clsWPFPieValues
+    '            ' Rot bewertet
+    '            With valueItem
+    '                .value = relevanteProjekte.getColorsInMonth(3, future).Sum
+    '                .name = "Zielverfehlung"
+    '                .color = CType(awinSettings.AmpelRot, UInt32)
+    '            End With
+    '            wpfInput.Add(valueItem.name, valueItem)
 
-                pieChartZieleV.Show()
-            Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-            End If
+    '            Dim pieChartZieleV As New PieChartWindow(wpfInput)
 
-        Else
-            If ControlID = "PT0G1B2" Then
-                Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
-            Else
-                Call MsgBox("Es sind keine Projekte geladen!")
-            End If
+    '            With pieChartZieleV
+    '                .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
+    '                '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
+    '                '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
+    '            End With
 
-        End If
+    '            pieChartZieleV.Show()
+    '        Else
+    '            Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
+    '        End If
 
-        'awinSettings.mppShowAmpel = formerAmpelSetting
+    '    Else
+    '        If ControlID = "PT0G1B2" Then
+    '            Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
+    '        Else
+    '            Call MsgBox("Es sind keine Projekte geladen!")
+    '        End If
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+    '    End If
 
-    End Sub
+    '    'awinSettings.mppShowAmpel = formerAmpelSetting
+
+    '    appInstance.EnableEvents = True
+    '    enableOnUpdate = True
+
+    'End Sub
 
 
 
@@ -9046,8 +9008,8 @@ Imports System.IO
 
         Call projektTafelInit()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9111,9 +9073,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load project/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte zuerst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -9375,19 +9337,26 @@ Imports System.IO
 
         visboWorkbook.Windows.Arrange(Excel.XlArrangeStyle.xlArrangeStyleHorizontal)
 
+        ' in Abhängigkeit von der Resolution soll jetzt mehr oder weniger prozentualer Platz spendiert werden 
+        Dim teilungsfaktor As Double = 0.7
+        If maxScreenHeight < 520 Then
+            teilungsfaktor = 0.6
+        End If
+
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.massEdit)
             .Top = 0
             .Left = 1.0
-            .Height = 3 / 4 * maxScreenHeight
+            '.Height = 3 / 4 * maxScreenHeight
+            .Height = teilungsfaktor * maxScreenHeight
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 
         ' jetzt die Größen anpassen 
         With projectboardWindows(PTwindows.meChart)
-            .Top = 3 / 4 * maxScreenHeight + 3
+            .Top = teilungsfaktor * maxScreenHeight + 1
             .Left = 1.0
-            .Height = 1 / 4 * maxScreenHeight - 3
+            .Height = (1 - teilungsfaktor) * maxScreenHeight - 1
             .Width = maxScreenWidth - 7.0        ' -7.0, damit der Scrollbar angeklickt werden kann
         End With
 
@@ -9413,7 +9382,7 @@ Imports System.IO
             Dim chLeft As Double = 2
             Dim stdBreite As Double = (projectboardWindows(PTwindows.meChart).UsableWidth - 12) / 4
             Dim chWidth As Double = stdBreite
-            Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 6
+            Dim chHeight As Double = projectboardWindows(PTwindows.meChart).UsableHeight - 2
             Dim chTop As Double = 5
 
             If ShowProjekte.contains(pName) Then
@@ -9909,9 +9878,9 @@ Imports System.IO
 
         Call projektTafelInit()
 
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
 
-
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If ok Then
 
             appInstance.EnableEvents = False
             enableOnUpdate = False
@@ -9971,9 +9940,9 @@ Imports System.IO
 
         Else
             If awinSettings.englishLanguage Then
-                Call MsgBox("please define a timeframe first ...")
+                Call MsgBox("please load projects/portfolios first ...")
             Else
-                Call MsgBox("bitte wählen Sie zuerst einen Zeitraum aus ...")
+                Call MsgBox("bitte erst Projekte/Portfolios laden ...")
             End If
         End If
 
@@ -10473,7 +10442,7 @@ Imports System.IO
 
     Sub PT3G1B2PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10494,7 +10463,7 @@ Imports System.IO
         End Try
 
 
-        If request.pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10533,7 +10502,7 @@ Imports System.IO
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, hproj)
                             lastElem = projekthistorie.Count - 1
@@ -10616,7 +10585,7 @@ Imports System.IO
     ''' <remarks></remarks>
     Sub PT3G1B3PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10637,7 +10606,7 @@ Imports System.IO
             awinSelection = Nothing
         End Try
 
-        If request.pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10675,7 +10644,7 @@ Imports System.IO
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                         lastElem = projekthistorie.Count - 1
@@ -10820,7 +10789,7 @@ Imports System.IO
 
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -10840,7 +10809,7 @@ Imports System.IO
             awinSelection = Nothing
         End Try
 
-        If request.pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -10866,7 +10835,7 @@ Imports System.IO
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
 
@@ -10927,7 +10896,7 @@ Imports System.IO
     Sub awinShowTrendKPI(control As IRibbonControl)
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -10970,9 +10939,9 @@ Imports System.IO
                 End If
 
                 If vglName <> hproj.getShapeText Then
-                    If request.pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -11028,153 +10997,7 @@ Imports System.IO
 
     Sub awinShowTimeMachine(control As IRibbonControl)
 
-
         Call PBBShowTimeMachine(control)
-
-        ' ''Dim hproj As clsProjekt
-        ' ''Dim pName As String, variantName As String
-        ' ''Dim vglName As String = " "
-        ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        ' ''Dim singleShp As Excel.Shape
-        ' ''Dim showCharacteristics As New frmShowProjCharacteristics
-        '' ''Dim returnValue As DialogResult
-        ' ''Dim awinSelection As Excel.ShapeRange
-        ' ''Dim grueneAmpel As String = awinPath & "gruen.gif"
-        ' ''Dim gelbeAmpel As String = awinPath & "gelb.gif"
-        ' ''Dim roteAmpel As String = awinPath & "rot.gif"
-        ' ''Dim graueAmpel As String = awinPath & "grau.gif"
-
-        ' ''If timeMachineIsOn Then
-        ' ''    Call MsgBox("bitte erst Time Machine beenden ...")
-        ' ''    Exit Sub
-        ' ''End If
-
-        ' ''Call projektTafelInit()
-
-        ' ''enableOnUpdate = False
-        ' ''appInstance.EnableEvents = True
-
-
-        ' ''Try
-        ' ''    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        ' ''Catch ex As Exception
-        ' ''    awinSelection = Nothing
-        ' ''End Try
-
-        ' ''If Not awinSelection Is Nothing Then
-
-
-        ' ''    If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
-        ' ''        ' jetzt die Aktion durchführen ...
-        ' ''        singleShp = awinSelection.Item(1)
-        ' ''        hproj = ShowProjekte.getProject(singleShp.Name)
-        ' ''        With hproj
-        ' ''            pName = .name
-        ' ''            variantName = .variantName
-        ' ''            'Try
-        ' ''            '    variantName = .variantName.Trim
-        ' ''            'Catch ex As Exception
-        ' ''            '    variantName = ""
-        ' ''            'End Try
-
-        ' ''        End With
-
-        ' ''        If Not projekthistorie Is Nothing Then
-        ' ''            If projekthistorie.Count > 0 Then
-        ' ''                vglName = projekthistorie.First.getShapeText
-        ' ''            End If
-
-        ' ''        Else
-        ' ''            projekthistorie = New clsProjektHistorie
-        ' ''        End If
-
-        ' ''        If vglName <> hproj.getShapeText Then
-
-        ' ''            If request.pingMongoDb() Then
-        ' ''                ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-        ' ''                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-        ' ''                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-        ' ''                If projekthistorie.Count <> 0 Then
-
-        ' ''                    projekthistorie.Add(Date.Now, hproj)
-
-        ' ''                End If
-
-        ' ''            Else
-        ' ''                Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-        ' ''                projekthistorie.clear()
-        ' ''            End If
-
-        ' ''        Else
-        ' ''            ' der aktuelle Stand hproj muss hinzugefügt werden 
-        ' ''            Dim lastElem As Integer = projekthistorie.Count - 1
-        ' ''            projekthistorie.RemoveAt(lastElem)
-        ' ''            projekthistorie.Add(Date.Now, hproj)
-        ' ''        End If
-
-
-        ' ''        Dim nrSnapshots As Integer = projekthistorie.Count
-
-        ' ''        If nrSnapshots > 0 Then
-
-        ' ''            With showCharacteristics
-
-        ' ''                .Text = "Historie für Projekt " & pName.Trim & vbLf & _
-        ' ''                        "( " & projekthistorie.getZeitraum & " )"
-        ' ''                .timeSlider.Minimum = 0
-        ' ''                .timeSlider.Maximum = nrSnapshots - 1
-
-        ' ''                '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
-
-        ' ''                'If kvp.Value.ampelStatus = 1 Then
-        ' ''                '    .ampelPicture.LoadAsync(grueneAmpel)
-        ' ''                'ElseIf kvp.Value.ampelStatus = 2 Then
-        ' ''                '    .ampelPicture.LoadAsync(gelbeAmpel)
-        ' ''                'ElseIf kvp.Value.ampelStatus = 3 Then
-        ' ''                '    .ampelPicture.LoadAsync(roteAmpel)
-        ' ''                'Else
-        ' ''                '    .ampelPicture.LoadAsync(graueAmpel)
-        ' ''                'End If
-
-        ' ''                '.snapshotDate.Text = kvp.Value.timeStamp.ToString
-        ' ''                ' das ist ja der aktuelle Stand ..
-        ' ''                .snapshotDate.Text = "Aktueller Stand"
-        ' ''                ' Designer 
-        ' ''                'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
-        ' ''                '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
-        ' ''                '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
-        ' ''                '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
-
-
-        ' ''            End With
-
-
-        ' ''            ' jetzt wird das Form aufgerufen ... 
-
-        ' ''            'returnValue = showCharacteristics.ShowDialog
-        ' ''            showCharacteristics.Show()
-
-        ' ''        Else
-        ' ''            Call MsgBox("es gibt noch keine Planungs-Historie")
-        ' ''        End If
-
-        ' ''    Else
-        ' ''        Call MsgBox("bitte nur ein Projekt selektieren")
-        ' ''        'For Each singleShp In awinSelection
-        ' ''        '    With singleShp
-        ' ''        '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-        ' ''        '            nrSelPshp = nrSelPshp + 1
-        ' ''        '            SID = .ID.ToString
-        ' ''        '        End If
-        ' ''        '    End With
-        ' ''        'Next
-        ' ''    End If
-        ' ''Else
-        ' ''    Call MsgBox("vorher Projekt selektieren ...")
-        ' ''End If
-
-        ' ''enableOnUpdate = True
-
 
     End Sub
 
@@ -11192,14 +11015,18 @@ Imports System.IO
 
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
-        Dim timeZoneWasOff As Boolean = False
+        Dim timeZoneWasOff As Boolean = (showRangeLeft = 0 Or showRangeRight = 0)
         getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
 
+
+        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
+
+
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
-        If showRangeRight - showRangeLeft >= minColumns - 1 Then
+        If ok Then
 
             If ShowProjekte.Count > 0 Then
 
@@ -11211,16 +11038,11 @@ Imports System.IO
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
         Else
-            ' automatisch bestimmen 
-            timeZoneWasOff = True
-            If selectedProjekte.Count > 0 Then
-                showRangeLeft = selectedProjekte.getMinMonthColumn
-                showRangeRight = selectedProjekte.getMaxMonthColumn
+            If awinSettings.englishLanguage Then
+                Call MsgBox("please load projects/portfoliso first ...")
             Else
-                showRangeLeft = ShowProjekte.getMinMonthColumn
-                showRangeRight = ShowProjekte.getMaxMonthColumn
+                Call MsgBox("bitte erst Projekt/Portfolios laden ...")
             End If
-            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
 
         End If
 
@@ -11272,7 +11094,7 @@ Imports System.IO
     Sub PTTestFunktion2(control As IRibbonControl)
 
         Dim hproj As clsProjekt
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         ''Dim tstCollection As SortedList(Of Date, String)
         Dim anzElements As Integer
@@ -11341,42 +11163,10 @@ Imports System.IO
                         Call MsgBox(vglProj.name & ": identisch ...")
                     End If
 
-
-                    'If i = 1 Then
-                    '    schluessel = calcProjektKey(hproj)
-                    'End If
-
-                    ''If request.pingMongoDb() Then
-                    ''    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    ''    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                    ''                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    ''Else
-                    ''    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                    ''    projekthistorie.clear()
-                    ''End If
-
-                    ''If projekthistorie.Count > 0 Then
-                    ''    ' Aufbau der Listen 
-                    ''    projektHistorien.Add(projekthistorie)
-
-
-                    ''End If
-
                 Next
             End If
         End If
 
-
-
-
-        ''tstCollection = projektHistorien.getTimeStamps(schluessel)
-        ''anzElements = tstCollection.Count
-
-        ''For i = 1 To anzElements
-        ''    ts = tstCollection.ElementAt(0).Key
-        ''    projektHistorien.Remove(schluessel, ts)
-        ''    todoListe.Add(schluessel, ts)
-        ''Next
 
 
         enableOnUpdate = True
@@ -11763,34 +11553,9 @@ Imports System.IO
         enableOnUpdate = False
         appInstance.EnableEvents = True
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        Dim ok2 As Boolean = request.cancelWriteProtections(dbUsername)
-
-        ' ''Dim wpItem As clsWriteProtectionItem
-
-        ' ''For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
-
-        ' ''    wpItem = New clsWriteProtectionItem(kvp.Key, dbUsername, True)
-        ' ''    ' ''wpItem = New clsWriteProtectionItem(kvp.Key, dbUsername, False)
-        ' ''    ' ''wpItem.isProtected = False
-        ' ''    Dim ok As Boolean = request.setWriteProtection(wpItem)
-        ' ''    If ok Then
-        ' ''        'Call MsgBox("Projekt " & wpItem.pvName & " wurde von User " & wpItem.userName & _
-        ' ''        '            "nicht permanent geschützt: Date: " & wpItem.lastDateSet.ToShortDateString)
-        ' ''    Else
-
-        ' ''        Dim writeProtections As SortedList(Of String, clsWriteProtectionItem) = request.retrieveWriteProtectionsFromDB(AlleProjekte)
-        ' ''        Dim resultstr As String = ""
-        ' ''        For Each elem As KeyValuePair(Of String, clsWriteProtectionItem) In writeProtections
-        ' ''            resultstr = resultstr & vbLf & elem.Key & elem.Value.userName
-        ' ''        Next
-        ' ''        Call MsgBox("Projekt " & wpItem.pvName & " konnte nicht für User " & wpItem.userName & _
-        ' ''                    " geschützt werden: Date: " & wpItem.lastDateSet.ToShortDateString & vbLf & _
-        ' ''                    "writeProtections: " & resultstr)
-        ' ''    End If
-
-        ' ''Next
+        Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername)
 
         enableOnUpdate = True
 
@@ -12035,30 +11800,22 @@ Imports System.IO
         enableOnUpdate = True
 
     End Sub
-    Public Sub PTWebRequest(control As IRibbonControl)
-        Dim bytearray() As Byte
-        Dim array As String = "{""email"": ""markus.seyfried@visbo.de"",  ""pass"": ""visbo123""}"
-        'Dim request As WebRequest = WebRequest.Create("http://visbo.myhome-server.de:3484/token/user/login")
-        Dim request As WebRequest = WebRequest.Create("http://localhost:3484/token/user/login")
-        request.Method = "POST"
-        request.ContentLength = array.Length
-        request.ContentType = "application/json"
 
-        ReDim bytearray(array.Length)
-        bytearray = UnicodeStringToBytes(array)
+
+    ' ----------------------------------------------------------------
+    ' Ab hier sind die MenuPunkte für WebServer
+    ' ----------------------------------------------------------------
+    Public Sub PTWebRequestLogin(control As IRibbonControl)
         Try
-            Dim dataStream As Stream = request.GetRequestStream()
-            dataStream.Write(bytearray, 0, bytearray.Length)
-            dataStream.Close()
-        Catch ex As Exception
-            MessageBox.Show(ex.Message)
-        End Try
 
-        Dim response As WebResponse = request.GetResponse()
+            Dim loginerfolgreich As Boolean = logInToMongoDB(True)
+
+        Catch ex As Exception
+
+        End Try
     End Sub
-    Private Function UnicodeStringToBytes(ByVal str As String) As Byte()
-        Return System.Text.Encoding.Unicode.GetBytes(str)
-    End Function
+
+
 #End Region
 
 #Region "Hilfsprogramme"

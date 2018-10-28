@@ -67,7 +67,7 @@ Public Class clsListOfCostAndRoles
                                                     Optional ByVal considerSubRoles As Boolean = False) As Collection
         Get
             Dim phaseCollection As New Collection
-            Dim subRoleCollection As Collection
+            'Dim subRoleCollection As Collection
 
             If roleCollection.Count > 0 Then
 
@@ -76,7 +76,7 @@ Public Class clsListOfCostAndRoles
                     Dim teilphaseCollection As Collection
 
                     If role.isCombinedRole And considerSubRoles Then
-                        subRoleCollection = RoleDefinitions.getSubRoleNamesOf(roleName)
+                        'subRoleCollection = RoleDefinitions.getSubRoleIDsOf(roleName)
                         teilphaseCollection = Me.getPhasesWithRoles(roleCollection, considerSubRoles)
                     Else
                         Dim roleUID As Integer = role.UID
@@ -176,10 +176,14 @@ Public Class clsListOfCostAndRoles
 
             For Each kvp As KeyValuePair(Of Integer, Collection) In _listOfRoles
 
-                If kvp.Key >= 1 And kvp.Key <= RoleDefinitions.Count Then
-                    Dim roleName As String = RoleDefinitions.getRoledef(kvp.Key).name
-                    tmpCollection.Add(roleName, roleName)
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+                If Not IsNothing(tmpRole) Then
+                    If Not tmpCollection.Contains(tmpRole.name) Then
+                        tmpCollection.Add(tmpRole.name, tmpRole.name)
+                    End If
+
                 End If
+
 
             Next
 

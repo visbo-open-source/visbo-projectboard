@@ -628,7 +628,7 @@
 
                             ' berechnen
                             myCollection.Add(roleName, roleName)
-                            rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type)
+                            rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type, True)
 
                             If considerTimeFrame Then
                                 For tmpIX As Integer = arrayIX To arrayIX + anzLoops - 1

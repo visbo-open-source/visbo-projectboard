@@ -29,10 +29,12 @@ Partial Class frmSelectVariant
         '
         'variantNamesListBox
         '
+        Me.variantNamesListBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.variantNamesListBox.FormattingEnabled = True
+        Me.variantNamesListBox.ItemHeight = 16
         Me.variantNamesListBox.Location = New System.Drawing.Point(12, 25)
         Me.variantNamesListBox.Name = "variantNamesListBox"
-        Me.variantNamesListBox.Size = New System.Drawing.Size(253, 186)
+        Me.variantNamesListBox.Size = New System.Drawing.Size(253, 180)
         Me.variantNamesListBox.TabIndex = 0
         '
         'showButton
@@ -50,12 +52,13 @@ Partial Class frmSelectVariant
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.ClientSize = New System.Drawing.Size(284, 268)
         Me.Controls.Add(Me.showButton)
         Me.Controls.Add(Me.variantNamesListBox)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmSelectVariant"
-        Me.Text = "Variante anzeigen"
+        Me.Text = "show Variant"
         Me.TopMost = True
         Me.ResumeLayout(False)
 

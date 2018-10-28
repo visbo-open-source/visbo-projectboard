@@ -38,13 +38,19 @@ Public Class ThisAddIn
             awinSettings.userNamePWD = My.Settings.userNamePWD
         End If
 
+        ' für Demo Zwecke only !! 
+        ' vor Auslieferung auf false setzen ! 
+        awinSettings.autoSetActualDataDate = True
+
     End Sub
 
 
     Private Sub ThisAddIn_Shutdown() Handles Me.Shutdown
+
         If VisboProtected Then
             Call makeVisboShapesVisible(False)
         End If
+
     End Sub
 
     Private Sub Application_OpenPresentation(Pres As Presentation) Handles Application.AfterPresentationOpen, Application.AfterNewPresentation
@@ -128,6 +134,7 @@ Public Class ThisAddIn
     End Sub
 
     Private Sub Application_PresentationBeforeClose(Pres As Presentation, ByRef Cancel As Boolean) Handles Application.PresentationBeforeClose
+
         ' bitte nicht benutzen siehe Module1.vb
     End Sub
 

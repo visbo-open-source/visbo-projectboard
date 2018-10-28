@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
-Imports MongoDbAccess
+Imports DBAccLayer
 Imports System.Windows.Forms
 Imports System.Drawing
 
@@ -614,8 +614,8 @@ Public Class frmProjPortfolioAdmin
         Else
 
             Try
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                Dim tCollection As Collection = request.retrieveZeitstempelFromDB()
+
+                Dim tCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
 
                 If tCollection.Count >= 1 Then
                     earliestDate = tCollection.Item(tCollection.Count).date.addhours(23).addminutes(59)
@@ -1322,8 +1322,8 @@ Public Class frmProjPortfolioAdmin
 
             If Not noDB Then
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 Select Case TreeLevel
 
@@ -1346,18 +1346,18 @@ Public Class frmProjPortfolioAdmin
                                 ' nicht zugelassen , also wieder zurücknehmen 
 
                                 ' wenn node gecheckt wurde, aber das Projekt gar nicht existiert ...
-                                If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
                                     If awinSettings.englishLanguage Then
-                                        Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                        Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf &
                                                     "please store at database before protecting ...")
                                     Else
-                                        Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                        Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf &
                                                     "dann schützen ...")
                                     End If
                                 End If
 
                                 node.Checked = Not node.Checked
-                                writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
 
@@ -1378,19 +1378,19 @@ Public Class frmProjPortfolioAdmin
                                     ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                 Else
 
-                                    If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                    If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
                                         If awinSettings.englishLanguage Then
-                                            Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf & _
+                                            Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf &
                                                         "please store at database before protecting ...")
                                         Else
-                                            Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                            Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf &
                                                         "dann schützen ...")
                                         End If
                                     End If
 
                                     ' nicht zugelassen , also alles unverändert lassen  
                                     atleastOneError = True
-                                    writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                    writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
                                     Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                                 End If
 
@@ -1422,19 +1422,19 @@ Public Class frmProjPortfolioAdmin
                             ' erfolgreich ..
                             ' es wurde bereits Node Apperance inkl Check-Status geklärt
                         Else
-                            If Not request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+                            If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
                                 If awinSettings.englishLanguage Then
-                                    Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf & _
+                                    Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf &
                                                 "please store at database before protecting ...")
                                 Else
-                                    Call MsgBox(pName & ", " & vName & "bitte erst in Datenbank speichern ... " & vbLf & _
+                                    Call MsgBox(pName & ", " & vName & " bitte erst in Datenbank speichern ... " & vbLf &
                                                 "dann schützen ...")
                                 End If
                             End If
 
                             ' nicht zugelassen , also alles unverändert lassen  
                             node.Checked = Not node.Checked
-                            writeProtections.upsert(request.getWriteProtection(pName, vName))
+                            writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
                             Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                         End If
 
@@ -1944,8 +1944,8 @@ Public Class frmProjPortfolioAdmin
 
         If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
             ' jetzt die writeProtections neu bestimmen 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         selectedNode = e.Node
@@ -2090,8 +2090,8 @@ Public Class frmProjPortfolioAdmin
 
                     If Not noDB Then
 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        If request.pingMongoDb() Then
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         Else
                             Dim msgText As String
                             If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2110,7 +2110,7 @@ Public Class frmProjPortfolioAdmin
                                 projekthistorie = New clsProjektHistorie
                             End If
 
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName, _
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName,
                                                                              storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
 
                         Catch ex As Exception
@@ -2571,7 +2571,10 @@ Public Class frmProjPortfolioAdmin
                     toStoreConstellation.checkAndCorrectYourself()
                 End If
 
-
+                ' hier war vorher .update
+                ' jetzt muss die Constellation upgedated werden ... 
+                ' hier muss 
+                Dim budget As Double = projectConstellations.getBudgetOfLoadedPortfolios
                 projectConstellations.update(toStoreConstellation)
 
                 Dim txtMsg1 As String = ""
@@ -2601,6 +2604,36 @@ Public Class frmProjPortfolioAdmin
                         Call MsgBox(txtMsg1)
                     End If
                 Else
+
+                    ' jetzt das Union Projekt errechnen ... 
+                    ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
+                    Try
+
+                        If budget = 0 Then
+                            budget = -1
+                        End If
+
+                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, portfolioVName, AlleProjekte, Date.Now)
+                        If Not IsNothing(oldSummaryP) Then
+                            budget = oldSummaryP.budgetWerte.Sum
+                        End If
+
+                        Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
+
+                        Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
+                        If AlleProjekte.Containskey(skey) Then
+                            AlleProjekte.Remove(skey)
+                        End If
+
+                        If Not AlleProjekte.Containskey(skey) Then
+                            AlleProjekte.Add(sproj)
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+
                     If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                         txtMsg1 = "ok, " & currentConstellationName & " in Session gespeichert"
                     Else
@@ -2611,6 +2644,7 @@ Public Class frmProjPortfolioAdmin
 
                 ' jetzt das EIngabe Feld wieder zurücksetzen 
                 dropboxScenarioNames.Text = ""
+
 
             End If
 
@@ -2795,8 +2829,8 @@ Public Class frmProjPortfolioAdmin
                 ' andernfalls prüfen, ob er von mir geschützt werden kann 
                 ' wenn ja, dann schützen 
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2828,7 +2862,7 @@ Public Class frmProjPortfolioAdmin
                                     ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                 Else
                                     ' nicht zugelassen , also nichts machen  
-                                    writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                    writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
                                     Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
 
                                     atLeastOneFailed = True
@@ -2854,7 +2888,7 @@ Public Class frmProjPortfolioAdmin
                                 projectNode.Checked = True
                             Else
                                 ' nicht zugelassen , also nichts machen  
-                                writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
 
                             End If
@@ -2918,13 +2952,13 @@ Public Class frmProjPortfolioAdmin
                                              ByVal pName As String, ByVal vName As String, _
                                              ByVal writeProtect As Boolean) As Boolean
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim pvName As String = calcProjektKey(pName, vName)
 
         Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project, _
                                                 dbUsername, Me.chkbxPermanent.Checked, writeProtect)
 
-        If request.setWriteProtection(wpItem) Then
+        If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
             ' alles in Ordnung : es ist jetzt geschützt bzw. released
             ' dann checken, dann in WriteProtections aktualisieren, dann Appearance setzen ...
             tmpNode.Checked = writeProtect
@@ -3107,8 +3141,8 @@ Public Class frmProjPortfolioAdmin
                 ' andernfalls prüfen, ob der Schutz von mir aufgehoben werden kann 
                 ' wenn ja, dann aufheben 
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -3142,7 +3176,7 @@ Public Class frmProjPortfolioAdmin
                                         ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                     Else
                                         ' Aufheben nicht zugelassen , also nichts machen  
-                                        writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                        writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
                                         Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
 
                                         atLeastOneFailed = True
@@ -3176,7 +3210,7 @@ Public Class frmProjPortfolioAdmin
                                 ' erfolgreich ..
                             Else
                                 ' nicht zugelassen , also nichts machen  
-                                writeProtections.upsert(request.getWriteProtection(pName, vName))
+                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
                                 Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
 
@@ -3245,8 +3279,8 @@ Public Class frmProjPortfolioAdmin
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub filterIcon_Click(sender As Object, e As EventArgs) Handles filterIcon.Click
-
-        Dim filterFormular As New frmNameSelection
+        'Dim filterFormular As New frmNameSelection
+        Dim filterFormular As New frmHierarchySelection
         Dim considerDependencies As Boolean
         Dim zeitraumVon As Date = StartofCalendar
         Dim zeitraumBis As Date = StartofCalendar.AddYears(20)
@@ -3255,6 +3289,8 @@ Public Class frmProjPortfolioAdmin
         ' hier ist der einzige Grund für browserAlleProjekte: es muss etwas da sein, wo reingeladen werden kann 
         ' wenn auf der Datenbank gefiltert werden soll - und das geht nur , in dem etwas geladen wird ... 
         Dim browserAlleProjekte As New clsProjekteAlle
+
+        awinSettings.useHierarchy = True
 
         If currentConstellationName <> calcLastSessionScenarioName() Then
             currentConstellationName = calcLastSessionScenarioName()
@@ -3298,7 +3334,7 @@ Public Class frmProjPortfolioAdmin
                 zeitraumBis = getDateofColumn(showRangeRight, True)
             End If
             ' es muss die Gesamtliste aufgebaut werden ... das dauert jetzt erst mal 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
             'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
             Dim pname As String = ""
@@ -3309,7 +3345,7 @@ Public Class frmProjPortfolioAdmin
             If Not browserAlleProjekte.Count = 0 Then
                 browserAlleProjekte.Clear(False)
             End If
-            browserAlleProjekte.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
+            browserAlleProjekte.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
             ' das darf hier nicht auf false gesetzt werden .... 
             'quickList = False
 
@@ -3324,10 +3360,12 @@ Public Class frmProjPortfolioAdmin
                 aKtionskennung = PTTvActions.delAllExceptFromDB Or _
                 aKtionskennung = PTTvActions.delFromDB Then
                 ' damit im Filterformular unterschieden werden kann, ob der Aufruf aus dem ProjPortfolioAdmin Formular erfolgte ...
-                .actionCode = aKtionskennung
+                'tk 9.9.18 
+                '.actionCode = aKtionskennung
                 .menuOption = PTmenue.filterdefinieren
             Else
-                .actionCode = aKtionskennung
+                ' tk 9.9.18
+                '.actionCode = aKtionskennung
                 .menuOption = PTmenue.sessionFilterDefinieren
             End If
 
@@ -3997,8 +4035,8 @@ Public Class frmProjPortfolioAdmin
         If Not IsNothing(constellation) Or pvNamesList.Count >= 1 Then
 
             If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
             End If
 
             With TreeViewProjekte

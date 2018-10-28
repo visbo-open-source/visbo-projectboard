@@ -43,6 +43,7 @@ Partial Class frmChanges
         Me.changeListTable.AllowUserToAddRows = False
         Me.changeListTable.AllowUserToDeleteRows = False
         Me.changeListTable.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells
+        Me.changeListTable.BackgroundColor = System.Drawing.SystemColors.ControlLightLight
         DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
         DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
         DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
@@ -125,12 +126,13 @@ Partial Class frmChanges
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.AutoScroll = True
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.ClientSize = New System.Drawing.Size(799, 86)
         Me.Controls.Add(Me.changeListTable)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Location = New System.Drawing.Point(24, 922)
         Me.MaximizeBox = False
-        Me.MinimumSize = New System.Drawing.Size(100, 30)
+        Me.MinimumSize = New System.Drawing.Size(100, 38)
         Me.Name = "frmChanges"
         Me.Text = "Changes"
         Me.TopMost = True

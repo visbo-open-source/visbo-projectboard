@@ -22,6 +22,7 @@ Partial Class ucProperties
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.eleName = New System.Windows.Forms.Label()
         Me.labelDate = New System.Windows.Forms.Label()
         Me.eleDatum = New System.Windows.Forms.Label()
@@ -34,6 +35,27 @@ Partial Class ucProperties
         Me.Panel1 = New System.Windows.Forms.Panel()
         Me.eleDeliverables = New System.Windows.Forms.RichTextBox()
         Me.eleAmpelText = New System.Windows.Forms.RichTextBox()
+        Me.stdLinks = New System.Windows.Forms.GroupBox()
+        Me.dreiDlnk = New System.Windows.Forms.PictureBox()
+        Me.survlnk = New System.Windows.Forms.PictureBox()
+        Me.medialnk = New System.Windows.Forms.PictureBox()
+        Me.doclnk = New System.Windows.Forms.PictureBox()
+        Me.myLinks = New System.Windows.Forms.GroupBox()
+        Me.mydreiDlnk = New System.Windows.Forms.PictureBox()
+        Me.mysurvlnk = New System.Windows.Forms.PictureBox()
+        Me.mymedialnk = New System.Windows.Forms.PictureBox()
+        Me.mydoclnk = New System.Windows.Forms.PictureBox()
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.stdLinks.SuspendLayout()
+        CType(Me.dreiDlnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.survlnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.medialnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.doclnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.myLinks.SuspendLayout()
+        CType(Me.mydreiDlnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.mysurvlnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.mymedialnk, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.mydoclnk, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'eleName
@@ -174,6 +196,104 @@ Partial Class ucProperties
         Me.eleAmpelText.TabIndex = 15
         Me.eleAmpelText.Text = ""
         '
+        'stdLinks
+        '
+        Me.stdLinks.Controls.Add(Me.dreiDlnk)
+        Me.stdLinks.Controls.Add(Me.survlnk)
+        Me.stdLinks.Controls.Add(Me.medialnk)
+        Me.stdLinks.Controls.Add(Me.doclnk)
+        Me.stdLinks.Location = New System.Drawing.Point(10, 472)
+        Me.stdLinks.Name = "stdLinks"
+        Me.stdLinks.Size = New System.Drawing.Size(276, 53)
+        Me.stdLinks.TabIndex = 21
+        Me.stdLinks.TabStop = False
+        Me.stdLinks.Text = "standard Connections"
+        '
+        'dreiDlnk
+        '
+        Me.dreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources._3d
+        Me.dreiDlnk.Location = New System.Drawing.Point(226, 19)
+        Me.dreiDlnk.Name = "dreiDlnk"
+        Me.dreiDlnk.Size = New System.Drawing.Size(26, 26)
+        Me.dreiDlnk.TabIndex = 2
+        Me.dreiDlnk.TabStop = False
+        '
+        'survlnk
+        '
+        Me.survlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.surveillance_camera
+        Me.survlnk.Location = New System.Drawing.Point(153, 19)
+        Me.survlnk.Name = "survlnk"
+        Me.survlnk.Size = New System.Drawing.Size(26, 26)
+        Me.survlnk.TabIndex = 2
+        Me.survlnk.TabStop = False
+        '
+        'medialnk
+        '
+        Me.medialnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.camera
+        Me.medialnk.Location = New System.Drawing.Point(80, 19)
+        Me.medialnk.Name = "medialnk"
+        Me.medialnk.Size = New System.Drawing.Size(26, 26)
+        Me.medialnk.TabIndex = 1
+        Me.medialnk.TabStop = False
+        '
+        'doclnk
+        '
+        Me.doclnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.documents
+        Me.doclnk.Location = New System.Drawing.Point(7, 19)
+        Me.doclnk.Name = "doclnk"
+        Me.doclnk.Size = New System.Drawing.Size(26, 26)
+        Me.doclnk.TabIndex = 0
+        Me.doclnk.TabStop = False
+        '
+        'myLinks
+        '
+        Me.myLinks.Controls.Add(Me.mydreiDlnk)
+        Me.myLinks.Controls.Add(Me.mysurvlnk)
+        Me.myLinks.Controls.Add(Me.mymedialnk)
+        Me.myLinks.Controls.Add(Me.mydoclnk)
+        Me.myLinks.Location = New System.Drawing.Point(10, 533)
+        Me.myLinks.Name = "myLinks"
+        Me.myLinks.Size = New System.Drawing.Size(276, 53)
+        Me.myLinks.TabIndex = 22
+        Me.myLinks.TabStop = False
+        Me.myLinks.Text = "my Connections"
+        '
+        'mydreiDlnk
+        '
+        Me.mydreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources._3d_plus
+        Me.mydreiDlnk.Location = New System.Drawing.Point(226, 19)
+        Me.mydreiDlnk.Name = "mydreiDlnk"
+        Me.mydreiDlnk.Size = New System.Drawing.Size(26, 26)
+        Me.mydreiDlnk.TabIndex = 6
+        Me.mydreiDlnk.TabStop = False
+        '
+        'mysurvlnk
+        '
+        Me.mysurvlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.surveillance_camera_plus
+        Me.mysurvlnk.Location = New System.Drawing.Point(153, 19)
+        Me.mysurvlnk.Name = "mysurvlnk"
+        Me.mysurvlnk.Size = New System.Drawing.Size(26, 26)
+        Me.mysurvlnk.TabIndex = 5
+        Me.mysurvlnk.TabStop = False
+        '
+        'mymedialnk
+        '
+        Me.mymedialnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.camera_plus
+        Me.mymedialnk.Location = New System.Drawing.Point(80, 19)
+        Me.mymedialnk.Name = "mymedialnk"
+        Me.mymedialnk.Size = New System.Drawing.Size(26, 26)
+        Me.mymedialnk.TabIndex = 4
+        Me.mymedialnk.TabStop = False
+        '
+        'mydoclnk
+        '
+        Me.mydoclnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.documents_plus
+        Me.mydoclnk.Location = New System.Drawing.Point(7, 19)
+        Me.mydoclnk.Name = "mydoclnk"
+        Me.mydoclnk.Size = New System.Drawing.Size(26, 26)
+        Me.mydoclnk.TabIndex = 3
+        Me.mydoclnk.TabStop = False
+        '
         'ucProperties
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -192,8 +312,20 @@ Partial Class ucProperties
         Me.Controls.Add(Me.eleDatum)
         Me.Controls.Add(Me.labelDate)
         Me.Controls.Add(Me.eleName)
+        Me.Controls.Add(Me.stdLinks)
+        Me.Controls.Add(Me.myLinks)
         Me.Name = "ucProperties"
         Me.Size = New System.Drawing.Size(299, 839)
+        Me.stdLinks.ResumeLayout(False)
+        CType(Me.dreiDlnk, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.survlnk, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.medialnk, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.doclnk, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.myLinks.ResumeLayout(False)
+        CType(Me.mydreiDlnk, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.mysurvlnk, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.mymedialnk, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.mydoclnk, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -210,4 +342,15 @@ Partial Class ucProperties
     Friend WithEvents Panel1 As System.Windows.Forms.Panel
     Friend WithEvents eleDeliverables As Windows.Forms.RichTextBox
     Friend WithEvents eleAmpelText As Windows.Forms.RichTextBox
+    Friend WithEvents stdLinks As Windows.Forms.GroupBox
+    Friend WithEvents myLinks As Windows.Forms.GroupBox
+    Friend WithEvents medialnk As Windows.Forms.PictureBox
+    Friend WithEvents doclnk As Windows.Forms.PictureBox
+    Friend WithEvents survlnk As Windows.Forms.PictureBox
+    Friend WithEvents dreiDlnk As Windows.Forms.PictureBox
+    Friend WithEvents mydoclnk As Windows.Forms.PictureBox
+    Friend WithEvents mymedialnk As Windows.Forms.PictureBox
+    Friend WithEvents mysurvlnk As Windows.Forms.PictureBox
+    Friend WithEvents mydreiDlnk As Windows.Forms.PictureBox
+    Friend WithEvents ToolTip1 As Windows.Forms.ToolTip
 End Class

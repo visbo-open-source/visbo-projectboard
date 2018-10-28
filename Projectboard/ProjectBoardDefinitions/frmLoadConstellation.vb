@@ -42,9 +42,10 @@
 
         If awinSettings.englishLanguage Then
             lblStandvom.Text = "Version"
-            addToSession.Text = "add to loaded projects"
+            addToSession.Text = "add to session"
             OKButton.Text = "OK"
             Abbrechen.Text = "Cancel"
+            loadAsSummary.Text = "load summary project"
         End If
 
     End Sub

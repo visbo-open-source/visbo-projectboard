@@ -5,62 +5,44 @@ Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
+Imports DBAccLayer
 
 
 Public Class ThisAddIn
 
     Private Sub ThisAddIn_Startup() Handles Me.Startup
 
-        ' war nur zu Testzwecken
+        Try
+            awinSettings.databaseURL = My.Settings.mongoDBURL
+            awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.DBWithSSL = My.Settings.mongoDBWithSSL
+            awinSettings.globalPath = My.Settings.globalPath
+            awinSettings.awinPath = My.Settings.awinPath
+            awinSettings.visboTaskClass = My.Settings.TaskClass
+            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+            awinSettings.visboAmpel = My.Settings.VISBOAmpel
+            awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+            awinSettings.visboresponsible = My.Settings.VISBOresponsible
+            awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+            awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+            awinSettings.visboDebug = My.Settings.VISBODebug
+            awinSettings.visboMapping = My.Settings.VISBOMapping
+            awinSettings.visboServer = My.Settings.VISBOServer
+            awinSettings.userNamePWD = My.Settings.userNamePWD
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
-        ' ''Call MsgBox("XML write TEst anfang")
-        ' ''Try
-        ' ''    Call xmltestwrite2()
-        ' ''    Call xmltestread2()
-        ' ''Catch ex As Exception
-        ' ''    Call MsgBox("XML write TEst Fehler")
-        ' ''End Try
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If awinSettings.rememberUserPwd Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            End If
 
+        Catch ex As Exception
 
-        ''Call MsgBox("Load VISBO Report Testversion")
+            Call MsgBox(ex.Message)
 
+        Finally
 
-
-        ''Try
-
-        ''    awinSettings.databaseURL = My.Settings.mongoDBURL
-        ''    awinSettings.databaseName = My.Settings.mongoDBname
-        ''    awinSettings.globalPath = My.Settings.globalPath
-        ''    awinSettings.awinPath = My.Settings.awinPath
-        ''    awinSettings.visboTaskClass = My.Settings.TaskClass
-        ''    awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
-        ''    awinSettings.visboAmpel = My.Settings.VISBOAmpel
-        ''    awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
-        ''    awinSettings.visboresponsible = My.Settings.VISBOresponsible
-        ''    awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
-        ''    awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
-        ''    awinSettings.visboDebug = My.Settings.VISBODebug
-        ''    awinSettings.visboMapping = My.Settings.VISBOMapping
-        ''    awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-        ''    If awinSettings.rememberUserPwd Then
-        ''        awinSettings.userNamePWD = My.Settings.userNamePWD
-        ''    End If
-
-        ''    dbUsername = ""
-        ''    dbPasswort = ""
-
-        ''    '09.11.2016: ur: Call awinsetTypenNEW("BHTC")
-        ''    Call awinsetTypen("BHTC")
-
-        ''    StartofCalendar = StartofCalendar.AddMonths(-12)
-
-        ''Catch ex As Exception
-
-        ''    Call MsgBox(ex.Message)
-
-        ''Finally
-
-        ''End Try
+        End Try
 
     End Sub
 

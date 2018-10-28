@@ -1,5 +1,5 @@
 ﻿''' <summary>
-''' Klassen Definition für einen Meilenstein  
+''' Klassen Definition für einen Meilenstein  in der MongoDB
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsResultDB
@@ -15,6 +15,9 @@ Public Class clsResultDB
     Public shortName As String
     Public originalName As String
     Public appearance As String
+
+    Public docURL As String
+    Public docUrlAppID As String
 
     Public deliverables As List(Of String)
     Public percentDone As Double
@@ -35,7 +38,7 @@ Public Class clsResultDB
     End Property
 
 
-    Friend Sub CopyTo(ByRef newResult As clsMeilenstein)
+    Public Sub CopyTo(ByRef newResult As clsMeilenstein)
         Dim i As Integer
 
         Try
@@ -47,6 +50,15 @@ Public Class clsResultDB
                     .nameID = calcHryElemKey(Me.name, True)
                 Else
                     .nameID = Me.name
+                End If
+
+                ' jetzt kommen die Doumenten Folder und AppIDs
+                If Not IsNothing(Me.docURL) Then
+                    .DocURL = Me.docURL
+                End If
+
+                If Not IsNothing(Me.docUrlAppID) Then
+                    .DocUrlAppID = Me.docUrlAppID
                 End If
 
                 .verantwortlich = Me.verantwortlich
@@ -124,7 +136,7 @@ Public Class clsResultDB
 
     End Sub
 
-    Friend Sub CopyFrom(ByVal newResult As clsMeilenstein)
+    Public Sub CopyFrom(ByVal newResult As clsMeilenstein)
         Dim i As Integer
 
 
@@ -137,6 +149,10 @@ Public Class clsResultDB
             Me.shortName = .shortName
             Me.originalName = .originalName
             Me.appearance = .appearance
+
+            ' Dokumenten-Url und Applikation
+            Me.docURL = .DocURL
+            Me.docUrlAppID = .DocUrlAppID
 
             Me.alternativeColor = .individualColor
 
@@ -215,6 +231,8 @@ Public Class clsResultDB
         percentDone = 0.0
         bewertungen = New SortedList(Of String, clsBewertungDB)
         deliverables = New List(Of String)
+        docURL = ""
+        docUrlAppID = ""
 
     End Sub
 
