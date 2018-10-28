@@ -10,6 +10,8 @@ Public Class Ribbon1
     Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
         Try
 
+            pseudoappInstance = New Microsoft.Office.Interop.Excel.Application
+
             awinSettings.databaseURL = My.Settings.mongoDBURL
             awinSettings.databaseName = My.Settings.mongoDBname
             awinSettings.globalPath = My.Settings.globalPath
