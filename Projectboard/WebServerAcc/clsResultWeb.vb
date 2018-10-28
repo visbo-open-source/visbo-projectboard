@@ -1,11 +1,10 @@
-﻿''' <summary>
-''' Klassen Definition für einen Meilenstein  in der MongoDB
+﻿Imports ProjectBoardDefinitions
+''' <summary>
+''' Klassendefinition für einen Meilenstein Zugriff über ReST
 ''' </summary>
-''' <remarks></remarks>
-Public Class clsResultDB
+Public Class clsResultWeb
 
-    Public bewertungen As SortedList(Of String, clsBewertungDB)
-
+    Public bewertungen As List(Of clsBewertungWeb)
 
     Public name As String
     Public verantwortlich As String
@@ -99,8 +98,8 @@ Public Class clsResultDB
                     Else
                         ' evtl sind die noch in der Bewertung vergraben ... 
                         If Me.bewertungsCount > 0 Then
-                            If Not IsNothing(Me.getBewertung(1).deliverables) Then
-                                Dim allDeliverables As String = Me.getBewertung(1).deliverables
+                            If Not IsNothing(Me.getBewertung(1).bewertung.deliverables) Then
+                                Dim allDeliverables As String = Me.getBewertung(1).bewertung.deliverables
 
                                 If allDeliverables.Trim.Length > 0 Then
                                     Dim tmpstr() As String = allDeliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
@@ -114,16 +113,17 @@ Public Class clsResultDB
                     End If
                 End If
 
-                For i = 1 To Me.bewertungsCount
-
+                For Each wBew As clsBewertungWeb In Me.bewertungen
                     Dim newb As New clsBewertung
+
+                    Dim nbewkey As String = wBew.key
+                    wBew.bewertung.CopyTo(newb)
                     Try
-                        Me.getBewertung(i).CopyTo(newb)
                         .addBewertung(newb)
-                    Catch ex1 As Exception
+                        '.bewertungsListe.Add(nbewkey, newb)
+                    Catch ex As Exception
 
                     End Try
-
                 Next
 
             End With
@@ -163,12 +163,15 @@ Public Class clsResultDB
                 Me.deliverables.Add(tmpDeliverable)
             Next
 
-            Try
-                For i = 1 To .bewertungsCount
-                    Dim newb As New clsBewertungDB
-                    newb.Copyfrom(.getBewertung(i))
+            Try    ' evtl vorhandene Bewertungen kopieren .... 
+
+                For Each kvp As KeyValuePair(Of String, clsBewertung) In .bewertungsListe
+                    Dim newb As New clsBewertungWeb
+                    newb.key = kvp.Key
+                    newb.bewertung.Copyfrom(kvp.Value)
                     Me.addBewertung(newb)
                 Next
+
             Catch ex As Exception
 
             End Try
@@ -179,17 +182,17 @@ Public Class clsResultDB
     End Sub
 
 
-    Friend Sub addBewertung(ByVal b As clsBewertungDB)
-        Dim key As String
+    Friend Sub addBewertung(ByVal b As clsBewertungWeb)
+        Dim key As String = b.key
 
-        If Not b.bewerterName Is Nothing Then
-            key = b.bewerterName.Trim & "#" & b.datum.ToString("MMM yy")
+        If Not b.bewertung.bewerterName Is Nothing Then
+            key = b.bewertung.bewerterName.Trim & "#" & b.bewertung.datum.ToString("MMM yy")
         Else
-            key = "#" & b.datum.ToString("MMM yy")
+            key = "#" & b.bewertung.datum.ToString("MMM yy")
         End If
 
         Try
-            bewertungen.Add(key, b)
+            bewertungen.Add(b)
         Catch ex As Exception
 
             Throw New ArgumentException("Bewertung wurde bereits vergeben ..")
@@ -201,7 +204,13 @@ Public Class clsResultDB
     Friend Sub removeBewertung(ByVal key As String)
 
         Try
-            bewertungen.Remove(key)
+            For Each wbew As clsBewertungWeb In bewertungen
+                If wbew.key = key Then
+                    bewertungen.Remove(wbew)
+                    Exit For
+                End If
+            Next
+
         Catch ex As Exception
 
             Throw New ArgumentException(ex.Message)
@@ -210,12 +219,12 @@ Public Class clsResultDB
 
     End Sub
 
-    Friend ReadOnly Property getBewertung(ByVal index As Integer) As clsBewertungDB
+    Friend ReadOnly Property getBewertung(ByVal index As Integer) As clsBewertungWeb
 
         Get
 
             Try
-                getBewertung = bewertungen.ElementAt(index - 1).Value
+                getBewertung = bewertungen.Item(index)
             Catch ex As Exception
                 getBewertung = Nothing
                 Throw New ArgumentException(ex.Message)
@@ -229,7 +238,7 @@ Public Class clsResultDB
     Sub New()
 
         percentDone = 0.0
-        bewertungen = New SortedList(Of String, clsBewertungDB)
+        bewertungen = New List(Of clsBewertungWeb)
         deliverables = New List(Of String)
         docURL = ""
         docUrlAppID = ""

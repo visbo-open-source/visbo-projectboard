@@ -78,6 +78,7 @@
     <Compile Include="clsPhaseWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
+    <Compile Include="clsResultWeb.vb" />
     <Compile Include="clsStringBoolean.vb" />
     <Compile Include="clsStringDouble.vb" />
     <Compile Include="clsStringString.vb" />

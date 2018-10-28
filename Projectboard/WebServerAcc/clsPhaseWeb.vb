@@ -6,7 +6,8 @@
 Public Class clsPhaseWeb
     Public AllRoles As List(Of clsRolleDB)
     Public AllCosts As List(Of clsKostenartDB)
-    Public AllResults As List(Of clsResultDB)
+    ' ur: 19.10.2018:  geändert gegenüber clsResultDB
+    Public AllResults As List(Of clsResultWeb)
     ' ur: 19.10.2018:  geändert gegenüber clsPhaseDB
     Public AllBewertungen As List(Of clsBewertungWeb)
 
@@ -37,7 +38,7 @@ Public Class clsPhaseWeb
     Public originalName As String
     Public appearance As String
 
-    Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultDB
+    Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultWeb
 
         Get
             getMilestone = AllResults.Item(index - 1)
@@ -100,7 +101,7 @@ Public Class clsPhaseWeb
             Next
 
             For r = 1 To .countMilestones
-                Dim newResult As New clsResultDB
+                Dim newResult As New clsResultWeb
 
                 Try
                     newResult.CopyFrom(.getMilestone(r))
@@ -322,7 +323,7 @@ Public Class clsPhaseWeb
     Sub New()
         AllRoles = New List(Of clsRolleDB)
         AllCosts = New List(Of clsKostenartDB)
-        AllResults = New List(Of clsResultDB)
+        AllResults = New List(Of clsResultWeb)
         AllBewertungen = New List(Of clsBewertungWeb)
 
         deliverables = New List(Of String)
