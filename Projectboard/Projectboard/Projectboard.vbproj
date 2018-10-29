@@ -16,11 +16,17 @@
     <SolutionID>9c1e2ee7-a36c-4ca8-b8fd-97bdf04a0cd8</SolutionID>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
+    <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\publish\VISBO Visual Board\</PublishUrl>
+    <PublishUrl>C:\publish\VISBO Visual Board ReST\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.5.1.5</ApplicationVersion>
+    <ApplicationVersion>3.5.1.8</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -30,13 +36,6 @@
     <SupportUrl />
     <FriendlyName>Projectboard</FriendlyName>
     <OfficeApplicationDescription />
-    <BootstrapperComponentsLocation>HomeSite</BootstrapperComponentsLocation>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <OldToolsVersion>4.0</OldToolsVersion>
-    <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
   </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
