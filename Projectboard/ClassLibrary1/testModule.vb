@@ -2377,8 +2377,8 @@ Public Module testModule
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
                                         Else
-                                            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                            Call createCostBalkenOfProjectInPPT(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape)
+                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            'Call createCostBalkenOfProjectInPPT(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape)
                                             compID = PTprdk.KostenBalken
                                         End If
 
@@ -3242,7 +3242,8 @@ Public Module testModule
                                     boxName = repMessages.getmsg(223)
                                 End If
 
-                                .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
+                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult)
+                                '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prStand
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
