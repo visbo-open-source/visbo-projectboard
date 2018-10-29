@@ -47,11 +47,22 @@ Public Class ThisAddIn
 
     Private Sub ThisAddIn_Shutdown() Handles Me.Shutdown
 
-        If VisboProtected Then
-            Call makeVisboShapesVisible(False)
-        End If
+        Try
+            If VisboProtected Then
+                Call makeVisboShapesVisible(False)
+            End If
+        Catch ex As Exception
+
+        End Try
+
 
         Try
+            ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
+            My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+            If My.Settings.rememberUserPWD Then
+                My.Settings.userNamePWD = awinSettings.userNamePWD
+            End If
+
             My.Settings.Save()
         Catch ex As Exception
 
@@ -68,83 +79,88 @@ Public Class ThisAddIn
 
     Private Sub Application_OpenPresentation(Pres As Presentation) Handles Application.AfterPresentationOpen, Application.AfterNewPresentation
 
-        ' bitte nicht benutzen siehe Module1.vb Sub defineAndManagePanes
+        ' das muss hier bleiben und kann nicht nach Module1 verlagert werden .. 
 
-        Dim hsearchPane As Microsoft.Office.Tools.CustomTaskPane
-        Dim hPropPane As Microsoft.Office.Tools.CustomTaskPane
-        Dim hucsearchView As ucSearch
-        Dim hucPropView As ucProperties
+        If presentationHasAnySmartSlides(Pres) Then
 
-        ' Id des aktiven Windows
-        Dim hWinID As Integer = Application.ActiveWindow.HWND
+            Dim hsearchPane As Microsoft.Office.Tools.CustomTaskPane
+            Dim hPropPane As Microsoft.Office.Tools.CustomTaskPane
+            Dim hucsearchView As ucSearch
+            Dim hucPropView As ucProperties
 
-        'Checks if the current window handle exists in the list of TaskPanes
-        If listOfWindows.Contains(hWinID) Then
-            'Do nothing, TaskPane has been added previously
-        Else
-            'Add TaskPanes
+            ' Id des aktiven Windows
+            Dim hWinID As Integer = Application.ActiveWindow.HWND
 
-            ' Definition des Search-Pane
-            hucsearchView = New ucSearch
-            If englishLanguage Then
-                'hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SEARCH" & hWinID.ToString)
-                hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SEARCH")
+            'Checks if the current window handle exists in the list of TaskPanes
+            If listOfWindows.Contains(hWinID) Then
+                'Do nothing, TaskPane has been added previously
             Else
-                'hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SUCHE" & hWinID.ToString)
-                hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SUCHE")
+                'Add TaskPanes
+
+                ' Definition des Search-Pane
+                hucsearchView = New ucSearch
+                If englishLanguage Then
+                    'hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SEARCH" & hWinID.ToString)
+                    hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SEARCH")
+                Else
+                    'hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SUCHE" & hWinID.ToString)
+                    hsearchPane = Me.CustomTaskPanes.Add(hucsearchView, "SUCHE")
+                End If
+
+                With hsearchPane
+                    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
+                    .Height = 500
+                    .Width = 500
+                    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
+                    .Width = 350
+                    .Visible = False
+                End With
+                listOfucSearch.Add(hWinID, hsearchPane)
+                searchPane = hsearchPane
+                listOfucSearchView.Add(hWinID, hucsearchView)
+                ucSearchView = hucsearchView
+
+                ' Definition des Info-Pane
+                hucPropView = New ucProperties
+                If englishLanguage Then
+                    'hPropPane = Me.CustomTaskPanes.Add(hucPropView, "PROPERTIES" & hWinID.ToString)
+                    hPropPane = Me.CustomTaskPanes.Add(hucPropView, "PROPERTIES")
+                Else
+                    'hPropPane = Me.CustomTaskPanes.Add(hucPropView, "EIGENSCHAFTEN" & hWinID.ToString)
+                    hPropPane = Me.CustomTaskPanes.Add(hucPropView, "EIGENSCHAFTEN")
+                End If
+
+                ' tk, try , whether selection Fehler ist immer noch drin 
+                With hPropPane
+                    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
+                    .Height = 500
+                    .Width = 500
+                    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
+                    .Width = 320
+                    .Visible = False
+                End With
+                listOfucProperties.Add(hWinID, hPropPane)
+                propertiesPane = hPropPane
+                listOfucPropView.Add(hWinID, hucPropView)
+                ucPropertiesView = hucPropView
+
+                'Pane = New ucInfo
+                'thePane = Me.CustomTaskPanes.Add(Pane, "Info")
+                'With thePane
+                '    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
+                '    .Height = 500
+                '    .Width = 500
+                '    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
+                '    .Width = 320
+                '    .Visible = True
+                'End With
+
+                'Add reference to the current DocumentWindow to the list
+                listOfWindows.Add(hWinID)
             End If
 
-            With hsearchPane
-                .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
-                .Height = 500
-                .Width = 500
-                .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
-                .Width = 350
-                .Visible = False
-            End With
-            listOfucSearch.Add(hWinID, hsearchPane)
-            searchPane = hsearchPane
-            listOfucSearchView.Add(hWinID, hucsearchView)
-            ucSearchView = hucsearchView
-
-            ' Definition des Info-Pane
-            hucPropView = New ucProperties
-            If englishLanguage Then
-                'hPropPane = Me.CustomTaskPanes.Add(hucPropView, "PROPERTIES" & hWinID.ToString)
-                hPropPane = Me.CustomTaskPanes.Add(hucPropView, "PROPERTIES")
-            Else
-                'hPropPane = Me.CustomTaskPanes.Add(hucPropView, "EIGENSCHAFTEN" & hWinID.ToString)
-                hPropPane = Me.CustomTaskPanes.Add(hucPropView, "EIGENSCHAFTEN")
-            End If
-
-            ' tk, try , whether selection Fehler ist immer noch drin 
-            With hPropPane
-                .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
-                .Height = 500
-                .Width = 500
-                .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
-                .Width = 320
-                .Visible = False
-            End With
-            listOfucProperties.Add(hWinID, hPropPane)
-            propertiesPane = hPropPane
-            listOfucPropView.Add(hWinID, hucPropView)
-            ucPropertiesView = hucPropView
-
-            'Pane = New ucInfo
-            'thePane = Me.CustomTaskPanes.Add(Pane, "Info")
-            'With thePane
-            '    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionFloating
-            '    .Height = 500
-            '    .Width = 500
-            '    .DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionRight
-            '    .Width = 320
-            '    .Visible = True
-            'End With
-
-            'Add reference to the current DocumentWindow to the list
-            listOfWindows.Add(hWinID)
         End If
+
 
     End Sub
 

@@ -34,14 +34,12 @@ Module Module1
     Friend VisboProtected As Boolean = False
     Friend protectionSolved As Boolean = False
 
-    ' damit wird ermittelt, ob im SlideSelctionChange tatsächlich von einer Slide auf eine weitere gewechselt wurde
-    ' der Event wird nämlich auch ausgelöst, wenn man Presentation öffnet und im Navi-Fenster auf 3 Folie wecshelt, dann in der Folie auf ein Element klickt ...
-    ' ausserdem muss in dem Event unterschieden werden können, wenn man von Presentation1.SlideID=285 au presentation2.slideID=285 wechselt ...
-    Friend beforeSlideKennung As String = ""
-
-    Friend thereIsNoVersionFieldOnSlide As Boolean = True
     ' bestimmt, ob in englisch oder auf deutsch ..
     Friend englishLanguage As Boolean = True
+
+    ' wird in Activate_Window gesetzt bzw. in After_presentation
+    Friend currentPresHasVISBOElements As Boolean = False
+
 
     ' in der Liste werden für jede Präsentation die beiden Timestamps Previous und current gemerkt 
     ' 0 = previous, 1 = current
@@ -555,96 +553,105 @@ Module Module1
     ''' <remarks></remarks>
     Private Sub pptAPP_AfterPresentationOpen(Pres As PowerPoint.Presentation) Handles pptAPP.AfterPresentationOpen
 
-        ' ein ggf. vorhandener Schutz  muss wieder aktiviert werden ... 
-        protectionSolved = False
+
+        ' hier muss nur weitergemacht werden, wenn es sich überhaupt um eine Presentation mit Smart Elements handelt 
+        ' hier wird davon ausgegange, dass Setzen von CurrentPreHAsVisboElements zuverlässig in Window_Activate erfolgt 
+        If currentPresHasVISBOElements Then
 
 
-        ' gibt es eine Sprachen-Tabelle ? 
-        Dim langGUID As String = Pres.Tags.Item("langGUID")
-        If langGUID.Length > 0 Then
-
-            Dim langXMLpart As Office.CustomXMLPart = Pres.CustomXMLParts.SelectByID(langGUID)
-
-            Dim langXMLstring = langXMLpart.XML
-            languages = xml_deserialize(langXMLstring)
-
-        End If
-
-        Dim key As String = Pres.Name
-        Dim hwinid As Integer = pptAPP.ActiveWindow.HWND
-
-        ' Erweitern der listOFPresentation
-        If Not listOfPresentations.ContainsKey(key) Then
-            listOfPresentations.Add(key, hwinid)
-        Else
-            listOfPresentations.Item(key) = hwinid
-        End If
-
-        ' jetzt muss die Time Machine für diese Presentation mit leer angelegt werden 
-
-        Dim tmpTM As clsPPTTimeMachine = Nothing
-        If Not varPPTTM.ContainsKey(key) Then
-            varPPTTM.Add(key, tmpTM)
-        Else
-            varPPTTM.Item(key) = tmpTM
-        End If
-
-        ' Anlegen einer leeren changeliste für jede Slide in der activePresentation
-        ' key ist die SlideID in der besagten Presentation, clsChangeListe die Liste der Veränderungen zu dieser Seite 
-        Dim slideChgListe As New SortedList(Of Integer, clsChangeListe)
-
-        For Each slide As PowerPoint.Slide In Pres.Slides
-            Dim chgelst As New clsChangeListe
-            slideChgListe.Add(slide.SlideID, chgelst)
-        Next
-
-        ' in chgeLstListe sind für jede Presentation die slideChgListen 
-        ' jetzt muss die chgListe ergänzt werden 
-        chgeLstListe.Add(key, slideChgListe)
-
-        ' tk 17.10.18 jetzt muss geprüft werden, ob eine der Slides smart-Infos enthält, wenigstens eine Slide nicht frozen ist und das aktuelle Datum der Slide vor dem heutigen Tag liegt 
-        Dim atleastOne As Boolean = False
-        Dim anzSlides As Integer = Pres.Slides.Count
-        Dim ix As Integer = 1
-
-        Do While ix <= anzSlides And Not atleastOne
-
-            atleastOne = isSlideWithNeedToBeUpdated(Pres.Slides.Item(ix))
-            ix = ix + 1
-
-        Loop
-
-        ' den Timestamp auslesen , ggf wird der ja nachher wieder beim Update umgesetzt 
-        currentTimestamp = getCurrentTimestampFromPresentation(Pres)
+            ' ein ggf. vorhandener Schutz  muss wieder aktiviert werden ... 
+            protectionSolved = False
 
 
-        ' wenn evtl wenigstens eine Slide ge-updated werden muss
-        ' die muss genau dann aktualisiert werden, wenn sie smart-Elements enthält, nicht bereits heute aktualisiert wurde und nicht frozen ist
-        If atleastOne Then
+            ' gibt es eine Sprachen-Tabelle ? 
+            Dim langGUID As String = Pres.Tags.Item("langGUID")
+            If langGUID.Length > 0 Then
 
-            currentSlide = Pres.Slides.Item(ix - 1)
-            Try
-                currentSlide.Select()
-            Catch ex As Exception
+                Dim langXMLpart As Office.CustomXMLPart = Pres.CustomXMLParts.SelectByID(langGUID)
 
-            End Try
+                Dim langXMLstring = langXMLpart.XML
+                languages = xml_deserialize(langXMLstring)
 
-            Dim msgtxt As String = "there might be a newer Version" & vbLf & "than " & currentTimestamp.ToShortDateString & "." & vbLf & vbLf & "Do you want to update?"
+            End If
+
+            Dim key As String = Pres.Name
+            Dim hwinid As Integer = pptAPP.ActiveWindow.HWND
+
+            ' Erweitern der listOFPresentation
+            If Not listOfPresentations.ContainsKey(key) Then
+                listOfPresentations.Add(key, hwinid)
+            Else
+                listOfPresentations.Item(key) = hwinid
+            End If
+
+            ' jetzt muss die Time Machine für diese Presentation mit leer angelegt werden 
+
+            Dim tmpTM As clsPPTTimeMachine = Nothing
+            If Not varPPTTM.ContainsKey(key) Then
+                varPPTTM.Add(key, tmpTM)
+            Else
+                varPPTTM.Item(key) = tmpTM
+            End If
+
+            ' Anlegen einer leeren changeliste für jede Slide in der activePresentation
+            ' key ist die SlideID in der besagten Presentation, clsChangeListe die Liste der Veränderungen zu dieser Seite 
+            Dim slideChgListe As New SortedList(Of Integer, clsChangeListe)
+
+            For Each slide As PowerPoint.Slide In Pres.Slides
+                Dim chgelst As New clsChangeListe
+                slideChgListe.Add(slide.SlideID, chgelst)
+            Next
+
+            ' in chgeLstListe sind für jede Presentation die slideChgListen 
+            ' jetzt muss die chgListe ergänzt werden 
+            chgeLstListe.Add(key, slideChgListe)
+
+            ' tk 17.10.18 jetzt muss geprüft werden, ob eine der Slides smart-Infos enthält, wenigstens eine Slide nicht frozen ist und das aktuelle Datum der Slide vor dem heutigen Tag liegt 
+            Dim atleastOne As Boolean = False
+            Dim anzSlides As Integer = Pres.Slides.Count
+            Dim ix As Integer = 1
+
+            Do While ix <= anzSlides And Not atleastOne
+
+                atleastOne = isSlideWithNeedToBeUpdated(Pres.Slides.Item(ix))
+                ix = ix + 1
+
+            Loop
+
+            ' den Timestamp auslesen , ggf wird der ja nachher wieder beim Update umgesetzt 
+            currentTimestamp = getCurrentTimestampFromPresentation(Pres)
 
 
-            Dim updateFrm As New frmUpdateInfo
-            With updateFrm
-                .updateMsg.Text = msgtxt
-                Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
+            ' wenn evtl wenigstens eine Slide ge-updated werden muss
+            ' die muss genau dann aktualisiert werden, wenn sie smart-Elements enthält, nicht bereits heute aktualisiert wurde und nicht frozen ist
+            If atleastOne Then
 
-                If diagResult = Windows.Forms.DialogResult.OK Then
-                    Dim tmpDate As Date = Date.MinValue
-                    Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
-                End If
-            End With
+                currentSlide = Pres.Slides.Item(ix - 1)
+                Try
+                    currentSlide.Select()
+                Catch ex As Exception
 
-        Else
-            ' es wird jetzt gleich aus der Presi ausgelesen 
+                End Try
+
+                Dim msgtxt As String = "there might be a newer Version" & vbLf & "than " & currentTimestamp.ToShortDateString & "." & vbLf & vbLf & "Do you want to update?"
+
+
+                Dim updateFrm As New frmUpdateInfo
+                With updateFrm
+                    .updateMsg.Text = msgtxt
+                    Dim diagResult As Windows.Forms.DialogResult = updateFrm.ShowDialog
+
+                    If diagResult = Windows.Forms.DialogResult.OK Then
+                        Dim tmpDate As Date = Date.MinValue
+                        Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+                    End If
+                End With
+
+            Else
+                ' es wird jetzt gleich aus der Presi ausgelesen 
+            End If
+
+
         End If
 
 
@@ -654,57 +661,49 @@ Module Module1
 
     Private Sub pptAPP_PresentationBeforeClose(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeClose
 
-        ' Id des aktiven Windows
-        Dim key As String = Pres.Name
-        Dim hwinid As Integer = pptAPP.ActiveWindow.HWND
+        If presentationHasAnySmartSlides(Pres) = True Then
 
-        ' die Time Machine Settings löschen 
-        If varPPTTM.ContainsKey(key) Then
-            varPPTTM.Remove(key)
+            ' Id des aktiven Windows
+            Dim key As String = Pres.Name
+            Dim hwinid As Integer = pptAPP.ActiveWindow.HWND
+
+            ' die Time Machine Settings löschen 
+            If varPPTTM.ContainsKey(key) Then
+                varPPTTM.Remove(key)
+            End If
+
+            ' die chgeliste aktualisieren , das heisst die 
+            If chgeLstListe.ContainsKey(key) Then
+                chgeLstListe.Remove(key)
+            End If
+
+            ' globale Variablen für Eigenschaften Pane und das Pane selbst löschen
+            If listOfucProperties.ContainsKey(hwinid) Then
+                listOfucProperties.Remove(hwinid)
+            End If
+            If listOfucPropView.ContainsKey(hwinid) Then
+                listOfucPropView.Remove(hwinid)
+            End If
+
+            If Not IsNothing(currentSlide) Then
+
+                ' changeliste der vorigen Slide (hier noch currentslide) in die chgeLstListe einfügen
+                'If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
+                '    chgeLstListe.Remove(currentSlide.SlideID)
+                '    chgeLstListe.Add(currentSlide.SlideID, changeListe)
+                'Else
+                '    chgeLstListe.Add(currentSlide.SlideID, changeListe)
+                'End If
+
+            End If
+
+            If VisboProtected Then
+                Call makeVisboShapesVisible(False)
+            End If
+
         End If
 
-        ' die chgeliste aktualisieren , das heisst die 
-        If chgeLstListe.ContainsKey(key) Then
-            chgeLstListe.Remove(key)
-        End If
 
-        ' globale Variablen für Eigenschaften Pane und das Pane selbst löschen
-        If listOfucProperties.ContainsKey(hWinID) Then
-            listOfucProperties.Remove(hWinID)
-        End If
-        If listOfucPropView.ContainsKey(hWinID) Then
-            listOfucPropView.Remove(hWinID)
-        End If
-
-        If Not IsNothing(currentSlide) Then
-
-            ' changeliste der vorigen Slide (hier noch currentslide) in die chgeLstListe einfügen
-            'If chgeLstListe.ContainsKey(currentSlide.SlideID) Then
-            '    chgeLstListe.Remove(currentSlide.SlideID)
-            '    chgeLstListe.Add(currentSlide.SlideID, changeListe)
-            'Else
-            '    chgeLstListe.Add(currentSlide.SlideID, changeListe)
-            'End If
-
-        End If
-
-        ' Username/Pwd in den Settings merken, falls Remember Me gecheckt
-        My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
-        If My.Settings.rememberUserPWD Then
-            My.Settings.userNamePWD = awinSettings.userNamePWD
-        End If
-
-        ' das passiert jetzt, wenn der Ribbon1 beendet wird, also wenn Powerpoint beendet wird
-        ''My.Settings.Save()
-        ''Try
-        ''    Call closeExcelAPP()
-        ''Catch ex As Exception
-
-        ''End Try
-
-        If VisboProtected Then
-            Call makeVisboShapesVisible(False)
-        End If
     End Sub
 
     Private Sub pptAPP_PresentationBeforeSave(Pres As PowerPoint.Presentation, ByRef Cancel As Boolean) Handles pptAPP.PresentationBeforeSave
@@ -751,185 +750,83 @@ Module Module1
         ' die aktuelle Slide setzen 
         If SldRange.Count = 1 Then
 
+            If currentPresHasVISBOElements Then
+                ' nur dann muss irgendwas weitergemacht werden ..
 
-            Dim afterSlide As Integer = SldRange.Item(1).SlideID ' aktuell selektierte SlideID
-            Dim afterSlideKennung As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name & afterSlide.ToString
-            Dim key As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name
+                Dim afterSlideID As Integer = SldRange.Item(1).SlideID ' aktuell selektierte SlideID
 
-            Dim beforeSlide As Integer = 0               ' zuvor selektierte SlideID
+                ' hier muss nur weitergemacht werden, wenn es sich um eine VISBO slide handelt 
+                If isVisboSlide(SldRange.Item(1)) Then
 
-            If Not IsNothing(currentSlide) Then
-                Try
-                    beforeSlide = currentSlide.SlideID
-                    beforeSlideKennung = CType(currentSlide.Parent, PowerPoint.Presentation).Name & beforeSlide.ToString
-                Catch ex As Exception
+                    Dim afterSlideKennung As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name & afterSlideID.ToString
+                    Dim beforeSlideKennung As String = ""
 
-                End Try
+                    Dim key As String = CType(SldRange.Item(1).Parent, PowerPoint.Presentation).Name
 
-            End If
+                    Dim beforeSlideID As Integer = 0               ' zuvor selektierte SlideID
 
-            '' jetzt die CurrentSlide setzen , denn evtl kommt man ja gar nicht in pptAPP_UpdateOneSlide
-            currentSlide = SldRange.Item(1)
+                    If Not IsNothing(currentSlide) Then
+                        Try
+                            beforeSlideID = currentSlide.SlideID
+                            beforeSlideKennung = CType(currentSlide.Parent, PowerPoint.Presentation).Name & beforeSlideID.ToString
+                        Catch ex As Exception
 
-            If beforeSlideKennung <> afterSlideKennung Then
-                Call pptAPP_AufbauSmartSlideLists(SldRange.Item(1))
+                        End Try
 
-                If varPPTTM.ContainsKey(key) Then
-                    ' fertig ... 
-                Else
-                    Dim tmpTM As clsPPTTimeMachine = Nothing
-                    varPPTTM.Add(key, tmpTM)
-                End If
+                    End If
 
-            End If
+                    '' jetzt die CurrentSlide setzen , denn evtl kommt man ja gar nicht in pptAPP_UpdateOneSlide
+                    currentSlide = SldRange.Item(1)
 
-            ' jetzt die currentTimeStamp setzen 
-            With currentSlide
-                If .Tags.Item("CRD").Length > 0 Then
-                    currentTimestamp = CDate(.Tags.Item("CRD"))
-                End If
-            End With
+                    If beforeSlideKennung <> afterSlideKennung Then
+                        Call pptAPP_AufbauSmartSlideLists(SldRange.Item(1))
 
-            '' ur:20180710: die auskommentierten Zeilen sind nun in pptAPP_UpdateSpecSlide - Defninition enthalten
-
-            ''    smartSlideLists = New clsSmartSlideListen
-
-            ''    If Not IsNothing(searchPane) Then
-            ''        If searchPane.Visible Then
-            ''            Call clearSearchPane(Nothing)
-            ''        End If
-            ''    End If
-
-
-            ''    ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
-            ''    currentSlide = SldRange.Item(1)
-
-            ''    Try
-            ''        If Not IsNothing(currentSlide) Then
-            ''            If currentSlide.Tags.Item("SMART").Length > 0 Then
-            ''                ' Änderung tk 13.8.17 - nicht mehr nötig, da die geänderten Shapes nicht mehr extra markiert werden 
-            ''                'Call resetMovedGlowOfShapes()
-            ''            End If
-            ''        End If
-
-            ''        Call deleteMarkerShapes()
-
-            ''        Call putAllNoPrioShapesInNoshow()
-
-            ''    Catch ex As Exception
-
-            ''    End Try
-
-            ''    thereIsNoVersionFieldOnSlide = True
-
-            ''    If currentSlide.Tags.Count > 0 Then
-            ''        Try
-            ''            If currentSlide.Tags.Item("SMART").Length > 0 Then
-
-            ''                ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
-            ''                Call getDBsettings()
-
-            ''                Dim msg As String = ""
-            ''                If userIsEntitled(msg) Then
-
-            ''                    ' die HomeButtonRelevanz setzen 
-            ''                    homeButtonRelevance = False
-            ''                    changedButtonRelevance = False
-
-            ''                    slideHasSmartElements = True
-
-            ''                    Try
-
-            ''                        slideCoordInfo = New clsPPTShapes
-            ''                        slideCoordInfo.pptSlide = currentSlide
-
-            ''                        With currentSlide
-
-            ''                            ' currentTimeStamp setzen 
-            ''                            If .Tags.Item("CRD").Length > 0 Then
-            ''                                currentTimestamp = CDate(.Tags.Item("CRD"))
-            ''                            End If
-
-            ''                            If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-            ''                                Dim tmpSD As String = .Tags.Item("CALL")
-            ''                                Dim tmpED As String = .Tags.Item("CALR")
-            ''                                slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-            ''                            End If
-
-            ''                            If .Tags.Item("SOC").Length > 0 Then
-            ''                                StartofCalendar = CDate(.Tags.Item("SOC"))
-            ''                            End If
-
-
-
-            ''                        End With
-
-            ''                    Catch ex As Exception
-            ''                        slideCoordInfo = Nothing
-            ''                    End Try
-
-
-            ''                    Call buildSmartSlideLists()
-
-            ''                    ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-            ''                    initialHomeButtonRelevance = homeButtonRelevance
-            ''                    initialChangedButtonRelevance = changedButtonRelevance
-            ''                    If searchPane.Visible Then
-
-            ''                        If slideHasSmartElements Then
-
-            ''                            ucSearchView.fülltListbox()
-
-            ''                        End If
-            ''                    End If
-
-            ''                Else
-            ''                    Call MsgBox(msg)
-            ''                End If
-
-            ''            End If
-            ''        Catch ex As Exception
-
-            ''        End Try
-            ''    Else
-
-            ''        slideHasSmartElements = False
-            ''        ' Listen löschen
-            ''        smartSlideLists = New clsSmartSlideListen
-
-            ''        If Not IsNothing(searchPane) Then
-            ''            If searchPane.Visible Then
-            ''                Call clearSearchPane(Nothing)
-            ''            End If
-            ''        End If
-
-            ''    End If
-
-            ' nur wenn die SlideID gewechselt hat, muss agiert werden
-            ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
-            If beforeSlideKennung <> afterSlideKennung Then
-                Try
-                    ' das Change-Formular aktualisieren, wenn es gezeigt wird  
-                    Dim hwind As Integer = pptAPP.ActiveWindow.HWND
-                    If Not IsNothing(changeFrm) Then
-
-                        changeFrm.changeliste.clearChangeList()
-
-                        If chgeLstListe.ContainsKey(key) Then
-                            If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
-                                changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
-                            Else
-                                ' eine Liste für die neue SlideID einfügen ..
-                            End If
+                        If varPPTTM.ContainsKey(key) Then
+                            ' fertig ... 
+                        Else
+                            Dim tmpTM As clsPPTTimeMachine = Nothing
+                            varPPTTM.Add(key, tmpTM)
                         End If
 
-                        changeFrm.neuAufbau()
                     End If
-                Catch ex As Exception
 
-                End Try
+                    ' jetzt die currentTimeStamp setzen 
+                    With currentSlide
+                        If .Tags.Item("CRD").Length > 0 Then
+                            currentTimestamp = CDate(.Tags.Item("CRD"))
+                        End If
+                    End With
 
-            End If       'Ende ob SlideIDs ungleich sind
+
+                    ' nur wenn die SlideID gewechselt hat, muss agiert werden
+                    ' dabei auch berücksichtigen, ob sich Presentation geändert hat 
+                    If beforeSlideKennung <> afterSlideKennung Then
+                        Try
+                            ' das Change-Formular aktualisieren, wenn es gezeigt wird  
+                            Dim hwind As Integer = pptAPP.ActiveWindow.HWND
+                            If Not IsNothing(changeFrm) Then
+
+                                changeFrm.changeliste.clearChangeList()
+
+                                If chgeLstListe.ContainsKey(key) Then
+                                    If chgeLstListe.Item(key).ContainsKey(currentSlide.SlideID) Then
+                                        changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
+                                    Else
+                                        ' eine Liste für die neue SlideID einfügen ..
+                                    End If
+                                End If
+
+                                changeFrm.neuAufbau()
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If       'Ende ob SlideIDs ungleich sind
+
+                End If
+
+            End If ' if currentPresHasVisboElements
 
         Else
             ' nichts tun, das heisst auch nichts verändern ...
@@ -1207,68 +1104,77 @@ Module Module1
         ' Id des aktiven DocumentWindow
 
         Dim key As String = Pres.Name
+        currentPresHasVISBOElements = presentationHasAnySmartSlides(Pres)
 
-        Try
-            '
-            ' setzen der current und previous timestamps 
-            If IsNothing(rememberListOfCPTimeStamps) Then
-                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
-                rememberListOfCPTimeStamps = New SortedList(Of String, Date())
-                Dim tmpDates(1) As Date
-                tmpDates(0) = previousTimeStamp
-                tmpDates(1) = currentTimestamp
-                rememberListOfCPTimeStamps.Add(key, tmpDates)
-            Else
-                If rememberListOfCPTimeStamps.ContainsKey(key) Then
-                    previousTimeStamp = rememberListOfCPTimeStamps.Item(key)(0)
-                    currentTimestamp = rememberListOfCPTimeStamps.Item(key)(1)
+        If currentPresHasVISBOElements Then
+
+            currentTimestamp = getCurrentTimestampFromPresentation(Pres)
+
+            Try
+                '
+                ' setzen der current und previous timestamps 
+                If IsNothing(rememberListOfCPTimeStamps) Then
+                    ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                    rememberListOfCPTimeStamps = New SortedList(Of String, Date())
+                    Dim tmpDates(1) As Date
+                    tmpDates(0) = previousTimeStamp
+                    tmpDates(1) = currentTimestamp
+                    rememberListOfCPTimeStamps.Add(key, tmpDates)
                 Else
-                    ' das setzen, was initial gesetzt wird ... 
-                    currentTimestamp = Date.MinValue
-                    previousTimeStamp = Date.MinValue
+                    If rememberListOfCPTimeStamps.ContainsKey(key) Then
+                        previousTimeStamp = rememberListOfCPTimeStamps.Item(key)(0)
+                        currentTimestamp = rememberListOfCPTimeStamps.Item(key)(1)
+                    Else
+                        ' das setzen, was initial gesetzt wird ... 
+                        currentTimestamp = Date.MinValue
+                        previousTimeStamp = Date.MinValue
+                    End If
                 End If
+
+                '
+                ' setzen der current und previous VariantNames  
+                If IsNothing(rememberListOfCPVariantNames) Then
+                    ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                    rememberListOfCPVariantNames = New SortedList(Of String, String())
+                    Dim tmpVnames(1) As String
+                    tmpVnames(0) = previousVariantName
+                    tmpVnames(1) = currentVariantname
+                    rememberListOfCPVariantNames.Add(key, tmpVnames)
+                Else
+                    If rememberListOfCPVariantNames.ContainsKey(key) Then
+                        previousVariantName = rememberListOfCPVariantNames.Item(key)(0)
+                        currentVariantname = rememberListOfCPVariantNames.Item(key)(1)
+                    Else
+                        ' das setzen, was initial gesetzt wird ...
+                        currentVariantname = ""
+                        previousVariantName = noVariantName
+                    End If
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+
+            ' globale Variablen für Eigenschaften Pane umsetzen
+            If listOfucProperties.ContainsKey(Wn.HWND) Then
+                propertiesPane = listOfucProperties.Item(Wn.HWND)
+            End If
+            If listOfucPropView.ContainsKey(Wn.HWND) Then
+                ucPropertiesView = listOfucPropView.Item(Wn.HWND)
             End If
 
-            '
-            ' setzen der current und previous VariantNames  
-            If IsNothing(rememberListOfCPVariantNames) Then
-                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
-                rememberListOfCPVariantNames = New SortedList(Of String, String())
-                Dim tmpVnames(1) As String
-                tmpVnames(0) = previousVariantName
-                tmpVnames(1) = currentVariantname
-                rememberListOfCPVariantNames.Add(key, tmpVnames)
-            Else
-                If rememberListOfCPVariantNames.ContainsKey(key) Then
-                    previousVariantName = rememberListOfCPVariantNames.Item(key)(0)
-                    currentVariantname = rememberListOfCPVariantNames.Item(key)(1)
-                Else
-                    ' das setzen, was initial gesetzt wird ...
-                    currentVariantname = ""
-                    previousVariantName = noVariantName
-                End If
+            ' globale Variable für search pane umsetzen
+            If listOfucSearch.ContainsKey(Wn.HWND) Then
+                searchPane = listOfucSearch.Item(Wn.HWND)
+            End If
+            If listOfucSearchView.ContainsKey(Wn.HWND) Then
+                ucSearchView = listOfucSearchView.Item(Wn.HWND)
             End If
 
-        Catch ex As Exception
 
-        End Try
-
-
-        ' globale Variablen für Eigenschaften Pane umsetzen
-        If listOfucProperties.ContainsKey(Wn.HWND) Then
-            propertiesPane = listOfucProperties.Item(Wn.HWND)
-        End If
-        If listOfucPropView.ContainsKey(Wn.HWND) Then
-            ucPropertiesView = listOfucPropView.Item(Wn.HWND)
         End If
 
-        ' globale Variable für search pane umsetzen
-        If listOfucSearch.ContainsKey(Wn.HWND) Then
-            searchPane = listOfucSearch.Item(Wn.HWND)
-        End If
-        If listOfucSearchView.ContainsKey(Wn.HWND) Then
-            ucSearchView = listOfucSearchView.Item(Wn.HWND)
-        End If
 
     End Sub
 
@@ -1276,62 +1182,69 @@ Module Module1
 
         Dim key As String = Pres.Name
 
-        Try
-            ' setzen der current und previous timestamps 
-            If Not IsNothing(rememberListOfCPTimeStamps) Then
-                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
-                If rememberListOfCPTimeStamps.ContainsKey(key) Then
-                    rememberListOfCPTimeStamps.Item(key)(0) = previousTimeStamp
-                    rememberListOfCPTimeStamps.Item(key)(1) = currentTimestamp
+        If currentPresHasVISBOElements Then
+
+            Try
+                ' setzen der current und previous timestamps 
+                If Not IsNothing(rememberListOfCPTimeStamps) Then
+                    ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                    If rememberListOfCPTimeStamps.ContainsKey(key) Then
+                        rememberListOfCPTimeStamps.Item(key)(0) = previousTimeStamp
+                        rememberListOfCPTimeStamps.Item(key)(1) = currentTimestamp
+                    Else
+                        ' einfügen 
+                        Dim tmpDates(1) As Date
+                        tmpDates(0) = previousTimeStamp
+                        tmpDates(1) = currentTimestamp
+                        rememberListOfCPTimeStamps.Add(key, tmpDates)
+                    End If
+
                 Else
-                    ' einfügen 
+                    ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                    rememberListOfCPTimeStamps = New SortedList(Of String, Date())
                     Dim tmpDates(1) As Date
                     tmpDates(0) = previousTimeStamp
                     tmpDates(1) = currentTimestamp
                     rememberListOfCPTimeStamps.Add(key, tmpDates)
                 End If
 
-            Else
-                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
-                rememberListOfCPTimeStamps = New SortedList(Of String, Date())
-                Dim tmpDates(1) As Date
-                tmpDates(0) = previousTimeStamp
-                tmpDates(1) = currentTimestamp
-                rememberListOfCPTimeStamps.Add(key, tmpDates)
-            End If
+                '
+                ' setzen der current und previous VariantNames  
+                If Not IsNothing(rememberListOfCPVariantNames) Then
+                    ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                    If rememberListOfCPVariantNames.ContainsKey(key) Then
+                        rememberListOfCPVariantNames.Item(key)(0) = previousVariantName
+                        rememberListOfCPVariantNames.Item(key)(1) = currentVariantname
+                    Else
+                        ' einfügen 
+                        Dim tmpVnames(1) As String
+                        tmpVnames(0) = previousVariantName
+                        tmpVnames(1) = currentVariantname
+                        rememberListOfCPVariantNames.Add(key, tmpVnames)
+                    End If
 
-            '
-            ' setzen der current und previous VariantNames  
-            If Not IsNothing(rememberListOfCPVariantNames) Then
-                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
-                If rememberListOfCPVariantNames.ContainsKey(key) Then
-                    rememberListOfCPVariantNames.Item(key)(0) = previousVariantName
-                    rememberListOfCPVariantNames.Item(key)(1) = currentVariantname
                 Else
-                    ' einfügen 
+                    ' ... sind die curent und previous Timestamps ja initial gesetzt ...
+                    rememberListOfCPVariantNames = New SortedList(Of String, String())
                     Dim tmpVnames(1) As String
                     tmpVnames(0) = previousVariantName
                     tmpVnames(1) = currentVariantname
                     rememberListOfCPVariantNames.Add(key, tmpVnames)
                 End If
 
-            Else
-                ' ... sind die curent und previous Timestamps ja initial gesetzt ...
-                rememberListOfCPVariantNames = New SortedList(Of String, String())
-                Dim tmpVnames(1) As String
-                tmpVnames(0) = previousVariantName
-                tmpVnames(1) = currentVariantname
-                rememberListOfCPVariantNames.Add(key, tmpVnames)
+            Catch ex As Exception
+
+            End Try
+
+            ' wenn geschützt, dann unsichtbar machen der relecanten Shapes 
+            If VisboProtected Then
+                Call makeVisboShapesVisible(False)
             End If
-
-        Catch ex As Exception
-
-        End Try
-
-        ' wenn geschützt, dann unsichtbar machen der relecanten Shapes 
-        If VisboProtected Then
-            Call makeVisboShapesVisible(False)
+        Else
+            ' auf false setzen, weil das in der nächsten Activate Routine bestimmt wird ... 
+            currentPresHasVISBOElements = False
         End If
+
     End Sub
 
     Private Sub pptAPP_WindowSelectionChange(Sel As PowerPoint.Selection) Handles pptAPP.WindowSelectionChange
@@ -1343,288 +1256,288 @@ Module Module1
 
         selectedPlanShapes = Nothing
 
-        Try
-            Dim shpRange As PowerPoint.ShapeRange = Sel.ShapeRange
+        ' alles weitere nur machen, wenn überhaupt Smart-Element enthalten sind 
+        If currentPresHasVISBOElements Then
 
-            If Not IsNothing(shpRange) And slideHasSmartElements Then
+            Try
+                Dim shpRange As PowerPoint.ShapeRange = Sel.ShapeRange
 
-                ' jetzt muss hier die Behandlung für Office 2010 rein 
-                Dim correctErrorShape1 As PowerPoint.Shape = Nothing
-                Dim correctErrorShape2 As PowerPoint.Shape = Nothing
+                If Not IsNothing(shpRange) And slideHasSmartElements Then
 
-                ' nur was machen, wenn es sich um Office 2010 handelt ... 
-                ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
-                ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
-                ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
-                If pptAPP.Version = "14.0" Then
-                    Try
-                        correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
-                    Catch ex As Exception
+                    ' jetzt muss hier die Behandlung für Office 2010 rein 
+                    Dim correctErrorShape1 As PowerPoint.Shape = Nothing
+                    Dim correctErrorShape2 As PowerPoint.Shape = Nothing
 
-                    End Try
-
-                    Try
-                        correctErrorShape2 = currentSlide.Shapes("visboCorrectError2")
-                    Catch ex As Exception
-
-                    End Try
-                End If
-
-
-                If ((pptAPP.Version = "14.0") And
-                    (((Not propertiesPane.Visible) Or
-                    (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or
-                    (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
-                    ' Erzeugen eines Hilfs-Elements
-
-                    ' Ist es 
-                    If IsNothing(correctErrorShape1) And IsNothing(correctErrorShape2) And Not isRelevantMSPHShape(shpRange(1)) Then
-                        ' nichts machen 
-                    Else
-                        If IsNothing(correctErrorShape1) Then
-                            ' erzeugen und selektieren der beiden Shapes  
-                            Dim oldShape As PowerPoint.Shape = shpRange(1)
-
-                            Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
-                                                                                               0, 0, 50, 50)
-
-
-
-                            If Not IsNothing(helpShape1) Then
-                                helpShape1.Name = "visboCorrectError1"
-                                helpShape1.Tags.Add("formerSN", oldShape.Name)
-                                helpShape1.Select()
-                            End If
-
-
-
-                        ElseIf IsNothing(correctErrorShape2) Then
-
-                            ' jetzt die zweite Welle 
-                            propertiesPane.Visible = True
-
-                            Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
-                                                                                               0, 0, 50, 50)
-                            If Not IsNothing(helpShape2) Then
-                                helpShape2.Name = "visboCorrectError2"
-                                helpShape2.Select()
-                            End If
-                        Else
-
-
-                            ' Selektieren des vorher geklickten shapes 
-                            Dim formerShapeName As String = correctErrorShape1.Tags.Item("formerSN")
-                            Dim formerSelShape As PowerPoint.Shape = Nothing
-
-                            If formerShapeName.Length > 0 Then
-                                Try
-
-                                    formerSelShape = currentSlide.Shapes(formerShapeName)
-
-                                    ' Löschen der Hilfs-Shapes 
-                                    correctErrorShape1.Delete()
-                                    correctErrorShape2.Delete()
-
-                                    ' Selektieren des formerShapes
-                                    formerSelShape.Select()
-
-                                Catch ex As Exception
-
-                                End Try
-
-                            End If
-
-                        End If
-                    End If
-
-                Else
-                    ' es sind ein oder mehrere Shapes selektiert worden 
-                    Dim i As Integer = 0
-                    If shpRange.Count = 1 Then
-
-                        ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
-                        ' Listbox passt 
-
-                        '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
-                        '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
-                        ' ''If Not IsNothing(infoFrm) And formIsShown Then
-                        ' ''    If infoFrm.rdbName.Visible Then
-                        ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
-                        ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
-                        ' ''        End If
-                        ' ''    End If
-                        ' ''End If
-
-
-                        ' jetzt ggf die angezeigten Marker löschen 
-                        If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
-                            Call deleteMarkerShapes()
-                        ElseIf markerShpNames.Count > 1 Then
-                            Call deleteMarkerShapes(shpRange(1).Name)
-                        End If
-
-                        ' prüfen, ob es ein Kommentar ist 
-                        Dim tmpShape As PowerPoint.Shape = shpRange(1)
-                        If isCommentShape(tmpShape) Then
-                            Call markReferenceShape(tmpShape.Name)
-                        End If
-                    ElseIf shpRange.Count > 1 Then
-                        ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
-                        For Each tmpShape As PowerPoint.Shape In shpRange
-                            If isCommentShape(tmpShape) Then
-                                Call markReferenceShape(tmpShape.Name)
-                            End If
-                        Next
-                    ElseIf shpRange.Count = 0 Then
-
-                        Call deleteMarkerShapes()
-
-                    End If
-
-
-                    For Each tmpShape As PowerPoint.Shape In shpRange
-
-                        If tmpShape.Tags.Count > 0 Then
-
-                            'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
-
-                            If isRelevantShape(tmpShape) Then
-                                If bekannteIDs.ContainsKey(tmpShape.Id) Or
-                                    tmpShape.Name.EndsWith(shadowName) Then
-
-                                    If Not relevantShapeNames.Contains(tmpShape.Name) Then
-                                        relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
-                                    End If
-
-                                Else
-                                    ' die vorhandenen Tags löschen ... und den Namen ändern 
-                                    Call deleteShpTags(tmpShape)
-                                End If
-
-                            End If
-
-                        End If
-
-
-                    Next
-
-                    '' Anfang ... das war vorher innerhalb der next Schleife .. 
-                    ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
-                    If relevantShapeNames.Count >= 1 Then
-
-                        ReDim arrayOfNames(relevantShapeNames.Count - 1)
-
-                        For ix As Integer = 1 To relevantShapeNames.Count
-                            arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
-                        Next
-
-                        selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
-
-                    ElseIf isSymbolShape(shpRange(1)) Then
-
-                        selectedPlanShapes = shpRange
-                        Call aktualisiereInfoPane(shpRange(1))
-
-                    Else
-                        ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
-                        Call checkHomeChangeBtnEnablement()
+                    ' nur was machen, wenn es sich um Office 2010 handelt ... 
+                    ' werden temporäre Shapes erzeugt und selektiert, die wiederum einen SelectionChange erzeugen
+                    ' dabei wird das ursprünglich selektierte Shape gemerkt udn am Schluss, wenn das Property Window angezeigt ist, 
+                    ' wieder selektiert .. das alles muss aber nur im Fall Version = 14.0 gemacht werden 
+                    If pptAPP.Version = "14.0" Then
                         Try
-                            If propertiesPane.Visible Then
-                                Call aktualisiereInfoPane(Nothing)
-                            End If
+                            correctErrorShape1 = currentSlide.Shapes("visboCorrectError1")
                         Catch ex As Exception
 
                         End Try
 
-                        ' ur: wegen Pane
-                        ' ''If formIsShown Then
-                        ' ''    Call aktualisiereInfoFrm(Nothing)
-                        ' ''End If
+                        Try
+                            correctErrorShape2 = currentSlide.Shapes("visboCorrectError2")
+                        Catch ex As Exception
+
+                        End Try
                     End If
-                    '' Ende ...
 
-                    If Not isSymbolShape(shpRange(1)) Then
-                        If Not IsNothing(selectedPlanShapes) Then
 
-                            Dim tmpShape As PowerPoint.Shape = Nothing
-                            Dim elemWasMoved As Boolean = False
+                    If ((pptAPP.Version = "14.0") And
+                    (((Not propertiesPane.Visible) Or
+                    (propertiesPane.Visible And Not IsNothing(correctErrorShape1)) Or
+                    (propertiesPane.Visible And Not IsNothing(correctErrorShape2))))) Then
+                        ' Erzeugen eines Hilfs-Elements
 
-                            Dim isPCard As Boolean = isProjectCard(shpRange(1))
+                        ' Ist es 
+                        If IsNothing(correctErrorShape1) And IsNothing(correctErrorShape2) And Not isRelevantMSPHShape(shpRange(1)) Then
+                            ' nichts machen 
+                        Else
+                            If IsNothing(correctErrorShape1) Then
+                                ' erzeugen und selektieren der beiden Shapes  
+                                Dim oldShape As PowerPoint.Shape = shpRange(1)
 
-                            If Not isPCard Then
-                                For Each tmpShape In selectedPlanShapes
-                                    ' hier sind nur noch richtige Shapes  
+                                Dim helpShape1 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                               0, 0, 50, 50)
 
-                                    ' sollen Home- bzw. Change-Button angezeigt werden ? 
-                                    elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
-                                    If elemWasMoved Then
-                                        homeButtonRelevance = True
-                                    Else
-                                        If tmpShape.Tags.Item("MVD").Length > 0 Then
-                                            changedButtonRelevance = True
+
+
+                                If Not IsNothing(helpShape1) Then
+                                    helpShape1.Name = "visboCorrectError1"
+                                    helpShape1.Tags.Add("formerSN", oldShape.Name)
+                                    helpShape1.Select()
+                                End If
+
+
+
+                            ElseIf IsNothing(correctErrorShape2) Then
+
+                                ' jetzt die zweite Welle 
+                                propertiesPane.Visible = True
+
+                                Dim helpShape2 As PowerPoint.Shape = currentSlide.Shapes.AddTextbox(Microsoft.Office.Core.MsoTextOrientation.msoTextOrientationHorizontal,
+                                                                                               0, 0, 50, 50)
+                                If Not IsNothing(helpShape2) Then
+                                    helpShape2.Name = "visboCorrectError2"
+                                    helpShape2.Select()
+                                End If
+                            Else
+
+
+                                ' Selektieren des vorher geklickten shapes 
+                                Dim formerShapeName As String = correctErrorShape1.Tags.Item("formerSN")
+                                Dim formerSelShape As PowerPoint.Shape = Nothing
+
+                                If formerShapeName.Length > 0 Then
+                                    Try
+
+                                        formerSelShape = currentSlide.Shapes(formerShapeName)
+
+                                        ' Löschen der Hilfs-Shapes 
+                                        correctErrorShape1.Delete()
+                                        correctErrorShape2.Delete()
+
+                                        ' Selektieren des formerShapes
+                                        formerSelShape.Select()
+
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
+
+                            End If
+                        End If
+
+                    Else
+                        ' es sind ein oder mehrere Shapes selektiert worden 
+                        Dim i As Integer = 0
+                        If shpRange.Count = 1 Then
+
+                            ' prüfen, ob inzwischen was selektiert wurde, was nicht zu der Selektion in der 
+                            ' Listbox passt 
+
+                            '' '' prüfen, ob das Info Fenster offen ist und der Search bereich sichtbar - 
+                            '' '' dann muss der Klarheit wegen die Listbox neu aufgebaut werden 
+                            ' ''If Not IsNothing(infoFrm) And formIsShown Then
+                            ' ''    If infoFrm.rdbName.Visible Then
+                            ' ''        If infoFrm.listboxNames.SelectedItems.Count > 0 Then
+                            ' ''            'Call infoFrm.listboxNames.SelectedItems.Clear()
+                            ' ''        End If
+                            ' ''    End If
+                            ' ''End If
+
+
+                            ' jetzt ggf die angezeigten Marker löschen 
+                            If Not markerShpNames.ContainsKey(shpRange(1).Name) Then
+                                Call deleteMarkerShapes()
+                            ElseIf markerShpNames.Count > 1 Then
+                                Call deleteMarkerShapes(shpRange(1).Name)
+                            End If
+
+                            ' prüfen, ob es ein Kommentar ist 
+                            Dim tmpShape As PowerPoint.Shape = shpRange(1)
+                            If isCommentShape(tmpShape) Then
+                                Call markReferenceShape(tmpShape.Name)
+                            End If
+                        ElseIf shpRange.Count > 1 Then
+                            ' für jedes Shape prüfen, ob es ein Comment Shape ist .. 
+                            For Each tmpShape As PowerPoint.Shape In shpRange
+                                If isCommentShape(tmpShape) Then
+                                    Call markReferenceShape(tmpShape.Name)
+                                End If
+                            Next
+                        ElseIf shpRange.Count = 0 Then
+
+                            Call deleteMarkerShapes()
+
+                        End If
+
+
+                        For Each tmpShape As PowerPoint.Shape In shpRange
+
+                            If tmpShape.Tags.Count > 0 Then
+
+                                'If tmpShape.AlternativeText <> "" And tmpShape.Title <> "" Then
+
+                                If isRelevantShape(tmpShape) Then
+                                    If bekannteIDs.ContainsKey(tmpShape.Id) Or
+                                    tmpShape.Name.EndsWith(shadowName) Then
+
+                                        If Not relevantShapeNames.Contains(tmpShape.Name) Then
+                                            relevantShapeNames.Add(tmpShape.Name, tmpShape.Name)
                                         End If
+
+                                    Else
+                                        ' die vorhandenen Tags löschen ... und den Namen ändern 
+                                        Call deleteShpTags(tmpShape)
                                     End If
 
-                                Next
-                            Else
-                                tmpShape = selectedPlanShapes(1)
-                            End If
-
-
-                            ' hier wird die Information zu dem selektierten Shape angezeigt 
-                            If Not IsNothing(propertiesPane) Then
-                                Call aktualisiereInfoPane(tmpShape, elemWasMoved)
-                            End If
-                            ' ur: wegen Pane
-                            If formIsShown Then
-                                If isPCard Then
-                                    Call aktualisiereInfoFrm(Nothing)
-                                Else
-                                    Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
                                 End If
 
                             End If
 
 
-                            ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
-                            ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
-                            Call ensureVisibilityOfSelection(selectedPlanShapes)
+                        Next
 
-                            ' kann jetzt wieder aktiviert werden ...
-                            If Not IsNothing(propertiesPane) Then
-                                propertiesPane.Visible = True
-                            End If
+                        '' Anfang ... das war vorher innerhalb der next Schleife .. 
+                        ' jetzt muss geprüft werden, ob relevantShapeNames mindestens ein Element enthält ..
+                        If relevantShapeNames.Count >= 1 Then
+
+                            ReDim arrayOfNames(relevantShapeNames.Count - 1)
+
+                            For ix As Integer = 1 To relevantShapeNames.Count
+                                arrayOfNames(ix - 1) = CStr(relevantShapeNames(ix))
+                            Next
+
+                            selectedPlanShapes = currentSlide.Shapes.Range(arrayOfNames)
+
+                        ElseIf isSymbolShape(shpRange(1)) Then
+
+                            selectedPlanShapes = shpRange
+                            Call aktualisiereInfoPane(shpRange(1))
+
                         Else
-
+                            ' in diesem Fall wurden nur nicht-relevante Shapes selektiert 
                             Call checkHomeChangeBtnEnablement()
-                            If propertiesPane.Visible Then
-                                Call aktualisiereInfoPane(Nothing)
-                            End If
+                            Try
+                                If propertiesPane.Visible Then
+                                    Call aktualisiereInfoPane(Nothing)
+                                End If
+                            Catch ex As Exception
 
+                            End Try
+
+                            ' ur: wegen Pane
+                            ' ''If formIsShown Then
+                            ' ''    Call aktualisiereInfoFrm(Nothing)
+                            ' ''End If
+                        End If
+                        '' Ende ...
+
+                        If Not isSymbolShape(shpRange(1)) Then
+                            If Not IsNothing(selectedPlanShapes) Then
+
+                                Dim tmpShape As PowerPoint.Shape = Nothing
+                                Dim elemWasMoved As Boolean = False
+
+                                Dim isPCard As Boolean = isProjectCard(shpRange(1))
+
+                                If Not isPCard Then
+                                    For Each tmpShape In selectedPlanShapes
+                                        ' hier sind nur noch richtige Shapes  
+
+                                        ' sollen Home- bzw. Change-Button angezeigt werden ? 
+                                        elemWasMoved = isMovedElement(tmpShape) Or elemWasMoved
+                                        If elemWasMoved Then
+                                            homeButtonRelevance = True
+                                        Else
+                                            If tmpShape.Tags.Item("MVD").Length > 0 Then
+                                                changedButtonRelevance = True
+                                            End If
+                                        End If
+
+                                    Next
+                                Else
+                                    tmpShape = selectedPlanShapes(1)
+                                End If
+
+
+                                ' hier wird die Information zu dem selektierten Shape angezeigt 
+                                If Not IsNothing(propertiesPane) Then
+                                    Call aktualisiereInfoPane(tmpShape, elemWasMoved)
+                                End If
+                                ' ur: wegen Pane
+                                If formIsShown Then
+                                    If isPCard Then
+                                        Call aktualisiereInfoFrm(Nothing)
+                                    Else
+                                        Call aktualisiereInfoFrm(tmpShape, elemWasMoved)
+                                    End If
+
+                                End If
+
+
+                                ' jetzt den Window Ausschnitt kontrollieren: ist das oder die selectedPlanShapes überhaupt sichtbar ? 
+                                ' wenn nein, dann sicherstellen, dass sie sichtbar werden 
+                                Call ensureVisibilityOfSelection(selectedPlanShapes)
+
+                                ' kann jetzt wieder aktiviert werden ...
+                                If Not IsNothing(propertiesPane) Then
+                                    propertiesPane.Visible = True
+                                End If
+                            Else
+
+                                Call checkHomeChangeBtnEnablement()
+                                If propertiesPane.Visible Then
+                                    Call aktualisiereInfoPane(Nothing)
+                                End If
+
+
+                            End If
 
                         End If
 
                     End If
+
                 End If
 
 
+            Catch ex As Exception
 
-
-
-
-            End If
-
-
-        Catch ex As Exception
-
-            If Not IsNothing(propertiesPane) Then
-                If propertiesPane.Visible Then
-                    Call aktualisiereInfoPane(Nothing)
+                If Not IsNothing(propertiesPane) Then
+                    If propertiesPane.Visible Then
+                        Call aktualisiereInfoPane(Nothing)
+                    End If
                 End If
-            End If
 
+            End Try
 
-        End Try
+        End If
 
     End Sub
 
@@ -4173,8 +4086,30 @@ Module Module1
 
         End Try
 
-
         hasKwInMs = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' prüft, ob irgendeine VISBO Slide entahlten ist; kann auch frozen sein
+    ''' </summary>
+    ''' <param name="pres"></param>
+    ''' <returns></returns>
+    Friend Function presentationHasAnySmartSlides(ByVal pres As PowerPoint.Presentation) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Try
+            For Each sld As PowerPoint.Slide In pres.Slides
+                If isVisboSlide(sld) Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+        Catch ex As Exception
+            tmpResult = False
+        End Try
+
+        presentationHasAnySmartSlides = tmpResult
+
     End Function
 
     ''' <summary>
@@ -5570,6 +5505,31 @@ Module Module1
         End With
 
         isSlideWithNeedToBeUpdated = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' prüft ob es sich um eine VISBO Slide handelt - dafür muss sie das Tag "SMART" enthalten 
+    ''' Frozen nicht, da ja auch eine Frozen Slide interaktiv Auskunft geben können soll 
+    ''' </summary>
+    ''' <param name="sld"></param>
+    ''' <returns></returns>
+    Public Function isVisboSlide(ByVal sld As PowerPoint.Slide) As Boolean
+        Dim tmpResult As Boolean = False
+
+        Try
+            With sld
+
+                If .Tags.Item("SMART").Length > 0 Then
+                    tmpResult = True
+                End If
+
+            End With
+        Catch ex As Exception
+            tmpResult = False
+        End Try
+
+        isVisboSlide = tmpResult
 
     End Function
 
@@ -7615,23 +7575,22 @@ Module Module1
             ' jetzt ggf gesetzte Glow MArker zurücksetzen ... 
             currentSlide = specSlide
 
+            ' tk 29.10.18 nicht nötig , wird an andere Stelle besser gemacht 
+            'Try
+            '    If Not IsNothing(currentSlide) Then
+            '        If currentSlide.Tags.Item("SMART").Length > 0 Then
 
-            Try
-                If Not IsNothing(currentSlide) Then
-                    If currentSlide.Tags.Item("SMART").Length > 0 Then
+            '            Call deleteMarkerShapes()
+            '            Call putAllNoPrioShapesInNoshow()
 
-                        Call deleteMarkerShapes()
-                        Call putAllNoPrioShapesInNoshow()
-
-                    End If
-                End If
+            '        End If
+            '    End If
 
 
-            Catch ex As Exception
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
-            thereIsNoVersionFieldOnSlide = True
 
             If Not IsNothing(currentSlide) Then
 
@@ -7639,65 +7598,55 @@ Module Module1
                     Try
                         If currentSlide.Tags.Item("SMART").Length > 0 Then
 
-                            ' wird benötigt, um jetzt die Infos zu der Datenbank rauszulesen ...
-                            ' damit festgestellt werden kann, ob bei einem notwendigen Login 
-                            Call getDBsettings()
+                            ' Aufbau SmartSlieLists muss immer ohne DB erfolgen können ! 
 
-                            Dim msg As String = ""
-                            If userIsEntitled(msg) Then
+                            ' die HomeButtonRelevanz setzen 
+                            homeButtonRelevance = False
+                            changedButtonRelevance = False
 
-                                ' die HomeButtonRelevanz setzen 
-                                homeButtonRelevance = False
-                                changedButtonRelevance = False
+                            slideHasSmartElements = True
 
-                                slideHasSmartElements = True
+                            Try
 
-                                Try
+                                slideCoordInfo = New clsPPTShapes
+                                slideCoordInfo.pptSlide = currentSlide
 
-                                    slideCoordInfo = New clsPPTShapes
-                                    slideCoordInfo.pptSlide = currentSlide
+                                With currentSlide
 
-                                    With currentSlide
+                                    If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
+                                        Dim tmpSD As String = .Tags.Item("CALL")
+                                        Dim tmpED As String = .Tags.Item("CALR")
+                                        slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
+                                    End If
 
-                                        If .Tags.Item("CALL").Length > 0 And .Tags.Item("CALR").Length > 0 Then
-                                            Dim tmpSD As String = .Tags.Item("CALL")
-                                            Dim tmpED As String = .Tags.Item("CALR")
-                                            slideCoordInfo.setCalendarDates(CDate(tmpSD), CDate(tmpED))
-                                        End If
-
-                                        If .Tags.Item("SOC").Length > 0 Then
-                                            StartofCalendar = CDate(.Tags.Item("SOC"))
-                                        End If
+                                    If .Tags.Item("SOC").Length > 0 Then
+                                        StartofCalendar = CDate(.Tags.Item("SOC"))
+                                    End If
 
 
 
-                                    End With
+                                End With
 
-                                Catch ex As Exception
-                                    slideCoordInfo = Nothing
-                                End Try
+                            Catch ex As Exception
+                                slideCoordInfo = Nothing
+                            End Try
 
 
-                                Call buildSmartSlideLists()
+                            Call buildSmartSlideLists()
 
-                                ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
-                                initialHomeButtonRelevance = homeButtonRelevance
-                                initialChangedButtonRelevance = changedButtonRelevance
+                            ' jetzt merken, wie die Settings für homeButton und chengedButton waren ..
+                            initialHomeButtonRelevance = homeButtonRelevance
+                            initialChangedButtonRelevance = changedButtonRelevance
 
-                                If Not IsNothing(searchPane) Then
-                                    If searchPane.Visible Then
+                            If Not IsNothing(searchPane) Then
+                                If searchPane.Visible Then
 
-                                        If slideHasSmartElements Then
+                                    If slideHasSmartElements Then
 
-                                            ucSearchView.fülltListbox(showTrafficLights)
+                                        ucSearchView.fülltListbox(showTrafficLights)
 
-                                        End If
                                     End If
                                 End If
-
-
-                            Else
-                                Call MsgBox(msg)
                             End If
 
                         End If
