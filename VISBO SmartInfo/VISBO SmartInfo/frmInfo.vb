@@ -130,6 +130,7 @@ Public Class frmInfo
         '    fullBreadCrumb.Visible = False
         'End If
 
+        uniqueNameRequired.Checked = showBestName
 
         showAbbrev.Checked = showShortName
 
