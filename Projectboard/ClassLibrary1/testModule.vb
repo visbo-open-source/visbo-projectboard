@@ -2376,26 +2376,26 @@ Public Module testModule
                                         If qualifier.Trim <> "Balken" Then
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
+                                            reportObj = obj
+                                            notYetDone = True
+                                            bigType = ptReportBigTypes.charts
+
                                         Else
-                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                            'Call createCostBalkenOfProjectInPPT(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape)
+                                            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken
+                                            Call createCostBalkenOfProjectInPPT(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
+                                            notYetDone = False
                                         End If
 
                                     Else
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.KostenPie
+                                        reportObj = obj
+                                        notYetDone = True
+                                        bigType = ptReportBigTypes.charts
                                     End If
 
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
-                                    Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
-                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                    End If
 
-                                    reportObj = obj
-                                    notYetDone = True
-                                    bigType = ptReportBigTypes.charts
 
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
