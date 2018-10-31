@@ -2973,7 +2973,7 @@ Public Class Request
 
             ' Request absetzen
             Dim Antwort As String
-            Dim webVPLockantwort As clsWebVPLock = Nothing
+            Dim webVPLockantwort As clsWebVPlock = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
