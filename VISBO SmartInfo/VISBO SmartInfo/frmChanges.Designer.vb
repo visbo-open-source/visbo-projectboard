@@ -57,6 +57,7 @@ Partial Class frmChanges
         Me.changeListTable.Dock = System.Windows.Forms.DockStyle.Fill
         Me.changeListTable.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically
         Me.changeListTable.Location = New System.Drawing.Point(0, 0)
+        Me.changeListTable.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.changeListTable.Name = "changeListTable"
         Me.changeListTable.ReadOnly = True
         Me.changeListTable.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
@@ -64,7 +65,7 @@ Partial Class frmChanges
         Me.changeListTable.ShowCellToolTips = False
         Me.changeListTable.ShowEditingIcon = False
         Me.changeListTable.ShowRowErrors = False
-        Me.changeListTable.Size = New System.Drawing.Size(799, 86)
+        Me.changeListTable.Size = New System.Drawing.Size(1198, 132)
         Me.changeListTable.TabIndex = 0
         '
         'colPname
@@ -123,16 +124,17 @@ Partial Class frmChanges
         '
         'frmChanges
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(144.0!, 144.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
-        Me.ClientSize = New System.Drawing.Size(799, 86)
+        Me.ClientSize = New System.Drawing.Size(1198, 132)
         Me.Controls.Add(Me.changeListTable)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Location = New System.Drawing.Point(24, 922)
+        Me.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.MaximizeBox = False
-        Me.MinimumSize = New System.Drawing.Size(100, 38)
+        Me.MinimumSize = New System.Drawing.Size(139, 56)
         Me.Name = "frmChanges"
         Me.Text = "Changes"
         Me.TopMost = True
