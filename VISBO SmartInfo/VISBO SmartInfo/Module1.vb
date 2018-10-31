@@ -7,6 +7,7 @@ Imports Microsoft.Office.Core.MsoThemeColorIndex
 
 Module Module1
 
+    Friend Const hiddenExcelSheetName As String = "visboupdate"
     Friend WithEvents pptAPP As PowerPoint.Application
 
     Friend ucPropertiesView As ucProperties
@@ -604,7 +605,12 @@ Module Module1
 
             ' in chgeLstListe sind für jede Presentation die slideChgListen 
             ' jetzt muss die chgListe ergänzt werden 
-            chgeLstListe.Add(key, slideChgListe)
+            If Not chgeLstListe.ContainsKey(key) Then
+                chgeLstListe.Add(key, slideChgListe)
+            Else
+                chgeLstListe.Item(key) = slideChgListe
+            End If
+
 
             ' tk 17.10.18 jetzt muss geprüft werden, ob eine der Slides smart-Infos enthält, wenigstens eine Slide nicht frozen ist und das aktuelle Datum der Slide vor dem heutigen Tag liegt 
             Dim atleastOne As Boolean = False
@@ -2313,7 +2319,8 @@ Module Module1
 
                                         Dim newWay As Boolean = True
 
-                                        'Call createNewHiddenExcel()
+                                        ' hier wird nur was gemacht, wenn es nicht schon existiert 
+                                        Call createNewHiddenExcel()
 
                                         If Not IsNothing(updateWorkbook) Or newWay Then
 
@@ -2349,7 +2356,8 @@ Module Module1
 
                                                             If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
                                                                 If newWay Then
-                                                                    Call updatePPTBalkenOfProjectInPPT2(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
+                                                                    Call updatePPTBalkenOfProjectInPPT(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
+                                                                    'Call updatePPTBalkenOfProjectInPPT2(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
                                                                     ' um den Fokus vom Chart wegzubekommen
                                                                     pptAPP.Activate()
                                                                 Else
@@ -2599,18 +2607,19 @@ Module Module1
     ''' <param name="prcTyp"></param>
     ''' <param name="auswahl"></param>
     ''' <param name="rcName"></param>
-    ''' <param name="curWS"></param>
     Public Sub updatePPTBalkenOfProjectInPPT(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
                                         ByRef pptShape As PowerPoint.Shape,
-                                        ByVal prcTyp As Integer, ByVal auswahl As Integer, ByVal rcName As String,
-                                        ByVal curWS As Excel.Worksheet)
+                                        ByVal prcTyp As Integer, ByVal auswahl As Integer, ByVal rcName As String)
 
-        Dim visboSheetName As String = "table1"
+
+
+        Dim curWS As Excel.Worksheet = Nothing
 
         Try
-            visboSheetName = curWS.Name
+            curWS = updateWorkbook.Worksheets.Item(hiddenExcelSheetName)
         Catch ex As Exception
-
+            Call MsgBox("can't access visboupdate Sheet")
+            Exit Sub
         End Try
 
 
@@ -2621,16 +2630,6 @@ Module Module1
         End If
 
         pptChart = pptShape.Chart
-
-        'Dim myWb As Excel.Workbook = Nothing
-        Dim myWS As Excel.Worksheet = curWS
-        myWS.Name = visboSheetName
-
-        'Try
-        '    myWS = pptChart.ChartData.Workbook.Worksheets.item(1)
-        'Catch ex As Exception
-        '    myWS = curWS
-        'End Try
 
 
         Dim kennung As String = pptChart.Name
@@ -2660,7 +2659,7 @@ Module Module1
 
         ' für das SetSourceData 
         Dim myRange As Excel.Range = Nothing
-        Dim usedRange As Excel.Range = myWS.UsedRange
+        Dim usedRange As Excel.Range = curWS.UsedRange
         ' Ende setsource Vorbereitungen 
 
         ' die Settings herauslesen ...
@@ -2767,15 +2766,15 @@ Module Module1
         With CType(pptChart, PowerPoint.Chart)
 
             ' remove old series
-            'Try
-            '    Dim anz As Integer = CInt(CType(.SeriesCollection, Excel.SeriesCollection).Count)
-            '    Do While anz > 0
-            '        .SeriesCollection(1).Delete()
-            '        anz = anz - 1
-            '    Loop
-            'Catch ex As Exception
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
 
-            'End Try
+            End Try
 
             'Dim series1Name As String = repmsg(1) & " " & hproj.timeStamp.ToShortDateString ' Stand vom 
 
@@ -2856,51 +2855,46 @@ Module Module1
                 Next
 
                 '' jetzt die Istdaten zeichnen 
-                'With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                '    '.Name = repmsg(6) & " " & hproj.timeStamp.ToShortDateString
-                '    .Name = repmsg(6)
-                '    '.Interior.Color = visboFarbeBlau
-                '    .Interior.Color = awinSettings.SollIstFarbeArea
-                '    .Values = istDatenReihe
-                '    .XValues = Xdatenreihe
-                '    .ChartType = Excel.XlChartType.xlColumnStacked
-                'End With
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .Name = repmsg(6)
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+                End With
 
 
             End If
 
 
-            'With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-            '    .ChartType = Excel.XlChartType.xlColumnStacked
-            '    .Name = series1Name
-            '    .Interior.Color = visboFarbeBlau
-            '    '.Interior.Color = visboFarbeYellow
-            '    '.Values = tdatenreihe
-            '    .Values = prognoseDatenReihe
-            '    .XValues = Xdatenreihe
+                .ChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+                .Name = series1Name
+                .Interior.Color = visboFarbeBlau
+                .Values = prognoseDatenReihe
+                .XValues = Xdatenreihe
 
-            'End With
+            End With
 
             If Not IsNothing(vglProj) Then
 
                 vSum = vdatenreihe.Sum
 
                 ''series
-                'With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                '    .ChartType = Excel.XlChartType.xlLine
-                '    .Name = series2Name
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    .Name = series2Name
 
-                '    .Values = vdatenreihe
-                '    .XValues = Xdatenreihe
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
 
-                '    With .Format.Line
-                '        .DashStyle = core.MsoLineDashStyle.msoLineDash
-                '        '.ForeColor.RGB = Excel.XlRgbColor.rgbFireBrick
-                '        .ForeColor.RGB = visboFarbeOrange
-                '        .Weight = 4
-                '    End With
-                'End With
+                    With .Format.Line
+                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                        .ForeColor.RGB = visboFarbeOrange
+                        .Weight = 4
+                    End With
+                End With
             End If
 
 
@@ -2921,6 +2915,7 @@ Module Module1
 
             ' nur wenn es auch einen Titel gibt ... 
             If .HasTitle Then
+
                 ' jetzt muss der Header bestimmt werden 
                 Dim tmpStr() As String = .ChartTitle.Text.Split(New Char() {CType("(", Char)})
                 titelTeile(0) = tmpStr(0).Trim
@@ -2934,11 +2929,8 @@ Module Module1
                         End If
 
                         If Not IsNothing(vglProj) Then
-                            'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " " & zE & ")"
-                            'titelTeile(0) = repmsg(4) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " " & zE & ")"
                             titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " " & zE & ")"
                         Else
-                            'titelTeile(0) = repMessages.getmsg(159) & " (" & gesamt_summe.ToString("####0.") & " " & zE & ")"
                             titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " " & zE & ")"
                         End If
                         titelTeile(1) = ""
@@ -2951,11 +2943,8 @@ Module Module1
                         End If
 
                         If Not IsNothing(vglProj) Then
-                            'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
-                            'titelTeile(0) = repmsg(0) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                         Else
-                            'titelTeile(0) = repMessages.getmsg(160) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = anfText & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                         End If
                         titelTeile(1) = ""
@@ -2964,24 +2953,18 @@ Module Module1
                         titelTeile(1) = ""
                     End If
                 Else
+
                     ' jetzt muss das aus Kosten übernommen werden 
-                    'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_Summe.ToString("####0.") & " T€" & ")"
                     If auswahl = 1 Then
                         If Not IsNothing(vglProj) Then
-                            'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
-                            'titelTeile(0) = repmsg(2) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = repmsg(2) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                         Else
-                            'titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = repmsg(2) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                         End If
                     ElseIf auswahl = 2 Then
                         If Not IsNothing(vglProj) Then
-                            'titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " / " & vSum.ToString("####0.") & " T€" & ")"
-                            'titelTeile(0) = repmsg(5) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = repmsg(5) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
                         Else
-                            'titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("####0.") & " T€" & ")"
                             titelTeile(0) = repmsg(5) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
                         End If
                     Else
@@ -3007,7 +2990,7 @@ Module Module1
         Dim anzSpalten As Integer = plen + 1
         Dim anzRows As Integer = 0
 
-        With myWS
+        With curWS
 
             ' neu 
 
@@ -3049,7 +3032,7 @@ Module Module1
 
             End If
 
-            myRange = myWS.Range(.Cells(fZeile, 1), .Cells(fZeile + anzRows - 1, anzSpalten))
+            myRange = curWS.Range(.Cells(fZeile, 1), .Cells(fZeile + anzRows - 1, anzSpalten))
 
             ' Ende neu 
 
@@ -3062,28 +3045,28 @@ Module Module1
         Dim chkvalues4() As String
         Try
 
-            ReDim chkvalues1(plen - 1)
-            For ix As Integer = 0 To plen - 1
+            ReDim chkvalues1(plen)
+            For ix As Integer = 0 To plen
                 chkvalues1(ix) = CStr(myRange.Cells(1, ix + 1).value)
             Next
 
 
-            ReDim chkvalues2(plen - 1)
-            For ix As Integer = 0 To plen - 1
+            ReDim chkvalues2(plen)
+            For ix As Integer = 0 To plen
                 chkvalues2(ix) = CStr(myRange.Cells(2, ix + 1).value)
             Next
 
             If anzRows > 2 Then
 
-                ReDim chkvalues3(plen - 1)
-                For ix As Integer = 0 To plen - 1
+                ReDim chkvalues3(plen)
+                For ix As Integer = 0 To plen
                     chkvalues3(ix) = CStr(myRange.Cells(3, ix + 1).value)
                 Next
 
                 If anzRows > 3 Then
 
-                    ReDim chkvalues4(plen - 1)
-                    For ix As Integer = 0 To plen - 1
+                    ReDim chkvalues4(plen)
+                    For ix As Integer = 0 To plen
                         chkvalues4(ix) = CStr(myRange.Cells(4, ix + 1).value)
                     Next
                 End If
@@ -3093,33 +3076,19 @@ Module Module1
         End Try
         ' Ende Test tk 21.10.18 
 
-        Dim rangeString As String = "= '" & myWS.Name & "'!" & myRange.Address & ""
 
         Try
+            ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
+            Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
+            pptShape.Chart.SetSourceData(Source:=rangeString)
+
             With pptShape.Chart.ChartData
                 .Activate()
             End With
 
-            'pptShape.Chart.SetSourceData(Source:=rangeString)
-
         Catch ex As Exception
 
         End Try
-
-        'pptShape.Chart.ChartData.BreakLink()
-
-        pptShape.Chart.SetSourceData(Source:=rangeString)
-
-        ' jetzt muss der Test kommen 
-        'Try
-        '    If Not IsNothing(pptShape.Chart.ChartData) Then
-        '        With pptShape.Chart.ChartData
-        '            Call MsgBox("isLinked: " & .IsLinked.ToString)
-        '        End With
-        '    End If
-        'Catch ex As Exception
-
-        'End Try
 
         pptShape.Chart.Refresh()
 
@@ -4272,7 +4241,8 @@ Module Module1
 
     End Sub
 
-    ''' <summary>
+    ''' <summary>    ''' 
+    ''' im AddIn-Shutdown beendet ...
     ''' erzeugt eine verborgene Excel-Instanz, die verwendet werden kann, um PPT charts hin und her zu kopieren und damit die Referenz zu löschen, 
     ''' die verhindert, dass ein PPT Chart geupdated werden kann;
     ''' wenn das HiddenExcel bereits existiert wird nichts gemacht ... 
@@ -4280,57 +4250,40 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub createNewHiddenExcel()
 
-        Try
+        If IsNothing(updateWorkbook) Then
+            ' es wird auf jeden Fall eine neue, verborgene Excel-Instanz aufgemacht 
+            ' die wird dann beim Schliessen einer Presentation wieder beendet bzw. zugemacht 
 
-            xlApp = CreateObject("Excel.Application")
-            xlApp.Visible = False
+            Try
+                xlApp = CreateObject("Excel.Application")
+                xlApp.Visible = False
 
-        Catch ex As Exception
-            xlApp = Nothing
-            updateWorkbook = Nothing
-            Exit Sub
-        End Try
+                xlApp.Workbooks.Add()
 
-        'If IsNothing(updateWorkbook) Then
-        '    ' es wird auf jeden Fall eine neue, verborgene Excel-Instanz aufgemacht 
-        '    ' die wird dann beim Schliessen einer Presentation wieder beendet bzw. zugemacht 
-        '    Try
-        '        xlApp = CreateObject("Excel.Application")
-        '        xlApp.Visible = False
+                updateWorkbook = xlApp.ActiveWorkbook
+                With updateWorkbook
+                    .Worksheets.Item(1).name = hiddenExcelSheetName
+                End With
 
-        '        'xlApp.Workbooks.Add()
+            Catch ex As Exception
+                xlApp = Nothing
+                updateWorkbook = Nothing
+                Exit Sub
+            End Try
 
-        '        'updateWorkbook = xlApp.ActiveWorkbook
-        '        'With updateWorkbook
-        '        '    .Worksheets.Item(1).name = "visboupdate"
-        '        'End With
+            'Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
+            'If My.Computer.FileSystem.FileExists(fullPathName) Then
+            '    ' öffnen
+            '    xlApp.Workbooks.Open(fullPathName)
+            'Else
+            '    xlApp.Workbooks.Add()
+            '    xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+            'End If
 
-        '        'xlApp.ScreenUpdating = False
-        '        '' prüft, ob bereits Powerpoint geöffnet ist 
-        '        'xlApp = GetObject(, "Excel.Application")
-        '    Catch ex As Exception
-        '        xlApp = Nothing
-        '        updateWorkbook = Nothing
-        '        Exit Sub
-        '    End Try
 
-        '    Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
-
-        '    If My.Computer.FileSystem.FileExists(fullPathName) Then
-        '        ' öffnen
-        '        xlApp.Workbooks.Open(fullPathName)
-
-        '    Else
-        '        xlApp.Workbooks.Add()
-
-        '        xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-        '    End If
-
-        '    updateWorkbook = xlApp.ActiveWorkbook
-
-        'Else
-        '    ' existiert schon, also existiert auch xlApp bereits ...
-        'End If
+        Else
+            ' existiert schon, also existiert auch xlApp bereits ...
+        End If
 
     End Sub
     ''' <summary>
@@ -7888,6 +7841,9 @@ Module Module1
 
 
 
+    ''' <summary>
+    ''' löscht beim Beenden von Powerpoint die Hidden App wieder 
+    ''' </summary>
     Friend Sub closeExcelAPP()
         Try
 
@@ -7899,13 +7855,13 @@ Module Module1
                 xlApp.Quit()
             End If
 
-            Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
+            'Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
 
-            If My.Computer.FileSystem.FileExists(fullPathName) Then
-                ' löschen ...
-                My.Computer.FileSystem.DeleteFile(fullPathName)
+            'If My.Computer.FileSystem.FileExists(fullPathName) Then
+            '    ' löschen ...
+            '    My.Computer.FileSystem.DeleteFile(fullPathName)
 
-            End If
+            'End If
 
             updateWorkbook = Nothing
             Call Sleep(300)
