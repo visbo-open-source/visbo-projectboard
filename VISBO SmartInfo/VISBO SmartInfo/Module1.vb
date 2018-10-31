@@ -2260,7 +2260,6 @@ Module Module1
                             Dim vName As String = ""
                             Dim chartTyp As Integer = -1
                             Dim prcTyp As Integer = ptElementTypen.roles
-                            Dim ws As xlNS.Worksheet
 
                             ' der Chart-ObjectName enthält sehr viel ..
                             'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
@@ -2317,173 +2316,70 @@ Module Module1
 
                                     Try
 
-                                        Dim newWay As Boolean = True
-
-                                        ' hier wird nur was gemacht, wenn es nicht schon existiert 
                                         Call createNewHiddenExcel()
 
-                                        If Not IsNothing(updateWorkbook) Or newWay Then
+                                        If Not IsNothing(updateWorkbook) Then
 
+                                            ' jetzt muss das chtobj aktualisiert werden ... 
+                                            Try
+                                                Dim a As Integer = tsProj.dauerInDays
 
-                                            'ws = CType(updateWorkbook.Worksheets.Item(1), xlNS.Worksheet)
-                                            ' das Workbook wird aktiviert ... 
+                                                If prpfTyp = ptPRPFType.project Then
 
-                                            ' dann muss das Shape in Excel kopiert werden 
-                                            '  ??? ur:10.10.2018 
-                                            'pptShape.Copy()
-                                            'ws.Paste()
+                                                    If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
 
-                                            Dim anzCharts As Integer = 0
-                                            'If Not newWay Then
-                                            '    ws = pptCopychartPaste(pptShape, ws)
-                                            '    anzCharts = CType(ws.ChartObjects, Excel.ChartObjects).Count
-                                            'End If
+                                                        Call updatePPTBalkenOfProjectInPPT(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
+                                                        pptAPP.Activate()
 
-                                            If anzCharts > 0 Or newWay Then
+                                                    ElseIf chartTyp = PTprdk.PersonalBalken2 Or chartTyp = PTprdk.KostenBalken2 Then
 
-                                                'If Not newWay Then
-                                                '    newchtobj = CType(ws.ChartObjects(anzCharts), Excel.ChartObject)
-                                                'End If
+                                                        Call updatePPTBalkenOfProjectInPPT(tsProj, lProj, pptShape, prcTyp, auswahl, qualifier2)
+                                                        pptAPP.Activate()
 
+                                                    ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
+                                                        ' Aktualisieren der Personal- bzw. Kosten-Pies ...
 
-                                                If Not IsNothing(newchtobj) Or newWay Then
+                                                    ElseIf chartTyp = PTprdk.Ergebnis Then
+                                                        ' Aktualisieren des Ergebnis Charts 
+                                                        Call updatePPTProjektErgebnis(tsProj, newchtobj)
 
-                                                    ' jetzt muss das chtobj aktualisiert werden ... 
-                                                    Try
-                                                        Dim a As Integer = tsProj.dauerInDays
+                                                    ElseIf chartTyp = PTprdk.StrategieRisiko Or
+                                                            chartTyp = PTprdk.ZeitRisiko Or
+                                                            chartTyp = PTprdk.FitRisikoVol Or
+                                                            chartTyp = PTprdk.ComplexRisiko Then
+                                                        ' Aktualisieren der Strategie-Charts
 
-                                                        If prpfTyp = ptPRPFType.project Then
+                                                        Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
 
-                                                            If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
-                                                                If newWay Then
-                                                                    Call updatePPTBalkenOfProjectInPPT(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
-                                                                    'Call updatePPTBalkenOfProjectInPPT2(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
-                                                                    ' um den Fokus vom Chart wegzubekommen
-                                                                    pptAPP.Activate()
-                                                                Else
-                                                                    'Call updatePPTBalkenOfProject(tsProj, bProj, newchtobj, prcTyp, auswahl, qualifier2, ws)
-                                                                End If
+                                                    ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or
+                                                            chartTyp = PTprdk.SollIstPersonalkostenC Or
+                                                            chartTyp = PTprdk.SollIstSonstKostenC Or
+                                                            chartTyp = PTprdk.SollIstRolleC Or
+                                                            chartTyp = PTprdk.SollIstKostenartC Then
 
+                                                        ' Aktualisieren der Strategie-Charts
+                                                        Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, qualifier2, True)
 
-                                                            ElseIf chartTyp = PTprdk.PersonalBalken2 Or chartTyp = PTprdk.KostenBalken2 Then
-                                                                ' Aktualisieren der Personal- bzw. Kosten-Pies ...
-                                                                If newWay Then
-                                                                    Call updatePPTBalkenOfProjectInPPT2(tsProj, lProj, pptShape, prcTyp, auswahl, qualifier2)
-                                                                Else
-                                                                    'Call updatePPTBalkenOfProject(tsProj, lProj, newchtobj, prcTyp, auswahl, qualifier2, ws)
-                                                                End If
+                                                    ElseIf chartTyp = PTprdk.SollIstGesamtkostenC2 Or
+                                                            chartTyp = PTprdk.SollIstPersonalkostenC2 Or
+                                                            chartTyp = PTprdk.SollIstSonstKostenC2 Or
+                                                            chartTyp = PTprdk.SollIstRolleC2 Or
+                                                            chartTyp = PTprdk.SollIstKostenartC2 Then
+                                                        ' Aktualisieren der Strategie-Charts
+                                                        Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, lProj, auswahl, qualifier2, True)
 
-
-                                                            ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
-                                                                ' Aktualisieren der Personal- bzw. Kosten-Pies ...
-
-                                                            ElseIf chartTyp = PTprdk.Ergebnis Then
-                                                                ' Aktualisieren des Ergebnis Charts 
-                                                                Call updatePPTProjektErgebnis(tsProj, newchtobj)
-
-                                                            ElseIf chartTyp = PTprdk.StrategieRisiko Or
-                                                                chartTyp = PTprdk.ZeitRisiko Or
-                                                                chartTyp = PTprdk.FitRisikoVol Or
-                                                                chartTyp = PTprdk.ComplexRisiko Then
-                                                                ' Aktualisieren der Strategie-Charts
-
-                                                                Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
-
-                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or
-                                                                chartTyp = PTprdk.SollIstPersonalkostenC Or
-                                                                chartTyp = PTprdk.SollIstSonstKostenC Or
-                                                                chartTyp = PTprdk.SollIstRolleC Or
-                                                                chartTyp = PTprdk.SollIstKostenartC Then
-
-                                                                ' Aktualisieren der Strategie-Charts
-                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, qualifier2, True)
-
-                                                            ElseIf chartTyp = PTprdk.SollIstGesamtkostenC2 Or
-                                                                chartTyp = PTprdk.SollIstPersonalkostenC2 Or
-                                                                chartTyp = PTprdk.SollIstSonstKostenC2 Or
-                                                                chartTyp = PTprdk.SollIstRolleC2 Or
-                                                                chartTyp = PTprdk.SollIstKostenartC2 Then
-                                                                ' Aktualisieren der Strategie-Charts
-                                                                Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, lProj, auswahl, qualifier2, True)
-
-                                                            End If
-
-
-
-                                                        ElseIf prpfTyp = ptPRPFType.portfolio Then
-
-                                                        End If
-
-                                                    Catch ex As Exception
-                                                        Call MsgBox(ex.Message)
-                                                    End Try
-
-
-                                                End If
-
-                                                If newWay Then
-                                                    ' fertig !? 
-                                                Else
-
-                                                    ' dann muss das Excel-Shape wieder zurück in PPT kopiert werden 
-                                                    Dim newShapeRange As PowerPoint.ShapeRange = Nothing
-                                                    newShapeRange = chartCopypptPaste(newchtobj, currentSlide)
-
-                                                    Dim newPPTShape As PowerPoint.Shape = newShapeRange.Item(1)
-
-                                                    ' Test , ob der Link noch da ist
-                                                    'Try
-
-                                                    '    Dim data As PowerPoint.ChartData = newPPTShape.Chart.ChartData
-                                                    '    If Not IsNothing(data) Then
-                                                    '        With data
-                                                    '            Call MsgBox("islinked: " & .IsLinked.ToString & " WB-Name: " & CType(.Workbook, Excel.Workbook).Name)
-                                                    '        End With
-                                                    '    End If
-
-                                                    'Catch ex As Exception
-                                                    '    Call MsgBox(ex.Message)
-                                                    'End Try
-
-                                                    ' End Test 20.10.18
-
-                                                    ' dann mus das Powerpoint Shape aktualisiert werden ...
-                                                    With newPPTShape
-                                                        .Top = pptShape.Top
-                                                        .Left = pptShape.Left
-                                                        .Height = pptShape.Height
-                                                        .Width = pptShape.Width
-                                                        .Name = pptShape.Name
-                                                        .Tags.Add("CHON", pptShape.Tags("CHON"))
-                                                        .Tags.Add("PNM", pptShape.Tags("PNM"))
-                                                        If showOtherVariant Then
-                                                            .Tags.Add("VNM", vName)
-                                                        Else
-                                                            .Tags.Add("VNM", pptShape.Tags("VNM"))
-                                                        End If
-
-                                                        .Tags.Add("CHT", pptShape.Tags("CHT"))
-                                                        .Tags.Add("ASW", pptShape.Tags("ASW"))
-                                                        .Tags.Add("COL", pptShape.Tags("COL"))
-                                                        .Tags.Add("UPDT", "TRUE")
-                                                        .Tags.Add("BID", pptShape.Tags("BID"))
-                                                        .Tags.Add("DID", pptShape.Tags("DID"))
-                                                        .Tags.Add("Q1", pptShape.Tags("Q1"))
-                                                        .Tags.Add("Q2", pptShape.Tags("Q2"))
-                                                    End With
-
-                                                    ' das Original Shape wird gelöscht und das neue tritt an seine Stelle ... 
-                                                    ' sowohl newChtobj als auch das late Powerpoint Shape ... 
-                                                    If Not IsNothing(newchtobj) Then
-                                                        newchtobj.Delete()
                                                     End If
-                                                    pptShape.Delete()
+
+
+
+                                                ElseIf prpfTyp = ptPRPFType.portfolio Then
 
                                                 End If
 
+                                            Catch ex As Exception
+                                                Call MsgBox(ex.Message)
+                                            End Try
 
-
-                                            End If
                                         Else
 
                                         End If
@@ -2498,8 +2394,6 @@ Module Module1
                         End If
 
                     End If
-
-
 
 
                 ElseIf bigType = ptReportBigTypes.components Or
@@ -3038,43 +2932,46 @@ Module Module1
 
         End With
 
+        '
         ' Test tk 21.10.18
-        Dim chkvalues1() As String
-        Dim chkvalues2() As String
-        Dim chkvalues3() As String
-        Dim chkvalues4() As String
-        Try
+        'Dim chkvalues1() As String
+        'Dim chkvalues2() As String
+        'Dim chkvalues3() As String
+        'Dim chkvalues4() As String
+        'Try
 
-            ReDim chkvalues1(plen)
-            For ix As Integer = 0 To plen
-                chkvalues1(ix) = CStr(myRange.Cells(1, ix + 1).value)
-            Next
+        '    ReDim chkvalues1(plen)
+        '    For ix As Integer = 0 To plen
+        '        chkvalues1(ix) = CStr(myRange.Cells(1, ix + 1).value)
+        '    Next
 
 
-            ReDim chkvalues2(plen)
-            For ix As Integer = 0 To plen
-                chkvalues2(ix) = CStr(myRange.Cells(2, ix + 1).value)
-            Next
+        '    ReDim chkvalues2(plen)
+        '    For ix As Integer = 0 To plen
+        '        chkvalues2(ix) = CStr(myRange.Cells(2, ix + 1).value)
+        '    Next
 
-            If anzRows > 2 Then
+        '    If anzRows > 2 Then
 
-                ReDim chkvalues3(plen)
-                For ix As Integer = 0 To plen
-                    chkvalues3(ix) = CStr(myRange.Cells(3, ix + 1).value)
-                Next
+        '        ReDim chkvalues3(plen)
+        '        For ix As Integer = 0 To plen
+        '            chkvalues3(ix) = CStr(myRange.Cells(3, ix + 1).value)
+        '        Next
 
-                If anzRows > 3 Then
+        '        If anzRows > 3 Then
 
-                    ReDim chkvalues4(plen)
-                    For ix As Integer = 0 To plen
-                        chkvalues4(ix) = CStr(myRange.Cells(4, ix + 1).value)
-                    Next
-                End If
-            End If
-        Catch ex As Exception
+        '            ReDim chkvalues4(plen)
+        '            For ix As Integer = 0 To plen
+        '                chkvalues4(ix) = CStr(myRange.Cells(4, ix + 1).value)
+        '            Next
+        '        End If
+        '    End If
+        'Catch ex As Exception
 
-        End Try
+        'End Try
+        '
         ' Ende Test tk 21.10.18 
+        '
 
 
         Try
