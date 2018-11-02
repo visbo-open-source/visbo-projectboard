@@ -784,7 +784,7 @@ Module Module1
                     '' jetzt die CurrentSlide setzen , denn evtl kommt man ja gar nicht in pptAPP_UpdateOneSlide
                     currentSlide = SldRange.Item(1)
 
-                    If beforeSlideKennung <> afterSlideKennung Then
+                    If beforeSlideKennung <> afterSlideKennung Or smartSlideLists.countProjects = 0 Then
                         Call pptAPP_AufbauSmartSlideLists(SldRange.Item(1))
 
                         If varPPTTM.ContainsKey(key) Then

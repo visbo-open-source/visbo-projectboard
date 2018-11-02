@@ -7271,6 +7271,528 @@ Public Module Projekte
 
     End Sub
 
+    Public Sub createCostBalkenOfProjectInPPT2(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                              ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
+                                              ByVal auswahl As Integer, ByVal chartContainer As PowerPoint.Shape,
+                                              ByVal DID As Integer, ByVal qualifier As String, ByVal qualifier2 As String)
+
+
+        Dim titleFontSize As Single = 14
+        If chartContainer.HasTextFrame = core.MsoTriState.msoTrue Then
+            titleFontSize = chartContainer.TextFrame2.TextRange.Font.Size
+        End If
+
+
+
+        Dim top As Single = chartContainer.Top
+        Dim left As Single = chartContainer.Left
+        Dim height As Single = chartContainer.Height
+        Dim width As Single = chartContainer.Width
+
+        Dim currentPresentation As PowerPoint.Presentation = pptAppl.Presentations.Item(presentationName)
+        Dim currentSlide As PowerPoint.Slide = currentPresentation.Slides.Item(currentSlideName)
+
+
+        ' jetzt wird das Chart erzeugt ...
+
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
+
+        Dim plen As Integer
+
+        Dim Xdatenreihe() As String
+        Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
+        Dim vdatenreihe() As Double
+        Dim vSum As Double = 0.0
+        Dim gesamt_summe As Double
+        Dim anzKostenarten As Integer
+
+        Dim pkIndex As Integer = CostDefinitions.Count
+        Dim pstart As Integer
+
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+        Dim tmpcollection As New Collection
+
+
+        Dim found As Boolean = False
+
+
+        Dim ErgebnisListeK As Collection
+
+
+        Dim pname As String = hproj.name
+
+        '
+        ' die Kennung für das Chart erstellen ...
+        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+
+        ' chg: hier muss Kostenarten und Ressourcen unterschieden werden ..
+        kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
+
+
+        '
+        ' hole die Projektdauer
+        '
+        With hproj
+            plen = .anzahlRasterElemente
+            pstart = .Start
+        End With
+
+        If Not IsNothing(vglProj) Then
+            If plen < vglProj.anzahlRasterElemente Then
+                plen = vglProj.anzahlRasterElemente
+            End If
+        End If
+        '
+        ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
+        '
+
+        ' chg: hier muss Kostenarten und Ressourcen unterschieden werden ..
+        ErgebnisListeK = hproj.getCostNames
+        anzKostenarten = ErgebnisListeK.Count
+
+
+        ReDim Xdatenreihe(plen - 1)
+        ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
+        ReDim vdatenreihe(plen - 1)
+
+        For i As Integer = 1 To plen
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
+        Next i
+
+
+        Dim ik As Integer = 1 ' wird für die Unterscheidung benötigt, ob mit Personal-Kosten oder ohne 
+        gesamt_summe = 0
+
+
+        ' hier werden die Werte-Arrays für die einzelnen Chart-Elemente / SeriesCollectiuon gesetzt 
+        ' chg: hier muss Kostenarten und Ressourcen unterschieden werden ..
+        If auswahl = 1 Then
+            tdatenreihe = hproj.getGesamtAndereKosten
+        Else
+            tdatenreihe = hproj.getGesamtKostenBedarf
+        End If
+
+        gesamt_summe = tdatenreihe.Sum
+
+        ' die Betrachtung der Ist-Daten versus Prognose Daten ...
+        ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
+
+        Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
+
+        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+        Dim actualdataIndex As Integer = -1
+
+        If considerIstDaten Then
+
+            Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+            actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+            ' die Prognose Daten bereinigen
+            For ix As Integer = 0 To actualdataIndex
+                prognoseDatenReihe(ix) = 0
+            Next
+
+            For ix = actualdataIndex + 1 To plen - 1
+                istDatenReihe(ix) = 0
+            Next
+
+        End If
+
+        If Not IsNothing(vglProj) Then
+            If auswahl = 1 Then
+                vdatenreihe = vglProj.getGesamtAndereKosten
+            Else
+                vdatenreihe = vglProj.getGesamtKostenBedarf
+            End If
+            vSum = vdatenreihe.Sum
+
+        End If
+
+
+        ' chg: hier muss Kostenarten und Ressourcen unterschieden werden ..
+        If auswahl = 1 Then
+            ' tk 12.6.17 
+            If Not IsNothing(vglProj) Then
+                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
+            Else
+                titelTeile(0) = repMessages.getmsg(165) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
+            End If
+
+            titelTeilLaengen(0) = titelTeile(0).Length
+            Dim maxlenTitle1 As Integer = 20
+            titelTeile(1) = ""
+
+            titelTeilLaengen(1) = titelTeile(1).Length
+            diagramTitle = titelTeile(0) & titelTeile(1)
+            'kennung = "Personalbedarf"
+        ElseIf auswahl = 2 Then
+            ' tk 12.6.17
+
+            If Not IsNothing(vglProj) Then
+                'titelTeile(0) = repMessages.getmsg(166) & " (" & vSum.ToString("####0.") & " / " & gesamt_summe.ToString("####0.") & " T€" & ")"
+                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("##,##0.") & " / " & vSum.ToString("##,##0.") & " T€" & ")"
+            Else
+                titelTeile(0) = repMessages.getmsg(166) & " (" & gesamt_summe.ToString("##,##0.") & " T€" & ")"
+            End If
+
+            titelTeilLaengen(0) = titelTeile(0).Length
+            titelTeile(1) = ""
+            titelTeilLaengen(1) = titelTeile(1).Length
+            diagramTitle = titelTeile(0) & titelTeile(1)
+
+        Else
+            diagramTitle = "--- (T€)" & vbLf & pname
+            'kennung = "Gesamtkosten"
+        End If
+
+        ' Ende der Werte Bestimmung 
+
+        Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
+                                                                           Width:=width, Height:=height)
+
+        newPPTChart.Name = kennung
+
+        ' ---- ab hier das Setzen der Values per Setsource Data 
+        Dim myRange As Excel.Range = Nothing
+        Dim myWB As Excel.Workbook = Nothing
+        Dim myWS As Excel.Worksheet = Nothing
+
+        Dim usedRange As Excel.Range = Nothing
+        Dim fZeile As Integer = 1
+        Dim anzSpalten As Integer = 1
+        Dim anzRows As Integer = 0
+
+
+
+        ' das ist der entscheidende Befehl ... 
+        ' Prüfung am 1.11.18 ergab: das wird bereits mit addChart gemacht 
+        'With newPPTChart.Chart.ChartData
+        '    .Activate()
+        'End With
+
+
+        ' jetzt kommt das Löschen der alten SeriesCollections . . 
+        With newPPTChart.Chart
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+        End With
+
+        With newPPTChart.Chart
+
+            ' jetzt kommt der Neu-Aufbau der Series-Collections
+            If considerIstDaten Then
+
+                Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+                actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+                ' die Prognose Daten bereinigen
+                For ix As Integer = 0 To actualdataIndex
+                    prognoseDatenReihe(ix) = 0
+                Next
+
+                For ix = actualdataIndex + 1 To plen - 1
+                    istDatenReihe(ix) = 0
+                Next
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+                End With
+
+
+            End If
+
+
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                .Interior.Color = visboFarbeBlau
+                .Values = prognoseDatenReihe
+                .XValues = Xdatenreihe
+                .ChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            End With
+
+            If Not IsNothing(vglProj) Then
+                If auswahl = 1 Then
+                    vdatenreihe = vglProj.getGesamtAndereKosten
+                Else
+                    vdatenreihe = vglProj.getGesamtKostenBedarf
+                End If
+                vSum = vdatenreihe.Sum
+
+                'series
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    With .Format.Line
+                        .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                        .ForeColor.RGB = visboFarbeOrange
+                        .Weight = 4
+                    End With
+                End With
+
+            End If
+
+        End With
+        ' Ende Neu-Aufbau der Series-Collections
+
+
+        '' Anfang des Aufbaus für 
+        'myWB = CType(newPPTChart.Chart.ChartData.Workbook, Excel.Workbook)
+        'myWS = CType(myWB.ActiveSheet, Excel.Worksheet)
+
+        '    usedRange = myWS.UsedRange
+        '    fZeile = CType(myWB.ActiveSheet.usedRange, Excel.Range).Rows.Count + 1
+        '    anzSpalten = plen + 1
+        '    anzRows = 0
+
+        '    With myWS
+
+        '        ' neu 
+
+        '        .Cells(fZeile, 1).value = ""
+        '        .Range(.Cells(fZeile, 2), .Cells(fZeile, anzSpalten)).Value = Xdatenreihe
+
+        '        If considerIstDaten Then
+
+        '            anzRows = 3
+
+        '            .Cells(fZeile + 1, 1).value = repMessages.getmsg(194)
+        '            .Range(.Cells(fZeile + 1, 2), .Cells(fZeile + 1, anzSpalten)).Value = istDatenReihe
+
+        '            .Cells(fZeile + 2, 1).value = repMessages.getmsg(38)
+        '            .Range(.Cells(fZeile + 2, 2), .Cells(fZeile + 2, anzSpalten)).Value = prognoseDatenReihe
+
+        '            If Not IsNothing(vglProj) Then
+
+        '                anzRows = 4
+        '                .Cells(fZeile + 3, 1).value = repMessages.getmsg(43)
+        '                .Range(.Cells(fZeile + 3, 2), .Cells(fZeile + 3, anzSpalten)).Value = vdatenreihe
+
+        '            End If
+
+        '        Else
+
+        '            anzRows = 2
+
+        '            .Cells(fZeile + 1, 1).value = repMessages.getmsg(38)
+        '            .Range(.Cells(fZeile + 1, 2), .Cells(fZeile + 1, anzSpalten)).Value = prognoseDatenReihe
+
+        '            If Not IsNothing(vglProj) Then
+        '                anzRows = 3
+
+        '                .Cells(fZeile + 2, 1).value = repMessages.getmsg(43)
+        '                .Range(.Cells(fZeile + 2, 2), .Cells(fZeile + 2, anzSpalten)).Value = vdatenreihe
+
+        '            End If
+
+        '        End If
+
+        '        myRange = myWS.Range(.Cells(fZeile, 1), .Cells(fZeile + anzRows - 1, anzSpalten))
+
+        '        ' Ende neu 
+
+        '    End With
+
+
+
+        '    ' tk 21.10.18
+        '    ' jetzt wird myRange gesetzt und setSourceData gesetzt 
+
+        '    '
+        '    ' Test tk 21.10.18
+        '    Dim chkvalues1() As String
+        'Dim chkvalues2() As String
+        'Dim chkvalues3() As String
+        'Dim chkvalues4() As String
+        'Try
+
+        '    ReDim chkvalues1(plen)
+        '    For ix As Integer = 0 To plen
+        '        chkvalues1(ix) = CStr(myRange.Cells(1, ix + 1).value)
+        '    Next
+
+
+        '    ReDim chkvalues2(plen)
+        '    For ix As Integer = 0 To plen
+        '        chkvalues2(ix) = CStr(myRange.Cells(2, ix + 1).value)
+        '    Next
+
+        '    If anzRows > 2 Then
+
+        '        ReDim chkvalues3(plen)
+        '        For ix As Integer = 0 To plen
+        '            chkvalues3(ix) = CStr(myRange.Cells(3, ix + 1).value)
+        '        Next
+
+        '        If anzRows > 3 Then
+
+        '            ReDim chkvalues4(plen)
+        '            For ix As Integer = 0 To plen
+        '                chkvalues4(ix) = CStr(myRange.Cells(4, ix + 1).value)
+        '            Next
+        '        End If
+        '    End If
+        'Catch ex As Exception
+
+        'End Try
+        ''
+        '' Ende Test tk 21.10.18 
+        ''
+
+        'Dim rangeString As String = "= '" & myWS.Name & "'!" & myRange.Address & ""
+
+
+        'newPPTChart.Chart.SetSourceData(Source:=rangeString)
+
+        '
+        ' ---- ab hier Achsen und Überschrift setzen 
+
+        With CType(newPPTChart.Chart, PowerPoint.Chart)
+            '
+            .HasAxis(PowerPoint.XlAxisType.xlCategory) = True
+            .HasAxis(PowerPoint.XlAxisType.xlValue) = True
+
+            .SetElement(core.MsoChartElementType.msoElementPrimaryValueAxisShow)
+
+            Try
+                With CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
+
+                    .HasTitle = False
+
+                    If titleFontSize - 4 >= 6 Then
+                        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
+                    Else
+                        .Format.TextFrame2.TextRange.Font.Size = 6
+                    End If
+
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+
+                    .HasTitle = False
+                    .MinimumScale = 0
+
+                    If titleFontSize - 4 >= 6 Then
+                        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
+                    Else
+                        .Format.TextFrame2.TextRange.Font.Size = 6
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .HasLegend = True
+                With .Legend
+                    .Position = PowerPoint.XlLegendPosition.xlLegendPositionTop
+
+                    If titleFontSize - 4 >= 6 Then
+                        .Font.Size = titleFontSize - 4
+                    Else
+                        .Font.Size = 6
+                    End If
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            .HasTitle = True
+            .ChartTitle.Text = " " ' Platzhalter 
+
+        End With
+
+        '
+        '' ---- ab hier die SeriesCollection setzen 
+        'If considerIstDaten Then
+        '    ' die Istdaten ... 
+        '    With CType(CType(CType(newPPTChart.Chart, PowerPoint.Chart).SeriesCollection, PowerPoint.SeriesCollection).Item(1), PowerPoint.Series)
+        '        .Interior.Color = awinSettings.SollIstFarbeArea
+        '        .ChartType = core.XlChartType.xlColumnStacked
+        '    End With
+
+        '    ' die Prognose-Daten ... 
+        '    With CType(CType(CType(newPPTChart.Chart, PowerPoint.Chart).SeriesCollection, PowerPoint.SeriesCollection).Item(2), PowerPoint.Series)
+        '        .Interior.Color = visboFarbeBlau
+        '        .ChartType = core.XlChartType.xlColumnStacked
+        '    End With
+
+        '    If Not IsNothing(vglProj) Then
+        '        With CType(CType(CType(newPPTChart.Chart, PowerPoint.Chart).SeriesCollection, PowerPoint.SeriesCollection).Item(3), PowerPoint.Series)
+        '            .ChartType = core.XlChartType.xlLine
+        '            With .Format.Line
+        '                .DashStyle = core.MsoLineDashStyle.msoLineDash
+        '                .ForeColor.RGB = visboFarbeOrange
+        '                .Weight = 4
+        '            End With
+        '        End With
+        '    End If
+        'Else
+        '    ' nur die Prognose-Daten ... 
+        '    With CType(CType(CType(newPPTChart.Chart, PowerPoint.Chart).SeriesCollection, PowerPoint.SeriesCollection).Item(1), PowerPoint.Series)
+        '        .Interior.Color = visboFarbeBlau
+        '        .ChartType = core.XlChartType.xlColumnStacked
+        '    End With
+
+        '    If Not IsNothing(vglProj) Then
+        '        With CType(CType(CType(newPPTChart.Chart, PowerPoint.Chart).SeriesCollection, PowerPoint.SeriesCollection).Item(2), PowerPoint.Series)
+        '            .ChartType = core.XlChartType.xlLine
+        '            With .Format.Line
+        '                .DashStyle = core.MsoLineDashStyle.msoLineDash
+        '                .ForeColor.RGB = visboFarbeOrange
+        '                .Weight = 4
+        '            End With
+        '        End With
+        '    End If
+        'End If
+
+        ' 
+        ' ---- hier dann final den Titel setzen 
+        With newPPTChart.Chart
+            .HasTitle = True
+            .ChartTitle.Text = diagramTitle
+            .ChartTitle.Font.Size = titleFontSize
+            .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
+                    titelTeilLaengen(1)).Font.Size = titleFontSize - 2
+        End With
+
+        newPPTChart.Chart.Refresh()
+
+        '
+        ' jetzt werden die Smart-Infos an das Chart angehängt ...
+        Dim bigtype As Integer = ptReportBigTypes.charts
+        Call addSmartPPTShapeInfo2(newPPTChart, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                                               bigtype, DID)
+
+
+    End Sub
+
     ''' <summary>
     ''' auswahl = 1: sonstige Kosten werden gezeigt 
     ''' auswahl = 2: Gesamtkosten werden gezeigt 
