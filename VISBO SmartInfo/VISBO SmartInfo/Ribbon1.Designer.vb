@@ -253,7 +253,6 @@
         '
         'settingsTab
         '
-        Me.settingsTab.Enabled = False
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
