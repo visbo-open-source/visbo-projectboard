@@ -1,5 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
-Imports MongoDbAccess
+Imports DBAccLayer
 Public Class frmCreateNewVariant
 
     Public multiSelect As Boolean = False
@@ -61,14 +61,15 @@ Public Class frmCreateNewVariant
         If isValidVariantName(Me.newVariant.Text) Then
             key = calcProjektKey(Me.projektName.Text, Me.newVariant.Text)
 
-            If Not noDB Then
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If request.pingMongoDb() Then
+            If Not noDB Then
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     If Not _
-                    (request.projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) Or
-                     AlleProjekte.Containskey(key)) Then
+                       (CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) _
+                       Or AlleProjekte.Containskey(key)) Then
 
                         ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden
                         ok = True
@@ -87,9 +88,13 @@ Public Class frmCreateNewVariant
                 Else
                     Dim msgTxt As String
                     If awinSettings.englishLanguage Then
+
+
                         msgTxt = "Datenbank- Verbindung ist unterbrochen!"
                     Else
                         msgTxt = "no database connection!"
+
+
                     End If
                     Call MsgBox(msgTxt)
 

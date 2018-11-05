@@ -105,24 +105,33 @@ namespace MongoDbAccess
             {
 
                 //var connectionString = "mongodb://" + databaseURL + "?connectTimeoutMS=30&SocketTimeoutMS=10";
-                var connectionString = "mongodb://" + databaseURL; 
+                //var connectionString = "mongodb://" + databaseURL; 
 
-                //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
+                //var connectionString = "mongodb://@ds034198.mlab.com:34198";
+                var connectionString = "mongodb://ute:Mopsi@cluster0-shard-00-00-5rtga.mongodb.net:27017,cluster0-shard-00-01-5rtga.mongodb.net:27017,cluster0-shard-00-02-5rtga.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
+                //var connectionString = "mongodb://ute:test@cluster0-shard-00-00-kpmhq.mongodb.net:27017,cluster0-shard-00-01-kpmhq.mongodb.net:27017,cluster0-shard-00-02-kpmhq.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
                 Client = new MongoClient(connectionString);
             }
             else
             {
+                
+
+
+                // wird nicht mehr verwendet , führt ggf zu Problemen bei zu schnellem Timeout 
+                // var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
+
+
                 var connectionString = "";
                 
                 if (Module1.awinSettings.DBWithSSL)
                 {
-                     connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "? ssl = true";
+                     connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?ssl=true";
                 }
                 else
                 {
                      connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
-                }
-                                
+                }                
+                
 
                 Client = new MongoClient(connectionString);
                      
@@ -377,6 +386,7 @@ namespace MongoDbAccess
 
             var sort = Builders<clsProjektDB>.Sort.Descending("timestamp");
 
+
             try
             {
                 result = CollectionProjects.Find(filter).Sort(sort).ToList().Last();
@@ -520,6 +530,8 @@ namespace MongoDbAccess
             }
             else
             {
+                //var projektID = "";
+                //projektID = result.vpid.ToString;
                 var projekt = new clsProjekt();
                 result.copyto(ref projekt);
                 int a = projekt.dauerInDays;
@@ -618,6 +630,8 @@ namespace MongoDbAccess
 
                 
             }
+
+            result.buildTopNodes();
 
             return result;
         }
@@ -1196,6 +1210,8 @@ namespace MongoDbAccess
             // in der Datenbank sind die Zeiten als Universal time gespeichert .. 
             // deshalb muss hier umgerechnet werden 
             storedatOrBefore = storedatOrBefore.ToUniversalTime();
+            zeitraumStart = zeitraumStart.ToUniversalTime();
+            zeitraumEnde = zeitraumEnde.ToUniversalTime();
             
             
             int startMonat = (int)DateAndTime.DateDiff(DateInterval.Month, Module1.StartofCalendar, zeitraumStart) + 1;
@@ -1268,6 +1284,8 @@ namespace MongoDbAccess
             // deshalb muss hier umgerechnet werden 
             storedLatest = storedLatest.ToUniversalTime();
             storedEarliest = storedEarliest.ToUniversalTime();
+            zeitraumStart = zeitraumStart.ToUniversalTime();
+            zeitraumEnde = zeitraumEnde.ToUniversalTime();
 
             if (onlyLatest)
             {
@@ -1390,21 +1408,15 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// 
+        /// holt Projekt-Namen über Angabe der Projekt-Nummer beim Kunden; 
+        /// kann Null, ein oder mehrere Ergebnis-Einträge enthalten; Liste kommt sortiert nach Projekt-Namen zurück
         /// </summary>
         /// <param name="pNR"></param>
         /// <returns></returns>
         public Collection retrieveProjectNamesByPNRFromDB(string pNR)
         {
             var result = new Collection();
-
             
-            //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
-            //var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
-            //               where e.name.Contains(searchstr)
-            //               select e.variantName
-            //               .Distinct();
-
 
             var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
                             .Where(c => c.kundenNummer == pNR)
@@ -1541,6 +1553,8 @@ namespace MongoDbAccess
         public bool storeRoleDefinitionToDB(clsRollenDefinition role, bool insertNewDate, DateTime ts)
         {
             bool tmpResult = true;
+            ts = ts.ToUniversalTime();
+
             try
             {
                 var roleDB = new clsRollenDefinitionDB();
@@ -1639,6 +1653,8 @@ namespace MongoDbAccess
         public bool storeCostDefinitionToDB(clsKostenartDefinition cost, bool insertNewDate, DateTime ts)
         {
             bool tmpResult = true;
+            ts = ts.ToUniversalTime();
+
             try
             {
                 var costDefDB = new clsKostenartDefinitionDB();

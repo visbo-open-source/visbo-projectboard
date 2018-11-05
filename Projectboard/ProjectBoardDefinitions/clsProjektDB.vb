@@ -1,4 +1,7 @@
 ﻿''' <summary>
+''' Vorsicht !!! 
+''' bei allen Änderungen in clsProjektDB und in clsPhaseDB, da für den ReST-Server-Zugriff separate Klassen existieren, die aber fast gleich sind.
+''' 
 ''' Klassen-Definition für ein Projekt-Dokument in MongoDB
 ''' benötigt Klassen-Definitionen clsPhaseDB, clsRolleDB, clsKostenartDB, clsHierarchyDB, clsHierarchyNodeDB, clsResultDB
 ''' </summary>
@@ -6,6 +9,9 @@
 Public Class clsProjektDB
 
     Public name As String
+    ' Änderung ur: vpid wird für VisualBoard als Web-Anwendung benötigt. 
+    '              Im vc sind VisboProjekte enthalten, die über vpid eindeutig vorhandene Projekte referenziert sind.
+    'Public vpid As Object
     Public variantName As String
     Public variantDescription As String
     Public Risiko As Double

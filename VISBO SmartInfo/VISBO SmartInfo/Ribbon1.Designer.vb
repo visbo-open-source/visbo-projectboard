@@ -52,7 +52,7 @@
         Me.btnDate = Me.Factory.CreateRibbonButton
         Me.btnFastForward = Me.Factory.CreateRibbonButton
         Me.btnEnd2 = Me.Factory.CreateRibbonButton
-        Me.btnPrevious = Me.Factory.CreateRibbonButton
+        Me.btnToggle = Me.Factory.CreateRibbonButton
         Me.Group4 = Me.Factory.CreateRibbonGroup
         Me.btnShowChanges = Me.Factory.CreateRibbonButton
         Me.activateSearch = Me.Factory.CreateRibbonButton
@@ -110,7 +110,7 @@
         Me.Group3.Items.Add(Me.btnDate)
         Me.Group3.Items.Add(Me.btnFastForward)
         Me.Group3.Items.Add(Me.btnEnd2)
-        Me.Group3.Items.Add(Me.btnPrevious)
+        Me.Group3.Items.Add(Me.btnToggle)
         Me.Group3.Label = "Time Machine"
         Me.Group3.Name = "Group3"
         '
@@ -170,14 +170,16 @@
         Me.btnEnd2.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks and VISBO charts " &
     "and tables  are synchronized with the latest version in the database; "
         '
-        'btnPrevious
+        'btnToggle
         '
-        Me.btnPrevious.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
-        Me.btnPrevious.Image = Global.VISBO_SmartInfo.My.Resources.Resources.undo
-        Me.btnPrevious.Label = "Previous"
-        Me.btnPrevious.Name = "btnPrevious"
-        Me.btnPrevious.ShowImage = True
-        Me.btnPrevious.SuperTip = resources.GetString("btnPrevious.SuperTip")
+        Me.btnToggle.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge
+        Me.btnToggle.Image = Global.VISBO_SmartInfo.My.Resources.Resources.undo
+        Me.btnToggle.Label = "Toggle"
+        Me.btnToggle.Name = "btnToggle"
+        Me.btnToggle.ShowImage = True
+        Me.btnToggle.SuperTip = "all plan-elements of the VISBO report such as milestones, tasks, VISBO charts and" &
+    " tables  are synchronized. With this button you may toggle two versions in the d" &
+    "atabase"
         '
         'Group4
         '
@@ -251,7 +253,6 @@
         '
         'settingsTab
         '
-        Me.settingsTab.Enabled = False
         Me.settingsTab.Label = "Settings"
         Me.settingsTab.Name = "settingsTab"
         '
@@ -311,7 +312,18 @@
 
     Private Sub Ribbon1_Close(sender As Object, e As EventArgs) Handles Me.Close
 
-        My.Settings.Save()
+        Try
+            My.Settings.Save()
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            Call closeExcelAPP()
+        Catch ex As Exception
+
+        End Try
+
     End Sub
 
     Friend WithEvents Button1 As Microsoft.Office.Tools.Ribbon.RibbonButton
@@ -322,7 +334,7 @@
     Friend WithEvents activateInfo As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents activateTab As Microsoft.Office.Tools.Ribbon.RibbonButton
     Friend WithEvents btnFreeze As Microsoft.Office.Tools.Ribbon.RibbonButton
-    Friend WithEvents btnPrevious As Microsoft.Office.Tools.Ribbon.RibbonButton
+    Friend WithEvents btnToggle As Microsoft.Office.Tools.Ribbon.RibbonButton
 End Class
 
 Partial Class ThisRibbonCollection

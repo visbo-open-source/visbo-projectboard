@@ -1,7 +1,7 @@
 ﻿Imports ClassLibrary1
 Imports ProjectBoardDefinitions
 Imports System.Math
-Imports MongoDbAccess
+Imports DBAccLayer
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
@@ -82,7 +82,7 @@ Public Class frmSelectRPlanImport
     Private Sub importRPLAN_Click(sender As Object, e As EventArgs) Handles importRPLAN.Click
 
         If Not noDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         End If
 
         Dim vglName As String = " "

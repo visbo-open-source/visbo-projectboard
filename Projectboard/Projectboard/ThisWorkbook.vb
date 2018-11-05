@@ -248,9 +248,9 @@ Public Class ThisWorkbook
 
 
                 If Not noDB Then
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    If request.pingMongoDb() And AlleProjekte.Count > 0 Then
+
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
                         returnValue = projektespeichern.ShowDialog
 
                         If returnValue = DialogResult.Yes Then
@@ -274,7 +274,7 @@ Public Class ThisWorkbook
 
                     If Not cancelAbbruch Then
                         ' die temporären Schutz
-                        If request.cancelWriteProtections(dbUsername) Then
+                        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
                             If awinSettings.visboDebug Then
                                 Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
                             End If

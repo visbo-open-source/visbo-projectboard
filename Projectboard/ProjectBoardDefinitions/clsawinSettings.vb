@@ -237,12 +237,16 @@ Public Class clsawinSettings
     Public Property useHierarchy As Boolean
 
     Public Property visboDebug As Boolean
+
     ' wird für den Import von Excel Projekt-Dateien benötigt 
     Public Property importSettings As String()
 
     ' wird für den Import der Allianz Delete Roles im Import Type 2 benötigt
     ' gibt an , welche Rollen gelöscht werden sollen, bevor die anderen importiert werden 
     Public Property allianzI2DelRoles As String = ""
+
+    Public Property visboServer As Boolean
+
 
     ' das ist ein Setting, das bewirkt, das zu jedem Projekt das ActualDataDate auf einen Monat vor dem aktuellem Timestamp gesetzt wird
     ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
@@ -401,7 +405,7 @@ Public Class clsawinSettings
         _isChangePortfolioFrmActive = False
 
         _visboDebug = False
-
+        _visboServer = False
 
 
 

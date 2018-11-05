@@ -1,5 +1,5 @@
 ﻿''' <summary>
-''' Klassen Definition für einen Meilenstein  
+''' Klassen Definition für einen Meilenstein  in der MongoDB
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsResultDB
@@ -38,7 +38,7 @@ Public Class clsResultDB
     End Property
 
 
-    Friend Sub CopyTo(ByRef newResult As clsMeilenstein)
+    Public Sub CopyTo(ByRef newResult As clsMeilenstein)
         Dim i As Integer
 
         Try
@@ -136,7 +136,7 @@ Public Class clsResultDB
 
     End Sub
 
-    Friend Sub CopyFrom(ByVal newResult As clsMeilenstein)
+    Public Sub CopyFrom(ByVal newResult As clsMeilenstein)
         Dim i As Integer
 
 
@@ -151,8 +151,8 @@ Public Class clsResultDB
             Me.appearance = .appearance
 
             ' Dokumenten-Url und Applikation
-            Me.docURL = .docURL
-            Me.docUrlAppID = .docUrlAppID
+            Me.docURL = .DocURL
+            Me.docUrlAppID = .DocUrlAppID
 
             Me.alternativeColor = .individualColor
 

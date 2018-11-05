@@ -17,10 +17,10 @@
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\tom\Documents\Publish Folder MPT\</PublishUrl>
+    <PublishUrl>C:\publish\VISBO Visual Board\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>3.5.1.2</ApplicationVersion>
+    <ApplicationVersion>3.5.1.5</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -271,6 +271,10 @@
       <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
       <Name>ClassLibrary1</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DBAccLayer\DBAccLayer.vbproj">
+      <Project>{68c4cab8-fc59-47b1-bdd7-68aa31fbb63f}</Project>
+      <Name>DBAccLayer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
       <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
       <Name>MongoDbAccess</Name>
@@ -283,9 +287,9 @@
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
       <Name>ProjectBoardDefinitions</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WPFPieChart\WPFPieChart.csproj">
-      <Project>{59210896-68d1-4a34-91cc-8d015eca7061}</Project>
-      <Name>WPFPieChart</Name>
+    <ProjectReference Include="..\WebServerAcc\WebServerAcc.vbproj">
+      <Project>{a6876837-dd60-4e0d-bcbc-de9a0d6f8de3}</Project>
+      <Name>WebServerAcc</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -380,7 +384,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>06A1E789552A35A634B26DD6CE7A5566D0999EB8</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>D93B0B03D88210D9100FE97AE3F6396FBD503A53</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>

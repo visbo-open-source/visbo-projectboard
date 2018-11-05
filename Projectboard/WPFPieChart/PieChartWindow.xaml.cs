@@ -17,7 +17,6 @@ using ScottLogic.Shapes;
 using ScottLogic.Controls.PieChart;
 using ScottLogic;
 using System.Windows.Markup;
-using ProjectBoardBasic;
 using ProjectBoardDefinitions;
 
 namespace WPFPieChart

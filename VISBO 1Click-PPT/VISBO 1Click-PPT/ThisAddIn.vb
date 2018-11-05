@@ -5,13 +5,44 @@ Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
+Imports DBAccLayer
 
 
 Public Class ThisAddIn
 
     Private Sub ThisAddIn_Startup() Handles Me.Startup
 
-        ' no actions
+        Try
+            awinSettings.databaseURL = My.Settings.mongoDBURL
+            awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.DBWithSSL = My.Settings.mongoDBWithSSL
+            awinSettings.globalPath = My.Settings.globalPath
+            awinSettings.awinPath = My.Settings.awinPath
+            awinSettings.visboTaskClass = My.Settings.TaskClass
+            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+            awinSettings.visboAmpel = My.Settings.VISBOAmpel
+            awinSettings.visboAmpelText = My.Settings.VISBOAmpelText
+            awinSettings.visboresponsible = My.Settings.VISBOresponsible
+            awinSettings.visbodeliverables = My.Settings.VISBOdeliverables
+            awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
+            awinSettings.visboDebug = My.Settings.VISBODebug
+            awinSettings.visboMapping = My.Settings.VISBOMapping
+            awinSettings.visboServer = My.Settings.VISBOServer
+            awinSettings.userNamePWD = My.Settings.userNamePWD
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If awinSettings.rememberUserPwd Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+
+        Finally
+
+        End Try
 
     End Sub
 

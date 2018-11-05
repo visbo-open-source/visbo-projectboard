@@ -1,7 +1,6 @@
 ﻿Imports ClassLibrary1
 Imports ProjectBoardDefinitions
-
-Imports MongoDbAccess
+Imports DBAccLayer
 Imports Microsoft.Office.Core
 Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
@@ -106,12 +105,12 @@ Public Module testModule
 
             If Not noDB Then
 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                 If vglName <> maxProj.getShapeText Then
-                    If request.pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         Try
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, maxProj)
                         Catch ex As Exception
@@ -175,12 +174,12 @@ Public Module testModule
 
                     If Not noDB Then
 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                         If vglName <> hproj.getShapeText Then
-                            If request.pingMongoDb() Then
+                            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                                 Try
-                                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                    projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                                     projekthistorie.Add(Date.Now, hproj)
                                 Catch ex As Exception
@@ -290,7 +289,8 @@ Public Module testModule
                                           ByRef pptFirstTime As Boolean, ByVal pptLastTime As Boolean, ByRef zeilenhoehe_sav As Double,
                                           ByRef legendFontSize As Single,
                                           ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
-        Dim pptApp As pptNS.Application = Nothing
+        ' tk 28.10.18 um nicht in Namenskonflikte zu kommen mit dem PRojekt smartInfo wo  eine globale pptApp deklariert ist ..
+        Dim pptAppfromX As pptNS.Application = Nothing
         Dim pptCurrentPresentation As pptNS.Presentation = Nothing
         Dim pptTemplatePresentation As pptNS.Presentation = Nothing
         Dim pptSlide As pptNS.Slide = Nothing
@@ -351,15 +351,16 @@ Public Module testModule
 
 
             If Not noDB Then
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If request.pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
 
                         If Not aktprojekthist Then
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                         End If
+
 
                         ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                         Dim tmpVariantName As String = ""
@@ -367,9 +368,10 @@ Public Module testModule
                             tmpVariantName = portfolioVName
                         End If
 
-                        bproj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = request.RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
+                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
+
 
 
                     Catch ex As Exception
@@ -422,16 +424,21 @@ Public Module testModule
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
-            pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
+            pptAppfromX = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
         Catch ex As Exception
             Try
-                pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
+                pptAppfromX = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
             Catch ex1 As Exception
                 Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
                 Exit Sub
             End Try
 
         End Try
+
+
+        ' jetzt gibt es die pptAppFromX ..
+        ' das ist hier nicht erlaubt 
+        ' statt dessen kann beim Öffnen angegeben werden, dass es ohne Window geöffnet werden soll ... 
 
 
         ' entweder wird das template geöffnet ...
@@ -442,19 +449,22 @@ Public Module testModule
 
         Try
 
-            If pptApp.Presentations.Count = 0 Then
+            If pptAppfromX.Presentations.Count = 0 Then
 
-                pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+                pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
 
                 If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                    pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
+                    ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                    pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFile)
                 Else
-                    pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
+                    ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                    pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFileH)
                 End If
 
             Else
-                pptCurrentPresentation = pptApp.ActivePresentation
-                pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+                pptCurrentPresentation = pptAppfromX.ActivePresentation
+                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
 
                 If pptFirstTime Then
 
@@ -467,9 +477,11 @@ Public Module testModule
                         Try
                             ' jetzt wird die entsprechende Template Präsentation geöffnet 
                             If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                                pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
+                                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                                pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFile)
                             Else
-                                pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
+                                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                                pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFileH)
                             End If
 
                         Catch ex As Exception
@@ -489,7 +501,7 @@ Public Module testModule
                                     worker.ReportProgress(0, e)
                                 End If
                             Else
-                                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+                                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
 
                             End If
 
@@ -516,7 +528,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
 
             End If
 
@@ -558,13 +570,13 @@ Public Module testModule
             End If
 
             If Not IsNothing(worker) Then
-                e.Result = msgtxt
+                e.Result = msgTxt
 
                 If worker.WorkerReportsProgress Then
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
 
 
             End If
@@ -680,7 +692,8 @@ Public Module testModule
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
             ' jetzt muss die Slide als SmartPPTSlide gekennzeichnet werden 
-            Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
+            'Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
+            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now, ptPRPFType.project)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -1058,7 +1071,7 @@ Public Module testModule
 
                                     ' die Slide mit Tag kennzeichnen ... 
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneMultiprojektSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                   objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                   tmpphases, tmpMilestones,
                                                                   selectedRoles, selectedCosts,
@@ -1080,7 +1093,7 @@ Public Module testModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneMultiprojektSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1103,7 +1116,7 @@ Public Module testModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneMultiprojektSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1126,7 +1139,7 @@ Public Module testModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
 
-                                    Call zeichneCategorySwimlaneSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneCategorySwimlaneSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1154,7 +1167,7 @@ Public Module testModule
                                         minCal = (qualifier.Trim = "minCal")
                                     End If
 
-                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneSwimlane2Sicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1183,7 +1196,7 @@ Public Module testModule
                                     End If
 
 
-                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneSwimlane2Sicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -2365,6 +2378,8 @@ Public Module testModule
                                 'hwidth = boxWidth * 14
                                 'hheight = boxHeight * 10
 
+                                Dim formerEE As Boolean = appInstance.ScreenUpdating
+
                                 Try
                                     auswahl = 2
 
@@ -2373,29 +2388,45 @@ Public Module testModule
                                         If qualifier.Trim <> "Balken" Then
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
+                                            reportObj = obj
+                                            notYetDone = True
+                                            bigType = ptReportBigTypes.charts
+
                                         Else
-                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+
+                                            appInstance.ScreenUpdating = False
+
                                             compID = PTprdk.KostenBalken
+                                            Call createCostBalkenOfProjectInPPT2(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
+
+                                            appInstance.ScreenUpdating = formerEE
+                                            notYetDone = False
                                         End If
 
                                     Else
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.KostenPie
+                                        reportObj = obj
+                                        notYetDone = True
+                                        bigType = ptReportBigTypes.charts
                                     End If
 
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
-                                    Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
-                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                    End If
+                                    ' das Platzhalter-Objekt : den Text auf leer setzen 
+                                    Try
+                                        .TextFrame2.TextRange.Text = ""
+                                        .AlternativeText = ""
+                                    Catch ex As Exception
 
-                                    reportObj = obj
-                                    notYetDone = True
-                                    bigType = ptReportBigTypes.charts
+                                    End Try
+
 
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(168)
+                                    If appInstance.ScreenUpdating = False Then
+                                        appInstance.ScreenUpdating = formerEE
+                                    End If
                                 End Try
 
                             Case "Gesamtkosten2"
@@ -3238,7 +3269,8 @@ Public Module testModule
                                     boxName = repMessages.getmsg(223)
                                 End If
 
-                                .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
+                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult)
+                                '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prStand
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
@@ -3381,9 +3413,11 @@ Public Module testModule
         'If pptLastTime Or swimlaneMode Then
         If pptLastTime Then
             Try
+
                 If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
                     pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
                 End If
+
             Catch ex As Exception
 
             End Try
@@ -6061,19 +6095,19 @@ Public Module testModule
 
         Dim jetzt As Date = Now
         Dim zeitStempel As Date
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         enableOnUpdate = False
 
         Dim outPutCollection As New Collection
         Dim outputline As String = ""
 
         ' die aktuelle WriteProtection holen 
-        writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+        writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         'Call storeSessionConstellation("Last")
 
-        If request.pingMongoDb() And Not noDB Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And Not noDB Then
 
             Try
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
@@ -6093,9 +6127,9 @@ Public Module testModule
                             End If
 
                             Dim storeNeeded As Boolean
-                            If request.projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
@@ -6108,7 +6142,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If request.storeProjectToDB(kvp.Value, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(kvp.Value, dbUsername) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved: " & kvp.Value.name & ", " & kvp.Value.variantName
@@ -6121,7 +6155,7 @@ Public Module testModule
                                     anzahlStores = anzahlStores + 1
                                     ' jetzt die writeProtections aktualisieren 
 
-                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
                                     writeProtections.upsert(wpItem)
 
 
@@ -6134,7 +6168,7 @@ Public Module testModule
                                         outPutCollection.Add(outputline)
                                     End If
 
-                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -6182,7 +6216,7 @@ Public Module testModule
 
                         If kvp.Key <> "Sort Result" And kvp.Key <> "Filter Result" Then
                             Try
-                                If request.storeConstellationToDB(kvp.Value) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(kvp.Value) Then
                                     If awinSettings.englishLanguage Then
                                         outputline = "Portfolio stored: " & kvp.Key
                                         outPutCollection.Add(outputline)
@@ -6211,7 +6245,7 @@ Public Module testModule
                                 'Exit Sub
                             End Try
                         End If
-                        
+
 
                     Next
 
@@ -6221,7 +6255,7 @@ Public Module testModule
                     For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
 
                         Try
-                            If request.storeDependencyofPToDB(kvp.Value) Then
+                            If CType(databaseAcc, DBAccLayer.Request).storeDependencyofPToDB(kvp.Value) Then
                                 ' nichts schreiben ...
                             Else
                                 If awinSettings.englishLanguage Then
@@ -6249,14 +6283,14 @@ Public Module testModule
                     Dim storedRoles As Integer = 0
                     For i As Integer = 1 To RoleDefinitions.Count
                         Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-                        If request.storeRoleDefinitionToDB(role, False, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeRoleDefinitionToDB(role, False, Date.Now) Then
                             Dim success As String = role.name
                         End If
                     Next
 
                     For i As Integer = 1 To CostDefinitions.Count
                         Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
-                        If request.storeCostDefinitionToDB(cost, False, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeCostDefinitionToDB(cost, False, Date.Now) Then
                             Dim success As String = cost.name
                         End If
                     Next
@@ -6271,33 +6305,33 @@ Public Module testModule
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
                             If awinSettings.englishLanguage Then
-                                outputline = "ok, portfolios stored!" & vbLf & vbLf & _
-                                        "1 project/project-variant stored " & vbLf & _
+                                outputline = "ok, portfolios stored!" & vbLf & vbLf &
+                                        "1 project/project-variant stored " & vbLf &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf & _
-                                        "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf & _
+                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf &
+                                        "es wurde 1 Projekt bzw. Projekt-Variante gespeichert" & vbLf &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
 
                         Else
                             If awinSettings.englishLanguage Then
-                                outputline = "ok, portfolios stored!" & vbLf & vbLf & _
-                                        anzahlStores & " projects/project-variants stored" & vbLf & _
+                                outputline = "ok, portfolios stored!" & vbLf & vbLf &
+                                        anzahlStores & " projects/project-variants stored" & vbLf &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf & _
-                                        "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf & _
+                                outputline = "ok, Portfolios gespeichert!" & vbLf & vbLf &
+                                        "es wurden " & anzahlStores & " Projekte bzw. Projekt-Varianten gespeichert " & vbLf &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
 
                         End If
                     Else
                         If awinSettings.englishLanguage Then
-                            outputline = "ok, portfolios stored!" & vbLf & _
+                            outputline = "ok, portfolios stored!" & vbLf &
                                 "no projects stored, because of no changes"
                         Else
-                            outputline = "ok, Portfolios gespeichert!" & vbLf & _
+                            outputline = "ok, Portfolios gespeichert!" & vbLf &
                                 "keine Projekte gespeichert, da es keine Änderungen gab"
                         End If
 
@@ -6308,19 +6342,19 @@ Public Module testModule
                     If anzahlStores > 0 Then
                         If anzahlStores = 1 Then
                             If awinSettings.englishLanguage Then
-                                outputline = "1 project/project-variant stored: " & _
+                                outputline = "1 project/project-variant stored: " &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = "1 Projekt/Projekt-Variante gespeichert " & _
+                                outputline = "1 Projekt/Projekt-Variante gespeichert " &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
 
                         Else
                             If awinSettings.englishLanguage Then
-                                outputline = anzahlStores & " projects/project-variants stored: " & _
+                                outputline = anzahlStores & " projects/project-variants stored: " &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             Else
-                                outputline = anzahlStores & " Projekte/Projekt-Varianten gespeichert: " & _
+                                outputline = anzahlStores & " Projekte/Projekt-Varianten gespeichert: " &
                                         zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString
                             End If
 
@@ -6371,7 +6405,7 @@ Public Module testModule
                 End Try
 
             Catch ex As Exception
-                Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & ex.Message)
                 'Call MsgBox(" Fehler beim Speichern in die Datenbank")
             End Try
         Else
@@ -6396,7 +6430,7 @@ Public Module testModule
 
         Dim outputCollection As New Collection
         Dim outputline As String = ""
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -6408,7 +6442,7 @@ Public Module testModule
             awinSelection = Nothing
         End Try
 
-        If request.pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -6455,9 +6489,9 @@ Public Module testModule
                             End If
 
                             Dim storeNeeded As Boolean
-                            If request.projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -6470,7 +6504,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If request.storeProjectToDB(hproj, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved: " & hproj.name & ", " & hproj.variantName
@@ -6482,7 +6516,7 @@ Public Module testModule
 
                                     anzStoredProj = anzStoredProj + 1
 
-                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                     writeProtections.upsert(wpItem)
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                                 Else
@@ -6494,7 +6528,7 @@ Public Module testModule
 
                                     outputCollection.Add(outputline)
 
-                                    Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -6588,7 +6622,7 @@ Public Module testModule
                                          ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
         Dim pname As String
@@ -6684,9 +6718,9 @@ Public Module testModule
 
 
                 If vglName <> hproj.getShapeText Then
-                    If request.pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -7133,7 +7167,7 @@ Public Module testModule
     Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String, _
                                   ByRef statusValue As Double, ByRef statusColor As Long)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim currentValues() As Double
         Dim formerValues() As Double
         Dim vglProj As clsProjekt
@@ -7170,9 +7204,9 @@ Public Module testModule
 
 
         If vglName <> hproj.getShapeText Then
-            If request.pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                 If projekthistorie.Count > 0 Then
                     projekthistorie.Add(Date.Now, hproj)
@@ -10078,14 +10112,15 @@ Public Module testModule
 
                     ' hat das Projekt bereits eine Historie ? 
 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
                     ' If awinSettings.compareWithStandardVariant Then
                     If hproj.projectType = ptPRPFType.project And awinSettings.compareWithStandardVariant Then
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     Else
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     End If
 
@@ -10889,7 +10924,7 @@ Public Module testModule
 
         'Dim vgl As Date
         Dim hproj As clsProjekt
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
         Dim Xdatenreihe() As String
@@ -10995,9 +11030,9 @@ Public Module testModule
             ersteVersion = Nothing
             letzteVersion = Nothing
 
-            If request.pingMongoDb() Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' es soll mit der Standard-Variante verglichen werden ... 
-                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:="", _
+                projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:="",
                                                             storedEarliest:=StartofCalendar, storedLatest:=aktuellesDatum)
 
                 anzH = anzH + 1
@@ -11122,36 +11157,36 @@ Public Module testModule
 
                     ende = hproj.Start + hproj.anzahlRasterElemente - 1
                     Dim zwWert As Integer = heuteColumn - 1
-                    tdatenreiheH(0) = tdatenreiheH(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
-                                                                                pStart:=hproj.Start, pEnde:=ende, _
+                    tdatenreiheH(0) = tdatenreiheH(0) + calcArrayIntersection(von:=von, bis:=zwWert,
+                                                                                pStart:=hproj.Start, pEnde:=ende,
                                                                                 tmpValues:=werteH).Sum
                     zwWert = heuteColumn
-                    tdatenreiheH(1) = tdatenreiheH(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
-                                                                                pStart:=hproj.Start, pEnde:=ende, _
+                    tdatenreiheH(1) = tdatenreiheH(1) + calcArrayIntersection(von:=zwWert, bis:=bis,
+                                                                                pStart:=hproj.Start, pEnde:=ende,
                                                                                 tmpValues:=werteH).Sum
 
                     If Not IsNothing(letzteVersion) Then
 
                         ende = letzteVersion.Start + letzteVersion.anzahlRasterElemente - 1
                         zwWert = heuteColumn - 1
-                        tdatenreiheL(0) = tdatenreiheL(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
-                                                                                    pStart:=letzteVersion.Start, pEnde:=ende, _
+                        tdatenreiheL(0) = tdatenreiheL(0) + calcArrayIntersection(von:=von, bis:=zwWert,
+                                                                                    pStart:=letzteVersion.Start, pEnde:=ende,
                                                                                     tmpValues:=werteL).Sum
                         zwWert = heuteColumn
-                        tdatenreiheL(1) = tdatenreiheL(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
-                                                                                    pStart:=letzteVersion.Start, pEnde:=ende, _
+                        tdatenreiheL(1) = tdatenreiheL(1) + calcArrayIntersection(von:=zwWert, bis:=bis,
+                                                                                    pStart:=letzteVersion.Start, pEnde:=ende,
                                                                                     tmpValues:=werteL).Sum
                     End If
 
                     If Not IsNothing(ersteVersion) Then
                         ende = ersteVersion.Start + ersteVersion.anzahlRasterElemente - 1
                         zwWert = heuteColumn - 1
-                        tdatenreiheE(0) = tdatenreiheE(0) + calcArrayIntersection(von:=von, bis:=zwWert, _
-                                                                                    pStart:=ersteVersion.Start, pEnde:=ende, _
+                        tdatenreiheE(0) = tdatenreiheE(0) + calcArrayIntersection(von:=von, bis:=zwWert,
+                                                                                    pStart:=ersteVersion.Start, pEnde:=ende,
                                                                                     tmpValues:=werteE).Sum
                         zwWert = heuteColumn
-                        tdatenreiheE(1) = tdatenreiheE(1) + calcArrayIntersection(von:=zwWert, bis:=bis, _
-                                                                                    pStart:=ersteVersion.Start, pEnde:=ende, _
+                        tdatenreiheE(1) = tdatenreiheE(1) + calcArrayIntersection(von:=zwWert, bis:=bis,
+                                                                                    pStart:=ersteVersion.Start, pEnde:=ende,
                                                                                     tmpValues:=werteE).Sum
                     End If
 
@@ -11501,7 +11536,7 @@ Public Module testModule
         Dim outOfToleranceProjekte As New SortedList(Of String, Double())
         Dim vglName As String = ""
         Dim compareToLast As Boolean = True
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim variantName As String = ""
         Dim tolerancePercent As Double = 0.02
         Dim toleranceTimeAbs As Integer = 5
@@ -11593,9 +11628,9 @@ Public Module testModule
             Try
                 hproj = ShowProjekte.getProject(pname)
                 variantName = hproj.variantName
-                If request.pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                    projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     If compareToLast Then
                         vproj = projekthistorie.Last
@@ -20765,6 +20800,7 @@ Public Module testModule
                             End If
 
 
+
                         End With
 
                         curHeight = pptCurrentPresentation.PageSetup.SlideHeight
@@ -21318,6 +21354,61 @@ Public Module testModule
             'Call MsgBox("pptCopypptPaste erfolgreich")
         End If
     End Function
+    ''' <summary>
+    ''' copiert ein Powerpoint-Shape in ein Powerpoint-Shape
+    ''' </summary>
+    ''' <param name="srcShape"></param>
+    ''' <param name="ws"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function pptCopychartPaste(ByVal srcShape As pptNS.Shape, ByVal ws As xlNS.Worksheet) As xlNS.Worksheet
+
+        pptCopychartPaste = Nothing
+        Dim ok1 As Boolean = False
+        Dim ok2 As Boolean = False
+        Dim i As Integer = 1
+        Dim j As Integer = 1
+
+        While Not ok1 And i < 100
+            Try
+                'srcShape.Copy()
+
+                While Not ok2 And j < 100
+                    Try
+                        srcShape.Copy()
+                        ok2 = True
+                    Catch ex As Exception
+
+                    End Try
+                    j = j + 1
+                End While
+
+                If Not ok2 Then
+                    Call MsgBox("pptCopy timeout oder j=" & j.ToString)
+                    If Not ok2 Then
+                        Throw New ArgumentException("pptCopy timeout")
+                    End If
+                End If
+
+                ws.Paste()
+                pptCopychartPaste = ws
+                ok1 = True
+
+            Catch ex As Exception
+                'Call MsgBox("pptCopychartPaste catch")
+                pptCopychartPaste = Nothing
+            End Try
+            i = i + 1
+
+        End While
+        If Not ok1 Then
+            Call MsgBox("pptCopychartPaste Timeout oder i=" & i.ToString)
+            Throw New ArgumentException("pptCopychartPaste timeout")
+
+        Else
+            'Call MsgBox("pptCopychartPaste erfolgreich")
+        End If
+    End Function
 
 
     ''' <summary>
@@ -21334,7 +21425,7 @@ Public Module testModule
         Dim ok2 As Boolean = False
         Dim i As Integer = 1
         Dim j As Integer = 1
-        
+
 
         While Not ok1 And i < 100
             Try

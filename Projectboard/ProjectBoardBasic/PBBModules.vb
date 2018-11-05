@@ -1,7 +1,7 @@
 ﻿
 Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
-Imports MongoDbAccess
+Imports DBAccLayer
 Imports ClassLibrary1
 'Imports WPFPieChart ' wird nicht verwendet 
 Imports Microsoft.Office.Core
@@ -1457,7 +1457,7 @@ Public Module PBBModules
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
         Dim vglName As String = " "
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -1513,9 +1513,9 @@ Public Module PBBModules
 
                 If vglName <> hproj.getShapeText Then
 
-                    If request.pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         If projekthistorie.Count <> 0 Then
 

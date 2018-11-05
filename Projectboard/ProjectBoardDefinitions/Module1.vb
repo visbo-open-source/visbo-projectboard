@@ -16,7 +16,12 @@ Public Module Module1
     ' in Modul 1 sollten jetzt alle Konstanten und Einstellungen in einer Klasse zusammengefasst werden
     ' awinSettings: für StartOfCalendar, linker Rand, rechter Rand, ...
     ' Laufzeit Parameter;
+
+    ' das Objekt, das später die Instanz-Variable Request aufnimmt 
+    Public databaseAcc As Object = Nothing
+
     Public iDkey As String = ""
+
     'login - Informationen
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
@@ -295,6 +300,7 @@ Public Module Module1
         project = 0
         portfolio = 1
         projectTemplate = 2
+        all = 3
     End Enum
 
     ''' <summary>
@@ -624,6 +630,7 @@ Public Module Module1
         projekt = 1
         nameList = 2
         categoryList = 3
+        portfolio = 4
     End Enum
 
     ''' <summary>
@@ -3564,19 +3571,13 @@ Public Module Module1
         Dim found As Boolean = False
         Dim foundinDatabase As Boolean = False
         Dim key As String = calcProjektKey(strName, "")
-        'Dim request As New Request(awinSettings.databaseName)
 
         If Len(strName) < 2 Then
             ' ProjektName soll mehr als 1 Zeichen haben
             found = True
         ElseIf AlleProjekte.Containskey(key) Then
             found = True
-            'ElseIf request.pingMongoDb() Then
 
-            '    found = request.projectNameAlreadyExists(strName, "", Date.Now)
-            'Else
-            '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-            '    found = False
         End If
 
         inProjektliste = found
@@ -3612,53 +3613,6 @@ Public Module Module1
         mapToAppearance = ergebnis
 
     End Function
-
-    '' '' ''' <summary>
-    '' '' ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
-    '' '' ''' </summary>
-    '' '' ''' <remarks></remarks>
-    '' ''Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
-    '' ''                                          ByVal fBU As Collection, ByVal fTyp As Collection, _
-    '' ''                                          ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-    '' ''                                          ByVal fRole As Collection, ByVal fCost As Collection, _
-    '' ''                                          ByVal calledFromHry As Boolean)
-
-    '' ''    Dim lastFilter As clsFilter
-
-
-    '' ''    If calledFromHry Then
-    '' ''        Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
-
-    '' ''        If Not IsNothing(nameLastFilter) Then
-    '' ''            With nameLastFilter
-    '' ''                lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-    '' ''            End With
-    '' ''        Else
-    '' ''            lastFilter = New clsFilter(fName, fBU, fTyp, _
-    '' ''                              fPhase, fMilestone, _
-    '' ''                             fRole, fCost)
-    '' ''        End If
-
-
-    '' ''    Else
-    '' ''        lastFilter = New clsFilter(fName, fBU, fTyp, _
-    '' ''                              fPhase, fMilestone, _
-    '' ''                             fRole, fCost)
-    '' ''    End If
-
-    '' ''    If menuOption = PTmenue.filterdefinieren Then
-
-    '' ''        filterDefinitions.storeFilter(fName, lastFilter)
-    '' ''        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-
-
-    '' ''    Else
-    '' ''        selFilterDefinitions.storeFilter(fName, lastFilter)
-    '' ''    End If
-
-
-    '' ''End Sub
-
 
 
     ''' <summary>
@@ -3972,6 +3926,10 @@ Public Module Module1
 
                 End If
 
+                If .Tags.Item("REST").Length > 0 Then
+                    .Tags.Delete("REST")
+                End If
+                .Tags.Add("REST", awinSettings.visboServer.ToString)
 
 
             End With

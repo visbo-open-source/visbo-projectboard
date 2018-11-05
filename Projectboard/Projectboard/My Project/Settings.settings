@@ -2,20 +2,17 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="" GeneratedClassName="MySettings" UseMySettingsClassName="true">
   <Profiles />
   <Settings>
-    <Setting Name="mongoDBURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">localhost</Value>
-    </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\Koytek\Documents\Project-Tafel Folder\epcm\</Value>
+      <Value Profile="(Default)">C:\Users\Tom\Documents\Projekt-Tafel Folder\DemoVC\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">epcm</Value>
+      <Value Profile="(Default)">Demo Visbo Center</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="TaskClass" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO Task Class</Value>
+      <Value Profile="(Default)">Task Class - local</Value>
     </Setting>
     <Setting Name="VISBOAbbreviation" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Alias</Value>
@@ -23,11 +20,8 @@
     <Setting Name="VISBOAmpel" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Ampel</Value>
     </Setting>
-    <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="VISBOAmpelText" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Indikatoren</Value>
+      <Value Profile="(Default)">Indicators</Value>
     </Setting>
     <Setting Name="VISBOdeliverables" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Deliverables</Value>
@@ -39,18 +33,24 @@
       <Value Profile="(Default)">% Work Complete</Value>
     </Setting>
     <Setting Name="VISBOMapping" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">VISBO Mapping</Value>
+      <Value Profile="(Default)">TMS_View_local</Value>
     </Setting>
     <Setting Name="userNamePWD" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="VISBOServer" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="mongoDBWithSSL" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="rememberUserPWD" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="mongoDBWithSSL" Type="System.Boolean" Scope="Application">
+    <Setting Name="mongoDBURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://my.visbo.net/api</Value>
+    </Setting>
+    <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>

@@ -1,4 +1,4 @@
-﻿Imports MongoDbAccess
+﻿Imports DBAccLayer
 Imports ProjectBoardDefinitions
 
 Public Class frmRenameProject
@@ -42,11 +42,11 @@ Public Class frmRenameProject
 
             Else
                 Try
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    Dim projExist As Boolean = request.projectNameAlreadyExists(newName.Text, "", Date.Now)
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    Dim projExist As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(newName.Text, "", Date.Now)
 
                     ' muss gemacht werden, weil es auch Projekte geben kann, die nur als Varianten existieren ...
-                    Dim listOfVariants As Collection = request.retrieveVariantNamesFromDB(newName.Text)
+                    Dim listOfVariants As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(newName.Text)
 
                     If projExist Or listOfVariants.Count > 0 Then
                         ' es existiert bereits .. 

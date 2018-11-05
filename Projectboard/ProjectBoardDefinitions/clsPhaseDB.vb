@@ -1,4 +1,7 @@
 ﻿''' <summary>
+''' Vorsicht !!! 
+''' bei allen Änderungen in clsProjektDB und in clsPhaseDB, da für den ReST-Server-Zugriff separate Klassen existieren, die aber fast gleich sind.
+''' 
 ''' Klassen-Definition für eine Phase bzw Sammel-Task in MongoDB
 ''' </summary>
 ''' <remarks></remarks>

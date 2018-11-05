@@ -2,8 +2,8 @@
 Imports ClassLibrary1
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
-Imports MongoDbAccess
 Imports System.Windows.Forms
+
 
 
 
@@ -26,30 +26,6 @@ Public Class frmAuthentication
 
     Private Sub maskedPwd_LostFocus(sender As Object, e As EventArgs) Handles maskedPwd.LostFocus
 
-        'Dim pwd As String
-        'Dim user As String
-        'Dim projexist As Boolean
-
-        'user = benutzer.Text
-        'pwd = maskedPwd.Text
-
-
-        'Try
-        '    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-        '    projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
-        '    dbUsername = benutzer.Text
-        '    dbPasswort = maskedPwd.Text
-        '    messageBox.Text = ""
-        '    DialogResult = System.Windows.Forms.DialogResult.OK
-        'Catch ex As Exception
-        '    messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
-        '    benutzer.Text = ""
-        '    maskedPwd.Text = ""
-        '    dbUsername = benutzer.Text
-        '    dbPasswort = maskedPwd.Text
-        '    benutzer.Focus()
-        '    DialogResult = System.Windows.Forms.DialogResult.Retry
-        'End Try
 
     End Sub
     Private Sub maskedPwd_KeyDown(sender As Object, e As KeyEventArgs) Handles maskedPwd.KeyDown
@@ -64,8 +40,16 @@ Public Class frmAuthentication
 
 
             Try
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-                Dim ok As Boolean = request.createIndicesOnce()
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+                'Dim ok As Boolean = Request.createIndicesOnce()
+
+                If IsNothing(databaseAcc) Then
+                    Dim hrequest As New DBAccLayer.Request
+                    databaseAcc = hrequest
+                End If
+
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+
                 If Not ok Then
                     If awinSettings.englishLanguage Then
                         messageBox.Text = "Wrong username or password!"
@@ -80,12 +64,18 @@ Public Class frmAuthentication
                     benutzer.Focus()
                     DialogResult = System.Windows.Forms.DialogResult.Retry
                 Else
-                    '' ''projexist = request.projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
+                    '' ''projexist = CType(mongoDBAcc, Request).projectNameAlreadyExists("TestProjekt", "v1", Date.Now)
 
                     dbUsername = benutzer.Text
                     dbPasswort = maskedPwd.Text
                     messageBox.Text = ""
                     DialogResult = System.Windows.Forms.DialogResult.OK
+
+                    ' jett wird request public gemacht ..
+                    ' mongoDBAcc = Request
+
+                    ' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
+                    ' mongoDBAcc = token
                 End If
 
             Catch ex As Exception
@@ -126,9 +116,16 @@ Public Class frmAuthentication
         messageBox.Text = ""
 
         Try         ' dieser Try Catch dauert so lange, da beim Request ein TimeOut von 30000ms eingestellt ist
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-            'Dim ok As Boolean = request.loginSucessful(awinSettings.databaseName, user, pwd)
-            Dim ok As Boolean = request.createIndicesOnce()
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+            'Dim ok As Boolean = Request.createIndicesOnce()
+
+            If IsNothing(databaseAcc) Then
+                Dim hrequest As New DBAccLayer.Request
+                databaseAcc = hrequest
+            End If
+
+            Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+
             If Not ok Then
                 If awinSettings.englishLanguage Then
                     messageBox.Text = "Wrong username or password!"
@@ -142,7 +139,9 @@ Public Class frmAuthentication
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             Else
-                'ok = request.createIndicesOnce()
+                ' login am Rest-Server/mongoDB hat funktioniert
+
+                ' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
 
@@ -156,11 +155,13 @@ Public Class frmAuthentication
 
                 messageBox.Text = ""
                 DialogResult = System.Windows.Forms.DialogResult.OK
-                ' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
-                Dim initOK As Integer = request.initWriteProtectionsOnce(dbUsername)
+
+
+                '' UR: 07.07.2018: sollte für WebServerAcc eigentlich nicht benötigt werden
+                '' hier werden einmalig alle Projekte in die WriteProtections Collection eingetragen
+                ' Dim initOK As Integer = CType(mongoDBAcc, MongoDbAccess.Request).initWriteProtectionsOnce(dbUsername)
 
             End If
-
         Catch ex As Exception
             If awinSettings.englishLanguage Then
                 messageBox.Text = "Wrong username or password!"
@@ -178,16 +179,27 @@ Public Class frmAuthentication
 
     Private Sub frmAuthentication_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
+
+            If awinSettings.visboServer Then
+                pwforgotten.Visible = True
+                pwforgotten.Enabled = True
+            Else
+                pwforgotten.Visible = False
+                pwforgotten.Enabled = False
+            End If
+
             If awinSettings.englishLanguage Then
                 Label2.Text = "Username"
                 Label3.Text = "Password"
                 chbx_remember.Text = "Remember Me"
                 abbrButton.Text = "Cancel"
+                pwforgotten.Text = "Password forgotten"
             Else
                 Label2.Text = "Benutzername"
                 Label3.Text = "Passwort"
                 chbx_remember.Text = "Passwort speichern"
                 abbrButton.Text = "Abbrechen"
+                pwforgotten.Text = "Passwort vergessen"
             End If
 
             Dim cipherText As String = awinSettings.userNamePWD
@@ -223,5 +235,54 @@ Public Class frmAuthentication
         Else
             awinSettings.rememberUserPwd = False
         End If
+    End Sub
+
+    Private Sub benutzer_TextChanged(sender As Object, e As EventArgs) Handles benutzer.TextChanged
+
+    End Sub
+
+    Private Sub pwforgotten_Click(sender As Object, e As EventArgs) Handles pwforgotten.Click
+        Try
+
+            Dim hrequest As New DBAccLayer.Request
+            databaseAcc = hrequest
+            Dim pwd As String
+            Dim user As String
+
+            user = benutzer.Text
+            pwd = maskedPwd.Text
+
+            If user = "" Then
+
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("Please enter your username")
+                Else
+                    Call MsgBox("Bitte geben Sie den Benutzer ein")
+                End If
+
+            Else
+
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).pwforgotten(awinSettings.databaseURL, awinSettings.databaseName, user)
+
+                If ok Then
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("You'll receive an email with the link to reset your password!")
+                    Else
+                        Call MsgBox("Sie erhalten eine Email mit dem Link zum Reset Ihres Passwortes")
+                    End If
+                Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error: Please contact your administrator")
+                    Else
+                        Call MsgBox("Fehler: Bitte kontaktieren Sie ihren Administrator")
+                    End If
+                End If
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
     End Sub
 End Class

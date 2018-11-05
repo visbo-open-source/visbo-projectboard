@@ -1,5 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
-Imports MongoDbAccess
+Imports DBAccLayer
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
@@ -14,11 +14,11 @@ Imports System.Xml.Serialization
 Imports System.IO
 Imports System.Drawing
 Imports System.Globalization
-
+Imports System.Web
 Imports Microsoft.VisualBasic
 Imports System.Security.Principal
-
-
+Imports System.Net
+Imports System.Text
 
 
 Public Module awinGeneralModules
@@ -72,7 +72,7 @@ Public Module awinGeneralModules
     Public Sub buildCacheProjekte(ByVal todoListe As Collection,
                                   Optional ByVal namesArePvNames As Boolean = False)
         Dim pName As String
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
         For i As Integer = 1 To todoListe.Count
             pName = CStr(todoListe.Item(i))
@@ -90,13 +90,17 @@ Public Module awinGeneralModules
                 If Not IsNothing(hproj) Then
                     If Not noDB Then
                         ' wenn es in der DB existiert, dann im Cache aufbauen 
-                        If request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
                             ' für den Datenbank Cache aufbauen 
-                            Dim dbProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                            Dim dbProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+
+
                             dbCacheProjekte.upsert(dbProj)
                         End If
                     End If
                 End If
+
 
             Catch ex As Exception
 
@@ -127,8 +131,6 @@ Public Module awinGeneralModules
     ''' <returns></returns>
     Public Function substitutePortfolioByProjects(ByVal todoListe As Collection,
                                                   Optional ByVal noNeedtoBeInShowProjekte As Boolean = False) As Collection
-
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim tmpCollection As New Collection
         Dim key As String = ""
@@ -162,9 +164,9 @@ Public Module awinGeneralModules
                                         Dim dbVName As String = getVariantnameFromKey(kvp.Key)
 
                                         ' wenn es in der DB existiert, dann im Cache aufbauen 
-                                        If request.projectNameAlreadyExists(dbPName, dbVName, Date.Now) Then
+                                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(dbPName, dbVName, Date.Now) Then
                                             ' jetzt aus datenbank holen und in AlleProjekte eintragen 
-                                            pproj = request.retrieveOneProjectfromDB(dbPName, dbVName, Date.Now)
+                                            pproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(dbPName, dbVName, Date.Now)
                                             If Not IsNothing(pproj) Then
                                                 If Not AlleProjekte.Containskey(kvp.Key) Then
                                                     AlleProjekte.Add(pproj, False)
@@ -256,7 +258,7 @@ Public Module awinGeneralModules
             '
             ' jetzt werden erstmal die Phase Mappings geschrieben  
             '
-            Dim wsName8 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(8)), _
+            Dim wsName8 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(8)),
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
             Dim area As Excel.Range
             Dim letzteZeile As Integer
@@ -265,7 +267,7 @@ Public Module awinGeneralModules
             With wsName8
 
                 ' Synonyme schreiben 
-                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row), _
+                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row),
                                                 CInt(CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row))
 
                 If letzteZeile >= 3 Then
@@ -273,7 +275,7 @@ Public Module awinGeneralModules
                     ' alte Synonym / regEX Area löschen
                     area.Clear()
                 End If
-                
+
 
                 ' neue Area definieren
                 area = CType(.Range(.Cells(3, 1), .Cells(phaseMappings.countSynonyms + phaseMappings.countRegEx + 4, 2)), Excel.Range)
@@ -301,7 +303,7 @@ Public Module awinGeneralModules
                     area = CType(.Range(.Cells(3, 6), .Cells(letzteZeile, 6)), Excel.Range)
                     area.Clear()
                 End If
-                
+
                 area = CType(.Range(.Cells(3, 6), .Cells(phaseMappings.countIgnore + 4, 6)), Excel.Range)
                 aktuelleZeile = 1
 
@@ -314,13 +316,13 @@ Public Module awinGeneralModules
             '
             ' jetzt werden erstmal die Phase Mappings geschrieben  
             '
-            Dim wsName10 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(10)), _
+            Dim wsName10 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(10)),
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             With wsName10
 
                 ' Synonyme schreiben 
-                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row), _
+                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row),
                                                 CInt(CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row))
 
 
@@ -329,7 +331,7 @@ Public Module awinGeneralModules
                     ' alte Area löschen
                     area.Clear()
                 End If
-                
+
 
                 ' neue Area definieren
                 area = CType(.Range(.Cells(3, 1), .Cells(milestoneMappings.countSynonyms + milestoneMappings.countRegEx + 4, 2)), Excel.Range)
@@ -354,7 +356,7 @@ Public Module awinGeneralModules
                     ' alte Area löschen
                     area.Clear()
                 End If
-                
+
                 area = CType(.Range(.Cells(3, 6), .Cells(milestoneMappings.countIgnore + 4, 6)), Excel.Range)
                 aktuelleZeile = 1
 
@@ -396,20 +398,20 @@ Public Module awinGeneralModules
         Dim darstellungsKlasse As String
 
         Dim wsName4 As Excel.Worksheet
-        
+
 
         ' beim Starten der Projekt-Tafel wird sichergestellt, dass auch das Worksheet MissingDefinitions = arrwsnames(15) existiert ...
         ' inkl der Namen der Phase- und MilestoneDefinitions
         If writeMissingDefinitions Then
             Try
-                wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(15)), _
+                wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(15)),
                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
             Catch ex As Exception
                 Exit Sub
             End Try
-            
+
         Else
-            wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(4)), _
+            wsName4 = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(4)),
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
         End If
 
@@ -469,7 +471,7 @@ Public Module awinGeneralModules
         Dim msAppearanceRng As Excel.Range = Nothing
         Dim phAppearanceRng As Excel.Range = Nothing
         Try
-            Dim wsAppearances As Excel.Worksheet = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(7)), _
+            Dim wsAppearances As Excel.Worksheet = CType(CType(appInstance.Workbooks.Item(myCustomizationFile), Excel.Workbook).Worksheets(arrWsNames(7)),
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
             For Each cl As Excel.Range In wsAppearances.Range("MeilensteinKlassen")
@@ -548,7 +550,7 @@ Public Module awinGeneralModules
                     darstellungsKlasse = .darstellungsKlasse
                 End With
             End If
-            
+
 
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = phName.ToString
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
@@ -557,16 +559,16 @@ Public Module awinGeneralModules
             Try
                 If phaseAppearanceClasses.Length > 0 Then
                     With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
-                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop,
                                                                                Formula1:=phaseAppearanceClasses)
                     End With
                 End If
-                
+
             Catch ex As Exception
 
             End Try
-            
-            
+
+
 
         Next ix
 
@@ -645,7 +647,7 @@ Public Module awinGeneralModules
                     darstellungsKlasse = .darstellungsKlasse
                 End With
             End If
-            
+
 
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = msName.ToString
             CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
@@ -654,11 +656,11 @@ Public Module awinGeneralModules
             Try
                 If milestoneAppearanceClasses.Length > 0 Then
                     With CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6)
-                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
+                        .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop,
                                                                                Formula1:=milestoneAppearanceClasses)
                     End With
                 End If
-                
+
             Catch ex As Exception
 
             End Try
@@ -704,7 +706,7 @@ Public Module awinGeneralModules
             If awinSettings.visboDebug Then
                 If Not IsNothing(globalPath) Then
                     If globalPath.Length > 0 Then
-                        Call MsgBox("GlobalPath:" & globalPath & vbLf & _
+                        Call MsgBox("GlobalPath:" & globalPath & vbLf &
                                     "existiert: " & My.Computer.FileSystem.DirectoryExists(globalPath).ToString)
                     Else
                         Call MsgBox("GlobalPath: leerer String")
@@ -736,7 +738,7 @@ Public Module awinGeneralModules
 
             End If
             If awinSettings.visboDebug And special <> "BHTC" Then
-                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+                Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) &
                            "Excel-Version: " & appInstance.Version, vbInformation, "Info")
             End If
 
@@ -920,7 +922,7 @@ Public Module awinGeneralModules
                 '' ''  um dahinter temporär die Darstellungsklassen kopieren zu können  
                 ' ''Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
                 ' ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-                projectBoardSheet = CType(appInstance.ActiveSheet, _
+                projectBoardSheet = CType(appInstance.ActiveSheet,
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
 
                 Call setWindowParameters()
@@ -1016,7 +1018,7 @@ Public Module awinGeneralModules
             'Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
             '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            Dim wsName4 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(4)), _
+            Dim wsName4 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(4)),
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet
                                                     )
             If awinSettings.visboDebug Then
@@ -1055,7 +1057,7 @@ Public Module awinGeneralModules
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
             ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            Dim wsName7810 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(7)), _
+            Dim wsName7810 As Excel.Worksheet = CType(xlsCustomization.Worksheets(arrWsNames(7)),
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet
                                                     )
 
@@ -1145,7 +1147,7 @@ Public Module awinGeneralModules
                             Dim wsName15 As Excel.Worksheet
                             Try
 
-                                wsName15 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                                wsName15 = CType(appInstance.Worksheets(arrWsNames(15)),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
 
                                 ' Auslesen der MissingPhase Definitionen 
@@ -1187,7 +1189,7 @@ Public Module awinGeneralModules
                 ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
                 ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)), _
+                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(8)),
                                                         Global.Microsoft.Office.Interop.Excel.Worksheet
                                                         )
 
@@ -1202,7 +1204,7 @@ Public Module awinGeneralModules
                 'wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
                 '                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)), _
+                wsName7810 = CType(xlsCustomization.Worksheets(arrWsNames(10)),
                                                        Global.Microsoft.Office.Interop.Excel.Worksheet
                                                        )
 
@@ -1224,7 +1226,7 @@ Public Module awinGeneralModules
 
                     ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
                     appInstance.EnableEvents = False
-                    CType(appInstance.Workbooks(myCustomizationFile).Worksheets(arrWsNames(7)), _
+                    CType(appInstance.Workbooks(myCustomizationFile).Worksheets(arrWsNames(7)),
                     Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
 
                     ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
@@ -1234,7 +1236,7 @@ Public Module awinGeneralModules
 
                     ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
                     appearanceDefinitions.Clear()
-                    wsName7810 = CType(appInstance.Workbooks(myProjektTafel).Worksheets(arrWsNames(7)), _
+                    wsName7810 = CType(appInstance.Workbooks(myProjektTafel).Worksheets(arrWsNames(7)),
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
@@ -1245,6 +1247,7 @@ Public Module awinGeneralModules
 
                         ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
                         Call readRessourcenDetails2()
+
 
                         '' Auslesen der Rollen aus der Datenbank ! wird hier jetzt nicht mehr gemacht ..
                         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -1268,14 +1271,16 @@ Public Module awinGeneralModules
 
                         RoleDefinitions.buildTopNodes()
 
+
                     Else
 
                         ' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        RoleDefinitions = request.retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = request.retrieveCostsFromDB(Date.Now)
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
-                        RoleDefinitions.buildTopNodes()
+                        ' ur: 2.11.2018: RoleDefinitions.builtTopNodes() wird bereits in retrieveRolesFromDB durchgeführt
+                        '                Nur bei Einlesen der Rollen von Projectboard.Cusomization.xlsx wäre dies notwendig.
+                        ' RoleDefinitions.buildTopNodes()
 
                         If awinSettings.visboDebug Then
                             Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
@@ -1443,15 +1448,16 @@ Public Module awinGeneralModules
         currentConstellationName = ""
 
         ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, _
-                                   dbUsername, dbPasswort)
-        If Request.cancelWriteProtections(dbUsername) Then
+
+
+        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
+
             If awinSettings.visboDebug Then
                 Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
             End If
         End If
 
-        
+
         ' tk, 10.11.16 allDependencies darf nicht gelöscht werden, weil das sonst nicht mehr vorhanden ist
         ' allDependencies wird aktull nur beim Start geladen - und das reicht ja auch ... 
         ' beim Laden eines Szenarios, beim Laden von Projekten wird das nicht mehr geladen ...
@@ -1985,6 +1991,7 @@ Public Module awinGeneralModules
                             End If
                         End If
 
+
                         ' jetzt checken 
                         If readingGroups And isWithoutID Then
                             ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
@@ -1995,6 +2002,7 @@ Public Module awinGeneralModules
                             End If
 
                         End If
+
 
                     Catch ex As Exception
                         anzWithoutID = anzWithoutID + 1
@@ -2081,9 +2089,11 @@ Public Module awinGeneralModules
 
                 End If
 
+
                 ' tk Änderung 25.5.18 Auslesen der Hierarchie - dann sind keine Ressourcen Manager Dateien mehr notwendig .. 
                 ' jetzt checken ob eine Hierarchie aufgebaut werden soll ..
                 hasHierarchy = hasHierarchy And atleastOneWithIndent
+
 
                 If hasHierarchy Then
                     ' Hierarchie aufbauen
@@ -2302,7 +2312,7 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Private Function isValidCustomField(ByVal id As Integer) As Boolean
 
-        If id = ptCustomFields.bool Or _
+        If id = ptCustomFields.bool Or
             id = ptCustomFields.Str Or
             id = ptCustomFields.Dbl Then
             isValidCustomField = True
@@ -2361,7 +2371,7 @@ Public Module awinGeneralModules
 
             End With
 
-            
+
         Catch ex As Exception
             Throw New ArgumentException("Fehler in Customization File: Kosten")
         End Try
@@ -2458,7 +2468,7 @@ Public Module awinGeneralModules
                 awinSettings.kalenderStart = CDate(.Range("Start_Kalender").Value)
                 awinSettings.zeitEinheit = CStr(.Range("Zeiteinheit").Value)
                 awinSettings.kapaEinheit = CStr(.Range("kapaEinheit").Value)
-                If awinSettings.kapaEinheit <> "PT" And _
+                If awinSettings.kapaEinheit <> "PT" And
                     awinSettings.kapaEinheit <> "PD" Then
                     awinSettings.kapaEinheit = "PT"
                     Call MsgBox("Kapa-Einheit: Personen-Tage")
@@ -2677,6 +2687,7 @@ Public Module awinGeneralModules
         ''listOfFiles = My.Computer.FileSystem.GetFiles(awinPath & projektRessOrdner,
         ''              FileIO.SearchOption.SearchTopLevelOnly, "Urlaubsplaner*.xlsx")
 
+
         If listOfFiles.Count >= 1 Then
 
             For Each tmpDatei As String In listOfFiles
@@ -2859,7 +2870,7 @@ Public Module awinGeneralModules
             CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook).Activate()
         End If
 
-        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), _
+        Dim wsName3 As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)),
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
         Dim tmpRange As Excel.Range
@@ -3002,16 +3013,16 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Private Sub readInitConstellations()
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
         ' Datenbank ist gestartet
-        If request.pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             ' alle Konstellationen laden 
-            projectConstellations = request.retrieveConstellationsFromDB()
+            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
 
             ' hier werden jetzt auch alle Abhängigkeiten geladen 
-            allDependencies = request.retrieveDependenciesFromDB()
+            allDependencies = CType(databaseAcc, DBAccLayer.Request).retrieveDependenciesFromDB()
 
             Dim axt As Integer = 9
 
@@ -3023,7 +3034,7 @@ Public Module awinGeneralModules
     '
     '
     '
-    Public Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer, _
+    Public Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer,
                                   Optional ByVal noFurtherActions As Boolean = False)
 
         'Dim k As Integer
@@ -3054,7 +3065,7 @@ Public Module awinGeneralModules
         End If
 
 
-        If showRangeLeft <> von Or showRangeRight <> bis Or _
+        If showRangeLeft <> von Or showRangeRight <> bis Or
             AlleProjekte.Count = 0 Then
             '
             ' wenn roentgenblick.ison , werden Bedarfe angezeigt - die müssen hier ausgeblendet werden - nachher mit den neuen Werten eingeblendet werden
@@ -3180,7 +3191,7 @@ Public Module awinGeneralModules
         Try
             'Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Tabelle1"), _
             '                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet, _
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet,
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             With activeWSListe
 
@@ -3195,7 +3206,7 @@ Public Module awinGeneralModules
                 ' hier werden jetzt die Columns bestimmt 
 
 
-                lastRow = System.Math.Max(CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row, _
+                lastRow = System.Math.Max(CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row,
                                           CType(.Cells(2000, 2), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row)
 
                 While zeile <= lastRow
@@ -3270,230 +3281,232 @@ Public Module awinGeneralModules
                         End If
                     Loop
 
-        If foundIX < 0 Then
-            ' SOP Date konnte nicht bestimmt werden 
-            sopDate = endDate
-            tmpStartSop = sopDate.AddDays(-28)
-            foundIX = tmpStr.Length - 1
-        End If
-
-        Select Case tmpStr(foundIX).Trim
-            Case "eA"
-                vorlagenName = "Enge Ableitung"
-            Case "wA"
-                vorlagenName = "Weite Ableitung"
-            Case "E"
-                vorlagenName = "Erstanläufer"
-            Case Else
-                vorlagenName = "Erstanläufer"
-        End Select
-
-        '
-        ' jetzt wird das Projekt angelegt 
-        '
-        hproj = New clsProjekt
-
-        Try
-            vproj = Projektvorlagen.getProject(vorlagenName)
-
-
-            hproj.farbe = vproj.farbe
-            hproj.Schrift = vproj.Schrift
-            hproj.Schriftfarbe = vproj.Schriftfarbe
-            hproj.name = ""
-            hproj.VorlagenName = vorlagenName
-            hproj.earliestStart = vproj.earliestStart
-            hproj.latestStart = vproj.latestStart
-            hproj.ampelStatus = farbKennung
-            hproj.leadPerson = responsible
-
-        Catch ex As Exception
-            Throw New Exception("es gibt keine entsprechende Vorlage mit Namen  " & vorlagenName & vbLf & ex.Message)
-        End Try
-
-
-        Try
-
-            hproj.name = pName
-            hproj.startDate = startDate
-            hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
-            hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
-            ' immer als beauftragtes PRojekt importieren 
-
-            hproj.Status = getStatusOfBaseVariant(pName, ProjektStatus(PTProjektStati.geplant))
-            hproj.StrategicFit = zufall.NextDouble * 10
-            hproj.Risiko = zufall.NextDouble * 10
-            hproj.volume = zufall.NextDouble * 1000000
-            hproj.complexity = zufall.NextDouble
-            hproj.businessUnit = nameBU
-            hproj.description = nameSopTyp
-
-            hproj.Erloes = 0.0
-
-
-        Catch ex As Exception
-            Throw New Exception("in erstelle InventurProjekte: " & vbLf & ex.Message)
-        End Try
-
-        ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
-        cphase = New clsPhase(parent:=hproj)
-        cphase.nameID = rootPhaseName
-        startoffset = 0
-        duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
-        cphase.changeStartandDauer(startoffset, duration)
-
-        cresult = New clsMeilenstein(parent:=cphase)
-        cresult.nameID = calcHryElemKey("SOP", True)
-        cresult.setDate = sopDate
-
-        cbewertung = New clsBewertung
-        cbewertung.colorIndex = farbKennung
-        cbewertung.description = " .. es wurde  keine Erläuterung abgegeben .. "
-        cresult.addBewertung(cbewertung)
-
-        Try
-            cphase.addMilestone(cresult)
-        Catch ex As Exception
-
-        End Try
-
-
-        hproj.AddPhase(cphase)
-
-
-        Dim phaseIX As Integer = PhaseDefinitions.Count + 1
-
-
-        Dim pStartDate As Date
-        Dim pEndDate As Date
-        Dim ok As Boolean = True
-        Dim lastPhaseName As String = cphase.nameID
-
-        Dim i As Integer
-        For i = anfang To ende
-
-            Try
-                itemName = CStr(CType(.Cells(i, 2), Excel.Range).Value).Trim
-            Catch ex As Exception
-                itemName = ""
-                ok = False
-            End Try
-
-            If ok Then
-
-                pStartDate = CDate(CType(.Cells(i, 3), Excel.Range).Value)
-                pEndDate = CDate(CType(.Cells(i, 4), Excel.Range).Value)
-                startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
-                duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
-
-                If duration > 1 Then
-                    ' es handelt sich um eine Phase 
-                    phaseName = itemName
-                    cphase = New clsPhase(parent:=hproj)
-                    cphase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
-
-                    If PhaseDefinitions.Contains(phaseName) Then
-                        ' nichts tun 
-                    Else
-                        ' in die Phase-Definitions aufnehmen 
-
-                        Dim hphase As clsPhasenDefinition
-                        hphase = New clsPhasenDefinition
-
-                        'hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
-                        hphase.name = phaseName
-                        hphase.UID = phaseIX
-                        phaseIX = phaseIX + 1
-
-                        Try
-                            PhaseDefinitions.Add(hphase)
-                        Catch ex As Exception
-
-                        End Try
-
+                    If foundIX < 0 Then
+                        ' SOP Date konnte nicht bestimmt werden 
+                        sopDate = endDate
+                        tmpStartSop = sopDate.AddDays(-28)
+                        foundIX = tmpStr.Length - 1
                     End If
 
-                    cphase.changeStartandDauer(startoffset, duration)
-                    hproj.AddPhase(cphase)
-                    lastPhaseName = cphase.nameID
+                    Select Case tmpStr(foundIX).Trim
+                        Case "eA"
+                            vorlagenName = "Enge Ableitung"
+                        Case "wA"
+                            vorlagenName = "Weite Ableitung"
+                        Case "E"
+                            vorlagenName = "Erstanläufer"
+                        Case Else
+                            vorlagenName = "Erstanläufer"
+                    End Select
 
-                ElseIf duration = 1 Then
+                    '
+                    ' jetzt wird das Projekt angelegt 
+                    '
+                    hproj = New clsProjekt
 
                     Try
-                        ' es handelt sich um einen Meilenstein 
-
-                        Dim bewertungsAmpel As Integer
-                        Dim explanation As String
-
-                        bewertungsAmpel = CInt(CType(.Cells(i, 12), Excel.Range).Value)
-                        explanation = CStr(CType(.Cells(i, 1), Excel.Range).Value)
-
-                        cphase = hproj.getPhaseByID(lastPhaseName)
-                        cresult = New clsMeilenstein(parent:=cphase)
-                        cbewertung = New clsBewertung
+                        vproj = Projektvorlagen.getProject(vorlagenName)
 
 
+                        hproj.farbe = vproj.farbe
+                        hproj.Schrift = vproj.Schrift
+                        hproj.Schriftfarbe = vproj.Schriftfarbe
+                        hproj.name = ""
+                        hproj.VorlagenName = vorlagenName
+                        hproj.earliestStart = vproj.earliestStart
+                        hproj.latestStart = vproj.latestStart
+                        hproj.ampelStatus = farbKennung
+                        hproj.leadPerson = responsible
 
-                        If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                            ' es gibt keine Bewertung
-                            bewertungsAmpel = 0
-                        End If
+                    Catch ex As Exception
+                        Throw New Exception("es gibt keine entsprechende Vorlage mit Namen  " & vorlagenName & vbLf & ex.Message)
+                    End Try
 
-                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                        With cbewertung
-                            '.bewerterName = resultVerantwortlich
-                            .colorIndex = bewertungsAmpel
-                            .datum = Date.Now
-                            .description = explanation
-                        End With
 
-                        With cresult
-                            .nameID = hproj.hierarchy.findUniqueElemKey(itemName, True)
-                            .setDate = pEndDate
-                            If Not cbewertung Is Nothing Then
-                                .addBewertung(cbewertung)
-                            End If
-                        End With
+                    Try
 
-                        Try
-                            With cphase
-                                .addMilestone(cresult)
-                            End With
-                        Catch ex As Exception
+                        hproj.name = pName
+                        hproj.startDate = startDate
+                        hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
+                        hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
+                        ' immer als beauftragtes PRojekt importieren 
 
-                        End Try
+                        hproj.Status = getStatusOfBaseVariant(pName, ProjektStatus(PTProjektStati.geplant))
+                        hproj.StrategicFit = zufall.NextDouble * 10
+                        hproj.Risiko = zufall.NextDouble * 10
+                        hproj.volume = zufall.NextDouble * 1000000
+                        hproj.complexity = zufall.NextDouble
+                        hproj.businessUnit = nameBU
+                        hproj.description = nameSopTyp
 
+                        hproj.Erloes = 0.0
+
+
+                    Catch ex As Exception
+                        Throw New Exception("in erstelle InventurProjekte: " & vbLf & ex.Message)
+                    End Try
+
+                    ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
+                    cphase = New clsPhase(parent:=hproj)
+                    cphase.nameID = rootPhaseName
+                    startoffset = 0
+                    duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
+                    cphase.changeStartandDauer(startoffset, duration)
+
+                    cresult = New clsMeilenstein(parent:=cphase)
+                    cresult.nameID = calcHryElemKey("SOP", True)
+                    cresult.setDate = sopDate
+
+                    cbewertung = New clsBewertung
+                    cbewertung.colorIndex = farbKennung
+                    cbewertung.description = " .. es wurde  keine Erläuterung abgegeben .. "
+                    cresult.addBewertung(cbewertung)
+
+                    Try
+                        cphase.addMilestone(cresult)
                     Catch ex As Exception
 
                     End Try
 
 
+                    hproj.AddPhase(cphase)
 
 
-                End If
+                    Dim phaseIX As Integer = PhaseDefinitions.Count + 1
+
+
+                    Dim pStartDate As Date
+                    Dim pEndDate As Date
+                    Dim ok As Boolean = True
+                    Dim lastPhaseName As String = cphase.nameID
+
+                    Dim i As Integer
+                    For i = anfang To ende
+
+                        Try
+                            itemName = CStr(CType(.Cells(i, 2), Excel.Range).Value).Trim
+                        Catch ex As Exception
+                            itemName = ""
+                            ok = False
+                        End Try
+
+                        If ok Then
+
+                            pStartDate = CDate(CType(.Cells(i, 3), Excel.Range).Value)
+                            pEndDate = CDate(CType(.Cells(i, 4), Excel.Range).Value)
+                            startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
+                            duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
+
+                            If duration > 1 Then
+                                ' es handelt sich um eine Phase 
+                                phaseName = itemName
+                                cphase = New clsPhase(parent:=hproj)
+                                cphase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+
+                                If PhaseDefinitions.Contains(phaseName) Then
+                                    ' nichts tun 
+                                Else
+                                    ' in die Phase-Definitions aufnehmen 
+
+                                    Dim hphase As clsPhasenDefinition
+                                    hphase = New clsPhasenDefinition
+
+                                    'hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
+                                    hphase.name = phaseName
+                                    hphase.UID = phaseIX
+                                    phaseIX = phaseIX + 1
+
+                                    Try
+                                        PhaseDefinitions.Add(hphase)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
+
+                                cphase.changeStartandDauer(startoffset, duration)
+                                hproj.AddPhase(cphase)
+                                lastPhaseName = cphase.nameID
+
+                            ElseIf duration = 1 Then
+
+                                Try
+                                    ' es handelt sich um einen Meilenstein 
+
+                                    Dim bewertungsAmpel As Integer
+                                    Dim explanation As String
+
+                                    bewertungsAmpel = CInt(CType(.Cells(i, 12), Excel.Range).Value)
+                                    explanation = CStr(CType(.Cells(i, 1), Excel.Range).Value)
+
+                                    cphase = hproj.getPhaseByID(lastPhaseName)
+                                    cresult = New clsMeilenstein(parent:=cphase)
+                                    cbewertung = New clsBewertung
+
+
+
+                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung
+                                        bewertungsAmpel = 0
+                                    End If
+
+                                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                    With cbewertung
+                                        '.bewerterName = resultVerantwortlich
+                                        .colorIndex = bewertungsAmpel
+                                        .datum = Date.Now
+                                        .description = explanation
+                                    End With
+
+                                    With cresult
+                                        .nameID = hproj.hierarchy.findUniqueElemKey(itemName, True)
+                                        .setDate = pEndDate
+                                        If Not cbewertung Is Nothing Then
+                                            .addBewertung(cbewertung)
+                                        End If
+                                    End With
+
+                                    Try
+                                        With cphase
+                                            .addMilestone(cresult)
+                                        End With
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Catch ex As Exception
+
+                                End Try
 
 
 
 
-                ' handelt es sich um eine Phase oder um einen Meilenstein ? 
+                            End If
 
 
-            End If
 
 
-        Next
+                            ' handelt es sich um eine Phase oder um einen Meilenstein ? 
+
+
+                        End If
+
+
+                    Next
 
 
                     ' jetzt muss das Projekt eingetragen werden 
+
                     ImportProjekte.Add(hproj, updateCurrentConstellation:=False, checkOnConflicts:=False)
+
                     myCollection.Add(hproj.name)
 
 
-        zeile = ende + 1
+                    zeile = ende + 1
 
-        Do While CBool(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color IsNot projektFarbe) And zeile <= lastRow
-            zeile = zeile + 1
-        Loop
+                    Do While CBool(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Interior.Color IsNot projektFarbe) And zeile <= lastRow
+                        zeile = zeile + 1
+                    Loop
 
                 End While
 
@@ -3652,15 +3665,18 @@ Public Module awinGeneralModules
 
                 ProjectStartDate = CDate(msproj.ProjectStart)
 
+
                 If CDate(msproj.Start) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.Start)
                 End If
+
 
                 If CDate(msproj.EarlyStart) < ProjectStartDate Then
                     ProjectStartDate = CDate(msproj.EarlyStart)
                 End If
 
 
+                ' Projekt nun mit diesem Startdatum anlegen
                 hproj = New clsProjekt(CDate(ProjectStartDate).Date, CDate(ProjectStartDate).Date, CDate(ProjectStartDate).Date)
 
 
@@ -3919,8 +3935,11 @@ Public Module awinGeneralModules
                             Dim cphaseStartOffset As Long
                             Dim dauerIndays As Long
 
-                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start).Date)
-                            dauerIndays = calcDauerIndays(CDate(msTask.Start).Date, CDate(msTask.Finish).Date)
+                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
+                            If cphaseStartOffset < 0 Then
+                                Throw New ArgumentException("Beginn der Task " & msTask.Name & "liegt vor ProjektStart")
+                            End If
+                            dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
 
                             .changeStartandDauer(cphaseStartOffset, dauerIndays)
                             .offset = 0
@@ -4898,8 +4917,6 @@ Public Module awinGeneralModules
     Public Sub importProjekteEintragen(ByVal importDate As Date, ByVal drawPlanTafel As Boolean)
 
 
-        'Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
-        '                                   Optional ByVal scenarioName As String = "")
         Dim hproj As New clsProjekt, cproj As New clsProjekt
         Dim fullName As String, vglName As String
         'Dim pname As String
@@ -4908,18 +4925,17 @@ Public Module awinGeneralModules
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
-        'Dim shpElement As Excel.Shape
+
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
         Dim wasNotEmpty As Boolean
 
         Dim existsInSession As Boolean = False
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' aus der Datenbank alle WriteProtections holen ...
         If Not noDB And AlleProjekte.Count > 0 Then
-            writeProtections.adjustListe = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
         End If
 
         If AlleProjekte.Count > 0 Then
@@ -4931,14 +4947,6 @@ Public Module awinGeneralModules
 
 
         Dim differentToPrevious As Boolean = False
-
-        ' Änderung tk 5.6.16: 
-        'es wird jetzt getrennt zwischen dem was in einer Constellation gespeichert werden soll und dem , 
-        ' was noch in die Session importiert werden muss. 
-
-        ''If myCollection.Count <> ImportProjekte.Count Then
-        ''    Throw New ArgumentException("keine Übereinstimmung In der Anzahl gültiger/ímportierter Projekte - Abbruch!")
-        ''End If
 
 
         anzAktualisierungen = 0
@@ -5075,7 +5083,7 @@ Public Module awinGeneralModules
 
                                 ' nicht erfolgreich, weil durch anderen geschützt ... 
                                 ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                                wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                                 writeProtections.upsert(wpItem)
 
                                 ' jetzt Variante anlegen 
@@ -5305,13 +5313,13 @@ Public Module awinGeneralModules
         Try
 
             If Not noDB Then
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If request.pingMongoDb() Then
 
-                    If request.projectNameAlreadyExists(pName, vName, datum) Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, datum) Then
 
                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                        tmpResult = request.retrieveOneProjectfromDB(pName, vName, datum)
+                        tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, datum)
 
                     Else
                         ' nichts tun, tmpResult ist bereits Nothing 
@@ -5556,13 +5564,13 @@ Public Module awinGeneralModules
 
                                 '
                                 ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                                If request.pingMongoDb() Then
 
-                                    If request.projectNameAlreadyExists(projectName, variantName, Date.Now) Then
+                                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectName, variantName, Date.Now) Then
 
                                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                        hproj = request.retrieveOneProjectfromDB(projectName, variantName, Date.Now)
+                                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projectName, variantName, Date.Now)
                                         ' jetzt in AlleProjekte eintragen ... 
                                         If Not IsNothing(hproj) Then
                                             AlleProjekte.Add(hproj)
@@ -5843,10 +5851,8 @@ Public Module awinGeneralModules
                         End If
 
 
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
-                                                   dbUsername, dbPasswort)
 
-                        If request.projectNameAlreadyExists(pName, variantName, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now) Then
                             ' als Constellation Item aufnehmen 
                             Dim cItem As New clsConstellationItem
 
@@ -8434,11 +8440,11 @@ Public Module awinGeneralModules
 
             Else
                 ' ist es in der Datenbank? wenn ja, in AlleProjekte holen ... 
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                 Dim storedAtOrBefore = Date.Now
 
-                If request.projectNameAlreadyExists(pname, "", storedAtOrBefore) Then
-                    oldProj = request.retrieveOneProjectfromDB(pname, "", storedAtOrBefore)
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pname, "", storedAtOrBefore) Then
+                    oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pname, "", storedAtOrBefore)
                 End If
 
                 If Not IsNothing(oldProj) Then
@@ -8455,7 +8461,7 @@ Public Module awinGeneralModules
                     ' jetzt wird noch über die Kunden-Projekt-Nummer gesucht ... 
                     ' auuserdem wird dann ggf noch das Projekt angelegt ... 
 
-                    Dim pNames As Collection = request.retrieveProjectNamesByPNRFromDB(projektKDNr)
+                    Dim pNames As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(projektKDNr)
 
                     ' greift die LookupTable ? 
                     Dim considerLookUpTable As Boolean = False
@@ -8473,8 +8479,8 @@ Public Module awinGeneralModules
                         ' in der Datenbank gibt es aktuell genau ein Projekt, dem diese Projekt-Kundennummer zugeordnet ist 
                         Dim visboDBname As String = pNames.Item(1)
 
-                        If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
-                            oldProj = request.retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
+                            oldProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
                         End If
 
                         If Not IsNothing(oldProj) Then
@@ -8523,9 +8529,9 @@ Public Module awinGeneralModules
                         Dim visboDBname As String = lookupTable.Item(projektKDNr)
 
                         If visboDBname.Trim <> "" Then
-                            If request.projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(visboDBname, "", storedAtOrBefore) Then
 
-                                Dim rupiProj As clsProjekt = request.retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
+                                Dim rupiProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(visboDBname, "", storedAtOrBefore)
                                 If Not IsNothing(rupiProj) Then
                                     projektListe.Add(rupiProj, updateCurrentConstellation:=False, checkOnConflicts:=False)
                                     fctResult = True
@@ -8914,16 +8920,16 @@ Public Module awinGeneralModules
                         ' nicht in der Session, aber ist es in der Datenbank ?  
 
                         If Not noDB Then
-
                             '
                             ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
-                            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                            If request.pingMongoDb() Then
 
-                                If request.projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
+                            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now) Then
 
                                     ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                    vglProj = request.retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
+                                    vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now)
+
 
                                     If IsNothing(vglProj) Then
                                         ' kann eigentlich nicht sein 
@@ -13166,17 +13172,17 @@ Public Module awinGeneralModules
         Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
-        Dim request As New Request(awinSettings.databaseURL, databaseName, dbUsername, dbPasswort)
+
         Dim lastConstellation As New clsConstellation
         Dim hproj As clsProjekt
 
-        If request.pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-            projectConstellations = request.retrieveConstellationsFromDB()
+            projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
 
-            ' Showprojekte leer machen 
+
             Try
-                'NoShowProjekte.Clear()
+
                 ShowProjekte.Clear()
                 lastConstellation = projectConstellations.getConstellation(calcLastSessionScenarioName)
             Catch ex As Exception
@@ -13213,247 +13219,147 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Sub awinProjekteImZeitraumLaden(ByVal databaseName As String, ByVal filter As clsFilter)
 
-        Dim zeitraumVon As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
-        Dim zeitraumbis As Date = StartofCalendar.AddMonths(showRangeRight - 1)
-        Dim storedHeute As Date = Now
-        Dim storedGestern As Date = storedHeute.AddDays(-1)
-        Dim pname As String = ""
-        Dim variantName As String = ""
-        Dim request As New Request(awinSettings.databaseURL, databaseName, dbUsername, dbPasswort)
-        Dim lastConstellation As New clsConstellation
-        Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
-        Dim projektHistorie As New clsProjektHistorie
+        Try
+            Dim zeitraumVon As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+            Dim zeitraumbis As Date = StartofCalendar.AddMonths(showRangeRight - 1)
+            Dim storedHeute As Date = Now
+            Dim storedGestern As Date = storedHeute.AddDays(-1)
+            Dim pname As String = ""
+            Dim variantName As String = ""
+
+            Dim lastConstellation As New clsConstellation
+            Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
+            Dim projektHistorie As New clsProjektHistorie
 
 
-        Dim ok As Boolean = True
-        Dim filterIsActive As Boolean
-        Dim toShowListe As New SortedList(Of Double, String)
+            Dim ok As Boolean = True
+            Dim filterIsActive As Boolean
+            Dim toShowListe As New SortedList(Of Double, String)
 
 
-        ' wurde ein definierter Filter mit übergeben ?
-        If IsNothing(filter) Then
-            filterIsActive = False
-        Else
-            If filter.isEmpty Then
+            ' wurde ein definierter Filter mit übergeben ?
+            If IsNothing(filter) Then
                 filterIsActive = False
             Else
-                filterIsActive = True
-            End If
-        End If
-
-        If request.pingMongoDb() Then
-
-            projekteImZeitraum = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-        Else
-            Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-        End If
-
-        If AlleProjekte.Count > 0 Then
-            ' es sind bereits Projekte geladen 
-            Dim atleastOne As Boolean = False
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
-
-                If filterIsActive Then
-                    ok = filter.doesNotBlock(kvp.Value)
+                If filter.isEmpty Then
+                    filterIsActive = False
                 Else
-                    ok = True
+                    filterIsActive = True
                 End If
+            End If
 
-                If ok Then
-                    ' Ist das Projekt bereits in AlleProjekte ? 
-                    If AlleProjekte.Containskey(kvp.Key) Then
-                        ' das Projekt soll nicht überschrieben werden ...
-                        ' also nichts tun 
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                projekteImZeitraum = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+            End If
+
+            If AlleProjekte.Count > 0 Then
+                ' es sind bereits Projekte geladen 
+                Dim atleastOne As Boolean = False
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
+
+                    If filterIsActive Then
+                        ok = filter.doesNotBlock(kvp.Value)
                     Else
-                        ' Workaround: 
-                        Dim tmpValue As Integer = kvp.Value.dauerInDays
-                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                        ' Call awinCreateBudgetWerte(kvp.Value)
-                        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
-                            AlleProjekte.Add(kvp.Value)
-                            If ShowProjekte.contains(kvp.Value.name) Then
-                                ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
-                            Else
-                                ShowProjekte.Add(kvp.Value)
-                                atleastOne = True
+                        ok = True
+                    End If
+
+                    If ok Then
+                        ' Ist das Projekt bereits in AlleProjekte ? 
+                        If AlleProjekte.Containskey(kvp.Key) Then
+                            ' das Projekt soll nicht überschrieben werden ...
+                            ' also nichts tun 
+                        Else
+                            ' Workaround: 
+                            Dim tmpValue As Integer = kvp.Value.dauerInDays
+                            ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                            ' Call awinCreateBudgetWerte(kvp.Value)
+                            If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
+                                AlleProjekte.Add(kvp.Value)
+                                If ShowProjekte.contains(kvp.Value.name) Then
+                                    ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
+                                Else
+                                    ShowProjekte.Add(kvp.Value)
+                                    atleastOne = True
+                                End If
                             End If
+
                         End If
 
                     End If
 
+                Next
+
+                ' jetzt ist Showprojekte und AlleProjekte aufgebaut ... 
+                ' jetzt muss ClearPlanTafel kommen 
+                If atleastOne Then
+                    Call awinClearPlanTafel()
+                    Call awinZeichnePlanTafel(True)
                 End If
 
-            Next
+            Else
 
-            ' jetzt ist Showprojekte und AlleProjekte aufgebaut ... 
-            ' jetzt muss ClearPlanTafel kommen 
-            If atleastOne Then
-                Call awinClearPlanTafel()
-                Call awinZeichnePlanTafel(True)
-            End If
+                ShowProjekte.Clear()
+                ' ShowProjekte aufbauen
 
-        Else
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
 
-            ShowProjekte.Clear()
-            ' ShowProjekte aufbauen
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
-
-                If filterIsActive Then
-                    ok = filter.doesNotBlock(kvp.Value)
-                Else
-                    ok = True
-                End If
-
-                If ok Then
-
-                    Dim tmpValue As Integer = kvp.Value.dauerInDays
-                    ' tk, Änderung 19.1.17 nicht mehr notwendig ..
-                    ' Call awinCreateBudgetWerte(kvp.Value)
-
-                    If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
-
-                        AlleProjekte.Add(kvp.Value)
-
-                        Try
-                            ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
-                            If ShowProjekte.contains(kvp.Value.name) Then
-                                If kvp.Value.variantName = "" Then
-                                    ShowProjekte.Remove(kvp.Value.name)
-                                    ShowProjekte.Add(kvp.Value)
-                                End If
-                            Else
-                                ShowProjekte.Add(kvp.Value)
-                            End If
-
-                        Catch ex As Exception
-                            Call MsgBox(ex.Message)
-                        End Try
+                    If filterIsActive Then
+                        ok = filter.doesNotBlock(kvp.Value)
+                    Else
+                        ok = True
                     End If
 
-                End If
+                    If ok Then
 
-            Next
+                        Dim tmpValue As Integer = kvp.Value.dauerInDays
+                        ' tk, Änderung 19.1.17 nicht mehr notwendig ..
+                        ' Call awinCreateBudgetWerte(kvp.Value)
 
-            Call awinZeichnePlanTafel(True)
+                        If Not AlleProjekte.hasAnyConflictsWith(calcProjektKey(kvp.Value), kvp.Value.projectType = ptPRPFType.portfolio) Then
 
-        End If
+                            AlleProjekte.Add(kvp.Value)
+
+                            Try
+                                ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
+                                If ShowProjekte.contains(kvp.Value.name) Then
+                                    If kvp.Value.variantName = "" Then
+                                        ShowProjekte.Remove(kvp.Value.name)
+                                        ShowProjekte.Add(kvp.Value)
+                                    End If
+                                Else
+                                    ShowProjekte.Add(kvp.Value)
+                                End If
+
+                            Catch ex As Exception
+                                Call MsgBox(ex.Message)
+                            End Try
+                        End If
+
+                    End If
+
+                Next
+
+                Call awinZeichnePlanTafel(True)
+
+            End If
+
+
+        Catch ex As Exception
+            Dim hstr() As String = Split(ex.Message, ":")
+            If CInt(hstr(0)) = 401 Then
+                Call MsgBox("neuer Login erforderlich")
+                loginErfolgreich = logInToMongoDB(True)
+            Else
+                Throw New ArgumentException(ex.Message)
+            End If
+        End Try
 
 
     End Sub
-    ' wurde ersetzt durch addConstellation
-    '' ''' <summary>
-    '' ''' lädt ein bestimmtes Portfolio von der Datenbank und zeigt es  
-    '' ''' in der Projekttafel an.
-    '' ''' 
-    '' ''' </summary>
-    '' ''' <param name="activeConstellation">
-    '' ''' Konstellation, die geladen werden soll  
-    '' ''' </param>
-    '' ''' <remarks></remarks>
-    '' ''' 
-    ''Public Sub loadConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date)
-
-    ''    Dim hproj As New clsProjekt
-    ''    Dim nvErrorMessage As String = ""
-    ''    Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
-    ''    Dim outPutCollection = New Collection
-    ''    Dim outputLine As String = ""
-
-
-    ''    ' prüfen, ob diese Constellation bereits existiert ..
-    ''    If IsNothing(activeConstellation) Then
-    ''        Call MsgBox(" das Szenario darf nicht NULL sein ... ")
-    ''        Exit Sub
-    ''    End If
-
-    ''    ShowProjekte.Clear()
-
-    ''    ' jetzt werden die Start-Values entsprechend gesetzt ..
-
-    ''    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
-
-    ''        If AlleProjekte.Containskey(kvp.Key) Then
-    ''            ' Projekt ist bereits im Hauptspeicher geladen
-    ''            hproj = AlleProjekte.getProject(kvp.Key)
-
-    ''        ElseIf Not noDB Then
-
-    ''            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-    ''            If request.pingMongoDb() Then
-
-    ''                If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore) Then
-
-    ''                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-    ''                    hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, storedAtOrBefore)
-    ''                    If Not IsNothing(hproj) Then
-    ''                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-    ''                        AlleProjekte.Add(hproj)
-    ''                    Else
-    ''                        outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ") Code: 098 " & nvErrorMessage
-    ''                        outPutCollection.Add(outputLine)
-    ''                    End If
-
-    ''                Else
-
-    ''                    hproj = Nothing
-    ''                    outputLine = kvp.Value.projectName & "(" & kvp.Value.variantName & ")" & nvErrorMessage
-    ''                    outPutCollection.Add(outputLine)
-    ''                End If
-    ''            Else
-    ''                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-    ''            End If
-
-    ''            ''Else      ' not noDB
-    ''            ''    Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
-
-    ''        End If
-
-    ''        If Not IsNothing(hproj) Then
-    ''            If hproj.name = kvp.Value.projectName Then
-
-    ''                With hproj
-
-    ''                    .tfZeile = kvp.Value.zeile
-
-    ''                End With
-
-    ''                If kvp.Value.show Then
-
-    ''                    Try
-
-    ''                        ShowProjekte.Add(hproj)
-
-    ''                    Catch ex1 As Exception
-    ''                        outputLine = hproj.name & "(" & hproj.variantName & ")" & " (konnte der Session nicht hinzugefügt werden)"
-    ''                        outPutCollection.Add(outputLine)
-    ''                    End Try
-
-    ''                    ' jetzt zeichnen des Projektes 
-    ''                    ' neu zeichnen des Projekts 
-    ''                    Dim tmpCollection As New Collection
-    ''                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
-
-    ''                End If
-
-
-    ''            End If
-    ''        End If
-
-
-    ''    Next
-
-    ''    ' die aktuelle Konstellation in "Last" speichern 
-    ''    'Call storeSessionConstellation("Last")
-
-    ''    If outPutCollection.Count > 0 Then
-    ''        Call showOutPut(outPutCollection, _
-    ''                        "Meldungen", _
-    ''                        "zum Zeitpunkt " & storedAtOrBefore.ToString & " nicht in DB vorhanden:")
-    ''    End If
-
-    ''End Sub
 
     ''' <summary>
     ''' visualisiert die in der Konstellation aufgeführten Projekte hinzu; 
@@ -13464,8 +13370,6 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date)
 
-
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
         Dim outPutCollection = New Collection
@@ -13586,7 +13490,6 @@ Public Module awinGeneralModules
         Dim tryZeile As Integer
         Dim nvErrorMessage As String = ""
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         If AlleProjekte.Containskey(key) Then
             ' Projekt ist bereits im Hauptspeicher geladen
@@ -13642,14 +13545,15 @@ Public Module awinGeneralModules
 
 
 
-
         Else
-            If request.pingMongoDb() Then
 
-                If request.projectNameAlreadyExists(pName, vName, storedAtOrBefore) Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAtOrBefore) Then
 
                     ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                    hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtOrBefore)
+                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAtOrBefore)
+
 
                     If Not IsNothing(hproj) Then
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
@@ -13717,7 +13621,6 @@ Public Module awinGeneralModules
     ''' <returns></returns>
     Public Function getProjektFromSessionOrDB(ByVal pName As String, ByVal vName As String, ByVal projektliste As clsProjekteAlle, ByVal storedAt As Date) As clsProjekt
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim key As String = calcProjektKey(pName, vName)
         Dim hproj As clsProjekt = Nothing
         Try
@@ -13726,8 +13629,8 @@ Public Module awinGeneralModules
 
             If IsNothing(hproj) Then
 
-                If request.projectNameAlreadyExists(pName, vName, storedAt) Then
-                    hproj = request.retrieveOneProjectfromDB(pName, vName, storedAt)
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt) Then
+                    hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAt)
                 End If
             End If
         Catch ex As Exception
@@ -14038,7 +13941,6 @@ Public Module awinGeneralModules
         Dim outputLine As String = ""
 
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' wenn HistoryMode aktiv ist ... 
         If demoModusHistory Then
@@ -14052,6 +13954,7 @@ Public Module awinGeneralModules
             Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
 
             If Not IsNothing(hproj) Then
+
                 If hproj.projectType = ptPRPFType.portfolio Then
                     ' dann muss erst diese Child-Constellation gespeichert werden ...
                     Dim childConstellation As clsConstellation = projectConstellations.getConstellation(hproj.name)
@@ -14061,10 +13964,10 @@ Public Module awinGeneralModules
                 End If
 
                 ' jetzt wird das Projekt bzw. Summary Projekt behandelt ... 
-                If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
+                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now) Then
                     ' speichern des Projektes 
                     hproj.timeStamp = DBtimeStamp
-                    If request.storeProjectToDB(hproj, dbUsername) Then
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
                             outputLine = "saved: " & hproj.name & ", " & hproj.variantName
@@ -14076,7 +13979,7 @@ Public Module awinGeneralModules
 
                         anzahlNeue = anzahlNeue + 1
 
-                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                     Else
@@ -14088,17 +13991,17 @@ Public Module awinGeneralModules
                         End If
                         outPutCollection.Add(outputLine)
 
-                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                     End If
                 Else
                     ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
-                    Dim oldProj As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
+                    Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now)
                     ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
                     If Not hproj.isIdenticalTo(oldProj) Then
                         hproj.timeStamp = DBtimeStamp
-                        If request.storeProjectToDB(hproj, dbUsername) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                             If awinSettings.englishLanguage Then
                                 outputLine = "saved: " & hproj.name & ", " & hproj.variantName
@@ -14111,7 +14014,7 @@ Public Module awinGeneralModules
                             ' alles ok
                             anzahlChanged = anzahlChanged + 1
 
-                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                             writeProtections.upsert(wpItem)
                         Else
                             If awinSettings.englishLanguage Then
@@ -14121,7 +14024,7 @@ Public Module awinGeneralModules
                             End If
                             outPutCollection.Add(outputLine)
 
-                            Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                             writeProtections.upsert(wpItem)
 
                         End If
@@ -14136,6 +14039,7 @@ Public Module awinGeneralModules
 
         ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
         Try
+
             Dim budget As Double = projectConstellations.getBudgetOfLoadedPortfolios
 
             If budget = 0 Then
@@ -14171,10 +14075,9 @@ Public Module awinGeneralModules
         End Try
 
 
-
         ' jetzt wird das Portfolio weggeschrieben 
         Try
-            If request.storeConstellationToDB(currentConstellation) Then
+            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(currentConstellation) Then
                 ' alles in Ordnung, Speichern hat geklappt ... 
             Else
                 If awinSettings.englishLanguage Then
@@ -14233,7 +14136,7 @@ Public Module awinGeneralModules
     ''' </param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub awinRemoveConstellation(ByVal constellationName As String, ByVal deleteDB As Boolean)
+    Public Function awinRemoveConstellation(ByVal constellationName As String, ByVal deleteDB As Boolean) As Boolean
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
@@ -14244,15 +14147,16 @@ Public Module awinGeneralModules
             activeConstellation = projectConstellations.getConstellation(constellationName)
         Catch ex As Exception
             Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
-            Exit Sub
+            awinRemoveConstellation = False
+            Exit Function
         End Try
 
         If deleteDB Then
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If request.pingMongoDb() Then
+
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                 ' Konstellation muss aus der Datenbank gelöscht werden.
-                returnValue = request.removeConstellationFromDB(activeConstellation)
+                returnValue = CType(databaseAcc, DBAccLayer.Request).removeConstellationFromDB(activeConstellation)
                 If returnValue = False Then
                     Call MsgBox("Fehler bei Löschen Portfolio : " & activeConstellation.constellationName)
                 End If
@@ -14270,10 +14174,12 @@ Public Module awinGeneralModules
                 Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
             End Try
         Else
-            Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
+            'Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
         End If
 
-    End Sub
+        awinRemoveConstellation = returnValue
+
+    End Function
 
     ''' <summary>
     ''' lädt die über pName#vName angegebene Variante aus der Datenbank;
@@ -14286,9 +14192,10 @@ Public Module awinGeneralModules
                                  ByVal pName As String, vName As String, ByVal show As Boolean,
                                  ByVal storedAtORBefore As Date)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pName, vName)
+
 
 
         If AlleProjekte.hasAnyConflictsWith(key, False) Then
@@ -14298,7 +14205,9 @@ Public Module awinGeneralModules
             ' ab diesem Wert soll neu gezeichnet werden 
             Dim freieZeile As Integer = projectboardShapes.getMaxZeile
 
-            hproj = request.retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
+
+            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAtORBefore)
+
 
 
             If Not IsNothing(hproj) Then
@@ -14310,9 +14219,11 @@ Public Module awinGeneralModules
 
                 AlleProjekte.Add(hproj)
 
+
                 ' jetzt die writeProtections aktualisieren 
-                Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                 writeProtections.upsert(wpItem)
+
 
                 If show Then
                     ' prüfen, ob es bereits in der Showprojekt enthalten ist
@@ -14348,8 +14259,6 @@ Public Module awinGeneralModules
         If kennung = PTTvActions.delFromDB Or
             kennung = PTTvActions.delAllExceptFromDB Then
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
             If kennung = PTTvActions.delAllExceptFromDB Then
 
@@ -14396,9 +14305,9 @@ Public Module awinGeneralModules
                             If writeProtections.isProtected(keyV, dbUsername) Then
                                 ' kann nichts machen ...
                             Else
-                                If request.deleteProjectTimestampFromDB(pname, variantName, zeitStempel, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(pname, variantName, zeitStempel, dbUsername) Then
                                     ' all ok 
-                                    If request.storeProjectToDB(variantProject, dbUsername) Then
+                                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(variantProject, dbUsername) Then
                                         ' alles ok; jetzt  
                                     Else
 
@@ -14435,7 +14344,7 @@ Public Module awinGeneralModules
                     For Each singleTimeStamp As Date In timeStampsToDelete
 
 
-                        If request.deleteProjectTimestampFromDB(pname, variantName, singleTimeStamp, dbUsername) Then
+                        If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(pname, variantName, singleTimeStamp, dbUsername) Then
                             ' all ok 
                             anzDeleted = anzDeleted + 1
                         Else
@@ -14481,7 +14390,7 @@ Public Module awinGeneralModules
                             projekthistorie.clear() ' alte Historie löschen
                         End If
 
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB _
+                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                                 (projectname:=pname, variantName:=variantName,
                                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
@@ -14489,7 +14398,7 @@ Public Module awinGeneralModules
                         ' jetzt über alle Elemente der Projekthistorie ..
                         For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
 
-                            If request.deleteProjectTimestampFromDB(pname, variantName, kvp.Key, dbUsername) Then
+                            If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(pname, variantName, kvp.Key, dbUsername) Then
                                 ' all ok 
                                 anzDeleted = anzDeleted + 1
                             Else
@@ -14601,14 +14510,11 @@ Public Module awinGeneralModules
 
         Dim tsToDelete As New Collection
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
-
         If Not IsNothing(projekthistorie) Then
             projekthistorie.clear() ' alte Historie löschen
         End If
 
-        projekthistorie.liste = request.retrieveProjectHistoryFromDB _
+        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                 (projectname:=pName, variantName:=vName,
                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1))
 
@@ -14782,13 +14688,12 @@ Public Module awinGeneralModules
                                                   ByVal timeStamp As Date, ByRef first As Boolean)
 
         Dim outputLine As String = ""
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+
         Dim hproj As clsProjekt
 
         If first Then
             projekthistorie.clear() ' alte Historie löschen
-            projekthistorie.liste = request.retrieveProjectHistoryFromDB _
+            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                    (projectname:=pname, variantName:=variantName,
                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
             first = False
@@ -14817,7 +14722,7 @@ Public Module awinGeneralModules
         Else
             ' Speichern im Papierkorb, dann löschen
             'If requestTrash.storeProjectToDB(hproj) Then
-            If request.deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName,
+            If CType(databaseAcc, DBAccLayer.Request).deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName,
                                   stored:=timeStamp, userName:=dbUsername) Then
                 'Call MsgBox("ok, gelöscht")
             Else
@@ -16112,9 +16017,8 @@ Public Module awinGeneralModules
 
                 Catch ex2 As Exception
                     If fehler Then
-                        'Call MsgBox(msgtxt)
-                        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        RoleDefinitions = request.retrieveRolesFromDB(DateTime.Now)
+
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now)
 
                         msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
                         If awinSettings.englishLanguage Then
@@ -16175,9 +16079,9 @@ Public Module awinGeneralModules
             baseVariantProj = AlleProjekte.getProject(pName, "")
 
             If IsNothing(baseVariantProj) Then
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If request.projectNameAlreadyExists(pName, "", Date.Now) Then
-                    baseVariantProj = request.retrieveOneProjectfromDB(pName, "", Date.Now)
+
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now) Then
+                    baseVariantProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", Date.Now)
                     baseVariantStatus = baseVariantProj.Status
                 End If
             Else
@@ -16254,302 +16158,9 @@ Public Module awinGeneralModules
             zeitraumbis = getDateofColumn(showRangeRight, True)
         End If
 
-
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        buildPvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
+        buildPvNamesList = CType(databaseAcc, DBAccLayer.Request).retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
 
     End Function
-
-    ' wird nicht mehr verwendet - jetzt mit upDateTreeView gelöst 
-    '' ''' <summary>
-    '' ''' baut den aktuell gültigen Treeview auf  
-    '' ''' </summary>
-    '' ''' <remarks></remarks>
-    ''Friend Sub buildTreeview(ByRef projektHistorien As clsProjektDBInfos, _
-    ''                          ByRef TreeviewProjekte As TreeView, _
-    ''                          ByRef pvNamesList As SortedList(Of String, String), _
-    ''                          ByVal constellation As clsConstellation, _
-    ''                          ByVal aKtionskennung As Integer, _
-    ''                          ByVal quickList As Boolean, _
-    ''                          ByVal storedAtOrBefore As Date)
-
-    ''    Dim nodeLevel0 As TreeNode
-    ''    Dim zeitraumVon As Date = StartofCalendar
-    ''    Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
-    ''    'Dim storedHeute As Date = Now
-    ''    Dim storedGestern As Date = StartofCalendar
-    ''    Dim pname As String = ""
-    ''    Dim variantName As String = ""
-    ''    Dim loadErrorMsg As String = ""
-
-    ''    If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
-    ''        ' es ist ein Zeitraum definiert 
-    ''        zeitraumVon = getDateofColumn(showRangeLeft, False)
-    ''        zeitraumbis = getDateofColumn(showRangeRight, True)
-    ''    End If
-
-    ''    ' steuert, ob erstmal nur Projekt-Namen, Varianten-Namen gelesen werden 
-    ''    ' geht wesentlich schneller, wenn es sich um eine Datenbank mit sehr vielen Projekten handelt ... 
-
-
-    ''    Dim deletedProj As Integer = 0
-
-
-
-    ''    ' alles zurücksetzen 
-    ''    projektHistorien.clear()
-
-    ''    With TreeviewProjekte
-    ''        .Nodes.Clear()
-    ''    End With
-
-
-    ''    ' Alle Projekte aus DB
-    ''    ' projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-
-    ''    Select Case aKtionskennung
-
-    ''        Case PTTvActions.delFromDB
-    ''            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-    ''            pname = ""
-    ''            variantName = ""
-
-    ''            pvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
-    ''            quickList = True
-    ''            loadErrorMsg = "es gibt keine Projekte in der Datenbank"
-
-    ''        Case PTTvActions.delAllExceptFromDB
-    ''            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-    ''            pname = ""
-    ''            variantName = ""
-
-    ''            pvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
-    ''            quickList = True
-    ''            loadErrorMsg = "es gibt keine Projekte in der Datenbank"
-
-    ''        Case PTTvActions.delFromSession
-
-    ''            loadErrorMsg = "es sind keine Projekte geladen"
-
-    ''        Case PTTvActions.chgInSession
-
-    ''            loadErrorMsg = "es sind keine Projekte geladen"
-
-    ''        Case PTTvActions.loadPVS    ' ur: 30.01.2015: aktuell nicht benutzt!!!
-    ''            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-    ''            'Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
-
-    ''            pname = ""
-    ''            variantName = ""
-
-    ''            'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
-    ''            ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
-    ''            'aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedAtOrBefore, True)
-    ''            loadErrorMsg = "es gibt keine Projekte in der Datenbank"
-
-    ''        Case PTTvActions.loadPV
-
-    ''            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-    ''            pname = ""
-    ''            variantName = ""
-    ''            pvNamesList = request.retrieveProjectVariantNamesFromDB(zeitraumVon, zeitraumbis, storedAtOrBefore)
-    ''            quickList = True
-    ''            loadErrorMsg = "es gibt keine Projekte in der Datenbank"
-
-
-    ''        Case PTTvActions.activateV
-    ''            loadErrorMsg = "es sind keine Projekte geladen"
-
-    ''        Case PTTvActions.deleteV
-    ''            loadErrorMsg = "es sind keine Projekte geladen"
-
-
-    ''    End Select
-
-    ''    ' '' jetzt wird der Filter angewendet, wenn er angewendet werden soll 
-    ''    ' '' das wird jetzt in der Routine mitgegeben 
-    ''    ''If applyFilter And aktuelleGesamtListe.Count > 0 Then
-    ''    ''    aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
-    ''    ''End If
-
-    ''    'Dim aktuelleGesamtListe As clsProjekteAlle = AlleProjekte.createCopy(filteredBy:=constellation)
-    ''    If Not IsNothing(constellation) Or pvNamesList.Count >= 1 Then
-
-    ''        With TreeviewProjekte
-
-    ''            .CheckBoxes = True
-
-    ''            Dim projektliste As Collection
-
-    ''            If quickList Then
-    ''                projektliste = New Collection
-    ''                For Each kvp As KeyValuePair(Of String, String) In pvNamesList
-    ''                    Dim tmpName As String = kvp.Key
-    ''                    If tmpName.Contains("#") Then
-    ''                        Dim tmpStr() As String = tmpName.Split(New Char() {CChar("#")})
-    ''                        If Not projektliste.Contains(tmpStr(0)) Then
-    ''                            projektliste.Add(tmpStr(0), tmpStr(0))
-    ''                        End If
-    ''                    Else
-    ''                        If Not projektliste.Contains(tmpName) Then
-    ''                            projektliste.Add(tmpName, tmpName)
-    ''                        End If
-    ''                    End If
-    ''                Next
-
-    ''            Else
-    ''                'projektliste = aktuelleGesamtListe.getProjectNames
-    ''                projektliste = constellation.getProjectNames()
-    ''            End If
-
-    ''            Dim showPname As Boolean
-
-
-
-    ''            For Each pname In projektliste
-
-    ''                showPname = True
-
-    ''                ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
-    ''                If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then
-    ''                    If constellation.getVariantZahl(pname) = 0 Then
-    ''                        showPname = False
-    ''                    End If
-    ''                End If
-
-    ''                If showPname Then
-
-    ''                    Dim variantNames As Collection
-
-    ''                    If quickList Then
-    ''                        variantNames = getVariantListeFromPVNames(pvNamesList, pname)
-
-    ''                    Else
-    ''                        'variantNames = aktuelleGesamtListe.getVariantNames(pname, True)
-    ''                        variantNames = constellation.getVariantNames(pname, True)
-    ''                    End If
-
-    ''                    nodeLevel0 = .Nodes.Add(pname)
-
-    ''                    ' damit kann evtl direkt auf den Node zugegriffen werden ...
-    ''                    nodeLevel0.Name = pname
-
-    ''                    ' Berücksichtigung der Abhängigkeiten im TreeView ...
-    ''                    If allDependencies.projectCount > 0 Then
-    ''                        ' es gibt irgendwelche Dependencies, die Lead-Projekte, abhängigen Projekte 
-    ''                        ' und sowohl-als-auch-Projekte werden farblich markiert  
-
-    ''                        ' die Projekte suchen, von denen dieses Projekt abhängt 
-    ''                        Dim passivListe As Collection = allDependencies.passiveListe(pname, PTdpndncyType.inhalt)
-    ''                        Dim aktivListe As Collection = allDependencies.activeListe(pname, PTdpndncyType.inhalt)
-
-    ''                        If passivListe.Count > 0 And aktivListe.Count = 0 Then
-    ''                            ' ist nur abhängiges Projekt ...
-    ''                            nodeLevel0.ForeColor = Color.Gray
-
-
-    ''                        ElseIf passivListe.Count = 0 And aktivListe.Count > 0 Then
-    ''                            ' hat abhängige Projekte  
-    ''                            nodeLevel0.ForeColor = Color.OrangeRed
-
-    ''                        ElseIf passivListe.Count > 0 And aktivListe.Count > 0 Then
-    ''                            ' hängt ab und hat abhängige Projekte 
-    ''                            nodeLevel0.ForeColor = Color.Orange
-    ''                        End If
-
-    ''                    End If
-
-
-    ''                    ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
-
-    ''                    If variantNames.Count > 1 Or _
-    ''                        aKtionskennung = PTTvActions.delFromDB Then
-
-    ''                        nodeLevel0.Tag = "X"
-    ''                        For iv As Integer = 1 To variantNames.Count
-    ''                            Dim tmpNodeLevel1 As TreeNode = nodeLevel0.Nodes.Add(CStr(variantNames.Item(iv)))
-    ''                            If aKtionskennung = PTTvActions.delFromDB Then
-    ''                                tmpNodeLevel1.Tag = "P"
-    ''                                Dim tmpNodeLevel2 As TreeNode = tmpNodeLevel1.Nodes.Add("Platzhalter-Datum")
-    ''                            Else
-    ''                                tmpNodeLevel1.Tag = "X"
-    ''                            End If
-
-    ''                        Next
-
-    ''                    Else
-    ''                        nodeLevel0.Tag = "X"
-    ''                    End If
-
-    ''                    If aKtionskennung = PTTvActions.chgInSession Then
-    ''                        If ShowProjekte.contains(pname) Then
-    ''                            nodeLevel0.Checked = True
-
-    ''                            ' jetzt die betreffende Variante setzen
-    ''                            Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-    ''                            Dim vName As String = "(" & hproj.variantName & ")"
-
-    ''                            For Each tmpNode As TreeNode In nodeLevel0.Nodes
-    ''                                If tmpNode.Text = vName Then
-    ''                                    tmpNode.Checked = True
-    ''                                Else
-    ''                                    tmpNode.Checked = False
-    ''                                End If
-    ''                            Next
-
-
-    ''                        End If
-    ''                    ElseIf aKtionskennung = PTTvActions.delFromDB Then
-
-    ''                        Dim vName As String
-    ''                        If variantNames.Count > 1 Then
-
-    ''                            Dim allWereReferenced As Boolean = True
-    ''                            For Each tmpNode As TreeNode In nodeLevel0.Nodes
-
-    ''                                Dim tmpStr() As String = tmpNode.Text.Split(New Char() {CChar("("), CChar(")")})
-    ''                                vName = tmpStr(1)
-    ''                                If notReferencedByAnyPortfolio(pname, vName) Then
-    ''                                    ' alles ok 
-    ''                                    allWereReferenced = False
-    ''                                Else
-    ''                                    tmpNode.ForeColor = Color.DimGray
-    ''                                End If
-
-    ''                            Next
-
-    ''                            If allWereReferenced Then
-    ''                                nodeLevel0.ForeColor = Color.DimGray
-    ''                            End If
-
-    ''                        Else
-    ''                            Dim tmpStr() As String = CStr(variantNames.Item(1)).Split(New Char() {CChar("("), CChar(")")})
-    ''                            vName = tmpStr(1)
-    ''                            If notReferencedByAnyPortfolio(pname, vName) Then
-    ''                                ' alles ok , kann gelöscht werden 
-    ''                            Else
-    ''                                nodeLevel0.ForeColor = Color.DimGray
-    ''                            End If
-    ''                        End If
-
-    ''                    End If
-
-    ''                End If
-
-    ''            Next
-
-    ''        End With
-    ''    Else
-    ''        Call MsgBox(loadErrorMsg)
-    ''    End If
-
-
-    ''End Sub
-
-
 
 
 
@@ -16829,7 +16440,8 @@ Public Module awinGeneralModules
 
     ''' <summary>
     ''' es wird der LoginProzess angestoßen. Bei erfolgreichem Login wird in den Settings verschlüsselt
-    ''' userNamePWD gemerkt. Damit ist es möglich den nächsten Login zu automatisieren
+    ''' userNamePWD gemerkt, sofern awinSettings.rememberUserPwd = true gesetzt ist.
+    ''' Damit ist es möglich den nächsten Login zu automatisieren
     ''' </summary>
     ''' <param name="noDBAccess"></param>
     ''' <returns>true = erfolgreich</returns>
@@ -16845,9 +16457,11 @@ Public Module awinGeneralModules
                     ' tk: 17.11.16: Einloggen in Datenbank 
                     noDBAccess = Not loginProzedur()
                     If Not noDBAccess Then
-                        ' in diesem Fall das mySettings setzen 
-                        Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                        awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                        If awinSettings.rememberUserPwd Then
+                            ' in diesem Fall das mySettings setzen 
+                            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                            awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                        End If
                     End If
                 Else
                     If awinSettings.userNamePWD = "" Then
@@ -16855,9 +16469,11 @@ Public Module awinGeneralModules
                         noDBAccess = Not loginProzedur()
 
                         If Not noDBAccess Then
-                            ' in diesem Fall das mySettings setzen 
-                            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                            awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                            If awinSettings.rememberUserPwd Then
+                                ' in diesem Fall das mySettings setzen 
+                                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                                awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+                            End If
                         End If
 
                     Else
@@ -16869,9 +16485,15 @@ Public Module awinGeneralModules
                             noDBAccess = Not loginProzedur()
 
                             If Not noDBAccess Then
-                                ' in diesem Fall das mySettings setzen 
-                                Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
-                                awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+
+                                If awinSettings.rememberUserPwd Then
+                                    ' in diesem Fall das mySettings setzen 
+                                    Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+                                    awinSettings.userNamePWD = visboCrypto.verschluessleUserPwd(dbUsername, dbPasswort)
+
+                                End If
+                            Else
+
 
                             End If
 
@@ -16904,16 +16526,29 @@ Public Module awinGeneralModules
             user = visboCrypto.getUserNameFromCipher(cipherText)
             pwd = visboCrypto.getPwdFromCipher(cipherText)
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-            Dim ok As Boolean = request.createIndicesOnce()
-            If Not ok Then
-                tmpResult = False
-            Else
-                tmpResult = True
-                ' jetzt müssen die globalen Variablen dbusername und dbpasswod gesetzt werden 
-                dbUsername = user
-                dbPasswort = pwd
+            If IsNothing(databaseAcc) Then
+
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+                'Dim ok As Boolean = Request.createIndicesOnce()
+
+                Dim hrequest As New DBAccLayer.Request()
+                databaseAcc = hrequest
+
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+
+                If Not ok Then
+                    tmpResult = False
+                Else
+                    tmpResult = True
+                    ' jetzt müssen die globalen Variablen dbusername und dbpasswod gesetzt werden 
+                    dbUsername = user
+                    dbPasswort = pwd
+
+                    '' damit wird request jetzt public ...
+                    'databaseAcc = request
+                End If
             End If
+
 
         Catch ex As Exception
             tmpResult = False
@@ -16933,8 +16568,9 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Function testLoginInfo_OK(ByVal user As String, ByVal pwd As String) As Boolean
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
-        Dim ok As Boolean = request.createIndicesOnce()
+
+        'Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).createIndicesOnce()
+        Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).pingMongoDb()
 
         testLoginInfo_OK = ok
     End Function
@@ -18040,13 +17676,13 @@ Public Module awinGeneralModules
 
             If Not noDB Then
                 ' Filter mit Namen "fName" in DB speichern
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
 
                 ' Datenbank ist gestartet
-                If request.pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(False)
+                    Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
                     For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
                         If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
                             filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
@@ -18068,12 +17704,12 @@ Public Module awinGeneralModules
                 If Not noDB Then
 
                     ' allee Filter aus DB lesen
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
                     ' Datenbank ist gestartet
-                    If request.pingMongoDb() Then
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                        Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
+                        Dim listofDBFilter As SortedList(Of String, clsFilter) = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(True)
                         For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
 
                             If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
@@ -18320,7 +17956,7 @@ Public Module awinGeneralModules
 
     Sub awinShowMilestoneTrend(ByVal selectedMilestones As Collection)
 
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim listOfItems As New Collection
         Dim nameList As New SortedList(Of Date, String)
@@ -18342,7 +17978,7 @@ Public Module awinGeneralModules
             awinSelection = Nothing
         End Try
 
-        If request.pingMongoDb() Then
+        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
             If Not awinSelection Is Nothing Then
 
@@ -18377,7 +18013,7 @@ Public Module awinGeneralModules
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                             projekthistorie.Add(Date.Now, hproj)
 
@@ -18624,13 +18260,13 @@ Public Module awinGeneralModules
 
 
                 ' Filter mit Namen "fName" in DB speichern
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                 ' Datenbank ist gestartet
-                If request.pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
-                    Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, False)
+                    Dim returnvalue As Boolean = CType(databaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, False)
                     If returnvalue = False Then
                         Call MsgBox("Fehler bei Schreiben Filter: " & fName)
                     End If
@@ -18672,13 +18308,13 @@ Public Module awinGeneralModules
             If Not noDB Then
 
                 ' Filter mit Namen "fName" in DB speichern
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                 ' Datenbank ist gestartet
-                If request.pingMongoDb() Then
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
-                    Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, True)
+                    Dim returnvalue As Boolean = CType(databaseAcc, DBAccLayer.Request).storeFilterToDB(filterToStoreInDB, True)
                 Else
                     Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
                 End If
@@ -22377,35 +22013,7 @@ Public Module awinGeneralModules
         End Try
     End Sub
 
-    Public Sub XMLExportLicences(ByVal lic As clsLicences, ByVal nameLicfile As String)
 
-
-        Dim xmlfilename As String = awinPath & nameLicfile
-
-        Try
-
-            Dim serializer = New DataContractSerializer(GetType(clsLicences))
-
-            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
-            ' ''serializer.WriteObject(file, lic)
-            ' ''file.Close()
-
-            Dim settings As New XmlWriterSettings()
-            settings.Indent = True
-            settings.IndentChars = (ControlChars.Tab)
-            settings.OmitXmlDeclaration = True
-
-            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
-            serializer.WriteObject(writer, lic)
-            writer.Flush()
-            writer.Close()
-        Catch ex As Exception
-
-            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
-
-        End Try
-
-    End Sub
 
     Public Function XMLImportLicences(ByVal licfile As String) As clsLicences
 
@@ -22430,6 +22038,43 @@ Public Module awinGeneralModules
         End Try
 
     End Function
+
+    ''' <summary>
+    ''' Errechnete Lizenzen in lic werden in ein Lizenzfile geschrieben XML-Format
+    ''' </summary>
+    ''' <param name="lic"></param>
+    ''' <param name="nameLicfile"></param>
+    Public Sub XMLExportLicences(ByVal lic As clsLicences, ByVal nameLicfile As String)
+
+
+        Dim xmlfilename As String = awinPath & nameLicfile
+
+        Try
+
+            Dim serializer = New DataContractSerializer(GetType(clsLicences))
+
+            'Dim file As New FileStream(xmlfilename, FileMode.Create)
+            'serializer.WriteObject(file, lic)
+            'file.Close()
+
+            Dim settings As New XmlWriterSettings
+
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, lic)
+            writer.Flush()
+            writer.Close()
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+
+    End Sub
 
     Public Function XMLImportReportMsg(ByVal repMsgfile As String, ByVal language As String) As clsReportMessages
 
@@ -23804,8 +23449,8 @@ Public Module awinGeneralModules
                     Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
                 Else
                     ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    vorgabeProj = request.retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
 
                     ' Berechnung budget/Vorgabe 
                     budget = 0.0
@@ -24451,7 +24096,7 @@ Public Module awinGeneralModules
             End If
 
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
             For Each pvName As String In todoListe
@@ -24473,7 +24118,7 @@ Public Module awinGeneralModules
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -24596,8 +24241,8 @@ Public Module awinGeneralModules
 
                                     End With
 
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("##,##0.#")
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0.0")
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0")
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
 
@@ -24628,12 +24273,9 @@ Public Module awinGeneralModules
 
 
                                     If awinSettings.mePrzAuslastung Then
-                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0)
-                                        CType(.Cells(zeile, 7), Excel.Range).NumberFormat = "0%"
-
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("0%")
                                     Else
-                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0)
-                                        CType(.Cells(zeile, 7), Excel.Range).NumberFormat = "#,##0"
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = auslastungsArray(roleUID - 1, 0).ToString("#,##0")
                                     End If
 
                                     editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
@@ -24787,8 +24429,8 @@ Public Module awinGeneralModules
 
                                     End With
 
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme
-                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = "##,##0.0"
+                                    CType(.Cells(zeile, 6), Excel.Range).Value = zeilensumme.ToString("0")
+                                    CType(.Cells(zeile, 6), Excel.Range).NumberFormat = Format("######0.0")
                                     If awinSettings.allowSumEditing Then
 
                                         With CType(.Cells(zeile, 6), Excel.Range)
@@ -24828,7 +24470,7 @@ Public Module awinGeneralModules
                                     End If
 
                                     editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + 2 * (bis - von + 1) - 1)), Excel.Range)
-                                    editRange.NumberFormat = "##,##0.0"
+                                    editRange.NumberFormat = Format("#####0.0")
                                 End With
 
                                 ' zusammenmischen von Schnittmenge und Prozentual-Werte 
@@ -24972,7 +24614,7 @@ Public Module awinGeneralModules
 
                                     If awinSettings.allowSumEditing Then
                                         With CType(.Cells(zeile, 6), Excel.Range)
-                                            .NumberFormat = "##,##0.0"
+                                            .NumberFormat = Format("######0.0")
                                             .Value = ""
                                             If isProtectedbyOthers Then
                                             Else
@@ -25165,7 +24807,7 @@ Public Module awinGeneralModules
                         If awinSettings.mePrzAuslastung Then
                             tmpRange.NumberFormat = "0%"
                         Else
-                            tmpRange.NumberFormat = "##,##0.#"
+                            tmpRange.NumberFormat = "######0.0"
                         End If
 
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
@@ -25178,7 +24820,7 @@ Public Module awinGeneralModules
                             CType(tmpRange.Font, Excel.Font).Size = 9
                         End If
 
-                        tmpRange.NumberFormat = "##,##0.#"
+                        tmpRange.NumberFormat = "######0.0"
                         tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     End If
                     isPrz = Not isPrz
@@ -25437,7 +25079,7 @@ Public Module awinGeneralModules
 
             zeile = 2
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
             For Each pvName As String In todoListe
@@ -25459,7 +25101,7 @@ Public Module awinGeneralModules
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -25837,8 +25479,6 @@ Public Module awinGeneralModules
 
             zeile = 2
 
-            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
 
             For Each pvName As String In todoListe
 
@@ -25859,7 +25499,7 @@ Public Module awinGeneralModules
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -26115,16 +25755,15 @@ Public Module awinGeneralModules
 
         Dim wpItem As clsWriteProtectionItem
         Dim isProtectedbyOthers As Boolean
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-        If request.projectNameAlreadyExists(pName, vName, Date.Now) Then
+        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
 
             ' es existiert in der Datenbank ...
-            If request.checkChgPermission(pName, vName, dbUsername) Then
+            If CType(databaseAcc, DBAccLayer.Request).checkChgPermission(pName, vName, dbUsername) Then
 
                 isProtectedbyOthers = False
                 ' jetzt prüfen, ob es Null ist, von mir permanent/nicht permanent geschützt wurde .. 
-                wpItem = request.getWriteProtection(pName, vName)
+                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName)
 
                 Dim notYetDone As Boolean = False
 
@@ -26148,7 +25787,7 @@ Public Module awinGeneralModules
                                                               False,
                                                               True)
 
-                    If request.setWriteProtection(wpItem) Then
+                    If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
                         ' erfolgreich ...
                         writeProtections.upsert(wpItem)
                     Else
@@ -26788,6 +26427,8 @@ Public Module awinGeneralModules
                             awinSettings.visboMapping = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "userNamePWD"
                             awinSettings.userNamePWD = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOServer"
+                            awinSettings.visboServer = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "mongoDBWithSSL"
                             awinSettings.DBWithSSL = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "VISBODebug"
@@ -26834,7 +26475,7 @@ Public Module awinGeneralModules
 
 
         Dim currentPresentationName As String = ""
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPassword)
+
         Dim reportProfil As clsReportAll = XMLImportReportProfil(profilname)
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
@@ -26902,7 +26543,7 @@ Public Module awinGeneralModules
                         'Das gewählte Projekt reporten
 
                         Dim hproj As New clsProjekt
-                        hproj = request.retrieveOneProjectfromDB(projekte, variante, timestamp)
+                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projekte, variante, timestamp)
 
                         If Not IsNothing(hproj) Then
 
@@ -27006,7 +26647,7 @@ Public Module awinGeneralModules
 
                     Dim hproj As New clsProjekt
                     Dim constellations As New clsConstellations
-                    constellations = request.retrieveConstellationsFromDB()
+                    constellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
                     If Not IsNothing(constellations) Then
 
                         Dim curconstellation As clsConstellation = constellations.getConstellation(projekte)
@@ -27015,7 +26656,7 @@ Public Module awinGeneralModules
 
                             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In curconstellation.Liste
 
-                                hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, timestamp)
+                                hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName, timestamp)
 
                                 If Not IsNothing(hproj) Then
 
@@ -27269,11 +26910,11 @@ Public Module awinGeneralModules
 
 
             If holeHistory Then
-                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If request.pingMongoDb() Then
+
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
-                        If request.projectNameAlreadyExists(pName, vName, Date.Now) Then
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
+                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                         Else
                             projekthistorie.clear()
@@ -27304,7 +26945,7 @@ Public Module awinGeneralModules
     Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean)
 
         Dim chtobj As Excel.ChartObject
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
         Dim vglName As String = hproj.name.Trim
         Dim founddiagram As New clsDiagramm
         ' ''Dim IDkennung As String
@@ -27376,7 +27017,9 @@ Public Module awinGeneralModules
 
 
                                             Try
-                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
@@ -27397,7 +27040,9 @@ Public Module awinGeneralModules
 
                                             Dim vglProj As clsProjekt = Nothing
                                             Try
-                                                vglProj = request.retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
@@ -27473,8 +27118,9 @@ Public Module awinGeneralModules
 
         Dim tmpResult As Boolean = False
 
-        Dim jetzt As Date = Date.Now
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        Dim jetzt As Date = Now
+
         enableOnUpdate = False
 
 
@@ -27483,12 +27129,12 @@ Public Module awinGeneralModules
         Try
 
             ' die aktuelle WriteProtection holen 
-            writeProtections.adjustListe(False) = request.retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe(False) = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
 
             ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
             'Call storeSessionConstellation("Last")
 
-            If request.pingMongoDb() And Not noDB Then
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And Not noDB Then
 
                 ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
@@ -27503,9 +27149,9 @@ Public Module awinGeneralModules
                 ' ur: 20170904: Funktion hproj.isIdenticalTo hat Probleme
 
                 Dim storeNeeded As Boolean
-                If request.projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
                     ' prüfen, ob es Unterschied gibt 
-                    Dim standInDB As clsProjekt = request.retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                    Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
                     If Not IsNothing(standInDB) Then
                         ' prüfe, ob es Unterschiede gibt
                         storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -27518,7 +27164,7 @@ Public Module awinGeneralModules
                 End If
 
                 If storeNeeded Then
-                    If request.storeProjectToDB(hproj, dbUsername) Then
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
 
                         If awinSettings.englishLanguage Then
 
@@ -27530,7 +27176,7 @@ Public Module awinGeneralModules
                             outputCollection.Add(outputline)
                         End If
 
-                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem, False)
 
                         tmpResult = True
@@ -27544,7 +27190,7 @@ Public Module awinGeneralModules
 
                         outputCollection.Add(outputline)
 
-                        Dim wpItem As clsWriteProtectionItem = request.getWriteProtection(hproj.name, hproj.variantName)
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
                         writeProtections.upsert(wpItem, False)
 
                         tmpResult = False
@@ -27577,5 +27223,6 @@ Public Module awinGeneralModules
         storeSingleProjectToDB = tmpResult
 
     End Function
+
 
 End Module
