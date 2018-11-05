@@ -3,7 +3,7 @@
     Public Property name As String
     Public Property vpid As String
     Public Property timestamp As Date
-    Public Property Erloes As Integer
+    Public Property Erloes As Double
     Public Property startDate As Date
     Public Property endDate As Date
     Public Property status As String

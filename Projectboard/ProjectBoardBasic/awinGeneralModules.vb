@@ -1278,8 +1278,9 @@ Public Module awinGeneralModules
                         RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
                         CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
-
-                        RoleDefinitions.buildTopNodes()
+                        ' ur: 2.11.2018: RoleDefinitions.builtTopNodes() wird bereits in retrieveRolesFromDB durchgeführt
+                        '                Nur bei Einlesen der Rollen von Projectboard.Cusomization.xlsx wäre dies notwendig.
+                        ' RoleDefinitions.buildTopNodes()
 
                         If awinSettings.visboDebug Then
                             Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)

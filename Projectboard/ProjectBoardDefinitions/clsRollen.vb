@@ -711,8 +711,10 @@ Public Class clsRollen
             Dim parentRole As clsRollenDefinition = Me.getParentRoleOf(currentRole.UID)
 
             If IsNothing(parentRole) Then
-                ' aufnehmen als Top Level Node ...
-                Me._topLevelNodeIDs.Add(currentRole.UID)
+                If Not Me._topLevelNodeIDs.Contains(currentRole.UID) Then
+                    ' aufnehmen als Top Level Node ...
+                    Me._topLevelNodeIDs.Add(currentRole.UID)
+                End If
             End If
 
             i = i + 1
