@@ -536,7 +536,7 @@ Public Class Request
             Dim pname As String = projekt.name
             Dim vname As String = projekt.variantName
 
-            Dim aktvp As clsVP = GETvpid(pname)
+            Dim aktvp As clsVP = GETvpid(pname, projekt.projectType)
             Dim vpid As String = aktvp._id
             Dim storedVP As Boolean = (vpid <> "")
 
@@ -554,7 +554,7 @@ Public Class Request
                 VP.name = pname
                 VP.vcid = aktVCid
                 VP.vpPublic = True
-                VP.vpType = ptPRPFType.project
+                VP.vpType = projekt.projectType
 
                 vpErg = POSTOneVP(VP)
 
@@ -633,7 +633,7 @@ Public Class Request
             End If
 
             ' Cache aktualisieren
-            VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
+            VRScache.VPsN = GETallVP(aktVCid, projekt.projectType)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message & ": storeProjectToDB")
@@ -3158,12 +3158,16 @@ Public Class Request
             End Using
 
             If errcode = 200 Then
+                Try
+                    ' Variante variantName in Cache mitaufnehmen
+                    var = webVPVar.Variant.ElementAt(0)
+                    If Not VRScache.VPsId(vpid).Variant.Contains(var) Then
+                        VRScache.VPsId(vpid).Variant.Add(var)
+                    End If
 
-                ' Variante variantName in Cache mitaufnehmen
-                var = webVPVar.Variant.ElementAt(0)
-                If Not VRScache.VPsId(vpid).Variant.Contains(var) Then
-                    VRScache.VPsId(vpid).Variant.Add(var)
-                End If
+                Catch ex As Exception
+
+                End Try
                 result = True
 
             Else

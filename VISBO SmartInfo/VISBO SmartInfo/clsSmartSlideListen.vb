@@ -280,32 +280,33 @@ Public Class clsSmartSlideListen
 
     End Sub
 
-    ''' <summary>
-    ''' passt die Liste der Timestamps so an, dass das erste Element größer oder gleich gkw ist ...
-    ''' Damit wird sichergestellt, dass, wenn mehrere Projekte geladen sind, jedes Projekt mit dem kleinsten TimeStamp aus der Liste existiert ... 
-    ''' </summary>
-    ''' <param name="gkw"></param>
-    ''' <remarks></remarks>
-    Public Sub adjustListOfTS(ByVal gkw As Date)
-        Dim fertig As Boolean = False
-        Dim ix As Integer = 0
-        Do While ix <= _listOfTimeStamps.Count - 1 And Not fertig
-            If _listOfTimeStamps.ElementAt(ix).Key >= gkw Then
-                fertig = True
-            Else
-                ix = ix + 1
-            End If
-        Loop
+    '''' <summary>
+    '''' passt die Liste der Timestamps so an, dass das erste Element größer oder gleich gkw ist ...
+    '''' Damit wird sichergestellt, dass, wenn mehrere Projekte geladen sind, jedes Projekt mit dem kleinsten TimeStamp aus der Liste existiert ... 
+    '''' das darf nicht gemacht werden, denn dann ist der Zeitraum, den man betrachten kann, sehr klein ...
+    '''' </summary>
+    '''' <param name="gkw"></param>
+    '''' <remarks></remarks>
+    'Public Sub adjustListOfTS(ByVal gkw As Date)
+    '    Dim fertig As Boolean = False
+    '    Dim ix As Integer = 0
+    '    Do While ix <= _listOfTimeStamps.Count - 1 And Not fertig
+    '        If _listOfTimeStamps.ElementAt(ix).Key >= gkw Then
+    '            fertig = True
+    '        Else
+    '            ix = ix + 1
+    '        End If
+    '    Loop
 
-        If fertig Then
-            For i As Integer = 0 To ix - 1
-                _listOfTimeStamps.RemoveAt(0)
-            Next
-        Else
-            _listOfTimeStamps.Clear()
-        End If
+    '    If fertig Then
+    '        For i As Integer = 0 To ix - 1
+    '            _listOfTimeStamps.RemoveAt(0)
+    '        Next
+    '    Else
+    '        _listOfTimeStamps.Clear()
+    '    End If
 
-    End Sub
+    'End Sub
 
     Public ReadOnly Property getListOfTS As SortedList(Of Date, Boolean)
         Get
@@ -431,10 +432,9 @@ Public Class clsSmartSlideListen
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub resetHistory(ByVal pName)
+
         If _projectTimeStamps.Count > 0 Then
             _projectTimeStamps.Clear()
-
-
         End If
     End Sub
 
@@ -443,6 +443,7 @@ Public Class clsSmartSlideListen
             Dim tmpResult As Boolean
 
             If _projectTimeStamps.Count > 0 Then
+
                 tmpResult = True
                 Dim i As Integer = 0
                 Do While i <= _projectTimeStamps.Count - 1 And tmpResult

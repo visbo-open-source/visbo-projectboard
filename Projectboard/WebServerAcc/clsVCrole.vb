@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Public Class clsVCrole
-    Inherits clsRollenDefinitionDB
+    Inherits clsRollenDefinitionWeb
     Public Property _id As String
     Public Property vcid As String
     Sub New()
