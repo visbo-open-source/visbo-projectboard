@@ -436,6 +436,11 @@ Public Module testModule
         End Try
 
 
+        ' jetzt gibt es die pptAppFromX ..
+        ' das ist hier nicht erlaubt 
+        ' statt dessen kann beim Öffnen angegeben werden, dass es ohne Window geöffnet werden soll ... 
+
+
         ' entweder wird das template geöffnet ...
         ' oder aber es wird in die aktive Presentation geschrieben 
 
@@ -449,13 +454,16 @@ Public Module testModule
                 pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
 
                 If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                    ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
                     pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFile)
                 Else
+                    ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
                     pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFileH)
                 End If
 
             Else
                 pptCurrentPresentation = pptAppfromX.ActivePresentation
+                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
                 pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
 
                 If pptFirstTime Then
@@ -469,8 +477,10 @@ Public Module testModule
                         Try
                             ' jetzt wird die entsprechende Template Präsentation geöffnet 
                             If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
                                 pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFile)
                             Else
+                                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
                                 pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFileH)
                             End If
 
@@ -2368,6 +2378,8 @@ Public Module testModule
                                 'hwidth = boxWidth * 14
                                 'hheight = boxHeight * 10
 
+                                Dim formerEE As Boolean = appInstance.ScreenUpdating
+
                                 Try
                                     auswahl = 2
 
@@ -2376,30 +2388,45 @@ Public Module testModule
                                         If qualifier.Trim <> "Balken" Then
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
+                                            reportObj = obj
+                                            notYetDone = True
+                                            bigType = ptReportBigTypes.charts
+
                                         Else
-                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
-                                            'Call createCostBalkenOfProjectInPPT(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape)
+                                            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+
+                                            appInstance.ScreenUpdating = False
+
                                             compID = PTprdk.KostenBalken
+                                            Call createCostBalkenOfProjectInPPT2(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
+
+                                            appInstance.ScreenUpdating = formerEE
+                                            notYetDone = False
                                         End If
 
                                     Else
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.KostenPie
+                                        reportObj = obj
+                                        notYetDone = True
+                                        bigType = ptReportBigTypes.charts
                                     End If
 
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
-                                    Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
-                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                    End If
+                                    ' das Platzhalter-Objekt : den Text auf leer setzen 
+                                    Try
+                                        .TextFrame2.TextRange.Text = ""
+                                        .AlternativeText = ""
+                                    Catch ex As Exception
 
-                                    reportObj = obj
-                                    notYetDone = True
-                                    bigType = ptReportBigTypes.charts
+                                    End Try
+
 
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(168)
+                                    If appInstance.ScreenUpdating = False Then
+                                        appInstance.ScreenUpdating = formerEE
+                                    End If
                                 End Try
 
                             Case "Gesamtkosten2"
@@ -3386,9 +3413,11 @@ Public Module testModule
         'If pptLastTime Or swimlaneMode Then
         If pptLastTime Then
             Try
+
                 If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
                     pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
                 End If
+
             Catch ex As Exception
 
             End Try
@@ -20769,6 +20798,7 @@ Public Module testModule
                                 .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
                                 .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
                             End If
+
 
 
                         End With

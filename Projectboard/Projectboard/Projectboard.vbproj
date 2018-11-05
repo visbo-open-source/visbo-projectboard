@@ -14,7 +14,7 @@
     <OfficeApplication>Excel</OfficeApplication>
     <ProjectGuid>{3CDE9F31-6693-4AF9-AF7F-81FAC9D0A600}</ProjectGuid>
     <SolutionID>9c1e2ee7-a36c-4ca8-b8fd-97bdf04a0cd8</SolutionID>
-    <IsWebBootstrapper>False</IsWebBootstrapper>
+    <IsWebBootstrapper>True</IsWebBootstrapper>
     <TargetFrameworkProfile />
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -24,7 +24,7 @@
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <PublishUrl>C:\publish\VISBO Visual Board REST\</PublishUrl>
-    <InstallUrl />
+    <InstallUrl>http://applications.visbo.de/VISBO%2520Visual%2520Board%2520REST/</InstallUrl>
     <TargetCulture>en</TargetCulture>
     <ApplicationVersion>3.5.1.6</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>

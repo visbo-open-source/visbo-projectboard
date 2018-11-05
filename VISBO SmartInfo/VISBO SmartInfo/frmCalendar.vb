@@ -22,6 +22,11 @@ Public Class frmCalendar
             Me.Height = frmCoord(PTfrm.calendar, PTpinfo.height)
         End If
 
+        ' das Datum auf currentTimestamp setzen 
+        DateTimePicker1.Value = currentTimestamp
+        DateTimePicker2.Value = currentTimestamp
+
+
 
         'If englishLanguage Then
         '    ' Set the Format type and the CustomFormat string.
@@ -42,7 +47,7 @@ Public Class frmCalendar
         frmCoord(PTfrm.calendar, PTpinfo.height) = Me.Height
 
         If DateTimePicker1.Value > Date.MinValue Then
-            DateTimePicker1.Value = DateTimePicker1.Value.Date.AddHours(23).AddMinutes(59)
+            'DateTimePicker1.Value = DateTimePicker1.Value.Date.AddHours(23).AddMinutes(59)
             DateTimePicker1.Value = DateTimePicker1.Value.Date.AddHours(DateTimePicker2.Value.TimeOfDay.Hours).AddMinutes(DateTimePicker2.Value.TimeOfDay.Minutes).AddSeconds(DateTimePicker2.Value.TimeOfDay.Seconds)
 
         End If
@@ -50,13 +55,5 @@ Public Class frmCalendar
 
     End Sub
 
-    Private Sub DateTimePicker1_ValueChanged(sender As Object, e As EventArgs)
-
-
-    End Sub
-
-    Private Sub DateTimePicker2_ValueChanged(sender As Object, e As EventArgs) 
-
-    End Sub
 
 End Class
