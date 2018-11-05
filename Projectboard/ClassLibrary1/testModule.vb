@@ -289,7 +289,8 @@ Public Module testModule
                                           ByRef pptFirstTime As Boolean, ByVal pptLastTime As Boolean, ByRef zeilenhoehe_sav As Double,
                                           ByRef legendFontSize As Single,
                                           ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
-        Dim pptApp As pptNS.Application = Nothing
+        ' tk 28.10.18 um nicht in Namenskonflikte zu kommen mit dem PRojekt smartInfo wo  eine globale pptApp deklariert ist ..
+        Dim pptAppfromX As pptNS.Application = Nothing
         Dim pptCurrentPresentation As pptNS.Presentation = Nothing
         Dim pptTemplatePresentation As pptNS.Presentation = Nothing
         Dim pptSlide As pptNS.Slide = Nothing
@@ -369,7 +370,7 @@ Public Module testModule
 
                         bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
+                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
 
 
 
@@ -423,16 +424,21 @@ Public Module testModule
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
-            pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
+            pptAppfromX = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
         Catch ex As Exception
             Try
-                pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
+                pptAppfromX = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
             Catch ex1 As Exception
                 Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
                 Exit Sub
             End Try
 
         End Try
+
+
+        ' jetzt gibt es die pptAppFromX ..
+        ' das ist hier nicht erlaubt 
+        ' statt dessen kann beim Öffnen angegeben werden, dass es ohne Window geöffnet werden soll ... 
 
 
         ' entweder wird das template geöffnet ...
@@ -443,19 +449,22 @@ Public Module testModule
 
         Try
 
-            If pptApp.Presentations.Count = 0 Then
+            If pptAppfromX.Presentations.Count = 0 Then
 
-                pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+                pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
 
                 If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                    pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
+                    ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                    pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFile)
                 Else
-                    pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
+                    ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                    pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFileH)
                 End If
 
             Else
-                pptCurrentPresentation = pptApp.ActivePresentation
-                pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+                pptCurrentPresentation = pptAppfromX.ActivePresentation
+                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                pptTemplatePresentation = pptAppfromX.Presentations.Open(pptTemplateName)
 
                 If pptFirstTime Then
 
@@ -468,9 +477,11 @@ Public Module testModule
                         Try
                             ' jetzt wird die entsprechende Template Präsentation geöffnet 
                             If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                                pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
+                                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                                pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFile)
                             Else
-                                pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
+                                ' ggf ohne Windows öffnen , um es nicht zu zeigen, aber dann muss noch anderer Stelle, was getan werden ...
+                                pptCurrentPresentation = pptAppfromX.Presentations.Open(presentationFileH)
                             End If
 
                         Catch ex As Exception
@@ -490,7 +501,7 @@ Public Module testModule
                                     worker.ReportProgress(0, e)
                                 End If
                             Else
-                                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+                                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
 
                             End If
 
@@ -517,7 +528,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
 
             End If
 
@@ -559,13 +570,13 @@ Public Module testModule
             End If
 
             If Not IsNothing(worker) Then
-                e.Result = msgtxt
+                e.Result = msgTxt
 
                 If worker.WorkerReportsProgress Then
                     worker.ReportProgress(0, e)
                 End If
             Else
-                Call logfileSchreiben(msgtxt, "createPPTSlidesFromProject", 0)
+                Call logfileSchreiben(msgTxt, "createPPTSlidesFromProject", 0)
 
 
             End If
@@ -681,7 +692,8 @@ Public Module testModule
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
             ' jetzt muss die Slide als SmartPPTSlide gekennzeichnet werden 
-            Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
+            'Call addSmartPPTSlideBaseInfo(pptSlide, hproj.timeStamp, ptPRPFType.project)
+            Call addSmartPPTSlideBaseInfo(pptSlide, Date.Now, ptPRPFType.project)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
@@ -1059,7 +1071,7 @@ Public Module testModule
 
                                     ' die Slide mit Tag kennzeichnen ... 
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneMultiprojektSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                   objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                   tmpphases, tmpMilestones,
                                                                   selectedRoles, selectedCosts,
@@ -1081,7 +1093,7 @@ Public Module testModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneMultiprojektSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1104,7 +1116,7 @@ Public Module testModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneMultiprojektSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1127,7 +1139,7 @@ Public Module testModule
                                         minCal = (qualifier2.Trim = "minCal")
                                     End If
 
-                                    Call zeichneCategorySwimlaneSicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneCategorySwimlaneSicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1155,7 +1167,7 @@ Public Module testModule
                                         minCal = (qualifier.Trim = "minCal")
                                     End If
 
-                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneSwimlane2Sicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -1184,7 +1196,7 @@ Public Module testModule
                                     End If
 
 
-                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide,
+                                    Call zeichneSwimlane2Sicht(pptAppfromX, pptCurrentPresentation, pptSlide,
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe_sav, legendFontSize,
                                                                       selectedPhases, selectedMilestones,
                                                                       selectedRoles, selectedCosts,
@@ -2366,6 +2378,8 @@ Public Module testModule
                                 'hwidth = boxWidth * 14
                                 'hheight = boxHeight * 10
 
+                                Dim formerEE As Boolean = appInstance.ScreenUpdating
+
                                 Try
                                     auswahl = 2
 
@@ -2374,29 +2388,45 @@ Public Module testModule
                                         If qualifier.Trim <> "Balken" Then
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
+                                            reportObj = obj
+                                            notYetDone = True
+                                            bigType = ptReportBigTypes.charts
+
                                         Else
-                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+
+                                            appInstance.ScreenUpdating = False
+
                                             compID = PTprdk.KostenBalken
+                                            Call createCostBalkenOfProjectInPPT2(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
+
+                                            appInstance.ScreenUpdating = formerEE
+                                            notYetDone = False
                                         End If
 
                                     Else
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        compID = PTprdk.KostenPie
+                                        reportObj = obj
+                                        notYetDone = True
+                                        bigType = ptReportBigTypes.charts
                                     End If
 
-                                    If obj.Chart.HasTitle Then
-                                        boxName = obj.Chart.ChartTitle.Text
-                                    Else
-                                        Dim gesamtSumme As Integer = CInt(hproj.getGesamtKostenBedarf.Sum)
-                                        boxName = boxName & " (" & gesamtSumme.ToString & " T€)"
-                                    End If
+                                    ' das Platzhalter-Objekt : den Text auf leer setzen 
+                                    Try
+                                        .TextFrame2.TextRange.Text = ""
+                                        .AlternativeText = ""
+                                    Catch ex As Exception
 
-                                    reportObj = obj
-                                    notYetDone = True
-                                    bigType = ptReportBigTypes.charts
+                                    End Try
+
 
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Gesamtkosten sind Null"
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(168)
+                                    If appInstance.ScreenUpdating = False Then
+                                        appInstance.ScreenUpdating = formerEE
+                                    End If
                                 End Try
 
                             Case "Gesamtkosten2"
@@ -3239,7 +3269,8 @@ Public Module testModule
                                     boxName = repMessages.getmsg(223)
                                 End If
 
-                                .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
+                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d", repCult)
+                                '.TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToString("d", repCult)
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prStand
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
@@ -3382,9 +3413,11 @@ Public Module testModule
         'If pptLastTime Or swimlaneMode Then
         If pptLastTime Then
             Try
+
                 If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
                     pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
                 End If
+
             Catch ex As Exception
 
             End Try
@@ -20765,6 +20798,7 @@ Public Module testModule
                                 .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
                                 .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
                             End If
+
 
 
                         End With
