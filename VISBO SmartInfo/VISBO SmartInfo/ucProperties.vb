@@ -46,6 +46,10 @@ Public Class ucProperties
     ''' setzt alle Picture Boxes und Container auf Visible bzw nicht visible, in Abhängigkeit von visibleStatus 
     ''' </summary>
     Friend Sub setLinksToVisible(ByVal visibleStatus As Boolean)
+
+        stdLinks.Visible = visibleStatus
+        myLinks.Visible = visibleStatus
+
         doclnk.Visible = visibleStatus
         mydoclnk.Visible = visibleStatus
         medialnk.Visible = visibleStatus
