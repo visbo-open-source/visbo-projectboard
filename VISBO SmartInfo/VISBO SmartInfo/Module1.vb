@@ -7,7 +7,7 @@ Imports Microsoft.Office.Core.MsoThemeColorIndex
 
 Module Module1
 
-    Friend Const hiddenExcelSheetName As String = "visboupdate"
+    'Friend Const hiddenExcelSheetName As String = "visboupdate"
     Friend WithEvents pptAPP As PowerPoint.Application
 
     Friend ucPropertiesView As ucProperties
@@ -2316,9 +2316,9 @@ Module Module1
 
                                     Try
 
-                                        Call createNewHiddenExcel()
+                                        'Call createNewHiddenExcel()
 
-                                        If Not IsNothing(updateWorkbook) Then
+                                        If Not IsNothing(updateWorkbook) Or True Then
 
                                             ' jetzt muss das chtobj aktualisiert werden ... 
                                             Try
@@ -2509,12 +2509,12 @@ Module Module1
 
         Dim curWS As Excel.Worksheet = Nothing
 
-        Try
-            curWS = updateWorkbook.Worksheets.Item(hiddenExcelSheetName)
-        Catch ex As Exception
-            Call MsgBox("can't access visboupdate Sheet")
-            Exit Sub
-        End Try
+        'Try
+        '    curWS = updateWorkbook.Worksheets.Item(1)
+        'Catch ex As Exception
+        '    Call MsgBox("can't access visboupdate Sheet")
+        '    Exit Sub
+        'End Try
 
 
         Dim pptChart As PowerPoint.Chart = Nothing
@@ -2524,6 +2524,7 @@ Module Module1
         End If
 
         pptChart = pptShape.Chart
+
 
 
         Dim kennung As String = pptChart.Name
@@ -2550,11 +2551,6 @@ Module Module1
 
         Dim curmaxScale As Double
         Dim considerIstDaten As Boolean = False
-
-        ' für das SetSourceData 
-        Dim myRange As Excel.Range = Nothing
-        Dim usedRange As Excel.Range = curWS.UsedRange
-        ' Ende setsource Vorbereitungen 
 
         ' die Settings herauslesen ...
         Dim chartTyp As String = ""
@@ -2625,21 +2621,6 @@ Module Module1
                 plen = vglProj.anzahlRasterElemente
             End If
         End If
-
-        '
-        ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
-        '
-        '
-        ' hole die Anzahl Rollen, die in diesem Projekt vorkommen
-        '
-        ' tk 9.8.18 braucht man hier nicht 
-        ''If prcTyp = ptElementTypen.roles Then
-        ''    ErgebnisListeRC = hproj.getRoleNames
-        ''Else
-        ''    ErgebnisListeRC = hproj.getCostNames
-        ''End If
-
-        ''anzElemente = ErgebnisListeRC.Count
 
 
 
@@ -2880,9 +2861,28 @@ Module Module1
 
         ' tk 21.10.18
         ' jetzt wird myRange gesetzt und setSourceData gesetzt 
-        Dim fZeile As Integer = usedRange.Rows.Count + 1
+        'Dim fZeile As Integer = usedRange.Rows.Count + 1
+        Dim fzeile As Integer = 1
         Dim anzSpalten As Integer = plen + 1
         Dim anzRows As Integer = 0
+
+        With pptShape.Chart.ChartData
+            .Activate()
+
+            xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
+            'xlApp.Visible = False
+
+            curWS = CType(.Workbook, Excel.Workbook).Worksheets.Item(1)
+            curWS.UsedRange.Clear()
+            'Dim myWindows As Excel.Window = CType(.Workbook, Excel.Workbook).Application.Windows.Item(1)
+            'myWindows.Visible = False
+            'CType(.Workbook, Excel.Workbook).Application.Visible = False
+        End With
+
+        ' für das SetSourceData 
+        Dim myRange As Excel.Range = Nothing
+        'Dim usedRange As Excel.Range = curWS.UsedRange
+        ' Ende setsource Vorbereitungen 
 
         With curWS
 
@@ -2978,10 +2978,6 @@ Module Module1
             ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
             Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
             pptShape.Chart.SetSourceData(Source:=rangeString)
-
-            With pptShape.Chart.ChartData
-                .Activate()
-            End With
 
         Catch ex As Exception
 
@@ -4147,20 +4143,54 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub createNewHiddenExcel()
 
-        If IsNothing(updateWorkbook) Then
-            ' es wird auf jeden Fall eine neue, verborgene Excel-Instanz aufgemacht 
-            ' die wird dann beim Schliessen einer Presentation wieder beendet bzw. zugemacht 
+        Dim excelAppExists As Boolean = False
+        Dim updWS As Excel.Worksheet = Nothing
+        Dim creationNeeded As Boolean = False
+
+        Try
+            If Not IsNothing(xlApp) Then
+                ' lediglich ein Test auf Zugreifbarkeit ... fällt auf die Nase, wenn User das Excel geschlossen hat 
+                Dim testCount As Integer = CType(xlApp.Workbooks, Excel.Workbooks).Count
+            End If
+
+        Catch ex As Exception
+            ' in diesem Fall wurde das Excel gelöscht ... 
+            xlApp = Nothing
+        End Try
+
+        If Not IsNothing(xlApp) Then
+
+            If xlApp.Workbooks.Count > 0 Then
+
+                Try
+                    updWS = xlApp.Worksheets.Item(1)
+                    If IsNothing(updWS) Then
+                        creationNeeded = True
+                    Else
+                        creationNeeded = False
+                        updateWorkbook = CType(updWS.Parent, Excel.Workbook)
+                    End If
+
+                Catch ex As Exception
+                    creationNeeded = True
+                End Try
+
+            Else
+                creationNeeded = True
+            End If
+
+            If creationNeeded Then
+                updateWorkbook = xlApp.Workbooks.Add()
+            End If
+
+        Else
 
             Try
+
                 xlApp = CreateObject("Excel.Application")
                 xlApp.Visible = False
 
-                xlApp.Workbooks.Add()
-
-                updateWorkbook = xlApp.ActiveWorkbook
-                With updateWorkbook
-                    .Worksheets.Item(1).name = hiddenExcelSheetName
-                End With
+                updateWorkbook = xlApp.Workbooks.Add()
 
             Catch ex As Exception
                 xlApp = Nothing
@@ -4176,11 +4206,9 @@ Module Module1
             '    xlApp.Workbooks.Add()
             '    xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
             'End If
-
-
-        Else
-            ' existiert schon, also existiert auch xlApp bereits ...
         End If
+
+
 
     End Sub
     ''' <summary>
