@@ -2868,9 +2868,32 @@ Module Module1
 
         With pptShape.Chart.ChartData
             .Activate()
+            '.ActivateChartDataWindow()
 
             xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
             'xlApp.Visible = False
+
+            Try
+                With xlApp
+                    If Not .ActiveWindow.Caption = "VISBO Smart Diagram" Then
+                        .DisplayFormulaBar = False
+                        With .ActiveWindow
+
+                            .Caption = "VISBO Smart Diagram"
+                            .DisplayHeadings = False
+                            .DisplayWorkbookTabs = False
+
+                            .Width = 500
+                            .Height = 150
+                            .Top = 100
+                            .Left = -1200
+
+                        End With
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
 
             curWS = CType(.Workbook, Excel.Workbook).Worksheets.Item(1)
             curWS.UsedRange.Clear()
