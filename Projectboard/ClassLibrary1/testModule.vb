@@ -793,6 +793,10 @@ Public Module testModule
                         kennzeichnung = "SymTrafficLight" Or
                         kennzeichnung = "SymRisks" Or
                         kennzeichnung = "SymGoals" Or
+                        kennzeichnung = "SymTeam" Or
+                        kennzeichnung = "SymFinance" Or
+                        kennzeichnung = "SymSchedules" Or
+                        kennzeichnung = "SymPrPf" Or
                         kennzeichnung = "Stand:" Or
                         kennzeichnung = "Laufzeit:" Or
                         kennzeichnung = "Verantwortlich:" Then
@@ -3259,6 +3263,39 @@ Public Module testModule
                                 ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
                                 bigType = ptReportBigTypes.components
                                 compID = ptReportComponents.prSymDescription
+                                qualifier2 = ""
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                                          bigType, compID)
+
+
+                            Case "SymFinance"
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prSymFinance
+                                qualifier2 = ""
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                                          bigType, compID)
+
+                            Case "SymSchedules"
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prSymSchedules
+                                qualifier2 = ""
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                                          bigType, compID)
+
+                            Case "SymTeam"
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prSymTeam
+                                qualifier2 = ""
+                                Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
+                                                          bigType, compID)
+
+                            Case "SymProject"
+                                ' hier wird das Symbol aufgeladen mit der entsprechenden Smart-Info 
+                                bigType = ptReportBigTypes.components
+                                compID = ptReportComponents.prSymProject
                                 qualifier2 = ""
                                 Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2,
                                                           bigType, compID)

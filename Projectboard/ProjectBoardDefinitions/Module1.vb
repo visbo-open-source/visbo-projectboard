@@ -292,6 +292,10 @@ Public Module Module1
         prSymDescription = 14
         prCard = 15
         prCardinvisible = 16
+        prSymFinance = 17
+        prSymSchedules = 18
+        prSymTeam = 19
+        prSymProject = 20
     End Enum
 
     ' wenn diese Enum erweitert wird, inbedingt im clsProjekt .projecttype Property den Wertebereich anpassen ...
@@ -4507,8 +4511,14 @@ Public Module Module1
 
                     If detailID = ptReportComponents.prSymTrafficLight Or
                         detailID = ptReportComponents.prSymRisks Or
-                        detailID = ptReportComponents.prSymDescription Then
+                        detailID = ptReportComponents.prSymDescription Or
+                        detailID = ptReportComponents.prSymFinance Or
+                        detailID = ptReportComponents.prSymProject Or
+                        detailID = ptReportComponents.prSymSchedules Or
+                        detailID = ptReportComponents.prSymTeam Then
+
                         Call updateSmartPPTSymTxt(pptShape, hproj, detailID)
+
                     End If
 
 
@@ -4536,15 +4546,167 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub updateSmartPPTSymTxt(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, ByVal detailID As Integer)
         Dim tmpText As String = ""
+
         If detailID = ptReportComponents.prSymTrafficLight Then
-            tmpText = hproj.ampelErlaeuterung
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = tmpText & hproj.ampelErlaeuterung
 
         ElseIf detailID = ptReportComponents.prSymRisks Then
             ' aktuell gibt es im Datenmodell noch keine Risiken
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
             tmpText = ""
 
         ElseIf detailID = ptReportComponents.prSymDescription Then
-            tmpText = hproj.fullDescription
+
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = tmpText & hproj.fullDescription
+
+        ElseIf detailID = ptReportComponents.prSymFinance Then
+            ' es werden Budget, Personalkosten, sosnt. Kosten und Forecast Ergebnis angezeigt
+            Dim budget As Double, pk As Double, sk As Double, rk As Double, forecast As Double
+            Call hproj.calculateRoundedKPI(budget, pk, sk, rk, forecast)
+
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+
+            tmpText = tmpText & "Budget: " & budget.ToString & " T€" & vbLf
+            tmpText = tmpText & "Personnel-Cost: " & pk.ToString & " T€" & vbLf
+            tmpText = tmpText & "Other Costs: " & sk.ToString & " T€" & vbLf
+            If forecast < 0 Then
+                tmpText = tmpText & "Loss: " & forecast.ToString & " T€"
+            Else
+                tmpText = tmpText & "Profit: " & forecast.ToString & " T€"
+            End If
+
+
+        ElseIf detailID = ptReportComponents.prSymSchedules Then
+
+            tmpText = ""
+            Try
+
+                ' es werden die Gesamt-Anzahl Überfälliger Meilensteine / Vorgänge angezeigt 
+                ' es werden die Gesamt-Anzahl roter, gelber, grüner, Nicht-bewerteter Meilensteine / Vorgänge angezeigt 
+                Dim sortedListOfMilestones As SortedList(Of Date, String) = hproj.getMilestones
+                Dim sortedListOfTasks As SortedList(Of Date, String) = hproj.getPhases
+
+                tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+
+                Dim vglDatum As Date = hproj.timeStamp
+                Dim anz As Integer = 0
+                Dim overDue As Integer = 0
+
+                ' jetzt die Meilensteine überprüfen 
+                If sortedListOfMilestones.Count > 0 Then
+                    Dim ix As Integer = 0
+                    Dim curDate As Date = sortedListOfMilestones.ElementAt(ix).Key
+
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+
+                        If hproj.getMilestoneByID(sortedListOfMilestones.ElementAt(ix).Value).percentDone < 1 Then
+                            overDue = overDue + 1
+                        End If
+
+                        anz = anz + 1
+                        ix = ix + 1
+
+                        curDate = sortedListOfMilestones.ElementAt(ix).Key
+                    Loop
+
+
+                End If
+
+                If sortedListOfTasks.Count > 0 Then
+                    Dim ix As Integer = 0
+                    Dim curDate As Date = sortedListOfTasks.ElementAt(ix).Key
+
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+
+                        If hproj.getPhaseByID(sortedListOfTasks.ElementAt(ix).Value).percentDone < 1 Then
+                            overDue = overDue + 1
+                        End If
+
+                        anz = anz + 1
+                        ix = ix + 1
+
+                        curDate = sortedListOfMilestones.ElementAt(ix).Key
+                    Loop
+
+                End If
+
+                tmpText = tmpText & "Number overdue / total number until version-date: " & overDue.ToString & " / " & anz.ToString & vbLf & vbLf
+
+                ' jetzt werden die Anzahl roten, gelben, grünen, grauen Bewertungen gezählt ..
+                Dim anzRed As Integer = 0, anzYellow As Integer = 0, anzGreen As Integer = 0, anzNoColor As Integer = 0
+
+                anz = sortedListOfMilestones.Count + sortedListOfTasks.Count
+
+                If sortedListOfMilestones.Count > 0 Then
+                    For Each kvp As KeyValuePair(Of Date, String) In sortedListOfMilestones
+                        Dim tmpColor As Integer = hproj.getMilestoneByID(kvp.Value).ampelStatus
+                        If tmpColor = 0 Then
+                            anzNoColor = anzNoColor + 1
+                        ElseIf tmpColor = 1 Then
+                            anzGreen = anzGreen + 1
+                        ElseIf tmpColor = 2 Then
+                            anzYellow = anzYellow + 1
+                        ElseIf tmpColor = 3 Then
+                            anzRed = anzRed + 1
+                        Else
+                            anzNoColor = anzNoColor + 1
+                        End If
+                    Next
+
+                End If
+
+                If sortedListOfTasks.Count > 0 Then
+                    For Each kvp As KeyValuePair(Of Date, String) In sortedListOfTasks
+                        Dim tmpColor As Integer = hproj.getPhaseByID(kvp.Value).ampelStatus
+                        If tmpColor = 0 Then
+                            anzNoColor = anzNoColor + 1
+                        ElseIf tmpColor = 1 Then
+                            anzGreen = anzGreen + 1
+                        ElseIf tmpColor = 2 Then
+                            anzYellow = anzYellow + 1
+                        ElseIf tmpColor = 3 Then
+                            anzRed = anzRed + 1
+                        Else
+                            anzNoColor = anzNoColor + 1
+                        End If
+                    Next
+
+                End If
+
+                tmpText = tmpText & "Total number of Milestones/Tasks: " & anz.ToString & vbLf
+                tmpText = tmpText & "No rating: " & anzNoColor.ToString & vbLf
+                tmpText = tmpText & "Green: " & anzGreen.ToString & vbLf
+                tmpText = tmpText & "Yellow: " & anzYellow.ToString & vbLf
+                tmpText = tmpText & "Red: " & anzRed.ToString & vbLf
+
+
+
+            Catch ex As Exception
+
+            End Try
+
+
+        ElseIf detailID = ptReportComponents.prSymProject Then
+            ' es werden Informationen zum Projekt angezeigt 
+            ' eigentlich wäre es hier am besten ein 
+
+            tmpText = "Stand vom " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = ""
+
+        ElseIf detailID = ptReportComponents.prSymTeam Then
+            ' es wird das Team angezeigt ...
+
+            Dim allNames As Collection = hproj.getRoleNames
+
+            Dim responsible As String = hproj.leadPerson
+            tmpText = "Project-Lead: " & responsible & vbLf
+
+            For Each tmpName As String In allNames
+                tmpText = tmpText & tmpName & vbLf
+            Next
+
         End If
 
         ' jetzt wird das unter dem Tag TXT eingetragen

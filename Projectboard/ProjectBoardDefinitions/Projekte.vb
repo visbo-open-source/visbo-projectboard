@@ -11854,18 +11854,32 @@ Public Module Projekte
 
                     End If
 
-                Case ptReportComponents.prSymTrafficLight
-                    If Not IsNothing(hproj) Then
-                        Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
 
-                        ' jetzt müssen an das Shape wieder die Smart-Infos angebunden werden 
-                        Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, "", "", ptReportBigTypes.components, ptReportComponents.prSymTrafficLight)
+                Case Else
+                    If detailID = ptReportComponents.prSymDescription Or
+                        detailID = ptReportComponents.prSymTrafficLight Or
+                        detailID = ptReportComponents.prSymFinance Or
+                        detailID = ptReportComponents.prSymProject Or
+                        detailID = ptReportComponents.prSymRisks Or
+                        detailID = ptReportComponents.prSymSchedules Or
+                        detailID = ptReportComponents.prSymTeam Then
+
+                        If Not IsNothing(hproj) Then
+
+                            If detailID = ptReportComponents.prSymTrafficLight Then
+                                Call switchOnTrafficLightColor(pptShape, hproj.ampelStatus)
+                            End If
+
+                            Dim qualifier As String = pptShape.Tags.Item("Q1")
+                            Dim qualifier2 As String = pptShape.Tags.Item("Q2")
+
+                            ' jetzt müssen an das Shape wieder die Smart-Infos angebunden werden 
+                            Call addSmartPPTShapeInfo2(pptShape, hproj, ptPRPFType.project, qualifier, qualifier2, ptReportBigTypes.components, detailID)
+
+                        End If
 
                     End If
 
-                Case Else
-
-                    'Call MsgBox("nicht abgedeckt: " & detailID.ToString)
 
             End Select
         Catch ex As Exception

@@ -3236,6 +3236,37 @@
     End Property
 
     ''' <summary>
+    ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Phasen zurück
+    ''' Sortierkriterium ist dabei das Phasen-Ende
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPhases As SortedList(Of Date, String)
+        Get
+
+            Dim tmpValues As New SortedList(Of Date, String)
+            Dim tmpDate As Date
+            Dim cphase As clsPhase
+
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+                tmpDate = cphase.getEndDate
+
+                Dim ok As Boolean = False
+                Do While tmpValues.ContainsKey(tmpDate)
+                    tmpDate = tmpDate.AddMilliseconds(1)
+                Loop
+                ' jetzt gibt es tmpdate noch nicht in der Liste ...
+                tmpValues.Add(tmpDate, cphase.nameID)
+
+            Next p
+
+            getPhases = tmpValues
+
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' gibt zum betreffenden Projekt eine nach dem Offset aufsteigend sortierte Liste der Meilensteine zurück 
     ''' wird benötigt, wo ein relativer Vergleich der MEilensteine erforderlich ist 
     ''' bei Gleichheit wird ein Koorktur Faktor kleiner 1 addiert, so dass es immer eindeutige Werte gibt  
