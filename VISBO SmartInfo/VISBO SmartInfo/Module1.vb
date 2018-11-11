@@ -2576,7 +2576,7 @@ Module Module1
             repmsg(0) = "Personnel Costs" '164
             repmsg(1) = "Forecast" ' 38
             repmsg(2) = "other Costs" ' 165
-            repmsg(3) = "version from" ' 273, vorher 43
+            repmsg(3) = "approved version from" ' 273, vorher 43
             repmsg(4) = "Personnel Needs" '159
             repmsg(5) = "Total Costs" ' 166
             repmsg(6) = "Actual data"
@@ -2584,7 +2584,7 @@ Module Module1
             repmsg(0) = "Personalkosten" '164
             repmsg(1) = "Prognose" ' 38
             repmsg(2) = "sonstige Kosten" ' 165
-            repmsg(3) = "Stand vom" ' 273 ; Beauftragung 43
+            repmsg(3) = "Beauftragung vom" ' 273 ; Beauftragung 43
             repmsg(4) = "Personalbedarf" '159
             repmsg(5) = "Gesamtkosten" ' 166
             repmsg(6) = "Ist-Werte"
@@ -7870,7 +7870,7 @@ Module Module1
                             .eleRespons.Text = bestimmeElemVE(tmpShape)
 
                             ' die Link Buttons grundsätzlich einblenden 
-                            .setLinksToVisible(True)
+                            .setLinksToVisible(False)
                             .setLinkValues(tmpShape)
 
 
