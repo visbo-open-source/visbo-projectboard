@@ -61,6 +61,8 @@ Public Class frmSelectVariant
             previousVariantName = currentVariantname
             currentVariantname = selectedVariantName
 
+            Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
+
             ' wenn das Projekt noch nicht in der Liste verzeichnet ist ... 
             Dim pvName As String = calcProjektKey(pName, selectedVariantName)
             If pvName <> "" Then
@@ -75,15 +77,16 @@ Public Class frmSelectVariant
 
             ' das Formular aufschalten 
 
-            'If IsNothing(changeFrm) Then
-            '    changeFrm = New frmChanges
-            '    changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
-            '    changeFrm.Show()
-            'Else
-            '    changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
-            '    changeFrm.neuAufbau()
-            'End If
-
+            If IsNothing(changeFrm) Then
+                changeFrm = New frmChanges
+                'changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
+                changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
+                changeFrm.Show()
+            Else
+                'changeFrm.changeliste = chgeLstListe(currentSlide.SlideID)
+                changeFrm.changeliste = chgeLstListe.Item(key).Item(currentSlide.SlideID)
+                changeFrm.neuAufbau()
+            End If
 
             Me.UseWaitCursor = False
 

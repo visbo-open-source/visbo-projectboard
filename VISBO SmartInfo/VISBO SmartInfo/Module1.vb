@@ -2343,6 +2343,7 @@ Module Module1
                                                         ' Aktualisieren des Ergebnis Charts 
                                                         Call updatePPTProjektErgebnis(tsProj, newchtobj)
 
+
                                                     ElseIf chartTyp = PTprdk.StrategieRisiko Or
                                                             chartTyp = PTprdk.ZeitRisiko Or
                                                             chartTyp = PTprdk.FitRisikoVol Or
@@ -2350,6 +2351,7 @@ Module Module1
                                                         ' Aktualisieren der Strategie-Charts
 
                                                         Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
+                                                            
 
                                                     ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or
                                                             chartTyp = PTprdk.SollIstPersonalkostenC Or
@@ -2556,7 +2558,8 @@ Module Module1
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
         Dim rcNameChk As String = ""
-        Call getChartKennungen(kennung, chartTyp, typID, auswahl, rcNameChk)
+        Dim tmpPName As String = ""
+        Call getChartKennungen(kennung, chartTyp, typID, auswahl, tmpPName, rcNameChk)
 
         If rcNameChk <> rcName Then
             Dim a As Integer = 1
@@ -3075,7 +3078,8 @@ Module Module1
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
         Dim rcNameChk As String = ""
-        Call getChartKennungen(kennung, chartTyp, typID, auswahl, rcNameChk)
+        Dim tmpPname As String = ""
+        Call getChartKennungen(kennung, chartTyp, typID, auswahl, tmpPname, rcNameChk)
 
         If rcNameChk <> rcName Then
             Dim a As Integer = 1
@@ -3644,7 +3648,8 @@ Module Module1
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
         Dim rcNameChk As String = ""
-        Call getChartKennungen(kennung, chartTyp, typID, auswahl, rcNameChk)
+        Dim tmpPname As String = ""
+        Call getChartKennungen(kennung, chartTyp, typID, auswahl, tmpPname, rcNameChk)
 
         If rcNameChk <> rcName Then
             Dim a As Integer = 1

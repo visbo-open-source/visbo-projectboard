@@ -398,6 +398,7 @@ Public Module Module1
         TrafficLight = 11
         TLExplanation = 12
         DocUrl = 13
+        Deliv = 14
     End Enum
 
 
@@ -6674,6 +6675,8 @@ Public Module Module1
         Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim currentCell As Excel.Range
         Dim currentCellPlus1 As Excel.Range
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
         Try
@@ -6707,29 +6710,23 @@ Public Module Module1
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
 
-                If Not awinSettings.meExtendedColumnsView Then
-                    appInstance.ScreenUpdating = False
-                    ' einblenden ... 
-                    .Range("MahleInfo").EntireColumn.Hidden = False
-                End If
-
-
-                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnEndData - 1)), Excel.Range)
+                'Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
+                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
+                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
                 copySource.Copy(Destination:=copyDestination)
 
                 CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
 
-                For c As Integer = columnStartData - 3 To columnEndData + 1
+                For c As Integer = columnStartData - 2 To columnEndData
                     CType(.Cells(zeile + 1, c), Excel.Range).Value = Nothing
                 Next
 
-                ' jetzt wieder ausblenden ... 
-                If Not awinSettings.meExtendedColumnsView Then
-                    ' ausblenden ... 
-                    .Range("MahleInfo").EntireColumn.Hidden = True
-                    appInstance.ScreenUpdating = True
-                End If
+                '' jetzt wieder ausblenden ... 
+                'If Not awinSettings.meExtendedColumnsView Then
+                '    ' ausblenden ... 
+                '    .Range("MahleInfo").EntireColumn.Hidden = True
+                '    appInstance.ScreenUpdating = True
+                'End If
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
@@ -6737,27 +6734,14 @@ Public Module Module1
 
             With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
 
-                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
+                ' wenn eine neue Zeile eingefügt ist und Ist-Spalten existieren , dann müssen die jetzt wieder auf frei gesetzt werden 
+                .Locked = False
 
+                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
                 Try
                     If Not IsNothing(.Validation) Then
                         .Validation.Delete()
                     End If
-                    ' jetzt wird die ValidationList aufgebaut
-                    ' ist es eine Rolle ? 
-                    '' ''If controlID = "PT2G1M2B4" Then
-                    '' ''    ' Rollen
-                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-                    '' ''                           Formula1:=validationStrings.Item("alleRollen"))
-                    '' ''ElseIf controlID = "PT2G1M2B7" Then
-                    '' ''    ' Kosten
-                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-                    '' ''                                                   Formula1:=validationStrings.Item("alleKosten"))
-                    '' ''Else
-                    '' ''    ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
-                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-                    '' ''                           Formula1:=validationStrings.Item("alles"))
-                    '' ''End If
 
                 Catch ex As Exception
 
@@ -6797,7 +6781,8 @@ Public Module Module1
             Call MsgBox("Fehler beim Kopieren einer Zeile ...")
         End Try
 
-        appInstance.EnableEvents = True
+        'appInstance.EnableEvents = True
+        appInstance.EnableEvents = formerEE
     End Sub
 
     Sub massEditZeileLoeschen(ByVal ID As String)
@@ -6833,6 +6818,11 @@ Public Module Module1
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                 Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
 
+                Dim actualDataExists As Boolean = False
+                If hproj.actualDataUntil > cphase.getStartDate Then
+                    actualDataExists = True
+                End If
+
                 If IsNothing(rcName) Then
                     ' nichts tun
                 ElseIf rcName.Trim.Length = 0 Then
@@ -6840,23 +6830,37 @@ Public Module Module1
                 ElseIf RoleDefinitions.containsName(rcName) Then
                     ' es handelt sich um eine Rolle
                     ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+                    ' gibt es Ist-Daten ? 
+
                     If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) Then
+                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
                         cphase.removeRoleByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
+                        If actualDataExists Then
+                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
+                        Else
+                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
+                                    " nicht gelöscht werden ...")
+                        End If
+
                         ok = False
                     End If
 
                 ElseIf CostDefinitions.containsName(rcName) Then
-                    ' es handelt sih um eine Kostenart 
+                    ' es handelt sich um eine Kostenart 
                     If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) Then
+                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
                         cphase.removeCostByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf &
+                        If actualDataExists Then
+                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Kostenart " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
+                        Else
+                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf &
+                                    " nicht gelöscht werden ...")
+                        End If
+
                         ok = False
                     End If
 

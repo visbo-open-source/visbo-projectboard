@@ -2085,8 +2085,8 @@ Public Module Projekte
         Dim charttype As Integer
         Dim tmpstr(5) As String
         Dim isSingleProject As Boolean = False
-        Dim tmpcollection As New Collection
-        Dim kennung As String = " "
+        'Dim tmpcollection As New Collection
+        'Dim kennung As String = " "
         Dim bubbleColor As Integer = 0
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
@@ -2100,8 +2100,8 @@ Public Module Projekte
         charttype = CInt(tmpstr(1))
 
         pName = hproj.name
-        tmpcollection.Add(pName & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", charttype, tmpcollection)
+        'tmpcollection.Add(pName & "#" & auswahl.ToString)
+        'kennung = calcChartKennung("pr", charttype, tmpcollection)
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
         ' event. für eine Erweiterung benötigt
@@ -2507,7 +2507,8 @@ Public Module Projekte
 
         End If
 
-        chtobj.Name = kennung
+        ' tk 6.10.18 das hat doch eh schon den Namen ... 
+        'chtobj.Name = kennung
         appInstance.EnableEvents = formerEE
 
 
@@ -4377,9 +4378,9 @@ Public Module Projekte
                 'kennung = "Rolle " & qualifier
                 kennung = calcChartKennung("pr", PTprdk.SollIstRolleC, tmpCollection)
                 Try
-                    werteB = beauftragung.getPersonalKosten(qualifier, True)
-                    werteL = lastPlan.getPersonalKosten(qualifier, True)
-                    werteC = hproj.getPersonalKosten(qualifier, True)
+                    werteB = beauftragung.getRessourcenBedarfNew(qualifier, True)
+                    werteL = lastPlan.getRessourcenBedarfNew(qualifier, True)
+                    werteC = hproj.getRessourcenBedarfNew(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -4887,10 +4888,10 @@ Public Module Projekte
 
                 Try
                     If vglBaseline Then
-                        werteB = vProj.getPersonalKosten(qualifier, True)
+                        werteB = vProj.getRessourcenBedarfNew(qualifier, True)
                     End If
 
-                    werteC = hproj.getPersonalKosten(qualifier, True)
+                    werteC = hproj.getRessourcenBedarfNew(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -5658,7 +5659,9 @@ Public Module Projekte
     Public Sub createRessBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglproj As clsProjekt,
                                          ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer,
                                             ByVal top As Double, left As Double, height As Double, width As Double,
-                                            ByVal calledFromReporting As Boolean, Optional ByVal roleName As String = "")
+                                            ByVal calledFromReporting As Boolean,
+                                            Optional ByVal roleName As String = "",
+                                            Optional ByVal vglTyp As Integer = PTprdk.PersonalBalken)
 
 
         Dim kennung As String = " "
@@ -5718,7 +5721,7 @@ Public Module Projekte
         End If
 
 
-        kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
+        kennung = calcChartKennung("pr", vglTyp, tmpcollection)
 
 
         '
@@ -5745,6 +5748,7 @@ Public Module Projekte
 
         If anzRollen = 0 Then
             'Throw New Exception("keine Ressourcen Bedarfe definiert")
+            appInstance.EnableEvents = formerEE
             Throw New Exception(repMessages.getmsg(161))
         End If
 
@@ -6125,8 +6129,9 @@ Public Module Projekte
         ' die Settings herauslesen ...
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
+        Dim projectName As String = ""
         Dim rcNameChk As String = ""
-        Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, rcNameChk)
+        Call getChartKennungen(chtobj.Name, chartTyp, typID, auswahl, projectName, rcNameChk)
 
         If rcNameChk <> rcName Then
             Dim a As Integer = 1
@@ -7805,10 +7810,11 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks></remarks>
-    Public Sub createCostBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, _
-                                         ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
-                                            ByVal top As Double, left As Double, height As Double, width As Double, _
-                                            ByVal calledFromReporting As Boolean)
+    Public Sub createCostBalkenOfProject(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                         ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer,
+                                         ByVal top As Double, left As Double, height As Double, width As Double,
+                                         ByVal calledFromReporting As Boolean,
+                                         ByVal comparisontype As Integer)
 
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
@@ -7858,7 +7864,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
+        kennung = calcChartKennung("pr", comparisontype, tmpcollection)
 
 
 
@@ -8009,7 +8015,10 @@ Public Module Projekte
 
                     ' jetzt die Istdaten zeichnen 
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+
+                        '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(194)
+
                         .Interior.Color = awinSettings.SollIstFarbeArea
                         .Values = istDatenReihe
                         .XValues = Xdatenreihe
@@ -8019,10 +8028,14 @@ Public Module Projekte
 
                 End If
 
-
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
 
-                    .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                    ' sonstige Kosten
+                    '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(38)
+                    '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
+
                     .Interior.Color = visboFarbeBlau
                     .Values = prognoseDatenReihe
                     .XValues = Xdatenreihe
@@ -8039,7 +8052,9 @@ Public Module Projekte
 
                     'series
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+
                         .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
+
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
@@ -8091,7 +8106,7 @@ Public Module Projekte
             With newChtObj.Chart
                 .ChartTitle.Text = diagramTitle
                 .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1,
                     titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End With
 
@@ -8407,7 +8422,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
+
 
 
         Dim ErgebnisListeK As Collection
@@ -8509,7 +8524,8 @@ Public Module Projekte
 
                 ' jetzt die Istdaten zeichnen 
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(194)
                     '.Interior.Color = visboFarbeBlau
                     .Interior.Color = awinSettings.SollIstFarbeArea
                     .Values = istDatenReihe
@@ -8524,7 +8540,8 @@ Public Module Projekte
             With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                 ' Stand vom sonstige Kosten
                 '.Name = repMessages.getmsg(273) & " " & hproj.timeStamp.ToShortDateString
-                .Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                '.Name = repMessages.getmsg(38) & " " & hproj.timeStamp.ToShortDateString
+                .Name = repMessages.getmsg(38)
                 '.Interior.Color = CostDefinitions.getCostdef(pkIndex).farbe
                 .Interior.Color = visboFarbeBlau
                 '.Interior.Color = visboFarbeYellow
@@ -8545,7 +8562,7 @@ Public Module Projekte
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(273) & " " & vglProj.timeStamp.ToShortDateString
                     '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
@@ -8634,7 +8651,6 @@ Public Module Projekte
 
         End With
 
-        chtobj.Name = kennung
 
         appInstance.EnableEvents = formerEE
         'appInstance.ScreenUpdating = formerSU
@@ -13343,18 +13359,6 @@ Public Module Projekte
         Dim heute As Date = Now
         Dim key As String = pname & "#"
         Dim referenceBudget As Double = 0.0
-
-        'Const extCost As String = "Kosten Externe"
-        Dim extCost As String
-        If CostDefinitions.Count > 1 Then
-            extCost = CostDefinitions.getCostdef(1).name
-        ElseIf CostDefinitions.Count = 1 And CostDefinitions.getCostdef(1).name = "Kosten Externe" Then
-            ' Mahle ...
-            extCost = "Kosten Externe"
-        Else
-            extCost = "undefined"
-        End If
-
 
         '
         ' ein neues Projekt wird als Objekt angelegt ....
@@ -24625,11 +24629,13 @@ Public Module Projekte
     ''' <param name="auswahl"></param>
     ''' <param name="pName"></param>
     ''' <remarks></remarks>
-    Public Sub getChartKennungen(ByVal chartName As String, _
-                                     ByRef chartTyp As String, _
-                                     ByRef typID As Integer, _
-                                     ByRef auswahl As Integer, _
-                                     ByRef pName As String)
+    Public Sub getChartKennungen(ByVal chartName As String,
+                                     ByRef chartTyp As String,
+                                     ByRef typID As Integer,
+                                     ByRef auswahl As Integer,
+                                     ByRef pName As String,
+                                     ByRef rcName As String)
+
         Dim tmpArray() As String = chartName.Split(New Char() {CType("#", Char)})
         If tmpArray.Length >= 4 Then
             If tmpArray(0) = "pr" Then
@@ -24645,6 +24651,15 @@ Public Module Projekte
                     auswahl = CInt(tmpArray(3))
                 Catch ex As Exception
                     auswahl = -1
+                End Try
+
+                ' tk 6.10.18 ergänzt, um einem Chart die Rolle / Kostenart beim Update mitgeben zu können
+                Try
+                    If tmpArray.Length > 4 Then
+                        rcName = tmpArray(4)
+                    End If
+                Catch ex As Exception
+
                 End Try
 
             End If
@@ -24791,6 +24806,9 @@ Public Module Projekte
         ElseIf typ = "pr" Then
 
             IDkennung = IDkennung & "#" & CStr(mycollection.Item(1))
+            If mycollection.Count >= 2 Then
+                IDkennung = IDkennung & "#" & CStr(mycollection.Item(2))
+            End If
 
         End If
 

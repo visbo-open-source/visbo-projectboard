@@ -2079,15 +2079,23 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
+
                                             If qualifier2 <> "" Then
+                                                If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                                    qualifier2 = selectedRoles.Item(1)
+                                                End If
+
                                                 If RoleDefinitions.containsName(qualifier2) Then
                                                     ' alles ok
                                                 Else
-                                                    Call MsgBox("Chart Personalbedarf: Rolle existiert nicht: " & qualifier2)
+                                                    Call MsgBox("Chart Personalkosten: Rolle existiert nicht: " & qualifier2)
                                                     qualifier2 = ""
                                                 End If
                                             End If
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -2131,15 +2139,24 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
+
                                             If qualifier2 <> "" Then
+                                                If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                                    qualifier2 = selectedRoles.Item(1)
+                                                End If
+
                                                 If RoleDefinitions.containsName(qualifier2) Then
                                                     ' alles ok
                                                 Else
-                                                    Call MsgBox("Chart Personalbedarf: Rolle existiert nicht: " & qualifier2)
+                                                    Call MsgBox("Chart Personalkosten: Rolle existiert nicht: " & qualifier2)
                                                     qualifier2 = ""
                                                 End If
                                             End If
-                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+
+
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken2)
                                             compID = PTprdk.PersonalBalken2
                                         End If
                                     Else
@@ -2198,7 +2215,9 @@ Public Module testModule
                                                 End If
                                             End If
 
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken)
                                             compID = PTprdk.PersonalBalken
                                         End If
 
@@ -2255,7 +2274,9 @@ Public Module testModule
                                                 End If
                                             End If
 
-                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, roleName:=qualifier2)
+                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                                                           roleName:=qualifier2,
+                                                                           vglTyp:=PTprdk.PersonalBalken2)
                                             compID = PTprdk.PersonalBalken2
                                         End If
 
@@ -2299,8 +2320,9 @@ Public Module testModule
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
                                         Else
-                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken
+                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
+
                                         End If
 
                                     Else
@@ -2342,8 +2364,9 @@ Public Module testModule
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
                                         Else
-                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken2
+                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
+
                                         End If
 
                                     Else
@@ -2397,7 +2420,6 @@ Public Module testModule
                                             bigType = ptReportBigTypes.charts
 
                                         Else
-                                            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
 
                                             appInstance.ScreenUpdating = False
 
@@ -2406,6 +2428,7 @@ Public Module testModule
 
                                             appInstance.ScreenUpdating = formerEE
                                             notYetDone = False
+
                                         End If
 
                                     Else
@@ -2454,8 +2477,8 @@ Public Module testModule
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenPie
                                         Else
-                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.KostenBalken2
+                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
                                         End If
 
                                     Else
@@ -2891,9 +2914,20 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist1C Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 2, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
@@ -2913,9 +2947,20 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist1C Personalkosten: Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 2, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Sonstige Kosten" & ke
                                     boxName = repMessages.getmsg(165) & ke
@@ -3048,18 +3093,29 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
                                     Dim vglBaseline As Boolean = True
 
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist1C Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 4, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Rolle " & qualifier & ze
-                                    boxName = repMessages.getmsg(200) & qualifier & ze
+                                    boxName = repMessages.getmsg(200) & qualifier2 & ze
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstRolleC
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier & repMessages.getmsg(202)
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier2 & repMessages.getmsg(202)
                                 End Try
 
                             Case "Soll-Ist2C Rolle"
@@ -3068,18 +3124,29 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+                                            qualifier2 = selectedRoles.Item(1)
+                                        End If
+                                        If RoleDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist2C Rolle existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 4, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Rolle " & qualifier & ze
-                                    boxName = repMessages.getmsg(200) & qualifier & ze
+                                    boxName = repMessages.getmsg(200) & qualifier2 & ze
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstRolleC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier & repMessages.getmsg(202)
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(201) & qualifier2 & repMessages.getmsg(202)
                                 End Try
 
 
@@ -3125,17 +3192,29 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
                                     Dim vglBaseline As Boolean = True
 
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedCosts.Count > 0 Then
+                                            qualifier2 = selectedCosts.Item(1)
+                                        End If
+                                        If CostDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist1C Kostenart: Kostenart existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
+
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 5, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Kostenart " & qualifier & ke
-                                    boxName = repMessages.getmsg(203) & qualifier & ke
+                                    boxName = repMessages.getmsg(203) & qualifier2 & ke
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstKostenartC
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier & repMessages.getmsg(202)
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier2 & repMessages.getmsg(202)
                                 End Try
 
 
@@ -3145,17 +3224,29 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
+                                    If qualifier2 <> "" Then
+                                        If qualifier2 = "%1" And selectedCosts.Count > 0 Then
+                                            qualifier2 = selectedCosts.Item(1)
+                                        End If
+                                        If CostDefinitions.containsName(qualifier2) Then
+                                            ' alles ok
+                                        Else
+                                            Call MsgBox("Chart Soll-Ist2C Kostenart: Kostenart existiert nicht: " & qualifier2)
+                                            qualifier2 = ""
+                                        End If
+                                    End If
+
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 5, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
                                     'boxName = "Kostenart " & qualifier & ke
-                                    boxName = repMessages.getmsg(203) & qualifier & ke
+                                    boxName = repMessages.getmsg(203) & qualifier2 & ke
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstKostenartC2
                                     notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier & repMessages.getmsg(202)
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(204) & qualifier2 & repMessages.getmsg(202)
                                 End Try
 
 

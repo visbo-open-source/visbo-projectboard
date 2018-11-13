@@ -12,6 +12,7 @@ Public Class ThisAddIn
 
     Private Sub ThisAddIn_Startup() Handles Me.Startup
 
+
         Try
             awinSettings.databaseURL = My.Settings.mongoDBURL
             awinSettings.databaseName = My.Settings.mongoDBname
@@ -43,6 +44,7 @@ Public Class ThisAddIn
         Finally
 
         End Try
+
 
     End Sub
 

@@ -105,7 +105,9 @@ Public Class Ribbon1
     Private Sub btnFreeze_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFreeze.Click
         Try
 
+
             Dim freeze As Boolean = True
+
 
             With currentSlide
 

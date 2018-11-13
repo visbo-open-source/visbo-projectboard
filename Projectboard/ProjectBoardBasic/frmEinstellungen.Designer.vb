@@ -23,23 +23,16 @@ Partial Class frmEinstellungen
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmEinstellungen))
-        Me.chkboxMassEdit = New System.Windows.Forms.CheckBox()
         Me.chkboxPropAnpass = New System.Windows.Forms.CheckBox()
         Me.chkboxAmpel = New System.Windows.Forms.CheckBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.SprachAusw = New System.Windows.Forms.ComboBox()
         Me.statusLabel = New System.Windows.Forms.Label()
+        Me.rdbFirst = New System.Windows.Forms.RadioButton()
+        Me.rdbLast = New System.Windows.Forms.RadioButton()
+        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
-        '
-        'chkboxMassEdit
-        '
-        Me.chkboxMassEdit.AutoSize = True
-        Me.chkboxMassEdit.Location = New System.Drawing.Point(27, 33)
-        Me.chkboxMassEdit.Name = "chkboxMassEdit"
-        Me.chkboxMassEdit.Size = New System.Drawing.Size(170, 17)
-        Me.chkboxMassEdit.TabIndex = 0
-        Me.chkboxMassEdit.Text = "Mass-Edit extended table view"
-        Me.chkboxMassEdit.UseVisualStyleBackColor = True
         '
         'chkboxPropAnpass
         '
@@ -54,7 +47,7 @@ Partial Class frmEinstellungen
         'chkboxAmpel
         '
         Me.chkboxAmpel.AutoSize = True
-        Me.chkboxAmpel.Location = New System.Drawing.Point(27, 105)
+        Me.chkboxAmpel.Location = New System.Drawing.Point(27, 94)
         Me.chkboxAmpel.Name = "chkboxAmpel"
         Me.chkboxAmpel.Size = New System.Drawing.Size(101, 17)
         Me.chkboxAmpel.TabIndex = 2
@@ -65,7 +58,7 @@ Partial Class frmEinstellungen
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!)
-        Me.Label1.Location = New System.Drawing.Point(24, 141)
+        Me.Label1.Location = New System.Drawing.Point(24, 130)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(116, 15)
         Me.Label1.TabIndex = 4
@@ -75,7 +68,7 @@ Partial Class frmEinstellungen
         '
         Me.SprachAusw.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.SprachAusw.FormattingEnabled = True
-        Me.SprachAusw.Location = New System.Drawing.Point(146, 141)
+        Me.SprachAusw.Location = New System.Drawing.Point(146, 129)
         Me.SprachAusw.MaxDropDownItems = 4
         Me.SprachAusw.Name = "SprachAusw"
         Me.SprachAusw.Size = New System.Drawing.Size(158, 21)
@@ -85,7 +78,7 @@ Partial Class frmEinstellungen
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(24, 176)
+        Me.statusLabel.Location = New System.Drawing.Point(24, 165)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(45, 15)
         Me.statusLabel.TabIndex = 45
@@ -93,28 +86,65 @@ Partial Class frmEinstellungen
         Me.statusLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft
         Me.statusLabel.Visible = False
         '
+        'rdbFirst
+        '
+        Me.rdbFirst.AutoSize = True
+        Me.rdbFirst.Location = New System.Drawing.Point(13, 23)
+        Me.rdbFirst.Name = "rdbFirst"
+        Me.rdbFirst.Size = New System.Drawing.Size(52, 17)
+        Me.rdbFirst.TabIndex = 46
+        Me.rdbFirst.TabStop = True
+        Me.rdbFirst.Text = "Erster"
+        Me.rdbFirst.UseVisualStyleBackColor = True
+        '
+        'rdbLast
+        '
+        Me.rdbLast.AutoSize = True
+        Me.rdbLast.Location = New System.Drawing.Point(132, 23)
+        Me.rdbLast.Name = "rdbLast"
+        Me.rdbLast.Size = New System.Drawing.Size(53, 17)
+        Me.rdbLast.TabIndex = 47
+        Me.rdbLast.TabStop = True
+        Me.rdbLast.Text = "letzter"
+        Me.rdbLast.UseVisualStyleBackColor = True
+        '
+        'GroupBox1
+        '
+        Me.GroupBox1.Controls.Add(Me.rdbLast)
+        Me.GroupBox1.Controls.Add(Me.rdbFirst)
+        Me.GroupBox1.Location = New System.Drawing.Point(14, 13)
+        Me.GroupBox1.Name = "GroupBox1"
+        Me.GroupBox1.Size = New System.Drawing.Size(309, 51)
+        Me.GroupBox1.TabIndex = 48
+        Me.GroupBox1.TabStop = False
+        Me.GroupBox1.Text = "Vergleich mit welcher Version"
+        '
         'frmEinstellungen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(335, 198)
+        Me.ClientSize = New System.Drawing.Size(335, 200)
+        Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.statusLabel)
         Me.Controls.Add(Me.SprachAusw)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.chkboxAmpel)
         Me.Controls.Add(Me.chkboxPropAnpass)
-        Me.Controls.Add(Me.chkboxMassEdit)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmEinstellungen"
         Me.Text = "Einstellungen"
+        Me.GroupBox1.ResumeLayout(False)
+        Me.GroupBox1.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
-    Friend WithEvents chkboxMassEdit As System.Windows.Forms.CheckBox
     Friend WithEvents chkboxPropAnpass As System.Windows.Forms.CheckBox
     Friend WithEvents chkboxAmpel As System.Windows.Forms.CheckBox
     Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents SprachAusw As System.Windows.Forms.ComboBox
     Friend WithEvents statusLabel As System.Windows.Forms.Label
+    Friend WithEvents rdbFirst As Windows.Forms.RadioButton
+    Friend WithEvents rdbLast As Windows.Forms.RadioButton
+    Friend WithEvents GroupBox1 As Windows.Forms.GroupBox
 End Class

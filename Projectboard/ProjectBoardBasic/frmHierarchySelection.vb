@@ -5042,60 +5042,6 @@ Public Class frmHierarchySelection
 
                 Call buildHryTreeViewNew(PTProjektType.nameList)
 
-                '' ' clear Listbox1 
-                ''If awinSettings.englishLanguage Then
-                ''    headerLine.Text = "Business Units"
-                ''Else
-                ''    headerLine.Text = "Kostenarten"
-                ''End If
-
-                ''filterBox.Text = ""
-
-                '' ' jetzt nur die Kosten anbieten, die auch vorkommen 
-                ''If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                ''    ' immer die ShowProjekte hernehmen 
-                ''    If selectedProjekte.Count > 0 Then
-                ''        allCosts = selectedProjekte.getCostNames
-                ''    ElseIf ShowProjekte.Count > 0 Then
-                ''        allCosts = ShowProjekte.getCostNames()
-                ''    Else
-                ''        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
-                ''        allCosts.Clear()
-                ''    End If
-
-                ''ElseIf Me.menuOption = PTmenue.filterdefinieren Then
-                ''    ' 
-                ''    If selectedProjekte.Count > 0 Then
-                ''        allCosts = selectedProjekte.getCostNames
-                ''    Else
-                ''        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
-                ''        For i As Integer = 1 To CostDefinitions.Count - 1
-                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
-                ''            If Not allCosts.Contains(tmpName) Then
-                ''                allCosts.Add(tmpName, tmpName)
-                ''            End If
-                ''        Next
-                ''    End If
-
-                ''Else
-                ''    ' alle anderen Optionen
-                ''    If selectedProjekte.Count > 0 Then
-                ''        allCosts = selectedProjekte.getCostNames
-                ''    ElseIf ShowProjekte.Count > 0 Then
-                ''        allCosts = ShowProjekte.getCostNames
-                ''    Else
-                ''        For i As Integer = 1 To CostDefinitions.Count - 1
-                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
-                ''            If Not allCosts.Contains(tmpName) Then
-                ''                allCosts.Add(tmpName, tmpName)
-                ''            End If
-                ''        Next
-                ''    End If
-
-                ''End If
-
-
-                ''Call rebuildFormerState(PTauswahlTyp.Kostenart)
 
             Else
 
@@ -5155,60 +5101,7 @@ Public Class frmHierarchySelection
 
                 Call buildHryTreeViewNew(PTProjektType.nameList)
 
-                '' ' clear Listbox1 
-                ''If awinSettings.englishLanguage Then
-                ''    headerLine.Text = "Business Units"
-                ''Else
-                ''    headerLine.Text = "Kostenarten"
-                ''End If
 
-                ''filterBox.Text = ""
-
-                '' ' jetzt nur die Kosten anbieten, die auch vorkommen 
-                ''If Me.menuOption = PTmenue.sessionFilterDefinieren Then
-                ''    ' immer die ShowProjekte hernehmen 
-                ''    If selectedProjekte.Count > 0 Then
-                ''        allCosts = selectedProjekte.getCostNames
-                ''    ElseIf ShowProjekte.Count > 0 Then
-                ''        allCosts = ShowProjekte.getCostNames()
-                ''    Else
-                ''        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
-                ''        allCosts.Clear()
-                ''    End If
-
-                ''ElseIf Me.menuOption = PTmenue.filterdefinieren Then
-                ''    ' 
-                ''    If selectedProjekte.Count > 0 Then
-                ''        allCosts = selectedProjekte.getCostNames
-                ''    Else
-                ''        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
-                ''        For i As Integer = 1 To CostDefinitions.Count - 1
-                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
-                ''            If Not allCosts.Contains(tmpName) Then
-                ''                allCosts.Add(tmpName, tmpName)
-                ''            End If
-                ''        Next
-                ''    End If
-
-                ''Else
-                ''    ' alle anderen Optionen
-                ''    If selectedProjekte.Count > 0 Then
-                ''        allCosts = selectedProjekte.getCostNames
-                ''    ElseIf ShowProjekte.Count > 0 Then
-                ''        allCosts = ShowProjekte.getCostNames
-                ''    Else
-                ''        For i As Integer = 1 To CostDefinitions.Count - 1
-                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
-                ''            If Not allCosts.Contains(tmpName) Then
-                ''                allCosts.Add(tmpName, tmpName)
-                ''            End If
-                ''        Next
-                ''    End If
-
-                ''End If
-
-
-                ''Call rebuildFormerState(PTauswahlTyp.Kostenart)
 
             Else
 
@@ -5300,6 +5193,22 @@ Public Class frmHierarchySelection
             ' tk 10.9.18 immer alle Rollen zeigen ... 
             'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
+
+
+            If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+
+                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+
+                        topNodes.Clear()
+                        topNodes.Add(RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit).UID)
+
+                    End If
+
+                End If
+            End If
+
+
 
 
             For i = 0 To topNodes.Count - 1

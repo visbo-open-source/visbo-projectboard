@@ -26,6 +26,28 @@
     Private _customBoolFields As SortedList(Of Integer, Boolean)
 
 
+    ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
+    ' mögliche Werte sind: 0: project, 1: Portfolio bzw. Unio, 2: ProjektVorlage
+    Friend _projectType As Integer
+    Public Overridable Property projectType As Integer
+        Get
+            projectType = _projectType
+        End Get
+        Set(value As Integer)
+            _projectType = ptPRPFType.projectTemplate
+            ' 30.9.18 in der Klasse Vorlage immer auf 2 gesetzt ..
+            'If Not IsNothing(value) Then
+            '    If value >= 0 And value <= 2 Then
+            '        _projectType = value
+            '    Else
+            '        _projectType = ptPRPFType.project
+            '    End If
+            'Else
+            '    _projectType = ptPRPFType.project
+            'End If
+        End Set
+    End Property
+
     ''' <summary>
     ''' gibt die sortierte Liste der Double Customfields zurück 
     ''' </summary>
@@ -4174,6 +4196,7 @@
         rcLists = New clsListOfCostAndRoles
 
         relStart = 1
+        _projectType = ptPRPFType.projectTemplate
         _Dauer = 0
         '_StartOffset = 0
         '_Start = 1
