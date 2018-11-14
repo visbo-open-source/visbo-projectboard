@@ -1,6 +1,7 @@
 ﻿Public Class clsVP
     Public Property _id As String
     Public Property name As String
+    Public Property kundennummer As String
     Public Property vcid As String
     Public Property vpvCount As Integer
     Public Property vpType As Integer
@@ -14,6 +15,7 @@
     Sub New()
         _id = ""
         _name = "not named"
+        _kundennummer = ""
         _vcid = "not yet defined"
         _vpvCount = 0
         _vpType = 0

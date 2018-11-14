@@ -199,23 +199,28 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                Try
-                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB()
 
-                Catch ex As Exception
+                resultCollection.Add(StartofCalendar)
+
+                '' ur: 2018.11.14: wird nur benötigt, um zu sehen, wann der erste Timestamp ist, über alle Projekte im VC betrachtet
+                ''
+                ''Try
+                ''    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB()
+
+                ''Catch ex As Exception
 
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd)
-                        If loginErfolgreich Then
-                            resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB()
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
-                    End If
+                ''    Dim hstr() As String = Split(ex.Message, ":")
+                ''    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                ''        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                ''        If loginErfolgreich Then
+                ''            resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB()
+                ''        End If
+                ''    Else
+                ''        Throw New ArgumentException(ex.Message)
+                ''    End If
 
-                End Try
+                ''End Try
 
 
             Else 'es wird eine MongoDB direkt adressiert

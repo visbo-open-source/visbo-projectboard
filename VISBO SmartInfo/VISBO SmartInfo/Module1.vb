@@ -1075,7 +1075,7 @@ Module Module1
                 Dim pName As String = getPnameFromKey(tmpName)
                 Dim vName As String = getVariantnameFromKey(tmpName)
                 Dim pvName As String = calcProjektKeyDB(pName, vName)
-                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
                 Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB(pvName)
                 smartSlideLists.addToListOfTS(tsCollection)
             Next
@@ -8315,7 +8315,7 @@ Module Module1
                             Dim pName As String = getPnameFromKey(tmpName)
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
-                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
                             tsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB(pvName)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 

@@ -14055,11 +14055,80 @@ Public Module awinGeneralModules
 
 
             Dim isIdentical As Boolean = False
-            If Not storeSingleProjectToDB(sproj, outPutCollection, identical:=isIdentical) Then ' wird im 1Click-PPT benötigt
-                Call MsgBox("speichern Summary Projekt mit Fehler ...")
+
+
+            If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now) Then
+                ' speichern des Projektes 
+                sproj.timeStamp = DBtimeStamp
+                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername) Then
+
+                    If awinSettings.englishLanguage Then
+                        outputLine = "saved: " & sproj.name & ", " & sproj.variantName
+                        outPutCollection.Add(outputLine)
+                    Else
+                        outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
+                        outPutCollection.Add(outputLine)
+                    End If
+
+                    anzahlNeue = anzahlNeue + 1
+
+                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName)
+                    writeProtections.upsert(wpItem)
+
+                Else
+                    ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                    If awinSettings.englishLanguage Then
+                        outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                    Else
+                        outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+                    End If
+                    outPutCollection.Add(outputLine)
+
+                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName)
+                    writeProtections.upsert(wpItem)
+
+                End If
             Else
-                Dim a As Integer = outPutCollection.Count
+                ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
+                Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(sproj.name, sproj.variantName, Date.Now)
+                ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
+                If Not sproj.isIdenticalTo(oldProj) Then
+                    sproj.timeStamp = DBtimeStamp
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername) Then
+
+                        If awinSettings.englishLanguage Then
+                            outputLine = "saved: " & sproj.name & ", " & sproj.variantName
+                            outPutCollection.Add(outputLine)
+                        Else
+                            outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
+                            outPutCollection.Add(outputLine)
+                        End If
+
+                        ' alles ok
+                        anzahlChanged = anzahlChanged + 1
+
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName)
+                        writeProtections.upsert(wpItem)
+                    Else
+                        If awinSettings.englishLanguage Then
+                            outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                        Else
+                            outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+                        End If
+                        outPutCollection.Add(outputLine)
+
+                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName)
+                        writeProtections.upsert(wpItem)
+
+                    End If
+                End If
             End If
+
+            ''If Not storeSingleProjectToDB(sproj, outPutCollection, identical:=isIdentical) Then ' wird im 1Click-PPT benötigt
+            ''    Call MsgBox("speichern Summary Projekt mit Fehler ...")
+            ''Else
+            ''    Dim a As Integer = outPutCollection.Count
+            ''End If
 
             Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
             If AlleProjekte.Containskey(skey) Then

@@ -330,9 +330,10 @@ Public Class Request
 
         Try
             Dim hproj As New clsProjekt
-            Dim aktDate As Date = Date.Now
 
             ' da in der Datenbank alle DateTime im UTC gespeichert sind, muss hier auch dieses Format verwendet werden
+            Dim aktDate As Date = Date.Now.ToUniversalTime()
+
             storedLatest = storedLatest.ToUniversalTime()
             storedEarliest = storedEarliest.ToUniversalTime()
             zeitraumStart = zeitraumStart.ToUniversalTime()
@@ -346,37 +347,64 @@ Public Class Request
 
                 VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
 
-                ' schleife über alle VisboProjects
-                For Each kvp As KeyValuePair(Of String, clsVP) In VRScache.VPsN
+                Dim VisboPv_all As New List(Of clsProjektWebLong)
+                VisboPv_all = GETallVPvLong("", , variantName, aktDate)
 
-                    Dim vpid As String = kvp.Value._id
+                For Each webProj As clsProjektWebLong In VisboPv_all
 
-                    If vpid <> "" Then
-                        ' gewünschten Varianten vom Server anfordern
-                        Dim allVPv As New List(Of clsProjektWebLong)
-                        allVPv = GETallVPvLong(vpid, , variantName, aktDate)
-
-                        For Each webProj As clsProjektWebLong In allVPv
-
-                            If (webProj.startDate <= zeitraumEnde And
+                    If (webProj.startDate <= zeitraumEnde And
                                 webProj.endDate >= zeitraumStart And
                                 webProj.timestamp <= storedLatest) Then
 
-                                webProj.copyto(hproj)
-                                Dim a As Integer = hproj.dauerInDays
-                                Dim key As String = Projekte.calcProjektKey(hproj)
-                                If Not result.ContainsKey(key) Then
-                                    result.Add(key, hproj)
-                                End If
+                        hproj = New clsProjekt
 
-                            End If
+                        webProj.copyto(hproj)
+                        Dim a As Integer = hproj.dauerInDays
+                        Dim key As String = Projekte.calcProjektKey(hproj)
+                        If Not result.ContainsKey(key) Then
+                            result.Add(key, hproj)
+                        End If
 
-                        Next
-                    Else
-                        ' kann eigentlich nicht vorkommen
                     End If
 
                 Next
+
+
+                '' ur: 2018.11.14: das Holen aller Projekte und Varianten einzeln verursacht zu lange Antwortzeit
+                ''
+                '' schleife über alle VisboProjects
+                'For Each kvp As KeyValuePair(Of String, clsVP) In VRScache.VPsN
+
+                '    Dim vpid As String = kvp.Value._id
+
+                '    If vpid <> "" Then
+                '        ' gewünschten Varianten vom Server anfordern
+                '        Dim allVPv As New List(Of clsProjektWebLong)
+                '        allVPv = GETallVPvLong(vpid, , variantName, aktDate)
+
+                '        For Each webProj As clsProjektWebLong In allVPv
+
+                '            If (webProj.startDate <= zeitraumEnde And
+                '                webProj.endDate >= zeitraumStart And
+                '                webProj.timestamp <= storedLatest) Then
+
+                '                hproj = New clsProjekt
+
+                '                webProj.copyto(hproj)
+                '                Dim a As Integer = hproj.dauerInDays
+                '                Dim key As String = Projekte.calcProjektKey(hproj)
+                '                If Not result.ContainsKey(key) Then
+                '                    result.Add(key, hproj)
+                '                End If
+
+                '            End If
+
+                '        Next
+                '    Else
+                '        ' kann eigentlich nicht vorkommen
+                '    End If
+
+                'Next
 
             Else
                 '  Projekt angegeben: d.h. es werden alle Timestamps der übergebenen Projekt-Variante zurückgegeben
@@ -388,6 +416,8 @@ Public Class Request
 
                     For Each webProj As clsProjektWebLong In allVPv
                         If webProj.timestamp >= storedEarliest Then
+
+                            hproj = New clsProjekt
 
                             webProj.copyto(hproj)
                             Dim a As Integer = hproj.dauerInDays
@@ -547,10 +577,11 @@ Public Class Request
                 Dim serverUri As New Uri(serverUriString)
 
                 Dim VP As New clsVP
-                Dim user As New clsUser
-                user.email = aktUser.email
-                user.role = "Admin"
-                VP.users.Add(user)
+                'ur: 8.11.2018: testweise: nach Telefonat mit ms soll der User, der hier zugriff hat vom ReST-Server eingetragen werden.
+                'Dim user As New clsUser
+                'user.email = aktUser.email
+                'user.role = "Admin"
+                'VP.users.Add(user)
                 VP.name = pname
                 VP.vcid = aktVCid
                 VP.vpPublic = True
@@ -712,9 +743,10 @@ Public Class Request
             vpvListe = GETallVPvShort("", "", storedAtOrBefore)
 
             For Each vpv As clsProjektWebShort In vpvListe
-
+                Dim vpType As Integer = GETvpType(vpv.vpid)
                 If vpv.startDate <= zeitraumEnde And
-                    vpv.endDate >= zeitraumStart Then
+                    vpv.endDate >= zeitraumStart And
+                    vpType = ptPRPFType.project Then
 
                     Dim pName As String = GETpName(vpv.vpid)
                     Dim pvname As String = calcProjektKey(pName, vpv.variantName)
@@ -770,28 +802,38 @@ Public Class Request
     Public Function retrieveProjectNamesByPNRFromDB(ByVal pNRatKD As String) As Collection
 
         Dim result As New Collection
-        Dim interimResult As New SortedList(Of String, String)
+        Dim interimResult As New Collection
 
         Try
 
-            ' holt alle Projekte/Variante/versionen 
-            Dim vpvListe As New List(Of clsProjektWebShort)
-            vpvListe = GETallVPvShort("")
+            Dim vpid As String = ""
+            Dim anzLoop As Integer = 0
+            'Dim allVP As New List(Of clsVP)
+            While (result.Count <= 0 And anzLoop <= 2)
 
-            For Each vpv As clsProjektWebShort In vpvListe
+                ' zuerst nur im Cache nachsehen
+                For Each kvp As KeyValuePair(Of String, clsVP) In VRScache.VPsId
 
-                If vpv.kundennummer = pNRatKD Then
-                    If Not interimResult.ContainsKey(vpv.name) Then
-                        interimResult.Add(vpv.name, vpv.name)
-                    Else
+                    If (kvp.Value.kundennummer = pNRatKD) And
+                        (kvp.Value.vpType = ptPRPFType.project) Then
+
+                        ' Projektnamen einsammeln
+                        result.Add(kvp.Value.name)
+                        ' vpid-eingesammelt, aktuell nicht weiter verwertet
+                        interimResult.Add(kvp.Value._id)
                     End If
+
+                Next
+                ' im Cache nicht gefunden, also nochmals alle VP des aktVCid holen und nachsehen.
+                If result.Count <= 0 Then
+
+                    VRScache.VPsId = GETallVP(aktVCid, ptPRPFType.all)
+
                 End If
-            Next
 
-            For Each kvp As KeyValuePair(Of String, String) In interimResult
-                result.Add(kvp.Key)
-            Next
+                anzLoop = anzLoop + 1
 
+            End While
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -833,7 +875,7 @@ Public Class Request
 
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
                 For Each vpv In allVPv
-                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
+                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest And vpv.variantName = variantName Then
                         'zwischenResult.Add(vpv.timestamp, vpv)
                         Dim hproj As New clsProjekt
                         vpv.copyto(hproj)
@@ -1414,13 +1456,19 @@ Public Class Request
 
             For Each kvp As KeyValuePair(Of String, clsVP) In vplist
 
-                ' holt zu der vpid die Varianten aus vpv Collection
-                Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id,, Date.Now)
+                If kvp.Value.lock.Count > 0 Then
 
-                ' Lock löschen für jede Variante des Projektes mit vpid
-                For Each vTp As clsProjektWebShort In variantToProj
-                    result = result And DELETEVPLock(kvp.Value._id, vTp.variantName)
-                Next
+                    ' holt zu der vpid die Varianten aus vpv Collection
+                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id,, Date.Now)
+
+                    ' Lock löschen für jede Variante des Projektes mit vpid
+                    For Each vTp As clsProjektWebShort In variantToProj
+
+                        result = result And DELETEVPLock(kvp.Value._id, vTp.variantName)
+
+                    Next
+                End If
+
             Next
 
         Catch ex As Exception
@@ -1797,6 +1845,49 @@ Public Class Request
         End Try
 
         GETpName = pName
+
+    End Function
+    ''' <summary>
+    ''' holt zu dem Projekt/Portfolio mit der Id vpid den zugehörigen Projekt/Portfolio-Namen vom Server
+    ''' </summary>
+    ''' <param name="vpid"></param>
+    ''' <returns></returns>
+    Private Function GETvpType(ByVal vpid As String) As Integer
+
+        Dim vpType As Integer = ptPRPFType.all
+
+        Try
+            ' Alle VisboProjects über Server von WebServer/DB holen
+            Dim anzLoop As Integer = 0
+
+            If vpid <> "" Then
+
+                While (vpType = ptPRPFType.all And anzLoop <= 2)
+
+                    If VRScache.VPsId.ContainsKey(vpid) Then
+                        ' pName zu angegebene vpid herausfinden
+                        vpType = VRScache.VPsId(vpid).vpType
+                    Else
+                        VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+
+                        Try
+                            vpType = VRScache.VPsId(vpid).vpType
+                        Catch ex As Exception
+                            vpType = ptPRPFType.all
+                        End Try
+
+                    End If
+
+                    anzLoop = anzLoop + 1
+                End While
+            Else
+                Throw New ArgumentException("Fehler in GETvpType: keine vpid übergeben")
+            End If
+        Catch ex As Exception
+            vpType = ptPRPFType.all
+        End Try
+
+        GETvpType = vpType
 
     End Function
 
@@ -3641,9 +3732,9 @@ Public Class Request
                     If awinSettings.visboDebug Then
                         Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
                     End If
-                    If withBreak Then
-                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
-                    End If
+                    'If withBreak Then
+                    Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
+                    'End If
 
                 Case 500 To 599     ' ServerIssue (internal Server Error)
 
@@ -3673,7 +3764,7 @@ Public Class Request
     ''' <param name="selfilter"></param>
     ''' <returns></returns>
     Public Function storeFilterToDB(ByVal ptFilter As clsFilter, ByRef selfilter As Boolean) As Boolean
-        storeFilterToDB = False
+        storeFilterToDB = True
     End Function
 
 
