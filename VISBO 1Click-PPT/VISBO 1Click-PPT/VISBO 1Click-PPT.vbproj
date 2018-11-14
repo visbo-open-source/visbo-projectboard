@@ -33,9 +33,9 @@
     <IsWebBootstrapper>True</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <PublishUrl>C:\publish\VISBO 1Click-PPT REST\</PublishUrl>
-    <InstallUrl>http://applications.visbo.de/VISBO%25201Click-PPT%2520REST/</InstallUrl>
+    <InstallUrl>http://u71697779-exchange%40home448168182.1and1-data.host/VISBO 1ClickPPT Project AddIn/</InstallUrl>
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.0.0.3</ApplicationVersion>
+    <ApplicationVersion>3.0.0.2</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
