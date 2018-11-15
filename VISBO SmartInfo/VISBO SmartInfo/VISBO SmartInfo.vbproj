@@ -26,7 +26,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>VISBO_SmartInfo</RootNamespace>
     <AssemblyName>VISBO SmartInfo</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <StartupObject>
     </StartupObject>
@@ -52,6 +52,7 @@
     <FriendlyName>VISBO SmartInfo</FriendlyName>
     <OfficeApplicationDescription>aktualisiert VISBO Powerpoint Dateien </OfficeApplicationDescription>
     <LoadBehavior>3</LoadBehavior>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
