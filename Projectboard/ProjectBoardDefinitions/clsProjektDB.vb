@@ -1,4 +1,7 @@
 ﻿''' <summary>
+''' Vorsicht !!! 
+''' bei allen Änderungen in clsProjektDB und in clsPhaseDB, da für den ReST-Server-Zugriff separate Klassen existieren, die aber fast gleich sind.
+''' 
 ''' Klassen-Definition für ein Projekt-Dokument in MongoDB
 ''' benötigt Klassen-Definitionen clsPhaseDB, clsRolleDB, clsKostenartDB, clsHierarchyDB, clsHierarchyNodeDB, clsResultDB
 ''' </summary>
@@ -6,6 +9,9 @@
 Public Class clsProjektDB
 
     Public name As String
+    ' Änderung ur: vpid wird für VisualBoard als Web-Anwendung benötigt. 
+    '              Im vc sind VisboProjekte enthalten, die über vpid eindeutig vorhandene Projekte referenziert sind.
+    'Public vpid As Object
     Public variantName As String
     Public variantDescription As String
     Public Risiko As Double
@@ -44,6 +50,15 @@ Public Class clsProjektDB
     Public description As String
     Public businessUnit As String
 
+    ' ergänzt am 23.5.18 
+    Public projectType As Integer = ptPRPFType.project
+
+    ' ergänzt am 9.6.18 
+    Public actualDataUntil As Date = Date.MinValue
+
+    ' ergänzt am 12.6.18 
+    Public kundenNummer As String = ""
+
     Public Sub copyfrom(ByVal projekt As clsProjekt)
         Dim i As Integer
 
@@ -64,13 +79,31 @@ Public Class clsProjektDB
                 Me.Id = .Id
             End If
 
+            If Not IsNothing(.projectType) Then
+                Me.projectType = .projectType
+            Else
+                Me.projectType = ptPRPFType.project
+            End If
+
+            If Not IsNothing(.kundenNummer) Then
+                Me.kundenNummer = .kundenNummer
+            Else
+                Me.kundenNummer = ""
+            End If
+
+
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
+
+            ' ist es ein Summary Projekt ? 
+
 
             Me.name = calcProjektKeyDB(projekt.name, projekt.variantName)
 
             Me.variantName = .variantName
             Me.variantDescription = .variantDescription
+
+            Me.actualDataUntil = .actualDataUntil.ToUniversalTime
 
             Me.Risiko = .Risiko
             Me.StrategicFit = .StrategicFit
@@ -150,6 +183,30 @@ Public Class clsProjektDB
             End If
 
             .variantName = Me.variantName
+
+            ' tk 24.5.18 , wenn Nothing wird das in der Setting Property abgefangen 
+            .projectType = Me.projectType
+
+            If IsNothing(Me.kundenNummer) Then
+                .kundenNummer = ""
+            Else
+                .kundenNummer = Me.kundenNummer
+            End If
+
+            If awinSettings.autoSetActualDataDate Then
+
+                If Me.timestamp.AddMonths(-1) > Me.startDate Then
+                    .actualDataUntil = Me.timestamp.AddMonths(-1)
+                End If
+
+            Else
+                If IsNothing(Me.actualDataUntil) Then
+                    .actualDataUntil = Date.MinValue
+                Else
+                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
+                End If
+            End If
+
 
             If IsNothing(Me.variantDescription) Then
                 .variantDescription = ""

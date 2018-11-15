@@ -16,7 +16,12 @@ Public Module Module1
     ' in Modul 1 sollten jetzt alle Konstanten und Einstellungen in einer Klasse zusammengefasst werden
     ' awinSettings: für StartOfCalendar, linker Rand, rechter Rand, ...
     ' Laufzeit Parameter;
+
+    ' das Objekt, das später die Instanz-Variable Request aufnimmt 
+    Public databaseAcc As Object = Nothing
+
     Public iDkey As String = ""
+
     'login - Informationen
     Public dbUsername As String = ""
     Public dbPasswort As String = ""
@@ -78,6 +83,11 @@ Public Module Module1
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
+
+    ' ist das Pendant zu AlleProjekte, nimmt nur Summary Projekte auf 
+    Public AlleProjektSummaries As New clsProjekteAlle
+    ' ist das Pendant zu ShowProjekte, gibt an welche Summary Projekte geladen sind  
+    Public ShowProjekteSummaries As New clsProjekte
 
     ' der DBCache der von allen Projekten angelegt wird, die im Mass-Edit bearbeitet werden 
     ' evtl wird das später mal erweitert auf alleProjekte, die geladen sind und in der DB existieren
@@ -164,8 +174,8 @@ Public Module Module1
     Public maxScreenHeight As Double, maxScreenWidth As Double
     Public boxWidth As Double = 19.3, boxHeight As Double, topOfMagicBoard As Double
     Public screen_correct As Double = 0.26
-    Public miniWidth As Double = 126 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
-    Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
+    Public chartWidth As Double = 140 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
+    Public chartHeight As Double = 120 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
     ' dieser Array dient zur Aufnahme der Spaltenbreiten, Schriftgrösse für MassEditRC (0), massEditTE (1), massEditAT (2)
     Public massColFontValues(2, 100) As Double
@@ -173,6 +183,11 @@ Public Module Module1
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
     ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
+
+    ' diese Konstante bestimmt, welchen Varianten Namen Portfolios bzw. Programme bekommen 
+    Public Const portfolioVName As String = "Portfolio/Prog."
+    ' diese Konstante bestimmt, wie die Variante heissen soll, die die Ist-Daten - zumindest temporär - aufnimmt 
+    Public Const istDatenVName As String = "ActualData"
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
@@ -224,6 +239,29 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum ptImportSettings
+        attributeNames1 = 0
+        attributeNamesCol1 = 1
+        roleCostNames1 = 2
+        roleCostNamesCol1 = 3
+        customFieldNames1 = 4
+        customFieldsNamesCol1 = 5
+        ' Werte für Import Typ 2
+        attributeNames2 = 6
+        attributeNamesCol2 = 7
+        roleCostNames2 = 8
+        roleCostNamesCol2 = 9
+        customFieldNames2 = 10
+        customFieldsNamesCol2 = 11
+        ' Werte für Import Typ 3
+        attributeNames3 = 12
+        attributeNamesCol3 = 13
+        roleCostNames3 = 14
+        roleCostNamesCol3 = 15
+        customFieldNames3 = 16
+        customFieldsNamesCol3 = 17
+
+    End Enum
 
     Public Enum ptReportBigTypes
         charts = 0
@@ -232,10 +270,10 @@ Public Module Module1
         planelements = 4
     End Enum
 
-    Public Enum ptReportTables
-        prMilestones = 0
-        pfMilestones = 1
-    End Enum
+    'Public Enum ptReportTables
+    '    prMilestones = 0
+    '    pfMilestones = 1
+    'End Enum
 
     Public Enum ptReportComponents
         prAmpel = 0
@@ -256,9 +294,13 @@ Public Module Module1
         prCardinvisible = 16
     End Enum
 
+    ' wenn diese Enum erweitert wird, inbedingt im clsProjekt .projecttype Property den Wertebereich anpassen ...
+    ' in mongoDBaccess wird statisch auf "0" für projekt abgefragt ..
     Public Enum ptPRPFType
         project = 0
         portfolio = 1
+        projectTemplate = 2
+        all = 3
     End Enum
 
     ''' <summary>
@@ -351,6 +393,7 @@ Public Module Module1
         percentDone = 10
         TrafficLight = 11
         TLExplanation = 12
+        DocUrl = 13
     End Enum
 
 
@@ -394,7 +437,7 @@ Public Module Module1
         MilestoneCategories = 22
     End Enum
 
-    ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 
+    ' Enumeration Projekt Diagramm Kennungen 
     Public Enum PTprdk
         PersonalBalken = 0
         PersonalPie = 1
@@ -416,6 +459,16 @@ Public Module Module1
         SollIstGesamtkostenC = 23
         SollIstRolleC = 24
         SollIstKostenartC = 25
+        PersonalBalken2 = 26
+        KostenBalken2 = 27
+        SollIstPersonalkosten2 = 28
+        SollIstSonstKosten2 = 29
+        SollIstGesamtkosten2 = 30
+        SollIstPersonalkostenC2 = 31
+        SollIstSonstKostenC2 = 32
+        SollIstGesamtkostenC2 = 33
+        SollIstRolleC2 = 34
+        SollIstKostenartC2 = 35
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
@@ -549,6 +602,8 @@ Public Module Module1
 
     Public Enum PTpptTableTypes
         prZiele = 0
+        prBudgetCostAPVCV = 1
+        prMilestoneAPVCV = 2
     End Enum
     Public Enum PTpptTableCellType
         name = 0
@@ -575,6 +630,7 @@ Public Module Module1
         projekt = 1
         nameList = 2
         categoryList = 3
+        portfolio = 4
     End Enum
 
     ''' <summary>
@@ -1003,6 +1059,8 @@ Public Module Module1
 
     End Function
 
+
+
     ''' <summary>
     ''' liefert eine Liste an Namen der Projekte zurück, die als "selektiert" gelten 
     ''' Projekte können selektiert werden durch explizites Selektieren des Project-Shapes, alle Projekte, die zu einem selektierten Chart beitragen und/oder 
@@ -1030,34 +1088,49 @@ Public Module Module1
                     ' alle selektierten Projekte aufnehmen ... 
                     If selectedProjekte.Count > 0 Then
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
-                            If Not tmpCollection.Contains(kvp.Key) Then
-                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                    tmpCollection.Add(kvp.Key, kvp.Key)
+
+                            If kvp.Value.projectType = ptPRPFType.project Then
+                                If Not tmpCollection.Contains(kvp.Key) Then
+                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                        tmpCollection.Add(kvp.Key, kvp.Key)
+                                    End If
+                                End If
+                            End If
+
+
+                        Next
+                    Else
+                        ' soll nur ausgewertet werden, wenn keine einzelnen Projekte selektiert waren 
+                        ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                            If kvp.Value.marker = True And kvp.Value.projectType = ptPRPFType.project Then
+                                If Not tmpCollection.Contains(kvp.Key) Then
+                                    ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
+                                    If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
+                                        tmpCollection.Add(kvp.Key, kvp.Key)
+                                    End If
                                 End If
                             End If
 
                         Next
+
                     End If
 
-                    ' jetzt soll geprüft werden, ob irgendwelche Projekte markiert sind, die sollen auch alle übernommen werden 
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                        If kvp.Value.marker = True Then
-                            If Not tmpCollection.Contains(kvp.Key) Then
-                                ' nur aufnehmen, wenn das Projekt überhaupt im Timeframe liegt ... 
-                                If kvp.Value.isWithinTimeFrame(showRangeLeft, showRangeRight) Then
-                                    tmpCollection.Add(kvp.Key, kvp.Key)
-                                End If
+                    If tmpCollection.Count = 0 And takeAllIFNothingWasSelected Then
+                        ' es dürfen keine Summary Projekte enthalten sein ...
+                        If ShowProjekte.containsAnySummaryProject Then
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("no summary projects allowed in this context ... please select projects only. ")
+                            Else
+                                Call MsgBox("Summary Projekte nicht zugelassen ... bitte nur einfache Projekte auswählen.")
                             End If
+                        Else
+                            ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
+                            tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
                         End If
 
-                    Next
-
-
-                    If tmpCollection.Count = 0 And takeAllIFNothingWasSelected Then
-                        ' jetzt alle Projekte aufnehmen, die in der TimeFrame liegen 
-                        tmpCollection = ShowProjekte.withinTimeFrame(PTpsel.alle, showRangeLeft, showRangeRight)
                     End If
 
 
@@ -1146,8 +1219,30 @@ Public Module Module1
         If found Then
             Dim weitermachen As Boolean = False
             If istRollenDiagramm(chtObj) Then
+
+                ' tk 9.9.18 jetzt sollen alle Kinder- und Kindes-Kinder Rollen gekennzeichnet werden 
+                ' es sollen jetzt Sammelrollen durch alle ihre BasicRoles ersetzt werden ... 
+                Dim substituteCollection As New Collection
+
+                For Each roleName As String In myCollection
+                    If Not substituteCollection.Contains(roleName) Then
+                        substituteCollection.Add(roleName, roleName)
+
+                        Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName)
+                        For Each roleKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
+                            Dim childName As String = RoleDefinitions.getRoleDefByID(roleKvP.Key).name
+                            If Not substituteCollection.Contains(childName) Then
+                                substituteCollection.Add(childName, childName)
+                            End If
+                        Next
+                    End If
+
+                Next
+
+                'currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
+                '                                                myCollection, Nothing)
                 currentFilter = New clsFilter("temp", Nothing, Nothing, Nothing, Nothing,
-                                                                myCollection, Nothing)
+                                                                substituteCollection, Nothing)
                 weitermachen = True
 
 
@@ -3476,19 +3571,13 @@ Public Module Module1
         Dim found As Boolean = False
         Dim foundinDatabase As Boolean = False
         Dim key As String = calcProjektKey(strName, "")
-        'Dim request As New Request(awinSettings.databaseName)
 
         If Len(strName) < 2 Then
             ' ProjektName soll mehr als 1 Zeichen haben
             found = True
         ElseIf AlleProjekte.Containskey(key) Then
             found = True
-            'ElseIf request.pingMongoDb() Then
 
-            '    found = request.projectNameAlreadyExists(strName, "", Date.Now)
-            'Else
-            '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-            '    found = False
         End If
 
         inProjektliste = found
@@ -3524,53 +3613,6 @@ Public Module Module1
         mapToAppearance = ergebnis
 
     End Function
-
-    '' '' ''' <summary>
-    '' '' ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
-    '' '' ''' </summary>
-    '' '' ''' <remarks></remarks>
-    '' ''Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
-    '' ''                                          ByVal fBU As Collection, ByVal fTyp As Collection, _
-    '' ''                                          ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-    '' ''                                          ByVal fRole As Collection, ByVal fCost As Collection, _
-    '' ''                                          ByVal calledFromHry As Boolean)
-
-    '' ''    Dim lastFilter As clsFilter
-
-
-    '' ''    If calledFromHry Then
-    '' ''        Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
-
-    '' ''        If Not IsNothing(nameLastFilter) Then
-    '' ''            With nameLastFilter
-    '' ''                lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-    '' ''            End With
-    '' ''        Else
-    '' ''            lastFilter = New clsFilter(fName, fBU, fTyp, _
-    '' ''                              fPhase, fMilestone, _
-    '' ''                             fRole, fCost)
-    '' ''        End If
-
-
-    '' ''    Else
-    '' ''        lastFilter = New clsFilter(fName, fBU, fTyp, _
-    '' ''                              fPhase, fMilestone, _
-    '' ''                             fRole, fCost)
-    '' ''    End If
-
-    '' ''    If menuOption = PTmenue.filterdefinieren Then
-
-    '' ''        filterDefinitions.storeFilter(fName, lastFilter)
-    '' ''        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-
-
-    '' ''    Else
-    '' ''        selFilterDefinitions.storeFilter(fName, lastFilter)
-    '' ''    End If
-
-
-    '' ''End Sub
-
 
 
     ''' <summary>
@@ -3877,8 +3919,17 @@ Public Module Module1
                         .Tags.Add("DBNAME", awinSettings.databaseName)
                     End If
 
+                    If .Tags.Item("DBSSL").Length > 0 Then
+                        .Tags.Delete("DBSSL")
+                    End If
+                    .Tags.Add("DBSSL", awinSettings.DBWithSSL.ToString)
+
                 End If
 
+                If .Tags.Item("REST").Length > 0 Then
+                    .Tags.Delete("REST")
+                End If
+                .Tags.Add("REST", awinSettings.visboServer.ToString)
 
 
             End With
@@ -3907,7 +3958,8 @@ Public Module Module1
                                           ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String,
                                           ByVal lieferumfaenge As String,
                                           ByVal verantwortlich As String,
-                                          ByVal percentDone As Double)
+                                          ByVal percentDone As Double,
+                                          ByVal docUrl As String)
 
         Dim nullDate As Date = Nothing
 
@@ -4033,6 +4085,17 @@ Public Module Module1
                         End If
                         Dim tmpValue As Double = 100 * percentDone
                         .Tags.Add("PD", tmpValue.ToString("0#."))
+                    End If
+
+                End If
+
+                ' central document link ..
+                If Not IsNothing(docUrl) Then
+                    If docUrl.Length > 0 Then
+                        If .Tags.Item("DUC").Length > 0 Then
+                            .Tags.Delete("DUC")
+                        End If
+                        .Tags.Add("DUC", docUrl)
                     End If
 
                 End If
@@ -4513,18 +4576,12 @@ Public Module Module1
                                         ByVal bigtype As Integer, ByVal detailID As Integer,
                                         ByVal nameIDS As Collection)
 
-        If nameIDS.Count = 0 Then
+        If nameIDS.Count = 0 And bigtype = ptReportBigTypes.charts Then
             Exit Sub
         End If
 
         Dim nameIDString As String = ""
-        For Each tmpID As String In nameIDS
-            If nameIDString = "" Then
-                nameIDString = tmpID
-            Else
-                nameIDString = nameIDString & "#" & tmpID
-            End If
-        Next
+        nameIDString = convertCollToNids(nameIDS)
 
         Try
 
@@ -4599,6 +4656,868 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' zeichnet bzw. aktualisiert die Powerpoint Table Milestone-Übersicht 
+    ''' wenn todoCollection leer, dann wird die Perfromance Metrik gezeichnet 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <param name="toDoCollection">enthält die NAmen, ggf incl P:, V: oder C: Qualifier und ggf inkl Breadcrumb Anteilen </param>
+    ''' <param name="q1">0, später die Anzahl Phasen </param>
+    ''' <param name="q2">Anzahl Milestones; aktuell redundant, da identisch mit Anzahl in der Collection</param>
+    Public Sub zeichneTableMilestoneAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
+                                     ByVal toDoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
+
+        Dim repmsg() As String
+        ' Performance Ratio 1 ist das Verhältnis zwischen der Anzahl aktuell erreichter Meilensteine im betrachteten Monat versus der Anzahl erreichter Meilensteine im betrachteten Monat im stand zur Beauftragung 
+        ' Performance Ratio 2 ist das Verhältnis zwischen der Anzahl aktuell erreichter Meilensteine im betrachteten Monat versus der Anzahl erreichter Meilensteine im betrachteten Monat im Stand der letzten Planung
+        repmsg = {"total sum of milestones", "finished until last month", "due this month", "total sum of finished milestones up-to-date", "due next month", "Overdue", "Performance Ratio (first)", "Performance Ratio (last)"}
+
+        Dim txtPKI(7) As String
+
+        txtPKI(0) = repmsg(0) ' total sum of milestones
+        txtPKI(1) = repmsg(1) ' finished until last month
+        txtPKI(2) = repmsg(2) ' due this month
+        txtPKI(3) = repmsg(3) ' total sum of finished milestones up-to-date
+        txtPKI(4) = repmsg(4) ' due next month
+        txtPKI(5) = repmsg(5) ' Overdue
+        txtPKI(6) = repmsg(6) ' Performance Ratio (first)
+        txtPKI(7) = repmsg(7) ' Performance Ratio (last)
+
+
+        ' steuert Einrückung ja, nein im Not Overview Modus 
+        Dim einrueckung As Integer = 0
+
+        Dim tabelle As pptNS.Table
+        Dim anzSpalten As Integer
+
+
+        Dim bigType As Integer = ptReportBigTypes.tables
+        Dim compID As Integer = PTpptTableTypes.prMilestoneAPVCV
+
+        ' wenn die gleich sind, sollen keine zwei Spalten mit identischen Werten ausgewiesen werden 
+        If Not IsNothing(lproj) And Not IsNothing(bproj) Then
+            If lproj.timeStamp = bproj.timeStamp Then
+                lproj = Nothing
+            End If
+        End If
+
+        Dim considerFapr As Boolean = Not IsNothing(bproj)
+        Dim considerLapr As Boolean = Not IsNothing(lproj)
+
+        Dim anzMilestones As Integer = 0
+        Dim anzPhases As Integer = 0
+
+        ' in q1, q2 sind dei Anzahl Rollen bzw Kosten drin, sofern in toDoCollection was angegeben ist 
+        Try
+            anzPhases = CInt(q1)
+            anzMilestones = CInt(q2)
+        Catch ex As Exception
+
+        End Try
+
+        Dim showOverviewOnly As Boolean = (toDoCollection.Count = 0)
+
+        ' jetzt wird SmartTableInfo gesetzt 
+        ' jetzt wird die SmartTableInfo gesetzt 
+        Call addSmartPPTTableInfo(pptShape,
+                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  q1, q2, bigType, compID,
+                                  toDoCollection)
+
+        ' jetzt werden die einzelnen Zeilen geschrieben 
+
+        Try
+            tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+            If anzSpalten = 6 Then
+                ' dann ist alles in Ordnung .. 
+
+
+                ' jetzt überprüfen, ob die Tabelle aktuell nur aus 2 Zeilen besteht ...
+                If tabelle.Rows.Count > 2 Then
+                    Do While tabelle.Rows.Count > 2
+                        tabelle.Rows(2).Delete()
+                    Loop
+                End If
+
+                ' jetzt die Werte in den 6 Spalten zurücksetzen 
+                Try
+                    With tabelle
+                        For i As Integer = 1 To 6
+                            .Cell(2, i).Shape.TextFrame2.TextRange.Text = ""
+                        Next
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+                Dim faprDate As Date = Date.MinValue
+                Dim laprDate As Date = Date.MinValue
+                Dim curDate As Date = Date.MinValue
+
+                If Not IsNothing(hproj) Then
+                    curDate = hproj.timeStamp
+                End If
+                If Not IsNothing(bproj) Then
+                    faprDate = bproj.timeStamp
+                End If
+                If Not IsNothing(lproj) Then
+                    laprDate = lproj.timeStamp
+                End If
+
+                ' jetzt die Headerzeile schreiben 
+                Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+
+                Dim tabellenzeile As Integer = 2
+                Try
+
+                    If Not showOverviewOnly Then
+
+                        einrueckung = 1
+
+                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                        Dim firstMilestone As Boolean = True
+
+                        Dim curValue As Date = Date.MinValue ' not defined
+                        Dim faprValue As Date = Date.MinValue  ' first approved version 
+                        Dim laprValue As Date = Date.MinValue  ' last approved version
+
+                        If anzPhases > 0 Then
+                            ' 
+                            'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                            tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = "Phases"
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+                        End If
+
+                        ' nimmt die eindeutigen IDs auf 
+                        Dim listOfIDs As New Collection
+
+                        For m As Integer = 1 To toDoCollection.Count
+
+                            Dim tmpCollection As New Collection From {
+                                CStr(toDoCollection.Item(m))
+                            }
+
+                            'Dim hprojBreadcrumbs() As String = hproj.getBreadCrumbArray(Nothing, hproj.getElemIdsOf(tmpCollection, True))
+                            'Dim bprojBreadCrumbs() As String = Nothing
+                            'Dim lprojBreadCrumbs() As String = Nothing
+
+                            Dim hprojLIDs As Collection = hproj.getElemIdsOf(tmpCollection, True)
+                            Dim bProjLIDs As Collection = Nothing
+                            Dim lprojLIDs As Collection = Nothing
+
+                            If considerFapr Then
+                                bProjLIDs = bproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            If considerLapr Then
+                                lprojLIDs = lproj.getElemIdsOf(tmpCollection, True)
+                            End If
+
+                            ' hproj steuert jetzt die Schleife 
+                            For hix As Integer = 1 To hprojLIDs.Count
+
+                                Dim hprojMsID As String = CStr(hprojLIDs.Item(hix))
+                                Dim curItem As String = elemNameOfElemID(hprojMsID)
+
+                                curValue = Date.MinValue
+                                faprValue = Date.MinValue
+                                laprValue = Date.MinValue
+
+                                Dim hMilestone As clsMeilenstein = hproj.getMilestoneByID(hprojMsID)
+
+                                If Not IsNothing(hMilestone) Then
+                                    curValue = hMilestone.getDate
+                                End If
+
+                                Dim bMileStone As clsMeilenstein = Nothing
+                                If considerFapr Then
+                                    If hix <= bProjLIDs.Count Then
+                                        bMileStone = bproj.getMilestoneByID(CStr(bProjLIDs.Item(hix)))
+                                        If Not IsNothing(bMileStone) Then
+                                            faprValue = bMileStone.getDate
+                                        End If
+                                    End If
+                                End If
+
+                                Dim lMilestone As clsMeilenstein = Nothing
+                                If considerLapr Then
+                                    If hix <= lprojLIDs.Count Then
+                                        lMilestone = lproj.getMilestoneByID(CStr(lprojLIDs.Item(hix)))
+                                        If Not IsNothing(lMilestone) Then
+                                            laprValue = lMilestone.getDate
+                                        End If
+                                    End If
+                                End If
+
+                                Call schreibeMilestoneAPVCVZeile(tabelle, tabellenzeile, curItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+
+                                tabelle.Rows.Add()
+                                tabellenzeile = tabellenzeile + 1
+
+
+                            Next
+
+                        Next
+
+
+                    Else
+
+                        Call MsgBox("noch nicht implementiert ...")
+
+                    End If
+
+                    ' jetzt letzte Zeile löschen  ...
+                    tabelle.Rows(tabellenzeile).Delete()
+                    tabellenzeile = tabellenzeile - 1
+
+                Catch ex1 As Exception
+
+                End Try
+            Else
+                Throw New Exception("Tabelle should have 6 columns ... exit ...")
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' zeichnet bzw. aktualisiert die Powerpoint Table Kosten-Übersicht 
+    ''' wenn todoCollection leer, dann wird die Gesamt-Übersicht Budget, Personal-Kosten, sonstige Kosten, Ergebnis gezeichnet 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <param name="todoCollection">enthält die NAmen der Rollen und Kostenarten</param>
+    ''' <param name="q1">gibt an, wieviele Rollen, die ersten q1 in der todoCollection sind Rollen</param>
+    ''' <param name="q2">gibt an wieviele Kosten</param>
+    Public Sub zeichneTableBudgetCostAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
+                                    ByVal todoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
+
+
+        Dim repmsg() As String
+
+        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+        'repmsg(1) = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
+
+        ' solange die repMessages nicht in Datenbank sind, geht das nicht 
+        'txtPKI(0) = repMessages.getmsg(49) ' Budget
+        'txtPKI(1) = repMessages.getmsg(51) ' Personalkosten
+        'txtPKI(2) = repMessages.getmsg(52) ' Sonstige Kosten
+        ''txtPKI(3) = repMessages.getmsg(50) ' Risiko-Kosten
+        'txtPKI(3) = repMessages.getmsg(53) ' Ergebnis-Prognose
+
+        Dim txtPKI(3) As String
+
+        txtPKI(0) = repmsg(0) ' Budget
+        txtPKI(1) = repmsg(1) ' Personalkosten
+        txtPKI(2) = repmsg(2) ' Sonstige Kosten
+        txtPKI(3) = repmsg(3) ' Ergebnis-Prognose
+
+
+
+        ' steuert Einrückung ja, nein im Not Overview Modus 
+        Dim einrueckung As Integer = 0
+
+        Dim tabelle As pptNS.Table
+        Dim anzSpalten As Integer
+
+
+        Dim bigType As Integer = ptReportBigTypes.tables
+        Dim compID As Integer = PTpptTableTypes.prBudgetCostAPVCV
+
+        ' wenn die gleich sind, sollen keine zwei Spalten mit identischen Werten ausgewiesen werden 
+        If Not IsNothing(lproj) And Not IsNothing(bproj) Then
+            If lproj.timeStamp = bproj.timeStamp Then
+                lproj = Nothing
+            End If
+        End If
+
+        Dim considerFapr As Boolean = Not IsNothing(bproj)
+        Dim considerLapr As Boolean = Not IsNothing(lproj)
+
+        Dim anzRoles As Integer = 0
+        Dim anzCosts As Integer = 0
+
+        ' in q1, q2 sind dei Anzahl Rollen bzw Kosten drin, sofern in toDoCollection was angegeben ist 
+        Try
+            anzRoles = CInt(q1)
+            anzCosts = CInt(q2)
+
+            If anzRoles = -1 And anzCosts = -1 Then
+                ' das ist das signal, dass erst die gemeinsame Liste bestimmt werden soll 
+                todoCollection = getCommonListOfRCNames(hproj, lproj, bproj, anzRoles, anzCosts)
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        Dim showOverviewOnly As Boolean = (todoCollection.Count = 0)
+
+        ' jetzt wird SmartTableInfo gesetzt 
+        ' jetzt wird die SmartTableInfo gesetzt 
+        Call addSmartPPTTableInfo(pptShape,
+                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  q1, q2, bigType, compID,
+                                  todoCollection)
+
+        ' jetzt werden die einzelnen Zeilen geschrieben 
+
+        Try
+            tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+            If anzSpalten = 6 Then
+                ' dann ist alles in Ordnung .. 
+
+
+                ' jetzt überprüfen, ob die Tabelle aktuell nur aus 2 Zeilen besteht ...
+                If tabelle.Rows.Count > 2 Then
+                    Do While tabelle.Rows.Count > 2
+                        tabelle.Rows(2).Delete()
+                    Loop
+                End If
+
+                ' jetzt die Werte in den 6 Spalten zurücksetzen 
+                Try
+                    With tabelle
+                        For i As Integer = 1 To 6
+                            .Cell(2, i).Shape.TextFrame2.TextRange.Text = ""
+                        Next
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+                Dim faprDate As Date = Date.MinValue
+                Dim laprDate As Date = Date.MinValue
+                Dim curDate As Date = Date.MinValue
+
+                If Not IsNothing(hproj) Then
+                    curDate = hproj.timeStamp
+                End If
+                If Not IsNothing(bproj) Then
+                    faprDate = bproj.timeStamp
+                End If
+                If Not IsNothing(lproj) Then
+                    laprDate = lproj.timeStamp
+                End If
+
+                ' jetzt die Headerzeile schreiben 
+                Call schreibeAPVCVHeaderZeile(tabelle, faprDate, laprDate, curDate, considerFapr, considerLapr)
+
+                Dim tabellenzeile As Integer = 2
+                Try
+
+                    If Not showOverviewOnly Then
+
+                        einrueckung = 1
+
+                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                        Dim firstCost As Boolean = True
+
+                        Dim curValue As Double = -1.0 ' not defined
+                        Dim faprValue As Double = -1.0 ' first approved version 
+                        Dim laprValue As Double = -1.0 ' last approved version
+
+                        ' keine zusätzliche Zeile schreiben ... macht das ganze nur unübersichtlicher  
+                        'If anzRoles > 0 And anzCosts > 0 Then
+                        '    ' 
+                        '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                        '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
+                        '    tabelle.Rows.Add()
+                        '    tabellenzeile = tabellenzeile + 1
+                        'End If
+
+                        For m As Integer = 1 To todoCollection.Count
+
+                            ' wegen Einrückung in Details ...
+                            Dim curItem As String = CStr(todoCollection.Item(m))
+                            Dim isRole As Boolean = RoleDefinitions.containsName(curItem)
+                            Dim isCost As Boolean = False
+                            If Not isRole Then
+                                isCost = CostDefinitions.containsName(curItem)
+                            End If
+
+                            If isRole Then
+
+                                'curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                curValue = hproj.getPersonalKosten(curItem, True).Sum
+
+                                If considerLapr Then
+                                    'laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    laprValue = lproj.getPersonalKosten(curItem, True).Sum
+                                End If
+
+                                If considerFapr Then
+                                    'faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
+                                    faprValue = bproj.getPersonalKosten(curItem, True).Sum
+                                End If
+
+
+                            ElseIf isCost Then
+
+                                'If firstCost Then
+                                '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
+                                '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(2)
+                                '    tabelle.Rows.Add()
+                                '    tabellenzeile = tabellenzeile + 1
+                                '    firstCost = False
+                                'End If
+
+                                'curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                curValue = hproj.getKostenBedarfNew(curItem).Sum
+
+                                If considerLapr Then
+                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
+                                    'laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                End If
+
+                                If considerFapr Then
+                                    'faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
+                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
+                                End If
+
+                            End If
+
+                            Dim zeilenItem As String = curItem
+                            'If anzRoles > 0 And anzCosts > 0 Then
+                            '    ' dann muss unterhalb Personalkosten und Sonstige Kosten eingerückt werden ... 
+                            '    zeilenItem = "  " & curItem
+                            'End If
+
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+
+                        Next
+
+
+                    Else
+
+                        Dim curPKI() As Double = {-1, -1, -1, -1}
+                        Dim faprPKI() As Double = {-1, -1, -1, -1}
+                        Dim laprPKI() As Double = {-1, -1, -1, -1}
+
+
+                        Dim tmpValue As Double
+                        Call hproj.calculateRoundedKPI(curPKI(0), curPKI(1), curPKI(2), tmpValue, curPKI(3), False)
+
+                        If considerFapr Then
+                            Call bproj.calculateRoundedKPI(faprPKI(0), faprPKI(1), faprPKI(2), tmpValue, faprPKI(3), False)
+                        End If
+
+                        If considerLapr Then
+                            Call lproj.calculateRoundedKPI(laprPKI(0), laprPKI(1), laprPKI(2), tmpValue, laprPKI(3), False)
+                        End If
+
+
+                        ' jetzt das Gesamt Budget, Personalkosten, Sonstige Kosten und Ergebnis schreiben 
+
+                        For i = 0 To 3
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, txtPKI(i), faprPKI(i), laprPKI(i), curPKI(i),
+                                                          considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 1
+                        Next
+
+
+                    End If
+
+                    ' jetzt letzte Zeile löschen  ...
+                    tabelle.Rows(tabellenzeile).Delete()
+                    tabellenzeile = tabellenzeile - 1
+
+                Catch ex1 As Exception
+
+                End Try
+            Else
+                Throw New Exception("Tabelle should have 6 columns ... exit ...")
+            End If
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    ''' <summary>
+    ''' ergänzt den Text in der Tabelle BudgetCOst Approved versions versus current Version
+    ''' 
+    ''' </summary>
+    ''' <param name="table"></param>
+    ''' <param name="faprDate"></param>
+    ''' <param name="laprDate"></param>
+    ''' <param name="curDate"></param>
+    Private Sub schreibeAPVCVHeaderZeile(ByRef table As pptNS.Table,
+                                                   ByVal faprDate As Date, ByVal laprDate As Date, ByVal curDate As Date,
+                                                   ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
+
+        With table
+
+            Dim faprText As String
+            Dim laprText As String
+            Dim curText As String
+
+            If Not considerFapr Then
+                faprDate = Date.MinValue
+            End If
+
+            If Not considerLapr Then
+                laprDate = Date.MinValue
+            End If
+
+            curText = addDateToText(table.Cell(1, 2).Shape.TextFrame2.TextRange.Text, curDate)
+            laprText = addDateToText(table.Cell(1, 3).Shape.TextFrame2.TextRange.Text, laprDate)
+            faprText = addDateToText(table.Cell(1, 5).Shape.TextFrame2.TextRange.Text, faprDate)
+
+            table.Cell(1, 2).Shape.TextFrame2.TextRange.Text = curText
+            table.Cell(1, 3).Shape.TextFrame2.TextRange.Text = laprText
+            table.Cell(1, 5).Shape.TextFrame2.TextRange.Text = faprText
+
+
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' ergänzt den String header um vbVerticalTab (myDate.toString)
+    ''' </summary>
+    ''' <param name="header"></param>
+    ''' <param name="myDate"></param>
+    ''' <returns></returns>
+    Private Function addDateToText(ByVal header As String, ByVal myDate As Date) As String
+
+        Dim tmpResult As String = ""
+        Dim dateString As String = ""
+        Dim tmpStr() As String = header.Split(New Char() {CChar("("), CChar(")")})
+
+        If DateDiff(DateInterval.Day, Date.MinValue, myDate) > 0 Then
+            dateString = "(" & myDate.ToShortDateString & ")"
+        End If
+
+        If tmpStr(0).EndsWith(vbVerticalTab) Then
+            tmpResult = tmpStr(0) & dateString
+        Else
+            tmpResult = tmpStr(0) & vbVerticalTab & dateString
+        End If
+
+
+        addDateToText = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' schreibt eine Zeile in die Tabelle BudgetCost Approved Versions versus curVersion
+    ''' </summary>
+    ''' <param name="table"></param>
+    ''' <param name="zeile"></param>
+    ''' <param name="itemName"></param>
+    ''' <param name="faprValue"></param>
+    ''' <param name="laprValue"></param>
+    ''' <param name="curValue"></param>
+    Private Sub schreibeBudgetCostAPVCVZeile(ByRef table As pptNS.Table, ByVal zeile As Integer,
+                                             ByVal itemName As String, ByVal faprValue As Double, ByVal laprValue As Double, ByVal curValue As Double,
+                                             ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
+
+        Dim deltaFMC As String = "-" ' niummt das Delta auf zwischen Fapr und Current: First minsu Current 
+        Dim deltaLMC As String = "-" ' nimmt das Delta auf zwischen Lapr und Current : last minus Current
+        Dim dblFormat As String = "#,##0.00"
+        Dim cellText As String = "-"
+        Dim nada As String = "-"
+        Dim isPositiv As Boolean = False
+
+        ' notwendig, solange keine repMessages in der Datenbank sind 
+        Dim repmsg() As String
+        'repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
+        repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+        If considerFapr Then
+            deltaFMC = (curValue - faprValue).ToString(dblFormat)
+        Else
+            deltaFMC = nada
+        End If
+
+        If considerLapr Then
+            deltaLMC = (curValue - laprValue).ToString(dblFormat)
+        Else
+            deltaLMC = nada
+        End If
+
+
+        ' jetzt wird das geschrieben 
+        With table
+            Dim tmpValue As String = "-"
+
+            ' Label schreiben
+            CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = itemName
+
+
+            ' wird benötigt, um die Schriftfarbe im Delta-Feld wieder auf Normal setzen zu können 
+            Dim normalColor As Integer = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB
+
+            ' Current Value schreiben 
+            cellText = curValue.ToString(dblFormat)
+            CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' last Approved Value schreiben  
+            If considerLapr Then
+                cellText = laprValue.ToString(dblFormat)
+            Else
+                cellText = nada
+            End If
+            CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC
+
+            ' ggf einfärben 
+            If System.Math.Abs(curValue - laprValue) <= 0.5 Then
+                ' nichts tun, ausser Farbe auf Nortmal setzen 
+                ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerLapr Then
+
+                If itemName = repmsg(0) Or itemName = repmsg(3) Then
+                    isPositiv = (curValue > laprValue + 0.5)
+                Else
+                    isPositiv = (laprValue > curValue + 0.5)
+                End If
+
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+
+            End If
+
+            ' first Approved Value schreiben  
+            If considerFapr Then
+                cellText = faprValue.ToString(dblFormat)
+            Else
+                cellText = nada
+            End If
+            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC
+
+            ' ggf einfärben 
+            If System.Math.Abs(curValue - faprValue) <= 0.5 Then
+                ' nichts tun, ausser Farbe auf Nortmal setzen 
+                ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerFapr Then
+                ' If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                If itemName = repmsg(0) Or itemName = repmsg(3) Then
+                    isPositiv = (curValue > faprValue)
+                Else
+                    isPositiv = (faprValue > curValue)
+                End If
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+            End If
+
+        End With
+
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt eine Zeile in die Tabelle Milestones Approved Versions versus curVersion
+    ''' </summary>
+    ''' <param name="table"></param>
+    ''' <param name="zeile"></param>
+    ''' <param name="itemName"></param>
+    ''' <param name="faprValue"></param>
+    ''' <param name="laprValue"></param>
+    ''' <param name="curValue"></param>
+    ''' <param name="considerFapr"></param>
+    ''' <param name="considerLapr"></param>
+    Private Sub schreibeMilestoneAPVCVZeile(ByRef table As pptNS.Table, ByVal zeile As Integer,
+                                             ByVal itemName As String, ByVal faprValue As Date, ByVal laprValue As Date, ByVal curValue As Date,
+                                             ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
+
+        Dim deltaFMC As Long = 0 ' niummt das Delta auf zwischen Fapr und Current: First minus Current 
+        Dim deltaLMC As Long = 0 ' nimmt das Delta auf zwischen Lapr und Current : last minus Current
+
+        Dim cellText As String = "-"
+        Dim nada As String = "-"
+        Dim isPositiv As Boolean = False
+
+
+        If considerFapr And faprValue > Date.MinValue Then
+            deltaFMC = DateDiff(DateInterval.Day, curValue.Date, faprValue.Date)
+        Else
+            deltaFMC = 0
+        End If
+
+        If considerLapr And laprValue > Date.MinValue Then
+            deltaLMC = DateDiff(DateInterval.Day, curValue.Date, laprValue.Date)
+        Else
+            deltaLMC = 0
+        End If
+
+
+        ' jetzt wird das geschrieben 
+        With table
+            Dim tmpValue As String = "-"
+
+            ' Label schreiben
+            CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = itemName
+
+
+            ' wird benötigt, um die Schriftfarbe im Delta-Feld wieder auf Normal setzen zu können 
+            Dim normalColor As Integer = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB
+
+            ' Current Value schreiben 
+            cellText = curValue.ToShortDateString
+            CType(.Cell(zeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' last Approved Value schreiben  
+            If considerLapr And laprValue > Date.MinValue Then
+                cellText = laprValue.ToShortDateString
+            Else
+                cellText = nada
+            End If
+
+            CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            If cellText = nada Then
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+            Else
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaLMC.ToString
+            End If
+
+
+            ' ggf einfärben 
+            If deltaLMC = 0 Then
+                ' nichts tun, ausser Farbe auf Normal setzen 
+                ' das ist notwednig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerLapr And laprValue > Date.MinValue Then
+
+                isPositiv = (deltaLMC > 0)
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+
+            End If
+
+            ' first Approved Value schreiben  
+            If considerFapr And faprValue > Date.MinValue Then
+                cellText = faprValue.ToShortDateString
+            Else
+                cellText = nada
+            End If
+
+            CType(.Cell(zeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cellText
+
+            ' Delta schreiben 
+            If cellText = nada Then
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ""
+            Else
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame2.TextRange.Text = deltaFMC.ToString
+            End If
+
+
+            ' ggf einfärben 
+            If deltaFMC = 0 Then
+                ' nichts tun, ausser Farbe auf Normal setzen 
+                ' das ist notwendig, weil durch den .add Row in der übergeordneten Sub evtl die dort verwendete Farbe Grün oder Rot zur Geltung kommt 
+                CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = normalColor
+
+            ElseIf considerFapr And faprValue > Date.MinValue Then
+                ' If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
+                isPositiv = (deltaFMC > 0)
+
+                ' Delta entsprechend einfärben 
+                If isPositiv Then
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeGreen
+                Else
+                    CType(.Cell(zeile, 6), pptNS.Cell).Shape.TextFrame.TextRange.Font.Color.RGB = visboFarbeRed
+                End If
+
+            End If
+
+        End With
+
+
+    End Sub
+
+    ''' <summary>
+    ''' wird benötigt, um Collections in Shape.Tags unterzubringen 
+    ''' </summary>
+    ''' <param name="nameCollection"></param>
+    ''' <returns></returns>
+    Public Function convertCollToNids(ByVal nameCollection As Collection) As String
+        Dim nids As String = ""
+        For Each tmpName As String In nameCollection
+
+            If tmpName.Contains("#") Then
+                tmpName = tmpName.Replace("#", "^")
+            End If
+
+            If nids = "" Then
+                nids = tmpName.Trim
+            Else
+                nids = nids & "#" & tmpName.Trim
+            End If
+        Next
+        convertCollToNids = nids
+    End Function
+
+    ''' <summary>
+    ''' wird benötigt, um Collection-Infos aus Shape.Tags wieder in eine Collection zu bringen  
+    ''' </summary>
+    ''' <param name="nids"></param>
+    ''' <returns></returns>
+    Public Function convertNidsToColl(ByVal nids As String) As Collection
+        Dim nameCollection As New Collection
+        Dim tmpStr() As String = nids.Split(New Char() {CChar("#")})
+
+        For Each tmpName In tmpStr
+
+            If tmpName.Contains("^") Then
+                tmpName = tmpName.Replace("^", "#")
+            End If
+
+            If tmpName.Trim.Length > 0 Then
+                nameCollection.Add(tmpName)
+            End If
+        Next
+        convertNidsToColl = nameCollection
+    End Function
+
+
+    ''' <summary>
     ''' bestimmt aus dem Namen eines Charts die Informationen, die benötigt werden, um ein PPTShape aus der Smart-PPT heraus zu aktualisieren ...
     ''' </summary>
     ''' <param name="chtObjName"></param>
@@ -4625,42 +5544,39 @@ Public Module Module1
             ' bestimme den Charttyp ...
             prpfTyp = ptPRPFType.project
 
-            chartTyp = CInt(tmpStr(1))
-
-            If chartTyp = PTprdk.KostenBalken Or
-                chartTyp = PTprdk.KostenPie Then
-                prcTyp = ptElementTypen.costs
-            ElseIf chartTyp = PTprdk.PersonalBalken Or
-                chartTyp = PTprdk.PersonalPie Then
-                prcTyp = ptElementTypen.roles
-            Else
-                prcTyp = ptElementTypen.ergebnis
-            End If
-
-
-            ' bestimme pName und vName 
-            Dim fullName As String = tmpStr(2)
-
-            If fullName.Contains("[") And fullName.Contains("]") Then
-                Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
-                pName = tmpstr1(0)
-                vName = tmpstr1(1)
-            Else
-                pName = fullName
-                vName = ""
-            End If
-
-            ' bestimme, um welche Auswahl es sich handelt ... 
-            auswahl = CInt(tmpStr(3))
         ElseIf tmpStr(0) = "pf" Then
-
             prpfTyp = ptPRPFType.portfolio
-            ' noch nicht implementiert ... 
         Else
 
         End If
 
+        chartTyp = CInt(tmpStr(1))
 
+        If chartTyp = PTprdk.KostenBalken Or
+            chartTyp = PTprdk.KostenPie Then
+            prcTyp = ptElementTypen.costs
+        ElseIf chartTyp = PTprdk.PersonalBalken Or
+            chartTyp = PTprdk.PersonalPie Then
+            prcTyp = ptElementTypen.roles
+        Else
+            prcTyp = ptElementTypen.ergebnis
+        End If
+
+
+        ' bestimme pName und vName 
+        Dim fullName As String = tmpStr(2)
+
+        If fullName.Contains("[") And fullName.Contains("]") Then
+            Dim tmpstr1() As String = fullName.Split(New Char() {CChar("["), CChar("]")})
+            pName = tmpstr1(0)
+            vName = tmpstr1(1)
+        Else
+            pName = fullName
+            vName = ""
+        End If
+
+        ' bestimme, um welche Auswahl es sich handelt ... 
+        auswahl = CInt(tmpStr(3))
 
 
     End Sub
@@ -4680,6 +5596,58 @@ Public Module Module1
         End Try
     End Sub
 
+    ''' <summary>
+    ''' setzt maxScreenWidth, maxScreenHeight und die dazugehörigen Default Windows- und Chartbreiten 
+    ''' </summary>
+    Public Sub setWindowParameters()
+        With appInstance.ActiveWindow
+
+            If .WindowState = Excel.XlWindowState.xlMaximized Then
+                'maxScreenHeight = .UsableHeight
+                maxScreenHeight = .Height
+                'maxScreenWidth = .UsableWidth
+                maxScreenWidth = .Width
+            Else
+                'Dim formerState As Excel.XlWindowState = .WindowState
+                .WindowState = Excel.XlWindowState.xlMaximized
+                'maxScreenHeight = .UsableHeight
+                maxScreenHeight = .Height
+                'maxScreenWidth = .UsableWidth
+                maxScreenWidth = .Width
+                '.WindowState = formerState
+            End If
+
+
+        End With
+
+        ' jetzt das ProjectboardWindows (0) setzen 
+        projectboardWindows(PTwindows.mpt) = appInstance.ActiveWindow
+
+        chartHeight = maxScreenHeight / 6
+        chartWidth = maxScreenWidth / 5
+
+        If chartHeight < 120 Then
+            chartHeight = 120
+        End If
+
+        If chartWidth < 140 Then
+            chartWidth = 140
+        End If
+
+        Dim oGrenze As Integer = UBound(frmCoord, 1)
+        ' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
+        For i = 0 To oGrenze
+            frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
+            frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
+        Next
+
+        ' jetzt setzen der Werte für Status-Information und Milestone-Information
+        frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
+        frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+        frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
+        frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+    End Sub
 
 
     ''' <summary>
@@ -4729,6 +5697,59 @@ Public Module Module1
         End Try
 
     End Sub
+
+    ''' <summary>
+    ''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
+    ''' </summary>
+    ''' <param name="text"></param>
+    Public Sub logfileSchreiben(ByVal text() As String)
+
+        Dim obj As Object
+        Try
+            Dim anzSpalten As Integer = text.Length
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                For ix As Integer = 1 To anzSpalten
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
+                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
+                Next
+                CType(.Cells(1, anzSpalten + 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, anzSpalten + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+            End With
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
+    Public Sub logfileSchreiben(ByVal text() As String, ByVal values() As Double)
+
+        Dim obj As Object
+        Try
+            Dim anzSpaltenText As Integer = text.Length
+            Dim anzSpaltenValues As Integer = values.Length
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                For ix As Integer = 1 To anzSpaltenText
+                    CType(.Cells(1, ix), Excel.Range).NumberFormat = "@"
+                    CType(.Cells(1, ix), Excel.Range).Value = text(ix - 1)
+                Next
+
+                For ix As Integer = 1 To anzSpaltenValues
+                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).Value = values(ix - 1)
+                    CType(.Cells(1, ix + anzSpaltenText), Excel.Range).NumberFormat = "#,##0.##"
+                Next
+                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
+                CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
+            End With
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
     ''' <summary>
     ''' öffnet das LogFile
     ''' </summary>
@@ -4925,9 +5946,9 @@ Public Module Module1
                 End If
 
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Visual Board" & outputmsg & "projects"
+                    tmpResult = "Visual Board" & outputmsg & "objects"
                 Else
-                    tmpResult = "Visual Board" & outputmsg & "Projekte"
+                    tmpResult = "Visual Board" & outputmsg & "Objekte"
                 End If
 
             Case PTwindows.massEdit
@@ -5068,14 +6089,14 @@ Public Module Module1
     ''' <param name="chwidth"></param>
     ''' <param name="chHeight"></param>
     ''' <remarks></remarks>
-    Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer, _
-                                            ByVal anzLegendEintraege As Integer, _
-                                                ByRef chtop As Double, _
-                                                ByRef chleft As Double, _
-                                                ByRef chwidth As Double, _
+    Public Sub bestimmeChartPositionAndSize(ByVal tableTyp As Integer,
+                                            ByVal anzLegendEintraege As Integer,
+                                                ByRef chtop As Double,
+                                                ByRef chleft As Double,
+                                                ByRef chwidth As Double,
                                                 ByRef chHeight As Double)
 
-        Dim currentWorksheet As Excel.Worksheet = _
+        Dim currentWorksheet As Excel.Worksheet =
             CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets.Item(arrWsNames(tableTyp)), Excel.Worksheet)
 
         Dim tmpTop As Double = 2.0
@@ -5098,8 +6119,10 @@ Public Module Module1
         Catch ex As Exception
 
         End Try
-        Dim tmpWidth As Double = maxScreenWidth / 5 - 29
-        Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH1 * korrfaktorH2
+        'Dim tmpWidth As Double = maxScreenWidth / 5 - 29
+        Dim tmpWidth As Double = chartWidth - 10
+        'Dim tmpHeight As Double = (maxScreenHeight - 39) / 5 * korrfaktorH1 * korrfaktorH2
+        Dim tmpHeight As Double = chartHeight * korrfaktorH1 * korrfaktorH2
 
 
         ' wenn schon Charts existieren: ein neues Chart wird immer als letztes  angehängt ..
@@ -5237,7 +6260,8 @@ Public Module Module1
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formereOU As Boolean = enableOnUpdate
 
-        Dim stdPfPrWindowBreite As Double = maxScreenWidth / 5 - 10
+        'Dim stdPfPrWindowBreite As Double = maxScreenWidth / 5 - 10
+        Dim stdPfPrWindowBreite As Double = chartWidth + 10
 
         If enableOnUpdate Then
             enableOnUpdate = False
@@ -5305,7 +6329,8 @@ Public Module Module1
                             .Visible = True
                             .WindowState = Excel.XlWindowState.xlNormal
                             .EnableResize = True
-                            .Left = 4 * maxScreenWidth / 5
+                            '.Left = 4 * maxScreenWidth / 5
+                            .Left = maxScreenWidth - stdPfPrWindowBreite
                             .Width = stdPfPrWindowBreite
                             ' wenn prWindows schon existert hat ..
                             If prWindowAlreadyExisting Then
@@ -5422,7 +6447,7 @@ Public Module Module1
                                 .WindowState = Excel.XlWindowState.xlNormal
                             End If
 
-                            .Left = projectboardWindows(PTwindows.mptpr).Left + _
+                            .Left = projectboardWindows(PTwindows.mptpr).Left +
                                     projectboardWindows(PTwindows.mptpr).Width + 1
 
                             If pfWindowAlreadyExisting Then
@@ -5430,6 +6455,7 @@ Public Module Module1
                             Else
                                 .Width = maxScreenWidth - (projectboardWindows(PTwindows.mptpr).Width + 1)
                             End If
+
 
 
                         End With
@@ -5652,22 +6678,22 @@ Public Module Module1
                 ElseIf RoleDefinitions.containsName(rcName) Then
                     ' es handelt sich um eine Rolle
                     ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
                                              showRangeLeft, showRangeRight, True) Then
                         cphase.removeRoleByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf & _
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
                         ok = False
                     End If
 
                 ElseIf CostDefinitions.containsName(rcName) Then
                     ' es handelt sih um eine Kostenart 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde, _
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
                                              showRangeLeft, showRangeRight, True) Then
                         cphase.removeCostByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf & _
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
                         ok = False
                     End If
@@ -5726,7 +6752,7 @@ Public Module Module1
     ''' <param name="zeile"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String, _
+    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String,
                                              ByVal zeile As Integer) As Boolean
         Dim found As Boolean = False
         Dim curZeile As Integer = 2
@@ -5833,5 +6859,21 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' liefert true, wenn diese URL erreichbar ist, false andernfalls
+    ''' </summary>
+    ''' <param name="URL"></param>
+    ''' <returns></returns>
+    Public Function isValidURL(ByVal URL As String) As Boolean
+        Try
+            Dim Response As Net.WebResponse = Nothing
+            Dim WebReq As Net.HttpWebRequest = CType(Net.HttpWebRequest.Create(URL), Net.HttpWebRequest)
+            Response = WebReq.GetResponse
+            Response.Close()
+            Return True
+        Catch ex As Exception
+            Return False
+        End Try
+    End Function
 
 End Module

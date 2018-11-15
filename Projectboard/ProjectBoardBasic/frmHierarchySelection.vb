@@ -82,15 +82,16 @@ Public Class frmHierarchySelection
             filterBox.Visible = False
 
 
-            If .menuOption = PTmenue.filterdefinieren Then
+            If (.menuOption = PTmenue.filterdefinieren) Or (.menuOption = PTmenue.sessionFilterDefinieren) Then
 
                 If awinSettings.englishLanguage Then
-                    .Text = "define Database Filter"
-                    .OKButton.Text = "Save"
+
+                    .Text = "define Filter"
+                    .OKButton.Text = "apply Filter"
                     .filterLabel.Text = "Name of Filter"
                 Else
-                    .Text = "Datenbank Filter definieren"
-                    .OKButton.Text = "Speichern"
+                    .Text = "Filter definieren"
+                    .OKButton.Text = "Filter anwenden"
                     .filterLabel.Text = "Name des Filters"
                 End If
                 '.rdbNameList.Enabled = False
@@ -271,7 +272,7 @@ Public Class frmHierarchySelection
                     .OKButton.Text = "Charts erstellen"
                 End If
 
-                
+
                 .rdbNameList.Enabled = False
                 .rdbNameList.Visible = False
                 .rdbNameList.Checked = False
@@ -386,11 +387,11 @@ Public Class frmHierarchySelection
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
 
-                .rdbRoles.Visible = False
-                .pictureRoles.Visible = False
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
 
-                .rdbCosts.Visible = False
-                .pictureCosts.Visible = False
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
 
                 .rdbPhaseMilest.Visible = False
                 .picturePhaseMilest.Visible = False
@@ -563,7 +564,7 @@ Public Class frmHierarchySelection
                 .filterLabel.Visible = True
 
 
-            ElseIf .menuOption = PTmenue.reportBHTC Or _
+            ElseIf .menuOption = PTmenue.reportBHTC Or
                 .menuOption = PTmenue.reportMultiprojektTafel Then
 
 
@@ -1208,30 +1209,15 @@ Public Class frmHierarchySelection
 
             filterName = filterDropbox.Text
             ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
+            ' aber nur, wenn auch etwas eingegeben wurde ... 
+            If Not IsNothing(filterName) Then
+                If filterName.Trim.Length > 0 Then
+                    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps,
+                                                   selectedPhases, selectedMilestones,
                                                    selectedRoles, selectedCosts, False)
-            ' tk 18.11.15 braucht man nicht, weil hier nur Phasen / Meilensteine ausgewählt werden können
-            'ElseIf Me.menuOption = PTmenue.visualisieren Then
+                End If
+            End If
 
-            '    If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-            '        (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-            '        Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-            '        ''Else
-            '        ''    filterName = filterDropbox.Text
-            '        ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            '        ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-            '        ''                                           selectedPhases, selectedMilestones, _
-            '        ''                                           selectedRoles, selectedCosts, False)
-            '    End If
-
-            ''Else    ' alle anderen PTmenues
-
-            ''    filterName = filterDropbox.Text
-            ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-            ''                                           selectedPhases, selectedMilestones, _
-            ''                                           selectedRoles, selectedCosts, False)
         End If
 
         ' jetzt wird der letzte Filter gespeichert ..
@@ -1251,10 +1237,12 @@ Public Class frmHierarchySelection
         ''
         ''''
         Dim validOption As Boolean
-        If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
-            Me.menuOption = PTmenue.vorlageErstellen Or _
+        If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or
+            Me.menuOption = PTmenue.vorlageErstellen Or
+            Me.menuOption = PTmenue.sessionFilterDefinieren Or Me.menuOption = PTmenue.filterdefinieren Or
             Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
+
             validOption = True
         ElseIf showRangeRight - showRangeLeft >= minColumns - 1 Then
             validOption = True
@@ -1407,21 +1395,24 @@ Public Class frmHierarchySelection
         Else
             ' die Aktion Subroutine aufrufen 
             ' hier können nur Phasen / Meilensteine ausgewählt werden; 
-            Dim tmpCollection As New Collection
-            If rdbPhases.Checked Or rdbMilestones.Checked _
-                Or rdbRoles.Checked Or rdbCosts.Checked Then
-                Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
-                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
-                ''ElseIf rdbRoles.Checked Then
-                ''    Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
-                ''                selectedRoles, tmpCollection, Me.chkbxOneChart.Checked, filterName)
-                ''ElseIf rdbCosts.Checked Then
-                ''    Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
-                ''                tmpCollection, selectedCosts, Me.chkbxOneChart.Checked, filterName)
-            Else
-                Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
-                                tmpCollection, tmpCollection, Me.chkbxOneChart.Checked, lastfilter)
-            End If
+            ''Dim tmpCollection As New Collection
+            ''If rdbPhases.Checked Or rdbMilestones.Checked _
+            ''    Or rdbRoles.Checked Or rdbCosts.Checked Then
+            ''    Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones,
+            ''                selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+            ''    ''ElseIf rdbRoles.Checked Then
+            ''    ''    Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
+            ''    ''                selectedRoles, tmpCollection, Me.chkbxOneChart.Checked, filterName)
+            ''    ''ElseIf rdbCosts.Checked Then
+            ''    ''    Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
+            ''    ''                tmpCollection, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+            ''Else
+            ''    Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones,
+            ''                    tmpCollection, tmpCollection, Me.chkbxOneChart.Checked, lastfilter)
+            ''End If
+            ' immer das hier machen ... 9.9.18 
+            Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones,
+                                selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, lastfilter)
         End If
 
         appInstance.EnableEvents = formerEE
@@ -1787,7 +1778,7 @@ Public Class frmHierarchySelection
                     ' Löschen von Platzhalter
                     node.Nodes.Clear()
 
-                    Dim nodelist As New SortedList(Of Integer, String)
+                    Dim nodelist As New SortedList(Of Integer, Double)
                     Try
                         nodelist = RoleDefinitions.getRoleDefByID(CInt(node.Name)).getSubRoleIDs
                         anzChilds = nodelist.Count
@@ -2268,8 +2259,70 @@ Public Class frmHierarchySelection
 
                     Call rebuildFormerState(PTauswahlTyp.meilenstein)
 
+                ElseIf Me.rdbBU.Checked Then
+
+                    'alle Business Units der selektierten Projekte zeigen, je nach menuOption
+
+                    statusLabel.Text = ""
+                    filterBox.Enabled = True
+
+                    ' clear Listbox1 
+                    If awinSettings.englishLanguage Then
+                        headerLine.Text = "Business Units"
+                    Else
+                        headerLine.Text = "Business Units"
+                    End If
+
+                    filterBox.Text = ""
+
+                    If selectedProjekte.Count > 0 Then
+                        allBUs = selectedProjekte.getBUNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allBUs = ShowProjekte.getBUNames
+                    Else
+                        For Each kvpBU As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                            If Not allBUs.Contains(kvpBU.Value.name) Then
+                                allBUs.Add(kvpBU.Value.name, kvpBU.Value.name)
+                            End If
+                        Next
+
+                    End If
+
+                    Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
+
+                ElseIf Me.rdbTyp.Checked Then
+
+                    'alle Typen der selektierten Projekte zeigen, je nach menuOption
+
+                    statusLabel.Text = ""
+                    filterBox.Enabled = True
+
+                    ' clear Listbox1 
+                    If awinSettings.englishLanguage Then
+                        headerLine.Text = "Project-Typs"
+                    Else
+                        headerLine.Text = "Projekt-Typen"
+                    End If
+
+                    filterBox.Text = ""
+
+                    If selectedProjekte.Count > 0 Then
+                        allTyps = selectedProjekte.getTypNames
+                    ElseIf ShowProjekte.Count > 0 Then
+                        allTyps = ShowProjekte.getTypNames
+                    Else
+                        For Each kvpTyp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
+                            If Not allTyps.Contains(kvpTyp.Key) Then
+                                allTyps.Add(kvpTyp.Key, kvpTyp.Key)
+                            End If
+                        Next
+
+                    End If
+
+                    Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
+
                 Else
-                    ' hier müssen noch Rollen, Kosten, Bu, Typ bearbeitet werden
+                    ' kann eigentlich nicht mehr sein ..
                 End If
 
             ElseIf auswahl = PTProjektType.categoryList Then
@@ -2407,6 +2460,8 @@ Public Class frmHierarchySelection
 
                         Call buildProjectSubTreeView(topLevel, hry)
                     End If
+
+
 
                 Next
             End If
@@ -4941,9 +4996,227 @@ Public Class frmHierarchySelection
 
     Private Sub rdbBU_CheckedChanged(sender As Object, e As EventArgs) Handles rdbBU.CheckedChanged
 
+        statusLabel.Text = ""
+        filterBox.Enabled = True
+
+        If businessUnitDefinitions.Count = 0 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no business units defined!")
+            Else
+                Call MsgBox("es sind keine Business Units definiert !")
+            End If
+
+        Else
+            If Me.rdbBU.Checked Then
+
+
+                With Me
+
+                    'Anzeigen der erforderlichen Buttons
+                    .rdbPhaseMilest.Visible = True
+                    .rdbPhaseMilest.Checked = False
+                    .picturePhaseMilest.Visible = True
+
+                    ' Ausblenden der nicht clickbaren Buttons
+                    .rdbNameList.Enabled = False
+                    .rdbNameList.Visible = False
+                    .rdbNameList.Checked = False
+
+                    .rdbProjStruktProj.Enabled = False
+                    .rdbProjStruktProj.Visible = False
+                    .rdbProjStruktProj.Checked = False
+
+                    .rdbProjStruktTyp.Enabled = False
+                    .rdbProjStruktTyp.Visible = False
+                    .rdbProjStruktTyp.Checked = False
+
+                    .rdbPhases.Visible = False
+                    .rdbPhases.Checked = False
+                    .picturePhasen.Visible = False
+
+                    .rdbMilestones.Visible = False
+                    .rdbMilestones.Checked = False
+                    .pictureMilestones.Visible = False
+
+                End With
+
+                Call buildHryTreeViewNew(PTProjektType.nameList)
+
+                '' ' clear Listbox1 
+                ''If awinSettings.englishLanguage Then
+                ''    headerLine.Text = "Business Units"
+                ''Else
+                ''    headerLine.Text = "Kostenarten"
+                ''End If
+
+                ''filterBox.Text = ""
+
+                '' ' jetzt nur die Kosten anbieten, die auch vorkommen 
+                ''If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                ''    ' immer die ShowProjekte hernehmen 
+                ''    If selectedProjekte.Count > 0 Then
+                ''        allCosts = selectedProjekte.getCostNames
+                ''    ElseIf ShowProjekte.Count > 0 Then
+                ''        allCosts = ShowProjekte.getCostNames()
+                ''    Else
+                ''        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                ''        allCosts.Clear()
+                ''    End If
+
+                ''ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                ''    ' 
+                ''    If selectedProjekte.Count > 0 Then
+                ''        allCosts = selectedProjekte.getCostNames
+                ''    Else
+                ''        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                ''        For i As Integer = 1 To CostDefinitions.Count - 1
+                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                ''            If Not allCosts.Contains(tmpName) Then
+                ''                allCosts.Add(tmpName, tmpName)
+                ''            End If
+                ''        Next
+                ''    End If
+
+                ''Else
+                ''    ' alle anderen Optionen
+                ''    If selectedProjekte.Count > 0 Then
+                ''        allCosts = selectedProjekte.getCostNames
+                ''    ElseIf ShowProjekte.Count > 0 Then
+                ''        allCosts = ShowProjekte.getCostNames
+                ''    Else
+                ''        For i As Integer = 1 To CostDefinitions.Count - 1
+                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                ''            If Not allCosts.Contains(tmpName) Then
+                ''                allCosts.Add(tmpName, tmpName)
+                ''            End If
+                ''        Next
+                ''    End If
+
+                ''End If
+
+
+                ''Call rebuildFormerState(PTauswahlTyp.Kostenart)
+
+            Else
+
+                ' Merken welches die selektierten Kosten waren 
+                Call pickupCheckedListItems(hryTreeView, selectedBUs, False, False)
+
+            End If
+        End If
+
     End Sub
 
     Private Sub rdbTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbTyp.CheckedChanged
+
+        statusLabel.Text = ""
+        filterBox.Enabled = True
+
+        If Projektvorlagen.Liste.Count = 0 Then
+            If awinSettings.englishLanguage Then
+                Call MsgBox("no Project templates defined!")
+            Else
+                Call MsgBox("es sind keine Projektvorlagen definiert!")
+            End If
+
+        Else
+            If Me.rdbTyp.Checked Then
+
+
+                With Me
+
+                    'Anzeigen der erforderlichen Buttons
+                    .rdbPhaseMilest.Visible = True
+                    .rdbPhaseMilest.Checked = False
+                    .picturePhaseMilest.Visible = True
+
+                    ' Ausblenden der nicht clickbaren Buttons
+                    .rdbNameList.Enabled = False
+                    .rdbNameList.Visible = False
+                    .rdbNameList.Checked = False
+
+                    .rdbProjStruktProj.Enabled = False
+                    .rdbProjStruktProj.Visible = False
+                    .rdbProjStruktProj.Checked = False
+
+                    .rdbProjStruktTyp.Enabled = False
+                    .rdbProjStruktTyp.Visible = False
+                    .rdbProjStruktTyp.Checked = False
+
+                    .rdbPhases.Visible = False
+                    .rdbPhases.Checked = False
+                    .picturePhasen.Visible = False
+
+                    .rdbMilestones.Visible = False
+                    .rdbMilestones.Checked = False
+                    .pictureMilestones.Visible = False
+
+                End With
+
+                Call buildHryTreeViewNew(PTProjektType.nameList)
+
+                '' ' clear Listbox1 
+                ''If awinSettings.englishLanguage Then
+                ''    headerLine.Text = "Business Units"
+                ''Else
+                ''    headerLine.Text = "Kostenarten"
+                ''End If
+
+                ''filterBox.Text = ""
+
+                '' ' jetzt nur die Kosten anbieten, die auch vorkommen 
+                ''If Me.menuOption = PTmenue.sessionFilterDefinieren Then
+                ''    ' immer die ShowProjekte hernehmen 
+                ''    If selectedProjekte.Count > 0 Then
+                ''        allCosts = selectedProjekte.getCostNames
+                ''    ElseIf ShowProjekte.Count > 0 Then
+                ''        allCosts = ShowProjekte.getCostNames()
+                ''    Else
+                ''        ' in der Session ist noch nichts, deswegen gbt es nichts zu definieren ... 
+                ''        allCosts.Clear()
+                ''    End If
+
+                ''ElseIf Me.menuOption = PTmenue.filterdefinieren Then
+                ''    ' 
+                ''    If selectedProjekte.Count > 0 Then
+                ''        allCosts = selectedProjekte.getCostNames
+                ''    Else
+                ''        ' eigentlich sollten hier alle Rollen der Datenbank stehen ... 
+                ''        For i As Integer = 1 To CostDefinitions.Count - 1
+                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                ''            If Not allCosts.Contains(tmpName) Then
+                ''                allCosts.Add(tmpName, tmpName)
+                ''            End If
+                ''        Next
+                ''    End If
+
+                ''Else
+                ''    ' alle anderen Optionen
+                ''    If selectedProjekte.Count > 0 Then
+                ''        allCosts = selectedProjekte.getCostNames
+                ''    ElseIf ShowProjekte.Count > 0 Then
+                ''        allCosts = ShowProjekte.getCostNames
+                ''    Else
+                ''        For i As Integer = 1 To CostDefinitions.Count - 1
+                ''            Dim tmpName As String = CostDefinitions.getCostdef(i).name
+                ''            If Not allCosts.Contains(tmpName) Then
+                ''                allCosts.Add(tmpName, tmpName)
+                ''            End If
+                ''        Next
+                ''    End If
+
+                ''End If
+
+
+                ''Call rebuildFormerState(PTauswahlTyp.Kostenart)
+
+            Else
+
+                ' Merken welches die selektierten Kosten waren 
+                Call pickupCheckedListItems(hryTreeView, selectedTyps, False, False)
+
+            End If
+        End If
 
     End Sub
 
@@ -5024,36 +5297,36 @@ Public Class frmHierarchySelection
 
 
             ' alle Rollen in geladenen Projekte zeigen 
+            ' tk 10.9.18 immer alle Rollen zeigen ... 
+            'If allRoles.Count > 0 Then
+            Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-            If allRoles.Count > 0 Then
-                Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
+            For i = 0 To topNodes.Count - 1
+                Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
+                topLevelNode = .Nodes.Add(role.name)
+                topLevelNode.Name = role.UID.ToString
+                topLevelNode.Text = role.name
+                If selectedRoles.Contains(role.name) Then
+                    topLevelNode.Checked = True
+                End If
 
-                For i = 0 To topNodes.Count - 1
-                    Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
-                    topLevelNode = .Nodes.Add(role.name)
-                    topLevelNode.Name = role.UID.ToString
-                    topLevelNode.Text = role.name
-                    If selectedRoles.Contains(role.name) Then
-                        topLevelNode.Checked = True
-                    End If
+                Dim listOfChildIDs As New SortedList(Of Integer, Double)
+                Try
+                    listOfChildIDs = role.getSubRoleIDs
+                Catch ex As Exception
 
-                    Dim listOfChildIDs As New SortedList(Of Integer, String)
-                    Try
-                        listOfChildIDs = role.getSubRoleIDs
-                    Catch ex As Exception
+                End Try
 
-                    End Try
+                If listOfChildIDs.Count > 0 Then
+                    For ii As Integer = 0 To listOfChildIDs.Count - 1
+                        Call buildRoleSubTreeView(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
+                    Next
+                End If
 
-                    If listOfChildIDs.Count > 0 Then
-                        For ii As Integer = 0 To listOfChildIDs.Count - 1
-                            Call buildRoleSubTreeView(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
-                        Next
-                    End If
-
-                    'Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
-                Next
-            End If
+                'Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
+            Next
+            'End If
 
 
         End With
@@ -5070,20 +5343,23 @@ Public Class frmHierarchySelection
 
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
-        Dim childIds As SortedList(Of Integer, String) = currentRole.getSubRoleIDs
-        Dim doItAnyWay As Boolean = False
-        Dim listOfroleNames As Collection = ShowProjekte.getRoleNames()
+        Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
+        ' tk 10.9.18 imer aufbauen 
+        'Dim doItAnyWay As Boolean = False
+        'Dim doItAnyWay As Boolean = True
+
+        'Dim listOfroleNames As Collection = ShowProjekte.getRoleNames()
 
         ' wenn die vorhandenen Rollen als Kind oder Kindeskind von currentRole vorkommen, dann doItAnyWay
-        If currentRole.isCombinedRole Then
-            If currentRole.hasAnyOfThemAsChild(listOfroleNames) Then
-                doItAnyWay = True
-            End If
-        End If
+        'If currentRole.isCombinedRole Then
+        '    If currentRole.hasAnyOfThemAsChild(listOfroleNames) Then
+        '        doItAnyWay = True
+        '    End If
+        'End If
 
-        If ShowProjekte.getRoleNames().Contains(currentRole.name) Or doItAnyWay Then
+        'If ShowProjekte.getRoleNames().Contains(currentRole.name) Or doItAnyWay Then
 
-            Dim newNode As TreeNode
+        Dim newNode As TreeNode
             With parentNode
                 newNode = .Nodes.Add(currentRole.name)
                 newNode.Name = roleUid.ToString
@@ -5098,7 +5374,7 @@ Public Class frmHierarchySelection
                 Call buildRoleSubTreeView(newNode, childIds.ElementAt(i).Key)
 
             Next
-        End If
+        'End If
 
     End Sub
 

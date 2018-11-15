@@ -181,53 +181,57 @@
         End If
 
     End Sub
-    ''' <summary>
-    ''' führt die Button Action der Time-Machine aus 
-    ''' </summary>
-    ''' <param name="newdate"></param>
-    ''' <remarks></remarks>
-    Private Sub performBtnAction(ByVal newdate As Date)
+    '''' <summary>
+    '''' führt die Button Action der Time-Machine aus
+    '''' es gibt in Module1 eine Sub gleichen Namens? deswegen wurde die jetzt deprecated gesetzt ...
+    '''' weill sie zuletzt vor 121 Tagen geändert wurde 
+    '''' </summary>
+    '''' <param name="newdate"></param>
+    '''' <remarks></remarks>
+    'Private Sub performBtnAction(ByVal newdate As Date)
+
+    '    ' Versuch den Undo-Stack zurückzusetzen
+    '    pptAPP.StartNewUndoEntry()
+
+    '    If newdate <> currentTimestamp Then
 
 
-        If newdate <> currentTimestamp Then
+    '        Me.UseWaitCursor = True
+    '        ' clear changelist 
+    '        'Call changeListe.clearChangeList()
 
+    '        previousVariantName = currentVariantname
+    '        previousTimeStamp = currentTimestamp
+    '        currentTimestamp = newdate
 
-            Me.UseWaitCursor = True
-            ' clear changelist 
-            'Call changeListe.clearChangeList()
+    '        currentDate.Text = currentTimestamp.ToString
 
-            previousVariantName = currentVariantname
-            previousTimeStamp = currentTimestamp
-            currentTimestamp = newdate
+    '        Call moveAllShapes()
 
-            currentDate.Text = currentTimestamp.ToString
+    '        Call setBtnEnablements()
 
-            Call moveAllShapes()
+    '        Call setCurrentTimestampInSlide(currentTimestamp)
 
-            Call setBtnEnablements()
+    '        If thereIsNoVersionFieldOnSlide Then
+    '            Call showTSMessage(currentTimestamp)
+    '        End If
 
-            Call setCurrentTimestampInSlide(currentTimestamp)
+    '        ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
+    '        If showChangeList.Checked = True Then
+    '            ' das Formular aufschalten 
+    '            If IsNothing(changeFrm) Then
+    '                changeFrm = New frmChanges
+    '                changeFrm.Show()
+    '            Else
+    '                changeFrm.neuAufbau()
+    '            End If
+    '        End If
 
-            If thereIsNoVersionFieldOnSlide Then
-                Call showTSMessage(currentTimestamp)
-            End If
+    '        Me.UseWaitCursor = False
 
-            ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
-            If showChangeList.Checked = True Then
-                ' das Formular aufschalten 
-                If IsNothing(changeFrm) Then
-                    changeFrm = New frmChanges
-                    changeFrm.Show()
-                Else
-                    changeFrm.neuAufbau()
-                End If
-            End If
+    '    End If
 
-            Me.UseWaitCursor = False
-
-        End If
-
-    End Sub
+    'End Sub
     Private Sub btnEnd_Click(sender As Object, e As EventArgs) Handles btnEnd.Click
 
         If Not IsNothing(timeStamps) Then
@@ -344,92 +348,92 @@
     End Sub
 
 
+    ' deprecated ? tk 18.10.18, es gibt keine Verweise
+    'Private Sub updateWithNewDate()
+    '    If Not IsNothing(timeStamps) Then
+    '        If timeStamps.Count > 0 Then
 
-    Private Sub updateWithNewDate()
-        If Not IsNothing(timeStamps) Then
-            If timeStamps.Count > 0 Then
+    '            Dim eingabe As Date = CDate(currentDate.Text).Date.AddHours(23).AddMinutes(59)
+    '            Try
+    '                ' ist es ein gültiges Datum ? 
+    '                If DateDiff(DateInterval.Day, eingabe, Date.Now) >= 0 And _
+    '                    DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) <= 0 Then
+    '                    ' es ist ein gültiges Datum ...
 
-                Dim eingabe As Date = CDate(currentDate.Text).Date.AddHours(23).AddMinutes(59)
-                Try
-                    ' ist es ein gültiges Datum ? 
-                    If DateDiff(DateInterval.Day, eingabe, Date.Now) >= 0 And _
-                        DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) <= 0 Then
-                        ' es ist ein gültiges Datum ...
+    '                    If smartSlideLists.countProjects = 1 Then
+    '                        ' nimm das Datum, das in der sortierten Liste unmittelbar davor liegt 
+    '                        Dim ix As Integer = timeStamps.Count - 1
+    '                        Dim found As Boolean = False
+    '                        Do While ix >= 0 And Not found
+    '                            If eingabe >= timeStamps.ElementAt(ix).Key Then
+    '                                found = True
+    '                            Else
+    '                                ix = ix - 1
+    '                            End If
+    '                        Loop
 
-                        If smartSlideLists.countProjects = 1 Then
-                            ' nimm das Datum, das in der sortierten Liste unmittelbar davor liegt 
-                            Dim ix As Integer = timeStamps.Count - 1
-                            Dim found As Boolean = False
-                            Do While ix >= 0 And Not found
-                                If eingabe >= timeStamps.ElementAt(ix).Key Then
-                                    found = True
-                                Else
-                                    ix = ix - 1
-                                End If
-                            Loop
+    '                        If found Then
+    '                            timeStampsIndex = ix
+    '                        End If
+    '                    Else
+    '                        ' ist ja schon gesetzt 
+    '                    End If
 
-                            If found Then
-                                timeStampsIndex = ix
-                            End If
-                        Else
-                            ' ist ja schon gesetzt 
-                        End If
+    '                ElseIf DateDiff(DateInterval.Day, eingabe, Date.Now) < 0 Then
+    '                    ' das Datum liegt in der Zukunft 
 
-                    ElseIf DateDiff(DateInterval.Day, eingabe, Date.Now) < 0 Then
-                        ' das Datum liegt in der Zukunft 
+    '                    eingabe = timeStamps.Last.Key.AddMinutes(1)
+    '                    timeStampsIndex = timeStamps.Count - 1
 
-                        eingabe = timeStamps.Last.Key.AddMinutes(1)
-                        timeStampsIndex = timeStamps.Count - 1
+    '                ElseIf DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) > 0 Then
+    '                    eingabe = timeStamps.First.Key.AddMinutes(1)
+    '                    timeStampsIndex = 0
 
-                    ElseIf DateDiff(DateInterval.Day, eingabe, timeStamps.First.Key) > 0 Then
-                        eingabe = timeStamps.First.Key.AddMinutes(1)
-                        timeStampsIndex = 0
-
-                    End If
-
-
-
-                Catch ex As Exception
-                    Dim a As Integer = 0
-                End Try
-
-                If eingabe <> currentTimestamp Then
-
-                    '' jetzt die Checkbox anzeigen ... 
-                    Me.showChangeList.Visible = True
-
-                    previousVariantName = currentVariantname
-                    previousTimeStamp = currentTimestamp
-                    currentTimestamp = eingabe
-
-                    currentDate.Text = currentTimestamp.ToString
-
-                    Call moveAllShapes()
-                    Call setBtnEnablements()
-
-                    Call setCurrentTimestampInSlide(currentTimestamp)
-
-                    If thereIsNoVersionFieldOnSlide Then
-                        Call showTSMessage(currentTimestamp)
-                    End If
-
-                    ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
-                    If showChangeList.Checked = True Then
-                        ' das Formular aufschalten 
-                        If IsNothing(changeFrm) Then
-                            changeFrm = New frmChanges
-                            changeFrm.Show()
-                        Else
-                            changeFrm.neuAufbau()
-                        End If
-                    End If
-
-                End If
+    '                End If
 
 
-            End If
-        End If
-    End Sub
+
+    '            Catch ex As Exception
+    '                Dim a As Integer = 0
+    '            End Try
+
+    '            If eingabe <> currentTimestamp Then
+
+    '                '' jetzt die Checkbox anzeigen ... 
+    '                Me.showChangeList.Visible = True
+
+    '                previousVariantName = currentVariantname
+    '                previousTimeStamp = currentTimestamp
+    '                currentTimestamp = eingabe
+
+    '                currentDate.Text = currentTimestamp.ToString
+
+    '                Call moveAllShapes()
+    '                Call setBtnEnablements()
+
+    '                Call setCurrentTimestampInSlide(currentTimestamp)
+
+    '                If thereIsNoVersionFieldOnSlide Then
+    '                    Call showTSMessage(currentTimestamp)
+    '                End If
+
+    '                ' jetzt prüfen, ob es Veränderungen im PPT gab, aktuell beschränkt auf Meilensteine und Phasen ..
+    '                If showChangeList.Checked = True Then
+    '                    ' das Formular aufschalten 
+    '                    If IsNothing(changeFrm) Then
+    '                        changeFrm = New frmChanges
+    '                        changeFrm.Show()
+    '                    Else
+    '                        changeFrm.neuAufbau()
+    '                    End If
+    '                End If
+
+    '            End If
+
+
+    '        End If
+    '    End If
+    'End Sub
 
     ''' <summary>
     ''' gibt das Datum zurück, das eingestellt wird, wenn der Button gedrückt wird ... 

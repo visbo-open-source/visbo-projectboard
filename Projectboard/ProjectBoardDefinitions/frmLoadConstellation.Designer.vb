@@ -29,6 +29,7 @@ Partial Class frmLoadConstellation
         Me.addToSession = New System.Windows.Forms.CheckBox()
         Me.lblStandvom = New System.Windows.Forms.Label()
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
+        Me.loadAsSummary = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'ListBox1
@@ -67,12 +68,12 @@ Partial Class frmLoadConstellation
         Me.addToSession.Checked = True
         Me.addToSession.CheckState = System.Windows.Forms.CheckState.Checked
         Me.addToSession.Cursor = System.Windows.Forms.Cursors.Default
-        Me.addToSession.Location = New System.Drawing.Point(13, 237)
+        Me.addToSession.Location = New System.Drawing.Point(12, 237)
         Me.addToSession.Name = "addToSession"
         Me.addToSession.RightToLeft = System.Windows.Forms.RightToLeft.Yes
-        Me.addToSession.Size = New System.Drawing.Size(201, 17)
+        Me.addToSession.Size = New System.Drawing.Size(135, 17)
         Me.addToSession.TabIndex = 3
-        Me.addToSession.Text = "zu angezeigten Projekten hinzufügen"
+        Me.addToSession.Text = "zur Session hinzufügen"
         Me.addToSession.UseVisualStyleBackColor = True
         '
         'lblStandvom
@@ -92,12 +93,25 @@ Partial Class frmLoadConstellation
         Me.requiredDate.Size = New System.Drawing.Size(200, 20)
         Me.requiredDate.TabIndex = 39
         '
+        'loadAsSummary
+        '
+        Me.loadAsSummary.AutoSize = True
+        Me.loadAsSummary.Cursor = System.Windows.Forms.Cursors.Default
+        Me.loadAsSummary.Location = New System.Drawing.Point(193, 237)
+        Me.loadAsSummary.Name = "loadAsSummary"
+        Me.loadAsSummary.RightToLeft = System.Windows.Forms.RightToLeft.Yes
+        Me.loadAsSummary.Size = New System.Drawing.Size(152, 17)
+        Me.loadAsSummary.TabIndex = 40
+        Me.loadAsSummary.Text = "nur Summary Projekt laden"
+        Me.loadAsSummary.UseVisualStyleBackColor = True
+        '
         'frmLoadConstellation
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(366, 305)
+        Me.Controls.Add(Me.loadAsSummary)
         Me.Controls.Add(Me.requiredDate)
         Me.Controls.Add(Me.lblStandvom)
         Me.Controls.Add(Me.addToSession)
@@ -118,4 +132,5 @@ Partial Class frmLoadConstellation
     Public WithEvents addToSession As System.Windows.Forms.CheckBox
     Public WithEvents lblStandvom As System.Windows.Forms.Label
     Public WithEvents requiredDate As System.Windows.Forms.DateTimePicker
+    Public WithEvents loadAsSummary As Windows.Forms.CheckBox
 End Class

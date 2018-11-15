@@ -38,7 +38,7 @@ Partial Class frmCalendar
         Me.Panel1.Location = New System.Drawing.Point(9, 10)
         Me.Panel1.Margin = New System.Windows.Forms.Padding(2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(262, 76)
+        Me.Panel1.Size = New System.Drawing.Size(262, 78)
         Me.Panel1.TabIndex = 4
         '
         'OKButton
@@ -46,10 +46,10 @@ Partial Class frmCalendar
         Me.OKButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.OKButton.AutoSize = True
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.OKButton.Location = New System.Drawing.Point(104, 42)
+        Me.OKButton.Location = New System.Drawing.Point(104, 36)
         Me.OKButton.Margin = New System.Windows.Forms.Padding(2)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(56, 23)
+        Me.OKButton.Size = New System.Drawing.Size(56, 31)
         Me.OKButton.TabIndex = 5
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -68,7 +68,7 @@ Partial Class frmCalendar
         Me.DateTimePicker2.ShowUpDown = True
         Me.DateTimePicker2.Size = New System.Drawing.Size(66, 20)
         Me.DateTimePicker2.TabIndex = 4
-        Me.DateTimePicker2.Value = New Date(2018, 8, 20, 20, 22, 0, 0)
+        Me.DateTimePicker2.Value = New Date(2018, 10, 3, 23, 59, 0, 0)
         '
         'DateTimePicker1
         '
@@ -82,9 +82,10 @@ Partial Class frmCalendar
         '
         'frmCalendar
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(278, 95)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.ClientSize = New System.Drawing.Size(278, 97)
         Me.Controls.Add(Me.Panel1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Margin = New System.Windows.Forms.Padding(2)

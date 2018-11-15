@@ -141,8 +141,8 @@
 
 
             ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
-            Do While _liste.ElementAt(index).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And _
-                     _liste.ElementAt(index).Value.Status <> ProjektStatus(PTProjektStati.ChangeRequest) And Not abbruch
+            ' ein ChangeRequest ist noch keine Beauftragung, deswegen wurde das rausgenommen 
+            Do While _liste.ElementAt(index).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
                 If index + 1 < anzSnapshots Then
                     index = index + 1
                 Else
@@ -155,6 +155,42 @@
             Else
                 _currentIndex = index
                 beauftragung = _liste.ElementAt(index).Value
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt das Element zurück, das zum Zeitpunkt refDate das zuletzt beauftragte war 
+    ''' </summary>
+    ''' <param name="refDate"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property lastBeauftragung(ByVal refDate As Date) As clsProjekt
+        Get
+            Dim found = False
+            Dim anzSnapshots As Integer = _liste.Count - 1
+            Dim index As Integer = anzSnapshots
+
+            Dim abbruch As Boolean = (index >= 0)
+            found = (_liste.ElementAt(index).Value.Status = ProjektStatus(PTProjektStati.beauftragt) And _liste.ElementAt(index).Value.timeStamp <= refDate)
+
+
+            ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
+            ' ein ChangeRequest ist noch keine Beauftragung, deswegen wurde das rausgenommen 
+            Do While Not found And Not abbruch
+                index = index - 1
+                If index >= 0 Then
+                    found = (_liste.ElementAt(index).Value.Status = ProjektStatus(PTProjektStati.beauftragt) And _liste.ElementAt(index).Value.timeStamp <= refDate)
+                Else
+                    abbruch = True
+                End If
+            Loop
+
+            If abbruch Then
+                lastBeauftragung = Nothing
+            Else
+                _currentIndex = index
+                lastBeauftragung = _liste.ElementAt(index).Value
             End If
 
         End Get

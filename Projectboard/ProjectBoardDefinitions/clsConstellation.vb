@@ -28,8 +28,54 @@
     ' 4: Formel: strategic Fit* 100 - risk*90 + 100*Marge + korrFaktor
     Private _sortType As Integer
 
+
     Private _constellationName As String = "Last"
 
+    ''' <summary>
+    ''' gibt eine sortierte Liste der eindeutigen Projekt-IDs zurück, das heisst wenn Summary PRojekte enthalten sind, werden die solange aufgelöst, bis nur noch Projekte enthalten sind 
+    ''' 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getBasicProjectIDs() As SortedList(Of String, Boolean)
+        Get
+            Dim tmpResult As New SortedList(Of String, Boolean)
+
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+
+                If kvp.Value.variantName = portfolioVName Then
+                    Try
+                        If tmpResult.ContainsKey(kvp.Key) Then
+                            ' nichts tun, ist schon drin 
+                        Else
+                            tmpResult.Add(kvp.Key, kvp.Value.show)
+                        End If
+
+                        Dim curConstellation As clsConstellation = projectConstellations.getConstellation(kvp.Value.projectName)
+                        If Not IsNothing(curConstellation) Then
+                            Dim teilErgebnisListe As SortedList(Of String, Boolean) = projectConstellations.getConstellation(kvp.Value.projectName).getBasicProjectIDs
+
+                            For Each teKvP As KeyValuePair(Of String, Boolean) In teilErgebnisListe
+                                If tmpResult.ContainsKey(teKvP.Key) Then
+                                    ' nichts tun, ist schon drin 
+                                Else
+                                    tmpResult.Add(teKvP.Key, teKvP.Value)
+                                End If
+
+                            Next
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+                Else
+                    tmpResult.Add(kvp.Key, kvp.Value.show)
+                End If
+            Next
+
+            getBasicProjectIDs = tmpResult
+        End Get
+    End Property
     ''' <summary>
     ''' gibt den Projekt-Namen zurück, der an der entsprechenden Position in der Sort-Liste steht, allerdings zählen nur die PRojekte in ShowProjekte
     ''' Position kann Werte zwischen 1 und count annehmen 
@@ -581,28 +627,34 @@
     ''' when considerShowAttr = true , only names with show-attribute = showvalue are in the output list 
     ''' </summary>
     ''' <value></value>
-    ''' <returns></returns>
+    ''' <returns>sortierte Liste mit Projekt-Namen bzw. Projektvarianten-Namen</returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getProjectNames(Optional ByVal fromCItemList As Boolean = True, _
-                                             Optional ByVal considerShowAttribute As Boolean = False, _
-                                             Optional ByVal showAttribute As Boolean = True) As SortedList(Of String, String)
+    Public ReadOnly Property getProjectNames(Optional ByVal fromCItemList As Boolean = True,
+                                             Optional ByVal considerShowAttribute As Boolean = False,
+                                             Optional ByVal showAttribute As Boolean = True,
+                                             Optional ByVal fullNameKeys As Boolean = False) As SortedList(Of String, String)
         Get
             Dim tmpList As New SortedList(Of String, String)
-            Dim pName As String
+            Dim returnName As String
 
             If fromCItemList Then
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                    pName = kvp.Value.projectName
+                    If fullNameKeys Then
+                        returnName = calcProjektKey(kvp.Value.projectName, kvp.Value.variantName)
+                    Else
+                        returnName = kvp.Value.projectName
+                    End If
+
 
                     If considerShowAttribute Then
                         If kvp.Value.show = showAttribute Then
-                            If Not tmpList.ContainsKey(pName) Then
-                                tmpList.Add(key:=pName, value:=pName)
+                            If Not tmpList.ContainsKey(returnName) Then
+                                tmpList.Add(key:=returnName, value:=returnName)
                             End If
                         End If
                     Else
-                        If Not tmpList.ContainsKey(pName) Then
-                            tmpList.Add(key:=pName, value:=pName)
+                        If Not tmpList.ContainsKey(returnName) Then
+                            tmpList.Add(key:=returnName, value:=returnName)
                         End If
                     End If
 
@@ -758,9 +810,9 @@
             End If
 
 
-
             With copyResult
                 .constellationName = cName
+
 
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
                     Dim copiedItem As clsConstellationItem = kvp.Value.copy
@@ -806,7 +858,7 @@
     End Sub
     ''' <summary>
     ''' fügt ein clsConstellationItem hinzu und aktualisiert auch die Sortlist entsprechend ... 
-    ''' Voraussetzung: in AlleProjekte ist das im Item beschriebene Objekt bereits enthalten 
+    ''' Voraussetzung, wenn UpdateSortlist passieren soll und Sortkey nicht alphabet und nicht Position ist  : in AlleProjekte ist das im Item beschriebene Objekt bereits enthalten 
     ''' im add muss kein Update der lastCustomlist erfolgen, nur beim Remove ... 
     ''' </summary>
     ''' <param name="cItem"></param>
@@ -1055,6 +1107,25 @@
     End Property
 
     ''' <summary>
+    ''' gibt true zurück, wenn die Constellation irgendein Summary Projekt enthält 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property containsAnySummaryProject() As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+                If kvp.Value.variantName = portfolioVName Then
+                    tmpResult = True
+                    Exit For
+                End If
+            Next
+
+            containsAnySummaryProject = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' ähnlich wie reduceToElementsWithShow, aber hier werden nur die Projekte rausgeschmissen, die gar nicht in ShowProjekte sind bzw. die in ShowProjekte sind 
     ''' </summary>
     ''' <param name="requiredShowAttribute"></param>
@@ -1248,13 +1319,14 @@
 
     End Function
 
-    Sub New()
+    Sub New(Optional ByVal skey As Integer = -1, Optional ByVal cName As String = "")
 
         _allItems = New SortedList(Of String, clsConstellationItem)
         _sortList = New SortedList(Of String, String)
         _lastCustomList = Nothing
-        _sortType = -1
-        Me.constellationName = "" ' damit wird der Name Last (<userName>)
+        _sortType = skey
+
+        Me.constellationName = cName ' mit leerem String wird der Name Last (<userName>)
 
     End Sub
 

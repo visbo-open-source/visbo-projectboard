@@ -1,5 +1,15 @@
 ﻿Public Class clsHierarchyDB
     Public allNodes As SortedList(Of String, clsHierarchyNodeDB)
+    'Public Property allNodes As Dictionary(Of String, clsHierarchyNodeDB)
+    '    Get
+
+    '    End Get
+    '    Set(value As Dictionary(Of String, clsHierarchyNodeDB))
+
+    '    End Set
+    'End Property
+
+
 
     ''' <summary>
     ''' kopiert aus einem HSP-Element in ein DB-Element
@@ -43,18 +53,21 @@
         Dim elemID As String
         Dim hryNodeDB As clsHierarchyNodeDB
 
-        For i = 1 To Me.allNodes.Count
+        'For i = 1 To Me.allNodes.Count
+        For Each kvp As KeyValuePair(Of String, clsHierarchyNodeDB) In Me.allNodes
 
             hryNode = New clsHierarchyNode
 
-            elemID = Me.allNodes.ElementAt(i - 1).Key
+            'elemID = Me.allNodes.ElementAt(i - 1).Key
+            elemID = kvp.Key
             If elemID = rootPhaseNameDB Then
                 elemID = rootPhaseName
             End If
             If elemID.Contains(punktNameDB) Then
                 elemID = elemID.Replace(punktNameDB, punktName)
             End If
-            hryNodeDB = Me.allNodes.ElementAt(i - 1).Value
+            'hryNodeDB = Me.allNodes.ElementAt(i - 1).Value
+            hryNodeDB = kvp.Value
             hryNodeDB.copyTo(hryNode)
 
             hry.copyNode(hryNode, elemID)
@@ -64,6 +77,7 @@
     End Sub
 
     Sub New()
+        'allNodes = New Dictionary(Of String, clsHierarchyNodeDB)
         allNodes = New SortedList(Of String, clsHierarchyNodeDB)
     End Sub
 End Class

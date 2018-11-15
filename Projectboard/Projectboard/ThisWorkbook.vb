@@ -32,22 +32,27 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_Deactivate() Handles Me.Deactivate
 
         Application.DisplayFormulaBar = True
+        Try
+            With Application.ActiveWindow
 
-        With Application.ActiveWindow
-            .SplitColumn = 0
-            .SplitRow = 0
-            .DisplayWorkbookTabs = True
-            .GridlineColor = RGB(220, 220, 220)
-            .DisplayHeadings = True
+                .SplitColumn = 0
+                .SplitRow = 0
+                .DisplayWorkbookTabs = True
+                .GridlineColor = RGB(220, 220, 220)
+                .DisplayHeadings = True
 
-            Try
-                .FreezePanes = False
-            Catch ex As Exception
+                Try
+                    .FreezePanes = False
+                Catch ex As Exception
 
-            End Try
+                End Try
 
 
-        End With
+            End With
+        Catch ex As Exception
+
+        End Try
+
 
     End Sub
 
@@ -88,6 +93,7 @@ Public Class ThisWorkbook
 
                 awinSettings.databaseURL = My.Settings.mongoDBURL
                 awinSettings.databaseName = My.Settings.mongoDBname
+                awinSettings.DBWithSSL = My.Settings.mongoDBWithSSL
                 awinSettings.globalPath = My.Settings.globalPath
                 awinSettings.awinPath = My.Settings.awinPath
                 awinSettings.visboTaskClass = My.Settings.TaskClass
@@ -102,6 +108,15 @@ Public Class ThisWorkbook
                 awinSettings.userNamePWD = My.Settings.userNamePWD
                 awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
+
+            End If
+
+            ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
+            awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
+            If My.Settings.rememberUserPWD Then
+                awinSettings.userNamePWD = My.Settings.userNamePWD
+            Else
+                awinSettings.userNamePWD = ""
             End If
 
             ' gespeichertes (verschlüsselt) Username und Pwd aus den Settings holen 
@@ -152,6 +167,7 @@ Public Class ThisWorkbook
         projectboardWindows(PTwindows.mpt) = Application.ActiveWindow
 
         With projectboardWindows(PTwindows.mpt)
+            .WindowState = XlWindowState.xlMaximized
             .DisplayHeadings = False
             '.Caption = windowNames(PTwindows.mpt)
             .Caption = bestimmeWindowCaption(PTwindows.mpt)
@@ -159,8 +175,15 @@ Public Class ThisWorkbook
             '.ScrollRow = 1
             '.ScrollColumn = 1
             .Visible = True
-            .Zoom = 100
-            .WindowState = XlWindowState.xlMaximized
+            If .Width < 1100 Then
+                .Zoom = 80
+            ElseIf .Width < 1400 Then
+                .Zoom = 90
+            Else
+                .Zoom = 100
+            End If
+
+
         End With
 
 
@@ -200,8 +223,19 @@ Public Class ThisWorkbook
 
         If loginErfolgreich Then
 
+
+
+
             ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
             Try
+                My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
+                If awinSettings.rememberUserPwd Then
+                    My.Settings.userNamePWD = awinSettings.userNamePWD
+                    ' um die Settings abzuspeichern
+                Else
+                    My.Settings.userNamePWD = ""
+                End If
+                My.Settings.Save()
 
                 My.Settings.rememberUserPWD = awinSettings.rememberUserPwd
                 If awinSettings.rememberUserPwd Then
@@ -214,9 +248,9 @@ Public Class ThisWorkbook
 
 
                 If Not noDB Then
-                    Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                    If request.pingMongoDb() And AlleProjekte.Count > 0 Then
+
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() And AlleProjekte.Count > 0 Then
                         returnValue = projektespeichern.ShowDialog
 
                         If returnValue = DialogResult.Yes Then
@@ -240,7 +274,7 @@ Public Class ThisWorkbook
 
                     If Not cancelAbbruch Then
                         ' die temporären Schutz
-                        If request.cancelWriteProtections(dbUsername) Then
+                        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
                             If awinSettings.visboDebug Then
                                 Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
                             End If
@@ -255,25 +289,29 @@ Public Class ThisWorkbook
 
             End Try
 
-            
+
 
             If cancelAbbruch Then
                 Cancel = True
             Else
-                appInstance.ScreenUpdating = False
-                ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-                Try
-                    'Call awinWritePhaseDefinitions()
-                    Call awinWritePhaseMilestoneDefinitions()
-                Catch ex As Exception
-                    If awinSettings.englishLanguage Then
-                        Call MsgBox("Error when writing Projectboard Customization File")
-                    Else
-                        Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
-                    End If
+                ' dann wird das ProjectboardCustomization File wieder weggespeichert ... 
+                If awinSettings.readWriteMissingDefinitions Then
+                    appInstance.ScreenUpdating = False
+                    ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+                    Try
+                        'Call awinWritePhaseDefinitions()
+                        Call awinWritePhaseMilestoneDefinitions()
+                    Catch ex As Exception
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("Error when writing Projectboard Customization File")
+                        Else
+                            Call MsgBox("Fehler bei Schreiben Projectboard Customization File")
+                        End If
 
-                End Try
-                appInstance.ScreenUpdating = True
+                    End Try
+                    appInstance.ScreenUpdating = True
+                End If
+
             End If
 
         End If
@@ -378,7 +416,6 @@ Public Class ThisWorkbook
                 Dim a As Integer = Application.Workbooks.Count
                 'Dim name asstring = Application.Workbooks(1).name
             End If
-
 
         Catch ex As Exception
 
@@ -491,16 +528,16 @@ Public Class ThisWorkbook
 
 
     'End Sub
-  
 
-  
+
+
 
 
     Private bIShrankTheRibbon As Boolean
     Private Sub ThisWorkbook_WindowActivate(Wn As Microsoft.Office.Interop.Excel.Window) Handles Me.WindowActivate
 
         If appInstance.Version <> "14.0" Then
-        
+
             If CStr(Wn.Caption).Contains("Chart") Then
                 bIShrankTheRibbon = False
                 appInstance.ExecuteExcel4Macro("SHOW.TOOLBAR(" & Chr(34) & "Ribbon" & Chr(34) & ",False)")
@@ -525,5 +562,12 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_SheetDeactivate(Sh As Object) Handles Me.SheetDeactivate
         Dim a As Integer = -1
+    End Sub
+
+    Private Sub ThisWorkbook_WindowResize(Wn As Window) Handles Me.WindowResize
+        ' ein Vergrößern sollte immer das Chart größer, das heisst breiter werden lassen
+        ' das Mitte Window 
+        ' beim Verkleinern sollte gar nix passieren , auss
+
     End Sub
 End Class

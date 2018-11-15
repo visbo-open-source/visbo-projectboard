@@ -33,7 +33,7 @@ Public Class frmdemoModusDate
         minutes = Date.Now.Minute
 
         If DateDiff(DateInterval.Second, oldHistoryDate, DateTimeHistory.Value) >= 0 Then
-            historicDate = DateTimeHistory.Value.AddHours(hours).AddMinutes(minutes)
+            historicDate = DateTimeHistory.Value.Date.AddHours(hours).AddMinutes(minutes)
 
         Else
             Call MsgBox("eingegebenes Datum muss später als '" & historicDate & " sein")

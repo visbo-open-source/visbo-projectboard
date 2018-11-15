@@ -1,5 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
-Imports MongoDbAccess
+Imports DBAccLayer
 Imports ProjectBoardBasic
 Imports xlNS = Microsoft.Office.Interop.Excel
 ''' <summary>
@@ -130,6 +130,7 @@ Public Class frmInfo
         '    fullBreadCrumb.Visible = False
         'End If
 
+        uniqueNameRequired.Checked = showBestName
 
         showAbbrev.Checked = showShortName
 
