@@ -9,7 +9,7 @@
     <RootNamespace>ExcelWorkbook1</RootNamespace>
     <AssemblyName>Projectboard</AssemblyName>
     <VSTO_HostDocumentName>Projectboard.xlsx</VSTO_HostDocumentName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <OfficeApplication>Excel</OfficeApplication>
     <ProjectGuid>{3CDE9F31-6693-4AF9-AF7F-81FAC9D0A600}</ProjectGuid>
