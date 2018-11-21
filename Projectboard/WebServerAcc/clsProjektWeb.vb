@@ -280,7 +280,7 @@ Public Class clsProjektWeb
                     .farbe = pvorlage.farbe
                 End If
             Catch ex As Exception
-
+                Call MsgBox(ex.Message & ": im Catch")
             End Try
 
             Me.hierarchy.copyTo(projekt.hierarchy)

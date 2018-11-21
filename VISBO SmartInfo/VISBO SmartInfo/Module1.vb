@@ -7072,57 +7072,57 @@ Module Module1
 
     End Sub
 
-    Public Function getProjektHistory(ByVal pvName) As clsProjektHistorie
+    'Public Function getProjektHistory(ByVal pvName) As clsProjektHistorie
 
-        Dim tmpResult As clsProjektHistorie = Nothing
-        Dim pName As String
-        Dim variantName As String = ""
-        Dim pHistory As New clsProjektHistorie
+    '    Dim tmpResult As clsProjektHistorie = Nothing
+    '    Dim pName As String
+    '    Dim variantName As String = ""
+    '    Dim pHistory As New clsProjektHistorie
 
-        If IsNothing(pvName) Then
-            ' nichts tun 
-        ElseIf pvName.trim.length = 0 Then
-            ' auch nichts tun ...
-        Else
+    '    If IsNothing(pvName) Then
+    '        ' nichts tun 
+    '    ElseIf pvName.trim.length = 0 Then
+    '        ' auch nichts tun ...
+    '    Else
 
-            Dim tmpstr() As String = pvName.Split(New Char() {CType("#", Char)})
-            pName = tmpstr(0).Trim
-            If tmpstr.Length > 1 Then
-                variantName = tmpstr(1).Trim
-            Else
-                variantName = ""
-            End If
+    '        Dim tmpstr() As String = pvName.Split(New Char() {CType("#", Char)})
+    '        pName = tmpstr(0).Trim
+    '        If tmpstr.Length > 1 Then
+    '            variantName = tmpstr(1).Trim
+    '        Else
+    '            variantName = ""
+    '        End If
 
-            If Not noDBAccessInPPT Then
+    '        If Not noDBAccessInPPT Then
 
-                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+    '            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
-                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                    Try
-                        pHistory.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
-                    Catch ex As Exception
-                        pHistory = Nothing
-                    End Try
-                Else
-                    If englishLanguage Then
-                        Call MsgBox("database connection lost !")
-                    Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-                    End If
+    '            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+    '                Try
+    '                    pHistory.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+    '                                                                    storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+    '                Catch ex As Exception
+    '                    pHistory = Nothing
+    '                End Try
+    '            Else
+    '                If englishLanguage Then
+    '                    Call MsgBox("database connection lost !")
+    '                Else
+    '                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+    '                End If
 
-                End If
-
-
+    '            End If
 
 
-            End If
 
 
-        End If
+    '        End If
 
-        getProjektHistory = tmpResult
-    End Function
+
+    '    End If
+
+    '    getProjektHistory = tmpResult
+    'End Function
 
     ''' <summary>
     ''' prüft, ob Home bzw Changed Button enabled werden muss 
@@ -8481,16 +8481,21 @@ Module Module1
                 End If
             Next
 
-            currentSlide = formerSlide
-            ' smartSlideLists für die aktuelle currentslide wieder aufbauen
-            ' tk 22.8.18
-            Call pptAPP_AufbauSmartSlideLists(currentSlide)
-            'Call buildSmartSlideLists()
+            If currentSlide.SlideID <> formerSlide.SlideID Then
+
+                currentSlide = formerSlide
+                ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+                ' tk 22.8.18
+                Call pptAPP_AufbauSmartSlideLists(currentSlide)
+                'Call buildSmartSlideLists()
+
+            End If
 
             ' das Formular ggf, also wenn aktiv,  updaten 
             If Not IsNothing(changeFrm) Then
                 changeFrm.neuAufbau()
             End If
+
         Catch ex As Exception
 
         End Try

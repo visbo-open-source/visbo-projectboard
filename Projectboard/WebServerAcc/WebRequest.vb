@@ -327,12 +327,17 @@ Public Class Request
                                                As SortedList(Of String, clsProjekt)
 
         Dim result As New SortedList(Of String, clsProjekt)
-
+        Dim diffRCBeginn As Date = Date.Now
+        Dim diffRC As Long
+        Dim diffCopy As Long
+        Dim diff3 As Long
         Try
             Dim hproj As New clsProjekt
 
             ' da in der Datenbank alle DateTime im UTC gespeichert sind, muss hier auch dieses Format verwendet werden
             Dim aktDate As Date = Date.Now.ToUniversalTime()
+
+
 
             storedLatest = storedLatest.ToUniversalTime()
             storedEarliest = storedEarliest.ToUniversalTime()
@@ -349,6 +354,10 @@ Public Class Request
 
                 Dim VisboPv_all As New List(Of clsProjektWebLong)
                 VisboPv_all = GETallVPvLong("", , variantName, aktDate)
+
+                diffRC = DateDiff(DateInterval.Second, diffRCBeginn, Date.Now)
+
+                Dim copyBeginn As Date = Date.Now
 
                 For Each webProj As clsProjektWebLong In VisboPv_all
 
@@ -369,6 +378,7 @@ Public Class Request
 
                 Next
 
+                diffCopy = DateDiff(DateInterval.Second, copyBeginn, Date.Now)
 
                 '' ur: 2018.11.14: das Holen aller Projekte und Varianten einzeln verursacht zu lange Antwortzeit
                 ''
@@ -439,7 +449,10 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
+
         retrieveProjectsFromDB = result
+
+        Call MsgBox("RestTime: " & diffRC.ToString & vbLf & "CopyTime: " & diffCopy.ToString)
 
     End Function
 
@@ -1915,9 +1928,11 @@ Public Class Request
                         End If
                     Next
                 End If
-                'If vcid = "" Then
-                VCs = GETallVC("")
-                'End If
+
+                ' noch kein vcName gefunden
+                If vcid = "" Then
+                    VCs = GETallVC("")
+                End If
 
                 anzLoop = anzLoop + 1
             End While
@@ -2141,7 +2156,7 @@ Public Class Request
 
         Try
             ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
-            nothingToDo = VRScache.existsInCache(vpid, variantName, , False)
+            nothingToDo = VRScache.existsInCache(vpid, variantName, , False, storedAtorBefore)
         Catch ex As Exception
             Call MsgBox("Fehler in existsInCache - Short")
         End Try
@@ -2226,7 +2241,7 @@ Public Class Request
 
                     If storedAtorBefore <= Date.MinValue Then
                         ' nur dann soll der Cache gefüllt werden, damit auch wirklich alle aktuellen Timestamps enthalten sind
-                        VRScache.createVPvShort(result, Date.Now)
+                        VRScache.createVPvShort(result, Date.Now.ToUniversalTime)
                     End If
 
 
@@ -2269,7 +2284,7 @@ Public Class Request
 
         Try
             ' hier wird gecheckt, ob die Timestamps für vpid und variantName bereits im Cache sind
-            nothingToDo = VRScache.existsInCache(vpid, variantName, vpvid, True)
+            nothingToDo = VRScache.existsInCache(vpid, variantName, vpvid, True, storedAtorBefore)
         Catch ex As Exception
             Call MsgBox("Fehler in existsInCache - Long")
         End Try
@@ -2370,7 +2385,7 @@ Public Class Request
                     ' cache soll nur befüllt werden, wenn nicht explizit mit VisboProjectVersion-Id aufgerufen
                     If (vpvid = "") Then
                         ' nur dann soll der Cache gefüllt werden, damit auch wirklich alle aktuellen Timestamps enthalten sind
-                        VRScache.createVPvLong(result)
+                        VRScache.createVPvLong(result, Date.Now.ToUniversalTime)
                     End If
 
                 Else
