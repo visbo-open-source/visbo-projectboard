@@ -129,8 +129,9 @@ Public Module awinGUI
             hproj = ShowProjekte.getProject(pname)
             tmpCollection.Add(hproj.name & "#0")
             ' ur: 21.07.2015: Versuch zur Korrektur:
-            'kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
-            kennung = calcChartKennung("pr", charttype, tmpCollection)
+            ' tk , 6.10.18 zurück korrigiert , weil charttype über ptpfdk besetzt ist ... 
+            kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
+            'kennung = calcChartKennung("pr", charttype, tmpCollection)
         Else
             kennung = calcChartKennung("pf", charttype, ProjektListe)
         End If
