@@ -16471,6 +16471,25 @@ Public Module awinGeneralModules
         logInToMongoDB = Not noDBAccess
 
     End Function
+
+    ''' <summary>
+    ''' Funktion testet die vorhandene Datenbank-authorisierungsinfog
+    ''' </summary>
+    ''' <param name="user"></param>
+    ''' <param name="pwd"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Function testLoginInfo_OK(ByVal user As String, ByVal pwd As String) As Boolean
+
+
+        'Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).createIndicesOnce()
+        Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).pingMongoDb()
+
+        testLoginInfo_OK = ok
+    End Function
+
+
+
     ' die nachfolgende gibt es nicht in DBAccLayer
     '''' <summary>
     '''' macht einen Auto-Login in der Datenbank, die in awinsettings angegeben ist 
