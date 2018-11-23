@@ -30,7 +30,7 @@
     <DefineConstants>VSTO40</DefineConstants>
     <StartupObject>
     </StartupObject>
-    <IsWebBootstrapper>True</IsWebBootstrapper>
+    <IsWebBootstrapper>False</IsWebBootstrapper>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -39,10 +39,10 @@
     <VSTO_TrustAssembliesLocation>true</VSTO_TrustAssembliesLocation>
     <TargetFrameworkProfile />
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>c:\publish\VISBO Smartinfo REST\</PublishUrl>
-    <InstallUrl>https://applications.visbo.de/VISBO%2520Smartinfo%2520REST/</InstallUrl>
+    <PublishUrl>c:\publish\VISBO Smartinfo\</PublishUrl>
+    <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.0.0.27</ApplicationVersion>
+    <ApplicationVersion>3.0.0.28</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
