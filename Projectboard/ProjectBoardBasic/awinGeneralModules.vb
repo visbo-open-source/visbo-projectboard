@@ -25992,6 +25992,8 @@ Public Module awinGeneralModules
                             awinSettings.visboMapping = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
                         Case "userNamePWD"
                             awinSettings.userNamePWD = cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value
+                        Case "VISBOServer"
+                            awinSettings.visboServer = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "mongoDBWithSSL"
                             awinSettings.DBWithSSL = CType(cfgs.applicationSettings.ExcelWorkbook1MySettings(i).value, Boolean)
                         Case "VISBODebug"
