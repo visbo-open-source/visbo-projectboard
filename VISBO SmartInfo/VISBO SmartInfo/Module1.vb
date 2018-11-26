@@ -879,7 +879,7 @@ Module Module1
         For Each sld As PowerPoint.Slide In pres.Slides
 
             With sld
-                If .Tags.Item("SMART").Length > 0 Then
+                If .Tags.Item("SMART") = "visbo" Then
                     If .Tags.Item("FROZEN").Length = 0 Then
                         If .Tags.Item("CRD").Length > 0 Then
                             tmpresult = CDate(.Tags.Item("CRD"))
@@ -932,10 +932,20 @@ Module Module1
     ''' erstellt die SmartSlideListen neu ... 
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub buildSmartSlideLists()
+    Friend Sub buildSmartSlideLists(Optional tsCollExists As Boolean = False)
+
+        ' vorherige smartSlideLists zwischenspeichern
+        Dim former_smartSlideLists As clsSmartSlideListen = smartSlideLists
 
         ' zurücksetzen der SmartSlideLists
         smartSlideLists = New clsSmartSlideListen
+
+        ' wenn bereits die tsCollection existiert, müssen ListOfTS und ListOfProjektHistorien gesichert werden
+        If tsCollExists Then
+            smartSlideLists.ListOfProjektHistorien = former_smartSlideLists.ListOfProjektHistorien
+            smartSlideLists.ListOfTS = former_smartSlideLists.ListOfTS
+        End If
+
         bekannteIDs = New SortedList(Of Integer, String)
 
         Dim aktSlideId As Integer = currentSlide.SlideID
@@ -1069,16 +1079,22 @@ Module Module1
 
 
         If Not noDBAccessInPPT Then
-            ' hier müssen jetzt die Timestamps noch aufgebaut werden 
-            For i As Integer = 1 To smartSlideLists.countProjects
-                Dim tmpName As String = smartSlideLists.getPVName(i)
-                Dim pName As String = getPnameFromKey(tmpName)
-                Dim vName As String = getVariantnameFromKey(tmpName)
-                Dim pvName As String = calcProjektKeyDB(pName, vName)
 
-                Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB(pvName)
-                smartSlideLists.addToListOfTS(tsCollection)
-            Next
+            If Not tsCollExists Then
+
+                ' hier müssen jetzt die Timestamps noch aufgebaut werden 
+                For i As Integer = 1 To smartSlideLists.countProjects
+                    Dim tmpName As String = smartSlideLists.getPVName(i)
+                    Dim pName As String = getPnameFromKey(tmpName)
+                    Dim vName As String = getVariantnameFromKey(tmpName)
+                    Dim pvName As String = calcProjektKeyDB(pName, vName)
+
+                    Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName)
+                    smartSlideLists.addToListOfTS(tsCollection)
+
+                Next
+
+            End If
 
             For Each tmpShpName As String In bigToDoList
                 Try
@@ -2231,7 +2247,8 @@ Module Module1
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim bProj As clsProjekt = Nothing ' nimmt das erste beauftragte Projekt auf ..
         Dim lProj As clsProjekt = Nothing ' nimmt das zuletzt beauftragte Projekt auf 
-
+        Dim bProj1 As clsProjekt = Nothing
+        Dim lProj1 As clsProjekt = Nothing
         Try
 
             If Not IsNothing(pptShape) Then
@@ -2302,16 +2319,6 @@ Module Module1
                                     Dim qualifier1 As String = pptShape.Tags.Item("Q1")
                                     Dim qualifier2 As String = pptShape.Tags.Item("Q2")
 
-                                    ' jetzt das bProj (Beauftragung) holen
-                                    Try
-
-                                        bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
-                                        lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
-
-                                    Catch ex As Exception
-                                        bProj = Nothing
-                                        lProj = Nothing
-                                    End Try
 
 
                                     Try
@@ -2327,11 +2334,26 @@ Module Module1
                                                 If prpfTyp = ptPRPFType.project Then
 
                                                     If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
+                                                        ' jetzt das bProj (Beauftragung) holen
+                                                        Try
+                                                            'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                                            bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                                        Catch ex As Exception
+                                                            bProj = Nothing
+                                                        End Try
 
                                                         Call updatePPTBalkenOfProjectInPPT(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
                                                         pptAPP.Activate()
 
                                                     ElseIf chartTyp = PTprdk.PersonalBalken2 Or chartTyp = PTprdk.KostenBalken2 Then
+
+                                                        ' jetzt das lProj (Beauftragung) holen
+                                                        Try
+                                                            'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                                            lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                                        Catch ex As Exception
+                                                            lProj = Nothing
+                                                        End Try
 
                                                         Call updatePPTBalkenOfProjectInPPT(tsProj, lProj, pptShape, prcTyp, auswahl, qualifier2)
                                                         pptAPP.Activate()
@@ -2357,6 +2379,14 @@ Module Module1
                                                             chartTyp = PTprdk.SollIstRolleC Or
                                                             chartTyp = PTprdk.SollIstKostenartC Then
 
+                                                        ' jetzt das bProj (Beauftragung) holen
+                                                        Try
+                                                            'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                                            bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                                        Catch ex As Exception
+                                                            bProj = Nothing
+                                                        End Try
+
                                                         ' Aktualisieren der Strategie-Charts
                                                         Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, qualifier2, True)
 
@@ -2365,6 +2395,14 @@ Module Module1
                                                             chartTyp = PTprdk.SollIstSonstKostenC2 Or
                                                             chartTyp = PTprdk.SollIstRolleC2 Or
                                                             chartTyp = PTprdk.SollIstKostenartC2 Then
+
+                                                        ' jetzt das lProj (Beauftragung) holen
+                                                        Try
+                                                            'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                                            lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                                        Catch ex As Exception
+                                                            lProj = Nothing
+                                                        End Try
                                                         ' Aktualisieren der Strategie-Charts
                                                         Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, lProj, auswahl, qualifier2, True)
 
@@ -2435,8 +2473,10 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
                                     Try
-                                        bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
-                                        lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                        lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
@@ -2455,8 +2495,10 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
                                     Try
-                                        bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
-                                        lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
+                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
+                                        lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
@@ -4593,7 +4635,7 @@ Module Module1
             Next
         End If
 
-        Call buildSmartSlideLists()
+        Call buildSmartSlideLists(True)
 
         ' soll auf alle Fälle angezeigt werden ...
         'Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
@@ -6550,7 +6592,7 @@ Module Module1
         Dim tmpResult As Boolean = False
 
         With curSlide
-            If .Tags.Item("SMART").Length > 0 Then
+            If .Tags.Item("SMART") = "visbo" Then
                 If .Tags.Item("FROZEN").Length = 0 Then
                     If .Tags.Item("CRD").Length > 0 Then
                         Dim slideDate As Date = CDate(.Tags.Item("CRD"))
@@ -6580,7 +6622,7 @@ Module Module1
         Try
             With sld
 
-                If .Tags.Item("SMART").Length > 0 Then
+                If .Tags.Item("SMART") = "visbo" Then
                     tmpResult = True
                 End If
 
@@ -7709,7 +7751,7 @@ Module Module1
                     .Tags.Delete("DBNAME")
                 End If
 
-                If .Tags.Item("SMART").Length > 0 Then
+                If .Tags.Item("SMART") = "visbo" Then
                     .Tags.Delete("SMART")
                 End If
 
@@ -8367,7 +8409,7 @@ Module Module1
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
 
-                            tsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB(pvName)
+                            tsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 
@@ -8665,7 +8707,7 @@ Module Module1
 
                 If currentSlide.Tags.Count > 0 Then
                     Try
-                        If currentSlide.Tags.Item("SMART").Length > 0 Then
+                        If currentSlide.Tags.Item("SMART") = "visbo" Then
 
                             ' Aufbau SmartSlieLists muss immer ohne DB erfolgen können ! 
 

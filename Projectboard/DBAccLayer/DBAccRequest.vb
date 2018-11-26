@@ -240,6 +240,55 @@ Public Class Request
     ''' </summary>
     ''' <param name="pvName"></param>
     ''' <returns>Collection, absteigend sortiert</returns>
+    Public Function retrieveZeitstempelFirstLastFromDB(ByVal pvName As String) As Collection
+
+        Dim ergebnisCollection As New Collection
+
+        Try
+
+            If usedWebServer Then
+                Try
+                    ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFirstLastFromDB(pvName)
+
+                Catch ex As Exception
+
+                    Dim hstr() As String = Split(ex.Message, ":")
+                    If CInt(hstr(0)) = 401 Then
+                        loginErfolgreich = login(dburl, dbname, uname, pwd)
+                        If loginErfolgreich Then
+                            ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFirstLastFromDB(pvName)
+                        End If
+                    Else
+                        Throw New ArgumentException(ex.Message)
+                    End If
+
+                End Try
+
+            Else 'es wird eine MongoDB direkt adressiert
+
+                Dim interResult As Collection = CType(DBAcc, MongoDbAccess.Request).retrieveZeitstempelFromDB(pvName)
+                ' First TimeStamp
+                ergebnisCollection.Add(interResult.Item(0))
+                ' Last TimeStamp
+                ergebnisCollection.Add(interResult.Item(interResult.Count - 1))
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        retrieveZeitstempelFirstLastFromDB = ergebnisCollection
+
+    End Function
+
+
+
+    ''' <summary>
+    ''' bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+    ''' </summary>
+    ''' <param name="pvName"></param>
+    ''' <returns>Collection, absteigend sortiert</returns>
     Public Function retrieveZeitstempelFromDB(ByVal pvName As String) As Collection
 
         Dim ergebnisCollection As New Collection
