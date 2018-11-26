@@ -114,24 +114,21 @@ namespace MongoDbAccess
             }
             else
             {
-                
-
-
-                // wird nicht mehr verwendet , führt ggf zu Problemen bei zu schnellem Timeout 
-                // var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?connectTimeoutMS=30&SocketTimeoutMS=10";  /*Aufruf mit MongoDB mit Authentication  */
-
 
                 var connectionString = "";
                 
                 if (Module1.awinSettings.DBWithSSL)
                 {
+
                      connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName + "?ssl=true";
+
                 }
                 else
                 {
                      connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL + "/" + databaseName;
-                }                
-                
+
+                }
+                                
 
                 Client = new MongoClient(connectionString);
                      

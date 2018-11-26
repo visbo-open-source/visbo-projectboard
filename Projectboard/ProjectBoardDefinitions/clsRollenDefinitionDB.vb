@@ -1,7 +1,7 @@
 ﻿Public Class clsRollenDefinitionDB
     ' bei subRoleIDs eigentlich integer, string), muss wegen Mongo auf String geändert werden 
     ' tk 29.5.18 in den SubroleID values steht jetzt im String nicht mehr der Name, der ist ohnehin redundant zur UID, sondern der Prozentsatz, wieviel die Rolle zur Kapa der Sammelrolle beiträgt 
-    ' wenn ein nicht als double interpretierbarer Wert drinsteht (=alte Speicherungen, dann wird der Wert auf 1.0 gesetzt 
+    ' wenn ein nicht als double interpretierbarer Wert drinsteht (=alte Speicherungen, dann wird der Wert auf String 1.0 gesetzt 
     Public subRoleIDs As SortedList(Of String, String)
     Public uid As Integer
     Public name As String

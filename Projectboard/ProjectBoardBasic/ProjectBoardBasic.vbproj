@@ -10,7 +10,7 @@
     <AssemblyName>ProjectBoardBasic</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>Windows</MyType>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -74,6 +74,12 @@
       <DependentUpon>frmEinstellungen.vb</DependentUpon>
     </Compile>
     <Compile Include="frmEinstellungen.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmProvideActualDataMonth.Designer.vb">
+      <DependentUpon>frmProvideActualDataMonth.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProvideActualDataMonth.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmRenameProject.Designer.vb">
@@ -333,6 +339,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjPortfolioAdmin.resx">
       <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmProvideActualDataMonth.resx">
+      <DependentUpon>frmProvideActualDataMonth.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmRenameProject.resx">
       <DependentUpon>frmRenameProject.vb</DependentUpon>

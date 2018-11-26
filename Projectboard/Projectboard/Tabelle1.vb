@@ -54,18 +54,18 @@ Public Class Tabelle1
     End Sub
 
     Private Sub Tabelle1_Startup() Handles Me.Startup
+        ' tk 16.9.18 das wird doch in Tabelle1_Activate Event übernommen
+        'Application.DisplayFormulaBar = False
 
-        Application.DisplayFormulaBar = False
-
-        With Application.ActiveWindow
-            .SplitColumn = 0
-            .SplitRow = 1
-            .DisplayWorkbookTabs = False
-            .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = True
-            .DisplayHeadings = False
-            .Zoom = 100
-        End With
+        'With Application.ActiveWindow
+        '    .SplitColumn = 0
+        '    .SplitRow = 1
+        '    .DisplayWorkbookTabs = False
+        '    .GridlineColor = RGB(220, 220, 220)
+        '    .FreezePanes = True
+        '    .DisplayHeadings = False
+        '    .Zoom = 100
+        'End With
     End Sub
 
 
