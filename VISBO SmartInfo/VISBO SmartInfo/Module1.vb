@@ -4661,7 +4661,7 @@ Module Module1
             If pvName <> "" Then
                 ' wenn das Projekt noch nicht geladen wurde, wird es aus der DB geholt und angelegt  ... 
                 Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
-                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                ' kann dann nothing werden, wenn es zu diesem Zeitpunkt noch nicht existiert hat
                 If Not IsNothing(tsProj) Then
                     Dim elemName As String = tmpShape.Tags.Item("CN")
                     Dim elemBC As String = tmpShape.Tags.Item("BC")
