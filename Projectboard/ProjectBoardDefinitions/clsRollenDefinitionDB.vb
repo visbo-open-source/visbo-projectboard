@@ -14,6 +14,7 @@
     Public name As String
     Public farbe As Long
     Public defaultKapa As Double
+    Public defaultDayKapa As Double
     Public tagessatzIntern As Double
     Public kapazitaet() As Double
 
@@ -35,7 +36,7 @@
         With roleDef
             If subRoleIDs.Count >= 1 Then
                 ' wegen Mongo müssen die Keys in String Format sein ... 
-                Dim maxNr As Integer = 1000
+
                 For Each kvp As KeyValuePair(Of String, String) In Me.subRoleIDs
                     Dim tmpValue As Double = 1.0
                     If IsNumeric(kvp.Value) Then
@@ -48,16 +49,58 @@
                     Else
                         tmpValue = 1.0
                     End If
-                    .addSubRole(CInt(kvp.Key), tmpValue)
+
+                    Try
+                        .addSubRole(CInt(kvp.Key), tmpValue)
+                    Catch ex As Exception
+                        Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
+                    End Try
+
                 Next
+
             End If
+
+            ' Allianz 23.11.18 jetzt die TeamIDs kopieren 
+            If teamIDs.Count >= 1 Then
+                ' wegen Mongo müssen die Keys in String Format sein ... 
+
+                For Each kvp As KeyValuePair(Of String, String) In Me.teamIDs
+                    Dim tmpValue As Double = 1.0
+                    If IsNumeric(kvp.Value) Then
+                        tmpValue = CDbl(kvp.Value)
+                        If tmpValue >= 0 And tmpValue <= 1.0 Then
+                            ' alles ok
+                        Else
+                            tmpValue = 1.0
+                        End If
+                    Else
+                        tmpValue = 1.0
+                    End If
+
+                    Try
+                        .addTeam(CInt(kvp.Key), tmpValue)
+                    Catch ex As Exception
+                        Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
+                    End Try
+
+                Next
+
+            End If
+            ' Ende 23.11.18 
+
+
             .UID = Me.uid
             .name = Me.name
+
+            ' 23.11.18 
             .isExternRole = Me.isExternRole
             .isTeam = Me.isTeam
 
             .farbe = Me.farbe
             .defaultKapa = Me.defaultKapa
+            ' 23.11.18 
+            .defaultDayKapa = Me.defaultDayKapa
+
             .tagessatzIntern = Me.tagessatzIntern
             ' tk Allianz 21.11.18, nicht mehr nötig  
             '.tagessatzExtern = Me.tagessatzExtern
@@ -206,10 +249,23 @@
                 Next
             End If
 
+            ' tk 23.11.18 
+            If .getTeamCount >= 1 Then
+                For Each kvp As KeyValuePair(Of Integer, Double) In .getTeamIDs
+                    Me.teamIDs.Add(CStr(kvp.Key), kvp.Value.ToString)
+                Next
+            End If
+
             Me.uid = .UID
             Me.name = .name
             Me.farbe = CLng(.farbe)
             Me.defaultKapa = .defaultKapa
+
+            ' 23.11.18 
+            Me.defaultDayKapa = .defaultDayKapa
+            Me.isExternRole = .isExternRole
+            Me.isTeam = .isTeam
+
             Me.tagessatzIntern = .tagessatzIntern
             ' tk Allianz 21.11.18 
             'Me.tagessatzExtern = .tagessatzExtern
@@ -262,6 +318,9 @@
                             (Me.name = vglRole.name) And
                             (Me.farbe = vglRole.farbe) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
+                            (Me.defaultDayKapa = vglRole.defaultDayKapa) And
+                            (Me.isExternRole = vglRole.isExternRole) And
+                            (Me.isTeam = vglRole.isTeam) And
                             (Me.tagessatzIntern = vglRole.tagessatzIntern)
                 'And _
                 '            (Me.tagessatzExtern = vglRole.tagessatzExtern)
@@ -283,14 +342,23 @@
     Public Sub New()
         subRoleIDs = New SortedList(Of String, String)
         teamIDs = New SortedList(Of String, String)
+
+        isTeam = False
+        isExternRole = False
+
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
         Id = ""
+
     End Sub
 
     Public Sub New(ByVal tmpDate As Date)
         subRoleIDs = New SortedList(Of String, String)
         teamIDs = New SortedList(Of String, String)
+
+        isTeam = False
+        isExternRole = False
+
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
         Id = ""

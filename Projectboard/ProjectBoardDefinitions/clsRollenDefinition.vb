@@ -1,5 +1,12 @@
 ﻿Public Class clsRollenDefinition
 
+    ' am 21.11.18 dazu gekommen 
+    ' _isExternRole, _isTeam, _teamIDs, _defaultDayKapa (errechnen sich wechselseitig auseinander: defaultDayKapa und defaultKapa errechnen sich über nrdayspMonth) 
+    ' weggefallen ist:
+    ' tagessatzExtern, externeKapazität
+    ' in der ..DB Definition bleiben die alten Definitionen erhalten, sie werden nur nicht mehr hin und herkopiert
+    ' in der WebDB Definition sollten sie besser ganz rausfliegen. Wir können jetzt noch auf grüner Wiese anfangern.
+
     ' wenn es sich um ein Team handelt, dann gibt der Double-Wert an, wieviel Prozent der Kapa der SubRoleID in das Team einfliesst 
     Private _subRoleIDs As SortedList(Of Integer, Double)
 
@@ -391,6 +398,7 @@
         ' Änderung 29.5.14 damit man zwanzig Jahre vom Start der Projekt-Tafel betrachten kann 
         ' Kapazität: die Null Position hat keine Bedeutung; kapazität(1) = der Wert für StartofCalendar
         ReDim _kapazitaet(240)
+
         _isExternRole = False
         _isTeam = False
 

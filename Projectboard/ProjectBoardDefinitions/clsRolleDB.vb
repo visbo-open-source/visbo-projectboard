@@ -3,27 +3,41 @@
 ''' </summary>
 ''' <remarks></remarks>
 Public Class clsRolleDB
-
+    ' tk 24.11.18 Rollentyp ist die RollenID
     Public RollenTyp As Integer
     Public name As String
+    Public Bedarf() As Double
+    ' neu hinzugekommen 
+    Public teamID As Integer
+
+    ' deprecated 24.11.18 
     Public farbe As Object
     Public startkapa As Integer
     Public tagessatzIntern As Double
     Public tagessatzExtern As Double
-    Public Bedarf() As Double
     Public isCalculated As Boolean
 
     Sub copyFrom(ByVal role As clsRolle)
 
         With role
             Me.RollenTyp = .RollenTyp
-            Me.name = .name
-            Me.farbe = .farbe
-            Me.startkapa = CInt(.Startkapa)
-            Me.tagessatzIntern = .tagessatzIntern
-            Me.tagessatzExtern = .tagessatzExtern
-            Bedarf = .Xwerte
-            Me.isCalculated = .isCalculated
+            Me.Bedarf = .Xwerte
+            Me.teamID = .teamID
+
+            ' 24.11.18 deprecated
+            Me.name = Nothing
+            Me.farbe = Nothing
+            Me.startkapa = Nothing
+            Me.tagessatzIntern = Nothing
+            Me.tagessatzExtern = Nothing
+            Me.isCalculated = Nothing
+
+            'Me.name = .name
+            'Me.farbe = .farbe
+            'Me.startkapa = CInt(.Startkapa)
+            'Me.tagessatzIntern = .tagessatzIntern
+            'Me.tagessatzExtern = .tagessatzExtern
+            'Me.isCalculated = .isCalculated
         End With
 
     End Sub
@@ -33,7 +47,8 @@ Public Class clsRolleDB
         With role
             .RollenTyp = Me.RollenTyp
             .Xwerte = Me.Bedarf
-            .isCalculated = Me.isCalculated
+            .teamID = Me.teamID
+            '.isCalculated = Me.isCalculated
         End With
 
     End Sub

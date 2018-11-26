@@ -4,14 +4,26 @@ Public Class clsRollenDefinitionWeb
     ' tk 29.5.18 in den SubroleID values steht jetzt im String nicht mehr der Name, der ist ohnehin redundant zur UID, sondern der Prozentsatz, wieviel die Rolle zur Kapa der Sammelrolle beiträgt 
     ' wenn ein nicht als double interpretierbarer Wert drinsteht (=alte Speicherungen, dann wird der Wert auf 1.0 gesetzt 
     Public subRoleIDs As List(Of clsSubRoleID)
+
+    ' 23.11.18 neu hinzugekommen 
+    Public teamIDs As List(Of clsSubRoleID)
+
+    ' 23.11.18 neu hinzugekommen 
+    Public isExternRole As Boolean
+    Public isTeam As Boolean
+
     Public uid As Integer
     Public name As String
     Public farbe As Long
     Public defaultKapa As Double
+    Public defaultDayKapa As Double
+
     Public tagessatzIntern As Double
-    Public tagessatzExtern As Double
+    ' tk 23.11. rausnehmen ..
+    ' Public tagessatzExtern As Double
     Public kapazitaet() As Double
-    Public externeKapazitaet() As Double
+
+    ' Public externeKapazitaet() As Double
     Public timestamp As Date
 
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
@@ -22,7 +34,7 @@ Public Class clsRollenDefinitionWeb
         With roleDef
             If subRoleIDs.Count >= 1 Then
                 ' wegen Mongo müssen die Keys in String Format sein ... 
-                Dim maxNr As Integer = 1000
+
                 For Each sr As clsSubRoleID In Me.subRoleIDs
                     Dim tmpValue As Double = 1.0
                     If IsNumeric(sr.value) Then
@@ -35,15 +47,54 @@ Public Class clsRollenDefinitionWeb
                     Else
                         tmpValue = 1.0
                     End If
-                    .addSubRole(CInt(sr.key), tmpValue)
+
+                    Try
+                        .addSubRole(CInt(sr.key), tmpValue)
+                    Catch ex As Exception
+                        Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
+                    End Try
+
                 Next
             End If
+
+            ' tk 23.11.18 dazugekommen 
+            If teamIDs.Count >= 1 Then
+                ' wegen Mongo müssen die Keys in String Format sein ... 
+
+                For Each sr As clsSubRoleID In Me.teamIDs
+                    Dim tmpValue As Double = 1.0
+                    If IsNumeric(sr.value) Then
+                        tmpValue = CDbl(sr.value)
+                        If tmpValue >= 0 And tmpValue <= 1.0 Then
+                            ' alles ok
+                        Else
+                            tmpValue = 1.0
+                        End If
+                    Else
+                        tmpValue = 1.0
+                    End If
+                    Try
+                        .addTeam(CInt(sr.key), tmpValue)
+                    Catch ex As Exception
+                        Call MsgBox("1119765: not allowed to to have team-Membership and Childs ..")
+                    End Try
+
+                Next
+            End If
+
             .UID = Me.uid
             .name = Me.name
             .farbe = Me.farbe
             .defaultKapa = Me.defaultKapa
+
+            ' tk 23.11.18 
+            .defaultDayKapa = Me.defaultDayKapa
+            .isExternRole = Me.isExternRole
+            .isTeam = Me.isTeam
+
             .tagessatzIntern = Me.tagessatzIntern
-            .tagessatzExtern = Me.tagessatzExtern
+
+            '.tagessatzExtern = Me.tagessatzExtern
             Dim lenDB As Integer = Me.kapazitaet.Length
             Dim lenSession As Integer = .kapazitaet.Length
 
@@ -54,21 +105,21 @@ Public Class clsRollenDefinitionWeb
                 If lenDB = lenSession Then
                     ' einfach kopieren ...
                     .kapazitaet = Me.kapazitaet
-                    .externeKapazitaet = Me.externeKapazitaet
+                    '.externeKapazitaet = Me.externeKapazitaet
                 ElseIf lenDB < lenSession Then
                     For i As Integer = 0 To lenDB
                         .kapazitaet(i) = Me.kapazitaet(i)
-                        .externeKapazitaet(i) = Me.externeKapazitaet(i)
+                        '.externeKapazitaet(i) = Me.externeKapazitaet(i)
                     Next
                     ' jetzt hinten auffüllen ..
                     For i As Integer = lenDB + 1 To lenSession - 1
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
                 Else
                     For i As Integer = 0 To lenSession - 1
                         .kapazitaet(i) = Me.kapazitaet(i)
-                        .externeKapazitaet(i) = Me.externeKapazitaet(i)
+                        '.externeKapazitaet(i) = Me.externeKapazitaet(i)
                     Next
                 End If
 
@@ -80,28 +131,28 @@ Public Class clsRollenDefinitionWeb
                 If lenDB = lenSession Then
                     For i As Integer = 0 To CInt(anzMon)
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
                     For i As Integer = CInt(anzMon + 1) To lenSession - 1
                         .kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
-                        .externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
+                        '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
                     Next
                 ElseIf lenDB < lenSession Then
                     ' Länge in der Datenbank ist kleiner als Länger in der Session 
                     For i As Integer = 0 To CInt(anzMon)
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
                     For i As Integer = CInt(anzMon + 1) To lenDB - 1
                         .kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
-                        .externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
+                        '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
                     Next
 
                     For i As Integer = lenDB To lenSession - 1
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
 
@@ -109,12 +160,12 @@ Public Class clsRollenDefinitionWeb
                     ' Länge in der Datenbank ist größer als Länge in der Session 
                     For i As Integer = 0 To CInt(anzMon)
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
                     For i As Integer = CInt(anzMon + 1) To lenSession - 1
                         .kapazitaet(i) = Me.kapazitaet(i - CInt(anzMon))
-                        .externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
+                        '.externeKapazitaet(i) = Me.externeKapazitaet((i - CInt(anzMon)))
                     Next
 
                 End If
@@ -129,33 +180,33 @@ Public Class clsRollenDefinitionWeb
 
                     ' eas Null-Element hat keine Bedeutung 
                     .kapazitaet(0) = 0
-                    .externeKapazitaet(0) = 0
+                    '.externeKapazitaet(0) = 0
 
                     For i As Integer = 1 To CInt(lenSession - anzMon - 1)
                         .kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
-                        .externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
+                        '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
                     Next
 
                     For i As Integer = CInt(lenSession - anzMon) To lenSession - 1
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
                 ElseIf lenDB < lenSession Then
                     ' Länge in der Datenbank ist kleiner als Länge in der Session 
                     For i As Integer = 0 To CInt(anzMon)
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
                     For i As Integer = CInt(anzMon + 1) To lenDB - 1 - CInt(anzMon)
                         .kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
-                        .externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
+                        '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
                     Next
 
                     For i As Integer = lenDB To lenSession - 1
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
 
@@ -163,12 +214,12 @@ Public Class clsRollenDefinitionWeb
                     ' Länge in der Datenbank ist größer als Länge in der Session 
                     For i As Integer = 0 To CInt(anzMon)
                         .kapazitaet(i) = Me.defaultKapa
-                        .externeKapazitaet(i) = 0
+                        '.externeKapazitaet(i) = 0
                     Next
 
                     For i As Integer = CInt(anzMon + 1) To lenSession - 1 - CInt(anzMon)
                         .kapazitaet(i) = Me.kapazitaet(i + CInt(anzMon))
-                        .externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
+                        '.externeKapazitaet(i) = Me.externeKapazitaet((i + CInt(anzMon)))
                     Next
 
                 End If
@@ -190,14 +241,29 @@ Public Class clsRollenDefinitionWeb
                 Next
             End If
 
+            If .getTeamCount >= 1 Then
+                For Each kvp As KeyValuePair(Of Integer, Double) In .getTeamIDs
+                    Dim sr As New clsSubRoleID
+                    sr.key = kvp.Key
+                    sr.value = kvp.Value.ToString
+                    Me.teamIDs.Add(sr)
+                Next
+            End If
+
             Me.uid = .UID
             Me.name = .name
             Me.farbe = CLng(.farbe)
             Me.defaultKapa = .defaultKapa
+
+            ' tk 23.11.18 
+            Me.defaultDayKapa = .defaultDayKapa
+            Me.isExternRole = .isExternRole
+            Me.isTeam = .isTeam
+
             Me.tagessatzIntern = .tagessatzIntern
-            Me.tagessatzExtern = .tagessatzExtern
+            'Me.tagessatzExtern = .tagessatzExtern
             Me.kapazitaet = .kapazitaet
-            Me.externeKapazitaet = .externeKapazitaet
+            'Me.externeKapazitaet = .externeKapazitaet
             ' Id wird beim Server von der MongoDB selbst erzeugt
             'Me.Id = "Role" & "#" & CStr(Me.uid) & "#" & Date.UtcNow.ToString
 
@@ -226,6 +292,12 @@ Public Class clsRollenDefinitionWeb
                         i = i + 1
                     Loop
 
+                    i = 0
+                    Do While i < Me.teamIDs.Count And stillok
+                        stillok = (Me.teamIDs.ElementAt(i).key = vglRole.teamIDs.ElementAt(i).key And
+                                   Me.teamIDs.ElementAt(i).value = vglRole.teamIDs.ElementAt(i).value)
+                        i = i + 1
+                    Loop
                 End If
             Else
                 stillok = False
@@ -239,15 +311,19 @@ Public Class clsRollenDefinitionWeb
                             (Me.name = vglRole.name) And
                             (Me.farbe = vglRole.farbe) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
-                            (Me.tagessatzIntern = vglRole.tagessatzIntern) And
-                            (Me.tagessatzExtern = vglRole.tagessatzExtern)
+                            (Me.defaultDayKapa = vglRole.defaultDayKapa) And
+                            (Me.isExternRole = vglRole.isExternRole) And
+                            (Me.isTeam = vglRole.isTeam) And
+                            (Me.tagessatzIntern = vglRole.tagessatzIntern)
+
 
             End If
 
             ' jetzt die Kapa-Arrays vergleichen 
             If stillok Then
-                stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet) And
-                            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
+                stillok = Not arraysAreDifferent(Me.kapazitaet, vglRole.kapazitaet)
+                'And
+                '            Not arraysAreDifferent(Me.externeKapazitaet, vglRole.externeKapazitaet)
             End If
 
             isIdenticalTo = stillok
@@ -257,12 +333,22 @@ Public Class clsRollenDefinitionWeb
 
     Public Sub New()
         subRoleIDs = New List(Of clsSubRoleID)
+        teamIDs = New List(Of clsSubRoleID)
+
+        isTeam = False
+        isExternRole = False
+
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
 
     Public Sub New(ByVal tmpDate As Date)
         subRoleIDs = New List(Of clsSubRoleID)
+        teamIDs = New List(Of clsSubRoleID)
+
+        isTeam = False
+        isExternRole = False
+
         timestamp = Date.UtcNow
         startOfCal = StartofCalendar.ToUniversalTime
     End Sub
