@@ -1315,12 +1315,14 @@ Public Class clsPhase
             'Dim checkValue As Integer = _relStart + _Offset
 
             Try
+                isVorlage = (Me.parentProject.projectType = ptPRPFType.projectTemplate)
 
-                If Me.parentProject Is Nothing Then
-                    isVorlage = True
-                Else
-                    isVorlage = False
-                End If
+                ' tk 30.9.18 , durch obiges Statement ersetzt
+                'If Me.parentProject Is Nothing Then
+                '    isVorlage = True
+                'Else
+                '    isVorlage = False
+                'End If
             Catch ex As Exception
                 isVorlage = True
             End Try
@@ -1358,12 +1360,14 @@ Public Class clsPhase
             Dim tmpValue As Integer
 
             Try
+                isVorlage = (Me.parentProject.projectType = ptPRPFType.projectTemplate)
 
-                If Me.parentProject Is Nothing Then
-                    isVorlage = True
-                Else
-                    isVorlage = False
-                End If
+                ' tk 30.9.18
+                'If Me.parentProject Is Nothing Then
+                '    isVorlage = True
+                'Else
+                '    isVorlage = False
+                'End If
             Catch ex As Exception
                 isVorlage = True
             End Try
@@ -2942,6 +2946,14 @@ Public Class clsPhase
         Dim gesBedarfReal As Double = 0.0
 
         ReDim newXwerte(newLength - 1)
+
+        ' Vorbereitung für Summen Berechnung nur bei Forecast
+        'Dim hasActualData As Boolean = Me.parentProject.actualDataUntil <> Date.MinValue
+        'Dim actualDataColumn As Integer = -1
+
+        'If hasActualData Then
+        '    actualDataColumn = getColumnOfDate(Me.parentProject.actualDataUntil)
+        'End If
 
         ' nur wenn überhaupt was zu verteilen ist, muss alles folgende gemacht werdne 
         ' andernfalls ist eh schon alles richtig 

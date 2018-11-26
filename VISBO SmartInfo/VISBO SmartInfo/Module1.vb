@@ -2343,6 +2343,7 @@ Module Module1
                                                         ' Aktualisieren des Ergebnis Charts 
                                                         Call updatePPTProjektErgebnis(tsProj, newchtobj)
 
+
                                                     ElseIf chartTyp = PTprdk.StrategieRisiko Or
                                                             chartTyp = PTprdk.ZeitRisiko Or
                                                             chartTyp = PTprdk.FitRisikoVol Or
@@ -2350,6 +2351,7 @@ Module Module1
                                                         ' Aktualisieren der Strategie-Charts
 
                                                         Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
+                                                            
 
                                                     ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or
                                                             chartTyp = PTprdk.SollIstPersonalkostenC Or
@@ -2556,7 +2558,8 @@ Module Module1
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
         Dim rcNameChk As String = ""
-        Call getChartKennungen(kennung, chartTyp, typID, auswahl, rcNameChk)
+        Dim tmpPName As String = ""
+        Call getChartKennungen(kennung, chartTyp, typID, auswahl, tmpPName, rcNameChk)
 
         If rcNameChk <> rcName Then
             Dim a As Integer = 1
@@ -3075,7 +3078,8 @@ Module Module1
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
         Dim rcNameChk As String = ""
-        Call getChartKennungen(kennung, chartTyp, typID, auswahl, rcNameChk)
+        Dim tmpPname As String = ""
+        Call getChartKennungen(kennung, chartTyp, typID, auswahl, tmpPname, rcNameChk)
 
         If rcNameChk <> rcName Then
             Dim a As Integer = 1
@@ -3644,7 +3648,8 @@ Module Module1
         Dim chartTyp As String = ""
         Dim typID As Integer = -1
         Dim rcNameChk As String = ""
-        Call getChartKennungen(kennung, chartTyp, typID, auswahl, rcNameChk)
+        Dim tmpPname As String = ""
+        Call getChartKennungen(kennung, chartTyp, typID, auswahl, tmpPname, rcNameChk)
 
         If rcNameChk <> rcName Then
             Dim a As Integer = 1
@@ -4656,7 +4661,7 @@ Module Module1
             If pvName <> "" Then
                 ' wenn das Projekt noch nicht geladen wurde, wird es aus der DB geholt und angelegt  ... 
                 Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
-                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                ' kann dann nothing werden, wenn es zu diesem Zeitpunkt noch nicht existiert hat
                 If Not IsNothing(tsProj) Then
                     Dim elemName As String = tmpShape.Tags.Item("CN")
                     Dim elemBC As String = tmpShape.Tags.Item("BC")
@@ -4747,6 +4752,9 @@ Module Module1
                         End If
 
                     End If
+                Else
+                    ' es hat zu diesem Zeitpunkt noch nicht existiert und muss unsichtbar gemacht werden 
+                    tmpShape.Visible = False
                 End If
 
             End If
@@ -6005,6 +6013,34 @@ Module Module1
                 Else
                     tmpText = "Projekt-Ziele"
                 End If
+
+            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymFinance) Then
+                If englishLanguage Then
+                    tmpText = "Finance Overview"
+                Else
+                    tmpText = "Finanz-Überblick"
+                End If
+
+            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymProject) Then
+                If englishLanguage Then
+                    tmpText = "Project-Overview"
+                Else
+                    tmpText = "Projekt-Überblick"
+                End If
+
+            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymSchedules) Then
+                If englishLanguage Then
+                    tmpText = "Schedules-Overview"
+                Else
+                    tmpText = "Termin-Überblick"
+                End If
+
+            ElseIf .Tags.Item("DID") = CStr(ptReportComponents.prSymTeam) Then
+                If englishLanguage Then
+                    tmpText = "Team"
+                Else
+                    tmpText = "Team"
+                End If
             End If
 
         End With
@@ -6434,7 +6470,11 @@ Module Module1
         isSymbolShape = ((bigType = CStr(ptReportBigTypes.components)) And
                          (detailID = CStr(ptReportComponents.prSymDescription) Or
                           detailID = CStr(ptReportComponents.prSymRisks) Or
-                          detailID = CStr(ptReportComponents.prSymTrafficLight)))
+                          detailID = CStr(ptReportComponents.prSymTrafficLight) Or 
+                          detailID = CStr(ptReportComponents.prSymFinance) Or 
+                          detailID = CStr(ptReportComponents.prSymProject) Or 
+                          detailID = CStr(ptReportComponents.prSymSchedules) Or 
+                          detailID = CStr(ptReportComponents.prSymTeam)))
 
     End Function
 
@@ -7875,7 +7915,7 @@ Module Module1
                         With ucPropertiesView
 
                             ' positioniert die Darstellungs-Elemente entsprechend
-                            '.symbolMode(True)
+                            .symbolMode(True)
                             .eleName.Text = bestimmeSymbolName(tmpShape)
                             .eleAmpelText.Text = bestimmeSymbolText(tmpShape)
 
@@ -7888,7 +7928,7 @@ Module Module1
                         With ucPropertiesView
 
                             ' positioniert die Darstellungs-Elemente entsprechend
-                            '.symbolMode(False)
+                            .symbolMode(False)
 
                             .eleName.Text = "                                                                   "
                             .eleName.Text = bestimmeElemText(tmpShape, False, False, showBestName)
@@ -7934,6 +7974,8 @@ Module Module1
                     'Dim rdbCode As Integer = calcRDB()
 
                     With ucPropertiesView
+                        ' leeren ...
+                        Call .emptyPane()
 
                         If .eleName.Text <> bestimmeElemText(tmpShape, False, True, showBestName) Then
                             .eleName.Text = " ... "
@@ -7962,6 +8004,9 @@ Module Module1
             Else
                 ' Info Pane Inhalte zurücksetzen ... 
                 With ucPropertiesView
+                    ' leeren 
+                    Call .emptyPane()
+
                     .eleName.Text = ""
                     .eleDatum.Text = ""
                     .eleDeliverables.Text = ""
