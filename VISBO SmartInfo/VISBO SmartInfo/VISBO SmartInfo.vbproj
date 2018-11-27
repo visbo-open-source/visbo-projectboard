@@ -42,10 +42,10 @@
     <PublishUrl>c:\publish\VISBO Smartinfo REST\</PublishUrl>
     <InstallUrl>https://applications.visbo.de/VISBO%2520Smartinfo%2520REST/</InstallUrl>
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.0.0.27</ApplicationVersion>
+    <ApplicationVersion>3.0.0.28</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
-    <UpdateInterval>1</UpdateInterval>
+    <UpdateInterval>4</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>VISBO SmartInfo</ProductName>
     <PublisherName>VISBO GmbH</PublisherName>
