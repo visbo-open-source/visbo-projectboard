@@ -385,7 +385,7 @@ Public Class Request
         Dim diffRCBeginn As Date = Date.Now
         Dim diffRC As Long
         Dim diffCopy As Long
-        Dim diff3 As Long
+
         Try
             Dim hproj As New clsProjekt
 
@@ -504,11 +504,12 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
-
-
         retrieveProjectsFromDB = result
 
-        Call MsgBox("RestTime: " & diffRC.ToString & vbLf & "CopyTime: " & diffCopy.ToString)
+        If awinSettings.visboDebug Then
+            Call MsgBox("RestTime: " & diffRC.ToString & vbLf & "CopyTime: " & diffCopy.ToString)
+        End If
+
 
     End Function
 
@@ -2435,12 +2436,41 @@ Public Class Request
 
         If nothingToDo Then
 
-            ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
-            ' diese werden hier in die result-liste gebracht
-            For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In VRScache.VPvs
+            If vpid <> "" And Not IsNothing(variantName) Then
+                Dim variantlist As SortedList(Of Date, clsProjektWebLong) = VRScache.VPvs(vpid).Item(variantName).tsLong
+
+
+                Dim found As Boolean = False
+                Dim i As Integer = variantlist.Count - 1
+
+                While Not found And i >= 0
+                    Dim ts As Date = variantlist.ElementAt(i).Key
+                    Dim longproj As clsProjektWebLong = variantlist.ElementAt(i).Value
+
+                    If storedAtorBefore > Date.MinValue Then
+                        ' größte, das kleiner als storeAtorBefore ist, als result zurückgeben
+                        If ts <= storedAtorBefore Then
+
+                            result.Add(longproj)
+                            found = True
+                        Else
+                            ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
+                        End If
+                    Else
+                        result.Add(longproj)
+                    End If
+                    i = i - 1
+                End While
+            Else
+
+
+                ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
+                ' diese werden hier in die result-liste gebracht
+                For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In VRScache.VPvs
 
                 Dim clsVarTs_vpid As String = kvp.Key
-                Dim clsVarTs_value As SortedList(Of String, clsVarTs) = kvp.Value
+
+                Dim clsVarTs_value As SortedList(Of String, clsVarTs) = VRScache.VPvs(clsVarTs_vpid)
 
                 For Each kvp1 As KeyValuePair(Of String, clsVarTs) In clsVarTs_value
 
@@ -2481,19 +2511,21 @@ Public Class Request
                 End If
             Next
 
-            '' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
-            '' diese werden hier in die result-liste gebracht
-            'For Each kvp As KeyValuePair(Of Date, clsProjektWebLong) In VRScache.VPvs(vpid)(variantName).tsLong
-            '    If storedAtorBefore > Date.MinValue Then
+                '' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
+                '' diese werden hier in die result-liste gebracht
+                'For Each kvp As KeyValuePair(Of Date, clsProjektWebLong) In VRScache.VPvs(vpid)(variantName).tsLong
+                '    If storedAtorBefore > Date.MinValue Then
 
-            '        If kvp.Key <= storedAtorBefore Then
-            '            result.Add(kvp.Value)
-            '        End If
-            '    Else
-            '        result.Add(kvp.Value)
-            '    End If
+                '        If kvp.Key <= storedAtorBefore Then
+                '            result.Add(kvp.Value)
+                '        End If
+                '    Else
+                '        result.Add(kvp.Value)
+                '    End If
 
-            'Next
+                'Next
+
+            End If
         Else
 
             Try
