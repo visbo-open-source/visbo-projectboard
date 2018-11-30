@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class frmSettingsNew
     Inherits System.Windows.Forms.Form
 
     'Das Formular überschreibt den Löschvorgang, um die Komponentenliste zu bereinigen.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,42 +20,42 @@ Partial Class frmSettingsNew
     'Hinweis: Die folgende Prozedur ist für den Windows Form-Designer erforderlich.
     'Das Bearbeiten ist mit dem Windows Form-Designer möglich.  
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSettingsNew))
         Me.Label1 = New System.Windows.Forms.Label()
         Me.fontSize = New System.Windows.Forms.TextBox()
         Me.chkbxEditable = New System.Windows.Forms.CheckBox()
         Me.btnOK = New System.Windows.Forms.Button()
-        Me.Label2 = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(32, 40)
+        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label1.Location = New System.Drawing.Point(22, 33)
         Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(63, 16)
+        Me.Label1.Size = New System.Drawing.Size(105, 13)
         Me.Label1.TabIndex = 0
-        Me.Label1.Text = "Font Size"
+        Me.Label1.Text = "Annotation Font Size"
         '
         'fontSize
         '
-        Me.fontSize.Location = New System.Drawing.Point(143, 37)
+        Me.fontSize.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.fontSize.Location = New System.Drawing.Point(136, 30)
         Me.fontSize.Name = "fontSize"
-        Me.fontSize.Size = New System.Drawing.Size(67, 22)
+        Me.fontSize.Size = New System.Drawing.Size(67, 20)
         Me.fontSize.TabIndex = 1
         Me.fontSize.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         '
         'chkbxEditable
         '
         Me.chkbxEditable.AutoSize = True
-        Me.chkbxEditable.Checked = True
-        Me.chkbxEditable.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkbxEditable.Location = New System.Drawing.Point(35, 78)
+        Me.chkbxEditable.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.chkbxEditable.Location = New System.Drawing.Point(23, 71)
         Me.chkbxEditable.Name = "chkbxEditable"
-        Me.chkbxEditable.Size = New System.Drawing.Size(175, 20)
+        Me.chkbxEditable.Size = New System.Drawing.Size(141, 17)
         Me.chkbxEditable.TabIndex = 2
         Me.chkbxEditable.Text = "SmartCharts are editable"
         Me.chkbxEditable.UseVisualStyleBackColor = True
@@ -63,29 +63,19 @@ Partial Class frmSettingsNew
         'btnOK
         '
         Me.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.btnOK.Location = New System.Drawing.Point(84, 127)
+        Me.btnOK.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnOK.Location = New System.Drawing.Point(84, 117)
         Me.btnOK.Name = "btnOK"
         Me.btnOK.Size = New System.Drawing.Size(75, 23)
         Me.btnOK.TabIndex = 3
         Me.btnOK.Text = "OK"
         Me.btnOK.UseVisualStyleBackColor = True
         '
-        'Label2
-        '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(32, 21)
-        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(71, 16)
-        Me.Label2.TabIndex = 4
-        Me.Label2.Text = "Annotation"
-        '
         'frmSettingsNew
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(253, 175)
-        Me.Controls.Add(Me.Label2)
+        Me.ClientSize = New System.Drawing.Size(243, 157)
         Me.Controls.Add(Me.btnOK)
         Me.Controls.Add(Me.chkbxEditable)
         Me.Controls.Add(Me.fontSize)
@@ -106,5 +96,4 @@ Partial Class frmSettingsNew
     Friend WithEvents fontSize As Windows.Forms.TextBox
     Friend WithEvents chkbxEditable As Windows.Forms.CheckBox
     Friend WithEvents btnOK As Windows.Forms.Button
-    Friend WithEvents Label2 As Windows.Forms.Label
 End Class
