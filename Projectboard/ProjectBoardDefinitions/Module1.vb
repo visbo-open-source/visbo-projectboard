@@ -188,6 +188,8 @@ Public Module Module1
     Public Const portfolioVName As String = "Portfolio/Prog."
     ' diese Konstante bestimmt, wie die Variante heissen soll, die die Ist-Daten - zumindest temporär - aufnimmt 
     Public Const istDatenVName As String = "ActualData"
+    ' diese Konstante wird benutzt, wenn keine Variante angegeben wurde, d.h. meistens das alle Variante relevant sind.
+    Public Const noVariantName As String = "-9999999"
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
