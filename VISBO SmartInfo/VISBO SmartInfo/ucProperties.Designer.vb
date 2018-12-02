@@ -144,7 +144,7 @@ Partial Class ucProperties
         Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.percentDone.AutoSize = True
         Me.percentDone.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.percentDone.Location = New System.Drawing.Point(247, 131)
+        Me.percentDone.Location = New System.Drawing.Point(247, 125)
         Me.percentDone.Name = "percentDone"
         Me.percentDone.Size = New System.Drawing.Size(0, 17)
         Me.percentDone.TabIndex = 13
@@ -299,8 +299,8 @@ Partial Class ucProperties
         '
         'ucProperties
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.AutoScroll = True
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.Controls.Add(Me.eleAmpelText)

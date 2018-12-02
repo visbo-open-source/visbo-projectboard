@@ -73,7 +73,15 @@ Public Class ucProperties
             .Visible = False
         End With
 
+        With eleDatum
+            .Visible = False
+        End With
+
         With labelRespons
+            .Visible = False
+        End With
+
+        With eleRespons
             .Visible = False
         End With
 
@@ -462,11 +470,19 @@ Public Class ucProperties
                 .Visible = True
             End With
 
+            With eleDatum
+                .Visible = False
+            End With
+
             With labelDate
                 .Visible = False
             End With
 
             With labelRespons
+                .Visible = False
+            End With
+
+            With eleRespons
                 .Visible = False
             End With
 
@@ -506,6 +522,9 @@ Public Class ucProperties
             ' der Normal-Mode
             With eleName
                 .Visible = True
+                tmpLocation.X = 5
+                tmpLocation.Y = 12
+                .Location = tmpLocation
             End With
 
             With labelDate
@@ -515,7 +534,15 @@ Public Class ucProperties
                 .Location = tmpLocation
             End With
 
+            With eleDatum
+                .Visible = True
+            End With
+
             With labelRespons
+                .Visible = True
+            End With
+
+            With eleRespons
                 .Visible = True
             End With
 
@@ -798,4 +825,7 @@ Public Class ucProperties
         ToolTip1.Show(ttmsg, mydreiDlnk, 2000)
     End Sub
 
+    Private Sub eleName_Click(sender As Object, e As EventArgs) Handles eleName.Click
+
+    End Sub
 End Class
