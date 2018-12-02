@@ -239,6 +239,23 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
+    ''' <summary>
+    ''' definiert, welche Import-Methode angewendet werden soll ; angelegt 30.11.18 by tk
+    ''' </summary>
+    Public Enum ptVisboImportTypen
+        visboSimple = 0
+        visboProjectbrief = 1
+        visboMassCreation = 2
+        visboRXF = 3
+        visboExcelBMW = 4
+        allianzMassImport1 = 5
+        allianzMassImport2 = 6
+        allianzTeamRessZuordnung = 7
+        allianzIstDaten = 8
+        visboMassRessourcenEdit = 9
+        visboMPP = 10
+    End Enum
+
     Public Enum ptImportSettings
         attributeNames1 = 0
         attributeNamesCol1 = 1

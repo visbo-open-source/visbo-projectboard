@@ -465,7 +465,7 @@ Public Class clsOpenXML
                         newRoleDef.defaultKapa = 20
 
                         ' OvertimeRate in Tagessatz umrechnen
-                        newRoleDef.tagessatzExtern = 780
+                        'newRoleDef.tagessatzExtern = 780
 
                         ' StandardRate in Tagessatz umrechnen
                         newRoleDef.tagessatzIntern = 780

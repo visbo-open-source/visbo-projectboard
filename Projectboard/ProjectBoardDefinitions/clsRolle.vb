@@ -9,6 +9,7 @@ Public Class clsRolle
 
     ' neu dazu gekommen: die evtl der Rolle zugeordnete TeamID ; -1 heisst es gibt keine 
     Private _teamID As Integer
+
     Public Property teamID As Integer
         Get
             teamID = _teamID
@@ -34,8 +35,10 @@ Public Class clsRolle
             Dim stillOK As Boolean = False
 
             With vRolle
-                If Me.RollenTyp = .RollenTyp And _
-                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) Then
+
+                If Me.RollenTyp = .RollenTyp And
+                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) And
+                    Me.teamID = .teamID Then
                     stillOK = True
                 Else
                     stillOK = False

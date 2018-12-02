@@ -2024,22 +2024,22 @@ Public Module awinGeneralModules
                                     .tagessatzIntern = defaultTagessatz
                                 End If
 
-                                Try
-                                    If CDbl(c.Offset(0, 3).Value) = 0.0 Then
-                                        .tagessatzExtern = .tagessatzIntern * 1.35
-                                    Else
-                                        .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
-                                    End If
-                                Catch ex As Exception
-                                    .tagessatzExtern = .tagessatzIntern * 1.35
-                                End Try
+                                'Try
+                                '    If CDbl(c.Offset(0, 3).Value) = 0.0 Then
+                                '        .tagessatzExtern = .tagessatzIntern * 1.35
+                                '    Else
+                                '        .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
+                                '    End If
+                                'Catch ex As Exception
+                                '    .tagessatzExtern = .tagessatzIntern * 1.35
+                                'End Try
 
                                 ' Auslesen der zukünftigen Kapazität
                                 ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
                                 For cp = 1 To 240
 
                                     .kapazitaet(cp) = .defaultKapa
-                                    .externeKapazitaet(cp) = 0.0
+                                    '.externeKapazitaet(cp) = 0.0
 
                                 Next
                                 .farbe = c.Interior.Color
@@ -4055,7 +4055,7 @@ Public Module awinGeneralModules
                                                     ' OvertimeRate in Tagessatz umrechnen
                                                     Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
                                                     hoverstr = Split(hoverstr(0), "€", -1)
-                                                    newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
+                                                    'newRoleDef.tagessatzExtern = CType(hoverstr(0), Double) * msproj.HoursPerDay
 
                                                     ' StandardRate in Tagessatz umrechnen
                                                     Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
@@ -15562,7 +15562,7 @@ Public Module awinGeneralModules
                             End If
 
                             If extTmpKapa >= 0 Then
-                                hrole.externeKapazitaet(index) = extTmpKapa
+                                'hrole.externeKapazitaet(index) = extTmpKapa
                             End If
 
 
