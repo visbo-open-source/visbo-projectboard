@@ -53,7 +53,6 @@
     <FriendlyName>VISBO SmartInfo</FriendlyName>
     <OfficeApplicationDescription>aktualisiert VISBO Powerpoint Dateien</OfficeApplicationDescription>
     <LoadBehavior>3</LoadBehavior>
-    <BootstrapperComponentsLocation>HomeSite</BootstrapperComponentsLocation>
   </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6">
@@ -221,7 +220,6 @@
     <Import Include="System.Xml" />
     <Import Include="System.Xml.Linq" />
     <Import Include="Office = Microsoft.Office.Core" />
-    <Import Include="PowerPoint = Microsoft.Office.Interop.PowerPoint" />
     <Import Include="System.Xml.Serialization" />
   </ItemGroup>
   <!--
