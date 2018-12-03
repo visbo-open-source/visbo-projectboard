@@ -19,6 +19,8 @@ Public Class ucProperties
     ' nimmt auf , um welches Shape es sich aktuell handelt 
     Private _currentShape As PowerPoint.Shape
 
+    Private _rememberYValueofEleAmpeltext As Integer = 0.0
+
     Public Sub New()
 
         ' Dieser Aufruf ist für den Designer erforderlich.
@@ -38,6 +40,8 @@ Public Class ucProperties
         _my3DLink = ""
 
         _currentShape = Nothing
+
+        _rememberYValueofEleAmpeltext = eleAmpelText.Location.Y
 
 
     End Sub
@@ -470,11 +474,11 @@ Public Class ucProperties
                 .Visible = True
             End With
 
-            With eleDatum
+            With labelDate
                 .Visible = False
             End With
 
-            With labelDate
+            With eleDatum
                 .Visible = False
             End With
 
@@ -500,8 +504,8 @@ Public Class ucProperties
 
             With eleAmpelText
                 .Visible = True
-                tmpLocation.X = 5
-                tmpLocation.Y = 53
+                tmpLocation.X = .Location.X
+                tmpLocation.Y = eleDatum.Location.Y
                 .Location = tmpLocation
                 .BorderStyle = Windows.Forms.BorderStyle.None
                 tmpSize.Height = 400
@@ -522,16 +526,10 @@ Public Class ucProperties
             ' der Normal-Mode
             With eleName
                 .Visible = True
-                tmpLocation.X = 5
-                tmpLocation.Y = 12
-                .Location = tmpLocation
             End With
 
             With labelDate
                 .Visible = True
-                tmpLocation.X = 5
-                tmpLocation.Y = 53
-                .Location = tmpLocation
             End With
 
             With eleDatum
@@ -560,8 +558,8 @@ Public Class ucProperties
 
             With eleAmpelText
                 .Visible = True
-                tmpLocation.X = 10
-                tmpLocation.Y = 148
+                tmpLocation.X = .Location.X
+                tmpLocation.Y = _rememberYValueofEleAmpeltext
                 .Location = tmpLocation
                 .BorderStyle = Windows.Forms.BorderStyle.FixedSingle
                 tmpSize.Height = 143

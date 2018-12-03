@@ -77,7 +77,7 @@ Partial Class ucProperties
         '
         Me.labelDate.AutoSize = True
         Me.labelDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelDate.Location = New System.Drawing.Point(5, 53)
+        Me.labelDate.Location = New System.Drawing.Point(5, 66)
         Me.labelDate.Name = "labelDate"
         Me.labelDate.Size = New System.Drawing.Size(42, 17)
         Me.labelDate.TabIndex = 2
@@ -90,7 +90,7 @@ Partial Class ucProperties
         Me.eleDatum.AutoSize = True
         Me.eleDatum.Enabled = False
         Me.eleDatum.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!)
-        Me.eleDatum.Location = New System.Drawing.Point(93, 53)
+        Me.eleDatum.Location = New System.Drawing.Point(93, 66)
         Me.eleDatum.Name = "eleDatum"
         Me.eleDatum.Size = New System.Drawing.Size(204, 17)
         Me.eleDatum.TabIndex = 3
@@ -100,7 +100,7 @@ Partial Class ucProperties
         '
         Me.labelRespons.AutoSize = True
         Me.labelRespons.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelRespons.Location = New System.Drawing.Point(6, 88)
+        Me.labelRespons.Location = New System.Drawing.Point(6, 101)
         Me.labelRespons.Name = "labelRespons"
         Me.labelRespons.Size = New System.Drawing.Size(90, 17)
         Me.labelRespons.TabIndex = 4
@@ -111,7 +111,7 @@ Partial Class ucProperties
         Me.eleRespons.AutoSize = True
         Me.eleRespons.Enabled = False
         Me.eleRespons.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.eleRespons.Location = New System.Drawing.Point(94, 88)
+        Me.eleRespons.Location = New System.Drawing.Point(94, 101)
         Me.eleRespons.Name = "eleRespons"
         Me.eleRespons.Size = New System.Drawing.Size(92, 17)
         Me.eleRespons.TabIndex = 5
@@ -121,7 +121,7 @@ Partial Class ucProperties
         '
         Me.labelAmpel.AutoSize = True
         Me.labelAmpel.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelAmpel.Location = New System.Drawing.Point(6, 125)
+        Me.labelAmpel.Location = New System.Drawing.Point(6, 138)
         Me.labelAmpel.Name = "labelAmpel"
         Me.labelAmpel.Size = New System.Drawing.Size(82, 17)
         Me.labelAmpel.TabIndex = 6
@@ -133,7 +133,7 @@ Partial Class ucProperties
         Me.eleAmpel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.eleAmpel.Cursor = System.Windows.Forms.Cursors.Default
         Me.eleAmpel.Enabled = False
-        Me.eleAmpel.Location = New System.Drawing.Point(94, 124)
+        Me.eleAmpel.Location = New System.Drawing.Point(94, 137)
         Me.eleAmpel.Name = "eleAmpel"
         Me.eleAmpel.ReadOnly = True
         Me.eleAmpel.Size = New System.Drawing.Size(23, 20)
@@ -144,7 +144,7 @@ Partial Class ucProperties
         Me.percentDone.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.percentDone.AutoSize = True
         Me.percentDone.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.percentDone.Location = New System.Drawing.Point(247, 125)
+        Me.percentDone.Location = New System.Drawing.Point(247, 138)
         Me.percentDone.Name = "percentDone"
         Me.percentDone.Size = New System.Drawing.Size(0, 17)
         Me.percentDone.TabIndex = 13
@@ -154,7 +154,7 @@ Partial Class ucProperties
         '
         Me.labelDeliver.AutoSize = True
         Me.labelDeliver.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelDeliver.Location = New System.Drawing.Point(6, 303)
+        Me.labelDeliver.Location = New System.Drawing.Point(6, 316)
         Me.labelDeliver.Name = "labelDeliver"
         Me.labelDeliver.Size = New System.Drawing.Size(90, 17)
         Me.labelDeliver.TabIndex = 9
@@ -177,7 +177,7 @@ Partial Class ucProperties
         Me.eleDeliverables.BackColor = System.Drawing.Color.White
         Me.eleDeliverables.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.eleDeliverables.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.eleDeliverables.Location = New System.Drawing.Point(10, 326)
+        Me.eleDeliverables.Location = New System.Drawing.Point(10, 339)
         Me.eleDeliverables.Name = "eleDeliverables"
         Me.eleDeliverables.ReadOnly = True
         Me.eleDeliverables.Size = New System.Drawing.Size(276, 143)
@@ -192,7 +192,7 @@ Partial Class ucProperties
         Me.eleAmpelText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.eleAmpelText.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.eleAmpelText.HideSelection = False
-        Me.eleAmpelText.Location = New System.Drawing.Point(10, 148)
+        Me.eleAmpelText.Location = New System.Drawing.Point(10, 161)
         Me.eleAmpelText.Name = "eleAmpelText"
         Me.eleAmpelText.ReadOnly = True
         Me.eleAmpelText.Size = New System.Drawing.Size(276, 143)
@@ -205,7 +205,7 @@ Partial Class ucProperties
         Me.stdLinks.Controls.Add(Me.survlnk)
         Me.stdLinks.Controls.Add(Me.medialnk)
         Me.stdLinks.Controls.Add(Me.doclnk)
-        Me.stdLinks.Location = New System.Drawing.Point(10, 484)
+        Me.stdLinks.Location = New System.Drawing.Point(10, 507)
         Me.stdLinks.Name = "stdLinks"
         Me.stdLinks.Size = New System.Drawing.Size(276, 55)
         Me.stdLinks.TabIndex = 21
@@ -215,7 +215,7 @@ Partial Class ucProperties
         'dreiDlnk
         '
         Me.dreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources._3d
-        Me.dreiDlnk.Location = New System.Drawing.Point(226, 19)
+        Me.dreiDlnk.Location = New System.Drawing.Point(226, 21)
         Me.dreiDlnk.Name = "dreiDlnk"
         Me.dreiDlnk.Size = New System.Drawing.Size(26, 27)
         Me.dreiDlnk.TabIndex = 2
@@ -224,7 +224,7 @@ Partial Class ucProperties
         'survlnk
         '
         Me.survlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.surveillance_camera
-        Me.survlnk.Location = New System.Drawing.Point(153, 19)
+        Me.survlnk.Location = New System.Drawing.Point(153, 21)
         Me.survlnk.Name = "survlnk"
         Me.survlnk.Size = New System.Drawing.Size(26, 27)
         Me.survlnk.TabIndex = 2
@@ -233,7 +233,7 @@ Partial Class ucProperties
         'medialnk
         '
         Me.medialnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.camera
-        Me.medialnk.Location = New System.Drawing.Point(80, 19)
+        Me.medialnk.Location = New System.Drawing.Point(80, 21)
         Me.medialnk.Name = "medialnk"
         Me.medialnk.Size = New System.Drawing.Size(26, 27)
         Me.medialnk.TabIndex = 1
@@ -242,7 +242,7 @@ Partial Class ucProperties
         'doclnk
         '
         Me.doclnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.documents
-        Me.doclnk.Location = New System.Drawing.Point(7, 19)
+        Me.doclnk.Location = New System.Drawing.Point(7, 21)
         Me.doclnk.Name = "doclnk"
         Me.doclnk.Size = New System.Drawing.Size(26, 27)
         Me.doclnk.TabIndex = 0
@@ -254,7 +254,7 @@ Partial Class ucProperties
         Me.myLinks.Controls.Add(Me.mysurvlnk)
         Me.myLinks.Controls.Add(Me.mymedialnk)
         Me.myLinks.Controls.Add(Me.mydoclnk)
-        Me.myLinks.Location = New System.Drawing.Point(10, 547)
+        Me.myLinks.Location = New System.Drawing.Point(10, 570)
         Me.myLinks.Name = "myLinks"
         Me.myLinks.Size = New System.Drawing.Size(276, 55)
         Me.myLinks.TabIndex = 22
@@ -264,7 +264,7 @@ Partial Class ucProperties
         'mydreiDlnk
         '
         Me.mydreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources._3d_plus
-        Me.mydreiDlnk.Location = New System.Drawing.Point(226, 19)
+        Me.mydreiDlnk.Location = New System.Drawing.Point(226, 20)
         Me.mydreiDlnk.Name = "mydreiDlnk"
         Me.mydreiDlnk.Size = New System.Drawing.Size(26, 27)
         Me.mydreiDlnk.TabIndex = 6
@@ -273,7 +273,7 @@ Partial Class ucProperties
         'mysurvlnk
         '
         Me.mysurvlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.surveillance_camera_plus
-        Me.mysurvlnk.Location = New System.Drawing.Point(153, 19)
+        Me.mysurvlnk.Location = New System.Drawing.Point(153, 20)
         Me.mysurvlnk.Name = "mysurvlnk"
         Me.mysurvlnk.Size = New System.Drawing.Size(26, 27)
         Me.mysurvlnk.TabIndex = 5
@@ -282,7 +282,7 @@ Partial Class ucProperties
         'mymedialnk
         '
         Me.mymedialnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.camera_plus
-        Me.mymedialnk.Location = New System.Drawing.Point(80, 19)
+        Me.mymedialnk.Location = New System.Drawing.Point(80, 20)
         Me.mymedialnk.Name = "mymedialnk"
         Me.mymedialnk.Size = New System.Drawing.Size(26, 27)
         Me.mymedialnk.TabIndex = 4
@@ -291,7 +291,7 @@ Partial Class ucProperties
         'mydoclnk
         '
         Me.mydoclnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.documents_plus
-        Me.mydoclnk.Location = New System.Drawing.Point(7, 19)
+        Me.mydoclnk.Location = New System.Drawing.Point(7, 20)
         Me.mydoclnk.Name = "mydoclnk"
         Me.mydoclnk.Size = New System.Drawing.Size(26, 27)
         Me.mydoclnk.TabIndex = 3
