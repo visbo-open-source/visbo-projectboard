@@ -6476,16 +6476,17 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' setzt die für den Allianz 1 Import Type notwendigen Felder
     ''' </summary>
-    ''' <param name="roleNamesToConsider"></param>
-    ''' <param name="colRoleNamesToConsider"></param>
-    ''' <param name="costNamesToConsider"></param>
+    ''' <param name="PTroleNamesToConsider"></param>
+    ''' <param name="PTcolRoleNamesToConsider"></param>
+    ''' <param name="TEroleNamesToConsider"></param>
     ''' <param name="colCostNamesToConsider"></param>
     ''' <param name="currentWS"></param>
-    Private Sub setAllianzImportArrays(ByRef roleNamesToConsider() As String,
-                                       ByRef colRoleNamesToConsider() As Integer,
-                                       ByRef costNamesToConsider() As String,
-                                       ByRef colCostNamesToConsider() As Integer,
-                                       ByVal currentWS As Excel.Worksheet)
+    Private Sub setAllianzImportArrays(ByRef PTroleNamesToConsider() As String,
+                                       ByRef PTcolRoleNamesToConsider() As Integer,
+                                       ByRef TEroleNamesToConsider() As String,
+                                       ByRef colTERoleNamesToConsider() As Integer,
+                                       ByVal currentWS As Excel.Worksheet,
+                                       ByVal importTyp As Integer)
 
         Dim tmpRoleNames(18) As String
         Dim tmpColBz(18) As String
@@ -6494,9 +6495,23 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
 
 
-        tmpRoleNames = {"D-BOSV-KB0", "D-BOSV-KB1", "D-BOSV-KB2", "D-BOSV-KB3", "D-BOSV-SBF1", "D-BOSV-SBF2", "DRUCK", "D-BOSV-SBP1", "D-BOSV-SBP2", "D-BOSV-SBP3", "AMIS",
+        If importTyp = ptVisboImportTypen.allianzMassImport1 Then
+
+            ReDim tmpRoleNames(18)
+            ReDim tmpColBz(18)
+            ' am besten hier aus awinsettings einlesen ...
+            ' sowohl die PTRoleNames als auch die T€RoleNames 
+            tmpRoleNames = {"D-BOSV-KB0", "D-BOSV-KB1", "D-BOSV-KB2", "D-BOSV-KB3", "D-BOSV-SBF1", "D-BOSV-SBF2", "DRUCK", "D-BOSV-SBP1", "D-BOSV-SBP2", "D-BOSV-SBP3", "AMIS",
                         "IT-BVG", "IT-KuV", "IT-PSQ", "A-IT04", "AZ Technology", "IT-SFK", "Op-DFS", "KaiserX IT"}
-        tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DI1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
+            tmpColBz = {"DB1", "DC1", "DD1", "DE1", "DG1", "DH1", "DI1", "DK1", "DL1", "DM1", "DN1", "DP1", "DQ1", "DR1", "DS1", "DT1", "DU1", "DV1", "DW1"}
+
+            TEroleNamesToConsider = Nothing
+            colTERoleNamesToConsider = Nothing
+
+        ElseIf importTyp = ptVisboImportTypen.allianzMassImport2 Then
+
+        End If
+
 
         If tmpRoleNames.Length <> tmpColBz.Length Then
             Throw New ArgumentException("ungleiche Anzahl Namen und Spalten-Ids")
@@ -6541,11 +6556,9 @@ Public Module awinGeneralModules
             End If
         End If
 
-        roleNamesToConsider = tmpRoleNames
-        colRoleNamesToConsider = tmpCols
+        PTroleNamesToConsider = tmpRoleNames
+        PTcolRoleNamesToConsider = tmpCols
 
-        costNamesToConsider = Nothing
-        colCostNamesToConsider = Nothing
 
     End Sub
 
