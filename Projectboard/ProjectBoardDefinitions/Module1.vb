@@ -4710,16 +4710,18 @@ Public Module Module1
             ' es werden Informationen zum Projekt angezeigt 
             ' eigentlich wäre es hier am besten ein 
 
-            tmpText = "Stand vom " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
             tmpText = ""
 
         ElseIf detailID = ptReportComponents.prSymTeam Then
             ' es wird das Team angezeigt ...
 
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+
             Dim allNames As Collection = hproj.getRoleNames
 
             Dim responsible As String = hproj.leadPerson
-            tmpText = "Project-Lead: " & responsible & vbLf
+            tmpText = tmpText & "Project-Lead: " & responsible & vbLf
 
             For Each tmpName As String In allNames
                 tmpText = tmpText & tmpName & vbLf
