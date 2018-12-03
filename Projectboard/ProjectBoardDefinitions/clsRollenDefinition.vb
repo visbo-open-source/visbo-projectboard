@@ -83,24 +83,16 @@
 
     End Function
 
-    Private _defaultDayKapa As Double
-    Public Property defaultDayKapa As Double
+    Public ReadOnly Property defaultDayKapa As Double
         Get
-            defaultDayKapa = _defaultDayKapa
-        End Get
-        Set(value As Double)
-            If Not IsNothing(value) Then
-                If value >= 0 Then
-                    _defaultDayKapa = value
-                    ' dann auch den Wert defaultKApa setzen 
-                    _defaultKapa = nrOfDaysMonth * _defaultDayKapa
-                Else
-                    _defaultDayKapa = 0
-                End If
+            If nrOfDaysMonth > 0 Then
+                defaultDayKapa = _defaultKapa / nrOfDaysMonth
             Else
-                _defaultDayKapa = 0
+                defaultDayKapa = 0
             End If
-        End Set
+
+        End Get
+
     End Property
 
     Private _defaultKapa As Double
@@ -115,10 +107,6 @@
             If Not IsNothing(value) Then
                 If value >= 0 Then
                     _defaultKapa = value
-
-                    If nrOfDaysMonth > 0 Then
-                        _defaultDayKapa = _defaultKapa / nrOfDaysMonth
-                    End If
 
                 Else
                     _defaultKapa = 0
@@ -372,7 +360,6 @@
                             (Me.name = vglRole.name) And
                             (CLng(Me.farbe) = CLng(vglRole.farbe)) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
-                            (Me.defaultDayKapa = vglRole.defaultDayKapa) And
                             (Me.isExternRole = vglRole.isExternRole) And
                             (Me.isTeam = vglRole.isTeam) And
                             (Me.tagessatzIntern = vglRole.tagessatzIntern)

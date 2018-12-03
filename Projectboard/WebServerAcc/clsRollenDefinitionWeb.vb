@@ -16,14 +16,16 @@ Public Class clsRollenDefinitionWeb
     Public name As String
     Public farbe As Long
     Public defaultKapa As Double
-    Public defaultDayKapa As Double
 
     Public tagessatzIntern As Double
-    ' tk 23.11. rausnehmen ..
-    ' Public tagessatzExtern As Double
     Public kapazitaet() As Double
 
-    ' Public externeKapazitaet() As Double
+    ' tk 23.11. nicht mehr relevant, bleibt drin, um alte Datenmodelle behandeln zu können 
+    Public tagessatzExtern As Double = Nothing
+    Public externeKapazitaet() As Double = Nothing
+
+
+
     Public timestamp As Date
 
     ' startOfCal ist wichtig, damit die korrekte Zuordnung der Kapa-Werte zu den Monaten gemacht werden kann 
@@ -88,7 +90,6 @@ Public Class clsRollenDefinitionWeb
             .defaultKapa = Me.defaultKapa
 
             ' tk 23.11.18 
-            .defaultDayKapa = Me.defaultDayKapa
             .isExternRole = Me.isExternRole
             .isTeam = Me.isTeam
 
@@ -250,20 +251,21 @@ Public Class clsRollenDefinitionWeb
                 Next
             End If
 
-            Me.uid = .UID
-            Me.name = .name
-            Me.farbe = CLng(.farbe)
-            Me.defaultKapa = .defaultKapa
+            uid = .UID
+            name = .name
+            farbe = CLng(.farbe)
+            defaultKapa = .defaultKapa
 
             ' tk 23.11.18 
-            Me.defaultDayKapa = .defaultDayKapa
-            Me.isExternRole = .isExternRole
-            Me.isTeam = .isTeam
+            isExternRole = .isExternRole
+            isTeam = .isTeam
 
-            Me.tagessatzIntern = .tagessatzIntern
-            'Me.tagessatzExtern = .tagessatzExtern
-            Me.kapazitaet = .kapazitaet
-            'Me.externeKapazitaet = .externeKapazitaet
+            tagessatzIntern = .tagessatzIntern
+            kapazitaet = .kapazitaet
+
+            ' tk 3.12.18 wird nicht mehr benötigt ...
+            tagessatzExtern = Nothing
+            externeKapazitaet = Nothing
             ' Id wird beim Server von der MongoDB selbst erzeugt
             'Me.Id = "Role" & "#" & CStr(Me.uid) & "#" & Date.UtcNow.ToString
 
@@ -311,7 +313,6 @@ Public Class clsRollenDefinitionWeb
                             (Me.name = vglRole.name) And
                             (Me.farbe = vglRole.farbe) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
-                            (Me.defaultDayKapa = vglRole.defaultDayKapa) And
                             (Me.isExternRole = vglRole.isExternRole) And
                             (Me.isTeam = vglRole.isTeam) And
                             (Me.tagessatzIntern = vglRole.tagessatzIntern)

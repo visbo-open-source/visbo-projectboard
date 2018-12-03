@@ -14,15 +14,14 @@
     Public name As String
     Public farbe As Long
     Public defaultKapa As Double
-    Public defaultDayKapa As Double
     Public tagessatzIntern As Double
     Public kapazitaet() As Double
 
 
     ' tk Allianz 21.11.18 deprecated, wird nur in Direkt DB Modell noch verwendet 
-    Public tagessatzExtern As Double
+    Public tagessatzExtern As Double = Nothing
     ' tk Allianz 21.11.18 deprecated, wird nur in Direkt DB Modell noch verwendet 
-    Public externeKapazitaet() As Double
+    Public externeKapazitaet() As Double = Nothing
 
     Public timestamp As Date
     ' Id wird von MongoDB automatisch gesetzt 
@@ -98,8 +97,7 @@
 
             .farbe = Me.farbe
             .defaultKapa = Me.defaultKapa
-            ' 23.11.18 
-            .defaultDayKapa = Me.defaultDayKapa
+
 
             .tagessatzIntern = Me.tagessatzIntern
             ' tk Allianz 21.11.18, nicht mehr nötig  
@@ -262,15 +260,16 @@
             Me.defaultKapa = .defaultKapa
 
             ' 23.11.18 
-            Me.defaultDayKapa = .defaultDayKapa
             Me.isExternRole = .isExternRole
             Me.isTeam = .isTeam
 
             Me.tagessatzIntern = .tagessatzIntern
-            ' tk Allianz 21.11.18 
-            'Me.tagessatzExtern = .tagessatzExtern
             Me.kapazitaet = .kapazitaet
-            'Me.externeKapazitaet = .externeKapazitaet
+
+            ' tk Allianz 21.11.18 
+            Me.tagessatzExtern = Nothing
+            Me.externeKapazitaet = Nothing
+
             Me.Id = "Role" & "#" & CStr(Me.uid) & "#" & Date.UtcNow.ToString
 
         End With
@@ -318,7 +317,6 @@
                             (Me.name = vglRole.name) And
                             (Me.farbe = vglRole.farbe) And
                             (Me.defaultKapa = vglRole.defaultKapa) And
-                            (Me.defaultDayKapa = vglRole.defaultDayKapa) And
                             (Me.isExternRole = vglRole.isExternRole) And
                             (Me.isTeam = vglRole.isTeam) And
                             (Me.tagessatzIntern = vglRole.tagessatzIntern)
