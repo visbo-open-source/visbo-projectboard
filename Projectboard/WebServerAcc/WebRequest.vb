@@ -385,7 +385,7 @@ Public Class Request
         Dim diffRCBeginn As Date = Date.Now
         Dim diffRC As Long
         Dim diffCopy As Long
-        Dim diff3 As Long
+        'Dim diff3 As Long
         Try
             Dim hproj As New clsProjekt
 
