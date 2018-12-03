@@ -324,31 +324,35 @@ Public Class clsCache
             Else   ' hier ist vpid = ""
 
                 Dim ok As Boolean = True
+                If _VPvs.Count > 0 Then
 
-                For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In _VPvs
-                    vpid = kvp.Key
-                    If kvp.Value.Count = 0 Then
-                        ok = False
-                    Else
+                    For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In _VPvs
+                        vpid = kvp.Key
+                        If kvp.Value.Count = 0 Then
+                            ok = False
+                        Else
 
-                        Dim varTS As SortedList(Of String, clsVarTs) = kvp.Value
-                        For Each kvp1 As KeyValuePair(Of String, clsVarTs) In varTS
-                            vpvid = kvp1.Key
-                            timeDiff = DateDiff(DateInterval.Minute, refDate, kvp1.Value.timeCLong)
-                            If timeDiff <= updateDelay Then
-                                ok = ok And True
-                            Else
-                                ok = False
-                                Exit For
-                            End If
-                        Next
-                    End If
+                            Dim varTS As SortedList(Of String, clsVarTs) = kvp.Value
+                            For Each kvp1 As KeyValuePair(Of String, clsVarTs) In varTS
+                                vpvid = kvp1.Key
+                                timeDiff = DateDiff(DateInterval.Minute, refDate, kvp1.Value.timeCLong)
+                                If timeDiff <= updateDelay Then
+                                    ok = ok And True
+                                Else
+                                    ok = False
+                                    Exit For
+                                End If
+                            Next
+                        End If
 
-                    If Not ok Then
-                        Exit For
-                    End If
+                        If Not ok Then
+                            Exit For
+                        End If
 
-                Next
+                    Next
+                Else
+                    ok = False
+                End If
 
                 nothingToDo = ok
 
