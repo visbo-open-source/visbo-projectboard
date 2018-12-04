@@ -30,15 +30,15 @@ Public Class frmSettings
 
     End Sub
 
-    Private Sub showInfoBC_CheckedChanged(sender As Object, e As EventArgs) Handles frmShowInfoBC.CheckedChanged
+    'Private Sub showInfoBC_CheckedChanged(sender As Object, e As EventArgs)
 
-        showBreadCrumbField = frmShowInfoBC.Checked
+    '    showBreadCrumbField = frmShowInfoBC.Checked
 
-    End Sub
+    'End Sub
 
-    Private Sub extendedSearch_CheckedChanged(sender As Object, e As EventArgs) Handles frmExtendedSearch.CheckedChanged
-        extSearch = frmExtendedSearch.Checked
-    End Sub
+    'Private Sub extendedSearch_CheckedChanged(sender As Object, e As EventArgs)
+    '    extSearch = frmExtendedSearch.Checked
+    'End Sub
 
 
     Private Sub languageSettings()
@@ -52,12 +52,12 @@ Public Class frmSettings
                 .lbl_schrift.Text = "Font Size"
                 .Label5.Text = "distance unit"
                 .lblLanguage.Text = "Language"
-                .frmShowInfoBC.Text = "show full BreadCrumb"
-                .frmExtendedSearch.Text = "extended search"
+                '.frmShowInfoBC.Text = "show full BreadCrumb"
+                '.frmExtendedSearch.Text = "extended search"
                 .btnChangeLanguage.Text = "Translate Annotations"
-                .rdbPWD.Text = "Password"
-                .lblProtectField1.Text = "Password:"
-                .btnProtect.Text = "Protect"
+                '.rdbPWD.Text = "Password"
+                '.lblProtectField1.Text = "Password:"
+                '.btnProtect.Text = "Protect"
                 .Label1.Text = "Language File"
                 .btnLanguageImp.Text = "Import"
                 .btnLanguageExp.Text = "Export"
@@ -67,19 +67,19 @@ Public Class frmSettings
 
     End Sub
     Private Sub frmSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        frmShowInfoBC.Checked = showBreadCrumbField
-        frmExtendedSearch.Checked = extSearch
+        'frmShowInfoBC.Checked = showBreadCrumbField
+        'frmExtendedSearch.Checked = extSearch
 
         Call languageSettings()
 
-        rdbPWD.Checked = True
-        lblProtectField1.Text = "Password:"
+        'rdbPWD.Checked = True
+        'lblProtectField1.Text = "Password:"
 
 
 
-        lblProtectField2.Visible = False
-        frmProtectField2.Visible = False
-        frmProtectField2.Text = ""
+        'lblProtectField2.Visible = False
+        'frmProtectField2.Visible = False
+        'frmProtectField2.Text = ""
 
 
         If languages.count > 1 Then
@@ -105,70 +105,70 @@ Public Class frmSettings
     End Sub
 
 
-    
-
-    Private Sub btnProtect_Click(sender As Object, e As EventArgs) Handles btnProtect.Click
-
-        VisboProtected = True
-
-        If rdbPWD.Checked Then
-            pptAPP.ActivePresentation.Tags.Add(protectionTag, "PWD")
-            pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text)
-        ElseIf rdbDBLogin.Checked Then
-            pptAPP.ActivePresentation.Tags.Add(protectionTag, "DATABASE")
-            pptAPP.ActivePresentation.Tags.Add(protectionValue, "")
-        Else
-            pptAPP.ActivePresentation.Tags.Add(protectionTag, "COMPUTER")
-            pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text & "\" & frmProtectField2.Text)
-        End If
-
-        Call makeVisboShapesVisible(False)
-
-    End Sub
-
-    Private Sub rdbPWD_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPWD.CheckedChanged
-        If rdbPWD.Checked = True Then
-
-            lblProtectField1.Text = "Passwort:"
-            lblProtectField1.Visible = True
-            frmProtectField1.Visible = True
-
-            lblProtectField2.Visible = False
-            frmProtectField2.Visible = False
-            frmProtectField2.Text = ""
-        
-        End If
-    End Sub
-
-    Private Sub rdbDBLogin_CheckedChanged(sender As Object, e As EventArgs) Handles rdbDBLogin.CheckedChanged
-
-        If rdbDBLogin.Checked = True Then
-            lblProtectField1.Text = ""
-            lblProtectField1.Visible = False
-            frmProtectField1.Visible = False
-
-            lblProtectField2.Visible = False
-            frmProtectField2.Visible = False
-            frmProtectField2.Text = ""
-        End If
-
-    End Sub
-
-    Private Sub rdbUserName_CheckedChanged(sender As Object, e As EventArgs) Handles rdbUserName.CheckedChanged
-
-        If rdbUserName.Checked = True Then
-            lblProtectField1.Text = ""
-            lblProtectField1.Visible = True
-            frmProtectField1.Visible = True
-
-            lblProtectField2.Visible = True
-            frmProtectField2.Visible = True
-            frmProtectField2.Text = ""
 
 
-            frmProtectField1.PasswordChar = ""
-        End If
-    End Sub
+    'Private Sub btnProtect_Click(sender As Object, e As EventArgs)
+
+    '    VisboProtected = True
+
+    '    If rdbPWD.Checked Then
+    '        pptAPP.ActivePresentation.Tags.Add(protectionTag, "PWD")
+    '        pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text)
+    '    ElseIf rdbDBLogin.Checked Then
+    '        pptAPP.ActivePresentation.Tags.Add(protectionTag, "DATABASE")
+    '        pptAPP.ActivePresentation.Tags.Add(protectionValue, "")
+    '    Else
+    '        pptAPP.ActivePresentation.Tags.Add(protectionTag, "COMPUTER")
+    '        pptAPP.ActivePresentation.Tags.Add(protectionValue, frmProtectField1.Text & "\" & frmProtectField2.Text)
+    '    End If
+
+    '    Call makeVisboShapesVisible(False)
+
+    'End Sub
+
+    'Private Sub rdbPWD_CheckedChanged(sender As Object, e As EventArgs)
+    '    If rdbPWD.Checked = True Then
+
+    '        lblProtectField1.Text = "Passwort:"
+    '        lblProtectField1.Visible = True
+    '        frmProtectField1.Visible = True
+
+    '        lblProtectField2.Visible = False
+    '        frmProtectField2.Visible = False
+    '        frmProtectField2.Text = ""
+
+    '    End If
+    'End Sub
+
+    'Private Sub rdbDBLogin_CheckedChanged(sender As Object, e As EventArgs)
+
+    '    If rdbDBLogin.Checked = True Then
+    '        lblProtectField1.Text = ""
+    '        lblProtectField1.Visible = False
+    '        frmProtectField1.Visible = False
+
+    '        lblProtectField2.Visible = False
+    '        frmProtectField2.Visible = False
+    '        frmProtectField2.Text = ""
+    '    End If
+
+    'End Sub
+
+    'Private Sub rdbUserName_CheckedChanged(sender As Object, e As EventArgs)
+
+    '    If rdbUserName.Checked = True Then
+    '        lblProtectField1.Text = ""
+    '        lblProtectField1.Visible = True
+    '        frmProtectField1.Visible = True
+
+    '        lblProtectField2.Visible = True
+    '        frmProtectField2.Visible = True
+    '        frmProtectField2.Text = ""
+
+
+    '        frmProtectField1.PasswordChar = ""
+    '    End If
+    'End Sub
 
     Private Sub lbl_schrift_Click(sender As Object, e As EventArgs) Handles lbl_schrift.Click
 

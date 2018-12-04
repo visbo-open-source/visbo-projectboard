@@ -69,7 +69,7 @@ Public Class clsProjektWeb
     Public businessUnit As String
 
     ' ergänzt am 9.6.18 
-    Public actualDataUntil As Date = Date.MinValue
+    Public actualDataUntil As Date
 
 
     ''' <summary>
@@ -105,14 +105,16 @@ Public Class clsProjektWeb
 
             Me.variantName = .variantName
             Me.variantDescription = .variantDescription
+            ' 6.11.2018: ur: wieder herausgenommen, nun in clsVP
+            ''If Not IsNothing(.kundenNummer) Then
+            ''    Me.kundennummer = .kundenNummer
+            ''Else
+            ''    Me.kundennummer = ""
+            ''End If
 
-            If Not IsNothing(.kundenNummer) Then
-                Me.kundennummer = .kundenNummer
-            Else
-                Me.kundennummer = ""
-            End If
-
+            ' 6.11.2018: ur: hinzugefügt, das in clsProjekt am 7.10.2018 eingeführt
             Me.actualDataUntil = .actualDataUntil.ToUniversalTime
+
 
             Me.Risiko = .Risiko
             Me.StrategicFit = .StrategicFit
@@ -139,10 +141,6 @@ Public Class clsProjektWeb
             Me.complexity = .complexity
             Me.description = .description
             Me.businessUnit = .businessUnit
-            ' ergänzt am 17.10.18
-            Me.actualDataUntil = .actualDataUntil
-            ' ergänzt am 17.10.18
-            Me.kundennummer = .kundenNummer
 
             Me.hierarchy.copyFrom(projekt.hierarchy)
 
@@ -154,17 +152,24 @@ Public Class clsProjektWeb
 
             ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
             For Each kvp As KeyValuePair(Of Integer, String) In projekt.customStringFields
-                Dim hvar As New clsStringString(CStr(kvp.Key), kvp.Value)
-                Me.customStringFields.Add(hvar)
+
+                If IsNothing(kvp.Value) Or kvp.Value = "" Then
+                    Dim hvar As New clsStringString(CStr(kvp.Key), CStr(" "))
+                    Me.customStringFields.Add(hvar)
+                Else
+                    Dim hvar As New clsStringString(CStr(kvp.Key), CStr(kvp.Value))
+                    Me.customStringFields.Add(hvar)
+                End If
+
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Double) In projekt.customDblFields
-                Dim hvar As New clsStringDouble(CStr(kvp.Key), kvp.Value)
+                Dim hvar As New clsStringDouble(CStr(kvp.Key), CDbl(kvp.Value))
                 Me.customDblFields.Add(hvar)
             Next
 
             For Each kvp As KeyValuePair(Of Integer, Boolean) In projekt.customBoolFields
-                Dim hvar As New clsStringBoolean(CStr(kvp.Key), kvp.Value)
+                Dim hvar As New clsStringBoolean(CStr(kvp.Key), CBool(kvp.Value))
                 Me.customBoolFields.Add(hvar)
             Next
 
@@ -204,11 +209,12 @@ Public Class clsProjektWeb
             .variantName = Me.variantName
 
             ' ergänzt am 17.10.18
-            If IsNothing(Me.kundennummer) Then
-                .kundenNummer = ""
-            Else
-                .kundenNummer = Me.kundennummer
-            End If
+            ' 6.11.2018: ur: wieder herausgenommen: ist nun in clsVP
+            'If IsNothing(Me.kundennummer) Then
+            '    .kundenNummer = ""
+            'Else
+            '    .kundenNummer = Me.kundennummer
+            'End If
 
             ' ergänzt am 17.10.18
             If awinSettings.autoSetActualDataDate Then
@@ -274,7 +280,7 @@ Public Class clsProjektWeb
                     .farbe = pvorlage.farbe
                 End If
             Catch ex As Exception
-
+                Call MsgBox(ex.Message & ": im Catch")
             End Try
 
             Me.hierarchy.copyTo(projekt.hierarchy)

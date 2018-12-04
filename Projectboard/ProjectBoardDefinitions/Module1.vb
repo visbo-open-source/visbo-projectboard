@@ -188,6 +188,8 @@ Public Module Module1
     Public Const portfolioVName As String = "Portfolio/Prog."
     ' diese Konstante bestimmt, wie die Variante heissen soll, die die Ist-Daten - zumindest temporär - aufnimmt 
     Public Const istDatenVName As String = "ActualData"
+    ' diese Konstante wird benutzt, wenn keine Variante angegeben wurde, d.h. meistens das alle Variante relevant sind.
+    Public Const noVariantName As String = "-9999999"
 
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
@@ -4693,16 +4695,18 @@ Public Module Module1
             ' es werden Informationen zum Projekt angezeigt 
             ' eigentlich wäre es hier am besten ein 
 
-            tmpText = "Stand vom " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
             tmpText = ""
 
         ElseIf detailID = ptReportComponents.prSymTeam Then
             ' es wird das Team angezeigt ...
 
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+
             Dim allNames As Collection = hproj.getRoleNames
 
             Dim responsible As String = hproj.leadPerson
-            tmpText = "Project-Lead: " & responsible & vbLf
+            tmpText = tmpText & "Project-Lead: " & responsible & vbLf
 
             For Each tmpName As String In allNames
                 tmpText = tmpText & tmpName & vbLf

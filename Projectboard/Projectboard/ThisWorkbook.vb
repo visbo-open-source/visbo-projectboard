@@ -64,7 +64,7 @@ Public Class ThisWorkbook
         appInstance = Application
 
         ' nicht visible setzen
-        appInstance.Visible = False
+        'appInstance.Visible = False
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
 
@@ -108,6 +108,7 @@ Public Class ThisWorkbook
                 awinSettings.visbopercentDone = My.Settings.VISBOpercentDone
                 awinSettings.visboMapping = My.Settings.VISBOMapping
                 awinSettings.visboDebug = My.Settings.VISBODebug
+                awinSettings.visboServer = My.Settings.VISBOServer
                 awinSettings.userNamePWD = My.Settings.userNamePWD
                 awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
 
@@ -130,11 +131,11 @@ Public Class ThisWorkbook
                 awinSettings.userNamePWD = ""
             End If
 
-            appInstance.EnableEvents = False
+            'appInstance.EnableEvents = False
             Call awinsetTypen("ProjectBoard")
-            appInstance.EnableEvents = True
+            'appInstance.EnableEvents = True
 
-            appInstance.Visible = True
+            'appInstance.Visible = True
 
         Catch ex As Exception
 

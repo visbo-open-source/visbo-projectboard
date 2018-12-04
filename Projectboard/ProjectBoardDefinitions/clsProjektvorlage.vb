@@ -2812,6 +2812,64 @@
 
     End Property
 
+    ''' <summary>
+    ''' übergibt in getResponsibleNames eine Collection von Namen, die für Meilensteine oder Phasen verantwortlich sind
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getResponsibleNames() As Collection
+        Get
+            Dim phase As clsPhase = Nothing
+            Dim milestone As clsMeilenstein = Nothing
+            Dim responsibleNames As New Collection
+
+            Dim respName As String = ""
+
+            Dim p As Integer
+
+            'Dim ende As Integer
+
+
+            If Me._Dauer > 0 Then
+
+                For p = 0 To AllPhases.Count - 1
+
+                    phase = AllPhases.Item(p)
+
+                    respName = phase.verantwortlich
+                    If Not IsNothing(respName) Then
+                        If respName.Trim.Length > 0 Then
+                            If Not responsibleNames.Contains(respName) Then
+                                responsibleNames.Add(respName, respName)
+                            End If
+                        End If
+                    End If
+
+                    With phase
+                        For m As Integer = 1 To .countMilestones
+                            milestone = .getMilestone(m)
+
+                            respName = milestone.verantwortlich
+                            If Not IsNothing(respName) Then
+                                If respName.Trim.Length > 0 Then
+                                    If Not responsibleNames.Contains(respName) Then
+                                        responsibleNames.Add(respName, respName)
+                                    End If
+                                End If
+                            End If
+
+                        Next m
+
+                    End With
+
+                Next p
+
+            End If
+
+            getResponsibleNames = responsibleNames
+
+        End Get
+    End Property
+
     '
     ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '
