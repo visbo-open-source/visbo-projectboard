@@ -71,6 +71,11 @@ Public Class clsProjektWeb
     ' ergänzt am 9.6.18 
     Public actualDataUntil As Date
 
+    ' ur: 04.12.2018, da benötigt beim StoreProjecttoDB um sicherzustellen, 
+    '                 dass nicht eine inzwischengespeicherte Projektversion einfach überschrieben wird.
+    ' verschoben von clsProjektWebLong
+    Public updatedAt As String
+
 
     ''' <summary>
     ''' kopiert den Inhalt des Projektes (clsProjekt) in clsProjektWeb
@@ -141,6 +146,14 @@ Public Class clsProjektWeb
             Me.complexity = .complexity
             Me.description = .description
             Me.businessUnit = .businessUnit
+
+            'ergänzt an 04.12.2018
+            If Not IsNothing(.updatedAt) Then
+                Me.updatedAt = DateTimeToISODate(.updatedAt.ToUniversalTime)
+            Else
+                'Me.updatedAt = DateTimeToISODate(Date.MinValue)
+                Me.updatedAt = ""
+            End If
 
             Me.hierarchy.copyFrom(projekt.hierarchy)
 
@@ -316,6 +329,12 @@ Public Class clsProjektWeb
                 Next
             End If
 
+            ' ur:04.12.2018: ergänzt
+            If Not IsNothing(Me.updatedAt) Then
+                .updatedAt = CDate(Me.updatedAt).ToLocalTime
+            Else
+                .updatedAt = Date.MinValue
+            End If
 
         End With
 

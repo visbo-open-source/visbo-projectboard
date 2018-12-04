@@ -404,6 +404,25 @@ Public Class clsProjekt
     End Property
 
 
+    Private _updatedAt As Date = Date.MinValue
+    Public Property updatedAt As Date
+        Get
+            If Not IsNothing(_updatedAt) Then
+                updatedAt = _updatedAt
+            Else
+                updatedAt = Date.MinValue
+            End If
+        End Get
+        Set(value As Date)
+            If Not IsNothing(value) Then
+                _updatedAt = value
+            Else
+                _updatedAt = Date.MinValue
+            End If
+        End Set
+    End Property
+
+
     ''''  Definitionen zu einem Projekt, die nicht in der DB abgespeichert werden
 
     ' ergänzt am 30.1.14 - diffToPrev , wird benutzt, um zu kennzeichnen , welches Projekt sich im Vergleich zu vorher verändert hat 
@@ -5831,6 +5850,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
+        _updatedAt = Date.MinValue
+
     End Sub
 
     ''' <summary>
@@ -5894,6 +5915,8 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
+        _updatedAt = Date.MinValue
+
     End Sub
 
     Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
@@ -5929,6 +5952,7 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
+        _updatedAt = Date.MinValue
     End Sub
 
     Public Sub New(ByVal startDate As Date, ByVal earliestStartdate As Date, ByVal latestStartdate As Date)
@@ -5963,6 +5987,8 @@ Public Class clsProjekt
         _businessUnit = ""
         _complexity = 0.0
         _volume = 0.0
+
+        _updatedAt = Date.MinValue
 
     End Sub
 
