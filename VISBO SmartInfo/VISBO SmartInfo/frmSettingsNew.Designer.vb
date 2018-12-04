@@ -73,8 +73,8 @@ Partial Class frmSettingsNew
         '
         'frmSettingsNew
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(243, 157)
         Me.Controls.Add(Me.btnOK)
         Me.Controls.Add(Me.chkbxEditable)
