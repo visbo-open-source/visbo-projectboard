@@ -385,7 +385,7 @@ Public Class Request
         Dim diffRCBeginn As Date = Date.Now
         Dim diffRC As Long
         Dim diffCopy As Long
-        'Dim diff3 As Long
+
         Try
             Dim hproj As New clsProjekt
 
@@ -504,11 +504,12 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
-
-
         retrieveProjectsFromDB = result
 
-        Call MsgBox("RestTime: " & diffRC.ToString & vbLf & "CopyTime: " & diffCopy.ToString)
+        If awinSettings.visboDebug Then
+            Call MsgBox("RestTime: " & diffRC.ToString & vbLf & "CopyTime: " & diffCopy.ToString)
+        End If
+
 
     End Function
 
@@ -809,7 +810,7 @@ Public Class Request
 
             ' holt alle Projekte/Variante/versionen mit ReferenzDatum storedatOrBefore
             Dim vpvListe As New List(Of clsProjektWebShort)
-            vpvListe = GETallVPvShort("", "", "", False, Nothing, storedAtOrBefore)
+            vpvListe = GETallVPvShort("", "", "", False, , storedAtOrBefore)
 
             For Each vpv As clsProjektWebShort In vpvListe
                 Dim vpType As Integer = GETvpType(vpv.vpid)
@@ -2187,7 +2188,7 @@ Public Class Request
                                    Optional vpvid As String = "",
                                    Optional status As String = "",
                                    Optional refNext As Boolean = False,
-                                   Optional ByVal variantName As String = Nothing,
+                                   Optional ByVal variantName As String = noVariantName,
                                    Optional ByVal storedAtorBefore As Date = Nothing) As List(Of clsProjektWebShort)
 
         Dim nothingToDo As Boolean = True
@@ -2210,51 +2211,80 @@ Public Class Request
 
         If nothingToDo Then
 
-            ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
-            ' diese werden hier in die result-liste gebracht
-            For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In VRScache.VPvs
+            If vpid <> "" And variantName <> noVariantName Then
 
-                Dim clsVarTs_vpid As String = kvp.Key
-                Dim clsVarTs_value As SortedList(Of String, clsVarTs) = kvp.Value
+                Dim variantlist As SortedList(Of Date, clsProjektWebShort) = VRScache.VPvs(vpid).Item(variantName).tsShort
 
-                For Each kvp1 As KeyValuePair(Of String, clsVarTs) In clsVarTs_value
+                Dim found As Boolean = False
+                Dim i As Integer = variantlist.Count - 1
 
-                    Dim vname As String = kvp1.Key
-                    Dim varts_liste As SortedList(Of Date, clsProjektWebShort) = kvp1.Value.tsShort
+                While Not found And i >= 0
+                    Dim ts As Date = variantlist.ElementAt(i).Key
+                    Dim shortproj As clsProjektWebShort = variantlist.ElementAt(i).Value
 
-                    Dim found As Boolean = False
-                    Dim i As Integer = varts_liste.Count - 1
+                    If storedAtorBefore > Date.MinValue Then
+                        ' größte, das kleiner als storeAtorBefore ist, als result zurückgeben
+                        If ts <= storedAtorBefore Then
 
-                    While Not found And i >= 0
-                        Dim ts As Date = varts_liste.ElementAt(i).Key
-                        Dim shortproj As clsProjektWebShort = varts_liste.ElementAt(i).Value
-
-                        If storedAtorBefore > Date.MinValue Then
-                            ' größte, das kleiner als storeAtorBefore ist, als result zurückgeben
-                            If ts <= storedAtorBefore Then
-
-                                result.Add(shortproj)
-                                found = True
-                            Else
-                                ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
-                            End If
-                        Else
                             result.Add(shortproj)
+                            found = True
+                        Else
+                            ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
                         End If
-                        i = i - 1
-                    End While
+                    Else
+                        result.Add(shortproj)
+                    End If
+                    i = i - 1
+                End While
+            Else
+                ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
+                ' diese werden hier in die result-liste gebracht
+                For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In VRScache.VPvs
 
-                    ' wenn eine Variante angegeben ist, so nimm nur diese
-                    If Not IsNothing(variantName) Then
-                        If vname = variantName Then
-                            Exit For
+                    Dim clsVarTs_vpid As String = kvp.Key
+                    Dim clsVarTs_value As SortedList(Of String, clsVarTs) = kvp.Value
+
+                    For Each kvp1 As KeyValuePair(Of String, clsVarTs) In clsVarTs_value
+
+                        Dim vname As String = kvp1.Key
+                        Dim varts_liste As SortedList(Of Date, clsProjektWebShort) = kvp1.Value.tsShort
+
+                        Dim found As Boolean = False
+                        Dim i As Integer = varts_liste.Count - 1
+
+                        While Not found And i >= 0
+                            Dim ts As Date = varts_liste.ElementAt(i).Key
+                            Dim shortproj As clsProjektWebShort = varts_liste.ElementAt(i).Value
+
+                            If storedAtorBefore > Date.MinValue Then
+                                ' größte, das kleiner als storeAtorBefore ist, als result zurückgeben
+                                If ts <= storedAtorBefore Then
+
+                                    result.Add(shortproj)
+                                    found = True
+                                Else
+                                    ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
+                                End If
+                            Else
+                                result.Add(shortproj)
+                            End If
+                            i = i - 1
+                        End While
+
+                        ' wenn eine Variante angegeben ist, so nimm nur diese
+                        If Not IsNothing(variantName) Then
+                            If vname = variantName Then
+                                Exit For
+                            End If
                         End If
+                    Next
+                    If clsVarTs_vpid = vpid Then
+                        Exit For
                     End If
                 Next
-                If clsVarTs_vpid = vpid Then
-                    Exit For
-                End If
-            Next
+
+            End If
+
         Else
 
             Try
@@ -2290,7 +2320,7 @@ Public Class Request
                             If status <> "" Then
                                 serverUriString = serverUriString & "&status=" & status
                             End If
-                            If variantName <> Nothing Then
+                            If variantName <> noVariantName Then
                                 serverUriString = serverUriString & "&variantName=" & variantName
                             End If
                         Else
@@ -2304,7 +2334,7 @@ Public Class Request
                                 If status <> "" Then
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
-                                If variantName <> Nothing Then
+                                If variantName <> noVariantName Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
                                 End If
                             Else
@@ -2316,7 +2346,7 @@ Public Class Request
                                 If status <> "" Then
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
-                                If variantName <> Nothing Then
+                                If variantName <> noVariantName Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
                                 End If
 
@@ -2412,7 +2442,7 @@ Public Class Request
                                    Optional vpvid As String = "",
                                    Optional status As String = "",
                                    Optional refNext As Boolean = False,
-                                   Optional ByVal variantName As String = Nothing,
+                                   Optional ByVal variantName As String = "Nothing",
                                    Optional ByVal storedAtorBefore As Date = Nothing) As List(Of clsProjektWebLong)
 
         Dim result As New List(Of clsProjektWebLong)
@@ -2435,65 +2465,96 @@ Public Class Request
 
         If nothingToDo Then
 
-            ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
-            ' diese werden hier in die result-liste gebracht
-            For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In VRScache.VPvs
+            If vpid <> "" And variantName <> noVariantName Then
 
-                Dim clsVarTs_vpid As String = kvp.Key
-                Dim clsVarTs_value As SortedList(Of String, clsVarTs) = kvp.Value
+                Dim variantlist As SortedList(Of Date, clsProjektWebLong) = VRScache.VPvs(vpid).Item(variantName).tsLong
 
-                For Each kvp1 As KeyValuePair(Of String, clsVarTs) In clsVarTs_value
+                Dim found As Boolean = False
+                Dim i As Integer = variantlist.Count - 1
 
-                    Dim vname As String = kvp1.Key
-                    Dim varts_liste As SortedList(Of Date, clsProjektWebLong) = kvp1.Value.tsLong
+                While Not found And i >= 0
+                    Dim ts As Date = variantlist.ElementAt(i).Key
+                    Dim longproj As clsProjektWebLong = variantlist.ElementAt(i).Value
 
-                    Dim found As Boolean = False
-                    Dim i As Integer = varts_liste.Count - 1
+                    If storedAtorBefore > Date.MinValue Then
+                        ' größte, das kleiner als storeAtorBefore ist, als result zurückgeben
+                        If ts <= storedAtorBefore Then
 
-                    While Not found And i >= 0
-                        Dim ts As Date = varts_liste.ElementAt(i).Key
-                        Dim longproj As clsProjektWebLong = varts_liste.ElementAt(i).Value
-
-                        If storedAtorBefore > Date.MinValue Then
-                            ' größte, das kleiner als storeAtorBefore ist, als result zurückgeben
-                            If ts <= storedAtorBefore Then
-
-                                result.Add(longproj)
-                                found = True
-                            Else
-                                ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
-                            End If
-                        Else
                             result.Add(longproj)
+                            found = True
+                        Else
+                            ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
                         End If
-                        i = i - 1
-                    End While
+                    Else
+                        result.Add(longproj)
+                    End If
+                    i = i - 1
+                End While
+            Else
 
-                    ' wenn eine Variante angegeben ist, so nimm nur diese
-                    If Not IsNothing(variantName) Then
-                        If vname = variantName Then
-                            Exit For
+
+                ' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
+                ' diese werden hier in die result-liste gebracht
+                For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In VRScache.VPvs
+
+                    Dim clsVarTs_vpid As String = kvp.Key
+
+                    Dim clsVarTs_value As SortedList(Of String, clsVarTs) = VRScache.VPvs(clsVarTs_vpid)
+
+                    For Each kvp1 As KeyValuePair(Of String, clsVarTs) In clsVarTs_value
+
+                        Dim vname As String = kvp1.Key
+                        Dim varts_liste As SortedList(Of Date, clsProjektWebLong) = kvp1.Value.tsLong
+
+                        Dim found As Boolean = False
+                        Dim i As Integer = varts_liste.Count - 1
+
+                        While Not found And i >= 0
+                            Dim ts As Date = varts_liste.ElementAt(i).Key
+                            Dim longproj As clsProjektWebLong = varts_liste.ElementAt(i).Value
+
+                            If storedAtorBefore > Date.MinValue Then
+                                ' größte, das kleiner als storeAtorBefore ist, als result zurückgeben
+                                If ts <= storedAtorBefore Then
+
+                                    result.Add(longproj)
+                                    found = True
+                                Else
+                                    ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
+                                End If
+                            Else
+                                result.Add(longproj)
+                            End If
+                            i = i - 1
+                        End While
+
+                        ' wenn eine Variante angegeben ist, so nimm nur diese
+                        If variantName <> noVariantName Then
+                            If vname = variantName Then
+                                Exit For
+                            End If
                         End If
+                    Next
+                    If clsVarTs_vpid = vpid Then
+                        Exit For
                     End If
                 Next
-                If clsVarTs_vpid = vpid Then
-                    Exit For
-                End If
-            Next
 
-            '' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
-            '' diese werden hier in die result-liste gebracht
-            'For Each kvp As KeyValuePair(Of Date, clsProjektWebLong) In VRScache.VPvs(vpid)(variantName).tsLong
-            '    If storedAtorBefore > Date.MinValue Then
+                '' es existieren zu dieser vpid  und variantenName vpvs mit timestamps
+                '' diese werden hier in die result-liste gebracht
+                'For Each kvp As KeyValuePair(Of Date, clsProjektWebLong) In VRScache.VPvs(vpid)(variantName).tsLong
+                '    If storedAtorBefore > Date.MinValue Then
 
-            '        If kvp.Key <= storedAtorBefore Then
-            '            result.Add(kvp.Value)
-            '        End If
-            '    Else
-            '        result.Add(kvp.Value)
-            '    End If
+                '        If kvp.Key <= storedAtorBefore Then
+                '            result.Add(kvp.Value)
+                '        End If
+                '    Else
+                '        result.Add(kvp.Value)
+                '    End If
 
-            'Next
+                'Next
+
+            End If
         Else
 
             Try
@@ -2530,7 +2591,7 @@ Public Class Request
                             If status <> "" Then
                                 serverUriString = serverUriString & "&status=" & status
                             End If
-                            If variantName <> Nothing Then
+                            If variantName <> noVariantName Then
                                 serverUriString = serverUriString & "&variantName=" & variantName
                             End If
                         Else
@@ -2544,7 +2605,7 @@ Public Class Request
                                 If status <> "" Then
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
-                                If variantName <> Nothing Then
+                                If variantName <> noVariantName Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
                                 End If
                             Else
@@ -2556,7 +2617,7 @@ Public Class Request
                                 If status <> "" Then
                                     serverUriString = serverUriString & "&status=" & status
                                 End If
-                                If variantName <> Nothing Then
+                                If variantName <> noVariantName Then
                                     serverUriString = serverUriString & "&variantName=" & variantName
                                 End If
 
