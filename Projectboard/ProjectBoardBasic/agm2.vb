@@ -8848,12 +8848,12 @@ Public Module agm2
                         ' test
                         Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                         If Not everythingOK Then
-                            If Not everythingOK Then
-                                ReDim logmsg(1)
-                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                logmsg(1) = current1program.constellationName
-                                Call logfileSchreiben(logmsg)
-                            End If
+
+                            ReDim logmsg(1)
+                            logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                            logmsg(1) = current1program.constellationName
+                            Call logfileSchreiben(logmsg)
+
                         End If
                         ' ende test
                     Else
@@ -15488,6 +15488,10 @@ Public Module agm2
                     ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
                     Call readRoleDefinitions(wsName4, readingGroups:=True)
 
+                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    ' jetzt kommt der Validation-Check 
+                    'Dim allTeamsAreOK As Boolean = checkTeamDefinitions()
+                    'Dim existingOverloads As Boolean = checkTeamMemberOverloads()
                 End If
 
 
@@ -16997,17 +17001,19 @@ Public Module agm2
                                     .tagessatzIntern = defaultTagessatz
                                 End If
 
-                                'Try
-                                '    If CDbl(c.Offset(0, 3).Value) = 0.0 Then
-                                '        .tagessatzExtern = .tagessatzIntern * 1.35
-                                '    Else
-                                '        .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
-                                '    End If
-                                'Catch ex As Exception
-                                '    .tagessatzExtern = .tagessatzIntern * 1.35
-                                'End Try
+                                ' tk 5.12 Aufnahme extern
+                                Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
 
-                                ' Auslesen der zukünftigen Kapazität
+                                If Not IsNothing(tmpValue) Then
+                                    tmpValue = tmpValue.Trim
+                                    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                    If positiveCriterias.Contains(tmpValue) Then
+                                        .isExternRole = True
+                                    End If
+                                End If
+
+
                                 ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
                                 For cp = 1 To 240
 
@@ -17021,10 +17027,13 @@ Public Module agm2
 
                             ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
                             If readingGroups And RoleDefinitions.containsName(hrole.name) Then
-                                ' nichts tun, alles gut 
+                                ' nichts tun, alles gut : 
                             Else
                                 ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
-                                RoleDefinitions.Add(hrole)
+                                If Not RoleDefinitions.containsName(hrole.name) Then
+                                    RoleDefinitions.Add(hrole)
+                                End If
+
                             End If
 
                             'hrole = Nothing
@@ -17071,9 +17080,18 @@ Public Module agm2
 
                                 If curLevel > 0 Then
                                     ' als Child aufnehmen 
+                                    ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
                                     Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
                                     Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
+
+                                    If curLevel = maxIndent And readingGroups Then
+                                        If Not parentRole.isTeam Then
+                                            parentRole.isTeam = True
+                                        End If
+                                        subRole.addTeam(parentRole.UID, przSatz)
+                                    End If
+
                                     ' 29.6.18 auch hier den Parent weiterschalten 
                                     parents(curLevel) = curRoleName
                                 Else
@@ -17116,6 +17134,15 @@ Public Module agm2
                                     Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
                                     Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
+
+                                    ' hier kann er eigentlich nie hinkommen ...
+                                    If curLevel = maxIndent And readingGroups Then
+                                        If Not parentRole.isTeam Then
+                                            parentRole.isTeam = True
+                                        End If
+                                        subRole.addTeam(parentRole.UID, przSatz)
+                                    End If
+
                                 Else
                                     ' nichts tun 
                                 End If

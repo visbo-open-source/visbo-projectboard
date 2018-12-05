@@ -7089,4 +7089,68 @@ Public Module Module1
         End Try
     End Function
 
+    ''' <summary>
+    ''' Test-Funktion: überprüft die Team-Definitionen 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function checkTeamDefinitions() As Boolean
+
+        Dim allTeams As SortedList(Of Integer, Double) = RoleDefinitions.getAllTeamIDs
+        Dim atleastOneError As Boolean = False
+
+        For Each kvp As KeyValuePair(Of Integer, Double) In allTeams
+
+            Dim ok As Boolean = True
+            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim childIDs As SortedList(Of Integer, Double) = teamRole.getSubRoleIDs
+
+            For Each child As KeyValuePair(Of Integer, Double) In childIDs
+                Dim childRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(child.Key)
+                ok = ok And childRole.getTeamIDs.ContainsKey(kvp.Key)
+                If Not ok Then
+                    Call MsgBox("teamRole " & teamRole.name & " conflicts with " & childRole.name)
+                    atleastOneError = True
+                    ok = True
+                End If
+            Next
+
+        Next
+        checkTeamDefinitions = atleastOneError
+
+    End Function
+
+    ''' <summary>
+    ''' Test-Funktion für Teams und Überlastung 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function checkTeamMemberOverloads() As Boolean
+
+        Dim allIDs As SortedList(Of Integer, Double) = RoleDefinitions.getAllIDs
+        Dim atleastOneOverload As Boolean = False
+
+        For Each kvp As KeyValuePair(Of Integer, Double) In allIDs
+
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim memberships As SortedList(Of Integer, Double) = tmpRole.getTeamIDs
+
+            If Not IsNothing(memberships) Then
+                If memberships.Count > 0 Then
+                    Dim wholeKapa As Double = 0.0
+                    For Each membership As KeyValuePair(Of Integer, Double) In memberships
+                        wholeKapa = wholeKapa + membership.Value
+                    Next
+
+                    If wholeKapa > 1.0 Then
+                        atleastOneOverload = True
+                        Call MsgBox("Overloaded Role: " & tmpRole.name & "Kapa: " & wholeKapa.ToString("#0.#"))
+                    End If
+                End If
+            End If
+
+        Next
+
+        checkTeamMemberOverloads = atleastOneOverload
+
+    End Function
+
 End Module
