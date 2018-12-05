@@ -9132,7 +9132,7 @@ Public Module Projekte
             Dim myCollection As New Collection From {
                 roleName, roleName}
 
-            Dim kapaArray As Double() = ShowProjekte.getRoleKapasInMonth(myCollection, False)
+            Dim kapaArray As Double() = ShowProjekte.getRoleKapasInMonth(myCollection)
 
             Dim sortCriteria As Double = 0.0
 

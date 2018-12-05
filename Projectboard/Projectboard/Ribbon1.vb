@@ -129,7 +129,7 @@ Imports System.Web
 
         End With
 
-        Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog
+        Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog()
 
         If returnValue = DialogResult.OK Then
 
@@ -11237,47 +11237,11 @@ Imports System.Web
         appInstance.EnableEvents = True
 
         Dim frmLizenzen As New frmCreateLicences
-        ' ''Dim i As Integer
-        ' ''Dim k As Integer
-        ' ''Dim VisboLic As New clsLicences
-        ' ''Dim clientLic As New clsLicences
-        ' ''Dim komponenten() As String = {"Swimlanes2"}
-        ' ''Dim users() As String = {"matthias.kaufhold", "thomas.braeutigam", "Ingo.Hanschke", myWindowsName, "BHTC-Domain/thomas.braeutigam", "Ute-Dagmar.Rittinghaus-Koytek"}
-        ' ''Dim endDate As Date = DateAdd(DateInterval.Month, 1200, Date.Now)
 
 
         Dim returnValue As DialogResult
         returnValue = frmLizenzen.ShowDialog
 
-
-        ' ''For i = 0 To users.Length - 1
-
-        ' ''    For k = 0 To komponenten.Length - 1
-
-        ' ''        ' Lizenzkey berechnen
-        ' ''        Dim licString As String = VisboLic.berechneKey(endDate, users(i), komponenten(k))
-
-        ' ''        ' VsisboListe mit Angabe von username, komponente, endDate
-        ' ''        Dim visbokey As String = users(i) & "-" & komponenten(k) & "-" & endDate.ToString
-        ' ''        If VisboLic.Liste.ContainsKey(visbokey) Then
-        ' ''            Dim ok As Boolean = VisboLic.Liste.Remove(visbokey)
-        ' ''        End If
-        ' ''        VisboLic.Liste.Add(visbokey, licString)
-
-        ' ''        ' Liste von Lizenzen für den Kunden 
-        ' ''        If clientLic.Liste.ContainsKey(licString) Then
-        ' ''            Dim ok As Boolean = clientLic.Liste.Remove(licString)
-        ' ''        End If
-        ' ''        clientLic.Liste.Add(licString, licString)
-
-        ' ''    Next k               'nächste Komponente
-
-        ' ''Next i                   ' nächster User
-
-        '' '' Lizenzen in XML-Dateien speichern
-        ' ''Call XMLExportLicences(VisboLic, requirementsOrdner & "visboLicfile.xml")
-
-        ' ''Call XMLExportLicences(clientLic, licFileName)
 
         enableOnUpdate = True
 
