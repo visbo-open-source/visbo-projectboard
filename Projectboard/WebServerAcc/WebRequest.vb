@@ -1157,7 +1157,7 @@ Public Class Request
             '           ptPRPFType.project = 0
             '           ptPRPFType.projectTemplate = 2
 
-            type = ptPRPFType.project
+
             Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, type)
 
             If wpItem.isProtected Then
@@ -3785,26 +3785,26 @@ Public Class Request
     End Function
 
 
-    '''' <summary>
-    '''' Umwandlung einen Datum des Typs Date in einen ISO-Datums-String
-    '''' </summary>
-    '''' <param name="datumUhrzeit"></param>
-    '''' <returns></returns>
-    'Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
+    ''' <summary>
+    ''' Umwandlung einen Datum des Typs Date in einen ISO-Datums-String
+    ''' </summary>
+    ''' <param name="datumUhrzeit"></param>
+    ''' <returns></returns>
+    Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
 
-    '    Dim ISODateandTime As String = Nothing
-    '    Dim ISODate As String = ""
-    '    Dim ISOTime As String = ""
+        Dim ISODateandTime As String = Nothing
+        Dim ISODate As String = ""
+        Dim ISOTime As String = ""
 
-    '    If datumUhrzeit >= Date.MinValue And datumUhrzeit <= Date.MaxValue Then
-    '        ' DatumUhrzeit wird um 1 Sekunde erhöht, dass die 1000-stel keine Rolle spielen
-    '        datumUhrzeit = datumUhrzeit.AddSeconds(1.0)
-    '        ISODateandTime = datumUhrzeit.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-    '    End If
+        If datumUhrzeit >= Date.MinValue And datumUhrzeit <= Date.MaxValue Then
+            ' DatumUhrzeit wird um 1 Sekunde erhöht, dass die 1000-stel keine Rolle spielen
+            datumUhrzeit = datumUhrzeit.AddSeconds(1.0)
+            ISODateandTime = datumUhrzeit.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        End If
 
-    '    DateTimeToISODate = ISODateandTime
+        DateTimeToISODate = ISODateandTime
 
-    'End Function
+    End Function
 
     ''' <summary>
     ''' Kopieren des ReST-Server Portfolios vpf in das der DB-Version clsConstellation

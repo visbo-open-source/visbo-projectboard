@@ -404,21 +404,13 @@ Public Class clsProjekt
     End Property
 
 
-    Private _updatedAt As Date = Date.MinValue
-    Public Property updatedAt As Date
+    Private _updatedAt As String
+    Public Property updatedAt As String
         Get
-            If Not IsNothing(_updatedAt) Then
-                updatedAt = _updatedAt
-            Else
-                updatedAt = Date.MinValue
-            End If
+            updatedAt = _updatedAt
         End Get
-        Set(value As Date)
-            If Not IsNothing(value) Then
-                _updatedAt = value
-            Else
-                _updatedAt = Date.MinValue
-            End If
+        Set(value As String)
+            _updatedAt = value
         End Set
     End Property
 
@@ -5850,7 +5842,7 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        _updatedAt = Date.MinValue
+        _updatedAt = ""
 
     End Sub
 
@@ -5915,7 +5907,7 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        _updatedAt = Date.MinValue
+        _updatedAt = ""
 
     End Sub
 
@@ -5988,7 +5980,7 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        _updatedAt = Date.MinValue
+        _updatedAt = ""
 
     End Sub
 

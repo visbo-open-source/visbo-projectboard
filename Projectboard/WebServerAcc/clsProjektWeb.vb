@@ -147,13 +147,9 @@ Public Class clsProjektWeb
             Me.description = .description
             Me.businessUnit = .businessUnit
 
-            'ergänzt an 04.12.2018
-            If Not IsNothing(.updatedAt) Then
-                Me.updatedAt = DateTimeToISODate(.updatedAt.ToUniversalTime)
-            Else
-                'Me.updatedAt = DateTimeToISODate(Date.MinValue)
-                Me.updatedAt = ""
-            End If
+            'ergänzt an 04.12.2018 wird nur zu interne Projektstruktur durchgereicht
+            '                      und wieder zurück
+            Me.updatedAt = .updatedAt
 
             Me.hierarchy.copyFrom(projekt.hierarchy)
 
@@ -330,11 +326,7 @@ Public Class clsProjektWeb
             End If
 
             ' ur:04.12.2018: ergänzt
-            If Not IsNothing(Me.updatedAt) Then
-                .updatedAt = CDate(Me.updatedAt).ToLocalTime
-            Else
-                .updatedAt = Date.MinValue
-            End If
+            .updatedAt = Me.updatedAt
 
         End With
 

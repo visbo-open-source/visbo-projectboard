@@ -6879,25 +6879,4 @@ Public Module Module1
     End Function
 
 
-    ''' <summary>
-    ''' Umwandlung einen Datum des Typs Date in einen ISO-Datums-String
-    ''' </summary>
-    ''' <param name="datumUhrzeit"></param>
-    ''' <returns></returns>
-    Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
-
-        Dim ISODateandTime As String = Nothing
-        Dim ISODate As String = ""
-        Dim ISOTime As String = ""
-
-        If datumUhrzeit >= Date.MinValue And datumUhrzeit <= Date.MaxValue Then
-            ' DatumUhrzeit wird um 1 Sekunde erhöht, dass die 1000-stel keine Rolle spielen
-            datumUhrzeit = datumUhrzeit.AddSeconds(1.0)
-            ISODateandTime = datumUhrzeit.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-        End If
-
-        DateTimeToISODate = ISODateandTime
-
-    End Function
-
 End Module
