@@ -4224,11 +4224,13 @@ Public Class clsProjekt
             Status = _Status
         End Get
         Set(value As String)
-            If value = ProjektStatus(0) Or _
-                value = ProjektStatus(1) Or _
-                value = ProjektStatus(2) Or _
-                value = ProjektStatus(3) Or _
-                value = ProjektStatus(4) Then
+            If value = ProjektStatus(0) Or
+                value = ProjektStatus(1) Or
+                value = ProjektStatus(2) Or
+                value = ProjektStatus(3) Or
+                value = ProjektStatus(4) Or
+                value = ProjektStatus(5) Or
+                value = ProjektStatus(6) Then
                 _Status = value
             Else
                 Call MsgBox("Wert als Status nicht zugelassen: " & value)

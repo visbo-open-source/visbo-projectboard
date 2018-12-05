@@ -5,12 +5,12 @@
 Public Class clsRolleDB
     ' tk 24.11.18 Rollentyp ist die RollenID
     Public RollenTyp As Integer
-    Public name As String
     Public Bedarf() As Double
     ' neu hinzugekommen 
     Public teamID As Integer
 
-    ' deprecated 24.11.18 
+    ' deprecated 24.11.18 , immer mit Nothing / Null lesen/schreiben
+    Public name As String
     Public farbe As Object
     Public startkapa As Integer
     Public tagessatzIntern As Double
@@ -32,12 +32,6 @@ Public Class clsRolleDB
             Me.tagessatzExtern = Nothing
             Me.isCalculated = Nothing
 
-            'Me.name = .name
-            'Me.farbe = .farbe
-            'Me.startkapa = CInt(.Startkapa)
-            'Me.tagessatzIntern = .tagessatzIntern
-            'Me.tagessatzExtern = .tagessatzExtern
-            'Me.isCalculated = .isCalculated
         End With
 
     End Sub
