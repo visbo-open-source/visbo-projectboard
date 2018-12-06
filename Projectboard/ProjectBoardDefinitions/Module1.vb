@@ -28,6 +28,11 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
     Public noDB As Boolean = True
 
+    ' tk 4.12.18 
+    Public dbUserID As String = ""
+    ' hier sind für den eingeloggten Nutzer  aktuell gewählte  alle 
+    Public customUserRoles As New clsCustomUserRoles
+
     ' wird verwendet um Informationen verschlüsselt zu schreiben 
     Public visboCryptoKey As String = "Berge2007QuebecKanada&2010SeilmitZeltThomasUtePhilippDenise060162130790141090050715&@Tecoplan@IPEQ@Visbo"
 
@@ -124,6 +129,7 @@ Public Module Module1
 
     Public PfChartBubbleNames() As String
 
+
     Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
     Public RoleDefinitions As New clsRollen
     Public RoleHierarchy As New clsroleHrchy
@@ -191,6 +197,9 @@ Public Module Module1
     ' diese Konstante wird benutzt, wenn keine Variante angegeben wurde, d.h. meistens das alle Variante relevant sind.
     Public Const noVariantName As String = "-9999999"
 
+    ' diese Konstante wird verwendet, um den VisboImportTyp zu erkennen
+    Public Const visboImportKennung = "VisboImportTyp"
+
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
     Public visboFarbeNone As Integer = RGB(127, 127, 127)
@@ -240,6 +249,34 @@ Public Module Module1
 
 
     Public Const maxProjektdauer As Integer = 60
+
+    ''' <summary>
+    ''' Werte-Bereich: {0=Admin, 1=PortfolioMgr; 2=RessourcenManager; 3=Projektleiter
+    ''' </summary>
+    Public Enum ptCustomUserProfils
+        admin = 0
+        portfoliomgr = 1
+        resourcemgr = 2
+        projectlead = 3
+        all = 4
+    End Enum
+
+    ''' <summary>
+    ''' definiert, welche Import-Methode angewendet werden soll ; angelegt 30.11.18 by tk
+    ''' </summary>
+    Public Enum ptVisboImportTypen
+        visboSimple = 0
+        visboProjectbrief = 1
+        visboMassCreation = 2
+        visboRXF = 3
+        visboExcelBMW = 4
+        allianzMassImport1 = 5
+        allianzMassImport2 = 6
+        allianzTeamRessZuordnung = 7
+        allianzIstDaten = 8
+        visboMassRessourcenEdit = 9
+        visboMPP = 10
+    End Enum
 
     Public Enum ptImportSettings
         attributeNames1 = 0
@@ -764,7 +801,11 @@ Public Module Module1
         ChangeRequest = 2
         abgebrochen = 3
         abgeschlossen = 4
+        geplanteVorgabe = 5
+        beauftragteVorgabe = 6
     End Enum
+
+
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
@@ -784,7 +825,9 @@ Public Module Module1
     ' geplant
     ' beauftragt
     ' abgeschlossen
-    Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen"}
+    ' Vorgabe, geplant
+    ' Vorgabe beauftragt
+    Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen", "geplanteVorgabe", "beauftragteVorgabe"}
 
 
     '
@@ -7044,6 +7087,70 @@ Public Module Module1
         Catch ex As Exception
             Return False
         End Try
+    End Function
+
+    ''' <summary>
+    ''' Test-Funktion: überprüft die Team-Definitionen 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function checkTeamDefinitions() As Boolean
+
+        Dim allTeams As SortedList(Of Integer, Double) = RoleDefinitions.getAllTeamIDs
+        Dim atleastOneError As Boolean = False
+
+        For Each kvp As KeyValuePair(Of Integer, Double) In allTeams
+
+            Dim ok As Boolean = True
+            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim childIDs As SortedList(Of Integer, Double) = teamRole.getSubRoleIDs
+
+            For Each child As KeyValuePair(Of Integer, Double) In childIDs
+                Dim childRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(child.Key)
+                ok = ok And childRole.getTeamIDs.ContainsKey(kvp.Key)
+                If Not ok Then
+                    Call MsgBox("teamRole " & teamRole.name & " conflicts with " & childRole.name)
+                    atleastOneError = True
+                    ok = True
+                End If
+            Next
+
+        Next
+        checkTeamDefinitions = atleastOneError
+
+    End Function
+
+    ''' <summary>
+    ''' Test-Funktion für Teams und Überlastung 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function checkTeamMemberOverloads() As Boolean
+
+        Dim allIDs As SortedList(Of Integer, Double) = RoleDefinitions.getAllIDs
+        Dim atleastOneOverload As Boolean = False
+
+        For Each kvp As KeyValuePair(Of Integer, Double) In allIDs
+
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim memberships As SortedList(Of Integer, Double) = tmpRole.getTeamIDs
+
+            If Not IsNothing(memberships) Then
+                If memberships.Count > 0 Then
+                    Dim wholeKapa As Double = 0.0
+                    For Each membership As KeyValuePair(Of Integer, Double) In memberships
+                        wholeKapa = wholeKapa + membership.Value
+                    Next
+
+                    If wholeKapa > 1.0 Then
+                        atleastOneOverload = True
+                        Call MsgBox("Overloaded Role: " & tmpRole.name & "Kapa: " & wholeKapa.ToString("#0.#"))
+                    End If
+                End If
+            End If
+
+        Next
+
+        checkTeamMemberOverloads = atleastOneOverload
+
     End Function
 
 

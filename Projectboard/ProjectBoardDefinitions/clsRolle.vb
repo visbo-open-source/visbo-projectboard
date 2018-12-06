@@ -3,7 +3,25 @@ Public Class clsRolle
 
     Private _typus As Integer
     Private _bedarf() As Double
-    Private _isCalculated As Boolean
+
+    ' tk 24.11.18 isCalculated wird nie gebraucht 
+    'Private _isCalculated As Boolean
+
+    ' neu dazu gekommen: die evtl der Rolle zugeordnete TeamID ; -1 heisst es gibt keine 
+    Private _teamID As Integer
+
+    Public Property teamID As Integer
+        Get
+            teamID = _teamID
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                If RoleDefinitions.containsUid(value) Then
+                    _teamID = value
+                End If
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' bestimmt, ob die Rolle identisch mit der übergebenen Rolle ist 
@@ -17,8 +35,10 @@ Public Class clsRolle
             Dim stillOK As Boolean = False
 
             With vRolle
-                If Me.RollenTyp = .RollenTyp And _
-                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) Then
+
+                If Me.RollenTyp = .RollenTyp And
+                    Not arraysAreDifferent(Me.Xwerte, .Xwerte) And
+                    Me.teamID = .teamID Then
                     stillOK = True
                 Else
                     stillOK = False
@@ -27,14 +47,14 @@ Public Class clsRolle
             isIdenticalTo = stillOK
         End Get
     End Property
-    Public Property isCalculated() As Boolean
-        Get
-            isCalculated = _isCalculated
-        End Get
-        Set(value As Boolean)
-            _isCalculated = value
-        End Set
-    End Property
+    'Public Property isCalculated() As Boolean
+    '    Get
+    '        isCalculated = _isCalculated
+    '    End Get
+    '    Set(value As Boolean)
+    '        _isCalculated = value
+    '    End Set
+    'End Property
 
     Public Property RollenTyp() As Integer
         Get
@@ -163,36 +183,27 @@ Public Class clsRolle
     End Property
     '
     '
-    '
-    Public ReadOnly Property tagessatzExtern() As Double
+    ' 24.11.18 deprecated
+    ''Public ReadOnly Property tagessatzExtern() As Double
 
-        Get
+    ''    Get
 
-            tagessatzExtern = RoleDefinitions.getRoledef(_typus).tagessatzExtern
+    ''        tagessatzExtern = 0
+    ''        ' 24.11.18 deprecated
+    ''        'tagessatzExtern = RoleDefinitions.getRoledef(_typus).tagessatzExtern
 
-        End Get
+    ''    End Get
 
 
-    End Property
+    ''End Property
     '
     '
     '
     Public ReadOnly Property summe() As Double
 
         Get
-            'Dim isum As Double
-            'Dim i As Integer
-            'Dim ende As Integer
-
-            'ende = UBound(_bedarf)
-            'isum = 0
-
-            'For i = 0 To ende
-            '    isum = isum + _bedarf(i)
-            'Next i
 
             summe = _bedarf.Sum
-            'summe = isum
 
 
         End Get
@@ -893,13 +904,16 @@ Public Class clsRolle
     End Function
 
     Public Sub New()
-        _isCalculated = False
+        ' erstmal keine Zuordnung zu einer TeamID  
+        _teamID = -1
     End Sub
 
     Public Sub New(ByVal laenge As Integer)
 
         ReDim _bedarf(laenge)
-        _isCalculated = False
+        ' erstmal keine Zuordnung zu einer TeamID  
+        _teamID = -1
+
 
     End Sub
 
