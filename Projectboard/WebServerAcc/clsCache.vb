@@ -226,7 +226,7 @@ Public Class clsCache
                                 Dim vp As clsVP = _VPsId(vpid)
 
                                 ' VisboProjekt Standard, keine Variante (Variante = "")
-                                If vName <> "" Then
+                                If vName <> noVariantName Then
 
                                     If _VPvs(vpid).ContainsKey(vName) Then
 
@@ -257,11 +257,10 @@ Public Class clsCache
                                         End If
                                     End If
 
-                                Else   ' vname <> noVariantname, alle Varianten sind relevant
+                                Else   ' vname = noVariantname, alle Varianten sind relevant
 
-                                    If nothingToDo Then
 
-                                        For Each vpvar As clsVPvariant In vp.Variant
+                                    For Each vpvar As clsVPvariant In vp.Variant
                                             Try
                                                 If _VPvs(vpid).ContainsKey(vpvar.variantName) Then
 
@@ -300,7 +299,6 @@ Public Class clsCache
 
                                         Next
 
-                                    End If  ' end if von it nothingToDo = true
 
                                 End If ' end if von vName <> noVariantName
 

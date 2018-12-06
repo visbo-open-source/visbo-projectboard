@@ -64,15 +64,11 @@ Public Class Ribbon1
         ' tk 11.1217 nur aktiv machen, wenn man Slides zur Weitergabe komplett strippen möchte ... um zu verhindern, dass die Re-Engineering machen ...
         'Call stripOffAllSmartInfo()
 
-        ' tk 27.10.18 hier soll kein DB login erfolgen ...
-        'If userIsEntitled(msg) Then
-        Dim settingsfrm As New frmSettings
-            With settingsfrm
-                Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
-            End With
-        'Else
-        '    Call MsgBox(msg)
-        'End If
+        Dim settingsfrm As New frmSettingsNew
+        With settingsfrm
+            Dim res As System.Windows.Forms.DialogResult = .ShowDialog()
+        End With
+
 
     End Sub
 
@@ -105,7 +101,9 @@ Public Class Ribbon1
     Private Sub btnFreeze_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFreeze.Click
         Try
 
+
             Dim freeze As Boolean = True
+
 
             With currentSlide
 

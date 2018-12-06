@@ -337,7 +337,7 @@ Public Class Request
 
                 hresultFirst = GETallVPvShort(vpid, vpvid:="", status:="", refNext:=True, variantName:=variantName, storedAtorBefore:=Nothing)
 
-                Dim anzResult As Integer = hresultFirst.count
+                Dim anzResult As Integer = hresultFirst.Count
                 If anzResult >= 0 Then
                     ergebnisCollection.Add(hresultFirst.Item(anzResult - 1).timestamp)
                 End If

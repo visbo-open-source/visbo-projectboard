@@ -2180,21 +2180,19 @@ Public Class clsProjekte
     ''' die Aufschlüsselung ist den Ressource Rollen Dateien zu finden 
     ''' </summary>
     ''' <param name="myCollection">enthält die Liste der zu betrachtenden Rollen-Namen</param>
-    ''' <param name="includingExterns">gibt an, ob die Werte inkl. der Externen zurückgegeben werden soll</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleKapasInMonth(ByVal myCollection As Collection,
-                                                 ByVal includingExterns As Boolean) As Double()
+    Public ReadOnly Property getRoleKapasInMonth(ByVal myCollection As Collection) As Double()
 
         Get
             Dim kapaValues() As Double
             Dim tmpValues() As Double
 
 
-            Dim rname As String
+
             Dim zeitraum As Integer
-            Dim r As Integer, m As Integer
+            Dim m As Integer
 
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
@@ -2281,11 +2279,8 @@ Public Class clsProjekte
 
                     ' in kvp.value steht jetzt der Prozentsatz, mit dem die Kapa der Rolle berücksichtig werden soll 
                     For i = showRangeLeft To showRangeRight
-                        If includingExterns Then
-                            tmpValues(i - showRangeLeft) = kvp.Value * (curRole.kapazitaet(i) + curRole.externeKapazitaet(i))
-                        Else
-                            tmpValues(i - showRangeLeft) = kvp.Value * curRole.kapazitaet(i)
-                        End If
+
+                        tmpValues(i - showRangeLeft) = kvp.Value * curRole.kapazitaet(i)
 
                         If tmpValues(i - showRangeLeft) < 0 Then
                             tmpValues(i - showRangeLeft) = 0
@@ -2303,42 +2298,42 @@ Public Class clsProjekte
 
             Next
 
-
+            ' tk 30.11.18 deprecated
             ' falls es SammelRollen gibt, müssen deren externe Kapas noch berücksichtigt werden ... 
             ' allerdings werden Sammelrollen nie mit Prz beaufschlagt ... 
-            If includingExterns And sammelRollenCollection.Count > 0 Then
+            'If includingExterns And sammelRollenCollection.Count > 0 Then
 
-                ReDim tmpValues(zeitraum)
-                For r = 1 To sammelRollenCollection.Count
+            '    ReDim tmpValues(zeitraum)
+            '    For r = 1 To sammelRollenCollection.Count
 
-                    rname = CStr(sammelRollenCollection.Item(r))
-                    Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(rname)
+            '        rname = CStr(sammelRollenCollection.Item(r))
+            '        Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(rname)
 
-                    If Not IsNothing(curRole) Then
+            '        If Not IsNothing(curRole) Then
 
-                        For i = showRangeLeft To showRangeRight
+            '            For i = showRangeLeft To showRangeRight
 
-                            tmpValues(i - showRangeLeft) = curRole.externeKapazitaet(i)
-                            If tmpValues(i - showRangeLeft) < 0 Then
-                                tmpValues(i - showRangeLeft) = 0
-                            End If
+            '                tmpValues(i - showRangeLeft) = curRole.externeKapazitaet(i)
+            '                If tmpValues(i - showRangeLeft) < 0 Then
+            '                    tmpValues(i - showRangeLeft) = 0
+            '                End If
 
-                        Next
-
-
-                        For m = 0 To zeitraum
-                            ' Änderung 27.7 Holen der Kapa Werte , jetzt aufgeschlüsselt nach 
-                            'kapaValues(m) = kapaValues(m) + hkapa
-                            kapaValues(m) = kapaValues(m) + tmpValues(m)
-                        Next m
-
-                    End If
+            '            Next
 
 
-                Next
+            '            For m = 0 To zeitraum
+            '                ' Änderung 27.7 Holen der Kapa Werte , jetzt aufgeschlüsselt nach 
+            '                'kapaValues(m) = kapaValues(m) + hkapa
+            '                kapaValues(m) = kapaValues(m) + tmpValues(m)
+            '            Next m
+
+            '        End If
 
 
-            End If
+            '    Next
+
+
+            'End If
 
             getRoleKapasInMonth = kapaValues
         End Get
@@ -3081,7 +3076,7 @@ Public Class clsProjekte
                 End If
 
                 myCollection.Add(roleName, roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                kapaValues = Me.getRoleKapasInMonth(myCollection)
                 myCollection.Clear()
 
                 Select Case typus
@@ -3171,13 +3166,13 @@ Public Class clsProjekte
                     myCollection.Add(roleName, roleName)
                     ' dann sollen alle Werte, aslo inkl der Subroles berücksichtigt werden  
                     roleValues = Me.getRoleValuesInMonthNew(roleName, considerAllSubRoles:=True)
-                    kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                    kapaValues = Me.getRoleKapasInMonth(myCollection)
 
                 Else
 
                     myCollection.Add(roleName, roleName)
                     roleValues = Me.getRoleValuesInMonthNew(roleName)
-                    kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                    kapaValues = Me.getRoleKapasInMonth(myCollection)
                     myCollection.Clear()
                 End If
 
@@ -3276,7 +3271,7 @@ Public Class clsProjekte
                 ReDim kapaValues(zeitraum)
 
                 myCollection.Add(roleName, roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection, awinSettings.meAuslastungIsInclExt)
+                kapaValues = Me.getRoleKapasInMonth(myCollection)
                 myCollection.Clear()
 
                 If istSammelRolle Then
@@ -3356,7 +3351,7 @@ Public Class clsProjekte
                 ReDim kapaValues(zeitraum)
 
                 myCollection.Add(roleName, roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection, awinSettings.meAuslastungIsInclExt)
+                kapaValues = Me.getRoleKapasInMonth(myCollection)
                 myCollection.Clear()
 
                 If istSammelRolle Then
@@ -3458,7 +3453,7 @@ Public Class clsProjekte
                         ReDim kapaValues(zeitraum)
 
                         myCollection.Add(roleName, roleName)
-                        alleKapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                        alleKapaValues = Me.getRoleKapasInMonth(myCollection)
                         alleRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
                                                                  considerAllSubRoles:=True, _
                                                                  type:=PTcbr.all, _
@@ -3467,7 +3462,7 @@ Public Class clsProjekte
 
                     Else
                         myCollection.Add(roleName, roleName)
-                        kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                        kapaValues = Me.getRoleKapasInMonth(myCollection)
                         myCollection.Clear()
                     End If
 
@@ -3593,9 +3588,10 @@ Public Class clsProjekte
 
                     With tmpRole
                         If isDeltaCalculation Then
-                            calculationValue = .tagessatzExtern - .tagessatzIntern
+                            calculationValue = 0
                         Else
-                            calculationValue = .tagessatzExtern
+                            calculationValue = .tagessatzIntern
+
                         End If
                     End With
 
@@ -3604,7 +3600,7 @@ Public Class clsProjekte
                         ReDim kapaValues(zeitraum)
 
                         myCollection.Add(roleName, roleName)
-                        alleKapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                        alleKapaValues = Me.getRoleKapasInMonth(myCollection)
                         alleRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
                                                                     considerAllSubRoles:=True, _
                                                                     type:=PTcbr.all, _
@@ -3613,7 +3609,7 @@ Public Class clsProjekte
 
                     Else
                         myCollection.Add(roleName, roleName)
-                        kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                        kapaValues = Me.getRoleKapasInMonth(myCollection)
                         myCollection.Clear()
                     End If
 
@@ -3724,7 +3720,7 @@ Public Class clsProjekte
 
                     If includesOverloadCost Then
                         myCollection.Add(roleName, roleName)
-                        alleKapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                        alleKapaValues = Me.getRoleKapasInMonth(myCollection)
                         alleRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
                                                                  considerAllSubRoles:=True, _
                                                                  type:=PTcbr.all,
@@ -3735,7 +3731,7 @@ Public Class clsProjekte
 
                 Else
                     myCollection.Add(roleName, roleName)
-                    kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                    kapaValues = Me.getRoleKapasInMonth(myCollection)
                     myCollection.Clear()
                 End If
 
@@ -3744,43 +3740,39 @@ Public Class clsProjekte
 
                 For ix = 0 To zeitraum
 
-
-                    If istSammelRolle Then
-
-                        If alleRoleValues(ix) > alleKapaValues(ix) And includesOverloadCost Then
-                            ' Overtime Kosten fallen an 
-                            ' bei der Sammelrolle ist der Beitrag der Überlast auf die Höhe des Platzhalter-Wertes beschränkt 
-                            Dim diff As Double = alleRoleValues(ix) - alleKapaValues(ix)
-                            If diff > roleValues(ix) Then
-                                diff = roleValues(ix)
-                            End If
-                            costValues(ix) = costValues(ix) + _
-                                             alleKapaValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                            costValues(ix) = costValues(ix) + _
-                                             diff * RoleDefinitions.getRoledef(roleName).tagessatzExtern * faktor / 1000
-                        Else
-                            ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
-                            costValues(ix) = costValues(ix) + _
+                    ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
+                    costValues(ix) = costValues(ix) +
                                              roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
 
-                        End If
+                    'If istSammelRolle Then
 
-                    Else
+                    '    If alleRoleValues(ix) > alleKapaValues(ix) And includesOverloadCost Then
+                    '        ' Overtime Kosten fallen an 
+                    '        ' bei der Sammelrolle ist der Beitrag der Überlast auf die Höhe des Platzhalter-Wertes beschränkt 
+                    '        Dim diff As Double = alleRoleValues(ix) - alleKapaValues(ix)
+                    '        If diff > roleValues(ix) Then
+                    '            diff = roleValues(ix)
+                    '        End If
+                    '        'costValues(ix) = costValues(ix) + _
+                    '        '                 alleKapaValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                    '        'costValues(ix) = costValues(ix) +
+                    '        '                 diff * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                    '        costValues(ix) = costValues(ix) +
+                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                    '    Else
+                    '        ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
+                    '        costValues(ix) = costValues(ix) +
+                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
 
-                        If roleValues(ix) > kapaValues(ix) And includesOverloadCost Then
-                            ' externe Ressourcen müssen hinzugezogen werden
-                            costValues(ix) = costValues(ix) + _
-                                             kapaValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                            costValues(ix) = costValues(ix) + _
-                                             (roleValues(ix) - kapaValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzExtern * faktor / 1000
-                        Else
-                            ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
-                            costValues(ix) = costValues(ix) + _
-                                             roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
+                    '    End If
 
-                        End If
+                    'Else
+                    '    ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
+                    '    costValues(ix) = costValues(ix) +
+                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
 
-                    End If
+
+                    'End If
 
                 Next ix
 
@@ -3947,9 +3939,9 @@ Public Class clsProjekte
             Dim kapaValues() As Double
             Dim costValue As Double
             Dim myCollection As New Collection
-            Dim ix As Integer
+
             Dim zeitraum As Integer
-            Dim tagessatzExtern As Double, tagessatzIntern As Double, diff As Double
+            Dim tagessatzIntern As Double
             Dim roleName As String
             Dim i As Integer
             Dim faktor As Double = 1
@@ -3976,39 +3968,39 @@ Public Class clsProjekte
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
 
                 If Not IsNothing(tmpRole) Then
-                    tagessatzExtern = tmpRole.tagessatzExtern
                     tagessatzIntern = tmpRole.tagessatzIntern
 
-                    If tagessatzExtern <> tagessatzIntern Then
-                        diff = tagessatzExtern - tagessatzIntern
-                        myCollection.Add(roleName, roleName)
+                    ' tk 30.11. es gibt keine externen Kostensätze mehr 
+                    'If tagessatzExtern <> tagessatzIntern Then
+                    '    diff = tagessatzExtern - tagessatzIntern
+                    '    myCollection.Add(roleName, roleName)
 
-                        If tmpRole.isCombinedRole Then
-                            roleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
-                                                                 considerAllSubRoles:=True, _
-                                                                 type:=PTcbr.all, _
-                                                                 excludedNames:=roleCollection)
+                    '    If tmpRole.isCombinedRole Then
+                    '        roleValues = Me.getRoleValuesInMonth(roleID:=roleName,
+                    '                                             considerAllSubRoles:=True,
+                    '                                             type:=PTcbr.all,
+                    '                                             excludedNames:=roleCollection)
 
-                        Else
-                            roleValues = Me.getRoleValuesInMonth(roleID:=roleName)
-                        End If
+                    '    Else
+                    '        roleValues = Me.getRoleValuesInMonth(roleID:=roleName)
+                    '    End If
 
-                        kapaValues = Me.getRoleKapasInMonth(myCollection, False)
-                        myCollection.Clear()
+                    '    kapaValues = Me.getRoleKapasInMonth(myCollection)
+                    '    myCollection.Clear()
 
-                        For ix = 0 To zeitraum
-                            If roleValues(ix) > kapaValues(ix) Then
-                                ' Kosten der externen Ressourcen
-                                costValue = costValue + _
-                                                 (roleValues(ix) - kapaValues(ix)) * diff * faktor / 1000
-                            ElseIf roleValues(ix) < kapaValues(ix) Then
-                                ' Kosten der internen Ressourcen, die nicht in Projekten arbeiten  
-                                costValue = costValue + _
-                                                 (kapaValues(ix) - roleValues(ix)) * tagessatzIntern * faktor / 1000
+                    '    For ix = 0 To zeitraum
+                    '        If roleValues(ix) > kapaValues(ix) Then
+                    '            ' Kosten der externen Ressourcen
+                    '            costValue = costValue +
+                    '                             (roleValues(ix) - kapaValues(ix)) * diff * faktor / 1000
+                    '        ElseIf roleValues(ix) < kapaValues(ix) Then
+                    '            ' Kosten der internen Ressourcen, die nicht in Projekten arbeiten  
+                    '            costValue = costValue +
+                    '                             (kapaValues(ix) - roleValues(ix)) * tagessatzIntern * faktor / 1000
 
-                            End If
-                        Next ix
-                    End If
+                    '        End If
+                    '    Next ix
+                    'End If
                 End If
 
 
@@ -4188,7 +4180,7 @@ Public Class clsProjekte
                         ReDim kapaValues(zeitraum)
                     Else
                         myCollection.Add(roleName, roleName)
-                        kapaValues = Me.getRoleKapasInMonth(myCollection, False)
+                        kapaValues = Me.getRoleKapasInMonth(myCollection)
                         myCollection.Clear()
                     End If
 

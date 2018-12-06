@@ -166,6 +166,9 @@ Public Class clsawinSettings
     ' Settings für Massen-Edit Funktionen 
     ' Anzeigen der prozentualen Auslastung bzw. der absoluten "freien" bzw. "überbelegten" Kapazitäten 
     Public Property mePrzAuslastung As Boolean
+    ' soll im MassenEdit das Chart mit dem ersten oder dem letzten Beauftragungs-Stand verglichen werden ? 
+    ' ersetzt im Formular das mePrzAuslastung
+    Public Property meCompareWithLastVersion As Boolean
     ' sollen Zuweisungen zu Rollen automatisch ggf vorhandene Sammelrollen Zuweisungen ersetzen  
     Public Property meAutoReduce As Boolean
     ' soll im Massen-Edit bei nicht nachgefragt werden wenn AutoReduce = true
@@ -252,15 +255,22 @@ Public Class clsawinSettings
     ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
     ' im Produktivbetrieb, wenn tatsächlich mit Ist-Werte gearbeitet wird, die eingelesen werden, sollte das immer auf false stehen ; 
     ' unbedingt beachten: kann im Konflikt mit actzalDataMonth stehen ;
-    Public Property autoSetActualDataDate As Boolean = False
+    Public Property autoSetActualDataDate As Boolean
 
     ' das ist ein Setting, das bewirkt, das ein festes Datum gesetzt werden kann, 
-    Public Property actualDataMonth As Date = Date.MinValue
+    Public Property actualDataMonth As Date
+
+    ' ist notwendig, um ggf die Sicht-Rechte auf eine Teil-Organisation zu beschränken ..
+    Public Property isRestrictedToOrgUnit As String
+
 
     Sub New()
 
         ReDim _importSettings(17)
         _allianzI2DelRoles = ""
+
+        _autoSetActualDataDate = False
+        _actualDataMonth = Date.MinValue
 
         ' Chart Settings
         _fontsizeTitle = 10
@@ -304,7 +314,7 @@ Public Class clsawinSettings
         _milestoneFreeFloat = True
         _autoCorrectBedarfe = True
         _propAnpassRess = False
-        _phasesProzentual = True
+        _phasesProzentual = False
         _drawphases = False
         _showValuesOfSelected = False
         _applyFilter = False
@@ -368,7 +378,8 @@ Public Class clsawinSettings
 
         ' Settings für online MassenEdit 
         _mePrzAuslastung = True
-        _meAutoReduce = True
+        _meCompareWithLastVersion = False
+        _meAutoReduce = False
         _meDontAskWhenAutoReduce = True
         _meEnableSorting = False
         _meAuslastungIsInclExt = True
@@ -403,6 +414,8 @@ Public Class clsawinSettings
         _useHierarchy = True
         _isHryNameFrmActive = False
         _isChangePortfolioFrmActive = False
+
+        _isRestrictedToOrgUnit = ""
 
         _visboDebug = False
         _visboServer = False

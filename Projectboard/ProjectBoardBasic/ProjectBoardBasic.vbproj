@@ -67,6 +67,7 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="agm2.vb" />
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
     <Compile Include="clsProjectboardConfig.vb" />
@@ -74,6 +75,12 @@
       <DependentUpon>frmEinstellungen.vb</DependentUpon>
     </Compile>
     <Compile Include="frmEinstellungen.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmProvideActualDataMonth.Designer.vb">
+      <DependentUpon>frmProvideActualDataMonth.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProvideActualDataMonth.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmRenameProject.Designer.vb">
@@ -333,6 +340,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjPortfolioAdmin.resx">
       <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmProvideActualDataMonth.resx">
+      <DependentUpon>frmProvideActualDataMonth.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmRenameProject.resx">
       <DependentUpon>frmRenameProject.vb</DependentUpon>

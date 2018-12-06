@@ -28,6 +28,11 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
     Public noDB As Boolean = True
 
+    ' tk 4.12.18 
+    Public dbUserID As String = ""
+    ' hier sind für den eingeloggten Nutzer  aktuell gewählte  alle 
+    Public customUserRoles As New clsCustomUserRoles
+
     ' wird verwendet um Informationen verschlüsselt zu schreiben 
     Public visboCryptoKey As String = "Berge2007QuebecKanada&2010SeilmitZeltThomasUtePhilippDenise060162130790141090050715&@Tecoplan@IPEQ@Visbo"
 
@@ -124,6 +129,7 @@ Public Module Module1
 
     Public PfChartBubbleNames() As String
 
+
     Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
     Public RoleDefinitions As New clsRollen
     Public RoleHierarchy As New clsroleHrchy
@@ -191,6 +197,9 @@ Public Module Module1
     ' diese Konstante wird benutzt, wenn keine Variante angegeben wurde, d.h. meistens das alle Variante relevant sind.
     Public Const noVariantName As String = "-9999999"
 
+    ' diese Konstante wird verwendet, um den VisboImportTyp zu erkennen
+    Public Const visboImportKennung = "VisboImportTyp"
+
     Public visboFarbeBlau As Integer = RGB(69, 140, 203)
     Public visboFarbeOrange As Integer = RGB(247, 148, 30)
     Public visboFarbeNone As Integer = RGB(127, 127, 127)
@@ -240,6 +249,34 @@ Public Module Module1
 
 
     Public Const maxProjektdauer As Integer = 60
+
+    ''' <summary>
+    ''' Werte-Bereich: {0=Admin, 1=PortfolioMgr; 2=RessourcenManager; 3=Projektleiter
+    ''' </summary>
+    Public Enum ptCustomUserProfils
+        admin = 0
+        portfoliomgr = 1
+        resourcemgr = 2
+        projectlead = 3
+        all = 4
+    End Enum
+
+    ''' <summary>
+    ''' definiert, welche Import-Methode angewendet werden soll ; angelegt 30.11.18 by tk
+    ''' </summary>
+    Public Enum ptVisboImportTypen
+        visboSimple = 0
+        visboProjectbrief = 1
+        visboMassCreation = 2
+        visboRXF = 3
+        visboExcelBMW = 4
+        allianzMassImport1 = 5
+        allianzMassImport2 = 6
+        allianzTeamRessZuordnung = 7
+        allianzIstDaten = 8
+        visboMassRessourcenEdit = 9
+        visboMPP = 10
+    End Enum
 
     Public Enum ptImportSettings
         attributeNames1 = 0
@@ -294,6 +331,10 @@ Public Module Module1
         prSymDescription = 14
         prCard = 15
         prCardinvisible = 16
+        prSymFinance = 17
+        prSymSchedules = 18
+        prSymTeam = 19
+        prSymProject = 20
     End Enum
 
     ' wenn diese Enum erweitert wird, inbedingt im clsProjekt .projecttype Property den Wertebereich anpassen ...
@@ -396,6 +437,7 @@ Public Module Module1
         TrafficLight = 11
         TLExplanation = 12
         DocUrl = 13
+        Deliv = 14
     End Enum
 
 
@@ -759,7 +801,11 @@ Public Module Module1
         ChangeRequest = 2
         abgebrochen = 3
         abgeschlossen = 4
+        geplanteVorgabe = 5
+        beauftragteVorgabe = 6
     End Enum
+
+
 
     ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
     ' soll so früh gesetzt sein, damit 
@@ -779,7 +825,9 @@ Public Module Module1
     ' geplant
     ' beauftragt
     ' abgeschlossen
-    Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen"}
+    ' Vorgabe, geplant
+    ' Vorgabe beauftragt
+    Public ProjektStatus() As String = {"geplant", "beauftragt", "beauftragt, Änderung noch nicht freigegeben", "beendet", "abgeschlossen", "geplanteVorgabe", "beauftragteVorgabe"}
 
 
     '
@@ -4509,8 +4557,14 @@ Public Module Module1
 
                     If detailID = ptReportComponents.prSymTrafficLight Or
                         detailID = ptReportComponents.prSymRisks Or
-                        detailID = ptReportComponents.prSymDescription Then
+                        detailID = ptReportComponents.prSymDescription Or
+                        detailID = ptReportComponents.prSymFinance Or
+                        detailID = ptReportComponents.prSymProject Or
+                        detailID = ptReportComponents.prSymSchedules Or
+                        detailID = ptReportComponents.prSymTeam Then
+
                         Call updateSmartPPTSymTxt(pptShape, hproj, detailID)
+
                     End If
 
 
@@ -4538,15 +4592,169 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Sub updateSmartPPTSymTxt(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt, ByVal detailID As Integer)
         Dim tmpText As String = ""
+
         If detailID = ptReportComponents.prSymTrafficLight Then
-            tmpText = hproj.ampelErlaeuterung
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = tmpText & hproj.ampelErlaeuterung
 
         ElseIf detailID = ptReportComponents.prSymRisks Then
             ' aktuell gibt es im Datenmodell noch keine Risiken
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
             tmpText = ""
 
         ElseIf detailID = ptReportComponents.prSymDescription Then
-            tmpText = hproj.fullDescription
+
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = tmpText & hproj.fullDescription
+
+        ElseIf detailID = ptReportComponents.prSymFinance Then
+            ' es werden Budget, Personalkosten, sosnt. Kosten und Forecast Ergebnis angezeigt
+            Dim budget As Double, pk As Double, sk As Double, rk As Double, forecast As Double
+            Call hproj.calculateRoundedKPI(budget, pk, sk, rk, forecast)
+
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+
+            tmpText = tmpText & "Budget: " & budget.ToString & " T€" & vbLf
+            tmpText = tmpText & "Personnel-Cost: " & pk.ToString & " T€" & vbLf
+            tmpText = tmpText & "Other Costs: " & sk.ToString & " T€" & vbLf
+            If forecast < 0 Then
+                tmpText = tmpText & "Loss: " & forecast.ToString & " T€"
+            Else
+                tmpText = tmpText & "Profit: " & forecast.ToString & " T€"
+            End If
+
+
+        ElseIf detailID = ptReportComponents.prSymSchedules Then
+
+            tmpText = ""
+            Try
+
+                ' es werden die Gesamt-Anzahl Überfälliger Meilensteine / Vorgänge angezeigt 
+                ' es werden die Gesamt-Anzahl roter, gelber, grüner, Nicht-bewerteter Meilensteine / Vorgänge angezeigt 
+                Dim sortedListOfMilestones As SortedList(Of Date, String) = hproj.getMilestones
+                Dim sortedListOfTasks As SortedList(Of Date, String) = hproj.getPhases
+
+                tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+
+                Dim vglDatum As Date = hproj.timeStamp
+                Dim anz As Integer = 0
+                Dim overDue As Integer = 0
+
+                ' jetzt die Meilensteine überprüfen 
+                If sortedListOfMilestones.Count > 0 Then
+                    Dim ix As Integer = 0
+                    Dim curDate As Date = sortedListOfMilestones.ElementAt(ix).Key
+
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+
+                        If hproj.getMilestoneByID(sortedListOfMilestones.ElementAt(ix).Value).percentDone < 1 Then
+                            overDue = overDue + 1
+                        End If
+
+                        anz = anz + 1
+                        ix = ix + 1
+
+                        curDate = sortedListOfMilestones.ElementAt(ix).Key
+                    Loop
+
+
+                End If
+
+                If sortedListOfTasks.Count > 0 Then
+                    Dim ix As Integer = 0
+                    Dim curDate As Date = sortedListOfTasks.ElementAt(ix).Key
+
+                    Do While DateDiff(DateInterval.Day, curDate, vglDatum) > 0
+
+                        If hproj.getPhaseByID(sortedListOfTasks.ElementAt(ix).Value).percentDone < 1 Then
+                            overDue = overDue + 1
+                        End If
+
+                        anz = anz + 1
+                        ix = ix + 1
+
+                        curDate = sortedListOfMilestones.ElementAt(ix).Key
+                    Loop
+
+                End If
+
+                tmpText = tmpText & "Number overdue / total number until version-date: " & overDue.ToString & " / " & anz.ToString & vbLf & vbLf
+
+                ' jetzt werden die Anzahl roten, gelben, grünen, grauen Bewertungen gezählt ..
+                Dim anzRed As Integer = 0, anzYellow As Integer = 0, anzGreen As Integer = 0, anzNoColor As Integer = 0
+
+                anz = sortedListOfMilestones.Count + sortedListOfTasks.Count
+
+                If sortedListOfMilestones.Count > 0 Then
+                    For Each kvp As KeyValuePair(Of Date, String) In sortedListOfMilestones
+                        Dim tmpColor As Integer = hproj.getMilestoneByID(kvp.Value).ampelStatus
+                        If tmpColor = 0 Then
+                            anzNoColor = anzNoColor + 1
+                        ElseIf tmpColor = 1 Then
+                            anzGreen = anzGreen + 1
+                        ElseIf tmpColor = 2 Then
+                            anzYellow = anzYellow + 1
+                        ElseIf tmpColor = 3 Then
+                            anzRed = anzRed + 1
+                        Else
+                            anzNoColor = anzNoColor + 1
+                        End If
+                    Next
+
+                End If
+
+                If sortedListOfTasks.Count > 0 Then
+                    For Each kvp As KeyValuePair(Of Date, String) In sortedListOfTasks
+                        Dim tmpColor As Integer = hproj.getPhaseByID(kvp.Value).ampelStatus
+                        If tmpColor = 0 Then
+                            anzNoColor = anzNoColor + 1
+                        ElseIf tmpColor = 1 Then
+                            anzGreen = anzGreen + 1
+                        ElseIf tmpColor = 2 Then
+                            anzYellow = anzYellow + 1
+                        ElseIf tmpColor = 3 Then
+                            anzRed = anzRed + 1
+                        Else
+                            anzNoColor = anzNoColor + 1
+                        End If
+                    Next
+
+                End If
+
+                tmpText = tmpText & "Total number of Milestones/Tasks: " & anz.ToString & vbLf
+                tmpText = tmpText & "No rating: " & anzNoColor.ToString & vbLf
+                tmpText = tmpText & "Green: " & anzGreen.ToString & vbLf
+                tmpText = tmpText & "Yellow: " & anzYellow.ToString & vbLf
+                tmpText = tmpText & "Red: " & anzRed.ToString & vbLf
+
+
+
+            Catch ex As Exception
+
+            End Try
+
+
+        ElseIf detailID = ptReportComponents.prSymProject Then
+            ' es werden Informationen zum Projekt angezeigt 
+            ' eigentlich wäre es hier am besten ein 
+
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+            tmpText = ""
+
+        ElseIf detailID = ptReportComponents.prSymTeam Then
+            ' es wird das Team angezeigt ...
+
+            tmpText = "Version: " & hproj.timeStamp.ToShortDateString & vbLf & vbLf
+
+            Dim allNames As Collection = hproj.getRoleNames
+
+            Dim responsible As String = hproj.leadPerson
+            tmpText = tmpText & "Project-Lead: " & responsible & vbLf
+
+            For Each tmpName As String In allNames
+                tmpText = tmpText & tmpName & vbLf
+            Next
+
         End If
 
         ' jetzt wird das unter dem Tag TXT eingetragen
@@ -6514,6 +6722,8 @@ Public Module Module1
         Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim currentCell As Excel.Range
         Dim currentCellPlus1 As Excel.Range
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
         Try
@@ -6547,29 +6757,23 @@ Public Module Module1
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
 
-                If Not awinSettings.meExtendedColumnsView Then
-                    appInstance.ScreenUpdating = False
-                    ' einblenden ... 
-                    .Range("MahleInfo").EntireColumn.Hidden = False
-                End If
-
-
-                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnEndData - 1)), Excel.Range)
+                'Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
+                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
+                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
                 copySource.Copy(Destination:=copyDestination)
 
                 CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
 
-                For c As Integer = columnStartData - 3 To columnEndData + 1
+                For c As Integer = columnStartData - 2 To columnEndData
                     CType(.Cells(zeile + 1, c), Excel.Range).Value = Nothing
                 Next
 
-                ' jetzt wieder ausblenden ... 
-                If Not awinSettings.meExtendedColumnsView Then
-                    ' ausblenden ... 
-                    .Range("MahleInfo").EntireColumn.Hidden = True
-                    appInstance.ScreenUpdating = True
-                End If
+                '' jetzt wieder ausblenden ... 
+                'If Not awinSettings.meExtendedColumnsView Then
+                '    ' ausblenden ... 
+                '    .Range("MahleInfo").EntireColumn.Hidden = True
+                '    appInstance.ScreenUpdating = True
+                'End If
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
@@ -6577,27 +6781,14 @@ Public Module Module1
 
             With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
 
-                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
+                ' wenn eine neue Zeile eingefügt ist und Ist-Spalten existieren , dann müssen die jetzt wieder auf frei gesetzt werden 
+                .Locked = False
 
+                ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
                 Try
                     If Not IsNothing(.Validation) Then
                         .Validation.Delete()
                     End If
-                    ' jetzt wird die ValidationList aufgebaut
-                    ' ist es eine Rolle ? 
-                    '' ''If controlID = "PT2G1M2B4" Then
-                    '' ''    ' Rollen
-                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-                    '' ''                           Formula1:=validationStrings.Item("alleRollen"))
-                    '' ''ElseIf controlID = "PT2G1M2B7" Then
-                    '' ''    ' Kosten
-                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-                    '' ''                                                   Formula1:=validationStrings.Item("alleKosten"))
-                    '' ''Else
-                    '' ''    ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
-                    '' ''    .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-                    '' ''                           Formula1:=validationStrings.Item("alles"))
-                    '' ''End If
 
                 Catch ex As Exception
 
@@ -6637,7 +6828,8 @@ Public Module Module1
             Call MsgBox("Fehler beim Kopieren einer Zeile ...")
         End Try
 
-        appInstance.EnableEvents = True
+        'appInstance.EnableEvents = True
+        appInstance.EnableEvents = formerEE
     End Sub
 
     Sub massEditZeileLoeschen(ByVal ID As String)
@@ -6673,6 +6865,11 @@ Public Module Module1
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                 Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
 
+                Dim actualDataExists As Boolean = False
+                If hproj.actualDataUntil > cphase.getStartDate Then
+                    actualDataExists = True
+                End If
+
                 If IsNothing(rcName) Then
                     ' nichts tun
                 ElseIf rcName.Trim.Length = 0 Then
@@ -6680,23 +6877,37 @@ Public Module Module1
                 ElseIf RoleDefinitions.containsName(rcName) Then
                     ' es handelt sich um eine Rolle
                     ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+                    ' gibt es Ist-Daten ? 
+
                     If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) Then
+                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
                         cphase.removeRoleByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
+                        If actualDataExists Then
+                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
+                        Else
+                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
+                                    " nicht gelöscht werden ...")
+                        End If
+
                         ok = False
                     End If
 
                 ElseIf CostDefinitions.containsName(rcName) Then
-                    ' es handelt sih um eine Kostenart 
+                    ' es handelt sich um eine Kostenart 
                     If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) Then
+                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
                         cphase.removeCostByName(rcName)
                     Else
-                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf &
+                        If actualDataExists Then
+                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Kostenart " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
+                        Else
+                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf &
+                                    " nicht gelöscht werden ...")
+                        End If
+
                         ok = False
                     End If
 
@@ -6876,6 +7087,70 @@ Public Module Module1
         Catch ex As Exception
             Return False
         End Try
+    End Function
+
+    ''' <summary>
+    ''' Test-Funktion: überprüft die Team-Definitionen 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function checkTeamDefinitions() As Boolean
+
+        Dim allTeams As SortedList(Of Integer, Double) = RoleDefinitions.getAllTeamIDs
+        Dim atleastOneError As Boolean = False
+
+        For Each kvp As KeyValuePair(Of Integer, Double) In allTeams
+
+            Dim ok As Boolean = True
+            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim childIDs As SortedList(Of Integer, Double) = teamRole.getSubRoleIDs
+
+            For Each child As KeyValuePair(Of Integer, Double) In childIDs
+                Dim childRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(child.Key)
+                ok = ok And childRole.getTeamIDs.ContainsKey(kvp.Key)
+                If Not ok Then
+                    Call MsgBox("teamRole " & teamRole.name & " conflicts with " & childRole.name)
+                    atleastOneError = True
+                    ok = True
+                End If
+            Next
+
+        Next
+        checkTeamDefinitions = atleastOneError
+
+    End Function
+
+    ''' <summary>
+    ''' Test-Funktion für Teams und Überlastung 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function checkTeamMemberOverloads() As Boolean
+
+        Dim allIDs As SortedList(Of Integer, Double) = RoleDefinitions.getAllIDs
+        Dim atleastOneOverload As Boolean = False
+
+        For Each kvp As KeyValuePair(Of Integer, Double) In allIDs
+
+            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim memberships As SortedList(Of Integer, Double) = tmpRole.getTeamIDs
+
+            If Not IsNothing(memberships) Then
+                If memberships.Count > 0 Then
+                    Dim wholeKapa As Double = 0.0
+                    For Each membership As KeyValuePair(Of Integer, Double) In memberships
+                        wholeKapa = wholeKapa + membership.Value
+                    Next
+
+                    If wholeKapa > 1.0 Then
+                        atleastOneOverload = True
+                        Call MsgBox("Overloaded Role: " & tmpRole.name & "Kapa: " & wholeKapa.ToString("#0.#"))
+                    End If
+                End If
+            End If
+
+        Next
+
+        checkTeamMemberOverloads = atleastOneOverload
+
     End Function
 
 

@@ -5,12 +5,21 @@ Imports ProjectBoardDefinitions
 
 Public Class frmEinstellungen
 
+    Private dontFire As Boolean = False
     Private Sub frmEinstellungen_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
-        chkboxMassEdit.Checked = awinSettings.meExtendedColumnsView
+        'chkboxMassEdit.Checked = awinSettings.meExtendedColumnsView
         chkboxAmpel.Checked = awinSettings.mppShowAmpel
         chkboxPropAnpass.Checked = awinSettings.propAnpassRess
+
+        dontFire = True
+        If awinSettings.meCompareWithLastVersion Then
+            rdbLast.Checked = True
+        Else
+            rdbFirst.Checked = True
+        End If
+        dontFire = False
 
         Dim xxx As String = awinSettings.ReportLanguage
 
@@ -39,15 +48,15 @@ Public Class frmEinstellungen
         statusLabel.Text = ""
     End Sub
 
-    Private Sub chkboxMassEdit_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxMassEdit.CheckedChanged
+    'Private Sub chkboxMassEdit_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxMassEdit.CheckedChanged
 
-        If chkboxMassEdit.Checked Then
-            awinSettings.meExtendedColumnsView = True
-        Else
-            awinSettings.meExtendedColumnsView = False
-        End If
+    '    If chkboxMassEdit.Checked Then
+    '        awinSettings.meExtendedColumnsView = True
+    '    Else
+    '        awinSettings.meExtendedColumnsView = False
+    '    End If
 
-    End Sub
+    'End Sub
 
     Private Sub chkboxPropAnpass_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxPropAnpass.CheckedChanged
 
@@ -93,5 +102,17 @@ Public Class frmEinstellungen
 
         'Me.Close()
 
+    End Sub
+
+    Private Sub rdbFirst_CheckedChanged(sender As Object, e As EventArgs) Handles rdbFirst.CheckedChanged
+        If rdbFirst.Checked = True And Not dontFire Then
+            awinSettings.meCompareWithLastVersion = False
+        End If
+    End Sub
+
+    Private Sub rdbLast_CheckedChanged(sender As Object, e As EventArgs) Handles rdbLast.CheckedChanged
+        If rdbLast.Checked = True And Not dontFire Then
+            awinSettings.meCompareWithLastVersion = True
+        End If
     End Sub
 End Class

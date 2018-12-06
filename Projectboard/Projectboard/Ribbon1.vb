@@ -129,7 +129,7 @@ Imports System.Web
 
         End With
 
-        Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog
+        Dim returnValue As DialogResult = storeConstellationFrm.ShowDialog()
 
         If returnValue = DialogResult.OK Then
 
@@ -338,115 +338,6 @@ Imports System.Web
     Sub PTAendernKonstellation(control As IRibbonControl)
 
         Call PBBChangeCurrentPortfolio()
-
-    End Sub
-    Sub PTRemoveKonstellation(control As IRibbonControl)
-
-        Dim ControlID As String = control.Id
-
-        Dim removeConstFilterFrm As New frmRemoveConstellation
-        Dim constFilterName As String
-
-        Dim returnValue As DialogResult
-
-        Call projektTafelInit()
-
-
-        Dim deleteDatenbank As String = "Pt5G3B1"
-        Dim deleteFromSession As String = "PT2G3M1B3"
-        Dim deleteFilter As String = "Pt6G3B5"
-
-        Dim removeFromDB As Boolean
-
-        If ControlID = deleteDatenbank And Not noDB Then
-            removeConstFilterFrm.frmOption = "ProjConstellation"
-            removeFromDB = True
-
-            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
-            Else
-                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-                removeFromDB = False
-            End If
-
-        ElseIf ControlID = deleteFromSession Then
-            removeConstFilterFrm.frmOption = "ProjConstellation"
-            removeFromDB = False
-
-        ElseIf ControlID = deleteFilter And Not noDB Then
-            removeConstFilterFrm.frmOption = "DBFilter"
-            removeFromDB = True
-
-            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                filterDefinitions.filterListe = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
-            Else
-                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-                removeFromDB = False
-            End If
-
-        Else
-            removeFromDB = False
-        End If
-
-        enableOnUpdate = False
-
-        returnValue = removeConstFilterFrm.ShowDialog
-
-        If returnValue = DialogResult.OK Then
-            If ControlID = deleteDatenbank Or
-                ControlID = deleteFromSession Then
-
-                constFilterName = removeConstFilterFrm.ListBox1.Text
-
-                If (awinRemoveConstellation(constFilterName, removeFromDB) = True) Then
-                    Call MsgBox(constFilterName & " wurde gelöscht ...")
-                End If
-
-
-                If constFilterName = currentConstellationName Then
-
-                    ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                    'Call storeSessionConstellation("Last")
-                    'currentConstellationName = "Last"
-                Else
-                    ' aktuelle Konstellation bleibt unverändert
-                End If
-
-
-            End If
-            If ControlID = deleteFilter Then
-
-                Dim removeOK As Boolean = False
-                Dim filter As clsFilter = Nothing
-
-                constFilterName = removeConstFilterFrm.ListBox1.Text
-
-                filter = filterDefinitions.retrieveFilter(constFilterName)
-
-                'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-
-                    ' Filter muss aus der Datenbank gelöscht werden.
-
-                    removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
-                    If removeOK = False Then
-                        Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
-                    Else
-                        ' DBFilter ist nun aus der DB gelöscht
-                        ' hier: wird der Filter nun noch aus der Filterliste gelöscht
-                        Call filterDefinitions.filterListe.Remove(constFilterName)
-                        Call MsgBox(constFilterName & " wurde gelöscht ...")
-                    End If
-                Else
-                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
-                    removeOK = False
-                End If
-
-            End If
-        End If
-        enableOnUpdate = True
 
     End Sub
 
@@ -2408,6 +2299,13 @@ Imports System.Web
                     tmpLabel = "Show Header"
                 End If
 
+            Case "PT6G2B8" ' Compare with Last Version
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "mit letzter Version vergleichen"
+                Else
+                    tmpLabel = "compare with last version"
+                End If
+
             Case "PTfreezeB1" ' Fixieren
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Fixieren"
@@ -3278,44 +3176,50 @@ Imports System.Web
                     With projectboardWindows(PTwindows.massEdit)
                         'With appInstance.ActiveWindow
 
-                        .FreezePanes = False
-                        .Split = False
+                        Try
+                            .FreezePanes = False
+                            .Split = False
 
-                        If meModus = ptModus.massEditRessCost Then
+                            If meModus = ptModus.massEditRessCost Then
 
-                            If awinSettings.meExtendedColumnsView = True Then
-                                .SplitRow = 1
-                                .SplitColumn = 7
-                                .FreezePanes = True
-                            Else
+                                If awinSettings.meExtendedColumnsView = True Then
+                                    .SplitRow = 1
+                                    .SplitColumn = 7
+                                    .FreezePanes = True
+                                Else
+                                    .SplitRow = 1
+                                    .SplitColumn = 6
+                                    .FreezePanes = True
+                                End If
+                                .DisplayHeadings = False
+
+                            ElseIf meModus = ptModus.massEditTermine Then
                                 .SplitRow = 1
                                 .SplitColumn = 6
                                 .FreezePanes = True
+                                .DisplayHeadings = True
+
+                            ElseIf meModus = ptModus.massEditAttribute Then
+                                .SplitRow = 1
+                                .SplitColumn = 5
+                                .FreezePanes = True
+                                .DisplayHeadings = True
+
+                            Else
+                                Exit Sub
                             End If
-                            .DisplayHeadings = False
 
-                        ElseIf meModus = ptModus.massEditTermine Then
-                            .SplitRow = 1
-                            .SplitColumn = 6
-                            .FreezePanes = True
-                            .DisplayHeadings = True
+                            .DisplayFormulas = False
+                            .DisplayGridlines = True
+                            '.GridlineColor = RGB(220, 220, 220)
+                            .GridlineColor = Excel.XlRgbColor.rgbBlack
+                            .DisplayWorkbookTabs = False
+                            .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
+                            .WindowState = Excel.XlWindowState.xlMaximized
+                        Catch ex As Exception
+                            Call MsgBox("Fehler in massEditRcTeAt")
+                        End Try
 
-                        ElseIf meModus = ptModus.massEditAttribute Then
-                            .SplitRow = 1
-                            .SplitColumn = 5
-                            .FreezePanes = True
-                            .DisplayHeadings = True
-
-                        Else
-                            Exit Sub
-                        End If
-
-                        .DisplayFormulas = False
-                        .DisplayGridlines = True
-                        .GridlineColor = RGB(220, 220, 220)
-                        .DisplayWorkbookTabs = False
-                        .Caption = bestimmeWindowCaption(PTwindows.massEdit, tableTyp:=tableTyp)
-                        .WindowState = Excel.XlWindowState.xlMaximized
 
                     End With
 
@@ -3703,129 +3607,11 @@ Imports System.Web
 
         Call massEditZeileEinfügen(control.Id)
 
-        ' ''Dim currentCell As Excel.Range
-        ' ''appInstance.EnableEvents = False
-
-        ' ''Try
-
-        ' ''    ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
-        ' ''    Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
-
-        ' ''    currentCell = CType(appInstance.ActiveCell, Excel.Range)
-
-        ' ''    'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-
-        ' ''    Dim columnEndData As Integer = visboZustaende.meColED
-        ' ''    Dim columnStartData As Integer = visboZustaende.meColSD
-
-        ' ''    Dim columnRC As Integer = visboZustaende.meColRC
-
-        ' ''    Dim hoehe As Double = CDbl(currentCell.Height)
-        ' ''    currentCell.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
-        ' ''    Dim zeile As Integer = currentCell.Row
-
-        ' ''    ' Blattschutz aufheben ... 
-        ' ''    If Not awinSettings.meEnableSorting Then
-        ' ''        ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
-        ' ''        With CType(appInstance.ActiveSheet, Excel.Worksheet)
-        ' ''            .Unprotect(Password:="x")
-        ' ''        End With
-        ' ''    End If
+        If Not appInstance.EnableEvents = True Then
+            appInstance.EnableEvents = True
+        End If
 
 
-
-        ' ''    With CType(appInstance.ActiveSheet, Excel.Worksheet)
-
-        ' ''        If Not awinSettings.meExtendedColumnsView Then
-        ' ''            appInstance.ScreenUpdating = False
-        ' ''            ' einblenden ... 
-        ' ''            .Range("MahleInfo").EntireColumn.Hidden = False
-        ' ''        End If
-
-
-        ' ''        Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
-        ' ''        Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile - 1, 1), .Cells(zeile - 1, 1).offset(0, columnEndData - 1)), Excel.Range)
-        ' ''        copySource.Copy(Destination:=copyDestination)
-
-        ' ''        CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile - 1), Excel.Range).RowHeight = hoehe
-
-        ' ''        For c As Integer = columnStartData - 3 To columnEndData + 1
-        ' ''            CType(.Cells(zeile - 1, c), Excel.Range).Value = Nothing
-        ' ''        Next
-
-        ' ''        ' jetzt wieder ausblenden ... 
-        ' ''        If Not awinSettings.meExtendedColumnsView Then
-        ' ''            ' ausblenden ... 
-        ' ''            .Range("MahleInfo").EntireColumn.Hidden = True
-        ' ''            appInstance.ScreenUpdating = True
-        ' ''        End If
-        ' ''    End With
-
-        ' ''    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-        ' ''    CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range).Select()
-
-        ' ''    With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile - 1, columnRC), Excel.Range)
-
-        ' ''        ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
-
-        ' ''        Try
-        ' ''            If Not IsNothing(.Validation) Then
-        ' ''                .Validation.Delete()
-        ' ''            End If
-        ' ''            ' jetzt wird die ValidationList aufgebaut
-        ' ''            ' ist es eine Rolle ? 
-        ' ''            If control.Id = "PT2G1M2B4" Then
-        ' ''                ' Rollen
-        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-        ' ''                                       Formula1:=validationStrings.Item("alleRollen"))
-        ' ''            ElseIf control.Id = "PT2G1M2B7" Then
-        ' ''                ' Kosten
-        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-        ' ''                                                               Formula1:=validationStrings.Item("alleKosten"))
-        ' ''            Else
-        ' ''                ' undefiniert, darf eigentlich nie vorkommen, aber just in case ...
-        ' ''                .Validation.Add(Type:=Excel.XlDVType.xlValidateList, AlertStyle:=Excel.XlDVAlertStyle.xlValidAlertStop, _
-        ' ''                                       Formula1:=validationStrings.Item("alles"))
-        ' ''            End If
-
-        ' ''        Catch ex As Exception
-
-        ' ''        End Try
-
-        ' ''    End With
-
-        ' ''    ' jetzt wird der Old-Value gesetzt 
-        ' ''    With visboZustaende
-        ' ''        If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
-        ' ''            Call MsgBox("Fehler 099 in PTzeileEinfügen")
-        ' ''        End If
-        ' ''        .oldValue = ""
-        ' ''        .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
-        ' ''    End With
-
-
-        ' ''    ' jetzt den Blattschutz wiederherstellen ... 
-        ' ''    If Not awinSettings.meEnableSorting Then
-        ' ''        ' es muss der Blattschutz wieder aktiviert werden ... 
-        ' ''        With CType(appInstance.ActiveSheet, Excel.Worksheet)
-        ' ''            .Protect(Password:="x", UserInterfaceOnly:=True, _
-        ' ''                     AllowFormattingCells:=True, _
-        ' ''                     AllowInsertingColumns:=False,
-        ' ''                     AllowInsertingRows:=True, _
-        ' ''                     AllowDeletingColumns:=False, _
-        ' ''                     AllowDeletingRows:=True, _
-        ' ''                     AllowSorting:=True, _
-        ' ''                     AllowFiltering:=True)
-        ' ''            .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
-        ' ''            .EnableAutoFilter = True
-        ' ''        End With
-        ' ''    End If
-
-        ' ''Catch ex As Exception
-        ' ''    Call MsgBox("Fehler beim Kopieren einer Zeile ...")
-        ' ''End Try
-
-        ' ''appInstance.EnableEvents = True
 
     End Sub
 
@@ -5030,19 +4816,24 @@ Imports System.Web
                             noScenarioCreation = True
                             Call importAllianzType2()
 
-                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 3") Then
+                        ElseIf scenarioNameP.StartsWith("Istdaten") Then
                             ' immer zwei Monate zurück gehen 
                             ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
-                            Dim monat As Integer = Date.Now.Month - 1
 
-                            If awinSettings.actualDataMonth <> Date.MinValue Then
-                                monat = awinSettings.actualDataMonth.Month
+                            Dim editActualDataMonth As New frmProvideActualDataMonth
+
+                            If editActualDataMonth.ShowDialog = DialogResult.OK Then
+
+                                Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
+
+                                Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
+                                Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+
+
+                                Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects)
+
                             End If
 
-                            If monat >= 1 And monat <= 12 Then
-                                'Call ImportAllianzType3(monat)
-                                Call ImportAllianzType3(monat, readAll:=True, createUnknown:=True)
-                            End If
 
                         ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
                             Call importAllianzType4()
@@ -6628,6 +6419,22 @@ Imports System.Web
         awinSettings.phasesProzentual = pressed
     End Sub
 
+    Public Function PTCompareLast(control As IRibbonControl) As Boolean
+        PTCompareLast = awinSettings.meCompareWithLastVersion
+    End Function
+
+    Sub awinCompareLast(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.meCompareWithLastVersion = pressed
+
+        ' jetzt muss der Auslastungs-Array neu aufgebaut werden 
+        visboZustaende.clearAuslastungsArray()
+
+        ' jetzt müssen die Charts aktualisiert werden 
+        Call aktualisiereCharts(visboZustaende.lastProject, False)
+
+    End Sub
+
     Public Function PTProzAuslastung(control As IRibbonControl) As Boolean
         PTProzAuslastung = awinSettings.mePrzAuslastung
     End Function
@@ -6641,7 +6448,7 @@ Imports System.Web
 
         If awinSettings.meExtendedColumnsView Then
             'Call deleteColorFormatMassEdit()
-            Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
+            'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, Nothing)
             'Call colorFormatMassEditRC()
         End If
 
@@ -7106,8 +6913,20 @@ Imports System.Web
                 Call createProjektErgebnisCharakteristik2(hproj, repObj, PThis.current,
                                                          top, left, width, height, False)
 
+
+                Dim compareWithLast As Boolean = awinSettings.meCompareWithLastVersion
+                Dim compareTyp As Integer
                 Try
-                    vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+
+                    If compareWithLast Then
+                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                        compareTyp = PTprdk.PersonalBalken2
+                    Else
+                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                        compareTyp = PTprdk.PersonalBalken
+                    End If
+
+
                 Catch ex As Exception
                     vglProjekt = Nothing
                 End Try
@@ -7116,14 +6935,19 @@ Imports System.Web
                 'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
                 auswahl = 1 ' zeige Personalbedarfe
-                Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
+                Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, vglTyp:=compareTyp)
 
                 ' Kosten-Balken
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
                 'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
                 auswahl = 1 ' zeige Sonstige Kosten
-                Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
+                If compareWithLast Then
+                    compareTyp = PTprdk.KostenBalken2
+                Else
+                    compareTyp = PTprdk.KostenBalken
+                End If
+                Call createCostBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, compareTyp)
 
                 ' Strategie / Risiko / Marge
                 Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 0, top, left, width, height)
@@ -7217,10 +7041,18 @@ Imports System.Web
                     End Try
 
                     Try
-
+                        Dim compareLast As Boolean = awinSettings.meCompareWithLastVersion
+                        Dim compareTyp As Integer
                         Try
 
-                            vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                            If compareLast Then
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                                compareTyp = PTprdk.PersonalBalken2
+                            Else
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                                compareTyp = PTprdk.PersonalBalken
+                            End If
+
 
                         Catch ex As Exception
                             vglProjekt = Nothing
@@ -7229,7 +7061,7 @@ Imports System.Web
                         Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
                         'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
 
-                        Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False)
+                        Call createRessBalkenOfProject(hproj, vglProjekt, repObj, auswahl, top, left, height, width, False, vglTyp:=compareTyp)
 
                         ' jetzt wird das Pie-Diagramm gezeichnet 
                         'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzRollen, top, left, width, height)
@@ -7327,19 +7159,32 @@ Imports System.Web
 
                 End Try
 
+
                 Try
+
+
+                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
+                    'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
+
+                    Dim compareWithLast As Boolean = awinSettings.meCompareWithLastVersion
+                    Dim compareTyp As Integer
+
                     Try
 
-                        vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                        If compareWithLast Then
+                            vglProj = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                            compareTyp = PTprdk.KostenBalken2
+                        Else
+                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                            compareTyp = PTprdk.KostenBalken
+                        End If
 
                     Catch ex As Exception
                         vglProj = Nothing
                     End Try
 
-                    Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, 2, top, left, width, height)
-                    'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
 
-                    Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False)
+                    Call createCostBalkenOfProject(hproj, vglProj, repObj, auswahl, top, left, height, width, False, compareTyp)
 
                     ' jetzt wird das Pie-Diagramm gezeichnet 
                     'Call bestimmeChartPositionAndSize(ptTables.mptPrCharts, tmpAnzCosts, top, left, width, height)
@@ -8788,221 +8633,6 @@ Imports System.Web
 
     End Sub
 
-    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
-
-
-    ' '' ''Sub PT0ShowPersonalBedarfe(control As IRibbonControl)
-
-    ' '' ''    Dim i As Integer
-    ' '' ''    Dim von As Integer, bis As Integer
-    ' '' ''    'Dim myCollection As Collection
-    ' '' ''    Dim listOfItems As New Collection
-    ' '' ''    'Dim left As Double, top As Double, height As Double, width As Double
-
-    ' '' ''    Dim repObj As Object = Nothing
-    ' '' ''    Dim title As String = "Rollen auswählen"
-
-    ' '' ''    Call projektTafelInit()
-
-    ' '' ''    'appInstance.ScreenUpdating = False
-    ' '' ''    'appInstance.EnableEvents = False
-    ' '' ''    'enableOnUpdate = False
-
-    ' '' ''    If ShowProjekte.Count > 0 Then
-
-    ' '' ''        If showRangeRight - showRangeLeft > 5 Then
-
-
-    ' '' ''            For i = 1 To RoleDefinitions.Count
-    ' '' ''                listOfItems.Add(RoleDefinitions.getRoledef(i).name)
-    ' '' ''            Next
-
-    ' '' ''            ' jetzt stehen in der listOfItems die Namen der Rollen 
-    ' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
-
-    ' '' ''            von = showRangeLeft
-    ' '' ''            bis = showRangeRight
-    ' '' ''            With auswahlFenster
-    ' '' ''                .chTop = 100.0 + awinSettings.ChartHoehe1
-    ' '' ''                .chLeft = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-    ' '' ''                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-    ' '' ''                .chHeight = awinSettings.ChartHoehe1
-    ' '' ''                .chTyp = DiagrammTypen(1)
-    ' '' ''            End With
-
-    ' '' ''            auswahlFenster.Show()
-    ' '' ''        Else
-    ' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
-    ' '' ''        End If
-    ' '' ''    Else
-    ' '' ''        Call MsgBox("Es sind noch keine Projekte geladen!")
-    ' '' ''    End If
-
-    ' '' ''    'appInstance.ScreenUpdating = True
-    ' '' ''    'appInstance.EnableEvents = True
-    ' '' ''    'enableOnUpdate = True
-
-    ' '' ''End Sub
-
-    ' '' ''ur: 13.09.2016: eliminiert, da nicht mehr benutzt
-
-
-    ' '' ''Sub PT0ShowKostenBedarfe(control As IRibbonControl)
-
-    ' '' ''    Dim i As Integer
-    ' '' ''    Dim von As Integer, bis As Integer
-    ' '' ''    'Dim myCollection As Collection
-    ' '' ''    Dim listOfItems As New Collection
-    ' '' ''    'Dim left As Double, top As Double, height As Double, width As Double
-    ' '' ''    Dim repObj As Object = Nothing
-    ' '' ''    Dim title As String = "Kostenarten auswählen"
-
-    ' '' ''    Call projektTafelInit()
-
-    ' '' ''    'appInstance.EnableEvents = False
-    ' '' ''    'enableOnUpdate = False
-    ' '' ''    If ShowProjekte.Count > 0 Then
-
-    ' '' ''        If showRangeRight - showRangeLeft > 5 Then
-
-    ' '' ''            For i = 1 To CostDefinitions.Count
-    ' '' ''                listOfItems.Add(CostDefinitions.getCostdef(i).name)
-    ' '' ''            Next
-
-    ' '' ''            ' jetzt stehen in der listOfItems die Namen der Rollen 
-    ' '' ''            'Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
-    ' '' ''            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
-
-
-    ' '' ''            von = showRangeLeft
-    ' '' ''            bis = showRangeRight
-    ' '' ''            With auswahlFenster
-    ' '' ''                .chTop = 50.0
-    ' '' ''                .chLeft = (showRangeRight - 1) * boxWidth + 4
-    ' '' ''                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-    ' '' ''                .chHeight = awinSettings.ChartHoehe1
-    ' '' ''                .chTyp = DiagrammTypen(2)
-
-    ' '' ''            End With
-
-    ' '' ''            auswahlFenster.Show()
-
-
-    ' '' ''        Else
-    ' '' ''            Call MsgBox("Bitte wählen Sie einen Zeitraum von mindestens 6 Monaten aus!")
-    ' '' ''        End If
-    ' '' ''    Else
-    ' '' ''        Call MsgBox("Es sind noch keine Projekte geladen!")
-    ' '' ''    End If
-
-    ' '' ''    'appInstance.EnableEvents = True
-    ' '' ''    'enableOnUpdate = True
-
-    ' '' ''End Sub
-
-    ' tk 17.10.18 wurde jetzt auskommentiert, weil WPFChart rausgeflogen ist
-    'Sub PT0ShowZieleUebersicht(control As IRibbonControl)
-
-    '    Dim ControlID As String = control.Id
-    '    Dim relevanteProjekte As clsProjekte
-    '    Dim chtObject As Excel.ChartObject = Nothing
-    '    'Dim top As Double, left As Double, width As Double, height As Double
-    '    Dim future As Integer = 0
-    '    Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
-    '    'awinSettings.mppShowAmpel = True
-
-
-    '    Dim myCollection As New Collection
-    '    myCollection.Add("Ziele")
-
-    '    Call projektTafelInit()
-
-    '    appInstance.EnableEvents = False
-    '    enableOnUpdate = False
-    '    If ControlID = "PT0G1B2" Then
-    '        relevanteProjekte = selectedProjekte
-    '    Else
-    '        Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
-    '        relevanteProjekte = ShowProjekte
-    '    End If
-
-    '    If relevanteProjekte.Count > 0 Then
-
-    '        Dim ok As Boolean = setTimeZoneIfTimeZonewasOff()
-
-    '        If ok Then
-
-    '            ' betrachte sowohl Vergangenheit als auch Gegenwart
-    '            future = 0
-
-    '            Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
-    '            Dim valueItem As New clsWPFPieValues
-
-    '            ' Nicht bewertet 
-    '            With valueItem
-    '                .value = relevanteProjekte.getColorsInMonth(0, future).Sum
-    '                .name = "nicht bewertet"
-    '                .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
-    '            End With
-    '            wpfInput.Add(valueItem.name, valueItem)
-
-    '            valueItem = New clsWPFPieValues
-    '            ' Grün bewertet
-    '            With valueItem
-    '                .value = relevanteProjekte.getColorsInMonth(1, future).Sum
-    '                .name = "OK"
-    '                .color = CType(awinSettings.AmpelGruen, UInt32)
-    '            End With
-    '            wpfInput.Add(valueItem.name, valueItem)
-
-    '            valueItem = New clsWPFPieValues
-    '            ' Gelb bewertet
-    '            With valueItem
-    '                .value = relevanteProjekte.getColorsInMonth(2, future).Sum
-    '                .name = "nicht vollständig"
-    '                .color = CType(awinSettings.AmpelGelb, UInt32)
-    '            End With
-    '            wpfInput.Add(valueItem.name, valueItem)
-
-    '            valueItem = New clsWPFPieValues
-    '            ' Rot bewertet
-    '            With valueItem
-    '                .value = relevanteProjekte.getColorsInMonth(3, future).Sum
-    '                .name = "Zielverfehlung"
-    '                .color = CType(awinSettings.AmpelRot, UInt32)
-    '            End With
-    '            wpfInput.Add(valueItem.name, valueItem)
-
-    '            Dim pieChartZieleV As New PieChartWindow(wpfInput)
-
-    '            With pieChartZieleV
-    '                .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
-    '                '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
-    '                '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
-    '            End With
-
-    '            pieChartZieleV.Show()
-    '        Else
-    '            Call MsgBox("Bitte zuerst Projekte/Portfolios laden ...")
-    '        End If
-
-    '    Else
-    '        If ControlID = "PT0G1B2" Then
-    '            Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
-    '        Else
-    '            Call MsgBox("Es sind keine Projekte geladen!")
-    '        End If
-
-    '    End If
-
-    '    'awinSettings.mppShowAmpel = formerAmpelSetting
-
-    '    appInstance.EnableEvents = True
-    '    enableOnUpdate = True
-
-    'End Sub
-
-
 
     Sub PT0ShowStrategieRisiko(control As IRibbonControl)
 
@@ -9023,24 +8653,6 @@ Imports System.Web
             myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
             If myCollection.Count > 0 Then
-
-                ' tk 30.9 wird jetzt durch bestimmeChartPositionandSize geregelt  
-                ''With appInstance.ActiveWindow
-                ''    sichtbarerBereich = .VisibleRange
-                ''    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
-                ''    If left < CDbl(sichtbarerBereich.Left) Then
-                ''        left = CDbl(sichtbarerBereich.Left) + 2
-                ''    End If
-
-                ''    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
-                ''    If top < CDbl(sichtbarerBereich.Top) Then
-                ''        top = CDbl(sichtbarerBereich.Top) + 2
-                ''    End If
-
-                ''End With
-
-                ''width = 600
-                ''height = 450
 
                 Dim obj As Excel.ChartObject = Nothing
 
@@ -9410,7 +9022,63 @@ Imports System.Web
             Dim obj As Excel.ChartObject = Nothing
             chLeft = chLeft + chWidth + 2
             chWidth = stdBreite
-            Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
+
+            ' hier muss jetzt das lproj bestimmt werden 
+            Dim lproj As clsProjekt = Nothing
+
+
+            Dim comparisonTyp As Integer
+            Dim qualifier2 As String = ""
+
+            If awinSettings.meCompareWithLastVersion Then
+                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now)
+                comparisonTyp = PTprdk.KostenBalken2
+
+                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                            comparisonTyp = PTprdk.PersonalBalken2
+                            qualifier2 = awinSettings.isRestrictedToOrgUnit
+                        End If
+                    End If
+                End If
+
+
+            Else
+                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, hproj.variantName)
+                comparisonTyp = PTprdk.KostenBalken
+
+                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
+                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                            comparisonTyp = PTprdk.PersonalBalken
+                            qualifier2 = awinSettings.isRestrictedToOrgUnit
+                        End If
+                    End If
+                End If
+
+            End If
+
+            Dim vglBaseline As Boolean = Not IsNothing(lproj)
+            Dim reportObj As Excel.ChartObject = Nothing
+
+
+            Try
+                If qualifier2 = "" Then
+                    Call createCostBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, False, comparisonTyp)
+                Else
+                    Call createRessBalkenOfProject(hproj, lproj, reportObj, 2, chTop, chLeft, chHeight, chWidth, True,
+                                               roleName:=qualifier2,
+                                               vglTyp:=comparisonTyp)
+                End If
+
+
+            Catch ex As Exception
+
+            End Try
+
+            ' bisher ...
+            'Call awinCreateBudgetErgebnisDiagramm(obj, chTop, chLeft, chWidth, chHeight, False, True)
 
 
         Else
@@ -11574,47 +11242,11 @@ Imports System.Web
         appInstance.EnableEvents = True
 
         Dim frmLizenzen As New frmCreateLicences
-        ' ''Dim i As Integer
-        ' ''Dim k As Integer
-        ' ''Dim VisboLic As New clsLicences
-        ' ''Dim clientLic As New clsLicences
-        ' ''Dim komponenten() As String = {"Swimlanes2"}
-        ' ''Dim users() As String = {"matthias.kaufhold", "thomas.braeutigam", "Ingo.Hanschke", myWindowsName, "BHTC-Domain/thomas.braeutigam", "Ute-Dagmar.Rittinghaus-Koytek"}
-        ' ''Dim endDate As Date = DateAdd(DateInterval.Month, 1200, Date.Now)
 
 
         Dim returnValue As DialogResult
         returnValue = frmLizenzen.ShowDialog
 
-
-        ' ''For i = 0 To users.Length - 1
-
-        ' ''    For k = 0 To komponenten.Length - 1
-
-        ' ''        ' Lizenzkey berechnen
-        ' ''        Dim licString As String = VisboLic.berechneKey(endDate, users(i), komponenten(k))
-
-        ' ''        ' VsisboListe mit Angabe von username, komponente, endDate
-        ' ''        Dim visbokey As String = users(i) & "-" & komponenten(k) & "-" & endDate.ToString
-        ' ''        If VisboLic.Liste.ContainsKey(visbokey) Then
-        ' ''            Dim ok As Boolean = VisboLic.Liste.Remove(visbokey)
-        ' ''        End If
-        ' ''        VisboLic.Liste.Add(visbokey, licString)
-
-        ' ''        ' Liste von Lizenzen für den Kunden 
-        ' ''        If clientLic.Liste.ContainsKey(licString) Then
-        ' ''            Dim ok As Boolean = clientLic.Liste.Remove(licString)
-        ' ''        End If
-        ' ''        clientLic.Liste.Add(licString, licString)
-
-        ' ''    Next k               'nächste Komponente
-
-        ' ''Next i                   ' nächster User
-
-        '' '' Lizenzen in XML-Dateien speichern
-        ' ''Call XMLExportLicences(VisboLic, requirementsOrdner & "visboLicfile.xml")
-
-        ' ''Call XMLExportLicences(clientLic, licFileName)
 
         enableOnUpdate = True
 

@@ -19,6 +19,8 @@ Public Class ucProperties
     ' nimmt auf , um welches Shape es sich aktuell handelt 
     Private _currentShape As PowerPoint.Shape
 
+    Private _rememberYValueofEleAmpeltext As Integer = 0.0
+
     Public Sub New()
 
         ' Dieser Aufruf ist für den Designer erforderlich.
@@ -38,6 +40,8 @@ Public Class ucProperties
         _my3DLink = ""
 
         _currentShape = Nothing
+
+        _rememberYValueofEleAmpeltext = eleAmpelText.Location.Y
 
 
     End Sub
@@ -59,6 +63,57 @@ Public Class ucProperties
         dreiDlnk.Visible = visibleStatus
         mydreiDlnk.Visible = visibleStatus
     End Sub
+
+    Friend Sub emptyPane()
+
+        Call setLinksToVisible(False)
+
+        ' der Symbol Mode
+        With eleName
+            .Visible = False
+        End With
+
+        With labelDate
+            .Visible = False
+        End With
+
+        With eleDatum
+            .Visible = False
+        End With
+
+        With labelRespons
+            .Visible = False
+        End With
+
+        With eleRespons
+            .Visible = False
+        End With
+
+        With labelAmpel
+            .Visible = False
+        End With
+
+        With eleAmpel
+            .Visible = False
+        End With
+
+        With percentDone
+            .Visible = False
+        End With
+
+        With eleAmpelText
+            .Visible = False
+        End With
+
+        With labelDeliver
+            .Visible = False
+        End With
+
+        With eleDeliverables
+            .Visible = False
+        End With
+    End Sub
+
 
     ''' <summary>
     ''' setzt die Link-Werte, die hinter den Pictureboxes für das betreffende Shape liegen .. 
@@ -398,6 +453,7 @@ Public Class ucProperties
             End With
         End If
 
+        Call emptyPane()
 
 
     End Sub
@@ -411,13 +467,26 @@ Public Class ucProperties
         Dim tmpLocation As New System.Drawing.Point
         Dim tmpSize As New System.Drawing.Size
 
+
         If isOn Then
             ' der Symbol Mode
+            With eleName
+                .Visible = True
+            End With
+
             With labelDate
                 .Visible = False
             End With
 
+            With eleDatum
+                .Visible = False
+            End With
+
             With labelRespons
+                .Visible = False
+            End With
+
+            With eleRespons
                 .Visible = False
             End With
 
@@ -429,13 +498,18 @@ Public Class ucProperties
                 .Visible = False
             End With
 
+            With percentDone
+                .Visible = False
+            End With
+
             With eleAmpelText
                 .Visible = True
-                tmpLocation.X = 5
-                tmpLocation.Y = 52
+                tmpLocation.X = .Location.X
+                tmpLocation.Y = eleDatum.Location.Y
                 .Location = tmpLocation
                 .BorderStyle = Windows.Forms.BorderStyle.None
                 tmpSize.Height = 400
+                tmpSize.Width = .Width
                 'tmpSize.Width = 276
                 .Size = tmpSize
             End With
@@ -450,14 +524,23 @@ Public Class ucProperties
 
         Else
             ' der Normal-Mode
+            With eleName
+                .Visible = True
+            End With
+
             With labelDate
                 .Visible = True
-                tmpLocation.X = 5
-                tmpLocation.Y = 52
-                .Location = tmpLocation
+            End With
+
+            With eleDatum
+                .Visible = True
             End With
 
             With labelRespons
+                .Visible = True
+            End With
+
+            With eleRespons
                 .Visible = True
             End With
 
@@ -469,13 +552,18 @@ Public Class ucProperties
                 .Visible = True
             End With
 
+            With percentDone
+                .Visible = True
+            End With
+
             With eleAmpelText
                 .Visible = True
-                tmpLocation.X = 10
-                tmpLocation.Y = 144
+                tmpLocation.X = .Location.X
+                tmpLocation.Y = _rememberYValueofEleAmpeltext
                 .Location = tmpLocation
                 .BorderStyle = Windows.Forms.BorderStyle.FixedSingle
-                tmpSize.Height = 139
+                tmpSize.Height = 143
+                tmpSize.Width = .Width
                 'tmpSize.Width = 276
                 .Size = tmpSize
             End With
@@ -487,6 +575,7 @@ Public Class ucProperties
             With eleDeliverables
                 .Visible = True
             End With
+
         End If
     End Sub
 
@@ -734,4 +823,7 @@ Public Class ucProperties
         ToolTip1.Show(ttmsg, mydreiDlnk, 2000)
     End Sub
 
+    Private Sub eleName_Click(sender As Object, e As EventArgs) Handles eleName.Click
+
+    End Sub
 End Class

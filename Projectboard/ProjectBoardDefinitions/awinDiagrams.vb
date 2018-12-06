@@ -143,7 +143,7 @@ Public Module awinDiagrams
         Dim Xdatenreihe() As String
         Dim datenreihe() As Double, edatenreihe() As Double, seriesSumDatenreihe() As Double
         Dim kdatenreihe() As Double ' nimmt die Kapa-Werte für das Diagramm auf
-        Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
+        'Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim msdatenreihe(,) As Double
         Dim prcName As String = ""
         Dim startdate As Date
@@ -202,7 +202,7 @@ Public Module awinDiagrams
         ReDim datenreihe(bis - von)
         ReDim edatenreihe(bis - von)
         ReDim kdatenreihe(bis - von)
-        ReDim kdatenreihePlus(bis - von)
+        'ReDim kdatenreihePlus(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
         ReDim VarValues(bis - von)
         ReDim msdatenreihe(3, bis - von)
@@ -305,8 +305,8 @@ Public Module awinDiagrams
 
 
         If prcTyp = DiagrammTypen(1) Then
-            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
-            kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
+            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+            'kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         ElseIf prcTyp = DiagrammTypen(5) Then
@@ -776,28 +776,28 @@ Public Module awinDiagrams
 
                     End If
 
-                    ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
-                    ' ansonsten werden nur die internen Kapazitäten angezeigt 
-                    If prcTyp = DiagrammTypen(1) Then
-                        If kdatenreihe.Sum < kdatenreihePlus.Sum Then
-                            ' es gibt geplante externe Ressourcen ... 
-                            With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                                .HasDataLabels = False
-                                '.name = "Kapazität incl. Externe"
-                                .Name = repMessages.getmsg(118)
+                    '''' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
+                    '''' ansonsten werden nur die internen Kapazitäten angezeigt 
+                    ''''If prcTyp = DiagrammTypen(1) Then
+                    ''''    If kdatenreihe.Sum < kdatenreihePlus.Sum Then
+                    ''''        ' es gibt geplante externe Ressourcen ... 
+                    ''''        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+                    ''''            .HasDataLabels = False
+                    ''''            '.name = "Kapazität incl. Externe"
+                    ''''            .Name = repMessages.getmsg(118)
 
-                                .Values = kdatenreihePlus
-                                .XValues = Xdatenreihe
-                                .ChartType = Excel.XlChartType.xlLine
-                                With .Format.Line
-                                    .DashStyle = MsoLineDashStyle.msoLineSysDot
-                                    .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                                    .Weight = 2
-                                End With
-                                nr_pts = CType(.Points, Excel.Points).Count
-                            End With
-                        End If
-                    End If
+                    ''''            .Values = kdatenreihePlus
+                    ''''            .XValues = Xdatenreihe
+                    ''''            .ChartType = Excel.XlChartType.xlLine
+                    ''''            With .Format.Line
+                    ''''                .DashStyle = MsoLineDashStyle.msoLineSysDot
+                    ''''                .ForeColor.RGB = XlRgbColor.rgbFuchsia
+                    ''''                .Weight = 2
+                    ''''            End With
+                    ''''            nr_pts = CType(.Points, Excel.Points).Count
+                    ''''        End With
+                    ''''    End If
+                    ''''End If
 
                     If prcTyp = DiagrammTypen(1) Or _
                         (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
@@ -1005,7 +1005,7 @@ Public Module awinDiagrams
         Dim seldatenreihe() As Double, tmpdatenreihe() As Double
 
         Dim kdatenreihe() As Double
-        Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
+        'Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim prcName As String = ""
 
         Dim breadcrumb As String = ""
@@ -1077,7 +1077,7 @@ Public Module awinDiagrams
         ReDim datenreihe(bis - von)
         ReDim edatenreihe(bis - von)
         ReDim kdatenreihe(bis - von)
-        ReDim kdatenreihePlus(bis - von)
+        'ReDim kdatenreihePlus(bis - von)
         ReDim seldatenreihe(bis - von)
         ReDim tmpdatenreihe(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
@@ -1183,8 +1183,8 @@ Public Module awinDiagrams
 
 
         If prcTyp = DiagrammTypen(1) Then
-            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
-            kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
+            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+            'kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         ElseIf prcTyp = DiagrammTypen(5) Then
@@ -1608,29 +1608,29 @@ Public Module awinDiagrams
             ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
             ' ansonsten werden nur die internen Kapazitäten angezeigt 
             ' hier werden die externen mitgezeichnet ....
-            If prcTyp = DiagrammTypen(1) Then
-                If kdatenreihe.Sum < kdatenreihePlus.Sum Then
-                    'es gibt geplante externe Ressourcen ... 
-                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                        .HasDataLabels = False
-                        '.name = "Kapazität incl. Externe"
-                        .Name = repMessages.getmsg(118)
+            'If prcTyp = DiagrammTypen(1) Then
+            '    If kdatenreihe.Sum < kdatenreihePlus.Sum Then
+            '        'es gibt geplante externe Ressourcen ... 
+            '        With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
+            '            .HasDataLabels = False
+            '            '.name = "Kapazität incl. Externe"
+            '            .Name = repMessages.getmsg(118)
 
-                        .Values = kdatenreihePlus
-                        .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlLine
+            '            .Values = kdatenreihePlus
+            '            .XValues = Xdatenreihe
+            '            .ChartType = Excel.XlChartType.xlLine
 
-                        'tk 28.3.17 soll bleiben wie es urspünglich war 
-                        With .Format.Line
-                            .DashStyle = MsoLineDashStyle.msoLineSysDot
-                            .ForeColor.RGB = XlRgbColor.rgbFuchsia
-                            .Weight = 2
-                        End With
+            '            'tk 28.3.17 soll bleiben wie es urspünglich war 
+            '            With .Format.Line
+            '                .DashStyle = MsoLineDashStyle.msoLineSysDot
+            '                .ForeColor.RGB = XlRgbColor.rgbFuchsia
+            '                .Weight = 2
+            '            End With
 
-                        'nr_pts = CType(.Points, Excel.Points).Count
-                    End With
-                End If
-            End If
+            '            'nr_pts = CType(.Points, Excel.Points).Count
+            '        End With
+            '    End If
+            'End If
 
             ' hier werde nur die internen gezeichnet ...
             If prcTyp = DiagrammTypen(1) Or _

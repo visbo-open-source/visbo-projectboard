@@ -180,4 +180,5 @@ Public Class ThisAddIn
     Private Sub Application_WindowDeactivate(Pres As Presentation, Wn As DocumentWindow) Handles Application.WindowDeactivate
         ' bitte nicht benutzen siehe Module1.vb
     End Sub
+
 End Class

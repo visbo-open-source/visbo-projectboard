@@ -50,6 +50,23 @@ Public Class clsProjekt
         End Set
     End Property
 
+    Public Overrides Property projectType As Integer
+        Get
+            projectType = _projectType
+        End Get
+        Set(value As Integer)
+            If Not IsNothing(value) Then
+                If value >= 0 And value <= 2 Then
+                    _projectType = value
+                Else
+                    _projectType = ptPRPFType.project
+                End If
+            Else
+                _projectType = ptPRPFType.project
+            End If
+        End Set
+    End Property
+
     ' tk ergänzt am 9.6.18 actualDataUntil 
     ' gibt an, bis zu welchem Monat einschließlich die Ressourcen und Kostenbedarfs-Werte den Ist-Daten aus der Zeiterfassung entsprechen 
     Private _actualDataUntil As Date
@@ -66,24 +83,6 @@ Public Class clsProjekt
         End Set
     End Property
 
-    ' ergänzt am 24.5.18 Merkmal , ob es sich bei dem Projekt um eine Union von Projekten handelt ...
-    Private _projectType As Integer
-    Public Property projectType As Integer
-        Get
-            projectType = _projectType
-        End Get
-        Set(value As Integer)
-            If Not IsNothing(value) Then
-                If value >= 0 And value <= 2 Then
-                    _projectType = value
-                Else
-                    _projectType = ptPRPFType.project
-                End If
-            Else
-                _projectType = ptPRPFType.project
-            End If
-        End Set
-    End Property
 
     ' ergänzt am 20.8.17 
     ' Marker für Projekte, um anzuzeigen, dass es zu einer bestimmten Menge gehört ; wird nicht in der Datenbank gespeichert, kommt deshalb nicht in clsProjektDB vor
@@ -2041,6 +2040,7 @@ Public Class clsProjekt
 
                 _Dauer = Me.anzahlRasterElemente
 
+
             End If
 
             dauerInDays = CInt(max)
@@ -2573,6 +2573,7 @@ Public Class clsProjekt
             .leadPerson = _leadPerson
             .Status = _Status
             .extendedView = Me.extendedView
+            .actualDataUntil = Me.actualDataUntil
             Try
                 .movable = Me.movable
             Catch ex As Exception
@@ -2666,7 +2667,8 @@ Public Class clsProjekt
                     tmpResult = Me.name
 
                 Case ptSortCriteria.buStartName
-                    tmpResult = Me.businessUnit & Me.Start.ToString(formatStr) & Me.name
+                    Dim offsetDays As Long = DateDiff(DateInterval.Day, StartofCalendar, Me.startDate)
+                    tmpResult = Me.businessUnit & offsetDays.ToString(formatStr) & Me.name
 
                 Case ptSortCriteria.customFields12
                     ' nimm aktuell die Default- Lösung 
@@ -4233,11 +4235,13 @@ Public Class clsProjekt
             Status = _Status
         End Get
         Set(value As String)
-            If value = ProjektStatus(0) Or _
-                value = ProjektStatus(1) Or _
-                value = ProjektStatus(2) Or _
-                value = ProjektStatus(3) Or _
-                value = ProjektStatus(4) Then
+            If value = ProjektStatus(0) Or
+                value = ProjektStatus(1) Or
+                value = ProjektStatus(2) Or
+                value = ProjektStatus(3) Or
+                value = ProjektStatus(4) Or
+                value = ProjektStatus(5) Or
+                value = ProjektStatus(6) Then
                 _Status = value
             Else
                 Call MsgBox("Wert als Status nicht zugelassen: " & value)
