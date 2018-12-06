@@ -115,6 +115,7 @@
     End Property
 
 
+
     Public ReadOnly Property getCostdef(ByVal myitem As String) As clsKostenartDefinition
         Get
 
@@ -133,14 +134,6 @@
             Loop
 
             getCostdef = tmpValue
-
-
-            ' old
-            ''Try
-            ''    getCostdef = CType(_allKostenarten.Item(myitem), clsKostenartDefinition)
-            ''Catch ex As Exception
-            ''    getCostdef = Nothing
-            ''End Try
 
         End Get
     End Property
