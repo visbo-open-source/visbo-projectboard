@@ -293,7 +293,6 @@ Public Class Request
 
                 For i As Integer = sl.Count - 1 To 0 Step -1
                     Dim kvp As KeyValuePair(Of DateTime, DateTime) = sl.ElementAt(i)
-                    '???: ergebnisCollection.Add(kvp.Value.ToUniversalTime)
                     ergebnisCollection.Add(kvp.Value.ToLocalTime)
                 Next i
 
@@ -1144,7 +1143,9 @@ Public Class Request
     ''' <param name="pName"></param>
     ''' <param name="vName"></param>
     ''' <param name="userName"></param>
-    ''' <param name="type"></param>
+    ''' <param name="type">  ptPRPFType.portfolio = 1
+    '''                      ptPRPFType.project = 0
+    '''                      ptPRPFType.projectTemplate = 2</param>
     ''' <returns>true -  es darf geändert werden
     '''          false - es darf nicht geändert werden</returns>
     Public Function checkChgPermission(ByVal pName As String, ByVal vName As String, ByVal userName As String, Optional type As Integer = ptPRPFType.project) As Boolean
@@ -1152,11 +1153,6 @@ Public Class Request
         Dim result As Boolean = False
 
         Try
-            ' angepasst: 20180914: ur: type muss im ReST-Server auf unsere Enumeration geändert werden: 
-            '           ptPRPFType.portfolio = 1
-            '           ptPRPFType.project = 0
-            '           ptPRPFType.projectTemplate = 2
-
 
             Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, type)
 
@@ -1250,10 +1246,10 @@ Public Class Request
             If (vpid <> "" And variantExists) Or (vpid <> "" And vname = "") Then
 
                 If wpItem.isProtected Then
-                    result = POSTVPLock(vpid, vname)
-                Else
-                    result = DELETEVPLock(vpid, vname)
-                End If
+                        result = POSTVPLock(vpid, vname)
+                    Else
+                        result = DELETEVPLock(vpid, vname)
+                    End If
 
             Else
 

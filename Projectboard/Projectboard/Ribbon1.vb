@@ -3534,19 +3534,24 @@ Imports System.Web
                             ' nichts tun, es ist permanent protected 
                             '
                         Else
-                            ' den temporären Schutz von mir zurücknehmen 
-                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
-                            'dbUsername, dbPasswort)
-                            Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
+                            ' den temporären Schutz von mir zurücknehmen sofern direkt auf MongoDB zugegriffen wird
+                            ' also kein visboServer
+                            If Not awinSettings.visboServer Then
+
+                                Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
                                                                       dbUsername, False, False)
-                            If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
-                                ' erfolgreich
-                                writeProtections.upsert(wpItem)
+                                If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
+                                    ' erfolgreich
+                                    writeProtections.upsert(wpItem)
+                                Else
+                                    ' nicht erfolgreich
+                                    wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                                    writeProtections.upsert(wpItem)
+                                End If
                             Else
-                                ' nicht erfolgreich
-                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
-                                writeProtections.upsert(wpItem)
+                                ' nichts zu tun, da auch keine Protection gesetzt wurde
                             End If
+
                         End If
                     Else
                         ' temporär geschützt lassen ...

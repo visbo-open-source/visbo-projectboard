@@ -24181,7 +24181,14 @@ Public Module awinGeneralModules
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
@@ -25148,9 +25155,6 @@ Public Module awinGeneralModules
 
             zeile = 2
 
-            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-
             For Each pvName As String In todoListe
 
                 Dim hproj As clsProjekt = Nothing
@@ -25164,7 +25168,14 @@ Public Module awinGeneralModules
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
@@ -25562,7 +25573,14 @@ Public Module awinGeneralModules
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
