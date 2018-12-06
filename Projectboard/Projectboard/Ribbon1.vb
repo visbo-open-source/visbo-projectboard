@@ -96,6 +96,114 @@ Imports System.Web
 
     End Sub
 
+    Sub PTRemoveKonstellation(control As IRibbonControl)
+
+        Dim ControlID As String = control.Id
+
+        Dim removeConstFilterFrm As New frmRemoveConstellation
+        Dim constFilterName As String
+
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+
+        Dim deleteDatenbank As String = "Pt5G3B1"
+        Dim deleteFromSession As String = "PT2G3M1B3"
+        Dim deleteFilter As String = "Pt6G3B5"
+
+        Dim removeFromDB As Boolean
+
+        If ControlID = deleteDatenbank And Not noDB Then
+            removeConstFilterFrm.frmOption = "ProjConstellation"
+            removeFromDB = True
+
+
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                removeFromDB = False
+            End If
+
+        ElseIf ControlID = deleteFromSession Then
+            removeConstFilterFrm.frmOption = "ProjConstellation"
+            removeFromDB = False
+
+        ElseIf ControlID = deleteFilter And Not noDB Then
+            removeConstFilterFrm.frmOption = "DBFilter"
+            removeFromDB = True
+
+
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                filterDefinitions.filterListe = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                removeFromDB = False
+            End If
+
+        Else
+            removeFromDB = False
+        End If
+
+        enableOnUpdate = False
+
+        returnValue = removeConstFilterFrm.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+            If ControlID = deleteDatenbank Or
+                ControlID = deleteFromSession Then
+
+                constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                Call awinRemoveConstellation(constFilterName, removeFromDB)
+                Call MsgBox(constFilterName & " wurde gelöscht ...")
+
+                If constFilterName = currentConstellationName Then
+
+                    ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                    'Call storeSessionConstellation("Last")
+                    'currentConstellationName = "Last"
+                Else
+                    ' aktuelle Konstellation bleibt unverändert
+                End If
+
+
+            End If
+            If ControlID = deleteFilter Then
+
+                Dim removeOK As Boolean = False
+                Dim filter As clsFilter = Nothing
+
+                constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                filter = filterDefinitions.retrieveFilter(constFilterName)
+
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                    ' Filter muss aus der Datenbank gelöscht werden.
+
+                    removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
+                    If removeOK = False Then
+                        Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
+                    Else
+                        ' DBFilter ist nun aus der DB gelöscht
+                        ' hier: wird der Filter nun noch aus der Filterliste gelöscht
+                        Call filterDefinitions.filterListe.Remove(constFilterName)
+                        Call MsgBox(constFilterName & " wurde gelöscht ...")
+                    End If
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
+                    removeOK = False
+                End If
+
+            End If
+        End If
+        enableOnUpdate = True
+
+    End Sub
+
+
     ''' <summary>
     ''' speichert die ausgewählten SessionConstellations in die Datenbank 
     ''' dabei wird sichergestellt, dass alle Projekte, die 
