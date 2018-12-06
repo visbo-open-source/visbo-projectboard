@@ -4800,8 +4800,9 @@ Imports System.Web
                         Dim isAllianzImport1 As Boolean = False
 
                         If scenarioNameP.StartsWith("Allianz-Typ 1") Then
-                            Dim startdate As Date = CDate("1.1.2018")
-                            Dim enddate As Date = CDate("31.12.2018")
+                            ' das muss noch abgefragt werden ... 
+                            Dim startdate As Date = CDate("1.1.2019")
+                            Dim enddate As Date = CDate("31.12.2019")
 
                             isAllianzImport1 = True
                             Call importAllianzType1(startdate, enddate)
