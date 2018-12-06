@@ -326,11 +326,12 @@ Public Class clsCache
 
                     For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In _VPvs
                         vpid = kvp.Key
-                        If kvp.Value.Count = 0 Then
+                        Dim VPvs_value As SortedList(Of String, clsVarTs) = _VPvs(vpid)
+                        If VPvs_value.Count = 0 Then
                             ok = False
                         Else
 
-                            Dim varTS As SortedList(Of String, clsVarTs) = kvp.Value
+                            Dim varTS As SortedList(Of String, clsVarTs) = _VPvs(vpid)
                             For Each kvp1 As KeyValuePair(Of String, clsVarTs) In varTS
                                 vpvid = kvp1.Key
                                 timeDiff = DateDiff(DateInterval.Minute, refDate, kvp1.Value.timeCLong)

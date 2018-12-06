@@ -13577,7 +13577,14 @@ Public Module agm2
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
@@ -14320,7 +14327,14 @@ Public Module agm2
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
@@ -14718,7 +14732,14 @@ Public Module agm2
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
