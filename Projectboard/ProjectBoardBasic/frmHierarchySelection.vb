@@ -5221,25 +5221,27 @@ Public Class frmHierarchySelection
 
 
             For i = 0 To topNodes.Count - 1
+
                 Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
                 topLevelNode = .Nodes.Add(role.name)
                 topLevelNode.Name = role.UID.ToString
                 topLevelNode.Text = role.name
 
                 ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
-                Dim nRTag As nodeRoleTag = Nothing
-
-                If role.isTeam Or role.getTeamIDs.Count > 0 Then
-                    nRTag = New nodeRoleTag
-                    With nRTag
-                        .isTeam = role.isTeam
-                        .isTeamMember = (role.getTeamIDs.Count > 0)
-                        .membershipID = Nothing
-                        .membershipPrz = 0.0
+                Dim nrTag As nodeRoleTag = Nothing
+                If role.isTeam Then
+                    ' toplevelNode kann nur Team sein, nicht Team-Member
+                    nrTag = New nodeRoleTag
+                    With nrTag
+                        .isTeam = True
+                        .isTeamMember = False
                     End With
+
                 End If
 
-                topLevelNode.Tag = nRTag
+                If Not IsNothing(nrTag) Then
+                    topLevelNode.Tag = nrTag
+                End If
 
 
                 If selectedRoles.Contains(role.name) Then
@@ -5279,20 +5281,6 @@ Public Class frmHierarchySelection
 
         Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
         Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
-        ' tk 10.9.18 imer aufbauen 
-        'Dim doItAnyWay As Boolean = False
-        'Dim doItAnyWay As Boolean = True
-
-        'Dim listOfroleNames As Collection = ShowProjekte.getRoleNames()
-
-        ' wenn die vorhandenen Rollen als Kind oder Kindeskind von currentRole vorkommen, dann doItAnyWay
-        'If currentRole.isCombinedRole Then
-        '    If currentRole.hasAnyOfThemAsChild(listOfroleNames) Then
-        '        doItAnyWay = True
-        '    End If
-        'End If
-
-        'If ShowProjekte.getRoleNames().Contains(currentRole.name) Or doItAnyWay Then
 
         Dim newNode As TreeNode
         With parentNode
@@ -5305,21 +5293,29 @@ Public Class frmHierarchySelection
             End If
 
             Dim nrTag As nodeRoleTag = Nothing
-            If currentRole.isTeam Or currentRole.getTeamIDs.Count > 0 Then
-                nRTag = New nodeRoleTag
+            If currentRole.isTeam Then
+
+                nrTag = New nodeRoleTag
                 With nrTag
-                    .isTeam = currentRole.isTeam
-                    .isTeamMember = (currentRole.getTeamIDs.Count > 0)
-                    If .isTeamMember Then
-                        .membershipID = CInt(parentNode.Name)
-                        .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), roleUid)
-                    End If
+                    .isTeam = True
+                    .isTeamMember = False
+                End With
 
+            ElseIf currentRole.getTeamIDs.Count > 0 Then
 
+                nrTag = New nodeRoleTag
+                With nrTag
+                    .isTeam = False
+                    .isTeamMember = True
+                    .membershipID = CInt(parentNode.Name)
+                    .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), roleUid)
                 End With
             End If
 
-            newNode.Tag = nrTag
+            If Not IsNothing(nrTag) Then
+                newNode.Tag = nrTag
+            End If
+
 
         End With
 
