@@ -704,6 +704,29 @@ Public Class clsRollen
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt zu gegebenem Team und Team-Member den Prozentsatz zurück, mit dem das Team-Member seine Kapa zur Verfügung stellt 
+    ''' </summary>
+    ''' <param name="parentUID"></param>
+    ''' <param name="childID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getMembershipPrz(ByVal parentUID As Integer, ByVal childID As Integer) As Double
+        Get
+            Dim tmpResult As Double = 0.0
+
+            If _allRollen.ContainsKey(parentUID) And _allRollen.ContainsKey(childID) Then
+                ' nur dann es einen Wert geben 
+                Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(parentUID)
+
+                If parentRole.getSubRoleIDs.ContainsKey(childID) Then
+                    tmpResult = parentRole.getSubRoleIDs.Item(childID)
+                End If
+            End If
+
+            getMembershipPrz = tmpResult
+        End Get
+    End Property
+
     Public Sub New()
 
         _allRollen = New SortedList(Of Integer, clsRollenDefinition)

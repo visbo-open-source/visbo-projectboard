@@ -48,6 +48,15 @@ Public Class frmHierarchySelection
     ' "MS Project" stehen. 
     Friend calledFrom As String
 
+    ''' <summary>
+    ''' tk 6.12.18 wird benötigt, um Teams, Team Memberships unterscheiden zu können
+    ''' </summary>
+    Private Structure nodeRoleTag
+        Friend isTeam As Boolean
+        Friend isTeamMember As Boolean
+        Friend membershipID As Integer
+        Friend membershipPrz As Double
+    End Structure
 
     Private Sub defineFrmButtonVisibility()
 
@@ -5216,6 +5225,23 @@ Public Class frmHierarchySelection
                 topLevelNode = .Nodes.Add(role.name)
                 topLevelNode.Name = role.UID.ToString
                 topLevelNode.Text = role.name
+
+                ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
+                Dim nRTag As nodeRoleTag = Nothing
+
+                If role.isTeam Or role.getTeamIDs.Count > 0 Then
+                    nRTag = New nodeRoleTag
+                    With nRTag
+                        .isTeam = role.isTeam
+                        .isTeamMember = (role.getTeamIDs.Count > 0)
+                        .membershipID = Nothing
+                        .membershipPrz = 0.0
+                    End With
+                End If
+
+                topLevelNode.Tag = nRTag
+
+
                 If selectedRoles.Contains(role.name) Then
                     topLevelNode.Checked = True
                 End If
@@ -5269,16 +5295,35 @@ Public Class frmHierarchySelection
         'If ShowProjekte.getRoleNames().Contains(currentRole.name) Or doItAnyWay Then
 
         Dim newNode As TreeNode
-            With parentNode
-                newNode = .Nodes.Add(currentRole.name)
-                newNode.Name = roleUid.ToString
-                newNode.Text = currentRole.name
-                If selectedRoles.Contains(currentRole.name) Then
-                    newNode.Checked = True
-                End If
-            End With
+        With parentNode
+            newNode = .Nodes.Add(currentRole.name)
+            newNode.Name = roleUid.ToString
+            newNode.Text = currentRole.name
 
-            For i = 0 To childIds.Count - 1
+            If selectedRoles.Contains(currentRole.name) Then
+                newNode.Checked = True
+            End If
+
+            Dim nrTag As nodeRoleTag = Nothing
+            If currentRole.isTeam Or currentRole.getTeamIDs.Count > 0 Then
+                nRTag = New nodeRoleTag
+                With nrTag
+                    .isTeam = currentRole.isTeam
+                    .isTeamMember = (currentRole.getTeamIDs.Count > 0)
+                    If .isTeamMember Then
+                        .membershipID = CInt(parentNode.Name)
+                        .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), roleUid)
+                    End If
+
+
+                End With
+            End If
+
+            newNode.Tag = nrTag
+
+        End With
+
+        For i = 0 To childIds.Count - 1
 
                 Call buildRoleSubTreeView(newNode, childIds.ElementAt(i).Key)
 
