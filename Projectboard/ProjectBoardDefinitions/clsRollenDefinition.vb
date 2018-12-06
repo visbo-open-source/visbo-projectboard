@@ -261,16 +261,11 @@
     ''' <remarks></remarks>
     Public Sub addSubRole(ByVal subRoleUid As Integer, ByVal subRolePrz As Double)
 
-        If Not _subRoleIDs.ContainsKey(subRoleUid) And RoleDefinitions.containsUid(subRoleUid) And _teamIDs.Count = 0 Then
-            If subRoleUid > 0 Then
+        If Not _subRoleIDs.ContainsKey(subRoleUid) And _teamIDs.Count = 0 Then
+            If _teamIDs.Count = 0 Then
                 _subRoleIDs.Add(subRoleUid, subRolePrz)
             Else
-                If _teamIDs.Count > 0 Then
-                    Throw New ArgumentException("unzulässig für Parentship: hat Team-Zugehörigkeit " & _teamIDs.Count.ToString)
-                Else
-                    Throw New ArgumentException("unzulässige uid für Subrolle:" & subRoleUid.ToString & ", " & subRolePrz)
-                End If
-
+                Throw New ArgumentException("unzulässig für Parentship: hat Team-Zugehörigkeit " & _teamIDs.Count.ToString)
             End If
         End If
 
@@ -285,15 +280,10 @@
     Public Sub addTeam(ByVal teamUid As Integer, ByVal teamPrz As Double)
 
         If Not _teamIDs.ContainsKey(teamUid) Then
-            If teamUid > 0 And RoleDefinitions.containsUid(teamUid) And _subRoleIDs.Count = 0 Then
+            If _subRoleIDs.Count = 0 Then
                 _teamIDs.Add(teamUid, teamPrz)
             Else
-                If _subRoleIDs.Count > 0 Then
-                    Throw New ArgumentException("unzulässig für Team-Membership: hat Kinder " & _subRoleIDs.Count.ToString)
-                Else
-                    Throw New ArgumentException("unzulässige uid für Team:" & teamUid.ToString & ", " & teamPrz)
-                End If
-
+                Throw New ArgumentException("unzulässig für Team-Membership: hat Kinder " & _subRoleIDs.Count.ToString)
             End If
         End If
 
