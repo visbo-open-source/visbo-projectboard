@@ -565,6 +565,7 @@ Public Module Module1
         all = 0
         placeholders = 1
         realRoles = 2
+        onlymyteammembers = 3
     End Enum
 
     Public Enum PThis

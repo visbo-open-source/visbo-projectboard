@@ -7,7 +7,7 @@ Public Class clsCustomUserRole
     Private _userName As String
     Private _userID As String
     Private _customUserRole As Integer
-    Private _specifics As Object
+    Private _specifics As String
 
     Public Sub New()
         _userName = ""
@@ -53,11 +53,11 @@ Public Class clsCustomUserRole
         End Set
     End Property
 
-    Public Property specifics As Object
+    Public Property specifics As String
         Get
             specifics = _specifics
         End Get
-        Set(value As Object)
+        Set(value As String)
             _specifics = value
         End Set
     End Property
