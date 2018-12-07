@@ -15317,8 +15317,8 @@ Public Module agm2
                 ' -----------------------------------------------------
                 ' Speziell für Pilot-Kunden
                 ' -----------------------------------------------------
-
-                Dim pilot As Date = "15.11.2018"
+                ' ab jetzt braucht man keine Lizenzen mehr ... 
+                Dim pilot As Date = "15.11.2118"
 
                 If Date.Now > pilot Then
 
@@ -15467,11 +15467,28 @@ Public Module agm2
                     Call MsgBox("readOtherDefinitions")
                 End If
 
+                ' 
                 ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-
                 RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
                 CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
+                If RoleDefinitions.Count > 0 Then
+                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    ' jetzt kommt der Validation-Check 
+                    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions()
+                    If Not TeamsAreNotOK Then
+                        Call MsgBox("keine Team-Definitions-Konflikte in DB")
+                    End If
+                    Dim existingOverloads As Boolean = checkTeamMemberOverloads()
+                    If Not existingOverloads Then
+                        Call MsgBox("keine Team-Member Überlastungen ... ")
+                    End If
+                End If
+
+                ' jetzt prüfen , ob alles ok 
+                If awinSettings.visboDebug Then
+
+                End If
 
                 ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
                 ' sonst von der DB

@@ -52,6 +52,7 @@ Public Class frmHierarchySelection
     ''' tk 6.12.18 wird benötigt, um Teams, Team Memberships unterscheiden zu können
     ''' </summary>
     Private Structure nodeRoleTag
+        Friend pTag As Char
         Friend isTeam As Boolean
         Friend isTeamMember As Boolean
         Friend membershipID As Integer
@@ -1143,7 +1144,18 @@ Public Class frmHierarchySelection
 
                     tmpNode = .Nodes.Item(px - 1)
 
-                    If tmpNode.Checked 
+                    If tmpNode.Checked Then
+
+                        ' jetzt muss geprüft werden, ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
+                        Dim nrTag As nodeRoleTag = CType(tmpNode.Tag, nodeRoleTag)
+                        Dim roleID As String
+                        If nrTag.isTeam Then
+                            roleID = tmpNode.Name & ";T"
+                        ElseIf nrTag.isTeamMember Then
+                            roleID = tmpNode.Name & ";" & nrTag.membershipID & ";" & nrTag.membershipPrz
+                        Else
+                            roleID = tmpNode.Name
+                        End If
 
                         If Not selectedRoles.Contains(tmpNode.Text) Then
                             selectedRoles.Add(tmpNode.Text, tmpNode.Text)
@@ -1758,6 +1770,7 @@ Public Class frmHierarchySelection
     Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
 
         Dim node As TreeNode
+        'Dim parentNode As TreeNode = Nothing
         Dim childNode As TreeNode
         Dim placeholder As TreeNode
         Dim elemID As String
@@ -1769,7 +1782,7 @@ Public Class frmHierarchySelection
         Dim curHry As clsHierarchy
         Dim vorlElem As String = ""
 
-        Dim childRole As clsRollenDefinition
+        'Dim childRole As clsRollenDefinition
 
         node = e.Node
         elemID = node.Name
@@ -1779,10 +1792,13 @@ Public Class frmHierarchySelection
 
             If Not IsNothing(node.Tag) Then
 
-                ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
-                If node.Tag = "P" Then
+                'parentNode = node.Parent
 
-                    node.Tag = "X"
+                Dim nrTag As nodeRoleTag = CType(node.Tag, nodeRoleTag)
+                ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
+                If nrTag.pTag = "P" Then
+
+                    nrTag.pTag = "X"
 
                     ' Löschen von Platzhalter
                     node.Nodes.Clear()
@@ -1799,45 +1815,48 @@ Public Class frmHierarchySelection
 
                     With hryTreeView
                         .CheckBoxes = True
-
-                        For i As Integer = 0 To anzChilds - 1
-                            childRole = RoleDefinitions.getRoleDefByID(nodelist.ElementAt(i).Key)
-                            Dim childName As String = childRole.name
-                            Dim childID As Integer = childRole.UID
-
-                            If allRoles.Contains(childName) Then
-
-                                childNode = node.Nodes.Add(childName)
-                                childNode.Name = childID.ToString
-                                childNode.Text = childName
-
-
-                                If selectedRoles.Contains(childName) Then
-                                    childNode.Checked = True
-                                End If
-
-                                Dim anzSubRolesOFChild As Integer
-                                Try
-                                    anzSubRolesOFChild = RoleDefinitions.getRoleDefByID(childID).getSubRoleIDs.Count
-                                Catch ex As Exception
-                                    anzSubRolesOFChild = 0
-                                End Try
-
-                                If anzSubRolesOFChild > 0 Then
-                                    childNode.Tag = "P"
-
-
-                                    placeholder = childNode.Nodes.Add("-")
-                                    placeholder.Tag = "P"
-                                Else
-                                    childNode.Tag = "X"
-                                End If
-
-                            End If
-                        Next
-
-
                     End With
+
+                    For i As Integer = 0 To anzChilds - 1
+
+                        Call buildRoleSubTreeView(node, nodelist.ElementAt(i).Key)
+                        'childRole = RoleDefinitions.getRoleDefByID(nodelist.ElementAt(i).Key)
+                        'Dim childName As String = childRole.name
+                        'Dim childID As Integer = childRole.UID
+
+                        'If allRoles.Contains(childName) Then
+
+                        '    childNode = node.Nodes.Add(childName)
+                        '    childNode.Name = childID.ToString
+                        '    childNode.Text = childName
+
+
+                        '    If selectedRoles.Contains(childName) Then
+                        '        childNode.Checked = True
+                        '    End If
+
+                        '    Dim anzSubRolesOFChild As Integer
+                        '    Try
+                        '        anzSubRolesOFChild = RoleDefinitions.getRoleDefByID(childID).getSubRoleIDs.Count
+                        '    Catch ex As Exception
+                        '        anzSubRolesOFChild = 0
+                        '    End Try
+
+                        '    If anzSubRolesOFChild > 0 Then
+                        '        childNode.Tag = "P"
+
+
+                        '        placeholder = childNode.Nodes.Add("-")
+                        '        placeholder.Tag = "P"
+                        '    Else
+                        '        childNode.Tag = "X"
+                        '    End If
+
+                        'End If
+                    Next
+
+
+
                 End If
             End If
 
@@ -5223,43 +5242,52 @@ Public Class frmHierarchySelection
             For i = 0 To topNodes.Count - 1
 
                 Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
+
                 topLevelNode = .Nodes.Add(role.name)
                 topLevelNode.Name = role.UID.ToString
                 topLevelNode.Text = role.name
 
+
+                Dim nrTag As New nodeRoleTag
+                With nrTag
+                    If role.getSubRoleCount > 0 Then
+                        .pTag = "P"
+                        topLevelNode.Nodes.Clear()
+                        topLevelNode.Nodes.Add("-")
+                    Else
+                        .pTag = "X"
+                    End If
+                End With
+
+
+
                 ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
-                Dim nrTag As nodeRoleTag = Nothing
+
                 If role.isTeam Then
                     ' toplevelNode kann nur Team sein, nicht Team-Member
-                    nrTag = New nodeRoleTag
-                    With nrTag
-                        .isTeam = True
-                        .isTeamMember = False
-                    End With
-
+                    nrTag.isTeam = True
+                    nrTag.isTeamMember = False
                 End If
 
-                If Not IsNothing(nrTag) Then
-                    topLevelNode.Tag = nrTag
-                End If
-
+                topLevelNode.Tag = nrTag
 
                 If selectedRoles.Contains(role.name) Then
                     topLevelNode.Checked = True
                 End If
 
-                Dim listOfChildIDs As New SortedList(Of Integer, Double)
-                Try
-                    listOfChildIDs = role.getSubRoleIDs
-                Catch ex As Exception
+                ' tk 7.12.18 wird nicht mehr gebraucht -. es wird immer nur die aktuelle Ebene gemacht, mit Klick aif "+" wird expanded 
+                'Dim listOfChildIDs As New SortedList(Of Integer, Double)
+                'Try
+                '    listOfChildIDs = role.getSubRoleIDs
+                'Catch ex As Exception
 
-                End Try
+                'End Try
 
-                If listOfChildIDs.Count > 0 Then
-                    For ii As Integer = 0 To listOfChildIDs.Count - 1
-                        Call buildRoleSubTreeView(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
-                    Next
-                End If
+                'If listOfChildIDs.Count > 0 Then
+                '    For ii As Integer = 0 To listOfChildIDs.Count - 1
+                '        Call buildRoleSubTreeView(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
+                '    Next
+                'End If
 
                 'Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
             Next
@@ -5274,56 +5302,68 @@ Public Class frmHierarchySelection
     ''' wenn dieser Child-Node seinerseits Kinder enthält, wird wiederum buildRoleSubTreeView aufgerufen ... 
     ''' </summary>
     ''' <param name="parentNode"></param>
-    ''' <param name="roleUid"></param>
+    ''' <param name="currentRoleUid"></param>
     ''' <remarks></remarks>
-    Public Sub buildRoleSubTreeView(ByRef parentNode As TreeNode, ByVal roleUid As Integer)
+    Public Sub buildRoleSubTreeView(ByRef parentNode As TreeNode, ByVal currentRoleUid As Integer)
 
 
-        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
+        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(currentRoleUid)
         Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
 
-        Dim newNode As TreeNode
-        With parentNode
-            newNode = .Nodes.Add(currentRole.name)
-            newNode.Name = roleUid.ToString
-            newNode.Text = currentRole.name
+        Dim currentNode As TreeNode
+        Dim childNode As TreeNode = Nothing
 
-            If selectedRoles.Contains(currentRole.name) Then
-                newNode.Checked = True
-            End If
+        currentNode = parentNode.Nodes.Add(currentRole.name)
+        currentNode.Name = currentRoleUid.ToString
+        currentNode.Text = currentRole.name
 
-            Dim nrTag As nodeRoleTag = Nothing
-            If currentRole.isTeam Then
+        If selectedRoles.Contains(currentRole.name) Then
+            currentNode.Checked = True
+        End If
 
-                nrTag = New nodeRoleTag
-                With nrTag
-                    .isTeam = True
-                    .isTeamMember = False
-                End With
+        Dim nrTag As New nodeRoleTag
+        If currentRole.isTeam Then
 
-            ElseIf currentRole.getTeamIDs.Count > 0 Then
+            nrTag = New nodeRoleTag
+            With nrTag
+                .isTeam = True
+                .isTeamMember = False
+            End With
 
-                nrTag = New nodeRoleTag
-                With nrTag
-                    .isTeam = False
-                    .isTeamMember = True
-                    .membershipID = CInt(parentNode.Name)
-                    .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), roleUid)
-                End With
-            End If
+        ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, nodeRoleTag).isTeam Then
 
-            If Not IsNothing(nrTag) Then
-                newNode.Tag = nrTag
-            End If
+            nrTag = New nodeRoleTag
+            With nrTag
+                .isTeam = False
+                .isTeamMember = True
+                .membershipID = CInt(parentNode.Name)
+                .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), currentRoleUid)
+            End With
+        End If
 
 
-        End With
+        If childIds.Count > 0 Then
+            currentNode.Nodes.Clear()
+            currentNode.Nodes.Add("-")
+            nrTag.pTag = "P"
+        Else
+            nrTag.pTag = "X"
+        End If
 
-        For i = 0 To childIds.Count - 1
+        currentNode.Tag = nrTag
 
-                Call buildRoleSubTreeView(newNode, childIds.ElementAt(i).Key)
 
-            Next
+        'For i = 0 To childIds.Count - 1
+
+        '    nrTag = New nodeRoleTag
+        '    nrTag.pTag = 
+
+        '    childNode = currentNode.Nodes.Add("-")
+        '    CType(childNode.Tag, nodeRoleTag).pTag = "P"
+
+        '    Call buildRoleSubTreeView(currentNode, childIds.ElementAt(i).Key)
+
+        'Next
         'End If
 
     End Sub
