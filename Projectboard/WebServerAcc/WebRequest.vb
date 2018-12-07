@@ -666,6 +666,20 @@ Public Class Request
                     aktvp = vpErg.ElementAt(0)
                     storedVP = (vpid <> "")
 
+                    ' VP im Cache ergänzen
+                    If VRScache.VPsN.ContainsKey(aktvp.name) Then
+                        VRScache.VPsN.Remove(aktvp.name)
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    Else
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    End If
+                    If VRScache.VPsId.ContainsKey(vpid) Then
+                        VRScache.VPsId.Remove(vpid)
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    Else
+                        VRScache.VPsId.Add(vpid, aktvp)
+                    End If
+
                 Else
                     Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
@@ -723,6 +737,15 @@ Public Class Request
                         result = (storeAntwort.state = "success")
                         result = True
 
+                        ' vpv zu Cache hinzufügen
+                        Dim newvpv As clsProjektWebLong = storeAntwort.vpv.ElementAt(0)
+                        Dim hlistvpv As New SortedList(Of String, clsVarTs)
+                        Dim VPvs As New clsVarTs
+                        VPvs.timeCLong = newvpv.timestamp
+                        VPvs.timeCShort = newvpv.timestamp
+                        VPvs.tsLong.Add(newvpv.timestamp, newvpv)
+                        hlistvpv.Add(newvpv._id, VPvs)
+                        VRScache.VPvs.Add(vpid, hlistvpv)
                     Else
 
                         ' Fehlerbehandlung je nach errcode
@@ -733,8 +756,8 @@ Public Class Request
                 End If
             End If
 
-            ' Cache aktualisieren
-            VRScache.VPsN = GETallVP(aktVCid, projekt.projectType)
+            '' Cache aktualisieren
+            'VRScache.VPsN = GETallVP(aktVCid, projekt.projectType)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message & ": storeProjectToDB")
@@ -1827,7 +1850,7 @@ Public Class Request
             ' Alle VisboProjects über Server von WebServer/DB holen
             Dim anzLoop As Integer = 0
             'Dim allVP As New List(Of clsVP)
-            While (vpid = "" And anzLoop <= 2)
+            While (vpid = "" And anzLoop < 2)
 
                 If VRScache.VPsN.Count > 0 Then
                     ' Id zu angegebenen Projekt herausfinden
@@ -1840,6 +1863,9 @@ Public Class Request
                     End If
                 Else
                     VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+                    If VRScache.VPsN.Count = 0 Then
+                        anzLoop = 2
+                    End If
                 End If
 
                 anzLoop = anzLoop + 1
@@ -1869,26 +1895,40 @@ Public Class Request
 
             If vpid <> "" Then
 
-                While (pName = "" And anzLoop <= 2)
+                While (pName = "" And anzLoop < 2)
 
-                    If VRScache.VPsId.ContainsKey(vpid) Then
-                        ' pName zu angegebene vpid herausfinden
-                        pName = VRScache.VPsId(vpid).name
+                    If VRScache.VPsId.Count > 0 Then
+
+                        If VRScache.VPsId.ContainsKey(vpid) Then
+                            ' pName zu angegebene vpid herausfinden
+                            pName = VRScache.VPsId(vpid).name
+                        Else
+
+                            VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+
+                            If VRScache.VPsId.Count <= 0 Then
+                                anzLoop = 2 ' while-Schleife beenden
+                            Else
+                                Try
+                                    pName = VRScache.VPsId(vpid).name
+                                Catch ex As Exception
+                                    pName = ""
+                                End Try
+                            End If
+
+                        End If
                     Else
                         VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
 
-                        Try
-                            pName = VRScache.VPsId(vpid).name
-                        Catch ex As Exception
-                            pName = ""
-                        End Try
-
+                        If VRScache.VPsId.Count <= 0 Then
+                            anzLoop = 2 ' while-Schleife beenden
+                        End If
                     End If
 
                     anzLoop = anzLoop + 1
                 End While
             Else
-                Throw New ArgumentException("Fehler in GETpName: keine vpid übergeben")
+                Throw New ArgumentException("Fehler in GETpName: vpid = "" übergeben")
             End If
         Catch ex As Exception
             pName = ""
