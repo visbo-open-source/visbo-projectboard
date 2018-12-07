@@ -15488,6 +15488,12 @@ Public Module agm2
                     Call MsgBox("readOtherDefinitions")
                 End If
 
+                ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
+
+                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+
+
                 ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
                 ' sonst von der DB
                 If Not awinSettings.readCostRolesFromDB Then
@@ -15643,6 +15649,8 @@ Public Module agm2
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
+
+
                     If Not awinSettings.readCostRolesFromDB Then
 
                         ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
@@ -15652,22 +15660,29 @@ Public Module agm2
                         Call readRessourcenDetails2()
 
 
-                        RoleDefinitions.buildTopNodes()
+                        '    RoleDefinitions.buildTopNodes()
 
-                    Else
+                        'Else
 
-                        ' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
+                        '    '' Auslesen der Rollen und Kosten ausschließlich  aus der Datenbank ! 
 
-                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                        '    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
+                        '    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
-                        RoleDefinitions.buildTopNodes()
+                        '    RoleDefinitions.buildTopNodes()
 
-                        If awinSettings.visboDebug Then
-                            Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
-                            Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
-                        End If
+                        '    If awinSettings.visboDebug Then
+                        '        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
+                        '        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
+                        '    End If
 
+                    End If
+
+                    RoleDefinitions.buildTopNodes()
+
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
+                        Call MsgBox("Anzahl gelesene Kosten Definitionen: " & CostDefinitions.Count.ToString)
                     End If
 
 

@@ -96,6 +96,114 @@ Imports System.Web
 
     End Sub
 
+    Sub PTRemoveKonstellation(control As IRibbonControl)
+
+        Dim ControlID As String = control.Id
+
+        Dim removeConstFilterFrm As New frmRemoveConstellation
+        Dim constFilterName As String
+
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+
+        Dim deleteDatenbank As String = "Pt5G3B1"
+        Dim deleteFromSession As String = "PT2G3M1B3"
+        Dim deleteFilter As String = "Pt6G3B5"
+
+        Dim removeFromDB As Boolean
+
+        If ControlID = deleteDatenbank And Not noDB Then
+            removeConstFilterFrm.frmOption = "ProjConstellation"
+            removeFromDB = True
+
+
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                removeFromDB = False
+            End If
+
+        ElseIf ControlID = deleteFromSession Then
+            removeConstFilterFrm.frmOption = "ProjConstellation"
+            removeFromDB = False
+
+        ElseIf ControlID = deleteFilter And Not noDB Then
+            removeConstFilterFrm.frmOption = "DBFilter"
+            removeFromDB = True
+
+
+            If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                filterDefinitions.filterListe = CType(databaseAcc, DBAccLayer.Request).retrieveAllFilterFromDB(False)
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                removeFromDB = False
+            End If
+
+        Else
+            removeFromDB = False
+        End If
+
+        enableOnUpdate = False
+
+        returnValue = removeConstFilterFrm.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+            If ControlID = deleteDatenbank Or
+                ControlID = deleteFromSession Then
+
+                constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                Call awinRemoveConstellation(constFilterName, removeFromDB)
+                Call MsgBox(constFilterName & " wurde gelöscht ...")
+
+                If constFilterName = currentConstellationName Then
+
+                    ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                    'Call storeSessionConstellation("Last")
+                    'currentConstellationName = "Last"
+                Else
+                    ' aktuelle Konstellation bleibt unverändert
+                End If
+
+
+            End If
+            If ControlID = deleteFilter Then
+
+                Dim removeOK As Boolean = False
+                Dim filter As clsFilter = Nothing
+
+                constFilterName = removeConstFilterFrm.ListBox1.Text
+
+                filter = filterDefinitions.retrieveFilter(constFilterName)
+
+                If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+
+                    ' Filter muss aus der Datenbank gelöscht werden.
+
+                    removeOK = CType(databaseAcc, DBAccLayer.Request).removeFilterFromDB(filter)
+                    If removeOK = False Then
+                        Call MsgBox("Fehler bei Löschen des Filters: " & constFilterName)
+                    Else
+                        ' DBFilter ist nun aus der DB gelöscht
+                        ' hier: wird der Filter nun noch aus der Filterliste gelöscht
+                        Call filterDefinitions.filterListe.Remove(constFilterName)
+                        Call MsgBox(constFilterName & " wurde gelöscht ...")
+                    End If
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "DB Filter '" & filter.name & "'konnte in der Datenbank nicht gelöscht werden")
+                    removeOK = False
+                End If
+
+            End If
+        End If
+        enableOnUpdate = True
+
+    End Sub
+
+
     ''' <summary>
     ''' speichert die ausgewählten SessionConstellations in die Datenbank 
     ''' dabei wird sichergestellt, dass alle Projekte, die 
@@ -3438,24 +3546,19 @@ Imports System.Web
                             ' nichts tun, es ist permanent protected 
                             '
                         Else
-                            ' den temporären Schutz von mir zurücknehmen sofern direkt auf MongoDB zugegriffen wird
-                            ' also kein visboServer
-                            If Not awinSettings.visboServer Then
-
-                                Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
+                            ' den temporären Schutz von mir zurücknehmen 
+                            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName,
+                            'dbUsername, dbPasswort)
+                            Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
                                                                       dbUsername, False, False)
-                                If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
-                                    ' erfolgreich
-                                    writeProtections.upsert(wpItem)
-                                Else
-                                    ' nicht erfolgreich
-                                    wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
-                                    writeProtections.upsert(wpItem)
-                                End If
+                            If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
+                                ' erfolgreich
+                                writeProtections.upsert(wpItem)
                             Else
-                                ' nichts zu tun, da auch keine Protection gesetzt wurde
+                                ' nicht erfolgreich
+                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                                writeProtections.upsert(wpItem)
                             End If
-
                         End If
                     Else
                         ' temporär geschützt lassen ...
@@ -4805,6 +4908,7 @@ Imports System.Web
                         Dim isAllianzImport1 As Boolean = False
 
                         If scenarioNameP.StartsWith("Allianz-Typ 1") Then
+                            ' das muss noch abgefragt werden ... 
                             Dim startdate As Date = CDate("1.1.2019")
                             Dim enddate As Date = CDate("31.12.2019")
 
