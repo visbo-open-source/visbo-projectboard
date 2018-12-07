@@ -1,6 +1,6 @@
 ﻿Public Class clsCustomUserRoles
 
-    ' der Schlüssel setzt sich zusammen aus userID und customerUserRole in clsCustomUserRole
+    ' der Schlüssel setzt sich zusammen aus userID, customerUserRole, specifics in clsCustomUserRole
     Private _customUserRoles As SortedList(Of String, clsCustomUserRole)
 
     Public Sub New()
