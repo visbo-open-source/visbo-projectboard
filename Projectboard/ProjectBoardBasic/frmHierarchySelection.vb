@@ -6,25 +6,6 @@ Imports System.ComponentModel
 
 Public Class frmHierarchySelection
 
-    ''' <summary>
-    ''' tk 6.12.18 wird benötigt, um Teams, Team Memberships unterscheiden zu können
-    ''' </summary>
-    Private Class pclsnodeRoleTag
-        Friend Property pTag As Char
-        Friend Property isTeam As Boolean
-        Friend Property isTeamMember As Boolean
-        Friend Property membershipID As Integer
-        Friend Property membershipPrz As Double
-
-        Friend Sub New()
-            _pTag = ""
-            _isTeam = False
-            _isTeamMember = False
-            _membershipID = -1
-            _membershipPrz = 0.0
-        End Sub
-    End Class
-
     Private hry As clsHierarchy
     Public repProfil As clsReportAll
 
@@ -1801,7 +1782,7 @@ Public Class frmHierarchySelection
 
                 'parentNode = node.Parent
 
-                Dim nrTag As pclsnodeRoleTag = CType(node.Tag, pclsnodeRoleTag)
+                Dim nrTag As clsNodeRoleTag = CType(node.Tag, clsNodeRoleTag)
                 ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
                 If nrTag.pTag = "P" Then
 
@@ -5179,6 +5160,7 @@ Public Class frmHierarchySelection
         Dim topLevelNode As TreeNode
         Dim checkProj As Boolean = False
 
+
         With hryTreeView
 
             .Nodes.Clear()
@@ -5215,7 +5197,7 @@ Public Class frmHierarchySelection
                 topLevelNode.Text = role.name
 
 
-                Dim nrTag As New pclsnodeRoleTag
+                Dim nrTag As New clsNodeRoleTag
                 With nrTag
                     If role.getSubRoleCount > 0 Then
                         .pTag = "P"
@@ -5243,23 +5225,9 @@ Public Class frmHierarchySelection
                     topLevelNode.Checked = True
                 End If
 
-                ' tk 7.12.18 wird nicht mehr gebraucht -. es wird immer nur die aktuelle Ebene gemacht, mit Klick aif "+" wird expanded 
-                'Dim listOfChildIDs As New SortedList(Of Integer, Double)
-                'Try
-                '    listOfChildIDs = role.getSubRoleIDs
-                'Catch ex As Exception
 
-                'End Try
-
-                'If listOfChildIDs.Count > 0 Then
-                '    For ii As Integer = 0 To listOfChildIDs.Count - 1
-                '        Call buildRoleSubTreeView(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
-                '    Next
-                'End If
-
-                'Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
             Next
-            'End If
+
 
 
         End With
@@ -5285,18 +5253,18 @@ Public Class frmHierarchySelection
         currentNode.Text = currentRole.name
 
 
-        Dim nrTag As New pclsnodeRoleTag
+        Dim nrTag As New clsNodeRoleTag
         If currentRole.isTeam Then
 
-            nrTag = New pclsnodeRoleTag
+            nrTag = New clsNodeRoleTag
             With nrTag
                 .isTeam = True
                 .isTeamMember = False
             End With
 
-        ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, pclsnodeRoleTag).isTeam Then
+        ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsnodeRoleTag).isTeam Then
 
-            nrTag = New pclsnodeRoleTag
+            nrTag = New clsNodeRoleTag
             With nrTag
                 .isTeam = False
                 .isTeamMember = True

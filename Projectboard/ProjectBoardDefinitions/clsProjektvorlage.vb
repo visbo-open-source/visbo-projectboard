@@ -2812,6 +2812,69 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die vorkommenden RoleIDs in der Form roleUid;teamUid zurück
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getRoleIDs(ByVal phaseNameID As String) As SortedList(Of String, String)
+        Get
+            Dim propResult As New SortedList(Of String, String)
+            Dim cPhase As clsPhase = Me.getPhaseByID(phaseNameID)
+            Dim roleID As String = ""
+            Dim isTeamMember As Boolean = False
+
+            If Not IsNothing(cPhase) Then
+                For r = 1 To cPhase.countRoles
+
+                    Dim hrole As clsRolle = cPhase.getRole(r)
+                    Dim teamMember As Boolean = (hrole.teamID > 0)
+
+                    roleID = RoleDefinitions.bestimmeRoleNodeName(hrole.RollenTyp, teamMember, hrole.teamID)
+                    '
+                    ' das ist performanter als der Weg über try .. catch 
+                    '
+                    If Not propResult.ContainsKey(roleID) Then
+                        propResult.Add(roleID, roleID)
+                    End If
+
+                Next r
+            End If
+
+            getRoleIDs = propResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die vorkommenden Kostenarten-Bezeichner in der Form "Name" zurück; es gibt noch keine Hierarchie bei den Kosten 
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCostIDs(ByVal phaseNameID As String) As SortedList(Of String, String)
+        Get
+            Dim propResult As New SortedList(Of String, String)
+
+            Dim cPhase As clsPhase = Me.getPhaseByID(phaseNameID)
+            Dim CostID As String = ""
+
+
+            If Not IsNothing(cPhase) Then
+                For c = 1 To cPhase.countCosts
+
+                    Dim hcost As clsKostenart = cPhase.getCost(c)
+                    Dim costName As String = hcost.name
+
+                    If Not propResult.ContainsKey(costName) Then
+                        propResult.Add(costName, costName)
+                    End If
+
+                Next c
+            End If
+
+            getCostIDs = propResult
+        End Get
+    End Property
+
     '
     ' übergibt in getRoleNames eine Collection von Rollen Definitionen, das sind alle Rollen, die in den Phasen vorkommen und einen Bedarf von größer Null haben
     '

@@ -13642,10 +13642,9 @@ Public Module agm2
                                         ' prüfen, ob es eine gültige Restriction ist 
 
                                         If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
-                                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
-                                            Dim tmpCollection As New Collection
-                                            tmpCollection.Add(tmpRole.name)
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleName, tmpCollection) Then
+                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
+
+                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleUID, restrictedTopRole.UID) Then
                                                 validRole = True
                                             Else
                                                 validRole = False

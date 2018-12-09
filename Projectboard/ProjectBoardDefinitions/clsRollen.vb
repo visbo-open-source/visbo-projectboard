@@ -336,6 +336,59 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' gibt true zurück, wenn roleID irgendwo unterhalb der Hierarchy von summaryRoleID zu finden ist ..
+    ''' das gilt für Team-Member ebenso wie für Orga-Mitglieder
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="summaryRoleID"></param>
+    ''' <returns></returns>
+    Public Function hasAnyChildParentRelationsship(ByVal roleID As Integer, ByVal summaryRoleID As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+
+        If roleID = summaryRoleID Then
+            tmpResult = True
+        Else
+            Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleID)
+            If Not IsNothing(sRole) Then
+                Dim alleChildIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(sRole.name, type:=PTcbr.all)
+                If alleChildIDs.Count > 0 Then
+                    tmpResult = alleChildIDs.ContainsKey(roleID)
+                End If
+            End If
+        End If
+
+
+        hasAnyChildParentRelationsship = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' Input ist eine sortierte Liste mit roleIds der Form roleUId;teamUid und die Uid einer Sammelrolle
+    ''' True, wenn irgendeine roleID Kind der summaryRoleID ist 
+    ''' </summary>
+    ''' <param name="roleIDs"></param>
+    ''' <param name="summaryRoleID"></param>
+    ''' <returns></returns>
+    Public Function hasAnyChildParentRelationsship(ByVal roleIDs As SortedList(Of String, String), ByVal summaryRoleID As Integer) As Boolean
+        Dim tmpResult As Boolean = False
+
+        For Each kvp As KeyValuePair(Of String, String) In roleIDs
+            Dim teamID As Integer = -1
+            Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(kvp.Value, teamID)
+
+            If hasAnyChildParentRelationsship(sRole.UID, summaryRoleID) Then
+                tmpResult = True
+                Exit For
+            End If
+
+        Next
+
+        hasAnyChildParentRelationsship = tmpResult
+
+    End Function
+
+    ''' <summary>
     ''' gibt true zurück, wenn die angegebene Rolle / Kostenart ein Kind oder Kindeskind eines der Elemente ist
     ''' oder das Element selber ist 
     ''' </summary>
@@ -344,7 +397,9 @@ Public Class clsRollen
     ''' <returns></returns>
     Public Function hasAnyChildParentRelationsship(ByVal roleCostName As String, ByVal roleCostCollection As Collection) As Boolean
 
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleCostName)
         Dim isRole As Boolean = RoleDefinitions.containsName(roleCostName)
+
         Dim iscost As Boolean = False
         Dim found As Boolean = False
         Dim ix As Integer = 1
@@ -353,7 +408,7 @@ Public Class clsRollen
         If isRole Then
 
             ' ist es eine Gruppe ...
-            If roleCostName.StartsWith("#") Then
+            If tmpRole.isTeam Then
                 myIDs = Me.getSubRoleIDsOf(roleCostName)
             Else
                 myIDs = New SortedList(Of Integer, Double)
