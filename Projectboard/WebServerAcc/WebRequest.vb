@@ -707,6 +707,7 @@ Public Class Request
                     projektWeb.copyfrom(projekt)
                     projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
                     projektWeb.vpid = vpid
+
                     data = serverInputDataJson(projektWeb, "")
 
                     Dim storeAntwort As clsWebLongVPv
@@ -1156,7 +1157,7 @@ Public Class Request
             '           ptPRPFType.project = 0
             '           ptPRPFType.projectTemplate = 2
 
-            type = ptPRPFType.project
+
             Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, type)
 
             If wpItem.isProtected Then
@@ -3789,7 +3790,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="datumUhrzeit"></param>
     ''' <returns></returns>
-    Private Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
+    Public Function DateTimeToISODate(ByVal datumUhrzeit As Date) As String
 
         Dim ISODateandTime As String = Nothing
         Dim ISODate As String = ""

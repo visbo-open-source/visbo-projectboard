@@ -7070,6 +7070,7 @@ Public Module Module1
 
     End Function
 
+
     ''' <summary>
     ''' gibt den Titel zurück 
     ''' </summary>
@@ -7089,6 +7090,7 @@ Public Module Module1
         bestimmeRollenDiagrammTitel = tmpResult
 
     End Function
+
 
 
 End Module

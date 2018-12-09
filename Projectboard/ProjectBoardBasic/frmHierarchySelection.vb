@@ -1601,7 +1601,7 @@ Public Class frmHierarchySelection
         If curNode.Name.StartsWith("P:") Or
             curNode.Name.StartsWith("V:") Then
 
-            Dim tmpStr() As String = curNode.Name.Split(New Char() {CChar(":")})
+            Dim tmpStr() As String = curNode.Name.Split(New Char() {CChar(":")}, 2)
             If tmpStr.Length >= 2 Then
                 tmpResult = tmpStr(1)
             End If
