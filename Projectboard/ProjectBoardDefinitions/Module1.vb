@@ -3729,26 +3729,20 @@ Public Module Module1
     ''' 2 = Namensliste
     ''' 3 = Category Liste
     ''' </summary>
-    ''' <param name="selectedBUs"></param>
-    ''' <param name="selectedTyps"></param>
-    ''' <param name="selectedPhases"></param>
-    ''' <param name="selectedMilestones"></param>
-    ''' <param name="selectedRoles"></param>
-    ''' <param name="selectedCosts"></param>
+    ''' <param name="selPh"></param>
+    ''' <param name="selMs"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function selectionTyp(ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
-                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
-                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection) As Integer
+    Public Function selectionTyp(ByVal selPh As Collection, ByVal selMs As Collection) As Integer
 
         Dim element As String = ""
         Dim tmpresult As Integer = PTProjektType.nameList
         Dim i As Integer = 1
 
         ' Check ob selectedPhases P:, V: oder C: enthält
-        Do While tmpresult <> PTProjektType.projekt And i <= selectedPhases.Count
+        Do While tmpresult <> PTProjektType.projekt And i <= selPh.Count
 
-            element = selectedPhases.Item(i).ToString
+            element = selPh.Item(i).ToString
 
             Dim elemName As String = ""
             Dim bc As String = ""
@@ -3768,9 +3762,9 @@ Public Module Module1
 
         ' Schleife ist nur solange notwendig, solange tmpResult nicht gleich Projekt-Typ ist 
         i = 1
-        Do While tmpresult <> PTProjektType.projekt And i <= selectedMilestones.Count
+        Do While tmpresult <> PTProjektType.projekt And i <= selMs.Count
 
-            element = selectedMilestones.Item(i).ToString
+            element = selMs.Item(i).ToString
 
             Dim elemName As String = ""
             Dim bc As String = ""
@@ -3794,84 +3788,6 @@ Public Module Module1
         selectionTyp = tmpresult
 
     End Function
-
-
-    ' ''' <summary>
-    ' ''' 
-    ' ''' </summary>
-    ' ''' <param name="selectedBUs"></param>
-    ' ''' <param name="selectedTyps"></param>
-    ' ''' <param name="selectedPhases"></param>
-    ' ''' <param name="selectedMilestones"></param>
-    ' ''' <param name="selectedRoles"></param>
-    ' ''' <param name="selectedCosts"></param>
-    ' ''' <returns></returns>
-    ' ''' <remarks></remarks>
-    'Public Function checkFilter(ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
-    '                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-    '                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection) As Collection
-
-    '    Dim element As String = ""
-    '    Dim outputCollection As New Collection
-
-    '    Dim i As Integer = 1
-    '    Dim projName As String = ""
-
-    '    Dim elemName As String = ""
-    '    Dim bc As String = ""
-    '    Dim type As Integer = -1
-    '    Dim pvcName As String = ""
-
-
-    '    For i = 1 To selectedPhases.Count
-
-    '        element = selectedPhases.Item(i).ToString
-
-    '        If element.StartsWith("[P:") Then
-    '            Call splitHryFullnameTo2(element, elemName, bc, type, pvcName)
-    '        End If
-
-
-    '        Dim hstr() As String = Split(element, "P:")
-    '        If hstr.Length > 1 Then
-    '            Dim hstr1() As String = Split(hstr(1), "]", , )
-    '            If hstr1.Length > 0 Then
-    '                projName = hstr1(0)
-    '                If Not ShowProjekte.contains(projName) Then
-    '                    If Not outputCollection.Contains(projName) Then
-    '                        outputCollection.Add(projName, projName)
-    '                    End If
-    '                End If
-    '            End If
-    '        End If
-    '    Next i
-
-    '    For i = 1 To selectedMilestones.Count
-
-    '        element = selectedMilestones.Item(i).ToString
-    '        Dim hstr() As String = Split(element, "P:")
-    '        If hstr.Length > 1 Then
-    '            Dim hstr1() As String = Split(hstr(1), "]", , )
-    '            If hstr1.Length > 0 Then
-    '                projName = hstr1(0)
-    '                If Not ShowProjekte.contains(projName) Then
-    '                    If Not outputCollection.Contains(projName) Then
-    '                        outputCollection.Add(projName, projName)
-    '                    End If
-    '                End If
-    '            End If
-    '        End If
-    '    Next i
-
-    '    Dim explstr As String = "Folgende Projekte sind im Filter enthalten, doch nicht in der Multprojekt-Tafel geladen"
-    '    Dim headerstr As String = "nicht geladene Projekte"
-
-    '    Call showOutPut(outputCollection, headerstr, explstr)
-
-    '    checkFilter = outputCollection
-
-    'End Function
-
 
 
     ''' <summary>
@@ -7153,6 +7069,28 @@ Public Module Module1
         checkTeamMemberOverloads = atleastOneOverload
 
     End Function
+
+
+    ''' <summary>
+    ''' gibt den Titel zurück 
+    ''' </summary>
+    ''' <param name="rollenKennung"></param>
+    ''' <returns></returns>
+    Public Function bestimmeRollenDiagrammTitel(ByVal rollenKennung As String) As String
+
+        Dim tmpResult As String = ""
+
+        Dim teamID As Integer
+        Try
+            tmpResult = RoleDefinitions.getRoleDefByIDKennung(rollenKennung, teamID).name
+        Catch ex As Exception
+
+        End Try
+
+        bestimmeRollenDiagrammTitel = tmpResult
+
+    End Function
+
 
 
 End Module

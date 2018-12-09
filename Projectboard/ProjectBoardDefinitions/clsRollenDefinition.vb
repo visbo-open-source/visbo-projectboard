@@ -193,6 +193,7 @@
         End Get
     End Property
 
+
     ''' <summary>
     ''' gibt zurück, ob es sich um eine Combined Role handelt ... 
     ''' </summary>

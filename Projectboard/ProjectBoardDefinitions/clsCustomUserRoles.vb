@@ -36,7 +36,7 @@
     ''' <param name="userID"></param>
     ''' <param name="customRoleType"></param>
     ''' <param name="specifics"></param>
-    Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserProfils, ByVal specifics As Object)
+    Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserProfils, ByVal specifics As String)
 
         Dim key As String = userName.Trim & customRoleType.ToString.Trim
         If _customUserRoles.ContainsKey(key) Then

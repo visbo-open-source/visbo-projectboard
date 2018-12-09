@@ -2751,9 +2751,9 @@ Module Module1
                             vdatenreihe = vglProj.getAlleRessourcen
                         End If
                     Else
-                        tdatenreihe = hproj.getRessourcenBedarfNew(rcName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(rcName, True)
                         If Not IsNothing(vglProj) Then
-                            vdatenreihe = vglProj.getRessourcenBedarfNew(rcName, True)
+                            vdatenreihe = vglProj.getRessourcenBedarf(rcName, True)
                         End If
                     End If
                 End If

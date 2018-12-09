@@ -238,13 +238,14 @@ Public Module awinDiagrams
             End If
 
         ElseIf prcTyp = DiagrammTypen(1) Then
+            ' Rollen 
 
             chtobjName = calcChartKennung("pf", PTpfdk.Rollen, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Rollen)
             Else
-                diagramTitle = CStr(myCollection.Item(1))
+                diagramTitle = bestimmeRollenDiagrammTitel(CStr(myCollection.Item(1)))
             End If
 
         ElseIf prcTyp = DiagrammTypen(2) Then
@@ -422,24 +423,28 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(1) Then
                             ' Rollen 
                             einheit = " " & awinSettings.kapaEinheit
-                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(prcName)
+                            Dim teamID As Integer = -1
+                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
+
                             objektFarbe = tmpRole.farbe
 
                             If tmpRole.isCombinedRole Then
+
                                 If awinSettings.showPlaceholderAndAssigned Then
+
                                     sumRoleShowsPlaceHolderAndAssigned = True
-                                    datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                                   considerAllSubRoles:=True, _
-                                                                                   type:=PTcbr.placeholders, _
+                                    datenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.placeholders,
                                                                                    excludedNames:=myCollection)
-                                    edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                                   considerAllSubRoles:=True, _
-                                                                                   type:=PTcbr.realRoles, _
+                                    edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.realRoles,
                                                                                    excludedNames:=myCollection)
                                 Else
-                                    datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                                   considerAllSubRoles:=True, _
-                                                                                   type:=PTcbr.all, _
+                                    datenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                                   considerAllSubRoles:=True,
+                                                                                   type:=PTcbr.all,
                                                                                    excludedNames:=myCollection)
                                 End If
 
@@ -540,7 +545,7 @@ Public Module awinDiagrams
 
                         If prcTyp = DiagrammTypen(1) And sumRoleShowsPlaceHolderAndAssigned Then
                             For i = 0 To bis - von
-                                seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) + _
+                                seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i) +
                                                             edatenreihe(i)
                             Next i
                         Else
@@ -799,8 +804,8 @@ Public Module awinDiagrams
                     ''''    End If
                     ''''End If
 
-                    If prcTyp = DiagrammTypen(1) Or _
-                        (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
+                    If prcTyp = DiagrammTypen(1) Or
+                        (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or
                         (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
                         With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                             .HasDataLabels = False
@@ -836,15 +841,15 @@ Public Module awinDiagrams
                     End If
                     .HasTitle = True
 
-                    If prcTyp = DiagrammTypen(0) Or _
-                        prcTyp = DiagrammTypen(5) Or _
-                        prcTyp = DiagrammTypen(7) Or _
+                    If prcTyp = DiagrammTypen(0) Or
+                        prcTyp = DiagrammTypen(5) Or
+                        prcTyp = DiagrammTypen(7) Or
                         prcTyp = DiagrammTypen(8) Then
                         titleSumme = ""
 
                     ElseIf prcTyp = DiagrammTypen(1) Then
                         einheit = awinSettings.kapaEinheit
-                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " &
                                             Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
 
                     ElseIf prcTyp = DiagrammTypen(2) Then
@@ -983,8 +988,8 @@ Public Module awinDiagrams
     ''' </summary>
     ''' <param name="chtobj"></param>
     ''' <remarks></remarks>
-    Sub awinUpdateprcCollectionDiagram(ByVal chtobj As ChartObject, _
-                                       ByVal roleCost As String, _
+    Sub awinUpdateprcCollectionDiagram(ByVal chtobj As ChartObject,
+                                       ByVal roleCost As String,
                                        ByVal isRole As Boolean)
 
         Dim von As Integer, bis As Integer
@@ -1114,7 +1119,7 @@ Public Module awinDiagrams
                     prcTyp = foundDiagram.diagrammTyp
                     found = True
                 End If
-                
+
             End If
 
         Catch ex As Exception
@@ -1157,12 +1162,17 @@ Public Module awinDiagrams
             ElseIf prcTyp = DiagrammTypen(5) Then
                 chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
-            
+
             Else
                 diagramTitle = repMessages.getmsg(114)
             End If
         Else
-            diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
+            If prcTyp = DiagrammTypen(1) Then
+                diagramTitle = bestimmeRollenDiagrammTitel(CStr(myCollection.Item(1)))
+            Else
+                diagramTitle = splitHryFullnameTo1(CStr(myCollection.Item(1)))
+            End If
+
         End If
 
         ' jetzt den Namen aus optischen Gründen ändern 
@@ -1275,25 +1285,27 @@ Public Module awinDiagrams
 
                 ElseIf prcTyp = DiagrammTypen(1) Then
                     einheit = " " & awinSettings.kapaEinheit
-                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(prcName)
-                    objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
+                    Dim teamID As Integer = -1
+                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(prcName, teamID)
+
+                    objektFarbe = tmpRole.farbe
 
                     If tmpRole.isCombinedRole Then
 
                         If awinSettings.showPlaceholderAndAssigned Then
                             sumRoleShowsPlaceHolderAndAssigned = True
-                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                           considerAllSubRoles:=True, _
-                                                                           type:=PTcbr.placeholders, _
+                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                           considerAllSubRoles:=True,
+                                                                           type:=PTcbr.placeholders,
                                                                            excludedNames:=myCollection)
-                            edatenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                           considerAllSubRoles:=True, _
-                                                                           type:=PTcbr.realRoles, _
+                            edatenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                           considerAllSubRoles:=True,
+                                                                           type:=PTcbr.realRoles,
                                                                            excludedNames:=myCollection)
                         Else
-                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                           considerAllSubRoles:=True, _
-                                                                           type:=PTcbr.all, _
+                            datenreihe = ShowProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                           considerAllSubRoles:=True,
+                                                                           type:=PTcbr.all,
                                                                            excludedNames:=myCollection)
                         End If
 
@@ -1305,9 +1317,9 @@ Public Module awinDiagrams
                     If (awinSettings.showValuesOfSelected) And myCollection.Count = 1 Then
                         ' Ergänzung wegen Anzeige der selektierten Objekte ... 
                         If tmpRole.isCombinedRole Then
-                            tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(roleID:=prcName, _
-                                                                       considerAllSubRoles:=True, _
-                                                                       type:=PTcbr.all, _
+                            tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(roleIDStr:=prcName,
+                                                                       considerAllSubRoles:=True,
+                                                                       type:=PTcbr.all,
                                                                        excludedNames:=myCollection)
                         Else
                             tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)

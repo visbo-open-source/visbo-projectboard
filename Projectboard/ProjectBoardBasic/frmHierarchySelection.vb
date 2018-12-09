@@ -6,7 +6,6 @@ Imports System.ComponentModel
 
 Public Class frmHierarchySelection
 
-
     Private hry As clsHierarchy
     Public repProfil As clsReportAll
 
@@ -48,15 +47,7 @@ Public Class frmHierarchySelection
     ' "MS Project" stehen. 
     Friend calledFrom As String
 
-    ''' <summary>
-    ''' tk 6.12.18 wird benötigt, um Teams, Team Memberships unterscheiden zu können
-    ''' </summary>
-    Private Structure nodeRoleTag
-        Friend isTeam As Boolean
-        Friend isTeamMember As Boolean
-        Friend membershipID As Integer
-        Friend membershipPrz As Double
-    End Structure
+
 
     Private Sub defineFrmButtonVisibility()
 
@@ -594,7 +585,7 @@ Public Class frmHierarchySelection
                     .rdbNameList.Enabled = False
                     .rdbNameList.Visible = False
                     .rdbNameList.Checked = False
-                    
+
                     .rdbProjStruktProj.Enabled = False
                     .rdbProjStruktProj.Visible = False
                     .rdbProjStruktProj.Checked = True
@@ -701,7 +692,7 @@ Public Class frmHierarchySelection
                 .filterDropbox.Visible = True
                 .filterLabel.Visible = True
 
-          
+
             End If
 
         End With
@@ -858,7 +849,7 @@ Public Class frmHierarchySelection
                 End If
 
                 auswahl = PTProjektType.projekt
-                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                auswahl = selectionTyp(selectedPhases, selectedMilestones)
 
                 Select Case auswahl
                     Case PTProjektType.nameList
@@ -1136,25 +1127,13 @@ Public Class frmHierarchySelection
             ' Radiobutton Rollen wurde geklickt
 
             selectedRoles.Clear()
-        
+
             With hryTreeView
 
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-
-                    If tmpNode.Checked 
-
-                        If Not selectedRoles.Contains(tmpNode.Text) Then
-                            selectedRoles.Add(tmpNode.Text, tmpNode.Text)
-                        End If
-
-                    End If
-
-
-                    If tmpNode.Nodes.Count > 0 Then
-                        Call pickupCheckedRoleItems(tmpNode)
-                    End If
+                    Call verarbeiteTreeRoleItem(tmpNode)
 
                 Next
 
@@ -1212,7 +1191,7 @@ Public Class frmHierarchySelection
 
         End If
 
-     
+
 
         If Me.menuOption = PTmenue.filterdefinieren Then
 
@@ -1232,8 +1211,8 @@ Public Class frmHierarchySelection
         ' jetzt wird der letzte Filter gespeichert ..
         Dim lastfilter As String = "Last"
         If Not (Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel) Then
-            Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
+            Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps,
+                                                   selectedPhases, selectedMilestones,
                                                    selectedRoles, selectedCosts, True)
         End If
 
@@ -1259,38 +1238,38 @@ Public Class frmHierarchySelection
             validOption = False
         End If
 
-        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Or _
+        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Or
             Me.menuOption = PTmenue.reportBHTC Or Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
             If ((selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0 Or selectedTyps.Count > 0) _
-                    And validOption) Or _
+                    And validOption) Or
                     (Me.menuOption = PTmenue.reportBHTC And validOption) Then
 
                 Dim vorlagenDateiName As String
 
                 If Me.menuOption = PTmenue.multiprojektReport Then
-                    vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                    vorlagenDateiName = awinPath & RepPortfolioVorOrdner &
                                     "\" & repVorlagenDropbox.Text
                 ElseIf Me.menuOption = PTmenue.einzelprojektReport Then
 
-                    vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                    vorlagenDateiName = awinPath & RepProjectVorOrdner &
                                     "\" & repVorlagenDropbox.Text
 
                 Else
 
                     If Not IsNothing(repProfil) Then
                         If repProfil.isMpp Then
-                            vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                            vorlagenDateiName = awinPath & RepPortfolioVorOrdner &
                                     "\" & repVorlagenDropbox.Text
                         Else
 
-                            vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                            vorlagenDateiName = awinPath & RepProjectVorOrdner &
                                             "\" & repVorlagenDropbox.Text
                         End If
                     Else
                         ' im zweifelsfall werden die Portfolio Vorlagen angezeigt
-                        vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                        vorlagenDateiName = awinPath & RepPortfolioVorOrdner &
                                                             "\" & repVorlagenDropbox.Text
                     End If
                 End If
@@ -1391,10 +1370,10 @@ Public Class frmHierarchySelection
             Else
                 'Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & "einen Zeitraum angeben ...")
                 If awinSettings.englishLanguage Then
-                    Me.statusLabel.Text = "please select at least one planelement resp. " & vbLf & _
+                    Me.statusLabel.Text = "please select at least one planelement resp. " & vbLf &
                              "provide a timespan ..."
                 Else
-                    Me.statusLabel.Text = "bitte mindestens ein Element selektieren bzw. " & vbLf & _
+                    Me.statusLabel.Text = "bitte mindestens ein Element selektieren bzw. " & vbLf &
                              "einen Zeitraum angeben ..."
                 End If
 
@@ -1429,10 +1408,10 @@ Public Class frmHierarchySelection
 
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 
 
-        If Me.menuOption = PTmenue.excelExport Or _
-            menuOption = PTmenue.filterdefinieren Or _
-            menuOption = PTmenue.sessionFilterDefinieren Or _
-            menuOption = PTmenue.leistbarkeitsAnalyse Or _
+        If Me.menuOption = PTmenue.excelExport Or
+            menuOption = PTmenue.filterdefinieren Or
+            menuOption = PTmenue.sessionFilterDefinieren Or
+            menuOption = PTmenue.leistbarkeitsAnalyse Or
             (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
             Me.DialogResult = System.Windows.Forms.DialogResult.OK
             MyBase.Close()
@@ -1445,6 +1424,27 @@ Public Class frmHierarchySelection
 
         End If
 
+
+
+    End Sub
+
+    ''' <summary>
+    ''' die Behandlung der TreeRoleItems 
+    ''' wird nur aufgerufen, wenn rdbroles.checked = true 
+    ''' </summary>
+    ''' <param name="tmpNode"></param>
+    Private Sub verarbeiteTreeRoleItem(ByVal tmpNode As TreeNode)
+
+        If tmpNode.Checked = True Then
+
+            If Not selectedRoles.Contains(tmpNode.Name) Then
+                selectedRoles.Add(tmpNode.Name, tmpNode.Name)
+            End If
+        End If
+
+        If tmpNode.Nodes.Count > 0 Then
+            Call pickupCheckedRoleItems(tmpNode)
+        End If
 
 
     End Sub
@@ -1598,7 +1598,7 @@ Public Class frmHierarchySelection
             curNode = curNode.Parent
         Loop
 
-        If curNode.Name.StartsWith("P:") Or _
+        If curNode.Name.StartsWith("P:") Or
             curNode.Name.StartsWith("V:") Then
 
             Dim tmpStr() As String = curNode.Name.Split(New Char() {CChar(":")}, 2)
@@ -1752,12 +1752,13 @@ Public Class frmHierarchySelection
 
     End Sub
 
-   
+
 
 
     Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
 
         Dim node As TreeNode
+        'Dim parentNode As TreeNode = Nothing
         Dim childNode As TreeNode
         Dim placeholder As TreeNode
         Dim elemID As String
@@ -1769,7 +1770,7 @@ Public Class frmHierarchySelection
         Dim curHry As clsHierarchy
         Dim vorlElem As String = ""
 
-        Dim childRole As clsRollenDefinition
+        'Dim childRole As clsRollenDefinition
 
         node = e.Node
         elemID = node.Name
@@ -1779,17 +1780,21 @@ Public Class frmHierarchySelection
 
             If Not IsNothing(node.Tag) Then
 
-                ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
-                If node.Tag = "P" Then
+                'parentNode = node.Parent
 
-                    node.Tag = "X"
+                Dim nrTag As clsNodeRoleTag = CType(node.Tag, clsNodeRoleTag)
+                ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
+                If nrTag.pTag = "P" Then
+
+                    nrTag.pTag = "X"
 
                     ' Löschen von Platzhalter
                     node.Nodes.Clear()
 
                     Dim nodelist As New SortedList(Of Integer, Double)
                     Try
-                        nodelist = RoleDefinitions.getRoleDefByID(CInt(node.Name)).getSubRoleIDs
+                        Dim teamID As Integer
+                        nodelist = RoleDefinitions.getRoleDefByIDKennung(CInt(node.Name), teamID).getSubRoleIDs
                         anzChilds = nodelist.Count
                     Catch ex As Exception
                         anzChilds = 0
@@ -1799,45 +1804,48 @@ Public Class frmHierarchySelection
 
                     With hryTreeView
                         .CheckBoxes = True
-
-                        For i As Integer = 0 To anzChilds - 1
-                            childRole = RoleDefinitions.getRoleDefByID(nodelist.ElementAt(i).Key)
-                            Dim childName As String = childRole.name
-                            Dim childID As Integer = childRole.UID
-
-                            If allRoles.Contains(childName) Then
-
-                                childNode = node.Nodes.Add(childName)
-                                childNode.Name = childID.ToString
-                                childNode.Text = childName
-
-
-                                If selectedRoles.Contains(childName) Then
-                                    childNode.Checked = True
-                                End If
-
-                                Dim anzSubRolesOFChild As Integer
-                                Try
-                                    anzSubRolesOFChild = RoleDefinitions.getRoleDefByID(childID).getSubRoleIDs.Count
-                                Catch ex As Exception
-                                    anzSubRolesOFChild = 0
-                                End Try
-
-                                If anzSubRolesOFChild > 0 Then
-                                    childNode.Tag = "P"
-
-
-                                    placeholder = childNode.Nodes.Add("-")
-                                    placeholder.Tag = "P"
-                                Else
-                                    childNode.Tag = "X"
-                                End If
-
-                            End If
-                        Next
-
-
                     End With
+
+                    For i As Integer = 0 To anzChilds - 1
+
+                        Call buildRoleSubTreeView(node, nodelist.ElementAt(i).Key)
+                        'childRole = RoleDefinitions.getRoleDefByID(nodelist.ElementAt(i).Key)
+                        'Dim childName As String = childRole.name
+                        'Dim childID As Integer = childRole.UID
+
+                        'If allRoles.Contains(childName) Then
+
+                        '    childNode = node.Nodes.Add(childName)
+                        '    childNode.Name = childID.ToString
+                        '    childNode.Text = childName
+
+
+                        '    If selectedRoles.Contains(childName) Then
+                        '        childNode.Checked = True
+                        '    End If
+
+                        '    Dim anzSubRolesOFChild As Integer
+                        '    Try
+                        '        anzSubRolesOFChild = RoleDefinitions.getRoleDefByID(childID).getSubRoleIDs.Count
+                        '    Catch ex As Exception
+                        '        anzSubRolesOFChild = 0
+                        '    End Try
+
+                        '    If anzSubRolesOFChild > 0 Then
+                        '        childNode.Tag = "P"
+
+
+                        '        placeholder = childNode.Nodes.Add("-")
+                        '        placeholder.Tag = "P"
+                        '    Else
+                        '        childNode.Tag = "X"
+                        '    End If
+
+                        'End If
+                    Next
+
+
+
                 End If
             End If
 
@@ -2137,7 +2145,7 @@ Public Class frmHierarchySelection
                             ' überprüfen, ob das Projekt irgend eine der selektierten Phasen oder Meilensteine enthält
                             Dim hproj As clsProjekt = projekteToLook.getProject(kvp.Key)
                             Dim tmpcollection As New Collection
-                            Dim newFil As New clsFilter("tmp", tmpcollection, tmpcollection, _
+                            Dim newFil As New clsFilter("tmp", tmpcollection, tmpcollection,
                                                         selectedPhases, selectedMilestones, tmpcollection, tmpcollection)
                             If newFil.doesNotBlock(hproj) Then
                                 topLevel.Checked = True
@@ -2546,14 +2554,14 @@ Public Class frmHierarchySelection
                     If elemIDIstMeilenstein(childNameID) Then
                         nodeLevel0.BackColor = System.Drawing.Color.Azure
                         If selectedMilestones.Contains(element) Or selectedMilestones.Contains(projElem) _
-                            Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Or _
+                            Or selectedMilestones.Contains(vorlElem) Or selectedMilestones.Contains(elemName) Or
                             selectedMilestones.Contains(categoryElem) Then
                             nodeLevel0.Checked = True
                         End If
                     Else
 
                         If selectedPhases.Contains(element) Or selectedPhases.Contains(projElem) _
-                            Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Or _
+                            Or selectedPhases.Contains(vorlElem) Or selectedPhases.Contains(elemName) Or
                             selectedPhases.Contains(categoryElem) Then
                             nodeLevel0.Checked = True
                         End If
@@ -2740,7 +2748,6 @@ Public Class frmHierarchySelection
     ''' <remarks></remarks>
     Public Sub pickupCheckedRoleItems(ByVal node As TreeNode)
         Dim tmpNode As TreeNode
-        Dim element As String
 
         If IsNothing(node) Then
             ' nichts tun
@@ -2753,21 +2760,7 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-
-                    If tmpNode.Checked Then
-
-                        element = tmpNode.Text
-                        If Not selectedRoles.Contains(element) Then
-                            selectedRoles.Add(element, element)
-                        End If
-
-
-                    End If
-
-
-                    If tmpNode.Nodes.Count > 0 Then
-                        Call pickupCheckedRoleItems(tmpNode)
-                    End If
+                    Call verarbeiteTreeRoleItem(tmpNode)
 
                 Next
 
@@ -2781,7 +2774,7 @@ Public Class frmHierarchySelection
     ''' <param name="tree"></param>
     ''' <param name="selectedElems"></param>
     ''' <remarks></remarks>
-    Private Sub pickupCheckedListItems(ByVal tree As TreeView, ByRef selectedElems As Collection, _
+    Private Sub pickupCheckedListItems(ByVal tree As TreeView, ByRef selectedElems As Collection,
                                        ByVal isCostType As Boolean, ByVal isMilestone As Boolean)
 
         ' Merken welches die selektierten Phasen waren 
@@ -2801,7 +2794,7 @@ Public Class frmHierarchySelection
                     End If
                 End If
 
-                
+
                 ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll
 
                 If Not selectedElems.Contains(tmpName) Then
@@ -2966,10 +2959,10 @@ Public Class frmHierarchySelection
                         Throw New ArgumentException(ex.Message)
                     End Try
 
-                    Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                      selectedPhases, selectedMilestones, _
-                                                      selectedRoles, selectedCosts, _
-                                                      selectedBUs, selectedTyps, True, _
+                    Call createPPTSlidesFromConstellation(vorlagenDateiName,
+                                                      selectedPhases, selectedMilestones,
+                                                      selectedRoles, selectedCosts,
+                                                      selectedBUs, selectedTyps, True,
                                                       worker, e)
                 Else
                     ' Einzelprojekt-Bericht
@@ -2983,10 +2976,10 @@ Public Class frmHierarchySelection
 
                     End Try
 
-                    Call createPPTReportFromProjects(vorlagenDateiName, _
-                                                     selectedPhases, selectedMilestones, _
-                                                     selectedRoles, selectedCosts, _
-                                                     selectedBUs, selectedTyps, _
+                    Call createPPTReportFromProjects(vorlagenDateiName,
+                                                     selectedPhases, selectedMilestones,
+                                                     selectedRoles, selectedCosts,
+                                                     selectedBUs, selectedTyps,
                                                      worker, e)
                 End If
 
@@ -3223,7 +3216,7 @@ Public Class frmHierarchySelection
                     Next
                 End With
 
-       
+
             ElseIf rdbBU.Checked = True Then
 
                 selectedBUs.Clear()
@@ -3242,7 +3235,7 @@ Public Class frmHierarchySelection
                 '    End If
                 'Next
             End If
-       
+
 
         ElseIf Me.rdbProjStruktProj.Checked Or Me.rdbProjStruktTyp.Checked Then
 
@@ -3356,19 +3349,7 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-
-                    If tmpNode.Checked Then
-
-                        If Not selectedRoles.Contains(tmpNode.Text) Then
-                            selectedRoles.Add(tmpNode.Text, tmpNode.Text)
-                        End If
-
-                    End If
-
-
-                    If tmpNode.Nodes.Count > 0 Then
-                        Call pickupCheckedRoleItems(tmpNode)
-                    End If
+                    Call verarbeiteTreeRoleItem(tmpNode)
 
                 Next
 
@@ -3377,19 +3358,19 @@ Public Class frmHierarchySelection
         End If
 
 
-        If Not (Me.menuOption = PTmenue.reportBHTC Or _
+        If Not (Me.menuOption = PTmenue.reportBHTC Or
             Me.menuOption = PTmenue.reportMultiprojektTafel) Then
 
             If Me.menuOption = PTmenue.filterdefinieren Then
 
                 filterName = filterDropbox.Text
                 ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-                Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                                                       selectedPhases, selectedMilestones, _
+                Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps,
+                                                       selectedPhases, selectedMilestones,
                                                        selectedRoles, selectedCosts, False)
             ElseIf Me.menuOption = PTmenue.visualisieren Then
 
-                If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+                If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And
                     (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
                     If awinSettings.englishLanguage Then
                         Call MsgBox("either phases/milestones or Roles/cost may be selected ...")
@@ -3400,8 +3381,8 @@ Public Class frmHierarchySelection
                 Else
                     filterName = filterDropbox.Text
                     ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-                    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                                                           selectedPhases, selectedMilestones, _
+                    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps,
+                                                           selectedPhases, selectedMilestones,
                                                            selectedRoles, selectedCosts, False)
                 End If
 
@@ -3409,15 +3390,15 @@ Public Class frmHierarchySelection
 
                 filterName = filterDropbox.Text
                 ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-                Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                                                       selectedPhases, selectedMilestones, _
+                Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps,
+                                                       selectedPhases, selectedMilestones,
                                                        selectedRoles, selectedCosts, False)
             End If
 
             ' jetzt wird der letzte Filter gespeichert ..
             Dim lastfilter As String = "Last"
-            Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
-                                                       selectedPhases, selectedMilestones, _
+            Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps,
+                                                       selectedPhases, selectedMilestones,
                                                        selectedRoles, selectedCosts, True)
 
             ' geänderte Auswahl/Filterliste neu anzeigen
@@ -3430,7 +3411,7 @@ Public Class frmHierarchySelection
             End If
 
 
-        ElseIf Me.menuOption = PTmenue.reportBHTC Or _
+        ElseIf Me.menuOption = PTmenue.reportBHTC Or
             Me.menuOption = PTmenue.reportMultiprojektTafel Then
 
 
@@ -3482,10 +3463,10 @@ Public Class frmHierarchySelection
 
             Dim vorlagenDateiName As String
             If Not repProfil.isMpp Then
-                vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                vorlagenDateiName = awinPath & RepProjectVorOrdner &
                                     "\" & repVorlagenDropbox.Text
             Else
-                vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                vorlagenDateiName = awinPath & RepPortfolioVorOrdner &
                                    "\" & repVorlagenDropbox.Text
             End If
 
@@ -3512,8 +3493,8 @@ Public Class frmHierarchySelection
                     ' Name der ReportProfils speichern
                     repProfil.name = filterDropbox.Text
 
-                    Call storeReportProfil(menuOption, selectedBUs, selectedTyps, _
-                                                               selectedPhases, selectedMilestones, _
+                    Call storeReportProfil(menuOption, selectedBUs, selectedTyps,
+                                                               selectedPhases, selectedMilestones,
                                                                selectedRoles, selectedCosts, repProfil)
 
 
@@ -3581,11 +3562,11 @@ Public Class frmHierarchySelection
                 ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
 
                 ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
-                Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
-                                        selectedPhases, selectedMilestones, _
+                Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps,
+                                        selectedPhases, selectedMilestones,
                                         selectedRoles, selectedCosts)
 
-                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                auswahl = selectionTyp(selectedPhases, selectedMilestones)
 
                 'missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
@@ -3643,15 +3624,14 @@ Public Class frmHierarchySelection
                 ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
 
                 ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
-                Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
-                                        selectedPhases, selectedMilestones, _
+                Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps,
+                                        selectedPhases, selectedMilestones,
                                         selectedRoles, selectedCosts)
 
                 If selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
 
 
-                    auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
-                                           selectedRoles, selectedCosts)
+                    auswahl = selectionTyp(selectedPhases, selectedMilestones)
 
                     'missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
                     '                                    selectedRoles, selectedCosts)
@@ -3778,10 +3758,10 @@ Public Class frmHierarchySelection
                         selectedProjekte.Add(hproj, False)
                     End If
 
-                    Call createPPTReportFromProjects(vorlagendateiname, _
-                                                     selectedPhases, selectedMilestones, _
-                                                     selectedRoles, selectedCosts, _
-                                                     selectedBUs, selectedTyps, _
+                    Call createPPTReportFromProjects(vorlagendateiname,
+                                                     selectedPhases, selectedMilestones,
+                                                     selectedRoles, selectedCosts,
+                                                     selectedBUs, selectedTyps,
                                                      worker, e)
 
                 End If
@@ -3797,10 +3777,10 @@ Public Class frmHierarchySelection
                 Dim vorlagendateiname As String = awinPath & RepPortfolioVorOrdner & "\" & reportProfil.PPTTemplate
                 If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
 
-                    Call createPPTSlidesFromConstellation(vorlagendateiname, _
-                                                          selectedPhases, selectedMilestones, _
-                                                          selectedRoles, selectedCosts, _
-                                                          selectedBUs, selectedTyps, True, _
+                    Call createPPTSlidesFromConstellation(vorlagendateiname,
+                                                          selectedPhases, selectedMilestones,
+                                                          selectedRoles, selectedCosts,
+                                                          selectedBUs, selectedTyps, True,
                                                           worker, e)
 
                 End If
@@ -3888,7 +3868,7 @@ Public Class frmHierarchySelection
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
-        If (menuOption = PTmenue.reportBHTC Or _
+        If (menuOption = PTmenue.reportBHTC Or
             menuOption = PTmenue.reportMultiprojektTafel) Then
 
             If awinSettings.englishLanguage Then
@@ -3916,7 +3896,7 @@ Public Class frmHierarchySelection
 
         If Me.rdbNameList.Checked Then
 
-            If selectedPhases.Count = 0 And _
+            If selectedPhases.Count = 0 And
                selectedMilestones.Count = 0 Then
                 If awinSettings.considerCategories Then
                     auswahl = PTProjektType.categoryList
@@ -3925,7 +3905,7 @@ Public Class frmHierarchySelection
                 End If
 
             Else
-                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                auswahl = selectionTyp(selectedPhases, selectedMilestones)
             End If
 
             Select Case auswahl
@@ -4084,8 +4064,7 @@ Public Class frmHierarchySelection
         Else
             '??? lastAuswahl = PTProjektType.nameList
 
-            auswahl = selectionTyp(selectedBUs, selectedTyps, _
-                                   selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+            auswahl = selectionTyp(selectedPhases, selectedMilestones)
 
             If auswahl = PTProjektType.nameList Or auswahl = PTProjektType.categoryList Then
 
@@ -4202,7 +4181,7 @@ Public Class frmHierarchySelection
                                 tmpNode.Checked = True
                             End If
                         End If
-                        
+
                     Next
                 Next
             Else
@@ -4231,7 +4210,7 @@ Public Class frmHierarchySelection
                     Me.rdbPhaseMilest.Checked = True
                 End If
             End If
-            
+
 
 
             ' clear Listbox1 
@@ -4244,12 +4223,12 @@ Public Class frmHierarchySelection
             filterBox.Visible = False
             filterBox.Text = ""
 
-            If selectedPhases.Count = 0 And _
+            If selectedPhases.Count = 0 And
                 selectedMilestones.Count = 0 Then
 
                 auswahl = PTProjektType.projekt
             Else
-                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                auswahl = selectionTyp(selectedPhases, selectedMilestones)
             End If
 
             Select Case auswahl
@@ -4319,11 +4298,11 @@ Public Class frmHierarchySelection
             filterBox.Visible = False
             filterBox.Text = ""
 
-            If selectedPhases.Count = 0 And _
+            If selectedPhases.Count = 0 And
                  selectedMilestones.Count = 0 Then
                 auswahl = PTProjektType.vorlage
             Else
-                auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+                auswahl = selectionTyp(selectedPhases, selectedMilestones)
             End If
 
             Select Case auswahl
@@ -4356,7 +4335,7 @@ Public Class frmHierarchySelection
                     If result = MsgBoxResult.Yes Then
                         selectedPhases.Clear()
                         selectedMilestones.Clear()
-                       
+
                         Call buildHryTreeViewNew(PTProjektType.vorlage)
 
                         Me.rdbProjStruktTyp.Checked = True
@@ -4560,7 +4539,7 @@ Public Class frmHierarchySelection
                             Next
                         End If
                         ' eigentlich sollten hier alle Phasen der Datenbank stehen ... 
-                       
+
                     End If
 
                 Else
@@ -4594,7 +4573,7 @@ Public Class frmHierarchySelection
                                 End If
                             Next
                         End If
-                        
+
                     End If
 
                 End If
@@ -4692,7 +4671,7 @@ Public Class frmHierarchySelection
                                 End If
                             Next
                         End If
-                        
+
                     End If
 
                 Else
@@ -4727,7 +4706,7 @@ Public Class frmHierarchySelection
                                 End If
                             Next
                         End If
-                        
+
                     End If
 
                 End If
@@ -4871,26 +4850,15 @@ Public Class frmHierarchySelection
 
                         tmpnode = .Nodes.Item(px - 1)
 
-                        If tmpnode.Checked Then
-
-                            If Not selectedRoles.Contains(tmpnode.Text) Then
-                                selectedRoles.Add(tmpnode.Text, tmpnode.Text)
-                            End If
-
-                        End If
-
-
-                        If tmpnode.Nodes.Count > 0 Then
-                            Call pickupCheckedRoleItems(tmpnode)
-                        End If
+                        Call verarbeiteTreeRoleItem(tmpnode)
 
                     Next
 
                 End With
 
 
-                End If
             End If
+        End If
     End Sub
 
     Private Sub rdbCosts_CheckedChanged(sender As Object, e As EventArgs) Handles rdbCosts.CheckedChanged
@@ -5183,7 +5151,7 @@ Public Class frmHierarchySelection
 
             End If
         End If
-        
+
     End Sub
 
     Public Sub buildTreeViewRolle()
@@ -5191,6 +5159,7 @@ Public Class frmHierarchySelection
 
         Dim topLevelNode As TreeNode
         Dim checkProj As Boolean = False
+
 
         With hryTreeView
 
@@ -5223,47 +5192,42 @@ Public Class frmHierarchySelection
             For i = 0 To topNodes.Count - 1
 
                 Dim role As clsRollenDefinition = RoleDefinitions.getRoleDefByID(topNodes.ElementAt(i))
+
                 topLevelNode = .Nodes.Add(role.name)
-                topLevelNode.Name = role.UID.ToString
                 topLevelNode.Text = role.name
 
+
+                Dim nrTag As New clsNodeRoleTag
+                With nrTag
+                    If role.getSubRoleCount > 0 Then
+                        .pTag = "P"
+                        topLevelNode.Nodes.Clear()
+                        topLevelNode.Nodes.Add("-")
+                    Else
+                        .pTag = "X"
+                    End If
+                End With
+
+
                 ' tk 6.12.18 jetzt kommen ggf an einen Knoten noch diese Informationen
-                Dim nrTag As nodeRoleTag = Nothing
+
                 If role.isTeam Then
                     ' toplevelNode kann nur Team sein, nicht Team-Member
-                    nrTag = New nodeRoleTag
-                    With nrTag
-                        .isTeam = True
-                        .isTeamMember = False
-                    End With
-
+                    nrTag.isTeam = True
+                    nrTag.isTeamMember = False
                 End If
 
-                If Not IsNothing(nrTag) Then
-                    topLevelNode.Tag = nrTag
-                End If
+                topLevelNode.Tag = nrTag
 
+                topLevelNode.Name = RoleDefinitions.bestimmeRoleNodeName(role.UID, nrTag.isTeamMember, nrTag.membershipID)
 
-                If selectedRoles.Contains(role.name) Then
+                If selectedRoles.Contains(topLevelNode.Name) Then
                     topLevelNode.Checked = True
                 End If
 
-                Dim listOfChildIDs As New SortedList(Of Integer, Double)
-                Try
-                    listOfChildIDs = role.getSubRoleIDs
-                Catch ex As Exception
 
-                End Try
-
-                If listOfChildIDs.Count > 0 Then
-                    For ii As Integer = 0 To listOfChildIDs.Count - 1
-                        Call buildRoleSubTreeView(topLevelNode, listOfChildIDs.ElementAt(ii).Key)
-                    Next
-                End If
-
-                'Call buildRoleSubTreeView(topLevel, roleHry.nodeItem(topNodes.Item(i)).childs)
             Next
-            'End If
+
 
 
         End With
@@ -5274,56 +5238,69 @@ Public Class frmHierarchySelection
     ''' wenn dieser Child-Node seinerseits Kinder enthält, wird wiederum buildRoleSubTreeView aufgerufen ... 
     ''' </summary>
     ''' <param name="parentNode"></param>
-    ''' <param name="roleUid"></param>
+    ''' <param name="currentRoleUid"></param>
     ''' <remarks></remarks>
-    Public Sub buildRoleSubTreeView(ByRef parentNode As TreeNode, ByVal roleUid As Integer)
+    Public Sub buildRoleSubTreeView(ByRef parentNode As TreeNode, ByVal currentRoleUid As Integer)
 
 
-        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleUid)
+        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(currentRoleUid)
         Dim childIds As SortedList(Of Integer, Double) = currentRole.getSubRoleIDs
 
-        Dim newNode As TreeNode
-        With parentNode
-            newNode = .Nodes.Add(currentRole.name)
-            newNode.Name = roleUid.ToString
-            newNode.Text = currentRole.name
+        Dim currentNode As TreeNode
+        Dim childNode As TreeNode = Nothing
 
-            If selectedRoles.Contains(currentRole.name) Then
-                newNode.Checked = True
-            End If
-
-            Dim nrTag As nodeRoleTag = Nothing
-            If currentRole.isTeam Then
-
-                nrTag = New nodeRoleTag
-                With nrTag
-                    .isTeam = True
-                    .isTeamMember = False
-                End With
-
-            ElseIf currentRole.getTeamIDs.Count > 0 Then
-
-                nrTag = New nodeRoleTag
-                With nrTag
-                    .isTeam = False
-                    .isTeamMember = True
-                    .membershipID = CInt(parentNode.Name)
-                    .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), roleUid)
-                End With
-            End If
-
-            If Not IsNothing(nrTag) Then
-                newNode.Tag = nrTag
-            End If
+        currentNode = parentNode.Nodes.Add(currentRole.name)
+        currentNode.Text = currentRole.name
 
 
-        End With
+        Dim nrTag As New clsNodeRoleTag
+        If currentRole.isTeam Then
 
-        For i = 0 To childIds.Count - 1
+            nrTag = New clsNodeRoleTag
+            With nrTag
+                .isTeam = True
+                .isTeamMember = False
+            End With
 
-                Call buildRoleSubTreeView(newNode, childIds.ElementAt(i).Key)
+        ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsnodeRoleTag).isTeam Then
 
-            Next
+            nrTag = New clsNodeRoleTag
+            With nrTag
+                .isTeam = False
+                .isTeamMember = True
+                .membershipID = CInt(parentNode.Name)
+                .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), currentRoleUid)
+            End With
+        End If
+
+
+        If childIds.Count > 0 Then
+            currentNode.Nodes.Clear()
+            currentNode.Nodes.Add("-")
+            nrTag.pTag = "P"
+        Else
+            nrTag.pTag = "X"
+        End If
+
+        currentNode.Tag = nrTag
+
+        currentNode.Name = RoleDefinitions.bestimmeRoleNodeName(currentRoleUid, nrTag.isTeamMember, nrTag.membershipID)
+
+        If selectedRoles.Contains(currentNode.Name) Then
+            currentNode.Checked = True
+        End If
+
+        'For i = 0 To childIds.Count - 1
+
+        '    nrTag = New nodeRoleTag
+        '    nrTag.pTag = 
+
+        '    childNode = currentNode.Nodes.Add("-")
+        '    CType(childNode.Tag, nodeRoleTag).pTag = "P"
+
+        '    Call buildRoleSubTreeView(currentNode, childIds.ElementAt(i).Key)
+
+        'Next
         'End If
 
     End Sub
