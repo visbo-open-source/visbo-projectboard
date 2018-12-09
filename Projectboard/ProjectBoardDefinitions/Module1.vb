@@ -7071,36 +7071,24 @@ Public Module Module1
     End Function
 
     ''' <summary>
-    ''' bestimmt aus dem übergebenen SelectedRolesItem Angaben wie RoleUID, ggf. die PArentRoleID und die MEmbership PRZ
+    ''' gibt den Titel zurück 
     ''' </summary>
-    ''' <param name="selRoleItem"></param>
-    ''' <param name="isTeam"></param>
-    ''' <param name="teamID"></param>
+    ''' <param name="rollenKennung"></param>
     ''' <returns></returns>
-    Public Function bestimmeRoleNodeID(ByVal selRoleItem As String, ByRef isTeam As Boolean, ByRef teamID As Integer) As Integer
-        ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
+    Public Function bestimmeRollenDiagrammTitel(ByVal rollenKennung As String) As String
 
-        Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
-        Dim tmpResult As Integer = -1
-        isTeam = False
+        Dim tmpResult As String = ""
 
-        tmpResult = CInt(tmpStr(0))
+        Dim teamID As Integer
+        Try
+            tmpResult = RoleDefinitions.getRoleDefByIDKennung(rollenKennung, teamID).name
+        Catch ex As Exception
 
-        If tmpStr.Length = 2 Then
-            ' ist Team 
-            If tmpStr(1) = "T" Then
-                isTeam = True
+        End Try
 
-            ElseIf IsNumeric(tmpStr(1)) Then
-                teamID = CInt(tmpStr(1))
-
-            End If
-
-        End If
-
-
-        bestimmeRoleNodeID = tmpResult
+        bestimmeRollenDiagrammTitel = tmpResult
 
     End Function
+
 
 End Module

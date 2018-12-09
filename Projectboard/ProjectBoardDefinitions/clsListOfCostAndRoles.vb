@@ -15,15 +15,12 @@ Public Class clsListOfCostAndRoles
 
     ''' <summary>
     ''' gibt die Phasen zurück, die diese Rolle enthalten 
-    ''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles enthalten 
     ''' </summary>
     ''' <param name="roleName"></param>
-    ''' <param name="considerSubroles"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getPhasesWithRole(ByVal roleName As String, _
-                                                   Optional ByVal considerSubroles As Boolean = False) As Collection
+    Public ReadOnly Property getPhasesWithRole(ByVal roleName As String) As Collection
         Get
             Dim phaseCollection As New Collection
             Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
@@ -32,21 +29,12 @@ Public Class clsListOfCostAndRoles
 
                 ' dann handelt es sich schon mal um eine gültige Rolle ...
 
-                If role.isCombinedRole And considerSubroles Then
-                    Dim roleCollection As New Collection
-                    roleCollection.Add(roleName, roleName)
-                    phaseCollection = Me.getPhasesWithRoles(roleCollection, considerSubroles)
+                Dim roleUID As Integer = role.UID
+                If _listOfRoles.ContainsKey(roleUID) Then
+                    phaseCollection = _listOfRoles.Item(roleUID)
                 Else
-                    Dim roleUID As Integer = role.UID
-                    If _listOfRoles.ContainsKey(roleUID) Then
-                        phaseCollection = _listOfRoles.Item(roleUID)
-                    Else
-                        ' nichts tun, tmpCollection ist bereits eine leere Collection 
-                    End If
-
+                    ' nichts tun, tmpCollection ist bereits eine leere Collection 
                 End If
-
-
 
             End If
 
@@ -59,12 +47,10 @@ Public Class clsListOfCostAndRoles
     ''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles einer der Rollen aus der Collection enthalten 
     ''' </summary>
     ''' <param name="roleCollection"></param>
-    ''' <param name="considerSubRoles"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getPhasesWithRoles(ByVal roleCollection As Collection, _
-                                                    Optional ByVal considerSubRoles As Boolean = False) As Collection
+    Public ReadOnly Property getPhasesWithRoles(ByVal roleCollection As Collection) As Collection
         Get
             Dim phaseCollection As New Collection
             'Dim subRoleCollection As Collection
@@ -75,17 +61,11 @@ Public Class clsListOfCostAndRoles
                     Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
                     Dim teilphaseCollection As Collection
 
-                    If role.isCombinedRole And considerSubRoles Then
-                        'subRoleCollection = RoleDefinitions.getSubRoleIDsOf(roleName)
-                        teilphaseCollection = Me.getPhasesWithRoles(roleCollection, considerSubRoles)
+                    Dim roleUID As Integer = role.UID
+                    If _listOfRoles.ContainsKey(roleUID) Then
+                        teilphaseCollection = _listOfRoles.Item(roleUID)
                     Else
-                        Dim roleUID As Integer = role.UID
-                        If _listOfRoles.ContainsKey(roleUID) Then
-                            teilphaseCollection = _listOfRoles.Item(roleUID)
-                        Else
-                            teilphaseCollection = New Collection
-                        End If
-
+                        teilphaseCollection = New Collection
                     End If
 
                     ' jetzt muss teilphaseCollection mit phaseCollection gemerged werden ...
@@ -188,6 +168,26 @@ Public Class clsListOfCostAndRoles
             Next
 
             getRoleNames = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert einen Array an UIDs zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getRoleUIDs As Integer()
+        Get
+
+            Dim tmpResult() As Integer = Nothing
+            If _listOfRoles.Count > 0 Then
+                ReDim tmpResult(_listOfRoles.Count - 1)
+                For i As Integer = 0 To _listOfRoles.Count - 1
+                    tmpResult(i) = _listOfRoles.ElementAt(i).Key
+                Next
+            End If
+
+            getRoleUIDs = tmpResult
 
         End Get
     End Property

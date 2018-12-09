@@ -395,6 +395,41 @@ Public Class clsRollen
         hasAnyChildParentRelationsship = found
 
     End Function
+    ''' <summary>
+    ''' bestimmt für eine Rolle im TreeView den Namen, der setzt sich zusammen aus RoleUid und ggf Membership Kennung 
+    ''' </summary>
+    ''' <param name="roleUID"></param>
+    ''' <param name="teamID"></param>
+    ''' <param name="isTeamMember"></param>
+    ''' <returns></returns>
+    Public Function bestimmeRoleNodeName(ByVal roleUID As Integer, ByVal isTeamMember As Boolean, ByVal teamID As Integer) As String
+        ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
+
+        Dim tmpResult As String = ""
+        Dim ok As Boolean = True
+
+        If teamID > 0 Then
+            ok = _allRollen.ContainsKey(teamID)
+        End If
+
+        If _allRollen.ContainsKey(roleUID) And ok Then
+            Dim nodeName As String = roleUID.ToString
+
+            If isTeamMember Then
+                nodeName = roleUID.ToString & ";" & teamID
+            Else
+                nodeName = roleUID.ToString
+            End If
+
+            tmpResult = nodeName
+
+        Else
+            tmpResult = ""
+        End If
+
+        bestimmeRoleNodeName = tmpResult
+
+    End Function
 
 
     ''' <summary>
@@ -525,10 +560,11 @@ Public Class clsRollen
                 If Not IsNothing(excludedNames) Then
                     ' jetzt müssen aus realCollection alle Namen raus, die in excludedNames drin sind ... 
                     For Each exclName As String In excludedNames
+                        Dim teamID As Integer = -1
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(exclName, teamID)
 
-                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(exclName)
                         If Not IsNothing(tmpRole) Then
-                            If realCollection.ContainsKey(tmpRole.UID) And exclName <> roleName Then
+                            If realCollection.ContainsKey(tmpRole.UID) And tmpRole.name <> roleName Then
                                 realCollection.Remove(tmpRole.UID)
                             End If
                         End If
@@ -687,6 +723,55 @@ Public Class clsRollen
 
     End Property
 
+    ''' <summary>
+    ''' bestimmt aus dem übergebenen SelectedRolesItem Angaben wie RoleUID, ggf. die zugehörige TeamID
+    ''' </summary>
+    ''' <param name="selRoleItem"></param>
+    ''' <param name="teamID"></param>
+    ''' <returns></returns>
+    Private Function bestimmeRoleNodeID(ByVal selRoleItem As String, ByRef teamID As Integer) As Integer
+        ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
+
+        Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
+        Dim tmpResult As Integer = -1
+
+
+        tmpResult = CInt(tmpStr(0))
+
+        If tmpStr.Length = 2 Then
+            ' ist Team 
+            If IsNumeric(tmpStr(1)) Then
+                teamID = CInt(tmpStr(1))
+                If _allRollen.ContainsKey(teamID) Then
+                    ' alles in Ordnung
+                Else
+                    teamID = -1
+                End If
+            Else
+                teamID = -1
+            End If
+        End If
+
+
+        bestimmeRoleNodeID = tmpResult
+
+    End Function
+    ''' <summary>
+    ''' gibt aus dem String die RollenDefinition zurück 
+    ''' ebenso die evtl vorhandene Team-Zugehörigkeit
+    ''' </summary>
+    ''' <param name="idK"></param>
+    ''' <returns></returns>
+    Public Function getRoleDefByIDKennung(ByVal idK As String, ByRef teamID As Integer) As clsRollenDefinition
+
+        teamID = -1
+        Try
+            getRoleDefByIDKennung = getRoleDefByID(bestimmeRoleNodeID(idK, teamID))
+        Catch ex As Exception
+            getRoleDefByIDKennung = Nothing
+        End Try
+
+    End Function
     ''' <summary>
     ''' gibt die Rolle mit der entsprechenden ID zurück ...
     ''' </summary>

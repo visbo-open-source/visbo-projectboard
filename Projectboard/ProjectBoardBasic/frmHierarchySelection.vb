@@ -1468,29 +1468,6 @@ Public Class frmHierarchySelection
 
     End Sub
 
-    ''' <summary>
-    ''' bestimmt für eine Rolle im TreeView den Namen, der setzt sich zusammen aus RoleUid, ggf T-Kennung bzw. Membership Kennung 
-    ''' </summary>
-    ''' <param name="roleUID"></param>
-    ''' <param name="nrTag"></param>
-    ''' <returns></returns>
-    Private Function bestimmeRoleNodeName(ByVal roleUID As Integer, ByVal nrTag As pclsnodeRoleTag) As String
-        ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
-
-        Dim nodeName As String = roleUID
-
-        If nrTag.isTeam Then
-            nodeName = roleUID.ToString & ";T"
-        ElseIf nrTag.isTeamMember Then
-            nodeName = roleUID.ToString & ";" & nrTag.membershipID
-        Else
-            nodeName = roleUID.ToString
-        End If
-
-        bestimmeRoleNodeName = nodeName
-
-    End Function
-
     Private Sub einstellungen_Click(sender As Object, e As EventArgs) Handles einstellungen.Click
 
         Dim mppFrm As New frmMppSettings
@@ -1835,7 +1812,8 @@ Public Class frmHierarchySelection
 
                     Dim nodelist As New SortedList(Of Integer, Double)
                     Try
-                        nodelist = RoleDefinitions.getRoleDefByID(CInt(node.Name)).getSubRoleIDs
+                        Dim teamID As Integer
+                        nodelist = RoleDefinitions.getRoleDefByIDKennung(CInt(node.Name), teamID).getSubRoleIDs
                         anzChilds = nodelist.Count
                     Catch ex As Exception
                         anzChilds = 0
@@ -5259,7 +5237,7 @@ Public Class frmHierarchySelection
 
                 topLevelNode.Tag = nrTag
 
-                topLevelNode.Name = bestimmeRoleNodeName(role.UID, nrTag)
+                topLevelNode.Name = RoleDefinitions.bestimmeRoleNodeName(role.UID, nrTag.isTeamMember, nrTag.membershipID)
 
                 If selectedRoles.Contains(topLevelNode.Name) Then
                     topLevelNode.Checked = True
@@ -5338,7 +5316,7 @@ Public Class frmHierarchySelection
 
         currentNode.Tag = nrTag
 
-        currentNode.Name = bestimmeRoleNodeName(currentRoleUid, nrTag)
+        currentNode.Name = RoleDefinitions.bestimmeRoleNodeName(currentRoleUid, nrTag.isTeamMember, nrTag.membershipID)
 
         If selectedRoles.Contains(currentNode.Name) Then
             currentNode.Checked = True

@@ -1117,7 +1117,13 @@ Public Class clsProjekte
                 For cix As Integer = 1 To myCollection.Count
                     Dim pvName As String = ""
                     Dim type As Integer = -1
-                    Call splitHryFullnameTo2(CStr(myCollection.Item(cix)), elemName, breadCrumb, type, pvName)
+                    If prcTyp = DiagrammTypen(1) Then
+                        Dim tmpTeamID As Integer = -1
+                        elemName = RoleDefinitions.getRoleDefByIDKennung(CStr(myCollection.Item(cix)), tmpTeamID).name
+                    Else
+                        Call splitHryFullnameTo2(CStr(myCollection.Item(cix)), elemName, breadCrumb, type, pvName)
+                    End If
+
 
                     If prcTyp = DiagrammTypen(0) Then
                         ' Phasen
@@ -1333,8 +1339,8 @@ Public Class clsProjekte
 
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
 
-                            If type = -1 Or _
-                                (type = PTProjektType.projekt And pvName = kvp.Value.name) Or _
+                            If type = -1 Or
+                                (type = PTProjektType.projekt And pvName = kvp.Value.name) Or
                                 (type = PTProjektType.vorlage And pvName = kvp.Value.VorlagenName) Then
 
                                 hproj = kvp.Value
@@ -1572,8 +1578,8 @@ Public Class clsProjekte
 
                 hproj = kvp.Value
 
-                If type = -1 Or _
-                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or _
+                If type = -1 Or
+                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or
                     (type = PTProjektType.projekt And pvName = hproj.name) Then
                     ' Aktion machen
 
@@ -1629,7 +1635,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns>gibt einen Array der Länge (showrangeright-showrangeleft+1) zurück </returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCountPhasesInMonth(phaseName As String, ByVal breadcrumb As String, _
+    Public ReadOnly Property getCountPhasesInMonth(phaseName As String, ByVal breadcrumb As String,
                                                    ByVal type As Integer, pvName As String) As Double()
 
         Get
@@ -1663,8 +1669,8 @@ Public Class clsProjekte
 
                 hproj = kvp.Value
 
-                If type = -1 Or _
-                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or _
+                If type = -1 Or
+                    (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Or
                     (type = PTProjektType.projekt And pvName = hproj.name) Then
                     ' Aktion machen
 
@@ -1829,128 +1835,16 @@ Public Class clsProjekte
     End Property
     '
     '
-    '
-    ''' <summary>
-    ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
-    ''' </summary>
-    ''' <param name="roleID"></param>
-    ''' <value>String für Rollenbezeichner oder Integer für den Key der Rolle</value>
-    ''' <returns>Array, der die Werte der gefragten Rolle pro Monat des betrachteten Zeitraums enthält</returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getRoleValuesInMonth(ByVal roleID As Object, _
-                                                  Optional ByVal considerAllSubRoles As Boolean = False, _
-                                                  Optional ByVal type As Integer = PTcbr.all, _
-                                                  Optional ByVal excludedNames As Collection = Nothing) As Double()
 
-        Get
-            Dim roleValues() As Double
-            Dim Dauer As Integer
-            Dim zeitraum As Integer
-            Dim anzProjekte As Integer
-            Dim i As Integer
-            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
-            Dim hproj As clsProjekt
-            Dim lookforIndex As Boolean
-            Dim tempArray() As Double
-            Dim prAnfang As Integer, prEnde As Integer
-            Dim roleName As String
-
-            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
-
-            lookforIndex = IsNumeric(roleID)
-            zeitraum = showRangeRight - showRangeLeft
-            ReDim roleValues(zeitraum)
-
-            If lookforIndex Then
-                roleName = RoleDefinitions.getRoledef(CInt(roleID)).name
-            Else
-                roleName = CStr(roleID)
-            End If
-
-            Dim toDoCollection As New Collection
-            ' wenn considerAllSubroles  = true , dann muss 
-
-            If considerAllSubRoles Then
-                Dim ergSortedliste As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName, type:=type, excludedNames:=excludedNames)
-                For Each kvp As KeyValuePair(Of Integer, Double) In ergSortedliste
-
-                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
-                    If Not IsNothing(tmpRole) Then
-                        If Not toDoCollection.Contains(tmpRole.name) Then
-                            toDoCollection.Add(tmpRole.name, tmpRole.name)
-                        End If
-                    End If
-                Next
-
-            Else
-                toDoCollection.Add(roleName, roleName)
-            End If
-
-
-
-            anzProjekte = _allProjects.Count
-
-            ' anzPhasen = AllPhases.Count
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
-
-                hproj = kvp.Value
-
-                Dauer = hproj.anzahlRasterElemente
-
-                ReDim tempArray(Dauer - 1)
-
-                With hproj
-                    prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
-                End With
-
-                anzLoops = 0
-                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
-
-                If anzLoops > 0 Then
-
-                    Try
-
-                        ' hier muss die Schleife für alle Items aus toDoCollection hin 
-                        For k = 1 To toDoCollection.Count
-
-                            Dim curRole As String = CStr(toDoCollection.Item(k))
-                            tempArray = hproj.getRessourcenBedarf(curRole)
-
-                            For i = 0 To anzLoops - 1
-                                roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
-                            Next i
-
-                        Next k
-
-
-
-                    Catch ex As Exception
-
-                    End Try
-
-
-                End If
-
-            Next kvp
-
-
-
-            getRoleValuesInMonth = roleValues
-
-        End Get
-
-    End Property
 
     ''' <summary>
     ''' bestimmt für den betrachteten Zeitraum für die angegebene Rolle die benötigte Summe pro Monat; roleid wird als String oder Key(Integer) übergeben
     ''' </summary>
-    ''' <param name="roleID"></param>
+    ''' <param name="roleIDStr"></param>
     ''' <value>String für Rollenbezeichner oder Integer für den Key der Rolle</value>
     ''' <returns>Array, der die Werte der gefragten Rolle pro Monat des betrachteten Zeitraums enthält</returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleValuesInMonthNew(ByVal roleID As Object,
+    Public ReadOnly Property getRoleValuesInMonth(ByVal roleIDStr As String,
                                                   Optional ByVal considerAllSubRoles As Boolean = False,
                                                   Optional ByVal type As Integer = PTcbr.all,
                                                   Optional ByVal excludedNames As Collection = Nothing) As Double()
@@ -1963,40 +1857,33 @@ Public Class clsProjekte
             Dim i As Integer
             Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
             Dim hproj As clsProjekt
-            Dim lookforIndex As Boolean
+
             Dim tempArray() As Double
             Dim testArray() As Double
             Dim prAnfang As Integer, prEnde As Integer
-            Dim roleName As String
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+            Dim teamID As Integer
+            Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleIDStr, teamID)
+            Dim considerTeam As Boolean = currentRole.isTeam
 
-            lookforIndex = IsNumeric(roleID)
+            If considerTeam Then
+                teamID = currentRole.UID
+            Else
+                teamID = -1
+            End If
+
             zeitraum = showRangeRight - showRangeLeft
             ReDim roleValues(zeitraum)
 
-            If lookforIndex Then
-                roleName = RoleDefinitions.getRoledef(CInt(roleID)).name
-            Else
-                roleName = CStr(roleID)
-            End If
 
             Dim toDoListe As New SortedList(Of Integer, Double)
             ' wenn considerAllSubroles  = true , dann muss 
 
             If considerAllSubRoles Then
-                toDoListe = RoleDefinitions.getSubRoleIDsOf(roleName, type:=type, excludedNames:=excludedNames)
-                ' Änderung tk: das Folgende darf nicht mehr drin sein, da ja das Kommando getSubRoleNamesOf jetzt alles erledigt 
-                'If Not toDoCollection.Contains(roleName) Then
-                '    toDoCollection.Add(roleName, roleName)
-                'End If
+                toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
             Else
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
-                If Not IsNothing(tmpRole) Then
-                    ' die 1.0 hat hier überhaupt keine Relevanz 
-                    toDoListe.Add(tmpRole.UID, 1.0)
-                End If
-
+                toDoListe.Add(currentRole.UID, 1.0)
             End If
 
 
@@ -2024,30 +1911,29 @@ Public Class clsProjekte
 
                 If anzLoops > 0 Then
 
-                    Dim listOfRoles As Collection = hproj.rcLists.getRoleNames
+                    Dim listOfRoles() As Integer = hproj.rcLists.getRoleUIDs
 
-                    Try
+                    If Not IsNothing(listOfRoles) Then
+                        Try
 
-                        ' hier muss die Schleife für alle Items aus toDoListe 
-                        For Each rKvP As KeyValuePair(Of Integer, Double) In toDoListe
-                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(rKvP.Key)
-                            If Not IsNothing(tmpRole) Then
+                            ' hier muss die Schleife für alle Items aus toDoListe 
+                            For Each rKvP As KeyValuePair(Of Integer, Double) In toDoListe
 
-                                If listOfRoles.Contains(tmpRole.name) Then
-                                    tempArray = hproj.getRessourcenBedarfNew(tmpRole.name)
+                                If listOfRoles.Contains(rKvP.Key) Then
+                                    tempArray = hproj.getRessourcenBedarf(rKvP.Key, teamID:=teamID)
 
                                     For i = 0 To anzLoops - 1
                                         roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
                                     Next i
                                 End If
 
-                            End If
-                        Next
 
-                    Catch ex As Exception
+                            Next
 
-                    End Try
+                        Catch ex As Exception
 
+                        End Try
+                    End If
 
                 End If
 
@@ -2055,7 +1941,7 @@ Public Class clsProjekte
 
 
 
-            getRoleValuesInMonthNew = roleValues
+            getRoleValuesInMonth = roleValues
 
         End Get
 
@@ -2204,8 +2090,10 @@ Public Class clsProjekte
             Dim sammelRollenCollection As New Collection
 
             For ix As Integer = 1 To myCollection.Count
-                Dim roleName As String = CStr(myCollection.Item(ix))
-                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+
+                Dim teamID As Integer = -1
+                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(CStr(myCollection.Item(ix)), teamID)
+                Dim roleName As String = curRole.name
 
                 If Not IsNothing(curRole) Then
 
@@ -3041,7 +2929,7 @@ Public Class clsProjekte
             Dim roleValues() As Double
             Dim kapaValues() As Double
             Dim tmpValues() As Double
-            Dim roleName As String
+            Dim roleID As String
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
@@ -3062,20 +2950,20 @@ Public Class clsProjekte
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(CStr(uniqueList.Item(i)))
 
                 Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
-                roleName = tmpRole.name
+                roleID = tmpRole.UID.ToString
 
                 If istSammelRolle Then
                     ' nur Platzhalter Rollenbedarfe berücksichtigen 
-                    roleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
-                                                         considerAllSubRoles:=True, _
-                                                         type:=PTcbr.all, _
+                    roleValues = Me.getRoleValuesInMonth(roleIDStr:=roleID,
+                                                         considerAllSubRoles:=True,
+                                                         type:=PTcbr.all,
                                                          excludedNames:=Nothing)
                 Else
-                    roleValues = Me.getRoleValuesInMonth(roleName)
+                    roleValues = Me.getRoleValuesInMonth(roleID)
 
                 End If
 
-                myCollection.Add(roleName, roleName)
+                myCollection.Add(roleID, roleID)
                 kapaValues = Me.getRoleKapasInMonth(myCollection)
                 myCollection.Clear()
 
@@ -3165,13 +3053,13 @@ Public Class clsProjekte
                 If istSammelRolle Then
                     myCollection.Add(roleName, roleName)
                     ' dann sollen alle Werte, aslo inkl der Subroles berücksichtigt werden  
-                    roleValues = Me.getRoleValuesInMonthNew(roleName, considerAllSubRoles:=True)
+                    roleValues = Me.getRoleValuesInMonth(roleName, considerAllSubRoles:=True)
                     kapaValues = Me.getRoleKapasInMonth(myCollection)
 
                 Else
 
                     myCollection.Add(roleName, roleName)
-                    roleValues = Me.getRoleValuesInMonthNew(roleName)
+                    roleValues = Me.getRoleValuesInMonth(roleName)
                     kapaValues = Me.getRoleKapasInMonth(myCollection)
                     myCollection.Clear()
                 End If
@@ -3241,7 +3129,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer, _
+    Public ReadOnly Property getAuslastungsArray(ByVal von As Integer, ByVal bis As Integer,
                                                  ByVal percentValues As Boolean) As Double(,)
         Get
             Dim tmpArray(,) As Double
@@ -3276,10 +3164,10 @@ Public Class clsProjekte
 
                 If istSammelRolle Then
                     ' alle Bedarfe berücksichtigen
-                    roleValues = Me.getRoleValuesInMonth(roleID:=roleName, considerAllSubRoles:=True, _
+                    roleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUID.ToString, considerAllSubRoles:=True,
                                                          type:=PTcbr.all)
                 Else
-                    roleValues = Me.getRoleValuesInMonth(roleName)
+                    roleValues = Me.getRoleValuesInMonth(roleUID.ToString)
                 End If
 
                 ' jetzt wird der Array aufgebaut
@@ -3326,7 +3214,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAuslastungsArrayOfRole(ByVal roleID As Integer, ByVal von As Integer, ByVal bis As Integer, _
+    Public ReadOnly Property getAuslastungsArrayOfRole(ByVal roleID As Integer, ByVal von As Integer, ByVal bis As Integer,
                                                        ByVal percentValues As Boolean) As Double()
         Get
             Dim tmpArray() As Double
@@ -3356,10 +3244,10 @@ Public Class clsProjekte
 
                 If istSammelRolle Then
                     ' alle Bedarfe berücksichtigen
-                    roleValues = Me.getRoleValuesInMonth(roleID:=roleName, considerAllSubRoles:=True, _
+                    roleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUID.ToString, considerAllSubRoles:=True,
                                                          type:=PTcbr.all)
                 Else
-                    roleValues = Me.getRoleValuesInMonth(roleName)
+                    roleValues = Me.getRoleValuesInMonth(roleUID.ToString)
                 End If
 
                 ' jetzt wird der Array aufgebaut
@@ -3414,6 +3302,7 @@ Public Class clsProjekte
             Dim alleKapaValues() As Double
 
             Dim roleName As String
+            Dim roleUIDStr As String
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
@@ -3445,7 +3334,8 @@ Public Class clsProjekte
 
                     Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
                     roleName = tmpRole.name
-                    roleValues = Me.getRoleValuesInMonth(roleName)
+                    roleUIDStr = tmpRole.UID.ToString
+                    roleValues = Me.getRoleValuesInMonth(roleUIDStr)
 
 
                     If istSammelRolle Then
@@ -3454,9 +3344,9 @@ Public Class clsProjekte
 
                         myCollection.Add(roleName, roleName)
                         alleKapaValues = Me.getRoleKapasInMonth(myCollection)
-                        alleRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
-                                                                 considerAllSubRoles:=True, _
-                                                                 type:=PTcbr.all, _
+                        alleRoleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUIDStr,
+                                                                 considerAllSubRoles:=True,
+                                                                 type:=PTcbr.all,
                                                                  excludedNames:=Nothing)
                         myCollection.Clear()
 
@@ -3473,9 +3363,9 @@ Public Class clsProjekte
                             If alleRoleValues(ix) > alleKapaValues(ix) Then
                                 ' der Anteil FIG22 intern ist beschränkt auf alleKapas - SummealleSubroles ohne Sammelrolle 
                                 ' 
-                                alleSubRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
-                                                                 considerAllSubRoles:=True, _
-                                                                 type:=PTcbr.realRoles, _
+                                alleSubRoleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUIDStr,
+                                                                 considerAllSubRoles:=True,
+                                                                 type:=PTcbr.realRoles,
                                                                  excludedNames:=Nothing)
                                 Dim diff As Double = alleKapaValues(ix) - alleSubRoleValues(ix)
 
@@ -3487,12 +3377,12 @@ Public Class clsProjekte
                                     End If
                                 End If
 
-                                costValues(ix) = costValues(ix) + _
+                                costValues(ix) = costValues(ix) +
                                                  diff * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
 
                             Else
                                 ' die internen Ressourcen reichen aus
-                                costValues(ix) = costValues(ix) + _
+                                costValues(ix) = costValues(ix) +
                                                  roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
                             End If
 
@@ -3500,11 +3390,11 @@ Public Class clsProjekte
 
                             If roleValues(ix) > kapaValues(ix) Then
                                 ' es werden die maximale Anzahl Leute dieser Rolle berücksichtigt 
-                                costValues(ix) = costValues(ix) + _
+                                costValues(ix) = costValues(ix) +
                                                  kapaValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
                             Else
                                 ' die internen Ressourcen reichen aus
-                                costValues(ix) = costValues(ix) + _
+                                costValues(ix) = costValues(ix) +
                                                  roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
                             End If
 
@@ -3549,6 +3439,7 @@ Public Class clsProjekte
             Dim includesOverloadCost As Boolean = True
 
             Dim roleName As String
+            Dim roleUIDStr As String
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
@@ -3579,9 +3470,10 @@ Public Class clsProjekte
                 If Not IsNothing(tmpRole) Then
                     Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
                     roleName = tmpRole.name
+                    roleUIDStr = tmpRole.UID.ToString
 
 
-                    roleValues = Me.getRoleValuesInMonth(roleName)
+                    roleValues = Me.getRoleValuesInMonth(roleUIDStr)
 
 
                     ' mit welchem Wert wird gerechnet 
@@ -3601,9 +3493,9 @@ Public Class clsProjekte
 
                         myCollection.Add(roleName, roleName)
                         alleKapaValues = Me.getRoleKapasInMonth(myCollection)
-                        alleRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
-                                                                    considerAllSubRoles:=True, _
-                                                                    type:=PTcbr.all, _
+                        alleRoleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUIDStr,
+                                                                    considerAllSubRoles:=True,
+                                                                    type:=PTcbr.all,
                                                                     excludedNames:=Nothing)
                         myCollection.Clear()
 
@@ -3620,9 +3512,9 @@ Public Class clsProjekte
                             Dim diff As Double
                             If alleRoleValues(ix) > alleKapaValues(ix) Then
 
-                                alleSubRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
-                                                                 considerAllSubRoles:=True, _
-                                                                 type:=PTcbr.realRoles, _
+                                alleSubRoleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUIDStr,
+                                                                 considerAllSubRoles:=True,
+                                                                 type:=PTcbr.realRoles,
                                                                  excludedNames:=Nothing)
 
                                 If alleSubRoleValues(ix) >= alleKapaValues(ix) Then
@@ -3632,7 +3524,7 @@ Public Class clsProjekte
                                     diff = alleRoleValues(ix) - alleKapaValues(ix)
                                 End If
 
-                                costValues(ix) = costValues(ix) + _
+                                costValues(ix) = costValues(ix) +
                                                  diff * calculationValue * faktor / 1000
 
 
@@ -3645,7 +3537,7 @@ Public Class clsProjekte
 
                             If roleValues(ix) > kapaValues(ix) Then
                                 ' Overtime Kosten fallen an
-                                costValues(ix) = costValues(ix) + _
+                                costValues(ix) = costValues(ix) +
                                                  (roleValues(ix) - kapaValues(ix)) * calculationValue * faktor / 1000
                             Else
                                 ' die internen Ressourcen reichen aus
@@ -3685,6 +3577,7 @@ Public Class clsProjekte
             Dim alleKapaValues() As Double
 
             Dim roleName As String
+            Dim roleUIDStr As String
             Dim myCollection As New Collection
             Dim i As Integer, ix As Integer
             Dim zeitraum As Integer
@@ -3712,7 +3605,9 @@ Public Class clsProjekte
 
                 Dim istSammelRolle As Boolean = RoleDefinitions.getRoledef(i).isCombinedRole
                 roleName = RoleDefinitions.getRoledef(i).name
-                roleValues = Me.getRoleValuesInMonth(roleName)
+                roleUIDStr = RoleDefinitions.getRoledef(i).UID.ToString
+
+                roleValues = Me.getRoleValuesInMonth(roleUIDStr)
 
                 If istSammelRolle Then
 
@@ -3721,8 +3616,8 @@ Public Class clsProjekte
                     If includesOverloadCost Then
                         myCollection.Add(roleName, roleName)
                         alleKapaValues = Me.getRoleKapasInMonth(myCollection)
-                        alleRoleValues = Me.getRoleValuesInMonth(roleID:=roleName, _
-                                                                 considerAllSubRoles:=True, _
+                        alleRoleValues = Me.getRoleValuesInMonth(roleIDStr:=roleUIDStr,
+                                                                 considerAllSubRoles:=True,
                                                                  type:=PTcbr.all,
                                                                  excludedNames:=Nothing)
                         myCollection.Clear()
@@ -4174,7 +4069,7 @@ Public Class clsProjekte
                     Dim istSammelRolle As Boolean = tmpRole.isCombinedRole
 
                     roleName = tmpRole.name
-                    roleValues = Me.getRoleValuesInMonth(roleName)
+                    roleValues = Me.getRoleValuesInMonth(tmpRole.UID.ToString)
 
                     If istSammelRolle Then
                         ReDim kapaValues(zeitraum)
@@ -4196,7 +4091,7 @@ Public Class clsProjekte
                         Else
                             If roleValues(ix) < kapaValues(ix) Then
                                 ' interne Ressourcen kosten , können aber nicht verrechnet werden 
-                                costValues(ix) = costValues(ix) + _
+                                costValues(ix) = costValues(ix) +
                                                  (kapaValues(ix) - roleValues(ix)) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
                             Else
                                 ' keine Opportunity Kosten 

@@ -112,9 +112,7 @@ Public Class frmMEhryRoleCost
 
     End Sub
 
-    Private Sub hryRoleCost_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryRoleCost.AfterSelect
 
-    End Sub
 
     Public Sub buildMERoleTree()
 

@@ -8740,7 +8740,7 @@ Public Module agm2
 
                                     Dim tmpCollection As New Collection
                                     tmpCollection.Add(tmpRollenName)
-                                    Dim istBedarf As Double = hproj.getRessourcenBedarfNew(tmpRollenName, True).Sum
+                                    Dim istBedarf As Double = hproj.getRessourcenBedarf(tmpRollenName, inclSubRoles:=True).Sum
 
                                     If Math.Abs(sollBedarf - istBedarf) > 0.001 Then
                                         outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
@@ -9155,8 +9155,8 @@ Public Module agm2
                             testprojekte.Add(oldProj)
 
                             Dim gesamtVorher As Double = oldProj.getAlleRessourcen().Sum
-                            Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonthNew("Orga", True).Sum
-                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("D-BOSV-KB", True).Sum
+                            Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonth("Orga", considerAllSubRoles:=True).Sum
+                            Dim bosvVorher As Double = oldProj.getRessourcenBedarf("D-BOSV-KB", inclSubRoles:=True).Sum
 
                             ' tk test ...
                             If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
@@ -9170,7 +9170,7 @@ Public Module agm2
 
                             ' tk test ...
                             For Each tmpRoleName As String In deleteRoles
-                                Dim bosvNachher As Double = newProj.getRessourcenBedarfNew(tmpRoleName, True).Sum
+                                Dim bosvNachher As Double = newProj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
 
                                 If Not bosvNachher = 0 Then
                                     Call MsgBox(tmpRoleName & " wurde nicht gelöscht ... Fehler bei" & newProj.name)
@@ -9186,7 +9186,7 @@ Public Module agm2
                             Next
                             newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
 
-                            Dim bosvErgebnis As Double = newProj.getRessourcenBedarfNew("Grp-BOSV-KB", True).Sum
+                            Dim bosvErgebnis As Double = newProj.getRessourcenBedarf("Grp-BOSV-KB", inclSubRoles:=True).Sum
 
                             If Math.Abs(bosvErgebnis - addValues) >= 0.001 Then
                                 outPutLine = "addValues ungleich ergebnis: " & addValues.ToString("#0.##") & " <> " & bosvErgebnis.ToString("#0.##")

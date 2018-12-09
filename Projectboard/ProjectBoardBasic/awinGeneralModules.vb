@@ -1863,7 +1863,7 @@ Public Module awinGeneralModules
                 showRangeRight = getColumnOfDate(CDate("31.12.2018"))
 
                 For Each tmpRole As String In uRoles
-                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonthNew(tmpRole)
+                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRole)
                     Dim myCollection As New Collection
                     myCollection.Add(tmpRole)
                     Dim uValues() As Double = uProj.getBedarfeInMonths(mycollection:=myCollection, type:=DiagrammTypen(1))
