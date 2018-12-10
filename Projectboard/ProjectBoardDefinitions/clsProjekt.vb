@@ -2795,7 +2795,7 @@ Public Class clsProjekt
                     If myRoleNames.Contains(tmpRoleName) Then
                         Dim myTmpRole As clsRolle = mycPhase.getRole(tmpRoleName)
                         Dim myValues() As Double = myTmpRole.Xwerte
-                        Dim tmpValues() As Double = otherproj.getRessourcenBedarfNew(tmpRoleName)
+                        Dim tmpValues() As Double = otherproj.getRessourcenBedarf(tmpRoleName)
                         For i As Integer = otherStartColumn To otherLength - 1
                             myValues(otherStartColumn) = myValues(otherStartColumn) - tmpValues(i - otherStartColumn)
                         Next
@@ -2941,7 +2941,7 @@ Public Class clsProjekt
             ' zurücksetzen 
             ReDim newValues(newLength - 1)
 
-            Dim myValues() As Double = Me.getRessourcenBedarfNew(tmpRole)
+            Dim myValues() As Double = Me.getRessourcenBedarf(tmpRole)
             Dim newRole As New clsRolle(newLength - 1)
 
             With newRole
@@ -2994,7 +2994,7 @@ Public Class clsProjekt
 
             newValues = newRole.Xwerte
 
-            Dim otherValues() As Double = otherProj.getRessourcenBedarfNew(tmpRole)
+            Dim otherValues() As Double = otherProj.getRessourcenBedarf(tmpRole)
 
 
             With newRole
@@ -3246,11 +3246,11 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles)
+                            valueArray = Me.getRessourcenBedarf(itemName, inclSubRoles)
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles)
+                                tempArray = Me.getRessourcenBedarf(itemName, inclSubRoles)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next

@@ -8740,7 +8740,7 @@ Public Module agm2
 
                                     Dim tmpCollection As New Collection
                                     tmpCollection.Add(tmpRollenName)
-                                    Dim istBedarf As Double = hproj.getRessourcenBedarfNew(tmpRollenName, True).Sum
+                                    Dim istBedarf As Double = hproj.getRessourcenBedarf(tmpRollenName, inclSubRoles:=True).Sum
 
                                     If Math.Abs(sollBedarf - istBedarf) > 0.001 Then
                                         outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
@@ -9155,8 +9155,8 @@ Public Module agm2
                             testprojekte.Add(oldProj)
 
                             Dim gesamtVorher As Double = oldProj.getAlleRessourcen().Sum
-                            Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonthNew("Orga", True).Sum
-                            Dim bosvVorher As Double = oldProj.getRessourcenBedarfNew("D-BOSV-KB", True).Sum
+                            Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonth("Orga", considerAllSubRoles:=True).Sum
+                            Dim bosvVorher As Double = oldProj.getRessourcenBedarf("D-BOSV-KB", inclSubRoles:=True).Sum
 
                             ' tk test ...
                             If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
@@ -9170,7 +9170,7 @@ Public Module agm2
 
                             ' tk test ...
                             For Each tmpRoleName As String In deleteRoles
-                                Dim bosvNachher As Double = newProj.getRessourcenBedarfNew(tmpRoleName, True).Sum
+                                Dim bosvNachher As Double = newProj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
 
                                 If Not bosvNachher = 0 Then
                                     Call MsgBox(tmpRoleName & " wurde nicht gelöscht ... Fehler bei" & newProj.name)
@@ -9186,7 +9186,7 @@ Public Module agm2
                             Next
                             newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
 
-                            Dim bosvErgebnis As Double = newProj.getRessourcenBedarfNew("Grp-BOSV-KB", True).Sum
+                            Dim bosvErgebnis As Double = newProj.getRessourcenBedarf("Grp-BOSV-KB", inclSubRoles:=True).Sum
 
                             If Math.Abs(bosvErgebnis - addValues) >= 0.001 Then
                                 outPutLine = "addValues ungleich ergebnis: " & addValues.ToString("#0.##") & " <> " & bosvErgebnis.ToString("#0.##")
@@ -13649,10 +13649,9 @@ Public Module agm2
                                         ' prüfen, ob es eine gültige Restriction ist 
 
                                         If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
-                                            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
-                                            Dim tmpCollection As New Collection
-                                            tmpCollection.Add(tmpRole.name)
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleName, tmpCollection) Then
+                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
+
+                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleUID, restrictedTopRole.UID) Then
                                                 validRole = True
                                             Else
                                                 validRole = False
@@ -15338,8 +15337,8 @@ Public Module agm2
                 ' -----------------------------------------------------
                 ' Speziell für Pilot-Kunden
                 ' -----------------------------------------------------
-
-                Dim pilot As Date = "15.11.2018"
+                ' ab jetzt braucht man keine Lizenzen mehr ... 
+                Dim pilot As Date = "15.11.2118"
 
                 If Date.Now > pilot Then
 
@@ -15488,11 +15487,28 @@ Public Module agm2
                     Call MsgBox("readOtherDefinitions")
                 End If
 
+                ' 
                 ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-
                 RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
                 CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
 
+                If RoleDefinitions.Count > 0 Then
+                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    ' jetzt kommt der Validation-Check 
+                    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions()
+                    If Not TeamsAreNotOK Then
+                        Call MsgBox("keine Team-Definitions-Konflikte in DB")
+                    End If
+                    Dim existingOverloads As Boolean = checkTeamMemberOverloads()
+                    If Not existingOverloads Then
+                        Call MsgBox("keine Team-Member Überlastungen ... ")
+                    End If
+                End If
+
+                ' jetzt prüfen , ob alles ok 
+                If awinSettings.visboDebug Then
+
+                End If
 
                 ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
                 ' sonst von der DB

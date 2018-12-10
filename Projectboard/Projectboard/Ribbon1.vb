@@ -11240,8 +11240,8 @@ Imports System.Web
                 For ix As Integer = 1 To RoleDefinitions.Count
                     Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
 
-                    Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID, True)
-                    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonthNew(role.UID, True)
+                    Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
+                    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
 
                     If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
                         atleastOne = True
