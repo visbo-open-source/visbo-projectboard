@@ -2632,88 +2632,17 @@
 
     End Property
 
-    '
-    ' übergibt in getRessourcenBedarf die Werte der Rolle <roleid>
-    '
-    Public ReadOnly Property getRessourcenBedarf(roleID As Object) As Double()
 
-        Get
-            Dim roleValues() As Double
-            Dim anzRollen As Integer
-            Dim anzPhasen As Integer
-            Dim found As Boolean
-            Dim i As Integer, p As Integer, r As Integer
-            Dim phase As clsPhase
-            Dim role As clsRolle
-            Dim lookforIndex As Boolean
-            Dim phasenStart As Integer
-            Dim tempArray As Double()
-
-
-            If _Dauer > 0 Then
-
-                lookforIndex = IsNumeric(roleID)
-
-                ReDim roleValues(_Dauer - 1)
-
-                anzPhasen = AllPhases.Count
-
-                For p = 0 To anzPhasen - 1
-                    phase = AllPhases.Item(p)
-                    With phase
-                        ' Off1
-                        anzRollen = .countRoles
-                        phasenStart = .relStart - 1
-
-                        ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
-                        ' es können Unschärfen auftreten 
-                        'phasenEnde = .relEnde - 1
-
-
-                        For r = 1 To anzRollen
-                            role = .getRole(r)
-                            found = False
-
-                            With role
-                                If lookforIndex Then
-                                    If .RollenTyp = CInt(roleID) Then
-                                        found = True
-                                    End If
-                                Else
-                                    If .name = CStr(roleID) Then
-                                        found = True
-                                    End If
-                                End If
-
-                                Dim dimension As Integer
-                                If found Then
-                                    dimension = .getDimension
-                                    ReDim tempArray(dimension)
-                                    tempArray = .Xwerte
-                                    For i = phasenStart To phasenStart + dimension
-                                        roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
-                                    Next i
-                                End If
-                            End With ' role
-
-                        Next r
-
-                    End With ' phase
-
-
-                Next p ' Loop über alle Phasen
-
-                getRessourcenBedarf = roleValues
-
-            Else
-                ReDim roleValues(0)
-                getRessourcenBedarf = roleValues
-            End If
-        End Get
-
-    End Property
-
-    Public ReadOnly Property getRessourcenBedarfNew(ByVal roleID As Object, Optional ByVal inclSubRoles As Boolean = False) As Double()
+    ''' <summary>
+    ''' es wird aufgerufen über den RoleName oder aber die RoleUID ! 
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="inclSubRoles"></param>
+    ''' <param name="teamID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
+                                                    Optional ByVal inclSubRoles As Boolean = False,
+                                                    Optional ByVal teamID As Integer = -1) As Double()
 
         Get
             Dim roleValues() As Double
@@ -2726,6 +2655,8 @@
             Dim lookforIndex As Boolean
             Dim phasenStart As Integer
             Dim tempArray As Double()
+            Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
+
             Dim roleUID As Integer
             Dim roleName As String = ""
 
@@ -2737,7 +2668,7 @@
                 lookforIndex = IsNumeric(roleID)
                 If IsNumeric(roleID) Then
                     roleUID = CInt(roleID)
-                    roleName = RoleDefinitions.getRoledef(roleUID).name
+                    roleName = RoleDefinitions.getRoleDefByID(roleUID).name
                 Else
                     If RoleDefinitions.containsName(CStr(roleID)) Then
                         roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
@@ -2758,7 +2689,7 @@
                 For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
                     roleName = RoleDefinitions.getRoledef(srkvp.Key).name
 
-                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
+                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
                     anzPhasen = listOfPhases.Count
 
                     For p = 1 To anzPhasen
@@ -2773,6 +2704,7 @@
                             ' es können Unschärfen auftreten 
                             'phasenEnde = .relEnde - 1
 
+                            Dim found As Boolean = False
 
                             For r = 1 To anzRollen
                                 role = .getRole(r)
@@ -2780,15 +2712,25 @@
                                 With role
 
                                     If .RollenTyp = srkvp.Key Then
-                                        Dim dimension As Integer
 
-                                        dimension = .getDimension
-                                        ReDim tempArray(dimension)
-                                        tempArray = .Xwerte
+                                        If considerTeam Then
+                                            found = teamID = role.teamID
+                                        Else
+                                            found = True
+                                        End If
 
-                                        For i = phasenStart To phasenStart + dimension
-                                            roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
-                                        Next i
+                                        If found Then
+                                            Dim dimension As Integer
+
+                                            dimension = .getDimension
+                                            ReDim tempArray(dimension)
+                                            tempArray = .Xwerte
+
+                                            For i = phasenStart To phasenStart + dimension
+                                                roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+                                            Next i
+                                        End If
+
 
                                     End If
 
@@ -2802,11 +2744,11 @@
 
                 Next ' Loop über for each srkvp
 
-                getRessourcenBedarfNew = roleValues
+                getRessourcenBedarf = roleValues
 
             Else
                 ReDim roleValues(0)
-                getRessourcenBedarfNew = roleValues
+                getRessourcenBedarf = roleValues
             End If
         End Get
 
@@ -2867,6 +2809,69 @@
 
             getResponsibleNames = responsibleNames
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die vorkommenden RoleIDs in der Form roleUid;teamUid zurück
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getRoleIDs(ByVal phaseNameID As String) As SortedList(Of String, String)
+        Get
+            Dim propResult As New SortedList(Of String, String)
+            Dim cPhase As clsPhase = Me.getPhaseByID(phaseNameID)
+            Dim roleID As String = ""
+            Dim isTeamMember As Boolean = False
+
+            If Not IsNothing(cPhase) Then
+                For r = 1 To cPhase.countRoles
+
+                    Dim hrole As clsRolle = cPhase.getRole(r)
+                    Dim teamMember As Boolean = (hrole.teamID > 0)
+
+                    roleID = RoleDefinitions.bestimmeRoleNodeName(hrole.RollenTyp, teamMember, hrole.teamID)
+                    '
+                    ' das ist performanter als der Weg über try .. catch 
+                    '
+                    If Not propResult.ContainsKey(roleID) Then
+                        propResult.Add(roleID, roleID)
+                    End If
+
+                Next r
+            End If
+
+            getRoleIDs = propResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die vorkommenden Kostenarten-Bezeichner in der Form "Name" zurück; es gibt noch keine Hierarchie bei den Kosten 
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCostIDs(ByVal phaseNameID As String) As SortedList(Of String, String)
+        Get
+            Dim propResult As New SortedList(Of String, String)
+
+            Dim cPhase As clsPhase = Me.getPhaseByID(phaseNameID)
+            Dim CostID As String = ""
+
+
+            If Not IsNothing(cPhase) Then
+                For c = 1 To cPhase.countCosts
+
+                    Dim hcost As clsKostenart = cPhase.getCost(c)
+                    Dim costName As String = hcost.name
+
+                    If Not propResult.ContainsKey(costName) Then
+                        propResult.Add(costName, costName)
+                    End If
+
+                Next c
+            End If
+
+            getCostIDs = propResult
         End Get
     End Property
 
@@ -3493,7 +3498,7 @@
                 For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
                     roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
 
-                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName, False)
+                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
                     anzPhasen = listOfPhases.Count
 
                     For p = 1 To anzPhasen
@@ -3736,7 +3741,7 @@
                 Else
                     Dim listOfPhases As Collection = Me.rcLists.getPhasesWithCost(costName)
                     anzPhasen = listOfPhases.Count
-                    
+
                     For p = 1 To anzPhasen
                         phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
 

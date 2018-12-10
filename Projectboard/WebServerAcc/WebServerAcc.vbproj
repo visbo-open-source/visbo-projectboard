@@ -73,6 +73,8 @@
   <ItemGroup>
     <Compile Include="clsBewertungWeb.vb" />
     <Compile Include="clsCache.vb" />
+    <Compile Include="clsCustomUserRolesWeb.vb" />
+    <Compile Include="clsCustomUserRoleWeb.vb" />
     <Compile Include="clsHierarchyWeb.vb" />
     <Compile Include="clsHryNodeWeb.vb" />
     <Compile Include="clsPhaseWeb.vb" />

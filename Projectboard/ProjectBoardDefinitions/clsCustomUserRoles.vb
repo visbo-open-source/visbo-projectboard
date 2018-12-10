@@ -1,6 +1,6 @@
 ﻿Public Class clsCustomUserRoles
 
-    ' der Schlüssel setzt sich zusammen aus userID und customerUserRole in clsCustomUserRole
+    ' der Schlüssel setzt sich zusammen aus userID, customerUserRole, specifics in clsCustomUserRole
     Private _customUserRoles As SortedList(Of String, clsCustomUserRole)
 
     Public Sub New()
@@ -36,7 +36,7 @@
     ''' <param name="userID"></param>
     ''' <param name="customRoleType"></param>
     ''' <param name="specifics"></param>
-    Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserProfils, ByVal specifics As Object)
+    Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserProfils, ByVal specifics As String)
 
         Dim key As String = userName.Trim & customRoleType.ToString.Trim
         If _customUserRoles.ContainsKey(key) Then

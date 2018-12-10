@@ -336,6 +336,59 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' gibt true zurück, wenn roleID irgendwo unterhalb der Hierarchy von summaryRoleID zu finden ist ..
+    ''' das gilt für Team-Member ebenso wie für Orga-Mitglieder
+    ''' </summary>
+    ''' <param name="roleID"></param>
+    ''' <param name="summaryRoleID"></param>
+    ''' <returns></returns>
+    Public Function hasAnyChildParentRelationsship(ByVal roleID As Integer, ByVal summaryRoleID As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+
+        If roleID = summaryRoleID Then
+            tmpResult = True
+        Else
+            Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleID)
+            If Not IsNothing(sRole) Then
+                Dim alleChildIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(sRole.name, type:=PTcbr.all)
+                If alleChildIDs.Count > 0 Then
+                    tmpResult = alleChildIDs.ContainsKey(roleID)
+                End If
+            End If
+        End If
+
+
+        hasAnyChildParentRelationsship = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' Input ist eine sortierte Liste mit roleIds der Form roleUId;teamUid und die Uid einer Sammelrolle
+    ''' True, wenn irgendeine roleID Kind der summaryRoleID ist 
+    ''' </summary>
+    ''' <param name="roleIDs"></param>
+    ''' <param name="summaryRoleID"></param>
+    ''' <returns></returns>
+    Public Function hasAnyChildParentRelationsship(ByVal roleIDs As SortedList(Of String, String), ByVal summaryRoleID As Integer) As Boolean
+        Dim tmpResult As Boolean = False
+
+        For Each kvp As KeyValuePair(Of String, String) In roleIDs
+            Dim teamID As Integer = -1
+            Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(kvp.Value, teamID)
+
+            If hasAnyChildParentRelationsship(sRole.UID, summaryRoleID) Then
+                tmpResult = True
+                Exit For
+            End If
+
+        Next
+
+        hasAnyChildParentRelationsship = tmpResult
+
+    End Function
+
+    ''' <summary>
     ''' gibt true zurück, wenn die angegebene Rolle / Kostenart ein Kind oder Kindeskind eines der Elemente ist
     ''' oder das Element selber ist 
     ''' </summary>
@@ -344,7 +397,9 @@ Public Class clsRollen
     ''' <returns></returns>
     Public Function hasAnyChildParentRelationsship(ByVal roleCostName As String, ByVal roleCostCollection As Collection) As Boolean
 
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleCostName)
         Dim isRole As Boolean = RoleDefinitions.containsName(roleCostName)
+
         Dim iscost As Boolean = False
         Dim found As Boolean = False
         Dim ix As Integer = 1
@@ -353,7 +408,7 @@ Public Class clsRollen
         If isRole Then
 
             ' ist es eine Gruppe ...
-            If roleCostName.StartsWith("#") Then
+            If tmpRole.isTeam Then
                 myIDs = Me.getSubRoleIDsOf(roleCostName)
             Else
                 myIDs = New SortedList(Of Integer, Double)
@@ -393,6 +448,41 @@ Public Class clsRollen
         End If
 
         hasAnyChildParentRelationsship = found
+
+    End Function
+    ''' <summary>
+    ''' bestimmt für eine Rolle im TreeView den Namen, der setzt sich zusammen aus RoleUid und ggf Membership Kennung 
+    ''' </summary>
+    ''' <param name="roleUID"></param>
+    ''' <param name="teamID"></param>
+    ''' <param name="isTeamMember"></param>
+    ''' <returns></returns>
+    Public Function bestimmeRoleNodeName(ByVal roleUID As Integer, ByVal isTeamMember As Boolean, ByVal teamID As Integer) As String
+        ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
+
+        Dim tmpResult As String = ""
+        Dim ok As Boolean = True
+
+        If teamID > 0 Then
+            ok = _allRollen.ContainsKey(teamID)
+        End If
+
+        If _allRollen.ContainsKey(roleUID) And ok Then
+            Dim nodeName As String = roleUID.ToString
+
+            If isTeamMember Then
+                nodeName = roleUID.ToString & ";" & teamID
+            Else
+                nodeName = roleUID.ToString
+            End If
+
+            tmpResult = nodeName
+
+        Else
+            tmpResult = ""
+        End If
+
+        bestimmeRoleNodeName = tmpResult
 
     End Function
 
@@ -525,10 +615,11 @@ Public Class clsRollen
                 If Not IsNothing(excludedNames) Then
                     ' jetzt müssen aus realCollection alle Namen raus, die in excludedNames drin sind ... 
                     For Each exclName As String In excludedNames
+                        Dim teamID As Integer = -1
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(exclName, teamID)
 
-                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(exclName)
                         If Not IsNothing(tmpRole) Then
-                            If realCollection.ContainsKey(tmpRole.UID) And exclName <> roleName Then
+                            If realCollection.ContainsKey(tmpRole.UID) And tmpRole.name <> roleName Then
                                 realCollection.Remove(tmpRole.UID)
                             End If
                         End If
@@ -688,6 +779,55 @@ Public Class clsRollen
     End Property
 
     ''' <summary>
+    ''' bestimmt aus dem übergebenen SelectedRolesItem Angaben wie RoleUID, ggf. die zugehörige TeamID
+    ''' </summary>
+    ''' <param name="selRoleItem"></param>
+    ''' <param name="teamID"></param>
+    ''' <returns></returns>
+    Private Function bestimmeRoleNodeID(ByVal selRoleItem As String, ByRef teamID As Integer) As Integer
+        ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
+
+        Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
+        Dim tmpResult As Integer = -1
+
+
+        tmpResult = CInt(tmpStr(0))
+
+        If tmpStr.Length = 2 Then
+            ' ist Team 
+            If IsNumeric(tmpStr(1)) Then
+                teamID = CInt(tmpStr(1))
+                If _allRollen.ContainsKey(teamID) Then
+                    ' alles in Ordnung
+                Else
+                    teamID = -1
+                End If
+            Else
+                teamID = -1
+            End If
+        End If
+
+
+        bestimmeRoleNodeID = tmpResult
+
+    End Function
+    ''' <summary>
+    ''' gibt aus dem String die RollenDefinition zurück 
+    ''' ebenso die evtl vorhandene Team-Zugehörigkeit
+    ''' </summary>
+    ''' <param name="idK"></param>
+    ''' <returns></returns>
+    Public Function getRoleDefByIDKennung(ByVal idK As String, ByRef teamID As Integer) As clsRollenDefinition
+
+        teamID = -1
+        Try
+            getRoleDefByIDKennung = getRoleDefByID(bestimmeRoleNodeID(idK, teamID))
+        Catch ex As Exception
+            getRoleDefByIDKennung = Nothing
+        End Try
+
+    End Function
+    ''' <summary>
     ''' gibt die Rolle mit der entsprechenden ID zurück ...
     ''' </summary>
     ''' <param name="uid"></param>
@@ -701,6 +841,29 @@ Public Class clsRollen
             Else
                 getRoleDefByID = Nothing
             End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu gegebenem Team und Team-Member den Prozentsatz zurück, mit dem das Team-Member seine Kapa zur Verfügung stellt 
+    ''' </summary>
+    ''' <param name="parentUID"></param>
+    ''' <param name="childID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getMembershipPrz(ByVal parentUID As Integer, ByVal childID As Integer) As Double
+        Get
+            Dim tmpResult As Double = 0.0
+
+            If _allRollen.ContainsKey(parentUID) And _allRollen.ContainsKey(childID) Then
+                ' nur dann es einen Wert geben 
+                Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(parentUID)
+
+                If parentRole.getSubRoleIDs.ContainsKey(childID) Then
+                    tmpResult = parentRole.getSubRoleIDs.Item(childID)
+                End If
+            End If
+
+            getMembershipPrz = tmpResult
         End Get
     End Property
 

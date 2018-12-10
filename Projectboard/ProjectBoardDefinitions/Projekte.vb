@@ -4378,9 +4378,9 @@ Public Module Projekte
                 'kennung = "Rolle " & qualifier
                 kennung = calcChartKennung("pr", PTprdk.SollIstRolleC, tmpCollection)
                 Try
-                    werteB = beauftragung.getRessourcenBedarfNew(qualifier, True)
-                    werteL = lastPlan.getRessourcenBedarfNew(qualifier, True)
-                    werteC = hproj.getRessourcenBedarfNew(qualifier, True)
+                    werteB = beauftragung.getRessourcenBedarf(qualifier, True)
+                    werteL = lastPlan.getRessourcenBedarf(qualifier, True)
+                    werteC = hproj.getRessourcenBedarf(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -4888,10 +4888,10 @@ Public Module Projekte
 
                 Try
                     If vglBaseline Then
-                        werteB = vProj.getRessourcenBedarfNew(qualifier, True)
+                        werteB = vProj.getRessourcenBedarf(qualifier, True)
                     End If
 
-                    werteC = hproj.getRessourcenBedarfNew(qualifier, True)
+                    werteC = hproj.getRessourcenBedarf(qualifier, True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -5851,7 +5851,7 @@ Public Module Projekte
                     If roleName = "" Then
                         tdatenreihe = hproj.getAlleRessourcen
                     Else
-                        tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(roleName, True)
                     End If
 
                 Else
@@ -5919,7 +5919,7 @@ Public Module Projekte
                         If roleName = "" Then
                             vdatenreihe = vglproj.getAlleRessourcen
                         Else
-                            vdatenreihe = vglproj.getRessourcenBedarfNew(roleName, True)
+                            vdatenreihe = vglproj.getRessourcenBedarf(roleName, True)
                         End If
                     Else
                         If roleName = "" Then
@@ -6275,9 +6275,9 @@ Public Module Projekte
                             vdatenreihe = vglProj.getAlleRessourcen
                         End If
                     Else
-                        tdatenreihe = hproj.getRessourcenBedarfNew(rcName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(rcName, True)
                         If Not IsNothing(vglProj) Then
-                            vdatenreihe = vglProj.getRessourcenBedarfNew(rcName, True)
+                            vdatenreihe = vglProj.getRessourcenBedarf(rcName, True)
                         End If
                     End If
                 End If
@@ -6642,7 +6642,7 @@ Public Module Projekte
                 If roleName = "" Then
                     tdatenreihe = hproj.getAlleRessourcen
                 Else
-                    tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
+                    tdatenreihe = hproj.getRessourcenBedarf(roleName, True)
                 End If
 
             Else
@@ -6711,7 +6711,7 @@ Public Module Projekte
                     If roleName = "" Then
                         vdatenreihe = vglProj.getAlleRessourcen
                     Else
-                        vdatenreihe = vglProj.getRessourcenBedarfNew(roleName, True)
+                        vdatenreihe = vglProj.getRessourcenBedarf(roleName, True)
                     End If
                 Else
                     If roleName = "" Then
@@ -9317,7 +9317,7 @@ Public Module Projekte
             Xdatenreihe(r) = roleName
 
             If auswahl = 1 Then
-                tdatenreihe(r) = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True).Sum
+                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True).Sum
             Else
                 tdatenreihe(r) = hproj.getPersonalKosten(roleName, inclSubRoles:=True).Sum
             End If
@@ -9555,7 +9555,7 @@ Public Module Projekte
             Xdatenreihe(r) = roleName
 
             If auswahl = 1 Then
-                tdatenreihe(r) = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True).Sum
+                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True).Sum
             Else
                 tdatenreihe(r) = hproj.getPersonalKosten(roleName).Sum
             End If
@@ -24762,7 +24762,9 @@ Public Module Projekte
 
                             For i = 1 To mycollection.Count
                                 cName = CStr(mycollection.Item(i))
-                                IDkennung = IDkennung & "#" & RoleDefinitions.getRoledef(cName).UID.ToString
+                                ' bei den cNames ist es jetzt roleUid;teamUid bzw roleUid; von daher einfach umverändert übernehmen 
+                                'IDkennung = IDkennung & "#" & RoleDefinitions.getRoledef(cName).UID.ToString
+                                IDkennung = IDkennung & "#" & cName
                             Next
 
                         End If

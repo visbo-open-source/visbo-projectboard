@@ -84,6 +84,7 @@
     <Compile Include="clsKostenartDefinitionDB.vb" />
     <Compile Include="clsLicences.vb" />
     <Compile Include="clsListOfCostAndRoles.vb" />
+    <Compile Include="clsNodeRoleTag.vb" />
     <Compile Include="clsOpenXML.vb" />
     <Compile Include="clsPhaseDB.vb" />
     <Compile Include="clsPPTShapes.vb" />
