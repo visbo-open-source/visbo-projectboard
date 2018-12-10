@@ -148,6 +148,58 @@ Public Class clsCache
         End Try
 
     End Sub
+    Public Sub deleteVPv(ByVal vpvid As String)
+
+        Dim vpid As String
+        Dim vname As String
+        Dim found As Boolean = False
+
+        If _VPvs.Count > 0 Then
+
+            While Not found
+
+                For Each kvp As KeyValuePair(Of String, SortedList(Of String, clsVarTs)) In _VPvs
+
+                    vpid = kvp.Key
+                    Dim VPvs_value As SortedList(Of String, clsVarTs) = _VPvs(vpid)
+
+                    If VPvs_value.Count <> 0 Then
+
+                        Dim varTS As SortedList(Of String, clsVarTs) = _VPvs(vpid)
+                        For Each kvp1 As KeyValuePair(Of String, clsVarTs) In varTS
+                            vname = kvp1.Key
+                            Dim vpvlongListe As SortedList(Of Date, clsProjektWebLong) = kvp1.Value.tsLong
+                            For Each vpvlong As KeyValuePair(Of Date, clsProjektWebLong) In vpvlongListe
+                                If vpvlong.Value._id = vpvid Then
+                                    vpvlongListe.Remove(vpvlong.Key)
+                                    found = True
+                                    Exit For
+                                End If
+                            Next
+                            Dim vpvshortListe As SortedList(Of Date, clsProjektWebShort) = kvp1.Value.tsShort
+                            For Each vpvshort As KeyValuePair(Of Date, clsProjektWebShort) In vpvshortListe
+                                If vpvshort.Value._id = vpvid Then
+                                    vpvshortListe.Remove(vpvshort.Key)
+                                    found = True
+                                    Exit For
+                                End If
+                            Next
+                            If found Then
+                                Exit For
+                            End If
+                        Next
+
+                    End If
+
+                    If found Then
+                        Exit For
+                    End If
+                Next
+
+            End While
+
+        End If
+    End Sub
 
     Public Function existsInCache(ByVal vpid As String,
                                   ByVal vName As String,

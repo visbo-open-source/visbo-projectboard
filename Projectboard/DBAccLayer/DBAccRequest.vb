@@ -730,7 +730,12 @@ Public Class Request
             Throw New ArgumentException("deleteProjectTimestampFromDB: " & ex.Message)
         End Try
 
+        If awinSettings.visboDebug Then
+            Call MsgBox("Projekt mit timestamp: " & projectname & "/" & variantName & "/" & stored & "von User: " & userName & " gelöscht.")
+        End If
+
         deleteProjectTimestampFromDB = result
+
 
     End Function
 

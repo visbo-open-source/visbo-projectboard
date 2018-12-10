@@ -738,18 +738,32 @@ Public Class Request
                         result = True
 
                         ' vpv zu Cache hinzufügen
-                        Dim newvpv As clsProjektWebLong = storeAntwort.vpv.ElementAt(0)
-                        Dim hlistvpv As New SortedList(Of String, clsVarTs)
-                        Dim VPvs As New clsVarTs
-                        VPvs.timeCLong = newvpv.timestamp
-                        VPvs.timeCShort = newvpv.timestamp
-                        VPvs.tsLong.Add(newvpv.timestamp, newvpv)
-                        hlistvpv.Add(newvpv._id, VPvs)
-                        VRScache.VPvs.Add(vpid, hlistvpv)
+                        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+
+
+                        'Dim hlistvpv As SortedList(Of String, clsVarTs) = VRScache.VPvs.Item(vpid)
+                        'If VRScache.VPvs.Item(vpid).ContainsKey(newvpvlong.variantName) Then
+                        '    Dim VPvs As clsVarTs = hlistvpv.Item(newvpv.variantName)
+                        '    VPvs = VRScache.VPvs.Item(vpid).Item(newvpvlong.variantName)
+                        '    VPvs.timeCLong = newvpvlong.timestamp
+                        '    VPvs.timeCShort = newvpvlong.timestamp
+                        '    VPvs.tsLong.Add(newvpvlong.timestamp, newvpvlong)
+                        'Else
+                        '    VPvs = New clsVarTs
+                        '    VPvs.timeCLong = newvpvlong.timestamp
+                        '    VPvs.timeCShort = newvpvlong.timestamp
+                        '    VPvs.tsLong.Add(newvpvlong.timestamp, newvpvlong)
+                        '    VPvs.ts
+                        'End If
+
+
+
+                        'hlistvpv.Add(newvpv._id, VPvs)
+                        'VRScache.VPvs.Add(vpid, hlistvpv)
                     Else
 
-                        ' Fehlerbehandlung je nach errcode
-                        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+                            ' Fehlerbehandlung je nach errcode
+                            Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
 
                     End If
 
@@ -2823,6 +2837,8 @@ Public Class Request
 
             If errcode = 200 Then
                 result = True
+                ' Cache aktualisieren
+                VRScache.deleteVPv(vpvid)
             Else
                 Dim statError As Boolean = errorHandling_withBreak("DELETEOneVPv", errcode, errmsg & " : " & webantwort.message)
             End If
