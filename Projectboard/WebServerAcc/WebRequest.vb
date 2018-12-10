@@ -293,7 +293,6 @@ Public Class Request
 
                 For i As Integer = sl.Count - 1 To 0 Step -1
                     Dim kvp As KeyValuePair(Of DateTime, DateTime) = sl.ElementAt(i)
-                    '???: ergebnisCollection.Add(kvp.Value.ToUniversalTime)
                     ergebnisCollection.Add(kvp.Value.ToLocalTime)
                 Next i
 
@@ -667,6 +666,20 @@ Public Class Request
                     aktvp = vpErg.ElementAt(0)
                     storedVP = (vpid <> "")
 
+                    ' VP im Cache ergänzen
+                    If VRScache.VPsN.ContainsKey(aktvp.name) Then
+                        VRScache.VPsN.Remove(aktvp.name)
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    Else
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    End If
+                    If VRScache.VPsId.ContainsKey(vpid) Then
+                        VRScache.VPsId.Remove(vpid)
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    Else
+                        VRScache.VPsId.Add(vpid, aktvp)
+                    End If
+
                 Else
                     Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
@@ -724,18 +737,41 @@ Public Class Request
                         result = (storeAntwort.state = "success")
                         result = True
 
+                        ' vpv zu Cache hinzufügen
+                        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+
+
+                        'Dim hlistvpv As SortedList(Of String, clsVarTs) = VRScache.VPvs.Item(vpid)
+                        'If VRScache.VPvs.Item(vpid).ContainsKey(newvpvlong.variantName) Then
+                        '    Dim VPvs As clsVarTs = hlistvpv.Item(newvpv.variantName)
+                        '    VPvs = VRScache.VPvs.Item(vpid).Item(newvpvlong.variantName)
+                        '    VPvs.timeCLong = newvpvlong.timestamp
+                        '    VPvs.timeCShort = newvpvlong.timestamp
+                        '    VPvs.tsLong.Add(newvpvlong.timestamp, newvpvlong)
+                        'Else
+                        '    VPvs = New clsVarTs
+                        '    VPvs.timeCLong = newvpvlong.timestamp
+                        '    VPvs.timeCShort = newvpvlong.timestamp
+                        '    VPvs.tsLong.Add(newvpvlong.timestamp, newvpvlong)
+                        '    VPvs.ts
+                        'End If
+
+
+
+                        'hlistvpv.Add(newvpv._id, VPvs)
+                        'VRScache.VPvs.Add(vpid, hlistvpv)
                     Else
 
-                        ' Fehlerbehandlung je nach errcode
-                        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+                            ' Fehlerbehandlung je nach errcode
+                            Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
 
                     End If
 
                 End If
             End If
 
-            ' Cache aktualisieren
-            VRScache.VPsN = GETallVP(aktVCid, projekt.projectType)
+            '' Cache aktualisieren
+            'VRScache.VPsN = GETallVP(aktVCid, projekt.projectType)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message & ": storeProjectToDB")
@@ -1144,7 +1180,9 @@ Public Class Request
     ''' <param name="pName"></param>
     ''' <param name="vName"></param>
     ''' <param name="userName"></param>
-    ''' <param name="type"></param>
+    ''' <param name="type">  ptPRPFType.portfolio = 1
+    '''                      ptPRPFType.project = 0
+    '''                      ptPRPFType.projectTemplate = 2</param>
     ''' <returns>true -  es darf geändert werden
     '''          false - es darf nicht geändert werden</returns>
     Public Function checkChgPermission(ByVal pName As String, ByVal vName As String, ByVal userName As String, Optional type As Integer = ptPRPFType.project) As Boolean
@@ -1152,11 +1190,6 @@ Public Class Request
         Dim result As Boolean = False
 
         Try
-            ' angepasst: 20180914: ur: type muss im ReST-Server auf unsere Enumeration geändert werden: 
-            '           ptPRPFType.portfolio = 1
-            '           ptPRPFType.project = 0
-            '           ptPRPFType.projectTemplate = 2
-
 
             Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, type)
 
@@ -1250,10 +1283,10 @@ Public Class Request
             If (vpid <> "" And variantExists) Or (vpid <> "" And vname = "") Then
 
                 If wpItem.isProtected Then
-                    result = POSTVPLock(vpid, vname)
-                Else
-                    result = DELETEVPLock(vpid, vname)
-                End If
+                        result = POSTVPLock(vpid, vname)
+                    Else
+                        result = DELETEVPLock(vpid, vname)
+                    End If
 
             Else
 
@@ -1831,7 +1864,7 @@ Public Class Request
             ' Alle VisboProjects über Server von WebServer/DB holen
             Dim anzLoop As Integer = 0
             'Dim allVP As New List(Of clsVP)
-            While (vpid = "" And anzLoop <= 2)
+            While (vpid = "" And anzLoop < 2)
 
                 If VRScache.VPsN.Count > 0 Then
                     ' Id zu angegebenen Projekt herausfinden
@@ -1844,6 +1877,9 @@ Public Class Request
                     End If
                 Else
                     VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+                    If VRScache.VPsN.Count = 0 Then
+                        anzLoop = 2
+                    End If
                 End If
 
                 anzLoop = anzLoop + 1
@@ -1873,26 +1909,40 @@ Public Class Request
 
             If vpid <> "" Then
 
-                While (pName = "" And anzLoop <= 2)
+                While (pName = "" And anzLoop < 2)
 
-                    If VRScache.VPsId.ContainsKey(vpid) Then
-                        ' pName zu angegebene vpid herausfinden
-                        pName = VRScache.VPsId(vpid).name
+                    If VRScache.VPsId.Count > 0 Then
+
+                        If VRScache.VPsId.ContainsKey(vpid) Then
+                            ' pName zu angegebene vpid herausfinden
+                            pName = VRScache.VPsId(vpid).name
+                        Else
+
+                            VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+
+                            If VRScache.VPsId.Count <= 0 Then
+                                anzLoop = 2 ' while-Schleife beenden
+                            Else
+                                Try
+                                    pName = VRScache.VPsId(vpid).name
+                                Catch ex As Exception
+                                    pName = ""
+                                End Try
+                            End If
+
+                        End If
                     Else
                         VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
 
-                        Try
-                            pName = VRScache.VPsId(vpid).name
-                        Catch ex As Exception
-                            pName = ""
-                        End Try
-
+                        If VRScache.VPsId.Count <= 0 Then
+                            anzLoop = 2 ' while-Schleife beenden
+                        End If
                     End If
 
                     anzLoop = anzLoop + 1
                 End While
             Else
-                Throw New ArgumentException("Fehler in GETpName: keine vpid übergeben")
+                Throw New ArgumentException("Fehler in GETpName: vpid = "" übergeben")
             End If
         Catch ex As Exception
             pName = ""
@@ -2787,6 +2837,8 @@ Public Class Request
 
             If errcode = 200 Then
                 result = True
+                ' Cache aktualisieren
+                VRScache.deleteVPv(vpvid)
             Else
                 Dim statError As Boolean = errorHandling_withBreak("DELETEOneVPv", errcode, errmsg & " : " & webantwort.message)
             End If

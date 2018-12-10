@@ -644,7 +644,6 @@ Public Module testModule
                 End If
             Else
 
-                'P???: ur: 16.11.2016 hier ist handlungsbedarf wegen nicht vorhandenem TmpSAv
                 Try
                     pptCurrentPresentation.Slides("tmpSav").Copy()
                     tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
@@ -3928,7 +3927,6 @@ Public Module testModule
             Dim tmpIX As Integer
             Dim tmpslideID As Integer
 
-            ' ur:31.03.2015????
 
             If Not pptFirstTime Then
                 '  pptSlide.Delete()

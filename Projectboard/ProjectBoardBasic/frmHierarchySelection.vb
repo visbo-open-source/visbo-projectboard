@@ -1122,7 +1122,7 @@ Public Class frmHierarchySelection
 
             End With
 
-        ElseIf rdbRoles.Checked = True Then '?????
+        ElseIf rdbRoles.Checked = True Then
 
             ' Radiobutton Rollen wurde geklickt
 
@@ -4073,7 +4073,6 @@ Public Class frmHierarchySelection
 
 
         Else
-            '??? lastAuswahl = PTProjektType.nameList
 
             auswahl = selectionTyp(selectedBUs, selectedTyps, _
                                    selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
