@@ -351,10 +351,11 @@ Public Class Tabelle2
 
         Dim currentCell As Excel.Range = Target
 
+
         ' die Rechtsklick-Behandlung soll auf alle Fälle abgeschaltet werden 
         Cancel = True
 
-        ' prüfen, ob sich das die selektierte Zelle in der Role-/Cost Spalte befindet 
+        ' prüfen, ob sich die selektierte Zelle in der Role-/Cost Spalte befindet 
         If Target.Column = columnRC Then
 
             Try
@@ -375,7 +376,10 @@ Public Class Tabelle2
                     Dim pName As String = CStr(meWS.Cells(zeile, visboZustaende.meColpName).value)
                     Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                     Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                    ' jetzt wird 
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                    Dim rcNameID As String = bestimmeRCNameID(meWS.Cells(zeile, columnRC))
+
                     Dim phaseNameID As String = calcHryElemKey(phaseName, False)
 
                     Dim hproj As clsProjekt = Nothing
@@ -422,6 +426,7 @@ Public Class Tabelle2
                                     ' ausgewählte Rolle eintragn
                                     'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
                                     CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
+
                                     ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
 
                                     'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
@@ -1831,6 +1836,63 @@ Public Class Tabelle2
 
     End Function
 
+    Private Function setCellFromRCNameID(ByVal currentCell As Excel.Range, ByVal rcNameID As String) As Excel.Range
+        Dim tmpCell As Excel.Range = currentCell
+        Dim roleName As String = ""
+        Dim teamName As String = ""
+        Dim teamID As Integer
+        Dim roleID As Integer = RoleDefinitions.parseRoleNodeID(rcNameID, teamID)
+
+
+
+        setCellFromRCNameID = tmpCell
+    End Function
+    Private Function getRCNameIDfromCell(ByVal currentCell As Excel.Range) As String
+
+        Dim tmpResult As String
+        Try
+            Dim tmpRCname As String = CStr(currentCell.Value)
+            Dim tmpComment As Excel.Comment = currentCell.Comment
+            Dim tmpTeamName As String = ""
+            If Not IsNothing(tmpComment) Then
+                tmpTeamName = tmpComment.Text
+            End If
+            tmpResult = bestimmeRCNameID(tmpRCname, tmpTeamName)
+        Catch ex As Exception
+            tmpResult = ""
+        End Try
+
+        getRCNameIDfromCell = tmpResult
+
+    End Function
+
+    Private Function bestimmeRCNameID(ByVal roleName As String, ByVal teamName As String) As String
+        Dim tmpResult As String = ""
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+
+        Try
+            If Not IsNothing(tmpRole) Then
+
+                If teamName.Length > 0 Then
+                    Dim tmpRoleTeam As clsRollenDefinition = RoleDefinitions.getRoledef(teamName)
+                    If Not IsNothing(tmpRoleTeam) Then
+                        If tmpRoleTeam.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
+                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, True, tmpRoleTeam.UID)
+                        Else
+                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, "")
+                        End If
+                    End If
+                Else
+                    tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, "")
+                End If
+
+            End If
+        Catch ex As Exception
+            tmpResult = ""
+        End Try
+
+        bestimmeRCNameID = tmpResult
+    End Function
 
     ''' <summary>
     ''' prüft, ob eine gültige Zelle selektiert wurde ... 
