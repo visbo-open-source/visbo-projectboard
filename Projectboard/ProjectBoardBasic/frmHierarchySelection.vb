@@ -5219,7 +5219,7 @@ Public Class frmHierarchySelection
 
                 topLevelNode.Tag = nrTag
 
-                topLevelNode.Name = RoleDefinitions.bestimmeRoleNodeName(role.UID, nrTag.isTeamMember, nrTag.membershipID)
+                topLevelNode.Name = RoleDefinitions.bestimmeRoleNodeName(role.UID, nrTag.membershipID)
 
                 If selectedRoles.Contains(topLevelNode.Name) Then
                     topLevelNode.Checked = True
@@ -5284,7 +5284,7 @@ Public Class frmHierarchySelection
 
         currentNode.Tag = nrTag
 
-        currentNode.Name = RoleDefinitions.bestimmeRoleNodeName(currentRoleUid, nrTag.isTeamMember, nrTag.membershipID)
+        currentNode.Name = RoleDefinitions.bestimmeRoleNodeName(currentRoleUid, nrTag.membershipID)
 
         If selectedRoles.Contains(currentNode.Name) Then
             currentNode.Checked = True
