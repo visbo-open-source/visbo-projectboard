@@ -144,6 +144,8 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public ReadOnly Property getTSProject(ByVal pvName As String, ByVal tsDate As Date) As clsProjekt
         Get
+            Dim err As New clsErrorCodeMsg
+
             Dim tmpProject As clsProjekt = Nothing
 
             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -158,7 +160,7 @@ Public Class clsSmartSlideListen
                     tmpProject = timeStamps.ElementAtorBefore(tsDate)
                     If IsNothing(tmpProject) Then
                         ' aus Datenbank holen 
-                        tmpProject = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, tsDate)
+                        tmpProject = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, tsDate, err)
 
                         If Not IsNothing(tmpProject) Then
                             timeStamps.Add(tsDate, tmpProject)
@@ -174,7 +176,7 @@ Public Class clsSmartSlideListen
                             tmpDateVon = _listOfTimeStamps.First.Key
                         End If
                     End If
-                    timeStamps.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now)
+                    timeStamps.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now, err)
                     _projectTimeStamps.Item(pvName) = timeStamps
 
                     tmpProject = timeStamps.ElementAtorBefore(tsDate)

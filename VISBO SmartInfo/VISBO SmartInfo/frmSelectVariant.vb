@@ -6,22 +6,24 @@ Public Class frmSelectVariant
     Friend vName As String = ""
     Private Sub frmSelectVariant_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Dim err As New clsErrorCodeMsg
+
         If Not noDBAccessInPPT Then
 
             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
             ' existiert der Projekt-Name
-            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
+            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now, err) Then
                 If vName = "" Then
                     ' zeigen nur an, was nicht bereits aktiv ist 
                     ' also hier nichts tun ...
                 Else
-                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now) Then
+                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now, err) Then
                         variantNamesListBox.Items.Add("Base-Variant")
                     End If
 
                 End If
 
-                Dim namesCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pName)
+                Dim namesCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(pName, err)
                 If namesCollection.Count > 0 Then
                     For Each tmpStr As String In namesCollection
                         Try
