@@ -1200,6 +1200,8 @@ Public Class frmProjPortfolioAdmin
     Private Sub doAfterCheckAction(ByVal actionCode As Integer, ByVal TreeLevel As Integer, ByVal node As TreeNode, _
                                        ByVal considerDependencies As Boolean)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim childNode As TreeNode
         Dim parentNode As TreeNode
 
@@ -1323,7 +1325,7 @@ Public Class frmProjPortfolioAdmin
             If Not noDB Then
 
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
 
                 Select Case TreeLevel
 
@@ -1346,7 +1348,7 @@ Public Class frmProjPortfolioAdmin
                                 ' nicht zugelassen , also wieder zurücknehmen 
 
                                 ' wenn node gecheckt wurde, aber das Projekt gar nicht existiert ...
-                                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now, err) Then
                                     If awinSettings.englishLanguage Then
                                         Call MsgBox(pName & ", " & vName & "not yet stored in database ... " & vbLf &
                                                     "please store at database before protecting ...")
@@ -1357,7 +1359,7 @@ Public Class frmProjPortfolioAdmin
                                 End If
 
                                 node.Checked = Not node.Checked
-                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
+                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName, err))
                                 Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
 
@@ -1378,7 +1380,7 @@ Public Class frmProjPortfolioAdmin
                                     ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                 Else
 
-                                    If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
+                                    If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now, err) Then
                                         If awinSettings.englishLanguage Then
                                             Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf &
                                                         "please store at database before protecting ...")
@@ -1390,7 +1392,7 @@ Public Class frmProjPortfolioAdmin
 
                                     ' nicht zugelassen , also alles unverändert lassen  
                                     atleastOneError = True
-                                    writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
+                                    writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName, err))
                                     Call bestimmeNodeAppearance(childNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                                 End If
 
@@ -1422,7 +1424,7 @@ Public Class frmProjPortfolioAdmin
                             ' erfolgreich ..
                             ' es wurde bereits Node Apperance inkl Check-Status geklärt
                         Else
-                            If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now) Then
+                            If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now, err) Then
                                 If awinSettings.englishLanguage Then
                                     Call MsgBox(pName & ", " & vName & " not yet stored in database ... " & vbLf &
                                                 "please store at database before protecting ...")
@@ -1434,7 +1436,7 @@ Public Class frmProjPortfolioAdmin
 
                             ' nicht zugelassen , also alles unverändert lassen  
                             node.Checked = Not node.Checked
-                            writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
+                            writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName, err))
                             Call bestimmeNodeAppearance(node, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
                         End If
 
@@ -1917,7 +1919,9 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
-        ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        Dim err As New clsErrorCodeMsg
+
         Dim selectedNode As New TreeNode
         Dim variantNode As New TreeNode
         Dim nodeTimeStamp As New TreeNode
@@ -1945,7 +1949,7 @@ Public Class frmProjPortfolioAdmin
         If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
             ' jetzt die writeProtections neu bestimmen 
             'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
         End If
 
         selectedNode = e.Node
@@ -2111,7 +2115,7 @@ Public Class frmProjPortfolioAdmin
                             End If
 
                             projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName,
-                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
 
                         Catch ex As Exception
                             projekthistorie.clear()
@@ -2688,6 +2692,7 @@ Public Class frmProjPortfolioAdmin
     ''' <remarks></remarks>
     Private Sub SelectionSet_Click(sender As Object, e As EventArgs) Handles SelectionSet.Click
 
+        Dim err As New clsErrorCodeMsg
 
         Dim projectNode As TreeNode
 
@@ -2830,7 +2835,7 @@ Public Class frmProjPortfolioAdmin
                 ' wenn ja, dann schützen 
 
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -2862,7 +2867,7 @@ Public Class frmProjPortfolioAdmin
                                     ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                 Else
                                     ' nicht zugelassen , also nichts machen  
-                                    writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
+                                    writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName, err))
                                     Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
 
                                     atLeastOneFailed = True
@@ -2888,7 +2893,7 @@ Public Class frmProjPortfolioAdmin
                                 projectNode.Checked = True
                             Else
                                 ' nicht zugelassen , also nichts machen  
-                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
+                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName, err))
                                 Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
 
                             End If
@@ -2952,13 +2957,14 @@ Public Class frmProjPortfolioAdmin
                                              ByVal pName As String, ByVal vName As String, _
                                              ByVal writeProtect As Boolean) As Boolean
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim err As New clsErrorCodeMsg
+
         Dim pvName As String = calcProjektKey(pName, vName)
 
         Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project, _
                                                 dbUsername, Me.chkbxPermanent.Checked, writeProtect)
 
-        If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
+        If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem, err) Then
             ' alles in Ordnung : es ist jetzt geschützt bzw. released
             ' dann checken, dann in WriteProtections aktualisieren, dann Appearance setzen ...
             tmpNode.Checked = writeProtect
@@ -3080,6 +3086,8 @@ Public Class frmProjPortfolioAdmin
     ''' <remarks></remarks>
     Private Sub SelectionReset_Click(sender As Object, e As EventArgs) Handles SelectionReset.Click
 
+        Dim err As New clsErrorCodeMsg
+
         Dim projectNode As TreeNode
 
         stopRecursion = True
@@ -3142,7 +3150,7 @@ Public Class frmProjPortfolioAdmin
                 ' wenn ja, dann aufheben 
 
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
 
                 For i As Integer = 1 To .Nodes.Count
                     projectNode = .Nodes.Item(i - 1)
@@ -3176,7 +3184,7 @@ Public Class frmProjPortfolioAdmin
                                         ' es wurde bereits Node Apperance inkl Check-Status geklärt
                                     Else
                                         ' Aufheben nicht zugelassen , also nichts machen  
-                                        writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
+                                        writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName, err))
                                         Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pName, vName)
 
                                         atLeastOneFailed = True
@@ -3210,7 +3218,7 @@ Public Class frmProjPortfolioAdmin
                                 ' erfolgreich ..
                             Else
                                 ' nicht zugelassen , also nichts machen  
-                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName))
+                                writeProtections.upsert(CType(databaseAcc, DBAccLayer.Request).getWriteProtection(pName, vName, err))
                                 Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pName, vName)
                             End If
 
@@ -3246,7 +3254,7 @@ Public Class frmProjPortfolioAdmin
 
         End With
 
-        If aKtionskennung = PTTvActions.chgInSession Or _
+        If aKtionskennung = PTTvActions.chgInSession Or
             aKtionskennung = PTTvActions.activateV Then
 
             If currentConstellationName <> calcLastSessionScenarioName() Then
@@ -3279,6 +3287,9 @@ Public Class frmProjPortfolioAdmin
     ''' <param name="e"></param>
     ''' <remarks></remarks>
     Private Sub filterIcon_Click(sender As Object, e As EventArgs) Handles filterIcon.Click
+
+        Dim err As New clsErrorCodeMsg
+
         'Dim filterFormular As New frmNameSelection
         Dim filterFormular As New frmHierarchySelection
         Dim considerDependencies As Boolean
@@ -3323,9 +3334,9 @@ Public Class frmProjPortfolioAdmin
         Me.Cursor = Cursors.WaitCursor
 
         ' jetzt erst mal überprüfen, ob quicklist = true ..
-        If quickList Or _
-            aKtionskennung = PTTvActions.delFromDB Or _
-            aKtionskennung = PTTvActions.delAllExceptFromDB Or _
+        If quickList Or
+            aKtionskennung = PTTvActions.delFromDB Or
+            aKtionskennung = PTTvActions.delAllExceptFromDB Or
             aKtionskennung = PTTvActions.loadPV Then
 
             If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
@@ -3345,7 +3356,7 @@ Public Class frmProjPortfolioAdmin
             If Not browserAlleProjekte.Count = 0 Then
                 browserAlleProjekte.Clear(False)
             End If
-            browserAlleProjekte.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True)
+            browserAlleProjekte.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumBis, storedGestern, storedAtOrBefore, True, err)
             ' das darf hier nicht auf false gesetzt werden .... 
             'quickList = False
 
@@ -3355,9 +3366,9 @@ Public Class frmProjPortfolioAdmin
         End If
 
         With filterFormular
-            If aKtionskennung = PTTvActions.loadPV Or _
-                aKtionskennung = PTTvActions.loadPVS Or _
-                aKtionskennung = PTTvActions.delAllExceptFromDB Or _
+            If aKtionskennung = PTTvActions.loadPV Or
+                aKtionskennung = PTTvActions.loadPVS Or
+                aKtionskennung = PTTvActions.delAllExceptFromDB Or
                 aKtionskennung = PTTvActions.delFromDB Then
                 ' damit im Filterformular unterschieden werden kann, ob der Aufruf aus dem ProjPortfolioAdmin Formular erfolgte ...
                 'tk 9.9.18 
@@ -3377,8 +3388,8 @@ Public Class frmProjPortfolioAdmin
                 Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
                 Dim ok As Boolean
 
-                If aKtionskennung = PTTvActions.loadPV Or _
-                    aKtionskennung = PTTvActions.delAllExceptFromDB Or _
+                If aKtionskennung = PTTvActions.loadPV Or
+                    aKtionskennung = PTTvActions.delAllExceptFromDB Or
                     aKtionskennung = PTTvActions.delFromDB Then
 
                     Dim removeList As New Collection
@@ -3429,7 +3440,7 @@ Public Class frmProjPortfolioAdmin
                     Next
 
                     If removeList.Count > 0 Then
-                        Call updateTreeview(currentBrowserConstellation, pvNamesList, _
+                        Call updateTreeview(currentBrowserConstellation, pvNamesList,
                                             aKtionskennung, quickList)
 
                     End If
@@ -3488,7 +3499,7 @@ Public Class frmProjPortfolioAdmin
                     ''currentBrowserConstellation.setTfZeilen(0)
 
                     If removeList.Count > 0 Then
-                        Call updateTreeview(currentBrowserConstellation, pvNamesList, _
+                        Call updateTreeview(currentBrowserConstellation, pvNamesList,
                                             aKtionskennung, quickList)
 
                         If aKtionskennung = PTTvActions.chgInSession Then
@@ -3497,7 +3508,7 @@ Public Class frmProjPortfolioAdmin
                             Dim tmpConstellation As New clsConstellations
                             tmpConstellation.Add(currentBrowserConstellation)
 
-                            Call showConstellations(constellationsToShow:=tmpConstellation, _
+                            Call showConstellations(constellationsToShow:=tmpConstellation,
                                                     clearBoard:=True, clearSession:=False, storedAtOrBefore:=storedAtOrBefore)
 
                             ''If aKtionskennung = PTTvActions.chgInSession Then
@@ -4002,10 +4013,12 @@ Public Class frmProjPortfolioAdmin
     ''' <param name="aKtionskennung"></param>
     ''' <param name="quickList"></param>
     ''' <remarks></remarks>
-    Private Sub updateTreeview(ByVal constellation As clsConstellation, _
-                                  ByVal pvNamesList As SortedList(Of String, String), _
-                                  ByVal aKtionskennung As Integer, _
+    Private Sub updateTreeview(ByVal constellation As clsConstellation,
+                                  ByVal pvNamesList As SortedList(Of String, String),
+                                  ByVal aKtionskennung As Integer,
                                   ByVal quickList As Boolean)
+
+        Dim err As New clsErrorCodeMsg
 
         Dim projectNode As TreeNode
         Dim zeitraumVon As Date = StartofCalendar
@@ -4036,7 +4049,7 @@ Public Class frmProjPortfolioAdmin
 
             If Not noDB And aKtionskennung = PTTvActions.setWriteProtection Then
                 'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
             End If
 
             With TreeViewProjekte
@@ -4139,7 +4152,7 @@ Public Class frmProjPortfolioAdmin
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
 
-                        If variantNames.Count > 1 Or _
+                        If variantNames.Count > 1 Or
                             aKtionskennung = PTTvActions.delFromDB Then
 
                             Dim vName As String = variantName
@@ -4164,7 +4177,7 @@ Public Class frmProjPortfolioAdmin
                                     variantNode.Tag = "X"
                                 End If
 
-                                Call bestimmeNodeCheckStatus(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, _
+                                Call bestimmeNodeCheckStatus(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant,
                                                              pname, vNameStripped)
                                 Call bestimmeNodeAppearance(variantNode, aKtionskennung, PTTreeNodeTyp.pVariant, pname, vNameStripped)
 
@@ -4174,7 +4187,7 @@ Public Class frmProjPortfolioAdmin
                             projectNode.Tag = "X"
                         End If
 
-                        Call bestimmeNodeCheckStatus(projectNode, aKtionskennung, PTTreeNodeTyp.project, _
+                        Call bestimmeNodeCheckStatus(projectNode, aKtionskennung, PTTreeNodeTyp.project,
                                                       pname, variantName)
                         Call bestimmeNodeAppearance(projectNode, aKtionskennung, PTTreeNodeTyp.project, pname, variantName)
 
