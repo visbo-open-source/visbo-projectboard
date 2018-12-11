@@ -2828,9 +2828,8 @@
                 For r = 1 To cPhase.countRoles
 
                     Dim hrole As clsRolle = cPhase.getRole(r)
-                    Dim teamMember As Boolean = (hrole.teamID > 0)
 
-                    roleID = RoleDefinitions.bestimmeRoleNodeName(hrole.RollenTyp, teamMember, hrole.teamID)
+                    roleID = RoleDefinitions.bestimmeRoleNodeName(hrole.RollenTyp, hrole.teamID)
                     '
                     ' das ist performanter als der Weg über try .. catch 
                     '

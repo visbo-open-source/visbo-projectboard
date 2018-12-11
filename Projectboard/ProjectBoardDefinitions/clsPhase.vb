@@ -1841,6 +1841,14 @@ Public Class clsPhase
     End Sub
 
     ''' <summary>
+    ''' entfernt alle Rollen-Instanzen mut RolleName-ID "roleuid;teamUid" aus der Phase
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    Public Sub removeRoleByNameID(ByVal roleNameID As String)
+
+    End Sub
+
+    ''' <summary>
     ''' es wird überprüft, ob der Meilenstein-Name schon existiert 
     ''' wenn er bereits existiert, wird eine ArgumentException geworfen  
     ''' </summary>

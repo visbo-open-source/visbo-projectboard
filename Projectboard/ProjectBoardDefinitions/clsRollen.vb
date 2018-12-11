@@ -455,13 +455,13 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="roleUID"></param>
     ''' <param name="teamID"></param>
-    ''' <param name="isTeamMember"></param>
     ''' <returns></returns>
-    Public Function bestimmeRoleNodeName(ByVal roleUID As Integer, ByVal isTeamMember As Boolean, ByVal teamID As Integer) As String
+    Public Function bestimmeRoleNodeName(ByVal roleUID As Integer, ByVal teamID As Integer) As String
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
         Dim tmpResult As String = ""
         Dim ok As Boolean = True
+        Dim isTeamMember As Boolean = (teamID > 0)
 
         If teamID > 0 Then
             ok = _allRollen.ContainsKey(teamID)

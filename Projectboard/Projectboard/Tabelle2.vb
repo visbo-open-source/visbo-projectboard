@@ -403,6 +403,7 @@ Public Class Tabelle2
                         frmMERoleCost.vName = vName
                         frmMERoleCost.phaseName = phaseName
                         frmMERoleCost.rcName = rcName
+                        frmMERoleCost.rcNameID = getRCNameIDfromCell(Target)
                         frmMERoleCost.phaseNameID = phaseNameID
                         frmMERoleCost.hproj = hproj
 
@@ -418,6 +419,14 @@ Public Class Tabelle2
                             ' jetzt sollten folgende Schritte durchgeführt werden 
                             ' 1. alle toDelete Rollen und Kosten der Phase löschen 
                             ' 2. alle toAdd Rollen und Kosten der Phase hinzufügen
+
+
+                            ' ad1: alle toDelete Rollen und Kosten löschen; es ist bereits sichergestellt, dass nur Rollen und Kosten gelöscht werden sollen
+                            ' die noch keine Ist-Daten enthalten
+
+                            Call massEditZeileLoeschen("")
+
+
 
                             ' alte Vorgehensweise ...
                             'If frmMERoleCost.rolesToAdd.Count = 1 Then
@@ -1873,15 +1882,20 @@ Public Class Tabelle2
     ''' <returns></returns>
     Private Function getRCNameIDfromCell(ByVal currentCell As Excel.Range) As String
 
-        Dim tmpResult As String
+        Dim tmpResult As String = ""
         Try
-            Dim tmpRCname As String = CStr(currentCell.Value)
-            Dim tmpComment As Excel.Comment = currentCell.Comment
-            Dim tmpTeamName As String = ""
-            If Not IsNothing(tmpComment) Then
-                tmpTeamName = tmpComment.Text
+            If Not IsNothing(currentCell.Value) Then
+                Dim tmpRCname As String = CStr(currentCell.Value)
+                Dim tmpComment As Excel.Comment = currentCell.Comment
+                Dim tmpTeamName As String = ""
+                If Not IsNothing(tmpComment) Then
+                    tmpTeamName = tmpComment.Text
+                End If
+                tmpResult = bestimmeRCNameID(tmpRCname, tmpTeamName)
+            Else
+                tmpResult = ""
             End If
-            tmpResult = bestimmeRCNameID(tmpRCname, tmpTeamName)
+
         Catch ex As Exception
             tmpResult = ""
         End Try
@@ -1907,14 +1921,14 @@ Public Class Tabelle2
                     Dim tmpRoleTeam As clsRollenDefinition = RoleDefinitions.getRoledef(teamName)
                     If Not IsNothing(tmpRoleTeam) Then
                         If tmpRoleTeam.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
-                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, True, tmpRoleTeam.UID)
+                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, tmpRoleTeam.UID)
                         Else
                             Dim dummy As Integer = -1
-                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, dummy)
+                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, dummy)
                         End If
                     End If
                 Else
-                    tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, -1)
+                    tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, -1)
                 End If
 
             End If
