@@ -5995,8 +5995,21 @@ Imports System.Web
             appInstance.ScreenUpdating = False
             enableOnUpdate = False
 
+            ' jetzt muss die myCollection aus den rolesToAdd und costsToAdd aufgebaut werden ; 
+            ' erstmal werden nur die rolesToAdd berücksichtigt
 
-            Dim myCollection As Collection = frmMERoleCost.ergItems
+            Dim myCollection As New Collection
+
+            For Each element As String In frmMERoleCost.rolesToAdd
+
+                Dim teamID As Integer = -1
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
+                If Not IsNothing(tmpRole) Then
+                    myCollection.Add(tmpRole.name)
+                End If
+
+            Next
+
 
             Try
                 Call writeProjektsForSequencing(myCollection)
@@ -6041,7 +6054,19 @@ Imports System.Web
             enableOnUpdate = False
 
 
-            Dim myCollection As Collection = frmMERoleCost.ergItems
+            Dim myCollection As New Collection
+
+            ' erstmal werden hier nur die 
+            For Each element As String In frmMERoleCost.rolesToAdd
+
+                Dim teamID As Integer = -1
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
+                If Not IsNothing(tmpRole) Then
+                    myCollection.Add(tmpRole.name)
+                End If
+
+            Next
+
 
             Try
                 Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollection)

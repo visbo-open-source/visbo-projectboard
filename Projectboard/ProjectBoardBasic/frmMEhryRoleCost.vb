@@ -11,12 +11,17 @@ Public Class frmMEhryRoleCost
     ' tk 9.12.18 enthält die Kosten, die beim Load des Formulars in der Projektphase enthalten sind 
     Private initialCostsOfPhase As New SortedList(Of String, String)
 
-    ' tk 9.1218 enthält den identifier in Form roleUID;teamUID 
-    Private currentRoleIDentifier As String
+    ' das sind die Rollen, die dazu gekommen sind, also noch nicht in der initialRolesOfPhase waren 
+    Public rolesToAdd As New Collection
 
-    ' das sind die Rollen, die am Ende, also wenn der ok Button gedrückt wird aufgesammelt werden  
-    Private selectedRC As New Collection
-    Public ergItems As New Collection
+    ' das sind die Rollen, die weggefallen sind, also bereits in der InitialRolesOfPhase waren 
+    Public rolesToDelete As New Collection
+
+    ' das sind die Kosten, die dazu gekommen sind, also noch nicht in der initialCostsOfPhase waren
+    Public costsToAdd As New Collection
+
+    ' das sind die Kosten, die weggefallen sind, also also bereits in der InitialRolesOfPhase waren 
+    Public costsToDelete As New Collection
 
     ' der Projekt-Name in der Zeile 
     Public pName As String
@@ -29,6 +34,9 @@ Public Class frmMEhryRoleCost
 
     ' der Rollen-Kosten Name in der Zeile 
     Public rcName As String
+
+    ' die Rollen-ID in der form roleUid;teamID oder roleUid.tostring bzw. costuid.tostring 
+    Public rcNameID As String
 
     ' der ggf dazugehörende Team-Name 
     Public teamName As String
@@ -59,21 +67,8 @@ Public Class frmMEhryRoleCost
         initialCostsOfPhase = hproj.getCostIDs(phaseNameID)
 
         ' wie lautet der Identifier der aktuellen Zeile: setzet sich zusammen aus roleuid;teamid
-        Dim tmpRoleUID As Integer
-        Dim isTeamMember As Boolean = False
+        ' der wird bereits beim Right Click ermittelt und steht in rcNameID - siehe oben ...
 
-        Dim tmpteamUid As Integer
-        If RoleDefinitions.containsName(teamName) Then
-            isTeamMember = True
-            tmpteamUid = RoleDefinitions.getRoledef(teamName).UID
-        End If
-
-        If RoleDefinitions.containsName(rcName) Then
-            tmpRoleUID = RoleDefinitions.getRoledef(rcName).UID
-            currentRoleIDentifier = RoleDefinitions.bestimmeRoleNodeName(tmpRoleUID, isTeamMember, tmpteamUid)
-        Else
-            currentRoleIDentifier = ""
-        End If
 
         Call buildMERoleTree()
     End Sub
@@ -83,53 +78,78 @@ Public Class frmMEhryRoleCost
         Dim anzahlKnoten As Integer = hryRoleCost.Nodes.Count
         Dim tmpnode As TreeNode
 
-        selectedRC.Clear()
 
-        ' einsammeln der Rollen und Kosten die selektiert wurden
+        ' 1. bestimmen der Rollen und Kosten, die gecheckt sind ... -> in rolesToadd bzw. costsToAdd
+        ' 2. alles aus initialRolesOfPhase, die nicht mehr in rolesToadd sind : in rolesTobeDeleted übernehmen ; same for costs
+        ' 3. alle, die bereits in initialRolesOfPhase sind, aus rolesToAdd rausnehmen , same for costs 
+
+
         With hryRoleCost
 
+            ' Schritt 1: bestimmen der Rollen und Kosten, die gecheckt sind ... -> in rolesToadd bzw. costsToAdd
             For px As Integer = 1 To anzahlKnoten
 
                 tmpnode = .Nodes.Item(px - 1)
 
                 If tmpnode.Checked Then
 
-                    If Not selectedRC.Contains(tmpnode.Text) Then
-                        selectedRC.Add(tmpnode.Text, tmpnode.Text)
+                    If CType(tmpnode.Tag, clsNodeRoleTag).isRole Then
+                        If Not rolesToAdd.Contains(tmpnode.Name) Then
+                            rolesToAdd.Add(tmpnode.Name, tmpnode.Name)
+                        End If
+                    Else
+                        If Not costsToAdd.Contains(tmpnode.Name) Then
+                            costsToAdd.Add(tmpnode.Name, tmpnode.Name)
+                        End If
                     End If
 
                 End If
 
-
                 If tmpnode.Nodes.Count > 0 Then
-                    Call pickupMECheckedRoleItems(tmpnode)
+                    Call pickupMECheckedRoleCostItems(tmpnode)
                 End If
 
             Next
 
         End With
 
-        Dim anzahlcheckedRoles As Integer = selectedRC.Count
+        ' Schritt 2: alles aus initialRolesOfPhase, die nicht mehr in rolesToadd sind : in rolesTobeDeleted übernehmen 
+        ' Schritt 2 - Rollen 
+        For Each kvp As KeyValuePair(Of String, String) In initialRolesOfPhase
 
-
-        For i = 1 To anzahlcheckedRoles
-
-            If Not IsNothing(hproj) Then
-
-                If IsNothing(hproj.getPhaseByID(phaseNameID).getRole(selectedRC.Item(i))) _
-                And IsNothing(hproj.getPhaseByID(phaseNameID).getCost(selectedRC.Item(i))) Then
-
-                    ''Call massEditZeileEinfügen("")
-                    ergItems.Add(selectedRC.Item(i))
-                Else
-                    If rcName = selectedRC.Item(i) Then
-                        ergItems.Add(selectedRC.Item(i))
-                    End If
-                End If
-            Else
-                ergItems.Add(selectedRC.Item(i))
+            If Not rolesToAdd.Contains(kvp.Key) Then
+                rolesToDelete.Add(kvp.Key, kvp.Key)
             End If
 
+        Next
+
+        ' Schritt 2 - Kosten 
+        For Each kvp As KeyValuePair(Of String, String) In initialCostsOfPhase
+
+            If Not costsToAdd.Contains(kvp.Key) Then
+                costsToDelete.Add(kvp.Key, kvp.Key)
+            End If
+
+        Next
+
+        ' Ende Schritt 2
+        ' 
+
+        ' Schritt 3: alle, die bereits in initialRolesOfPhase sind, aus rolesToAdd rausnehmen, same for costs 
+        For Each kvp As KeyValuePair(Of String, String) In initialRolesOfPhase
+
+            If rolesToAdd.Contains(kvp.Key) Then
+                rolesToAdd.Remove(kvp.Key)
+            End If
+
+        Next
+
+        ' Schritt 2 - Kosten 
+        For Each kvp As KeyValuePair(Of String, String) In initialCostsOfPhase
+
+            If Not costsToAdd.Contains(kvp.Key) Then
+                costsToDelete.Remove(kvp.Key)
+            End If
 
         Next
 
@@ -423,15 +443,14 @@ Public Class frmMEhryRoleCost
     End Sub
 
     ''' <summary>
-    ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der selectedRoles-Liste zurück  
+    ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der rolesToAdd- bzw. costsToAdd-Liste zurück  
     ''' wird rekursiv aufgerufen 
     ''' Achtung: wenn es Endlos Zyklen gibt, dann ist hier eine Endlos-Schleife ! 
     ''' </summary>
     ''' <param name="node"></param>
     ''' <remarks></remarks>
-    Public Sub pickupMECheckedRoleItems(ByVal node As TreeNode)
+    Public Sub pickupMECheckedRoleCostItems(ByVal node As TreeNode)
         Dim tmpNode As TreeNode
-        Dim element As String
 
         If IsNothing(node) Then
             ' nichts tun
@@ -447,17 +466,20 @@ Public Class frmMEhryRoleCost
 
                     If tmpNode.Checked Then
 
-                        element = tmpNode.Text
-                        If Not selectedRC.Contains(element) Then
-                            selectedRC.Add(element, element)
+                        If CType(tmpNode.Tag, clsNodeRoleTag).isRole Then
+                            If Not rolesToAdd.Contains(tmpNode.Name) Then
+                                rolesToAdd.Add(tmpNode.Name, tmpNode.Name)
+                            End If
+                        Else
+                            If Not costsToAdd.Contains(tmpNode.Name) Then
+                                costsToAdd.Add(tmpNode.Name, tmpNode.Name)
+                            End If
                         End If
-
 
                     End If
 
-
                     If tmpNode.Nodes.Count > 0 Then
-                        Call pickupMECheckedRoleItems(tmpNode)
+                        Call pickupMECheckedRoleCostItems(tmpNode)
                     End If
 
                 Next
@@ -513,6 +535,34 @@ Public Class frmMEhryRoleCost
 
             End If
 
+        End If
+
+    End Sub
+
+    Private Sub hryRoleCost_AfterCheck(sender As Object, e As TreeViewEventArgs) Handles hryRoleCost.AfterCheck
+
+        Dim node As TreeNode = e.Node
+
+        If node.Checked = False Then
+            Dim checkItem As String = node.Name
+            ' es wurde unchecked ... das ist nur erlaubt, wenn die betreffende Rolle nicht bereits initial in der Phase war ... 
+            If CType(node.Tag, clsNodeRoleTag).isRole Then
+
+                If Not initialRolesOfPhase.ContainsKey(checkItem) Then
+                    ' alles ok 
+                Else
+                    ' hier prüfen, ob es für diese Rolle in dieser Phase Istdaten gibt, denn darf nicht rausgenommen werden 
+                    node.Checked = True
+                    Call MsgBox("Rolle hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
+                End If
+            Else
+                If Not initialCostsOfPhase.ContainsKey(checkItem) Then
+                    ' alles ok , weil checken, dann un-checken schon erlaubt ist 
+                Else
+                    node.Checked = True
+                    Call MsgBox("bitte verwenden Sie zum Löschen einer Kostenart den Befehl 'Zeile löschen'.")
+                End If
+            End If
         End If
 
     End Sub

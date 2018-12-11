@@ -378,7 +378,7 @@ Public Class Tabelle2
                     Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                     ' jetzt wird 
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                    Dim rcNameID As String = bestimmeRCNameID(meWS.Cells(zeile, columnRC))
+                    Dim rcNameID As String = getRCNameIDfromCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
 
                     Dim phaseNameID As String = calcHryElemKey(phaseName, False)
 
@@ -409,135 +409,134 @@ Public Class Tabelle2
                         returnValue = frmMERoleCost.ShowDialog()
 
                         If returnValue = DialogResult.OK Then
+
+                            With frmMERoleCost
+                                Dim anz As Integer = .rolesToAdd.Count + .costsToAdd.Count + .rolesToDelete.Count + .costsToDelete.Count
+                            End With
                             ' eintragen der selektierten Rollen
 
-                            If frmMERoleCost.ergItems.Count = 1 Then
-                                Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(1))
+                            ' jetzt sollten folgende Schritte durchgeführt werden 
+                            ' 1. alle toDelete Rollen und Kosten der Phase löschen 
+                            ' 2. alle toAdd Rollen und Kosten der Phase hinzufügen
 
-                                ' jetzt den Schutz aufheben , falls einer definiert ist 
-                                If meWS.ProtectContents Then
-                                    meWS.Unprotect(Password:="x")
-                                End If
-                                Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
-                                rng.ClearComments()
+                            ' alte Vorgehensweise ...
+                            'If frmMERoleCost.rolesToAdd.Count = 1 Then
+                            '    Dim newTeamID As Integer
+                            '    Dim newRcNameID As String = CStr(frmMERoleCost.rolesToAdd.Item(1))
+                            '    Dim newRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(newRcNameID, newTeamID)
 
-
-                                If rcName <> hRCname Then
-                                    ' ausgewählte Rolle eintragn
-                                    'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
-                                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
-
-                                    ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
-
-                                    'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
-                                    If Not IsNumeric(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value) Then
-                                        If CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = "" Then
-                                            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0
-                                        End If
-                                    End If
-
-                                    ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
-                                    If CostDefinitions.containsName(hRCname) Then
-
-                                        CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
-                                        With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
-                                            .Visible = False
-                                            If awinSettings.englishLanguage Then
-                                                .Text("Value in thousand €")
-                                            Else
-                                                .Text(Text:="Angabe in T€")
-                                            End If
-                                            .Shape.ScaleHeight(0.6, Microsoft.Office.Core.MsoTriState.msoFalse)
-                                        End With
-                                    Else
-
-                                        '' jetzt den Schutz aufheben , falls einer definiert ist 
-                                        'If meWS.ProtectContents Then
-                                        '    meWS.Unprotect(Password:="x")
-                                        'End If
-                                        'Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
-                                        'rng.ClearComments()
-
-                                    End If
-
-                                End If
-                            Else
-                                Dim i As Integer
-                                For i = 1 To frmMERoleCost.ergItems.Count
-
-                                    If rcName = CStr(frmMERoleCost.ergItems(i)) Then
-                                        ' aktuelle Rolle immer noch ausgewählt, muss aber nicht eingefügt werden, sondern nur alle anderen
-                                    Else
-                                        ' Zeile im MassenEdit-Tabelle einfügen und Namen einfügen
-                                        ' es soll nur dann eine Zeile eingefügt werden, wenn bereits etwas für Rolle/Kostenart eingetragen ist 
-                                        If i > 1 Or rcName <> "" Then
-                                            Call massEditZeileEinfügen("")
-                                            ' da in massEdit jetzt in der Zeile danach eins eingefügt wird, muss hier die zeile um eins erhöht werden ...
-                                            zeile = zeile + 1
-                                        End If
-
-                                        Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(i))
-
-                                        If meWS.ProtectContents Then
-                                            meWS.Unprotect(Password:="x")
-                                        End If
-                                        Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
-                                        rng.ClearComments()
+                            '    ' jetzt den Schutz aufheben , falls einer definiert ist 
+                            '    If meWS.ProtectContents Then
+                            '        meWS.Unprotect(Password:="x")
+                            '    End If
+                            '    Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                            '    rng.ClearComments()
 
 
-                                        ' ausgewählte Rolle eintragn
-                                        'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
-                                        CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
-                                        ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
+                            '    If rcNameID <> newRcNameID Then
+                            '        ' ausgewählte Rolle eintragn
+                            '        'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
+                            '        Call setCellFromRCNameID(CType(meWS.Cells(zeile, columnRC), Excel.Range), newRcNameID)
 
-                                        'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
-                                        CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
+                            '        ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
+
+                            '        'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
+                            '        If Not IsNumeric(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value) Then
+                            '            If CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = "" Then
+                            '                CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0
+                            '            End If
+                            '        End If
+
+                            '        ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
+                            '        If CostDefinitions.containsName(hRCname) Then
+
+                            '            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
+                            '            With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
+                            '                .Visible = False
+                            '                If awinSettings.englishLanguage Then
+                            '                    .Text("Value in thousand €")
+                            '                Else
+                            '                    .Text(Text:="Angabe in T€")
+                            '                End If
+                            '                .Shape.ScaleHeight(0.6, Microsoft.Office.Core.MsoTriState.msoFalse)
+                            '            End With
+                            '        Else
+
+                            '            '' jetzt den Schutz aufheben , falls einer definiert ist 
+                            '            'If meWS.ProtectContents Then
+                            '            '    meWS.Unprotect(Password:="x")
+                            '            'End If
+                            '            'Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                            '            'rng.ClearComments()
+
+                            '        End If
+
+                            '    End If
+                            'Else
+                            '    Dim i As Integer
+                            '    For i = 1 To frmMERoleCost.ergItems.Count
+
+                            '        If rcName = CStr(frmMERoleCost.ergItems(i)) Then
+                            '            ' aktuelle Rolle immer noch ausgewählt, muss aber nicht eingefügt werden, sondern nur alle anderen
+                            '        Else
+                            '            ' Zeile im MassenEdit-Tabelle einfügen und Namen einfügen
+                            '            ' es soll nur dann eine Zeile eingefügt werden, wenn bereits etwas für Rolle/Kostenart eingetragen ist 
+                            '            If i > 1 Or rcName <> "" Then
+                            '                Call massEditZeileEinfügen("")
+                            '                ' da in massEdit jetzt in der Zeile danach eins eingefügt wird, muss hier die zeile um eins erhöht werden ...
+                            '                zeile = zeile + 1
+                            '            End If
+
+                            '            Dim hRCname As String = CStr(frmMERoleCost.ergItems.Item(i))
+
+                            '            If meWS.ProtectContents Then
+                            '                meWS.Unprotect(Password:="x")
+                            '            End If
+                            '            Dim rng As Excel.Range = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                            '            rng.ClearComments()
 
 
-                                        ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
-                                        If CostDefinitions.containsName(hRCname) Then
-                                            ' jetzt den Schutz aufheben , falls einer definiert ist 
+                            '            ' ausgewählte Rolle eintragn
+                            '            'CType(meWS.Cells(zeile, columnRC), Excel.Range).NumberFormat = Format("@")
+                            '            CType(meWS.Cells(zeile, columnRC), Excel.Range).Value = hRCname
+                            '            ' summe = 0 eintragen => es wird diese Rolle/Kosten in hproj eingetragen über change-event
 
-                                            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
-                                            With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
-                                                .Visible = False
-                                                If awinSettings.englishLanguage Then
-                                                    .Text("Value in thousand €")
-                                                Else
-                                                    .Text(Text:="Angabe in T€")
-                                                End If
-                                                .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
-                                            End With
-                                        Else
+                            '            'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).NumberFormat = Format("######0.0  ")
+                            '            CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = 0.0
 
-                                            ' '' ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment.Delete()
-                                            ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
-                                            ' jetzt den Schutz aufheben , falls einer definiert ist 
-                                            'If meWS.ProtectContents Then
-                                            '    meWS.Unprotect(Password:="x")
-                                            'End If
-                                            'rng = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
-                                            'rng.ClearComments()
 
-                                        End If
-                                    End If
+                            '            ' wenn es sich um eine Kostenart handelt, so wird ein Kommentar eingetragen
+                            '            If CostDefinitions.containsName(hRCname) Then
+                            '                ' jetzt den Schutz aufheben , falls einer definiert ist 
 
-                                Next
+                            '                CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).AddComment()
+                            '                With CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment
+                            '                    .Visible = False
+                            '                    If awinSettings.englishLanguage Then
+                            '                        .Text("Value in thousand €")
+                            '                    Else
+                            '                        .Text(Text:="Angabe in T€")
+                            '                    End If
+                            '                    .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                            '                End With
+                            '            Else
 
-                            End If
-                            ' Blattschutz wieder setzen wie zuvor
-                            'With meWS
-                            '    .Protect(Password:="x", UserInterfaceOnly:=True, _
-                            '             AllowFormattingCells:=True, _
-                            '             AllowInsertingColumns:=False,
-                            '             AllowInsertingRows:=True, _
-                            '             AllowDeletingColumns:=False, _
-                            '             AllowDeletingRows:=True, _
-                            '             AllowSorting:=True, _
-                            '             AllowFiltering:=True)
-                            '    .EnableSelection = XlEnableSelection.xlUnlockedCells
-                            '    .EnableAutoFilter = True
-                            'End With
+                            '                ' '' ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Comment.Delete()
+                            '                ''CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).ClearComments()
+                            '                ' jetzt den Schutz aufheben , falls einer definiert ist 
+                            '                'If meWS.ProtectContents Then
+                            '                '    meWS.Unprotect(Password:="x")
+                            '                'End If
+                            '                'rng = CType(meWS.Cells(zeile, columnRC + 1), Excel.Range)
+                            '                'rng.ClearComments()
+
+                            '            End If
+                            '        End If
+
+                            '    Next
+
+                            'End If
+
 
                             With meWS
                                 .Protect(Password:="x", UserInterfaceOnly:=True,
@@ -1836,17 +1835,42 @@ Public Class Tabelle2
 
     End Function
 
-    Private Function setCellFromRCNameID(ByVal currentCell As Excel.Range, ByVal rcNameID As String) As Excel.Range
+    ''' <summary>
+    ''' schreibt in die angegebene Excel-Zelle den Rollen-NAmen als String und trägt ggf einen Kommentar mit dem Team-NAmen ein.  
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <param name="rcNameID"></param>
+    Private Sub setCellFromRCNameID(ByRef currentCell As Excel.Range, ByVal rcNameID As String)
         Dim tmpCell As Excel.Range = currentCell
         Dim roleName As String = ""
         Dim teamName As String = ""
         Dim teamID As Integer
         Dim roleID As Integer = RoleDefinitions.parseRoleNodeID(rcNameID, teamID)
 
+        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)
+        If Not IsNothing(currentRole) Then
+            tmpCell.Value = currentRole.name
 
+            If teamID > 0 Then
 
-        setCellFromRCNameID = tmpCell
-    End Function
+                tmpCell.ClearComments()
+                Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
+                If Not IsNothing(teamRole) Then
+                    Dim newComment As Excel.Comment = tmpCell.AddComment(teamRole.name)
+                End If
+
+            End If
+        Else
+            tmpCell.Value = ""
+            tmpCell.ClearComments()
+        End If
+
+    End Sub
+    ''' <summary>
+    ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <returns></returns>
     Private Function getRCNameIDfromCell(ByVal currentCell As Excel.Range) As String
 
         Dim tmpResult As String
@@ -1866,6 +1890,12 @@ Public Class Tabelle2
 
     End Function
 
+    ''' <summary>
+    ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="teamName"></param>
+    ''' <returns></returns>
     Private Function bestimmeRCNameID(ByVal roleName As String, ByVal teamName As String) As String
         Dim tmpResult As String = ""
         Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
@@ -1879,11 +1909,12 @@ Public Class Tabelle2
                         If tmpRoleTeam.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
                             tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, True, tmpRoleTeam.UID)
                         Else
-                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, "")
+                            Dim dummy As Integer = -1
+                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, dummy)
                         End If
                     End If
                 Else
-                    tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, "")
+                    tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, False, -1)
                 End If
 
             End If
