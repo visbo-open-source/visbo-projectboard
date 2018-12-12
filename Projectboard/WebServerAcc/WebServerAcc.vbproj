@@ -90,7 +90,10 @@
     <Compile Include="clsUserAddress.vb" />
     <Compile Include="clsUserLoginSignup.vb" />
     <Compile Include="clsVCcost.vb" />
+    <Compile Include="clsVCOrganisationWeb.vb" />
     <Compile Include="clsVCrole.vb" />
+    <Compile Include="clsVCSettingTypeClasses.vb" />
+    <Compile Include="clsWebVCSetting.vb" />
     <Compile Include="clsVPf.vb" />
     <Compile Include="clsVPLock.vb" />
     <Compile Include="clsVPVariant.vb" />

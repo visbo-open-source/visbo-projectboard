@@ -2964,12 +2964,12 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As String
-            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Dim webVCroleantwort As clsWebVCroles = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCroles)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3035,12 +3035,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Dim webVCroleantwort As clsWebVCroles = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCroles)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3093,12 +3093,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Dim webVCroleantwort As clsWebVCroles = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCroles)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3152,12 +3152,12 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As String
-            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Dim webVCcostantwort As clsWebVCcosts = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcosts)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3210,12 +3210,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Dim webVCcostantwort As clsWebVCcosts = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcosts)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3267,12 +3267,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Dim webVCcostantwort As clsWebVCcosts = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcosts)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3295,6 +3295,79 @@ Public Class Request
 
     End Function
 
+
+
+    ''' <summary>
+    ''' erzeugt ein Setting
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="setting"></param>
+    ''' <returns></returns>
+    Private Function POSTOneVCsetting(ByVal vcid As String, ByVal type As String, ByVal setting As Object, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim webVCsetting As Object = Nothing
+
+        Try
+
+
+
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/setting"
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(setting, "")
+
+
+
+            Dim Antwort As String
+            Dim webVCroleantwort As clsWebVCroles = Nothing
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                Select Case type
+                    Case "  xx"
+                        webVCsetting = CType(webVCsetting, clsVCSettingCustomroles)
+                        webVCsetting = JsonConvert.DeserializeObject(Of clsVCSettingCustomroles)(Antwort)
+                    Case "  yy"
+                        webVCsetting = CType(webVCsetting, clsVCSettingCustomfields)
+                        webVCsetting = JsonConvert.DeserializeObject(Of clsVCSettingCustomroles)(Antwort)
+                    Case Else
+                        webVCsetting = CType(webVCsetting, clsVCSettingOrganisation)
+                        webVCsetting = JsonConvert.DeserializeObject(Of clsVCSettingOrganisation)(Antwort)
+                End Select
+
+            End Using
+
+            If errcode = 200 Then
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVCsetting", errcode, errmsg & " : " & webVCsetting.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        POSTOneVCsetting = result
+
+    End Function
 
 
     ''' <summary>
