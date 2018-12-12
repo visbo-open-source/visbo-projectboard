@@ -250,6 +250,19 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
+    Public settingTypes() = {"customfields", "customroles", "organisation", "clientsettings", "phasemilestonedefs", "reportprofiles", "reportprofiles", "generalexcelcharts"}
+
+    Public Enum ptSettingTypes
+        customfields = 0
+        customroles = 1
+        organisation = 2
+        clientsettings = 3
+        phasemilestonedefs = 4
+        reportprofiles = 5
+        ppttemplates = 6
+        generalexcelcharts = 7
+    End Enum
+
     ''' <summary>
     ''' Werte-Bereich: {0=Admin, 1=PortfolioMgr; 2=RessourcenManager; 3=Projektleiter
     ''' </summary>
