@@ -1,8 +1,4 @@
-﻿
-Public Class clsWebVCSetting
-
-
-    Inherits clsWebOutput
+﻿Public Class clsVCSetting
     Public Property _id As String
     Public Property vcid As String
     Public Property name As String
@@ -18,9 +14,8 @@ Public Class clsWebVCSetting
         _userId = "not defined"
         _type = "type of setting"
         _timestamp = Date.MinValue
+
     End Sub
 
 
-
 End Class
-

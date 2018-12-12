@@ -1472,4 +1472,37 @@ Public Class Request
         storeDependencyofPToDB = result
 
     End Function
+
+
+    ''' <summary>
+    ''' speichert VC Settings in DB 
+    ''' </summary>
+    ''' <param name="hlist"></param>
+    ''' <param name="type"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function storeVCSettingsToDB(ByVal hlist As clsCustomUserRoles,
+                                        ByVal type As String,
+                                        ByVal ts As Date,
+                                        ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+
+            If usedWebServer Then
+                result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, ts, err)
+
+            Else 'es wird eine MongoDB direkt adressiert
+                result = False
+            End If
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("storeVCSettingsToDB: " & ex.Message)
+        End Try
+        storeVCSettingsToDB = result
+
+    End Function
 End Class

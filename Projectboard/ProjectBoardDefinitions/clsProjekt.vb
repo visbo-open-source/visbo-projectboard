@@ -5948,7 +5948,7 @@ Public Class clsProjekt
         _complexity = 0.0
         _volume = 0.0
 
-        _updatedAt = Date.MinValue
+        _updatedAt = ""
     End Sub
 
     Public Sub New(ByVal startDate As Date, ByVal earliestStartdate As Date, ByVal latestStartdate As Date)

@@ -11577,7 +11577,18 @@ Imports System.Web
 
         End Try
     End Sub
+    Public Sub PTWebVCSettingTest(control As IRibbonControl)
+        Try
 
+            Dim listofCURs As New clsCustomUserRoles
+            Dim type As String = CStr(settingTypes(ptSettingTypes.customroles))
+            Dim err As New clsErrorCodeMsg
+
+            Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCsettingsToDB(listofCURs, type, Date.Now, err)
+        Catch ex As Exception
+
+        End Try
+    End Sub
 
 #End Region
 

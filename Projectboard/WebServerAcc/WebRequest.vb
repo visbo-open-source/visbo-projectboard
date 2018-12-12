@@ -146,6 +146,7 @@ Public Class Request
 
     End Function
 
+
     ''' <summary>
     ''' prüft die Verfügbarkeit der MongoDB bzw. ob ein Login bereits erfolgte, d.h. gültiger token vorhanden
     ''' </summary>
@@ -1747,6 +1748,61 @@ Public Class Request
 
     End Function
 
+
+    ''' <summary>
+    ''' speichert eine VCSetting in der Datenbank; 
+    ''' </summary>
+    ''' <param name="listofCustomUserRoles"></param>
+    ''' <param name="type"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function storeVCsettingsToDB(ByVal listofCustomUserRoles As clsCustomUserRoles,
+                                        ByVal type As String,
+                                        ByVal ts As DateTime,
+                                        ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim setting As Object = Nothing
+        Try
+            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
+
+            Dim listofCURsWeb As New clsCustomUserRolesWeb
+            Dim listlistofCURsWeb As New List(Of clsCustomUserRolesWeb)
+
+            ' hier fehtl noch der copyto und copyfrom für die customUserRollen
+
+            Dim CustUserRole As New clsCustomUserRoleWeb
+            CustUserRole.userID = aktUser._id
+            CustUserRole.userName = aktUser.email
+            CustUserRole.customUserRole = 1
+            CustUserRole.specifics = "testCustomRolle 1"
+            listofCURsWeb.customUserRoles.Add(CustUserRole)
+            listlistofCURsWeb.Add(listofCURsWeb)
+
+            If type = settingTypes(ptSettingTypes.customroles) Then
+                setting = New clsVCSettingCustomroles
+                CType(setting, clsVCSettingCustomroles).name = "BOSV"
+                CType(setting, clsVCSettingCustomroles).timestamp = DateTimeToISODate(Date.Now)
+                CType(setting, clsVCSettingCustomroles).userId = aktUser._id
+                CType(setting, clsVCSettingCustomroles).vcid = aktVCid
+                CType(setting, clsVCSettingCustomroles).type = type
+                CType(setting, clsVCSettingCustomroles).value = listlistofCURsWeb
+
+
+            End If
+
+            result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), setting, err)
+
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        storeVCsettingsToDB = result
+    End Function
+
     ' ------------------------------------------------------------------------------------------
     '  Interne Funktionen für VisboRestServer - zugriff
     ' --------------------------------------------------------------------------------------------
@@ -3309,10 +3365,37 @@ Public Class Request
         Dim errmsg As String = ""
         Dim errcode As Integer
         Dim webVCsetting As Object = Nothing
+        'Dim listofCustomUserRoles As New clsCustomUserRolesWeb
+        'Dim CustUserRole As New clsCustomUserRoleWeb
+        'CustUserRole.userID = aktUser._id
+        'CustUserRole.userName = aktUser.email
+        'CustUserRole.customUserRole = 1
+        'CustUserRole.specifics = "testCustomRolle 1"
+        'listofCustomUserRoles.customUserRoles.Add(CustUserRole)
+
 
         Try
 
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomroles)
 
+                    'CType(setting, clsVCSettingCustomroles).name = "BOSV"
+                    'CType(setting, clsVCSettingCustomroles).timestamp = DateTimeToISODate(Date.Now)
+                    'CType(setting, clsVCSettingCustomroles).userId = aktUser._id
+                    'CType(setting, clsVCSettingCustomroles).vcid = aktVCid
+                    'CType(setting, clsVCSettingCustomroles).type = type
+                    'CType(setting, clsVCSettingCustomroles).value = listofCustomUserRoles
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomfields)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingOrganisation)
+
+                Case Else
+                    Call MsgBox("settingType = " & type)
+            End Select
 
             Dim serverUriString As String
             Dim typeRequest As String = "/vc"
@@ -3337,15 +3420,14 @@ Public Class Request
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 Select Case type
-                    Case "  xx"
-                        webVCsetting = CType(webVCsetting, clsVCSettingCustomroles)
-                        webVCsetting = JsonConvert.DeserializeObject(Of clsVCSettingCustomroles)(Antwort)
-                    Case "  yy"
-                        webVCsetting = CType(webVCsetting, clsVCSettingCustomfields)
-                        webVCsetting = JsonConvert.DeserializeObject(Of clsVCSettingCustomroles)(Antwort)
+                    Case settingTypes(ptSettingTypes.customroles)
+                        webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
+                    Case settingTypes(ptSettingTypes.customfields)
+                        webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
+                    Case settingTypes(ptSettingTypes.organisation)
+                        webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
                     Case Else
-                        webVCsetting = CType(webVCsetting, clsVCSettingOrganisation)
-                        webVCsetting = JsonConvert.DeserializeObject(Of clsVCSettingOrganisation)(Antwort)
+                        Call MsgBox("settingType = " & type)
                 End Select
 
             End Using

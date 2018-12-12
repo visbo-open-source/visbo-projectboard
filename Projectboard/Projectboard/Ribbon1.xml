@@ -432,6 +432,7 @@
       <tab id="PTWebServer" getVisible="chckVisibility" getLabel ="bestimmeLabel">
         <group id ="PTXIG1" > 
           <button id="_token_user_login" label="Login"  onAction ="PTWebRequestLogin" />
+          <button id="_VCSetting" label="VCSettingTest" onAction ="PTWebVCSettingTest"/>
          </group>
       </tab>
       <!--label="Lizenzen"-->
