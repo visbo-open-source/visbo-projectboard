@@ -19,7 +19,7 @@ Public Module testModule
     ' '' ''' <param name="pptTemplate"></param>
     ' '' ''' <remarks></remarks>
     ' '' ''' 
-    
+
     ''' <summary>
     ''' erzeugt den Report aller selektieren Projekte auf Grundlage des Templates templatedossier.pptx
     ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie der selektierten Projekte steht 
@@ -27,11 +27,13 @@ Public Module testModule
     ''' <param name="pptTemplate"></param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub createPPTReportFromProjects(ByVal pptTemplate As String, _
-                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
-                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+    Public Sub createPPTReportFromProjects(ByVal pptTemplate As String,
+                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
+                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
+                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
                                            ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
+
+        Dim err As New clsErrorCodeMsg
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -50,11 +52,11 @@ Public Module testModule
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
         Dim tatsErstellt As Integer = 0
         Dim msgTxt As String
-        
+
 
         Dim todoListe As New Collection
 
-       
+
 
         If selectedProjekte.Count > 0 Then
 
@@ -111,7 +113,7 @@ Public Module testModule
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         Try
                             projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
                             projekthistorie.Add(Date.Now, maxProj)
                         Catch ex As Exception
                             projekthistorie.clear()
@@ -138,13 +140,15 @@ Public Module testModule
             worker.ReportProgress(0, e)
 
 
-            Call createPPTSlidesFromProject(maxProj, vorlagenDateiName, _
-                                            selectedPhases, selectedMilestones, _
-                                            selectedRoles, selectedCosts, _
-                                            selectedBUs, selectedTyps, True, _
-                                            (selectedProjekte.Count = tatsErstellt + 1), zeilenhoehe, _
-                                            legendFontSize, _
+            Call createPPTSlidesFromProject(maxProj, vorlagenDateiName,
+                                            selectedPhases, selectedMilestones,
+                                            selectedRoles, selectedCosts,
+                                            selectedBUs, selectedTyps, True,
+                                            (selectedProjekte.Count = tatsErstellt + 1), zeilenhoehe,
+                                            legendFontSize,
                                             worker, e)
+            Dim err1 As New clsErrorCodeMsg
+
             tatsErstellt = tatsErstellt + 1
 
 
@@ -180,7 +184,7 @@ Public Module testModule
                             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                                 Try
                                     projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                                    storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                                                                    storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err1)
                                     projekthistorie.Add(Date.Now, hproj)
                                 Catch ex As Exception
                                     projekthistorie.clear()
@@ -209,12 +213,12 @@ Public Module testModule
 
                     If tatsErstellt = 0 Then
 
-                        Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
-                                                        selectedPhases, selectedMilestones, _
-                                                        selectedRoles, selectedCosts, _
-                                                        selectedBUs, selectedTyps, True, _
-                                                        (todoListe.Count = tatsErstellt + 1), zeilenhoehe, _
-                                                        legendFontSize, _
+                        Call createPPTSlidesFromProject(hproj, vorlagenDateiName,
+                                                        selectedPhases, selectedMilestones,
+                                                        selectedRoles, selectedCosts,
+                                                        selectedBUs, selectedTyps, True,
+                                                        (todoListe.Count = tatsErstellt + 1), zeilenhoehe,
+                                                        legendFontSize,
                                                         worker, e)
 
                     Else
@@ -227,12 +231,12 @@ Public Module testModule
                         ' ''                           legendFontSize, _
                         ' ''                           worker, e)
 
-                        Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
-                                                        selectedPhases, selectedMilestones, _
-                                                        selectedRoles, selectedCosts, _
-                                                        selectedBUs, selectedTyps, False, _
-                                                        (todoListe.Count = tatsErstellt + 1), zeilenhoehe, _
-                                                        legendFontSize, _
+                        Call createPPTSlidesFromProject(hproj, vorlagenDateiName,
+                                                        selectedPhases, selectedMilestones,
+                                                        selectedRoles, selectedCosts,
+                                                        selectedBUs, selectedTyps, False,
+                                                        (todoListe.Count = tatsErstellt + 1), zeilenhoehe,
+                                                        legendFontSize,
                                                         worker, e)
 
                     End If
@@ -289,6 +293,9 @@ Public Module testModule
                                           ByRef pptFirstTime As Boolean, ByVal pptLastTime As Boolean, ByRef zeilenhoehe_sav As Double,
                                           ByRef legendFontSize As Single,
                                           ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
+
+        Dim err As New clsErrorCodeMsg
+
         ' tk 28.10.18 um nicht in Namenskonflikte zu kommen mit dem PRojekt smartInfo wo  eine globale pptApp deklariert ist ..
         Dim pptAppfromX As pptNS.Application = Nothing
         Dim pptCurrentPresentation As pptNS.Presentation = Nothing
@@ -358,7 +365,7 @@ Public Module testModule
 
                         If Not aktprojekthist Then
                             projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
-                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=Err)
                         End If
 
 
@@ -368,9 +375,9 @@ Public Module testModule
                             tmpVariantName = portfolioVName
                         End If
 
-                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate)
+                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate, err:=err)
 
 
 
@@ -644,7 +651,6 @@ Public Module testModule
                 End If
             Else
 
-                'P???: ur: 16.11.2016 hier ist handlungsbedarf wegen nicht vorhandenem TmpSAv
                 Try
                     pptCurrentPresentation.Slides("tmpSav").Copy()
                     tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
@@ -3928,7 +3934,6 @@ Public Module testModule
             Dim tmpIX As Integer
             Dim tmpslideID As Integer
 
-            ' ur:31.03.2015????
 
             If Not pptFirstTime Then
                 '  pptSlide.Delete()
@@ -6221,6 +6226,8 @@ Public Module testModule
 
     Public Sub StoreAllProjectsinDB(Optional everythingElse As Boolean = False)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim jetzt As Date = Now
         Dim zeitStempel As Date
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -6230,7 +6237,7 @@ Public Module testModule
         Dim outputline As String = ""
 
         ' die aktuelle WriteProtection holen 
-        writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+        writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         'Call storeSessionConstellation("Last")
@@ -6255,9 +6262,9 @@ Public Module testModule
                             End If
 
                             Dim storeNeeded As Boolean
-                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
@@ -6270,7 +6277,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(kvp.Value, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(kvp.Value, dbUsername, err) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved: " & kvp.Value.name & ", " & kvp.Value.variantName
@@ -6283,7 +6290,7 @@ Public Module testModule
                                     anzahlStores = anzahlStores + 1
                                     ' jetzt die writeProtections aktualisieren 
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, err)
                                     writeProtections.upsert(wpItem)
 
 
@@ -6296,7 +6303,7 @@ Public Module testModule
                                         outPutCollection.Add(outputline)
                                     End If
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, Err)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -6344,7 +6351,7 @@ Public Module testModule
 
                         If kvp.Key <> "Sort Result" And kvp.Key <> "Filter Result" Then
                             Try
-                                If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(kvp.Value) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(kvp.Value, err) Then
                                     If awinSettings.englishLanguage Then
                                         outputline = "Portfolio stored: " & kvp.Key
                                         outPutCollection.Add(outputline)
@@ -6411,14 +6418,14 @@ Public Module testModule
                     Dim storedRoles As Integer = 0
                     For i As Integer = 1 To RoleDefinitions.Count
                         Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-                        If CType(databaseAcc, DBAccLayer.Request).storeRoleDefinitionToDB(role, False, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeRoleDefinitionToDB(role, False, Date.Now, err) Then
                             Dim success As String = role.name
                         End If
                     Next
 
                     For i As Integer = 1 To CostDefinitions.Count
                         Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
-                        If CType(databaseAcc, DBAccLayer.Request).storeCostDefinitionToDB(cost, False, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeCostDefinitionToDB(cost, False, Date.Now, err) Then
                             Dim success As String = cost.name
                         End If
                     Next
@@ -6548,6 +6555,8 @@ Public Module testModule
 
     Public Function StoreSelectedProjectsinDB() As Integer
 
+        Dim err As New clsErrorCodeMsg
+
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt
         Dim hilfshproj As clsProjekt
@@ -6617,9 +6626,9 @@ Public Module testModule
                             End If
 
                             Dim storeNeeded As Boolean
-                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -6632,7 +6641,7 @@ Public Module testModule
                             End If
 
                             If storeNeeded Then
-                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved: " & hproj.name & ", " & hproj.variantName
@@ -6644,7 +6653,7 @@ Public Module testModule
 
                                     anzStoredProj = anzStoredProj + 1
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                                     writeProtections.upsert(wpItem)
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                                 Else
@@ -6656,7 +6665,7 @@ Public Module testModule
 
                                     outputCollection.Add(outputline)
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -6750,7 +6759,9 @@ Public Module testModule
                                          ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        Dim err As New clsErrorCodeMsg
+
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
         Dim pname As String
@@ -6849,7 +6860,7 @@ Public Module testModule
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
                         Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
@@ -7295,7 +7306,8 @@ Public Module testModule
     Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String, _
                                   ByRef statusValue As Double, ByRef statusColor As Long)
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim err As New clsErrorCodeMsg
+
         Dim currentValues() As Double
         Dim formerValues() As Double
         Dim vglProj As clsProjekt
@@ -7335,7 +7347,7 @@ Public Module testModule
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                 projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
-                                                                   storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                   storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                 If projekthistorie.Count > 0 Then
                     projekthistorie.Add(Date.Now, hproj)
                 End If
@@ -10009,6 +10021,9 @@ Public Module testModule
                                    ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef summenArray() As Double,
                                    Optional ByVal qualifier As String = "",
                                    Optional ByVal showPersonalBedarf As Boolean = False)
+
+        Dim err As New clsErrorCodeMsg
+
         Dim tabelle As pptNS.Table
         Dim zaehler As Integer = 1
         Dim startItem As Integer = 1, endeItem As Integer = ShowProjekte.Count
@@ -10246,10 +10261,10 @@ Public Module testModule
                     ' If awinSettings.compareWithStandardVariant Then
                     If hproj.projectType = ptPRPFType.project And awinSettings.compareWithStandardVariant Then
                         projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                     Else
                         projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                     End If
 
                     'If vergleichstyp = PThis.letzterStand Then
@@ -10574,8 +10589,8 @@ Public Module testModule
 
                     If i <= 3 Then
 
-                        CType(.Cell(zeile, 5 + i - coldelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
-                        CType(.Cell(zeile, 5 + i - coldelta), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
+                        CType(.Cell(zeile, 5 + i - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Text = summenArray(i).ToString(formatierung)
+                        CType(.Cell(zeile, 5 + i - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = fntSize + 2
                         CType(.Cell(zeile, 5 + i - colDelta), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Bold = MsoTriState.msoCTrue
 
                     ElseIf vergleichstyp <> PThis.current Then
@@ -11037,6 +11052,10 @@ Public Module testModule
     Sub createSollIstOfPortfolio(ByRef reportObj As Excel.ChartObject, ByVal aktuellesDatum As Date, ByVal auswahl As Integer, ByVal qualifier As String, _
                                  ByVal ersterStandDatum As Date, ByVal letzterStandDatum As Date, _
                                 ByVal top As Double, ByVal left As Double, ByVal height As Double, ByVal width As Double)
+
+
+        Dim err As New clsErrorCodeMsg
+
         Dim chtobj As Excel.ChartObject
         Dim anzDiagrams As Integer
         Dim i As Integer, ix As Integer = 0
@@ -11161,7 +11180,7 @@ Public Module testModule
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' es soll mit der Standard-Variante verglichen werden ... 
                 projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:="",
-                                                            storedEarliest:=StartofCalendar, storedLatest:=aktuellesDatum)
+                                                            storedEarliest:=StartofCalendar, storedLatest:=aktuellesDatum, err:=err)
 
                 anzH = anzH + 1
                 anzSnapshots = projekthistorie.Count
@@ -11641,6 +11660,7 @@ Public Module testModule
                                              ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
                                              ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
+        Dim err As New clsErrorCodeMsg
 
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
@@ -11759,7 +11779,7 @@ Public Module testModule
                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
-                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                     If compareToLast Then
                         vproj = projekthistorie.Last
                     Else

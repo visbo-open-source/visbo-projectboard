@@ -7496,6 +7496,8 @@ Public Module agm2
     ''' <remarks></remarks>
     Public Sub importiereMassenEdit()
 
+        Dim err As New clsErrorCodeMsg
+
         Dim projectName As String = ""
         Dim variantName As String = ""
 
@@ -7617,10 +7619,10 @@ Public Module agm2
 
                                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectName, variantName, Date.Now) Then
+                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectName, variantName, Date.Now, err) Then
 
                                         ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projectName, variantName, Date.Now)
+                                        hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(projectName, variantName, Date.Now, err)
                                         ' jetzt in AlleProjekte eintragen ... 
                                         If Not IsNothing(hproj) Then
                                             AlleProjekte.Add(hproj)
@@ -7824,6 +7826,8 @@ Public Module agm2
     ''' <remarks></remarks>
     Public Function importScenarioDefinition(ByVal scenarioName As String) As clsConstellation
 
+        Dim err As New clsErrorCodeMsg
+
         Dim zeile As Integer, spalte As Integer
 
 
@@ -7901,7 +7905,7 @@ Public Module agm2
                         End If
 
 
-                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now) Then
+                        If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, variantName, Date.Now, err) Then
                             ' als Constellation Item aufnehmen 
                             Dim cItem As New clsConstellationItem
 
@@ -10546,6 +10550,8 @@ Public Module agm2
     ''' <remarks></remarks>
     Friend Sub readUrlOfRole(ByVal kapaFileName As String)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim ok As Boolean = True
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -10837,7 +10843,7 @@ Public Module agm2
                     If fehler Then
                         'Call MsgBox(msgtxt)
 
-                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now)
+                        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(DateTime.Now, err)
 
                         msgtxt = "Es wurden nun die Kapazitäten aus der Datenbank gelesen ..."
                         If awinSettings.englishLanguage Then
@@ -12815,6 +12821,7 @@ Public Module agm2
     ''' <remarks></remarks>
     Public Sub writeProjektsForSequencing(ByVal roleCostCollection As Collection)
 
+        Dim err As New clsErrorCodeMsg
 
         appInstance.EnableEvents = False
 
@@ -12988,7 +12995,7 @@ Public Module agm2
                     Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
                 Else
                     ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
-                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName)
+                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName, err)
 
                     ' Berechnung budget/Vorgabe 
                     budget = 0.0
@@ -13401,6 +13408,7 @@ Public Module agm2
     ''' das ist in dem Branch MahleSaveMassEdit festgelaten </remarks>
     Public Sub writeOnlineMassEditRessCost(ByVal todoListe As Collection,
                                            ByVal von As Integer, ByVal bis As Integer)
+        Dim err As New clsErrorCodeMsg
 
         Dim maxRCLengthAbsolut As Integer = 0
         Dim maxRCLengthVorkommen As Integer = 0
@@ -13577,13 +13585,20 @@ Public Module agm2
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -14197,6 +14212,8 @@ Public Module agm2
     ''' <param name="todoListe"></param>
     Public Sub writeOnlineMassEditTermine(ByVal todoListe As Collection)
 
+        Dim err As New clsErrorCodeMsg
+
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
@@ -14319,13 +14336,20 @@ Public Module agm2
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -14568,6 +14592,8 @@ Public Module agm2
     ''' <param name="todoListe"></param>
     Public Sub writeOnlineMassEditAttribute(ByVal todoListe As Collection)
 
+        Dim err As New clsErrorCodeMsg
+
         If todoListe.Count = 0 Then
             If awinSettings.englishLanguage Then
                 Call MsgBox("no projects for mass-edit available ..")
@@ -14717,13 +14743,20 @@ Public Module agm2
                     ' wenn nein, dann temporär schützen 
                     Dim protectionText As String = ""
                     Dim wpItem As clsWriteProtectionItem
-                    Dim isProtectedbyOthers As Boolean = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    Dim isProtectedbyOthers As Boolean
+
+                    If awinSettings.visboServer Then
+                        isProtectedbyOthers = Not (CType(databaseAcc, DBAccLayer.Request).checkChgPermission(hproj.name, hproj.variantName, dbUsername, err, ptPRPFType.project))
+                    Else
+                        isProtectedbyOthers = Not tryToprotectProjectforMe(hproj.name, hproj.variantName)
+                    End If
+
 
                     If isProtectedbyOthers Then
 
                         ' nicht erfolgreich, weil durch anderen geschützt ... 
                         ' oder aber noch gar nicht in Datenbank: aber das ist noch nicht berücksichtigt  
-                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                        wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                         writeProtections.upsert(wpItem)
 
                         protectionText = writeProtections.getProtectionText(calcProjektKey(hproj.name, hproj.variantName))
@@ -15056,6 +15089,8 @@ Public Module agm2
     ''' <remarks></remarks>
     Public Sub awinsetTypen(ByVal special As String)
         Try
+            Dim err As New clsErrorCodeMsg
+
             ' neu 9.11.2016
             Dim formerSU As Boolean = True
             Dim needToBeSaved As Boolean = False
@@ -15468,8 +15503,8 @@ Public Module agm2
 
                 ' 
                 ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
                 If RoleDefinitions.Count > 0 Then
                     ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 

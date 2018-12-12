@@ -281,15 +281,15 @@ Public Class ThisWorkbook
 
 
                     End If
-
-                    If Not cancelAbbruch Then
-                        ' die temporären Schutz
-                        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
-                            If awinSettings.visboDebug Then
-                                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
-                            End If
-                        End If
-                    End If
+                    ' ???ur: 05.12.2018???
+                    'If Not cancelAbbruch Then
+                    '    ' die temporären Schutz
+                    '    If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername) Then
+                    '        If awinSettings.visboDebug Then
+                    '            Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+                    '        End If
+                    '    End If
+                    'End If
 
 
                 End If

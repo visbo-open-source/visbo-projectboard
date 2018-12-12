@@ -55,6 +55,8 @@ Public Class frmCreateNewVariant
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
+        Dim err As New clsErrorCodeMsg
+
         Dim key As String
         Dim ok As Boolean = False
 
@@ -68,7 +70,9 @@ Public Class frmCreateNewVariant
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
                     If Not _
-                       (CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:=Me.projektName.Text, variantname:=Me.newVariant.Text, storedAtorBefore:=Date.Now) _
+                       (CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:=Me.projektName.Text,
+                                                                                        variantname:=Me.newVariant.Text,
+                                                                                        storedAtorBefore:=Date.Now, err:=err) _
                        Or AlleProjekte.Containskey(key)) Then
 
                         ' Projekt-Variante existiert noch nicht in der DB, kann also eingetragen werden

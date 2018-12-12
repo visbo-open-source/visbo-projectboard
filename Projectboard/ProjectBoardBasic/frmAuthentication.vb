@@ -30,6 +30,8 @@ Public Class frmAuthentication
     End Sub
     Private Sub maskedPwd_KeyDown(sender As Object, e As KeyEventArgs) Handles maskedPwd.KeyDown
 
+        Dim err As New clsErrorCodeMsg
+
         If e.KeyCode = Keys.Enter Or e.KeyCode = Keys.Tab Then
 
             Dim pwd As String
@@ -48,7 +50,7 @@ Public Class frmAuthentication
                     databaseAcc = hrequest
                 End If
 
-                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+                Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd, err)
 
                 If Not ok Then
                     If awinSettings.englishLanguage Then
@@ -108,6 +110,9 @@ Public Class frmAuthentication
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
+        Dim err As New clsErrorCodeMsg
+
+
         Dim pwd As String
         Dim user As String
 
@@ -124,7 +129,7 @@ Public Class frmAuthentication
                 databaseAcc = hrequest
             End If
 
-            Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
+            Dim ok As Boolean = CType(databaseAcc, DBAccLayer.Request).login(awinSettings.databaseURL, awinSettings.databaseName, user, pwd, err)
 
             If Not ok Then
                 If awinSettings.englishLanguage Then
