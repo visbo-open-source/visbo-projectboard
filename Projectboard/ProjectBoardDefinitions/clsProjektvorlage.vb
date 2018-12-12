@@ -2574,7 +2574,7 @@
         Get
 
             Dim phIndex As Integer = Me.hierarchy.getPMIndexOfID(elemID)
-            If phIndex >= 0 Or phIndex < AllPhases.Count Then
+            If phIndex > 0 And phIndex <= AllPhases.Count Then
                 getPhaseByID = AllPhases.Item(phIndex - 1)
             Else
                 getPhaseByID = Nothing
@@ -2829,7 +2829,7 @@
 
                     Dim hrole As clsRolle = cPhase.getRole(r)
 
-                    roleID = RoleDefinitions.bestimmeRoleNodeName(hrole.RollenTyp, hrole.teamID)
+                    roleID = RoleDefinitions.bestimmeRoleNameID(hrole.RollenTyp, hrole.teamID)
                     '
                     ' das ist performanter als der Weg über try .. catch 
                     '

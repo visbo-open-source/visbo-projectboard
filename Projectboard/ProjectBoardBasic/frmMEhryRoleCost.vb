@@ -242,7 +242,7 @@ Public Class frmMEhryRoleCost
 
                     topLevelNode.Tag = nrTag
 
-                    topLevelNode.Name = RoleDefinitions.bestimmeRoleNodeName(role.UID, nrTag.membershipID)
+                    topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
 
                     ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
                     If initialRolesOfPhase.ContainsKey(topLevelNode.Name) Then
@@ -379,7 +379,7 @@ Public Class frmMEhryRoleCost
 
         currentNode.Tag = nrTag
 
-        currentNode.Name = RoleDefinitions.bestimmeRoleNodeName(currentRoleUid, nrTag.membershipID)
+        currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
 
         ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
         If initialRolesOfPhase.ContainsKey(currentNode.Name) Then

@@ -6872,24 +6872,217 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <returns></returns>
+    Public Function getRCNameIDfromCell(ByVal currentCell As Excel.Range) As String
+
+        Dim tmpResult As String = ""
+        Try
+            If Not IsNothing(currentCell.Value) Then
+                Dim tmpRCname As String = CStr(currentCell.Value)
+
+                If RoleDefinitions.containsName(tmpRCname) Then
+                    Dim tmpComment As Excel.Comment = currentCell.Comment
+                    Dim tmpTeamName As String = ""
+                    If Not IsNothing(tmpComment) Then
+                        tmpTeamName = tmpComment.Text
+                    End If
+                    tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRCname, tmpTeamName)
+                Else
+                    ' im Falle von Kosten soll erst mal die alte Herangehensweise gelten 
+                    tmpResult = tmpRCname
+                End If
+
+            Else
+                tmpResult = ""
+            End If
+
+        Catch ex As Exception
+            tmpResult = ""
+        End Try
+
+        getRCNameIDfromCell = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' ermittelt in einem MassEdit RoleCost Fenster die PhaseNameID  
+    ''' </summary>
+    ''' <param name="currentCell"></param>
+    ''' <returns></returns>
+    Public Function getPhaseNameIDfromMeRcCell(ByVal currentCell As Excel.Range) As String
+        Dim tmpResult As String = ""
+
+        Try
+            Dim phaseName As String = CStr(currentCell.Value)
+            Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+            Dim curComment As Excel.Comment = currentCell.Comment
+
+            If Not IsNothing(curComment) Then
+                phaseNameID = curComment.Text
+            End If
+
+            tmpResult = phaseNameID
+        Catch ex As Exception
+            tmpResult = ""
+        End Try
+
+
+        getPhaseNameIDfromMeRcCell = tmpResult
+    End Function
+
+
+
+    Sub meRCZeileLoeschen(ByVal zeile As Integer,
+                          ByVal pName As String,
+                          ByVal phNameID As String,
+                          ByVal rcNameID As String,
+                          ByVal isRole As Boolean)
+
+        Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+        appInstance.EnableEvents = False
+
+        Dim ok As Boolean = True
+
+        Try
+
+            If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
+                Dim columnEndData As Integer = visboZustaende.meColED
+                Dim columnStartData As Integer = visboZustaende.meColSD
+                Dim columnRC As Integer = visboZustaende.meColRC
+
+
+                'Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
+                'Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+                'Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
+                'Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+                'Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                'If Not IsNothing(curComment) Then
+                '    phaseNameID = curComment.Text
+                'End If
+
+                'Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                ''Dim rcNameID As String = 
+
+                ' hier wird die Rolle- bzw. Kostenart aus der Projekt-Phase gelöscht 
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                Dim cphase As clsPhase = hproj.getPhaseByID(phNameID)
+
+                ' das muss noch besser überprüft werden 
+                Dim actualDataExists As Boolean = False
+                If hproj.actualDataUntil > cphase.getStartDate Then
+                    actualDataExists = True
+                End If
+
+                Dim teamID As Integer = -1
+                If IsNothing(rcNameID) Then
+                    ' nichts tun
+                ElseIf rcNameID.Trim.Length = 0 Then
+                    ' nichts tun ... 
+                ElseIf Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)) Then
+                    ' es handelt sich um eine Rolle
+                    ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
+                    ' gibt es Ist-Daten ? 
+
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
+                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
+                        cphase.removeRoleByNameID(rcNameID)
+                    Else
+                        Dim rcName As String = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).name
+                        If actualDataExists Then
+                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
+                                    " nicht gelöscht werden ...")
+                        Else
+                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
+                                    " nicht gelöscht werden ...")
+                        End If
+
+                        ok = False
+                    End If
+
+                ElseIf CostDefinitions.containsName(rcNameID) Then
+                    ' es handelt sich um eine Kostenart 
+                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
+                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
+                        cphase.removeCostByName(rcNameID)
+                    Else
+                        If actualDataExists Then
+                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Kostenart " & rcNameID & vbLf &
+                                    " nicht gelöscht werden ...")
+                        Else
+                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcNameID & vbLf &
+                                    " nicht gelöscht werden ...")
+                        End If
+
+                        ok = False
+                    End If
+
+
+                End If
+
+
+                If ok Then
+                    ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
+                    ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
+                    If noDuplicatesInSheet(pName, phNameID, Nothing, zeile) Then
+                        ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
+                        ' aber die Werte müssen alle gelöscht werden 
+                        For ix As Integer = columnRC To columnEndData + 1
+                            CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
+                        Next
+                    Else
+                        CType(meWS.Rows(zeile), Excel.Range).Delete()
+                    End If
+
+                    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
+
+                    ' jetzt wird der Old-Value gesetzt 
+                    With visboZustaende
+                        .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
+                        .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
+                    End With
+
+                Else
+                    ' nichts tun 
+                End If
+
+
+            Else
+                Call MsgBox(" es können nur Zeilen aus dem Datenbereich gelöscht werden ...")
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Löschen einer Zeile ..." & vbLf & ex.Message)
+        End Try
+
+        appInstance.EnableEvents = True
+    End Sub
+
+    ''' <summary>
     ''' prüft ob in dem aktiven Massen-Edit Sheet die übergebene Kombination nocheinmal vorkommt ... 
     ''' wenn nein: Rückgabe true
     ''' wenn ja: Rückgabe false
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <param name="phaseNameID"></param>
-    ''' <param name="rcName"></param>
+    ''' <param name="rcNameID"></param>
     ''' <param name="zeile"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcName As String,
+    Public Function noDuplicatesInSheet(ByVal pName As String, ByVal phaseNameID As String, ByVal rcNameID As String,
                                              ByVal zeile As Integer) As Boolean
         Dim found As Boolean = False
         Dim curZeile As Integer = 2
 
         Dim chckName As String
         Dim chckPhNameID As String
-        Dim chckRCName As String
+        Dim chckRCNameID As String
+
+        Dim teamID As Integer = -1
+        Dim isRole As Boolean = Not IsNothing(RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID))
 
         Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
             .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
@@ -6897,27 +7090,33 @@ Public Module Module1
         With meWS
             chckName = CStr(meWS.Cells(curZeile, 2).value)
 
-            Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
-            chckPhNameID = calcHryElemKey(phaseName, False)
-            Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
-            If Not IsNothing(curComment) Then
-                chckPhNameID = curComment.Text
+            'Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+            chckPhNameID = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
+
+            'chckPhNameID = calcHryElemKey(phaseName, False)
+            'Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+            'If Not IsNothing(curComment) Then
+            '    chckPhNameID = curComment.Text
+            'End If
+            If Not isRole Then
+                chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
+            Else
+                chckRCNameID = getRCNameIDfromCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
             End If
 
-            chckRCName = CStr(meWS.Cells(curZeile, 5).value)
 
         End With
         ' aus der Funktionalität zeile löschen wird rcName auch mit Nothing aufgerufen ... 
         Do While Not found And curZeile <= visboZustaende.meMaxZeile
 
 
-            If chckName = pName And _
-                phaseNameID = chckPhNameID And _
+            If chckName = pName And
+                phaseNameID = chckPhNameID And
                 zeile <> curZeile Then
 
-                If IsNothing(rcName) Then
+                If IsNothing(rcNameID) Then
                     found = True
-                ElseIf rcName = chckRCName Then
+                ElseIf rcNameID = chckRCNameID Then
                     found = True
                 End If
 
@@ -6930,14 +7129,21 @@ Public Module Module1
                 With meWS
                     chckName = CStr(meWS.Cells(curZeile, 2).value)
 
-                    Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
-                    chckPhNameID = calcHryElemKey(phaseName, False)
-                    Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
-                    If Not IsNothing(curComment) Then
-                        chckPhNameID = curComment.Text
+                    'Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
+                    'chckPhNameID = calcHryElemKey(phaseName, False)
+                    chckPhNameID = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
+                    'Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
+                    'If Not IsNothing(curComment) Then
+                    '    chckPhNameID = curComment.Text
+                    'End If
+
+
+                    If Not isRole Then
+                        chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
+                    Else
+                        chckRCNameID = getRCNameIDfromCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
                     End If
 
-                    chckRCName = CStr(meWS.Cells(curZeile, 5).value)
 
                 End With
 

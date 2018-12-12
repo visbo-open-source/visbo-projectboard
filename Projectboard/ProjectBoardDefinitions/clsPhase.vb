@@ -1846,6 +1846,21 @@ Public Class clsPhase
     ''' <param name="roleNameID"></param>
     Public Sub removeRoleByNameID(ByVal roleNameID As String)
 
+        Dim toDoList As New List(Of clsRolle)
+
+        For i As Integer = 1 To _allRoles.Count
+            Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
+            Dim IdStr As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.RollenTyp, tmpRole.teamID)
+            If IdStr = roleNameID Then
+                toDoList.Add(tmpRole)
+            End If
+        Next
+
+        For Each tmpRole As clsRolle In toDoList
+            _allRoles.Remove(tmpRole)
+            Me.parentProject.rcLists.removeRP(tmpRole.RollenTyp, Me.nameID, tmpRole.teamID, False)
+        Next
+
     End Sub
 
     ''' <summary>

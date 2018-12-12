@@ -379,20 +379,22 @@ Public Class Tabelle2
                     ' jetzt wird 
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
                     Dim rcNameID As String = getRCNameIDfromCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                    Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
-                    Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+                    'Dim phaseNameID As String = calcHryElemKey(phaseName, False)
 
                     Dim hproj As clsProjekt = Nothing
                     If Not IsNothing(pName) And pName <> "" Then
                         hproj = ShowProjekte.getProject(pName)
                     End If
 
-                    Dim hPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                    ' old stuff
+                    'Dim hPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
 
-                    Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
-                    If Not IsNothing(curComment) Then
-                        phaseNameID = curComment.Text
-                    End If
+                    'Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
+                    'If Not IsNothing(curComment) Then
+                    '    phaseNameID = curComment.Text
+                    'End If
 
 
 
@@ -414,6 +416,7 @@ Public Class Tabelle2
                             With frmMERoleCost
                                 Dim anz As Integer = .rolesToAdd.Count + .costsToAdd.Count + .rolesToDelete.Count + .costsToDelete.Count
                             End With
+
                             ' eintragen der selektierten Rollen
 
                             ' jetzt sollten folgende Schritte durchgeführt werden 
@@ -423,6 +426,13 @@ Public Class Tabelle2
 
                             ' ad1: alle toDelete Rollen und Kosten löschen; es ist bereits sichergestellt, dass nur Rollen und Kosten gelöscht werden sollen
                             ' die noch keine Ist-Daten enthalten
+
+                            For Each roleNameIDItem As String In frmMERoleCost.rolesToDelete
+                                Dim zeileToDelete As Integer = findeZeileInMeRC(meWS, pName, phaseNameID, roleNameIDItem)
+                                Call meRCZeileLoeschen(zeileToDelete, pName, phaseNameID, roleNameIDItem, True)
+                            Next
+
+                            Dim rng As Excel.Range = Nothing
 
                             Call massEditZeileLoeschen("")
 
@@ -1848,15 +1858,15 @@ Public Class Tabelle2
     ''' schreibt in die angegebene Excel-Zelle den Rollen-NAmen als String und trägt ggf einen Kommentar mit dem Team-NAmen ein.  
     ''' </summary>
     ''' <param name="currentCell"></param>
-    ''' <param name="rcNameID"></param>
-    Private Sub setCellFromRCNameID(ByRef currentCell As Excel.Range, ByVal rcNameID As String)
+    ''' <param name="roleNameID"></param>
+    Private Sub setCellFromRoleNameID(ByRef currentCell As Excel.Range, ByVal roleNameID As String)
         Dim tmpCell As Excel.Range = currentCell
         Dim roleName As String = ""
         Dim teamName As String = ""
         Dim teamID As Integer
-        Dim roleID As Integer = RoleDefinitions.parseRoleNodeID(rcNameID, teamID)
+        Dim roleID As Integer = RoleDefinitions.parseRoleNodeID(roleNameID, teamID)
 
-        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)
+        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
         If Not IsNothing(currentRole) Then
             tmpCell.Value = currentRole.name
 
@@ -1875,69 +1885,7 @@ Public Class Tabelle2
         End If
 
     End Sub
-    ''' <summary>
-    ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
-    ''' </summary>
-    ''' <param name="currentCell"></param>
-    ''' <returns></returns>
-    Private Function getRCNameIDfromCell(ByVal currentCell As Excel.Range) As String
 
-        Dim tmpResult As String = ""
-        Try
-            If Not IsNothing(currentCell.Value) Then
-                Dim tmpRCname As String = CStr(currentCell.Value)
-                Dim tmpComment As Excel.Comment = currentCell.Comment
-                Dim tmpTeamName As String = ""
-                If Not IsNothing(tmpComment) Then
-                    tmpTeamName = tmpComment.Text
-                End If
-                tmpResult = bestimmeRCNameID(tmpRCname, tmpTeamName)
-            Else
-                tmpResult = ""
-            End If
-
-        Catch ex As Exception
-            tmpResult = ""
-        End Try
-
-        getRCNameIDfromCell = tmpResult
-
-    End Function
-
-    ''' <summary>
-    ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
-    ''' </summary>
-    ''' <param name="roleName"></param>
-    ''' <param name="teamName"></param>
-    ''' <returns></returns>
-    Private Function bestimmeRCNameID(ByVal roleName As String, ByVal teamName As String) As String
-        Dim tmpResult As String = ""
-        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
-
-        Try
-            If Not IsNothing(tmpRole) Then
-
-                If teamName.Length > 0 Then
-                    Dim tmpRoleTeam As clsRollenDefinition = RoleDefinitions.getRoledef(teamName)
-                    If Not IsNothing(tmpRoleTeam) Then
-                        If tmpRoleTeam.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
-                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, tmpRoleTeam.UID)
-                        Else
-                            Dim dummy As Integer = -1
-                            tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, dummy)
-                        End If
-                    End If
-                Else
-                    tmpResult = RoleDefinitions.bestimmeRoleNodeName(tmpRole.UID, -1)
-                End If
-
-            End If
-        Catch ex As Exception
-            tmpResult = ""
-        End Try
-
-        bestimmeRCNameID = tmpResult
-    End Function
 
     ''' <summary>
     ''' prüft, ob eine gültige Zelle selektiert wurde ... 

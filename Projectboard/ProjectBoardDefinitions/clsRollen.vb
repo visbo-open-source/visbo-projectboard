@@ -456,7 +456,7 @@ Public Class clsRollen
     ''' <param name="roleUID"></param>
     ''' <param name="teamID"></param>
     ''' <returns></returns>
-    Public Function bestimmeRoleNodeName(ByVal roleUID As Integer, ByVal teamID As Integer) As String
+    Public Function bestimmeRoleNameID(ByVal roleUID As Integer, ByVal teamID As Integer) As String
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
         Dim tmpResult As String = ""
@@ -471,7 +471,7 @@ Public Class clsRollen
             Dim nodeName As String = roleUID.ToString
 
             If isTeamMember Then
-                nodeName = roleUID.ToString & ";" & teamID
+                nodeName = roleUID.ToString & ";" & teamID.ToString
             Else
                 nodeName = roleUID.ToString
             End If
@@ -482,8 +482,43 @@ Public Class clsRollen
             tmpResult = ""
         End If
 
-        bestimmeRoleNodeName = tmpResult
+        bestimmeRoleNameID = tmpResult
 
+    End Function
+
+    ''' <summary>
+    ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="teamName"></param>
+    ''' <returns></returns>
+    Public Function bestimmeRoleNameID(ByVal roleName As String, ByVal teamName As String) As String
+        Dim tmpResult As String = ""
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+
+        Try
+            If Not IsNothing(tmpRole) Then
+
+                If teamName.Length > 0 Then
+                    Dim tmpRoleTeam As clsRollenDefinition = RoleDefinitions.getRoledef(teamName)
+                    If Not IsNothing(tmpRoleTeam) Then
+                        If tmpRoleTeam.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
+                            tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, tmpRoleTeam.UID)
+                        Else
+                            Dim dummy As Integer = -1
+                            tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, dummy)
+                        End If
+                    End If
+                Else
+                    tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, -1)
+                End If
+
+            End If
+        Catch ex As Exception
+            tmpResult = ""
+        End Try
+
+        bestimmeRoleNameID = tmpResult
     End Function
 
 

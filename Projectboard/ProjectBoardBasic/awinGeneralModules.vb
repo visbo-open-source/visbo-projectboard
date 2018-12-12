@@ -5736,6 +5736,53 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcNameID"></param>
+    ''' <returns>0, wenn nichts gefunden wird</returns>
+    Public Function findeZeileInMeRC(ByVal ws As Excel.Worksheet,
+                                     ByVal pName As String,
+                                     ByVal phaseNameID As String,
+                                     ByVal rcNameID As String) As Integer
+
+        Dim tmpResult As Integer = 0
+        Dim zeile As Integer = 2
+
+        Dim colPName As Integer = visboZustaende.meColpName
+        Dim colPhaseName As Integer = visboZustaende.meColRC - 1
+        Dim colRcName As Integer = visboZustaende.meColRC
+        Dim found As Boolean = False
+
+        Dim vglPname As String = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
+        Dim vglRcNameID As String = getRCNameIDfromCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+        Dim vglPhaseNameID As String = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
+
+
+        Do While zeile <= visboZustaende.meMaxZeile And Not found
+
+            If vglPname = pName And
+                    vglPhaseNameID = phaseNameID And
+                    vglRcNameID = rcNameID Then
+                found = True
+            Else
+                zeile = zeile + 1
+                vglPname = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
+                vglRcNameID = getRCNameIDfromCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+                vglPhaseNameID = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
+            End If
+
+        Loop
+
+        If found Then
+            tmpResult = zeile
+        End If
+
+        findeZeileInMeRC = tmpResult
+
+    End Function
 
     ''' <summary>
     ''' gibt eine Zeile zurück, die zu dem angegebenen Projekt, der Phase und dem rcName eine Sammelrolle zurückgibt

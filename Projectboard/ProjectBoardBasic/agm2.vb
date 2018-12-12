@@ -6558,7 +6558,6 @@ Public Module agm2
                                         ' Prüfung, ob die Phase phaseName in der bereits aus Termine bestehenden Hierarchie mit dem gleiche breadcrumb existiert, sonst Fehler
 
 
-
                                         If Not hproj.hierarchy.containsPhase(phaseName, breadcrumb) Then
 
                                             Dim xxx As Boolean = hproj.hierarchy.containsPhase(phaseName, breadcrumb)

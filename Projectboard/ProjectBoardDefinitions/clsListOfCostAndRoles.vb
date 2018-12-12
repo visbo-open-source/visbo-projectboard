@@ -6,10 +6,10 @@
 Public Class clsListOfCostAndRoles
 
     ''' <summary>
-    ''' der erste schlüssel ist die RoleUID, dann kommt eine Liste mit PhaseNameID und Phasen-Nummern 
+    ''' der erste schlüssel ist die RoleUID, dann kommt eine SortedList mit teamID ( ohne teamID = -1 und Collection mit PhaseNameIDs 
     ''' </summary>
     ''' <remarks></remarks>
-    Private _listOfRoles As SortedList(Of Integer, Collection)
+    Private _listOfRoles As SortedList(Of Integer, SortedList(Of Integer, Collection))
     Private _listOfCosts As SortedList(Of Integer, Collection)
 
 
@@ -20,7 +20,7 @@ Public Class clsListOfCostAndRoles
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getPhasesWithRole(ByVal roleName As String) As Collection
+    Public ReadOnly Property getPhasesWithRole(ByVal roleName As String, Optional ByVal teamID As Integer = -1) As Collection
         Get
             Dim phaseCollection As New Collection
             Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
@@ -31,9 +31,32 @@ Public Class clsListOfCostAndRoles
 
                 Dim roleUID As Integer = role.UID
                 If _listOfRoles.ContainsKey(roleUID) Then
-                    phaseCollection = _listOfRoles.Item(roleUID)
+                    Dim memberList As SortedList(Of Integer, Collection) = _listOfRoles.Item(roleUID)
+
+                    If teamID = -1 Then
+                        ' alle holen 
+                        phaseCollection = memberList.ElementAt(0).Value
+
+                        ' falls es jetzt mehrere geben sollte, weil dieselbe PErson in diesem Projekt für mehrere Teams arbeitet ...
+                        For i = 1 To memberList.Count - 1
+                            Dim tmpCollection As Collection = memberList.ElementAt(i).Value
+                            For Each phNameID As String In tmpCollection
+                                If Not phaseCollection.Contains(phNameID) Then
+                                    phaseCollection.Add(phNameID, phNameID)
+                                End If
+                            Next
+                        Next
+
+
+                    ElseIf teamID > 0 Then
+                        ' nur die holen, die die Rolle in seiner Eigenschaft als Team-Member enthalten 
+                        If memberList.ContainsKey(teamID) Then
+                            phaseCollection = memberList.Item(teamID)
+                        End If
+                    End If
+
                 Else
-                    ' nichts tun, tmpCollection ist bereits eine leere Collection 
+                    ' nichts tun, phaseCollection ist  eine leere Collection 
                 End If
 
             End If
@@ -42,45 +65,45 @@ Public Class clsListOfCostAndRoles
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt die Phasen zurück, die eine der Rollen aus der Collection enthält
-    ''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles einer der Rollen aus der Collection enthalten 
-    ''' </summary>
-    ''' <param name="roleCollection"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getPhasesWithRoles(ByVal roleCollection As Collection) As Collection
-        Get
-            Dim phaseCollection As New Collection
-            'Dim subRoleCollection As Collection
+    '''' <summary>
+    '''' gibt die Phasen zurück, die eine der Rollen aus der Collection enthält
+    '''' wenn considerSubRoles = true, dann auch die Phasen, die eine oder mehrere SubRoles einer der Rollen aus der Collection enthalten 
+    '''' </summary>
+    '''' <param name="roleCollection"></param>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public ReadOnly Property getPhasesWithRoles(ByVal roleCollection As Collection) As Collection
+    '    Get
+    '        Dim phaseCollection As New Collection
+    '        'Dim subRoleCollection As Collection
 
-            If roleCollection.Count > 0 Then
+    '        If roleCollection.Count > 0 Then
 
-                For Each roleName As String In roleCollection
-                    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
-                    Dim teilphaseCollection As Collection
+    '            For Each roleName As String In roleCollection
+    '                Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+    '                Dim teilphaseCollection As Collection
 
-                    Dim roleUID As Integer = role.UID
-                    If _listOfRoles.ContainsKey(roleUID) Then
-                        teilphaseCollection = _listOfRoles.Item(roleUID)
-                    Else
-                        teilphaseCollection = New Collection
-                    End If
+    '                Dim roleUID As Integer = role.UID
+    '                If _listOfRoles.ContainsKey(roleUID) Then
+    '                    teilphaseCollection = _listOfRoles.Item(roleUID)
+    '                Else
+    '                    teilphaseCollection = New Collection
+    '                End If
 
-                    ' jetzt muss teilphaseCollection mit phaseCollection gemerged werden ...
-                    For Each phaseName As String In teilphaseCollection
-                        If Not phaseCollection.Contains(phaseName) Then
-                            phaseCollection.Add(phaseCollection, phaseName)
-                        End If
-                    Next
+    '                ' jetzt muss teilphaseCollection mit phaseCollection gemerged werden ...
+    '                For Each phaseName As String In teilphaseCollection
+    '                    If Not phaseCollection.Contains(phaseName) Then
+    '                        phaseCollection.Add(phaseCollection, phaseName)
+    '                    End If
+    '                Next
 
-                Next
-            End If
+    '            Next
+    '        End If
 
-            getPhasesWithRoles = phaseCollection
-        End Get
-    End Property
+    '        getPhasesWithRoles = phaseCollection
+    '    End Get
+    'End Property
 
 
     ''' <summary>
@@ -113,36 +136,36 @@ Public Class clsListOfCostAndRoles
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt die Phasen zurück, die eine der Kostenarten aus der Collection enthält
-    ''' </summary>
-    ''' <param name="costCollection"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getPhasesWithCosts(ByVal costCollection As Collection) As Collection
-        Get
-            Dim phaseCollection As New Collection
+    '''' <summary>
+    '''' gibt die Phasen zurück, die eine der Kostenarten aus der Collection enthält
+    '''' </summary>
+    '''' <param name="costCollection"></param>
+    '''' <value></value>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public ReadOnly Property getPhasesWithCosts(ByVal costCollection As Collection) As Collection
+    '    Get
+    '        Dim phaseCollection As New Collection
 
-            If costCollection.Count > 0 Then
+    '        If costCollection.Count > 0 Then
 
-                For Each costName As String In costCollection
+    '            For Each costName As String In costCollection
 
-                    Dim teilphaseCollection As Collection = Me.getPhasesWithCost(costName)
+    '                Dim teilphaseCollection As Collection = Me.getPhasesWithCost(costName)
 
-                    ' jetzt muss teilphaseCollection mit phaseCollection gemerged werden ...
-                    For Each phaseName As String In teilphaseCollection
-                        If Not phaseCollection.Contains(phaseName) Then
-                            phaseCollection.Add(phaseCollection, phaseName)
-                        End If
-                    Next
+    '                ' jetzt muss teilphaseCollection mit phaseCollection gemerged werden ...
+    '                For Each phaseName As String In teilphaseCollection
+    '                    If Not phaseCollection.Contains(phaseName) Then
+    '                        phaseCollection.Add(phaseCollection, phaseName)
+    '                    End If
+    '                Next
 
-                Next
-            End If
+    '            Next
+    '        End If
 
-            getPhasesWithCosts = phaseCollection
-        End Get
-    End Property
+    '        getPhasesWithCosts = phaseCollection
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' liefert eine sortierte Collection mit allen vorkommenden Role-Names zurück
@@ -154,16 +177,16 @@ Public Class clsListOfCostAndRoles
         Get
             Dim tmpCollection As New Collection
 
-            For Each kvp As KeyValuePair(Of Integer, Collection) In _listOfRoles
+            For Each kvp As KeyValuePair(Of Integer, SortedList(Of Integer, Collection)) In _listOfRoles
 
                 Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+
                 If Not IsNothing(tmpRole) Then
                     If Not tmpCollection.Contains(tmpRole.name) Then
                         tmpCollection.Add(tmpRole.name, tmpRole.name)
                     End If
 
                 End If
-
 
             Next
 
@@ -181,10 +204,13 @@ Public Class clsListOfCostAndRoles
 
             Dim tmpResult() As Integer = Nothing
             If _listOfRoles.Count > 0 Then
+
                 ReDim tmpResult(_listOfRoles.Count - 1)
+
                 For i As Integer = 0 To _listOfRoles.Count - 1
                     tmpResult(i) = _listOfRoles.ElementAt(i).Key
                 Next
+
             End If
 
             getRoleUIDs = tmpResult
@@ -221,19 +247,25 @@ Public Class clsListOfCostAndRoles
     ''' <param name="roleUID"></param>
     ''' <param name="phaseNameID"></param>
     ''' <remarks></remarks>
-    Public Sub addRP(ByVal roleUID As Integer, ByVal phaseNameID As String)
+    Public Sub addRP(ByVal roleUID As Integer, ByVal phaseNameID As String, ByVal Optional teamID As Integer = -1)
 
         If _listOfRoles.ContainsKey(roleUID) Then
-            Dim listOfPhases As Collection = _listOfRoles.Item(roleUID)
+            Dim memberlist As SortedList(Of Integer, Collection) = _listOfRoles.Item(roleUID)
+
+            Dim listOfPhases As Collection = memberlist.Item(teamID)
+
             If Not listOfPhases.Contains(phaseNameID) Then
                 listOfPhases.Add(phaseNameID, phaseNameID)
             Else
                 ' nichts tun , Phase ist schon drin ...
             End If
         Else
+            Dim memberlist As New SortedList(Of Integer, Collection)
             Dim listOfPhases = New Collection
             listOfPhases.Add(phaseNameID, phaseNameID)
-            _listOfRoles.Add(roleUID, listOfPhases)
+            memberlist.Add(teamID, listOfPhases)
+
+            _listOfRoles.Add(roleUID, memberlist)
         End If
     End Sub
 
@@ -260,23 +292,60 @@ Public Class clsListOfCostAndRoles
     End Sub
 
     ''' <summary>
-    ''' löscht den Vermerk, dass Rolle mit roleUID in Phase mit NAme phaseNameID ist 
+    ''' löscht den Vermerk, dass Rolle mit roleUID, ggf teamID  in Phase mit Name phaseNameID ist 
     ''' </summary>
     ''' <param name="roleUID"></param>
     ''' <param name="phaseNameID"></param>
     ''' <remarks></remarks>
-    Public Sub removeRP(ByVal roleUID As Integer, ByVal phaseNameID As String)
+    Public Sub removeRP(ByVal roleUID As Integer, ByVal phaseNameID As String, ByVal Optional teamID As Integer = -1, ByVal Optional deleteAll As Boolean = True)
 
         If _listOfRoles.ContainsKey(roleUID) Then
-            Dim listOfPhases As Collection = _listOfRoles.Item(roleUID)
-            If listOfPhases.Contains(phaseNameID) Then
-                listOfPhases.Remove(phaseNameID)
-                If listOfPhases.Count = 0 Then
+
+            Dim memberships As SortedList(Of Integer, Collection) = _listOfRoles.Item(roleUID)
+
+            If deleteAll Then
+
+                Dim deleteList As New Collection
+                For Each kvp As KeyValuePair(Of Integer, Collection) In memberships
+
+                    If kvp.Value.Contains(phaseNameID) Then
+                        kvp.Value.Remove(phaseNameID)
+                        ' merken fpr folgendes löschen ...
+                        If kvp.Value.Count = 0 Then
+                            deleteList.Add(kvp.Key)
+                        End If
+                    End If
+                Next
+
+                For Each delTeamID As Integer In deleteList
+                    memberships.Remove(delTeamID)
+                Next
+
+                If memberships.Count = 0 Then
                     _listOfRoles.Remove(roleUID)
                 End If
+
             Else
-                ' nichts tun , die Phase enthält die Rolle nicht 
+                If memberships.ContainsKey(teamID) Then
+                    Dim phList As Collection = memberships.Item(teamID)
+                    If phList.Contains(phaseNameID) Then
+                        phList.Remove(phaseNameID)
+                    Else
+                        ' nichts tun
+                    End If
+
+                    If phList.Count = 0 Then
+                        memberships.Remove(teamID)
+                    End If
+
+                    If memberships.Count = 0 Then
+                        _listOfRoles.Remove(roleUID)
+                    End If
+
+                End If
+
             End If
+
         Else
             ' nichts tun, Rolle gibt es nicht mehr  
         End If
@@ -308,7 +377,7 @@ Public Class clsListOfCostAndRoles
     End Sub
 
     Public Sub New()
-        _listOfRoles = New SortedList(Of Integer, Collection)
+        _listOfRoles = New SortedList(Of Integer, SortedList(Of Integer, Collection))
         _listOfCosts = New SortedList(Of Integer, Collection)
     End Sub
 
