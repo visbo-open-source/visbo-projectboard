@@ -427,14 +427,18 @@ Public Class Tabelle2
                             ' ad1: alle toDelete Rollen und Kosten löschen; es ist bereits sichergestellt, dass nur Rollen und Kosten gelöscht werden sollen
                             ' die noch keine Ist-Daten enthalten
 
+                            ' Zeile merken 
+                            Dim tmpzeile As Integer = Target.Row
+
                             For Each roleNameIDItem As String In frmMERoleCost.rolesToDelete
                                 Dim zeileToDelete As Integer = findeZeileInMeRC(meWS, pName, phaseNameID, roleNameIDItem)
                                 Call meRCZeileLoeschen(zeileToDelete, pName, phaseNameID, roleNameIDItem, True)
                             Next
 
-                            Dim rng As Excel.Range = Nothing
 
-                            Call massEditZeileLoeschen("")
+                            For Each roleNameIDitem As String In frmMERoleCost.rolesToAdd
+
+                            Next
 
 
 
