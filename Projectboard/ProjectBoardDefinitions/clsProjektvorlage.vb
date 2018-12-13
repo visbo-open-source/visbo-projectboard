@@ -2687,7 +2687,7 @@
                 ReDim roleValues(_Dauer - 1)
 
                 For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
-                    roleName = RoleDefinitions.getRoledef(srkvp.Key).name
+                    roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
 
                     Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
                     anzPhasen = listOfPhases.Count
@@ -2711,7 +2711,7 @@
 
                                 With role
 
-                                    If .RollenTyp = srkvp.Key Then
+                                    If .uid = srkvp.Key Then
 
                                         If considerTeam Then
                                             found = teamID = role.teamID
@@ -2829,7 +2829,7 @@
 
                     Dim hrole As clsRolle = cPhase.getRole(r)
 
-                    roleID = RoleDefinitions.bestimmeRoleNameID(hrole.RollenTyp, hrole.teamID)
+                    roleID = RoleDefinitions.bestimmeRoleNameID(hrole.uid, hrole.teamID)
                     '
                     ' das ist performanter als der Weg über try .. catch 
                     '
@@ -3460,6 +3460,7 @@
 
             Dim roleIDs As New SortedList(Of Integer, Double)
 
+
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
@@ -3476,13 +3477,14 @@
 
                 If IsNumeric(roleID) Then
                     roleUID = CInt(roleID)
-                    roleName = RoleDefinitions.getRoledef(roleUID).name
+                    roleName = RoleDefinitions.getRoleDefByID(roleUID).name
                 Else
                     If RoleDefinitions.containsName(CStr(roleID)) Then
                         roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
                         roleName = CStr(roleID)
                     End If
                 End If
+
 
                 ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
                 If inclSubRoles Then
@@ -3515,7 +3517,7 @@
 
                                 With role
 
-                                    If .RollenTyp = srkvp.Key Then
+                                    If .uid = srkvp.Key Then
 
                                         tagessatz = .tagessatzIntern
                                         dimension = .getDimension

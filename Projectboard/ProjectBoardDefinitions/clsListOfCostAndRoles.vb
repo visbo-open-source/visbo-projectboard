@@ -12,6 +12,76 @@ Public Class clsListOfCostAndRoles
     Private _listOfRoles As SortedList(Of Integer, SortedList(Of Integer, Collection))
     Private _listOfCosts As SortedList(Of Integer, Collection)
 
+    ''' <summary>
+    ''' gibt zurück, ob die roleUID, optional in der Eigenschaft als teamMEmber in der PhaseNAmeID auftaucht ..
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="roleUID"></param>
+    ''' <param name="teamID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property phaseContainsRole(ByVal phaseNameID As String, ByVal roleUID As Integer, Optional ByVal teamID As Integer = -1) As Boolean
+
+        Get
+            Dim tmpResult As Boolean = False
+            Dim found As Boolean = False
+
+            If _listOfRoles.ContainsKey(roleUID) Then
+                ' nur dann gibt es überhaupt irgendetwas zu dieser Rolle in dem Projekt 
+                Dim memberList As SortedList(Of Integer, Collection) = _listOfRoles.Item(roleUID)
+
+                If teamID = -1 Then
+                    ' alle durchgehen 
+                    For Each kvp As KeyValuePair(Of Integer, Collection) In memberList
+                        If kvp.Value.Contains(phaseNameID) Then
+                            found = True
+                            Exit For
+                        End If
+                    Next
+
+                Else
+                    Dim listOfPhases As Collection = memberList.Item(teamID)
+                    If Not IsNothing(listOfPhases) Then
+                        If listOfPhases.Count > 0 Then
+                            found = listOfPhases.Contains(phaseNameID)
+                        End If
+                    End If
+                End If
+            End If
+
+            phaseContainsRole = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zurück, ob die CostUID, in der PhaseNameID auftaucht ..
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="costUID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property phaseContainsCost(ByVal phaseNameID As String, ByVal costUID As Integer) As Boolean
+
+        Get
+            Dim tmpResult As Boolean = False
+            Dim found As Boolean = False
+
+            If _listOfCosts.ContainsKey(costUID) Then
+
+                Dim listOfPhases As Collection = _listOfCosts.Item(costUID)
+
+                If Not IsNothing(listOfPhases) Then
+                    If listOfPhases.Count > 0 Then
+                        found = listOfPhases.Contains(phaseNameID)
+                    End If
+                End If
+
+            End If
+
+            phaseContainsCost = tmpResult
+        End Get
+
+    End Property
+
+
 
     ''' <summary>
     ''' gibt die Phasen zurück, die diese Rolle enthalten 

@@ -707,8 +707,8 @@ Public Class Tabelle2
                                                 Dim cRole As clsRolle = cPhase.getRole(visboZustaende.oldValue)
                                                 If IsNothing(cRole) Then
                                                 Else
-                                                    hproj.rcLists.removeRP(cRole.RollenTyp, cPhase.nameID)
-                                                    cRole.RollenTyp = newRoleID
+                                                    hproj.rcLists.removeRP(cRole.uid, cPhase.nameID)
+                                                    cRole.uid = newRoleID
                                                     hproj.rcLists.addRP(newRoleID, cPhase.nameID)
                                                 End If
 
@@ -931,7 +931,7 @@ Public Class Tabelle2
                                             tmpRole = New clsRolle(phEnde - phStart)
 
                                             With tmpRole
-                                                .RollenTyp = uid
+                                                .uid = uid
                                             End With
                                             With cPhase
                                                 .addRole(tmpRole)
@@ -1076,7 +1076,7 @@ Public Class Tabelle2
                                         ' die Rolle muss neu angelegt und der Phase hinzugefügt werden  
 
                                         tmpRole = New clsRolle(cphase.relEnde - cphase.relStart)
-                                        tmpRole.RollenTyp = RoleDefinitions.getRoledef(rcName).UID
+                                        tmpRole.uid = RoleDefinitions.getRoledef(rcName).UID
 
                                         Call cphase.addRole(tmpRole)
 
@@ -1853,38 +1853,6 @@ Public Class Tabelle2
         isValidRCChange = tmpValue
 
     End Function
-
-    ''' <summary>
-    ''' schreibt in die angegebene Excel-Zelle den Rollen-NAmen als String und trägt ggf einen Kommentar mit dem Team-NAmen ein.  
-    ''' </summary>
-    ''' <param name="currentCell"></param>
-    ''' <param name="roleNameID"></param>
-    Private Sub setCellFromRoleNameID(ByRef currentCell As Excel.Range, ByVal roleNameID As String)
-        Dim tmpCell As Excel.Range = currentCell
-        Dim roleName As String = ""
-        Dim teamName As String = ""
-        Dim teamID As Integer
-        Dim roleID As Integer = RoleDefinitions.parseRoleNodeID(roleNameID, teamID)
-
-        Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
-        If Not IsNothing(currentRole) Then
-            tmpCell.Value = currentRole.name
-
-            If teamID > 0 Then
-
-                tmpCell.ClearComments()
-                Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(teamID)
-                If Not IsNothing(teamRole) Then
-                    Dim newComment As Excel.Comment = tmpCell.AddComment(teamRole.name)
-                End If
-
-            End If
-        Else
-            tmpCell.Value = ""
-            tmpCell.ClearComments()
-        End If
-
-    End Sub
 
 
     ''' <summary>

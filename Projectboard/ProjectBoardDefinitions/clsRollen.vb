@@ -819,7 +819,7 @@ Public Class clsRollen
     ''' <param name="selRoleItem"></param>
     ''' <param name="teamID"></param>
     ''' <returns></returns>
-    Public Function parseRoleNodeID(ByVal selRoleItem As String, ByRef teamID As Integer) As Integer
+    Public Function parseRoleNameID(ByVal selRoleItem As String, ByRef teamID As Integer) As Integer
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
         Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
@@ -843,7 +843,7 @@ Public Class clsRollen
         End If
 
 
-        parseRoleNodeID = tmpResult
+        parseRoleNameID = tmpResult
 
     End Function
     ''' <summary>
@@ -856,7 +856,7 @@ Public Class clsRollen
 
         teamID = -1
         Try
-            getRoleDefByIDKennung = getRoleDefByID(parseRoleNodeID(idK, teamID))
+            getRoleDefByIDKennung = getRoleDefByID(parseRoleNameID(idK, teamID))
         Catch ex As Exception
             getRoleDefByIDKennung = Nothing
         End Try
