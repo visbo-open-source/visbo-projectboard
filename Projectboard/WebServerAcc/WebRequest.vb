@@ -1789,10 +1789,11 @@ Public Class Request
                 CType(setting, clsVCSettingCustomroles).type = type
                 CType(setting, clsVCSettingCustomroles).value = listlistofCURsWeb
 
+                result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), setting, err)
 
             End If
 
-            result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), setting, err)
+
 
 
 

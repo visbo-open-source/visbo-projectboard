@@ -4,7 +4,7 @@
     Public Property name As String
     Public Property userId As String
     Public Property type As String
-    Public Property timestamp As Date
+    Public Property timestamp As String
 
 
     Sub New()
@@ -13,7 +13,7 @@
         _name = "no setting name"
         _userId = "not defined"
         _type = "type of setting"
-        _timestamp = Date.MinValue
+        _timestamp = Date.MinValue.ToString
 
     End Sub
 
