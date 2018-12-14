@@ -411,6 +411,8 @@ Module Module1
     ''' <remarks></remarks>
     Friend Function userIsEntitled(ByRef msg As String) As Boolean
 
+        Dim err As New clsErrorCodeMsg
+
         Dim tmpResult As Boolean = False
 
         ' tk 27.10.18 rausgenommen, weil smartInfo keine Lizenz benötigt
@@ -433,8 +435,8 @@ Module Module1
                 tmpResult = True
 
                 ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
                 ' in allen Slides den Sicht Schutz aufheben 
                 protectionSolved = True
@@ -941,6 +943,9 @@ Module Module1
     ''' <remarks></remarks>
     Friend Sub buildSmartSlideLists(Optional tsCollExists As Boolean = False)
 
+        Dim err As New clsErrorCodeMsg
+
+
         ' vorherige smartSlideLists zwischenspeichern
         Dim former_smartSlideLists As clsSmartSlideListen = smartSlideLists
 
@@ -1096,7 +1101,7 @@ Module Module1
                     Dim vName As String = getVariantnameFromKey(tmpName)
                     Dim pvName As String = calcProjektKeyDB(pName, vName)
 
-                    Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName)
+                    Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
                     smartSlideLists.addToListOfTS(tsCollection)
 
                 Next
@@ -8269,6 +8274,8 @@ Module Module1
     ''' <remarks></remarks>
     Public Sub initPPTTimeMachine(ByRef tmpTM As clsPPTTimeMachine, Optional ByVal showMessage As Boolean = True)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim msg As String = ""
         Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
 
@@ -8316,7 +8323,7 @@ Module Module1
                             Dim vName As String = getVariantnameFromKey(tmpName)
                             Dim pvName As String = calcProjektKeyDB(pName, vName)
 
-                            tsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName)
+                            tsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
                             ' ermitteln des größten kleinstern Wertes ...
                             ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
 

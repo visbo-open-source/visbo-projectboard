@@ -5,6 +5,9 @@ Public Class frmRenameProject
 
     Private Sub Ok_Button_Click(sender As Object, e As EventArgs) Handles Ok_Button.Click
 
+        Dim err As New clsErrorCodeMsg
+
+
         ' es ist wichtig, dass keine führenden Blanks zugelassen sind ... 
         ' das ist in lostFocus_newName geregelt 
         Dim msgtxt As String = ""
@@ -42,11 +45,11 @@ Public Class frmRenameProject
 
             Else
                 Try
-                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                    Dim projExist As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(newName.Text, "", Date.Now)
+
+                    Dim projExist As Boolean = CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(newName.Text, "", Date.Now, err)
 
                     ' muss gemacht werden, weil es auch Projekte geben kann, die nur als Varianten existieren ...
-                    Dim listOfVariants As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(newName.Text)
+                    Dim listOfVariants As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveVariantNamesFromDB(newName.Text, err)
 
                     If projExist Or listOfVariants.Count > 0 Then
                         ' es existiert bereits .. 
@@ -71,7 +74,7 @@ Public Class frmRenameProject
 
             End If
         End If
-        
+
     End Sub
 
     Private Sub frmRenameProject_Load(sender As Object, e As EventArgs) Handles MyBase.Load

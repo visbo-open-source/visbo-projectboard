@@ -173,7 +173,7 @@ Module oneClickGeneralModules
     Friend Function logInToMongoDB(ByVal noDBAccess As Boolean) As Boolean
         ' jetzt die Login Maske aufrufen, aber nur wenn nicht schon ein Login erfolgt ist .. ... 
 
-        'awinSettings.visboServer = False ' Ohne Server
+        Dim err As New clsErrorCodeMsg
 
         ' bestimmt, ob in englisch oder auf deutsch ..
         Dim englishLanguage As Boolean = awinSettings.englishLanguage
@@ -243,11 +243,9 @@ Module oneClickGeneralModules
             Call MsgBox(msg)
         Else
             ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            'RoleDefinitions = request.retrieveRolesFromDB(currentTimestamp)
-            'CostDefinitions = request.retrieveCostsFromDB(currentTimestamp)
-            RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-            CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
+
+            RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+            CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
         End If
 
         logInToMongoDB = Not noDBAccess

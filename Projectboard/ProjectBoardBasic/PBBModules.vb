@@ -1454,6 +1454,8 @@ Public Module PBBModules
 
     Sub PBBShowTimeMachine(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
         Dim vglName As String = " "
@@ -1516,7 +1518,7 @@ Public Module PBBModules
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         If projekthistorie.Count <> 0 Then
 
                             projekthistorie.Add(Date.Now, hproj)
@@ -1542,7 +1544,7 @@ Public Module PBBModules
 
                     With showCharacteristics
 
-                        .Text = "Historie für Projekt " & pName.Trim & vbLf & _
+                        .Text = "Historie für Projekt " & pName.Trim & vbLf &
                                 "( " & projekthistorie.getZeitraum & " )"
                         .timeSlider.Minimum = 0
                         .timeSlider.Maximum = nrSnapshots - 1

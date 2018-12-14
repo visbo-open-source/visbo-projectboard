@@ -100,6 +100,8 @@ Imports System.Web
 
         Dim ControlID As String = control.Id
 
+        Dim err As New clsErrorCodeMsg
+
         Dim removeConstFilterFrm As New frmRemoveConstellation
         Dim constFilterName As String
 
@@ -120,7 +122,7 @@ Imports System.Web
 
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
-                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
+                projectConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
             Else
                 Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                 removeFromDB = False
@@ -256,6 +258,8 @@ Imports System.Web
 
     Sub PTLadenKonstellation(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim load1FromDatenbank As String = "PT5G1B1"
         Dim load2FromDatenbank As String = "PT5G1"
         Dim loadConstellationFrm As New frmLoadConstellation
@@ -280,7 +284,7 @@ Imports System.Web
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB()
+                dbConstellations = CType(databaseAcc, DBAccLayer.Request).retrieveConstellationsFromDB(err)
 
                 Try
                     timeStampsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFromDB()
@@ -432,7 +436,7 @@ Imports System.Web
 
             ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
             If Not noDB Then
-                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
             End If
 
             appInstance.ScreenUpdating = True
@@ -953,6 +957,8 @@ Imports System.Web
     ''' <remarks></remarks>
     Sub Tom2G1Rename(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
 
@@ -1019,10 +1025,10 @@ Imports System.Web
 
                                 ' jetzt wird in der Datenbank umbenannt 
                                 Try
-                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now) Or
-                                        CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, hproj.variantName, Date.Now) Then
+                                    If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now, err) Or
+                                        CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, hproj.variantName, Date.Now, err) Then
 
-                                        ok = CType(databaseAcc, DBAccLayer.Request).renameProjectsInDB(pName, newName, dbUsername)
+                                        ok = CType(databaseAcc, DBAccLayer.Request).renameProjectsInDB(pName, newName, dbUsername, err)
                                         If Not ok Then
                                             If awinSettings.englishLanguage Then
                                                 Call MsgBox("rename cancelled: there is at least one write-protected variant for Project " & pName)
@@ -1030,7 +1036,7 @@ Imports System.Web
                                                 Call MsgBox("Rename nicht durchgeführt: es gibt mindestens eine schreibgeschützte Variante im Projekt " & pName)
                                             End If
                                         Else
-                                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
                                         End If
                                     End If
                                 Catch ex As Exception
@@ -1154,6 +1160,8 @@ Imports System.Web
 
     Sub PT2ProjektNeu(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
@@ -1180,7 +1188,7 @@ Imports System.Web
                     'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                        If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now) Then
+                        If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(projectname:= .projectName.Text, variantname:="", storedAtorBefore:=Date.Now, err:=err) Then
 
                             ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
@@ -1717,6 +1725,27 @@ Imports System.Web
     Function bestimmeLabel(control As IRibbonControl) As String
         Dim tmpLabel As String = "?"
         Select Case control.Id
+            Case "PT4G1M1-1"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Konfiguration"
+                Else
+                    tmpLabel = "Import Configuration"
+                End If
+
+            Case "PT4G1B8"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Organisation"
+                Else
+                    tmpLabel = "Organisation"
+                End If
+
+            Case "PT4G1B11"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Custom Nutzer Rollen"
+                Else
+                    tmpLabel = "Custom User Roles"
+                End If
+
             Case "PTproj" ' Project
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekt"
@@ -3507,6 +3536,8 @@ Imports System.Web
     ''' <param name="control"></param>
     Sub PTbackToProjectBoard(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         ' Bildschirm einfrieren ...
         If appInstance.ScreenUpdating = True Then
             appInstance.ScreenUpdating = False
@@ -3551,12 +3582,12 @@ Imports System.Web
                             'dbUsername, dbPasswort)
                             Dim wpItem As New clsWriteProtectionItem(pvName, ptWriteProtectionType.project,
                                                                       dbUsername, False, False)
-                            If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem) Then
+                            If CType(databaseAcc, DBAccLayer.Request).setWriteProtection(wpItem, err) Then
                                 ' erfolgreich
                                 writeProtections.upsert(wpItem)
                             Else
                                 ' nicht erfolgreich
-                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName)
+                                wpItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                                 writeProtections.upsert(wpItem)
                             End If
                         End If
@@ -4843,6 +4874,15 @@ Imports System.Web
 
     End Sub
 
+    Public Sub PTImportCustomUserRoles(control As IRibbonControl)
+
+        Dim allCustomUserRoles As New clsCustomUserRoles
+        Call awinImportCustomUserRoles(allCustomUserRoles)
+
+        '??? Aufruf speichern der CustomUser Roles über rest-Server ...
+
+    End Sub
+
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
         ' Übernahme 
 
@@ -5050,6 +5090,9 @@ Imports System.Web
     End Sub
 
     Public Sub Tom2G4B1ScenarioImport(control As IRibbonControl)
+
+        Dim err As New clsErrorCodeMsg
+
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
@@ -5128,7 +5171,7 @@ Imports System.Web
 
                         ' jetzt muss die Info zu den Schreibberechtigungen geholt werden 
                         If Not noDB Then
-                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte)
+                            writeProtections.adjustListe = CType(databaseAcc, DBAccLayer.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
                         End If
 
                     Else
@@ -6948,6 +6991,8 @@ Imports System.Web
     ''' <remarks></remarks>
     Sub TomMostImportantProjectCharts(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim singleShp As Excel.Shape
         Dim ok As Boolean = True
         'Dim SID As String
@@ -7048,10 +7093,10 @@ Imports System.Web
                 Try
 
                     If compareWithLast Then
-                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
                         compareTyp = PTprdk.PersonalBalken2
                     Else
-                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
                         compareTyp = PTprdk.PersonalBalken
                     End If
 
@@ -7108,6 +7153,8 @@ Imports System.Web
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Sub Tom2G2M1B2Resources(control As IRibbonControl)
+
+        Dim err As New clsErrorCodeMsg
 
         Dim singleShp As Excel.Shape
         'Dim SID As String
@@ -7175,10 +7222,10 @@ Imports System.Web
                         Try
 
                             If compareLast Then
-                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
                                 compareTyp = PTprdk.PersonalBalken2
                             Else
-                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
                                 compareTyp = PTprdk.PersonalBalken
                             End If
 
@@ -7236,6 +7283,8 @@ Imports System.Web
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Sub Tom2G2M1B5GKosten(control As IRibbonControl)
+
+        Dim err As New clsErrorCodeMsg
 
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt, vglProj As clsProjekt = Nothing
@@ -7301,10 +7350,10 @@ Imports System.Web
                     Try
 
                         If compareWithLast Then
-                            vglProj = CType(databaseAcc, DBAccLayer.Request).RetrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now)
+                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
                             compareTyp = PTprdk.KostenBalken2
                         Else
-                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
                             compareTyp = PTprdk.KostenBalken
                         End If
 
@@ -7822,7 +7871,9 @@ Imports System.Web
     ''' <param name="typ"></param>
     ''' <remarks></remarks>
     Private Sub awinSollIstVergleich(ByVal auswahl As Integer, ByVal typ As String, ByVal vglBaseline As Boolean)
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
+        Dim err As New clsErrorCodeMsg
+
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -7902,7 +7953,7 @@ Imports System.Web
                 End If
 
                 ' das bproj bestimmen 
-                bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName)
+                bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
 
 
 
@@ -8967,6 +9018,7 @@ Imports System.Web
     ''' <remarks></remarks>
     Sub PTMEShowCharts(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
 
         ' das Ganze nur machen, wenn das Chart nicht ohnehin schon gezeigt wird ... 
         Try
@@ -9160,7 +9212,7 @@ Imports System.Web
             Dim qualifier2 As String = ""
 
             If awinSettings.meCompareWithLastVersion Then
-                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now)
+                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now, err)
                 comparisonTyp = PTprdk.KostenBalken2
 
                 If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
@@ -9174,7 +9226,7 @@ Imports System.Web
 
 
             Else
-                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, hproj.variantName)
+                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, hproj.variantName, err)
                 comparisonTyp = PTprdk.KostenBalken
 
                 If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
@@ -10244,7 +10296,8 @@ Imports System.Web
 
     Sub PT3G1B2PhasenVgl(control As IRibbonControl)
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim err As New clsErrorCodeMsg
+
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10305,7 +10358,7 @@ Imports System.Web
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                             projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                             projekthistorie.Add(Date.Now, hproj)
                             lastElem = projekthistorie.Count - 1
 
@@ -10387,7 +10440,8 @@ Imports System.Web
     ''' <remarks></remarks>
     Sub PT3G1B3PhasenVgl(control As IRibbonControl)
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim err As New clsErrorCodeMsg
+
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10447,7 +10501,7 @@ Imports System.Web
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                         lastElem = projekthistorie.Count - 1
 
@@ -10589,6 +10643,8 @@ Imports System.Web
 
     Sub awinShowTrendSR(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -10638,7 +10694,7 @@ Imports System.Web
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
 
                     Else
@@ -10696,6 +10752,9 @@ Imports System.Web
 
 
     Sub awinShowTrendKPI(control As IRibbonControl)
+
+        Dim err As New clsErrorCodeMsg
+
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
         'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
@@ -10744,7 +10803,7 @@ Imports System.Web
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
                         Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
@@ -10777,14 +10836,7 @@ Imports System.Web
 
             Else
                 Call MsgBox("bitte nur ein Projekt selektieren")
-                'For Each singleShp In awinSelection
-                '    With singleShp
-                '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-                '            nrSelPshp = nrSelPshp + 1
-                '            SID = .ID.ToString
-                '        End If
-                '    End With
-                'Next
+
             End If
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -11351,13 +11403,13 @@ Imports System.Web
     End Sub
     Public Sub PTTestWriteProtect(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
+
         Call projektTafelInit()
         enableOnUpdate = False
         appInstance.EnableEvents = True
 
-        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-
-        Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername)
+        Dim ok2 As Boolean = CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err)
 
         enableOnUpdate = True
 

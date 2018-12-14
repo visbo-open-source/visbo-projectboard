@@ -49,8 +49,7 @@
             If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
                 _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
             Else
-                '' ' ???? UR: 02.03.2016
-                ''_farbe = awinSettings.AmpelNichtBewertet
+
                 _farbe = awinSettings.missingDefinitionColor
 
             End If

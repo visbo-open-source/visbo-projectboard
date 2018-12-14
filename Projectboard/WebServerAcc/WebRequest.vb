@@ -60,12 +60,18 @@ Public Class Request
     ''' <param name="databaseName">wird beim Login am Visbo-Rest-Server nicht benötigt</param>
     ''' <param name="username"></param>
     ''' <param name="dbPasswort"></param>
-    Public Function login(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String, ByVal dbPasswort As String) As Boolean
+    Public Function login(ByVal ServerURL As String,
+                          ByVal databaseName As String,
+                          ByVal username As String,
+                          ByVal dbPasswort As String,
+                          ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim typeRequest As String = "/token/user/login"
         'Dim typeRequest As String = "/token/user/signup"
         Dim serverUri As New Uri(ServerURL & typeRequest)
         Dim loginOK As Boolean = False
+        Dim errcode As Integer
+        Dim errmsg As String = ""
         Dim httpresp_sav As HttpWebResponse
 
         Try
@@ -85,6 +91,8 @@ Public Class Request
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 httpresp_sav = httpresp     ' sichern der Server-Antwort
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
                 loginAntwort = JsonConvert.DeserializeObject(Of clsWebTokenUserLoginSignup)(Antwort)
             End Using
 
@@ -92,9 +100,9 @@ Public Class Request
                 Call MsgBox(loginAntwort.message)
             End If
 
-            loginOK = (loginAntwort.state = "success")
+            If errcode = 200 Then
 
-            If loginOK Then
+                loginOK = True
                 token = loginAntwort.token
                 serverUriName = ServerURL
                 aktUser = loginAntwort.user
@@ -117,10 +125,17 @@ Public Class Request
                 serverUriName = ServerURL
                 aktUser = Nothing
                 If awinSettings.visboDebug Then
-                    Call MsgBox("( " & CType(httpresp_sav.StatusCode, Integer).ToString & ") : " & httpresp_sav.StatusDescription & " : " & loginAntwort.message)
+                    Call MsgBox("( " & CType(errcode, Integer).ToString & ") : " & errmsg & " : " & loginAntwort.message)
                 End If
 
+                err.errorCode = errcode
+                err.errorMsg = "POSTOneVP" & " : " & errmsg & " : " & loginAntwort.message
+
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVP", errcode, errmsg & " : " & loginAntwort.message)
+
             End If
+
 
 
         Catch ex As Exception
@@ -155,11 +170,11 @@ Public Class Request
     ''' über Email setzen einen neuen Passwortes; geht nur beim Server
     ''' </summary>
     ''' <returns></returns>
-    Public Function pwforgotten(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String) As Boolean
+    Public Function pwforgotten(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Try
-            result = POSTpwforgotten(ServerURL, databaseName, username)
+            result = POSTpwforgotten(ServerURL, databaseName, username, err)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -168,6 +183,7 @@ Public Class Request
         pwforgotten = result
     End Function
 
+
     ''' <summary>
     ''' prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
     ''' falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
@@ -175,8 +191,11 @@ Public Class Request
     ''' <param name="projectname"></param>
     ''' <param name="variantname"></param>
     ''' <param name="storedAtorBefore"></param>
+    ''' <param name="err"></param>
     ''' <returns></returns>
-    Public Function projectNameAlreadyExists(ByVal projectname As String, ByVal variantname As String, ByVal storedAtorBefore As DateTime) As Boolean
+    Public Function projectNameAlreadyExists(ByVal projectname As String, ByVal variantname As String,
+                                             ByVal storedAtorBefore As DateTime,
+                                             ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -189,7 +208,7 @@ Public Class Request
 
             Dim vpid As String = ""
 
-            vpid = GETvpid(projectname)._id
+            vpid = GETvpid(projectname, err)._id
 
             If vpid <> "" And variantname <> "" Then
                 ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
@@ -215,11 +234,13 @@ Public Class Request
     End Function
 
 
+
     ''' <summary>
     ''' bringt alle in der Datenbank vorkommenden TimeStamps zurück , in absteigender Sortierung
+    ''' <param name="err"></param>
     ''' </summary>
     ''' <returns>Collection, absteigend sortiert</returns>
-    Public Function retrieveZeitstempelFromDB() As Collection
+    Public Function retrieveZeitstempelFromDB(ByRef err As clsErrorCodeMsg) As Collection
 
         Dim resultCollection As New Collection
 
@@ -229,7 +250,7 @@ Public Class Request
             ' ur:08.06.2018: wird in globale Variable gecacht: Dim allVPv As New List(Of clsProjektWebShort)
 
             Dim allVPv As New List(Of clsProjektWebShort)
-            allVPv = GETallVPvShort("")
+            allVPv = GETallVPvShort("", err)
 
             ' alle vorhandenen Timestamps in der resultCollection sammeln
             Dim sl As New SortedList(Of Date, Date)
@@ -257,7 +278,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="pvName"></param>
     ''' <returns>Collection, absteigend sortiert</returns>
-    Public Function retrieveZeitstempelFromDB(ByVal pvName As String) As Collection
+    Public Function retrieveZeitstempelFromDB(ByVal pvName As String, ByRef err As clsErrorCodeMsg) As Collection
 
         Dim ergebnisCollection As New Collection
         'token = ""
@@ -276,12 +297,12 @@ Public Class Request
             End If
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectName)._id
+            vpid = GETvpid(projectName, err)._id
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
                 Dim allVPv As New List(Of clsProjektWebShort)
-                allVPv = GETallVPvShort(vpid, , variantName)
+                allVPv = GETallVPvShort(vpid, err, , variantName)
 
                 ' alle vorhandenen Timestamps zu einem pvName in die ErgebnisCollection sammeln
                 Dim sl As New SortedList(Of Date, Date)
@@ -293,7 +314,6 @@ Public Class Request
 
                 For i As Integer = sl.Count - 1 To 0 Step -1
                     Dim kvp As KeyValuePair(Of DateTime, DateTime) = sl.ElementAt(i)
-                    '???: ergebnisCollection.Add(kvp.Value.ToUniversalTime)
                     ergebnisCollection.Add(kvp.Value.ToLocalTime)
                 Next i
 
@@ -311,7 +331,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="pvName"></param>
     ''' <returns>Collection, absteigend sortiert</returns>
-    Public Function retrieveZeitstempelFirstLastFromDB(ByVal pvName As String) As Collection
+    Public Function retrieveZeitstempelFirstLastFromDB(ByVal pvName As String, ByRef err As clsErrorCodeMsg) As Collection
 
         Dim ergebnisCollection As New Collection
         'token = ""
@@ -330,26 +350,31 @@ Public Class Request
             End If
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectName)._id
+            vpid = GETvpid(projectName, err)._id
 
             If vpid <> "" Then
 
                 Dim hresultFirst As New List(Of clsProjektWebShort)
 
-                hresultFirst = GETallVPvShort(vpid, vpvid:="", status:="", refNext:=True, variantName:=variantName, storedAtorBefore:=Nothing)
+                hresultFirst = GETallVPvShort(vpid, err, vpvid:="", status:="", refNext:=True, variantName:=variantName, storedAtorBefore:=Nothing)
 
                 Dim anzResult As Integer = hresultFirst.Count
                 If anzResult >= 0 Then
                     ergebnisCollection.Add(hresultFirst.Item(anzResult - 1).timestamp)
                 End If
 
-                Dim hresultLast As New List(Of clsProjektWebShort)
+                If err.errorCode = 200 Then
+                    Dim hresultLast As New List(Of clsProjektWebShort)
 
-                hresultLast = GETallVPvShort(vpid, , , refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
+                    hresultLast = GETallVPvShort(vpid, err, , , refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
 
-                If hresultLast.Count >= 0 Then
-                    ergebnisCollection.Add(hresultLast.Item(0).timestamp)
+                    If hresultLast.Count >= 0 Then
+                        ergebnisCollection.Add(hresultLast.Item(0).timestamp)
+                    End If
                 End If
+
+            Else
+
 
             End If
 
@@ -378,7 +403,7 @@ Public Class Request
     Public Function retrieveProjectsFromDB(ByVal projectname As String, ByVal variantName As String,
                                                ByVal zeitraumStart As DateTime, ByVal zeitraumEnde As DateTime,
                                                ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
-                                               ByVal onlyLatest As Boolean) _
+                                               ByVal onlyLatest As Boolean, ByRef err As clsErrorCodeMsg) _
                                                As SortedList(Of String, clsProjekt)
 
         Dim result As New SortedList(Of String, clsProjekt)
@@ -405,10 +430,10 @@ Public Class Request
             If projectname = "" Then
 
 
-                VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.project)
+                VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.project)
 
                 Dim VisboPv_all As New List(Of clsProjektWebLong)
-                VisboPv_all = GETallVPvLong("", , , , variantName, aktDate)
+                VisboPv_all = GETallVPvLong("", err, , , , variantName, aktDate)
 
                 diffRC = DateDiff(DateInterval.Second, diffRCBeginn, Date.Now)
 
@@ -473,11 +498,11 @@ Public Class Request
 
             Else
                 '  Projekt angegeben: d.h. es werden alle Timestamps der übergebenen Projekt-Variante zurückgegeben
-                Dim vpid As String = GETvpid(projectname)._id
+                Dim vpid As String = GETvpid(projectname, err)._id
                 If vpid <> "" Then
                     ' gewünschten Varianten vom Server anfordern
                     Dim allVPv As New List(Of clsProjektWebLong)
-                    allVPv = GETallVPvLong(vpid, , , , variantName, storedLatest)
+                    allVPv = GETallVPvLong(vpid, err, , , , variantName, storedLatest)
 
                     For Each webProj As clsProjektWebLong In allVPv
                         If webProj.timestamp >= storedEarliest Then
@@ -524,7 +549,8 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveOneProjectfromDB(ByVal projectname As String,
                                              ByVal variantname As String,
-                                             ByVal storedAtOrBefore As DateTime) As clsProjekt
+                                             ByVal storedAtOrBefore As DateTime,
+                                             ByRef err As clsErrorCodeMsg) As clsProjekt
         Dim result As clsProjekt = Nothing
 
         storedAtOrBefore = storedAtOrBefore.ToUniversalTime
@@ -532,12 +558,12 @@ Public Class Request
         Try
             Dim hproj As New clsProjekt
             Dim vpid As String = ""
-            vpid = GETvpid(projectname)._id
+            vpid = GETvpid(projectname, err)._id
 
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
                 Dim allVPv As New List(Of clsProjektWebLong)
-                allVPv = GETallVPvLong(vpid, , , , variantname, storedAtOrBefore)
+                allVPv = GETallVPvLong(vpid, err, , , , variantname, storedAtOrBefore)
                 If allVPv.Count > 0 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
                     webProj.copyto(hproj)
@@ -564,11 +590,14 @@ Public Class Request
     ''' <param name="userName"></param>
     ''' <returns>true : rename wurde durchgeführt
     '''          false: rename konnte nicht ausgeführt werden</returns>
-    Public Function renameProjectsInDB(ByVal oldName As String, ByVal newName As String, ByVal userName As String) As Boolean
+    Public Function renameProjectsInDB(ByVal oldName As String,
+                                       ByVal newName As String,
+                                       ByVal userName As String,
+                                       ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Try
-            If projectNameAlreadyExists(newName, "", DateTime.Now) Then
+            If projectNameAlreadyExists(newName, "", DateTime.Now, err) Then
 
                 renameProjectsInDB = result
 
@@ -579,13 +608,13 @@ Public Class Request
                 ' hier wird überprüft, ob das Projekt selbst
                 ' und auch keine der Varianten von einem anderen User schreibgeschützt ist
 
-                chkOk = checkChgPermission(oldName, "", userName)
+                chkOk = checkChgPermission(oldName, "", userName, err)
 
                 If chkOk Then
 
                     Dim vp As New clsVP
 
-                    Dim vpid As String = GETvpid(oldName)._id
+                    Dim vpid As String = GETvpid(oldName, err)._id
                     If VRScache.VPsN.ContainsKey(oldName) Then
 
                         vp = VRScache.VPsN(oldName)
@@ -597,7 +626,7 @@ Public Class Request
 
                     End If
 
-                    Dim vpList As List(Of clsVP) = PUTOneVP(vpid, vp)
+                    Dim vpList As List(Of clsVP) = PUTOneVP(vpid, vp, err)
                     ' rename war korrekt, wenn in vplist ein und zwar nur ein VisboProject zurückgegeben wurde.
                     result = (vpList.Count = 1)
 
@@ -621,7 +650,7 @@ Public Class Request
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
     ''' <returns></returns>
-    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String) As Boolean
+    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -636,7 +665,7 @@ Public Class Request
             Dim pname As String = projekt.name
             Dim vname As String = projekt.variantName
 
-            Dim aktvp As clsVP = GETvpid(pname, projekt.projectType)
+            Dim aktvp As clsVP = GETvpid(pname, err, projekt.projectType)
             Dim vpid As String = aktvp._id
             Dim storedVP As Boolean = (vpid <> "")
 
@@ -657,7 +686,7 @@ Public Class Request
                 VP.vpPublic = True
                 VP.vpType = projekt.projectType
 
-                vpErg = POSTOneVP(VP)
+                vpErg = POSTOneVP(VP, err)
 
 
                 If vpErg.Count > 0 Then
@@ -666,6 +695,20 @@ Public Class Request
                     vpid = vpErg.ElementAt(0)._id
                     aktvp = vpErg.ElementAt(0)
                     storedVP = (vpid <> "")
+
+                    ' VP im Cache ergänzen
+                    If VRScache.VPsN.ContainsKey(aktvp.name) Then
+                        VRScache.VPsN.Remove(aktvp.name)
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    Else
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    End If
+                    If VRScache.VPsId.ContainsKey(vpid) Then
+                        VRScache.VPsId.Remove(vpid)
+                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                    Else
+                        VRScache.VPsId.Add(vpid, aktvp)
+                    End If
 
                 Else
                     Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
@@ -686,7 +729,7 @@ Public Class Request
             ' wenn Variante noch nicht vorhanden, so muss sie angelegt werden
             If Not storedVPVariant Then
                 If vname <> "" Then
-                    storedVPVariant = POSTVPVariant(vpid, vname)
+                    storedVPVariant = POSTVPVariant(vpid, vname, err)
                 Else
                     ' zu diesem Projekt gibt es nur die Standardvariante = > nichts tun
                 End If
@@ -701,7 +744,7 @@ Public Class Request
                 Dim serverUri As New Uri(serverUriString)
 
 
-                If checkChgPermission(pname, vname, userName) Then
+                If checkChgPermission(pname, vname, userName, err) Then
 
                     Dim projektWeb As New clsProjektWebLong
                     projektWeb.copyfrom(projekt)
@@ -724,18 +767,19 @@ Public Class Request
                         result = (storeAntwort.state = "success")
                         result = True
 
+                        ' vpv zu Cache hinzufügen
+                        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+
                     Else
 
                         ' Fehlerbehandlung je nach errcode
                         Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
 
                     End If
-
+                    err.errorCode = errcode
+                    err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
                 End If
             End If
-
-            ' Cache aktualisieren
-            VRScache.VPsN = GETallVP(aktVCid, projekt.projectType)
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message & ": storeProjectToDB")
@@ -752,7 +796,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="projectName"></param>
     ''' <returns></returns>
-    Public Function retrieveVariantNamesFromDB(ByVal projectName As String) As Collection
+    Public Function retrieveVariantNamesFromDB(ByVal projectName As String, ByRef err As clsErrorCodeMsg) As Collection
 
         Dim ergebnisCollection As New Collection
 
@@ -760,7 +804,7 @@ Public Class Request
             Dim vpid As String = ""
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectName)._id
+            vpid = GETvpid(projectName, err)._id
 
             ' nun ist sicher die VPs aufgebaut
             Dim vp As clsVP = VRScache.VPsN(projectName)
@@ -789,7 +833,8 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveProjectVariantNamesFromDB(ByVal zeitraumStart As DateTime,
                                                           ByVal zeitraumEnde As DateTime,
-                                                          ByVal storedAtOrBefore As DateTime) _
+                                                          ByVal storedAtOrBefore As DateTime,
+                                                          ByRef err As clsErrorCodeMsg) _
                                                           As SortedList(Of String, String)
 
         Dim result As New SortedList(Of String, String)
@@ -811,10 +856,10 @@ Public Class Request
 
             ' holt alle Projekte/Variante/versionen mit ReferenzDatum storedatOrBefore
             Dim vpvListe As New List(Of clsProjektWebShort)
-            vpvListe = GETallVPvShort("", "", "", False, , storedAtOrBefore)
+            vpvListe = GETallVPvShort("", err, "", "", False, , storedAtOrBefore)
 
             For Each vpv As clsProjektWebShort In vpvListe
-                Dim vpType As Integer = GETvpType(vpv.vpid)
+                Dim vpType As Integer = GETvpType(vpv.vpid, err)
                 If vpv.startDate <= zeitraumEnde And
                     vpv.endDate >= zeitraumStart And
                     vpType = ptPRPFType.project Then
@@ -870,7 +915,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="pNRatKD"></param>
     ''' <returns></returns>
-    Public Function retrieveProjectNamesByPNRFromDB(ByVal pNRatKD As String) As Collection
+    Public Function retrieveProjectNamesByPNRFromDB(ByVal pNRatKD As String, ByRef err As clsErrorCodeMsg) As Collection
 
         Dim result As New Collection
         Dim interimResult As New Collection
@@ -898,7 +943,7 @@ Public Class Request
                 ' im Cache nicht gefunden, also nochmals alle VP des aktVCid holen und nachsehen.
                 If result.Count <= 0 Then
 
-                    VRScache.VPsId = GETallVP(aktVCid, ptPRPFType.all)
+                    VRScache.VPsId = GETallVP(aktVCid, err, ptPRPFType.all)
 
                 End If
 
@@ -924,7 +969,8 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
-                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime) As SortedList(Of DateTime, clsProjekt)
+                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
+                                                 ByRef err As clsErrorCodeMsg) As SortedList(Of DateTime, clsProjekt)
 
         Dim result As New SortedList(Of DateTime, clsProjekt)
         storedLatest = storedLatest.ToUniversalTime()
@@ -937,12 +983,12 @@ Public Class Request
 
 
             ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectname)._id
+            vpid = GETvpid(projectname, err)._id
 
             If vpid <> "" Then
 
                 Dim allVPv As New List(Of clsProjektWebLong)
-                allVPv = GETallVPvLong(vpid, , , , variantName)
+                allVPv = GETallVPvLong(vpid, err, , , , variantName)
 
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
                 For Each vpv In allVPv
@@ -973,7 +1019,8 @@ Public Class Request
     ''' <param name="userName"></param>
     ''' <returns></returns>
     Public Function deleteProjectTimestampFromDB(ByVal projectname As String, ByVal variantName As String,
-                                                     ByVal stored As DateTime, ByVal userName As String) As Boolean
+                                                     ByVal stored As DateTime, ByVal userName As String,
+                                                 ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -984,19 +1031,19 @@ Public Class Request
                 Dim vpid As String = ""
 
                 ' VPID zu Projekt projectName holen vom WebServer/DB
-                vpid = GETvpid(projectname)._id
+                vpid = GETvpid(projectname, err)._id
 
                 If vpid <> "" Then
                     ' gewünschte Variante vom Server anfordern
                     Dim allVPv As New List(Of clsProjektWebShort)
-                    allVPv = GETallVPvShort(vpid, , "", False, variantName, stored)
+                    allVPv = GETallVPvShort(vpid, err, , "", False, variantName, stored)
                     If allVPv.Count >= 0 Then
                         If allVPv.Count = 1 Then
-                            result = DELETEOneVPv(allVPv.Item(0)._id)
+                            result = DELETEOneVPv(allVPv.Item(0)._id, err)
                         Else
                             For Each vpv As clsProjektWebShort In allVPv
                                 If vpv.variantName = variantName Then
-                                    result = result And DELETEOneVPv(vpv._id)
+                                    result = result And DELETEOneVPv(vpv._id, err)
                                 End If
                             Next
                         End If
@@ -1025,13 +1072,14 @@ Public Class Request
     ''' <param name="projectname"></param>
     ''' <param name="variantname"></param>
     ''' <returns></returns>
-    Public Function retrieveFirstContractedPFromDB(ByVal projectname As String, ByVal variantname As String) As clsProjekt
+    Public Function retrieveFirstContractedPFromDB(ByVal projectname As String, ByVal variantname As String,
+                                                   ByRef err As clsErrorCodeMsg) As clsProjekt
 
         Dim hproj As New clsProjekt
 
         Try
             Dim vpid As String = ""
-            Dim vp As clsVP = GETvpid(projectname)
+            Dim vp As clsVP = GETvpid(projectname, err)
 
             If Not IsNothing(vp) Then
 
@@ -1042,7 +1090,7 @@ Public Class Request
 
                     Dim hresult As New List(Of clsProjektWebLong)
 
-                    hresult = GETallVPvLong(vpid:=vpid, vpvid:="",
+                    hresult = GETallVPvLong(vpid:=vpid, err:=err, vpvid:="",
                                                 status:="beauftragt",
                                                 refNext:=True,
                                                 variantName:=variantname,
@@ -1079,7 +1127,8 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveLastContractedPFromDB(ByVal projectname As String,
                                                   ByVal variantname As String,
-                                                  ByVal storedAtOrBefore As DateTime) As clsProjekt
+                                                  ByVal storedAtOrBefore As DateTime,
+                                                  ByRef err As clsErrorCodeMsg) As clsProjekt
 
         Dim hproj As New clsProjekt
 
@@ -1091,7 +1140,7 @@ Public Class Request
             End If
 
             Dim vpid As String = ""
-            Dim vp As clsVP = GETvpid(projectname)
+            Dim vp As clsVP = GETvpid(projectname, err)
 
             If Not IsNothing(vp) Then
 
@@ -1104,7 +1153,7 @@ Public Class Request
                     Dim hresult As New List(Of clsProjektWebLong)
 
 
-                    hresult = GETallVPvLong(vpid:=vpid, vpvid:="",
+                    hresult = GETallVPvLong(vpid:=vpid, err:=err, vpvid:="",
                                             status:="beauftragt",
                                             refNext:=False,
                                             variantName:=variantname,
@@ -1144,21 +1193,18 @@ Public Class Request
     ''' <param name="pName"></param>
     ''' <param name="vName"></param>
     ''' <param name="userName"></param>
-    ''' <param name="type"></param>
+    ''' <param name="type">  ptPRPFType.portfolio = 1
+    '''                      ptPRPFType.project = 0
+    '''                      ptPRPFType.projectTemplate = 2</param>
     ''' <returns>true -  es darf geändert werden
     '''          false - es darf nicht geändert werden</returns>
-    Public Function checkChgPermission(ByVal pName As String, ByVal vName As String, ByVal userName As String, Optional type As Integer = ptPRPFType.project) As Boolean
+    Public Function checkChgPermission(ByVal pName As String, ByVal vName As String, ByVal userName As String, ByRef err As clsErrorCodeMsg, Optional type As Integer = ptPRPFType.project) As Boolean
 
         Dim result As Boolean = False
 
         Try
-            ' angepasst: 20180914: ur: type muss im ReST-Server auf unsere Enumeration geändert werden: 
-            '           ptPRPFType.portfolio = 1
-            '           ptPRPFType.project = 0
-            '           ptPRPFType.projectTemplate = 2
 
-
-            Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, type)
+            Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, err, type)
 
             If wpItem.isProtected Then
                 result = (wpItem.userName = aktUser.email)
@@ -1182,10 +1228,12 @@ Public Class Request
     ''' <param name="vName"></param>
     ''' <param name="type"></param>
     ''' <returns></returns>
-    Public Function getWriteProtection(ByVal pName As String, ByVal vName As String, Optional type As Integer = ptPRPFType.project) As clsWriteProtectionItem
+    Public Function getWriteProtection(ByVal pName As String, ByVal vName As String,
+                                       ByRef err As clsErrorCodeMsg,
+                                       Optional type As Integer = ptPRPFType.project) As clsWriteProtectionItem
         Dim result As New clsWriteProtectionItem
         Try
-            Dim vp As clsVP = GETvpid(pName, type)
+            Dim vp As clsVP = GETvpid(pName, err, type)
             result.pvName = calcProjektKey(pName, vName)
             result.isProtected = False
             result.isSessionOnly = True
@@ -1230,14 +1278,14 @@ Public Class Request
     ''' </summary>
     ''' <param name="wpItem"></param>
     ''' <returns></returns>
-    Public Function setWriteProtection(ByVal wpItem As clsWriteProtectionItem) As Boolean
+    Public Function setWriteProtection(ByVal wpItem As clsWriteProtectionItem, ByRef err As clsErrorCodeMsg) As Boolean
         Dim result As Boolean = False
 
         Try
             Dim pname As String = Projekte.getPnameFromKey(wpItem.pvName)
             Dim vname As String = Projekte.getVariantnameFromKey(wpItem.pvName)
 
-            Dim aktvp As clsVP = GETvpid(pname)
+            Dim aktvp As clsVP = GETvpid(pname, err)
             Dim vpid As String = aktvp._id
             Dim variantExists As Boolean = False
 
@@ -1250,9 +1298,9 @@ Public Class Request
             If (vpid <> "" And variantExists) Or (vpid <> "" And vname = "") Then
 
                 If wpItem.isProtected Then
-                    result = POSTVPLock(vpid, vname)
+                    result = POSTVPLock(vpid, vname, err)
                 Else
-                    result = DELETEVPLock(vpid, vname)
+                    result = DELETEVPLock(vpid, err, vname)
                 End If
 
             Else
@@ -1275,7 +1323,7 @@ Public Class Request
     '''  Das Ergebnis dieser Funktion ist eine Liste (String, clsConstellation) 
     ''' </summary>
     ''' <returns></returns>
-    Public Function retrieveConstellationsFromDB() As clsConstellations
+    Public Function retrieveConstellationsFromDB(ByRef err As clsErrorCodeMsg) As clsConstellations
 
         Dim result As New clsConstellations
         Try
@@ -1284,7 +1332,7 @@ Public Class Request
             Dim timestamp As Date = Date.Now
             Dim c As New clsConstellation
 
-            intermediate = GETallVP(aktVCid, ptPRPFType.portfolio)
+            intermediate = GETallVP(aktVCid, err, ptPRPFType.portfolio)
             For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
 
 
@@ -1292,7 +1340,7 @@ Public Class Request
 
 
                     Dim vpid As String = kvp.Value._id
-                    Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp)
+                    Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp, err)
                     If portfolioVersions.Count > 0 Then
 
                         Dim aktPortfolio As clsVPf = portfolioVersions.Last.Value
@@ -1329,7 +1377,8 @@ Public Class Request
     ''' </summary>
     ''' <param name="c"></param>
     ''' <returns></returns>
-    Public Function storeConstellationToDB(ByVal c As clsConstellation) As Boolean
+    Public Function storeConstellationToDB(ByVal c As clsConstellation,
+                                           ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -1342,7 +1391,7 @@ Public Class Request
 
             ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
             '                       cVP = GETvpid(c.constellationName, vpType:=2)
-            cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
+            cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
 
 
             'cVPf = clsConst2clsVPf(c)
@@ -1364,7 +1413,7 @@ Public Class Request
                 cVP.vpType = ptPRPFType.portfolio
 
                 ' Erzeugen des VisboPortfolios in der Collection visboproject im akt. VisboCenter
-                newVP = POSTOneVP(cVP)
+                newVP = POSTOneVP(cVP, err)
                 If newVP.Count > 0 Then
                     cVP._id = newVP.Item(0)._id
                 Else
@@ -1384,7 +1433,7 @@ Public Class Request
 
             If cVP._id <> "" Then
 
-                newVPf = POSTOneVPf(cVPf)
+                newVPf = POSTOneVPf(cVPf, err)
 
                 If newVPf.Count > 0 Then
                     result = True
@@ -1405,7 +1454,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="c"></param>
     ''' <returns></returns>
-    Public Function removeConstellationFromDB(ByVal c As clsConstellation) As Boolean
+    Public Function removeConstellationFromDB(ByVal c As clsConstellation, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -1418,22 +1467,22 @@ Public Class Request
 
             ' angepasst: 20180914: korrigieren, wenn ReST-Server geändert wurde
             'cVP = GETvpid(c.constellationName, vpType:=2)
-            cVP = GETvpid(c.constellationName, ptPRPFType.portfolio)
+            cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
 
-            newVPf = GETallVPf(cVP._id, Date.Now)
+            newVPf = GETallVPf(cVP._id, Date.Now, err)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
             If newVPf.Count > 0 Then
 
                 If newVPf.Count = 1 Then
-                    result = DELETEOneVPf(cVP._id, newVPf.ElementAt(0).Value._id)
+                    result = DELETEOneVPf(cVP._id, newVPf.ElementAt(0).Value._id, err)
                 Else
                     Dim lv As Integer = 0
                     Dim ok As Boolean = True
                     result = ok
                     While result And (lv < newVPf.Count)
                         lv = lv + 1
-                        ok = DELETEOneVPf(cVP._id, newVPf.ElementAt(lv - 1).Value._id)
+                        ok = DELETEOneVPf(cVP._id, newVPf.ElementAt(lv - 1).Value._id, err)
                         If lv = 1 Then
                             result = ok
                         Else
@@ -1448,7 +1497,7 @@ Public Class Request
             End If
 
             If result = True Then
-                result = DELETEOneVP(cVP._id)
+                result = DELETEOneVP(cVP._id, err)
             End If
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -1463,7 +1512,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="AlleProjekte"></param>
     ''' <returns></returns>
-    Public Function retrieveWriteProtectionsFromDB(ByVal AlleProjekte As clsProjekteAlle) As SortedList(Of String, clsWriteProtectionItem)
+    Public Function retrieveWriteProtectionsFromDB(ByVal AlleProjekte As clsProjekteAlle, ByRef err As clsErrorCodeMsg) As SortedList(Of String, clsWriteProtectionItem)
 
         Dim result As New SortedList(Of String, clsWriteProtectionItem)
 
@@ -1474,7 +1523,7 @@ Public Class Request
                 wpItem.pvName = kvp.Key
                 Dim pname As String = Projekte.getPnameFromKey(kvp.Key)
                 Dim vname As String = Projekte.getVariantnameFromKey(kvp.Key)
-                wpItem = getWriteProtection(pname, vname, ptPRPFType.project)
+                wpItem = getWriteProtection(pname, vname, err, ptPRPFType.project)
 
                 If Not result.ContainsKey(wpItem.pvName) Then
                     result.Add(wpItem.pvName, wpItem)
@@ -1495,7 +1544,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="user"></param>
     ''' <returns></returns>
-    Public Function cancelWriteProtections(ByVal user As String) As Boolean
+    Public Function cancelWriteProtections(ByVal user As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Dim vplist As New SortedList(Of String, clsVP)
@@ -1505,7 +1554,7 @@ Public Class Request
             If VRScache.VPsN.Count > 0 Then
                 vplist = VRScache.VPsN
             Else
-                vplist = GETallVP(aktVCid, Nothing)
+                vplist = GETallVP(aktVCid, err, Nothing)
             End If
 
             For Each kvp As KeyValuePair(Of String, clsVP) In vplist
@@ -1513,12 +1562,12 @@ Public Class Request
                 If kvp.Value.lock.Count > 0 Then
 
                     ' holt zu der vpid die Varianten aus vpv Collection
-                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id, , "", False,  , Date.Now)
+                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id, err, , "", False,  , Date.Now)
 
                     ' Lock löschen für jede Variante des Projektes mit vpid
                     For Each vTp As clsProjektWebShort In variantToProj
 
-                        result = result And DELETEVPLock(kvp.Value._id, vTp.variantName)
+                        result = result And DELETEVPLock(kvp.Value._id, err, vTp.variantName)
 
                     Next
                 End If
@@ -1539,7 +1588,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveRolesFromDB(ByVal storedAtOrBefore As DateTime) As clsRollen
+    Public Function retrieveRolesFromDB(ByVal storedAtOrBefore As DateTime, ByRef err As clsErrorCodeMsg) As clsRollen
 
         Dim result As New clsRollen()
 
@@ -1553,7 +1602,7 @@ Public Class Request
             Dim allRoles As New List(Of clsVCrole)
 
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
-            allRoles = GETallVCrole(aktVCid)
+            allRoles = GETallVCrole(aktVCid, err)
 
             For Each role As clsVCrole In allRoles
                 Dim roleDef As New clsRollenDefinition
@@ -1580,7 +1629,10 @@ Public Class Request
     ''' <param name="insertNewDate"></param>
     ''' <param name="ts"></param>
     ''' <returns></returns>
-    Public Function storeRoleDefinitionToDB(ByVal roleDef As clsRollenDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
+    Public Function storeRoleDefinitionToDB(ByVal roleDef As clsRollenDefinition,
+                                            ByVal insertNewDate As Boolean,
+                                            ByVal ts As DateTime,
+                                            ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -1592,15 +1644,15 @@ Public Class Request
             role.timestamp = timestamp
 
             If insertNewDate Then
-                result = POSTOneVCrole(aktVCid, role)
+                result = POSTOneVCrole(aktVCid, role, err)
             Else
                 If VRScache.VCrole.ContainsKey(role.name) Then
                     role._id = VRScache.VCrole(role.name)._id
-                    result = PUTOneVCrole(aktVCid, role)
+                    result = PUTOneVCrole(aktVCid, role, err)
                 End If
 
                 If result = False Then ' Rolle ist noch nicht vorhanden im VisboCenter, also neu erzeugen
-                    result = POSTOneVCrole(aktVCid, role)
+                    result = POSTOneVCrole(aktVCid, role, err)
                 End If
             End If
 
@@ -1622,7 +1674,10 @@ Public Class Request
     ''' <param name="insertNewDate"></param>
     ''' <param name="ts"></param>
     ''' <returns></returns>
-    Public Function storeCostDefinitionToDB(ByVal costDef As clsKostenartDefinition, ByVal insertNewDate As Boolean, ByVal ts As DateTime) As Boolean
+    Public Function storeCostDefinitionToDB(ByVal costDef As clsKostenartDefinition,
+                                            ByVal insertNewDate As Boolean,
+                                            ByVal ts As DateTime,
+                                            ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
 
@@ -1634,16 +1689,16 @@ Public Class Request
             cost.timestamp = timestamp
 
             If insertNewDate Then
-                result = POSTOneVCcost(aktVCid, cost)
+                result = POSTOneVCcost(aktVCid, cost, err)
             Else
 
                 If VRScache.VCcost.ContainsKey(cost.name) Then
                     cost._id = VRScache.VCcost(cost.name)._id
-                    result = PUTOneVCcost(aktVCid, cost)
+                    result = PUTOneVCcost(aktVCid, cost, err)
                 End If
 
                 If result = False Then  ' Kostenart ist noch nicht vorhanden im VisboCenter, also neu erzeugen
-                    result = POSTOneVCcost(aktVCid, cost)
+                    result = POSTOneVCcost(aktVCid, cost, err)
                 End If
             End If
 
@@ -1663,7 +1718,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
-    Public Function retrieveCostsFromDB(ByVal storedAtOrBefore As DateTime) As clsKostenarten
+    Public Function retrieveCostsFromDB(ByVal storedAtOrBefore As DateTime, ByRef err As clsErrorCodeMsg) As clsKostenarten
 
         Dim result As New clsKostenarten()
         Try
@@ -1675,7 +1730,7 @@ Public Class Request
 
             Dim allCosts As New List(Of clsVCcost)
             ' Alle in der DB-vorhandenen Rollen mit timestamp <= refdate wäre wünschenswert
-            allCosts = GETallVCcost(aktVCid)
+            allCosts = GETallVCcost(aktVCid, err)
 
             For Each cost As clsVCcost In allCosts
                 Dim costDef As New clsKostenartDefinition
@@ -1816,13 +1871,18 @@ Public Class Request
     End Function
 
 
+
     ''' <summary>
     ''' holt zu dem Projekt projectName die zugehörige vpid vom Server
     ''' vpType = 1 ist Projekt; vpType = 0 ist Template (noch nicht fertig programmiert- ur:2018.07.24)
     ''' </summary>
     ''' <param name="projectName"></param>
+    ''' <param name="err"></param>
+    ''' <param name="vpType"></param>
     ''' <returns></returns>
-    Private Function GETvpid(ByVal projectName As String, Optional ByVal vpType As Integer = ptPRPFType.project) As clsVP
+    Private Function GETvpid(ByVal projectName As String,
+                             ByRef err As clsErrorCodeMsg,
+                             Optional ByVal vpType As Integer = ptPRPFType.project) As clsVP
 
         Dim vpid As String = ""
         Dim aktvp As New clsVP
@@ -1831,7 +1891,7 @@ Public Class Request
             ' Alle VisboProjects über Server von WebServer/DB holen
             Dim anzLoop As Integer = 0
             'Dim allVP As New List(Of clsVP)
-            While (vpid = "" And anzLoop <= 2)
+            While (vpid = "" And anzLoop < 2)
 
                 If VRScache.VPsN.Count > 0 Then
                     ' Id zu angegebenen Projekt herausfinden
@@ -1840,10 +1900,13 @@ Public Class Request
                         vpid = vp._id
                         aktvp = vp
                     Else
-                        VRScache.VPsN = GETallVP(aktVCid, vpType)
+                        VRScache.VPsN = GETallVP(aktVCid, err, vpType)
                     End If
                 Else
-                    VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+                    VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
+                    If VRScache.VPsN.Count = 0 Then
+                        anzLoop = 2
+                    End If
                 End If
 
                 anzLoop = anzLoop + 1
@@ -1865,7 +1928,7 @@ Public Class Request
     Private Function GETpName(ByVal vpid As String) As String
 
         Dim pName As String = ""
-
+        Dim err As New clsErrorCodeMsg
 
         Try
             ' Alle VisboProjects über Server von WebServer/DB holen
@@ -1873,26 +1936,40 @@ Public Class Request
 
             If vpid <> "" Then
 
-                While (pName = "" And anzLoop <= 2)
+                While (pName = "" And anzLoop < 2)
 
-                    If VRScache.VPsId.ContainsKey(vpid) Then
-                        ' pName zu angegebene vpid herausfinden
-                        pName = VRScache.VPsId(vpid).name
-                    Else
-                        VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+                    If VRScache.VPsId.Count > 0 Then
 
-                        Try
+                        If VRScache.VPsId.ContainsKey(vpid) Then
+                            ' pName zu angegebene vpid herausfinden
                             pName = VRScache.VPsId(vpid).name
-                        Catch ex As Exception
-                            pName = ""
-                        End Try
+                        Else
 
+                            VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
+
+                            If VRScache.VPsId.Count <= 0 Then
+                                anzLoop = 2 ' while-Schleife beenden
+                            Else
+                                Try
+                                    pName = VRScache.VPsId(vpid).name
+                                Catch ex As Exception
+                                    pName = ""
+                                End Try
+                            End If
+
+                        End If
+                    Else
+                        VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
+
+                        If VRScache.VPsId.Count <= 0 Then
+                            anzLoop = 2 ' while-Schleife beenden
+                        End If
                     End If
 
                     anzLoop = anzLoop + 1
                 End While
             Else
-                Throw New ArgumentException("Fehler in GETpName: keine vpid übergeben")
+                Throw New ArgumentException("Fehler in GETpName: vpid = "" übergeben")
             End If
         Catch ex As Exception
             pName = ""
@@ -1906,7 +1983,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="vpid"></param>
     ''' <returns></returns>
-    Private Function GETvpType(ByVal vpid As String) As Integer
+    Private Function GETvpType(ByVal vpid As String, ByRef err As clsErrorCodeMsg) As Integer
 
         Dim vpType As Integer = ptPRPFType.all
 
@@ -1922,7 +1999,7 @@ Public Class Request
                         ' pName zu angegebene vpid herausfinden
                         vpType = VRScache.VPsId(vpid).vpType
                     Else
-                        VRScache.VPsN = GETallVP(aktVCid, ptPRPFType.all)
+                        VRScache.VPsN = GETallVP(aktVCid, err, ptPRPFType.all)
 
                         Try
                             vpType = VRScache.VPsId(vpid).vpType
@@ -2044,7 +2121,9 @@ Public Class Request
     ''' <param name="vcid">vcid = "": es werden alle VisboProjects dieses Users geholt
     '''                    sonst die visboProjects vom Visbocenter vcid</param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
-    Private Function GETallVP(ByVal vcid As String, Optional ByVal vptype As Integer = ptPRPFType.project) As SortedList(Of String, clsVP)
+    Private Function GETallVP(ByVal vcid As String,
+                              ByRef err As clsErrorCodeMsg,
+                              Optional ByVal vptype As Integer = ptPRPFType.project) As SortedList(Of String, clsVP)
 
         Dim result As New SortedList(Of String, clsVP)          ' sortiert nach pname
         Dim secondResult As New SortedList(Of String, clsVP)    ' sortiert nach vpid
@@ -2164,9 +2243,14 @@ Public Class Request
                 GETallVP = result
 
             Else
+
+
                 ' Fehlerbehandlung je nach errcode
                 Dim statError As Boolean = errorHandling_withBreak("GETallVP", errcode, errmsg & " : " & webVPantwort.message)
             End If
+
+            err.errorCode = errcode
+            err.errorMsg = "GETallVP" & " : " & errmsg & " : " & webVPantwort.message
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -2186,6 +2270,7 @@ Public Class Request
     ''' <param name="storedAtorBefore"></param>
     ''' <returns></returns>
     Private Function GETallVPvShort(ByVal vpid As String,
+                                    ByRef err As clsErrorCodeMsg,
                                    Optional vpvid As String = "",
                                    Optional status As String = "",
                                    Optional refNext As Boolean = False,
@@ -2354,32 +2439,6 @@ Public Class Request
                             End If
                         End If
 
-                        '    If vpid <> "" Or storedAtorBefore > Date.MinValue Or variantName <> Nothing Then
-
-                        '    If vpid <> "" Then
-                        '        serverUriString = serverUriString & "&vpid=" & vpid
-
-                        '        If storedAtorBefore > Date.MinValue Then
-                        '            serverUriString = serverUriString & "&refDate=" & refDate
-                        '        End If
-
-                        '        If variantName <> Nothing Then
-                        '            serverUriString = serverUriString & "&variantName=" & variantName
-                        '        End If
-                        '    Else
-                        '        If storedAtorBefore > Date.MinValue Then
-                        '            serverUriString = serverUriString & "&refDate=" & refDate
-                        '            If variantName <> Nothing Then
-                        '                serverUriString = serverUriString & "&variantName=" & variantName
-                        '            End If
-                        '        Else
-                        '            If variantName <> Nothing Then
-                        '                serverUriString = serverUriString & "&variantName=" & variantName
-                        '            End If
-                        '        End If
-
-                        '    End If
-
                     End If
 
                 End If
@@ -2419,6 +2478,9 @@ Public Class Request
 
                 End If
 
+                err.errorCode = errcode
+                err.errorMsg = "GETallVPvShort" & " : " & errmsg & " : " & webVPvAntwort.message
+
             Catch ex As Exception
                 Throw New ArgumentException(ex.Message)
             End Try
@@ -2440,6 +2502,7 @@ Public Class Request
     ''' <param name="storedAtorBefore"></param>
     ''' <returns></returns>
     Private Function GETallVPvLong(ByVal vpid As String,
+                                   ByRef err As clsErrorCodeMsg,
                                    Optional vpvid As String = "",
                                    Optional status As String = "",
                                    Optional refNext As Boolean = False,
@@ -2671,6 +2734,9 @@ Public Class Request
 
                 End If
 
+                err.errorCode = errcode
+                err.errorMsg = "GETallVPvLong" & " : " & errmsg & " : " & webVPvAntwort.message
+
             Catch ex As Exception
                 Throw New ArgumentException(ex.Message)
             End Try
@@ -2689,7 +2755,7 @@ Public Class Request
     ''' <param name="vpid">vpid = "": es werden alle VisboportfolioVersions  dieser vpid geholt
     '''                    die jünger sind als timestamp</param>
     ''' <returns>nach Projektnamen sortierte Liste der VisboProjects</returns>
-    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date) As SortedList(Of Date, clsVPf)
+    Private Function GETallVPf(ByVal vpid As String, ByVal timestamp As Date, ByRef err As clsErrorCodeMsg) As SortedList(Of Date, clsVPf)
 
         Dim result As New SortedList(Of Date, clsVPf)          ' sortiert nach datum
         Dim secondResult As New SortedList(Of String, clsVPf)    ' sortiert nach vpid
@@ -2738,6 +2804,9 @@ Public Class Request
 
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "GETallVPf" & " : " & errmsg & " : " & webVPfantwort.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -2752,7 +2821,7 @@ Public Class Request
     ''' <param name="vpvid"></param>
     ''' <returns>true:  löschen erfolgreich
     '''          false: löschen hat nicht funktioniert</returns>
-    Private Function DELETEOneVPv(ByVal vpvid As String) As Boolean
+    Private Function DELETEOneVPv(ByVal vpvid As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -2787,9 +2856,15 @@ Public Class Request
 
             If errcode = 200 Then
                 result = True
+                ' Cache aktualisieren
+                VRScache.deleteVPv(vpvid)
             Else
                 Dim statError As Boolean = errorHandling_withBreak("DELETEOneVPv", errcode, errmsg & " : " & webantwort.message)
             End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "DELETEOneVPv" & " : " & errmsg & " : " & webantwort.message
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -2806,7 +2881,7 @@ Public Class Request
     ''' <param name="vpfid"></param>
     ''' <returns>true:  löschen erfolgreich
     '''          false: löschen hat nicht funktioniert</returns>
-    Private Function DELETEOneVPf(ByVal vpid As String, ByVal vpfid As String) As Boolean
+    Private Function DELETEOneVPf(ByVal vpid As String, ByVal vpfid As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -2846,6 +2921,10 @@ Public Class Request
                 Dim statError As Boolean = errorHandling_withBreak("DELETEOneVPf", errcode, errmsg & " : " & webantwort.message)
             End If
 
+
+            err.errorCode = errcode
+            err.errorMsg = "DELETEOneVPf" & " : " & errmsg & " : " & webantwort.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -2860,7 +2939,7 @@ Public Class Request
     ''' <param name="vcid">vcid = "": es werden alle Rollen vom Visbocenter vcid  geholt</param>
     '''                    
     ''' <returns>Liste der Rollen</returns>
-    Private Function GETallVCrole(ByVal vcid As String) As List(Of clsVCrole)
+    Private Function GETallVCrole(ByVal vcid As String, ByRef err As clsErrorCodeMsg) As List(Of clsVCrole)
 
         Dim result As New List(Of clsVCrole)
         Dim errmsg As String = ""
@@ -2912,6 +2991,10 @@ Public Class Request
 
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "GETallVCrole" & " : " & errmsg & " : " & webVCroleantwort.message
+
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -2929,7 +3012,7 @@ Public Class Request
     ''' <param name="vcid"></param>
     ''' <param name="role"></param>
     ''' <returns></returns>
-    Private Function POSTOneVCrole(ByVal vcid As String, ByVal role As clsVCrole) As Boolean
+    Private Function POSTOneVCrole(ByVal vcid As String, ByVal role As clsVCrole, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean
         Dim errmsg As String = ""
@@ -2967,6 +3050,10 @@ Public Class Request
                 Dim statError As Boolean = errorHandling_withBreak("POSTOneVCrole", errcode, errmsg & " : " & webVCroleantwort.message)
             End If
 
+
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVCrole" & " : " & errmsg & " : " & webVCroleantwort.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -2983,7 +3070,7 @@ Public Class Request
     ''' <param name="vcid"></param>
     ''' <param name="role"></param>
     ''' <returns></returns>
-    Private Function PUTOneVCrole(ByVal vcid As String, ByVal role As clsVCrole) As Boolean
+    Private Function PUTOneVCrole(ByVal vcid As String, ByVal role As clsVCrole, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean
         Dim errmsg As String = ""
@@ -3023,6 +3110,10 @@ Public Class Request
 
             End If
 
+
+            err.errorCode = errcode
+            err.errorMsg = "PUTOneVCrole" & " : " & errmsg & " : " & webVCroleantwort.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -3036,7 +3127,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="vcid">vcid = "": es werden alle Kostenarten vom Visbocenter vcid geholt</param>
     ''' <returns>Liste der Kostenarten</returns>
-    Private Function GETallVCcost(ByVal vcid As String) As List(Of clsVCcost)
+    Private Function GETallVCcost(ByVal vcid As String, ByRef err As clsErrorCodeMsg) As List(Of clsVCcost)
 
         Dim result As New List(Of clsVCcost)
         Dim errmsg As String = ""
@@ -3074,8 +3165,12 @@ Public Class Request
                 result = webVCcostantwort.vccost
             Else
                 ' Fehlerbehandlung je nach errcode
-                Dim statError As Boolean = errorHandling_withBreak("GETalVCcost", errcode, errmsg & " : " & webVCcostantwort.message)
+                Dim statError As Boolean = errorHandling_withBreak("GETallVCcost", errcode, errmsg & " : " & webVCcostantwort.message)
             End If
+
+            err.errorCode = errcode
+            err.errorMsg = "GETallVCcost" & " : " & errmsg & " : " & webVCcostantwort.message
+
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -3092,7 +3187,7 @@ Public Class Request
     ''' <param name="vcid"></param>
     ''' <param name="cost"></param>
     ''' <returns></returns>
-    Private Function POSTOneVCcost(ByVal vcid As String, ByVal cost As clsVCcost) As Boolean
+    Private Function POSTOneVCcost(ByVal vcid As String, ByVal cost As clsVCcost, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean
         Dim errmsg As String = ""
@@ -3130,6 +3225,9 @@ Public Class Request
                 Dim statError As Boolean = errorHandling_withBreak("POSTOneVCcost", errcode, errmsg & " : " & webVCcostantwort.message)
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVCcost" & " : " & errmsg & " : " & webVCcostantwort.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -3146,7 +3244,7 @@ Public Class Request
     ''' <param name="vcid"></param>
     ''' <param name="cost"></param>
     ''' <returns></returns>
-    Private Function PUTOneVCcost(ByVal vcid As String, ByVal cost As clsVCcost) As Boolean
+    Private Function PUTOneVCcost(ByVal vcid As String, ByVal cost As clsVCcost, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean
         Dim errmsg As String = ""
@@ -3186,6 +3284,9 @@ Public Class Request
 
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "PUTOneVCcost" & " : " & errmsg & " : " & webVCcostantwort.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -3201,7 +3302,7 @@ Public Class Request
     ''' </summary>
     ''' <param name="vpid">vpid = "": es wird ein VisboProject geändert. user muss die Rechte haben, das checkt der Server</param>
     ''' <returns>Liste der VisboProjects</returns>
-    Private Function PUTOneVP(ByVal vpid As String, ByVal vp As clsVP) As List(Of clsVP)
+    Private Function PUTOneVP(ByVal vpid As String, ByVal vp As clsVP, ByRef err As clsErrorCodeMsg) As List(Of clsVP)
 
         Dim result As New List(Of clsVP)
         Dim errmsg As String = ""
@@ -3257,7 +3358,7 @@ Public Class Request
     ''' <param name="vpid">vpid = "": es wird dass VisboProject vpid gelöscht. user muss die Rechte haben, das checkt der Server</param>
     ''' <returns>true: gelöscht
     '''          false: konnte nicht gelöscht werden</returns>
-    Private Function DELETEOneVP(ByVal vpid As String) As Boolean
+    Private Function DELETEOneVP(ByVal vpid As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -3311,6 +3412,9 @@ Public Class Request
 
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "DELETEOneVP" & " : " & errmsg & " : " & webVP.message
+
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -3326,7 +3430,9 @@ Public Class Request
     ''' </summary>
     ''' <param name="vpid">vpid = "": es wird ein VisboProject geändert. user muss die Rechte haben, das checkt der Server</param>
     ''' <returns>Liste der VisboProjects</returns>
-    Private Function POSTVPLock(ByVal vpid As String, ByVal variantName As String) As Boolean
+    Private Function POSTVPLock(ByVal vpid As String,
+                                ByVal variantName As String,
+                                ByRef err As clsErrorCodeMsg) As Boolean
 
 
         Dim result As Boolean = False
@@ -3406,6 +3512,10 @@ Public Class Request
 
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "POSTVPLock" & " : " & errmsg & " : " & webVPLockantwort.message
+
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -3422,7 +3532,9 @@ Public Class Request
     ''' <param name="vpid">vpid = "": es wird ein der Lock eines VisboProject gelöscht. user muss die Rechte haben, das checkt der Server</param>
     ''' <returns>true: gelöscht
     '''          false: konnte nicht gelöscht werden</returns>
-    Private Function DELETEVPLock(ByVal vpid As String, Optional ByVal variantName As String = "") As Boolean
+    Private Function DELETEVPLock(ByVal vpid As String,
+                                  ByRef err As clsErrorCodeMsg,
+                                  Optional ByVal variantName As String = "") As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -3494,6 +3606,8 @@ Public Class Request
                 Dim statError As Boolean = errorHandling_withBreak("DELETEVPLock", errcode, errmsg & " : " & webVPLockantwort.message)
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "DELETEVPLock" & " : " & errmsg & " : " & webVPLockantwort.message
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -3509,7 +3623,8 @@ Public Class Request
     ''' <param name="vpid">vpid = "": es wird ein VisboProject geändert. user muss die Rechte haben, das checkt der Server</param>
     ''' <param name="variantName"></param>
     ''' <returns></returns>
-    Private Function POSTVPVariant(ByVal vpid As String, ByVal variantName As String) As Boolean
+    Private Function POSTVPVariant(ByVal vpid As String, ByVal variantName As String,
+                                   ByRef err As clsErrorCodeMsg) As Boolean
 
 
         Dim result As Boolean = False
@@ -3557,6 +3672,9 @@ Public Class Request
                 Dim statError As Boolean = errorHandling_withBreak("POSTVPVariant", errcode, errmsg & " : " & webVPVar.message)
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "POSTVPVariant" & " : " & errmsg & " : " & webVPVar.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -3572,7 +3690,9 @@ Public Class Request
     ''' <param name="vpid">vpid = "": es wird die Variante des VisboProject vpid gelöscht. user muss die Rechte haben, das checkt der Server</param>
     ''' <returns>true: gelöscht
     '''          false: konnte nicht gelöscht werden</returns>
-    Private Function DELETEVPVariant(ByVal vpid As String, Optional ByVal varID As String = "") As Boolean
+    Private Function DELETEVPVariant(ByVal vpid As String,
+                                     ByRef err As clsErrorCodeMsg,
+                                     Optional ByVal varID As String = "") As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -3626,6 +3746,9 @@ Public Class Request
                     Dim statError As Boolean = errorHandling_withBreak("DELETEVPVariant", errcode, errmsg & " : " & webVPVarAntwort.message)
                 End If
 
+                err.errorCode = errcode
+                err.errorMsg = "DELETEVPVariant" & " : " & errmsg & " : " & webVPVarAntwort.message
+
             End If    ' ende von if vpid <> ""
 
         Catch ex As Exception
@@ -3642,7 +3765,8 @@ Public Class Request
     ''' </summary>
     ''' <param name="vp">hier sind alle Daten des Projektes/Portfolios enthalten</param>
     ''' <returns>Liste mit dem angelegten VisboProject/VisboPortfolio inkl. kreierter _Id</returns>
-    Private Function POSTOneVP(ByVal vp As clsVP) As List(Of clsVP)
+    Private Function POSTOneVP(ByVal vp As clsVP,
+                               ByRef err As clsErrorCodeMsg) As List(Of clsVP)
 
         Dim result As New List(Of clsVP)
         Dim errmsg As String = ""
@@ -3676,6 +3800,9 @@ Public Class Request
 
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVP" & " : " & errmsg & " : " & webVPantwort.message
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -3689,7 +3816,8 @@ Public Class Request
     ''' </summary>
     ''' <param name="vpf">hier sind alle Daten des Projektes/Portfolios enthalten</param>
     ''' <returns>Liste mit dem angelegten VisboProject/VisboPortfolio inkl. kreierter _Id</returns>
-    Private Function POSTOneVPf(ByVal vpf As clsVPf) As List(Of clsVPf)
+    Private Function POSTOneVPf(ByVal vpf As clsVPf,
+                                ByRef err As clsErrorCodeMsg) As List(Of clsVPf)
 
         Dim result As New List(Of clsVPf)
         Dim errmsg As String = ""
@@ -3728,6 +3856,10 @@ Public Class Request
 
             End If
 
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVPf" & " : " & errmsg & " : " & webVPfantwort.message
+
+
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
         End Try
@@ -3736,11 +3868,12 @@ Public Class Request
 
     End Function
 
-    Private Function POSTpwforgotten(ByVal ServerURL As String, ByVal databaseName As String, ByVal username As String) As Boolean
+    Private Function POSTpwforgotten(ByVal ServerURL As String, ByVal databaseName As String,
+                                     ByVal username As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
-        Dim errmsg As String = ""
-        Dim errcode As Integer
+        'Dim errmsg As String = ""
+        'Dim errcode As Integer
 
         Try
             Dim serverUriString As String = ""
@@ -3762,17 +3895,19 @@ Public Class Request
             Dim webantwort As clsWebOutput = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
-                errcode = CType(httpresp.StatusCode, Integer)
-                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                err.errorCode = CType(httpresp.StatusCode, Integer)
+                err.errorMsg = "( " & err.errorCode.ToString & ") : " & httpresp.StatusDescription
                 'webantwort = JsonConvert.DeserializeObject(Of clsWeboutput)(Antwort)
             End Using
 
-            If errcode = 200 Then
+
+            If err.errorCode = 200 Then
 
                 result = True
             Else
+
                 ' Fehlerbehandlung je nach errcode
-                Dim statError As Boolean = errorHandling_withBreak("POSTpwforgotten", errcode, errmsg & " : " & webantwort.message)
+                Dim statError As Boolean = errorHandling_withBreak("POSTpwforgotten", err.errorCode, err.errorMsg & " : " & webantwort.message)
 
             End If
 
@@ -3851,6 +3986,7 @@ Public Class Request
     Private Function clsConst2clsVPf(ByVal c As clsConstellation) As clsVPf
 
         Dim result As New clsVPf
+        Dim err As New clsErrorCodeMsg
         Try
             Dim hvpid As String = ""
             Dim vpfItem As New clsVPfItem
@@ -3862,14 +3998,14 @@ Public Class Request
                 ' angepasst: 20180914: ReST-Server muss auf ptPRPFType-Enumeration angepasst werden
                 '.vpid = GETvpid(c.constellationName, vpType:=2)._id
 
-                .vpid = GETvpid(c.constellationName, vpType:=ptPRPFType.portfolio)._id
+                .vpid = GETvpid(c.constellationName, err, vpType:=ptPRPFType.portfolio)._id
 
                 .timestamp = DateTimeToISODate(Date.Now)
 
                 .sortType = c.sortCriteria
                 ' .sortlist aufbauen aus c.sortlist
                 For Each kvp As KeyValuePair(Of String, String) In c.sortListe(result.sortType)
-                    hvpid = GETvpid(kvp.Value)._id
+                    hvpid = GETvpid(kvp.Value, err)._id
                     If Not .sortList.Contains(hvpid) Then
                         .sortList.Add(hvpid)
                     End If
@@ -3928,11 +4064,12 @@ Public Class Request
     ''' <returns></returns>
     Private Function clsConstItem2clsVPfItem(ByVal cItem As clsConstellationItem) As clsVPfItem
         Dim result As New clsVPfItem
+        Dim err As New clsErrorCodeMsg
         Try
             With result
 
                 result.name = cItem.projectName
-                result.vpid = GETvpid(cItem.projectName)._id
+                result.vpid = GETvpid(cItem.projectName, err)._id
                 result._id = ""
                 result.projectName = cItem.projectName
                 result.variantName = cItem.variantName
@@ -4101,42 +4238,6 @@ Public Class Request
         storeDependencyofPToDB = result
 
     End Function
-    ''    {
-
-    ''        Try
-    ''        {
-    ''            var depDB = New clsDependenciesOfPDB();
-    ''            depDB.copyFrom(d);
-    ''            depDB.Id = depDB.projectName;
-
-    ''            bool alreadyExisting = CollectionDependencies.AsQueryable < clsDependenciesOfPDB > ()
-    ''.Any(p >= p.projectName == d.projectName);
-
-    ''            If (alreadyExisting)
-    ''            {
-    ''                var filter = Builders < clsDependenciesOfPDB > .Filter.Eq("projectName", d.projectName);
-    ''                var rResult = CollectionDependencies.ReplaceOne(filter, depDB);
-    ''                If (rResult.ModifiedCount > 0)
-    ''                {
-    ''                    Return True;
-    ''                }
-    ''                Else
-    ''                {
-    ''                    Return False;
-    ''                }
-    ''            }
-    ''            Else
-    ''            {
-    ''                CollectionDependencies.InsertOne(depDB);
-    ''                Return True;
-    ''            }
-
-    ''        }
-    ''        Catch (Exception)
-    ''        {
-
-    ''            Return False;
-    ''        }
 
 
 End Class

@@ -14019,7 +14019,7 @@ Public Module Projekte
                         ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
                         newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
 
-                        newchtobj.Top = oldchtobj.Top + maxTop '???
+                        newchtobj.Top = oldchtobj.Top + maxTop
                         newchtobj.Left = oldchtobj.Left + maxLeft
                         ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
 
@@ -18846,7 +18846,7 @@ Public Module Projekte
 
                 'If awinSettings.drawProjectLine Then
                 If awinSettings.drawProjectLine Then
-                    ' ????ur: hier geht es schief beim Laden von Konstellation
+
                     projectShape = worksheetShapes.AddConnector(core.MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top),
                                                                 CSng(left + width), CSng(top))
 

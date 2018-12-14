@@ -78,6 +78,7 @@
     <Compile Include="clsCustomUserRoles.vb" />
     <Compile Include="clsDocuments.vb" />
     <Compile Include="clsDocumentsDB.vb" />
+    <Compile Include="clsErrorCodeMsg.vb" />
     <Compile Include="clsHierarchyDB.vb" />
     <Compile Include="clsHierarchyNodeDB.vb" />
     <Compile Include="clsKostenartDB.vb" />
