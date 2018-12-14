@@ -71,6 +71,12 @@
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
     <Compile Include="clsProjectboardConfig.vb" />
+    <Compile Include="frmChooseCustomUserRole.Designer.vb">
+      <DependentUpon>frmChooseCustomUserRole.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmChooseCustomUserRole.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmEinstellungen.Designer.vb">
       <DependentUpon>frmEinstellungen.vb</DependentUpon>
     </Compile>
@@ -295,6 +301,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmBetterWorseSettings.resx">
       <DependentUpon>frmBetterWorseSettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmChooseCustomUserRole.resx">
+      <DependentUpon>frmChooseCustomUserRole.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmCreateLicences.resx">
       <DependentUpon>frmCreateLicences.vb</DependentUpon>
