@@ -1725,6 +1725,27 @@ Imports System.Web
     Function bestimmeLabel(control As IRibbonControl) As String
         Dim tmpLabel As String = "?"
         Select Case control.Id
+            Case "PT4G1M1-1"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Konfiguration"
+                Else
+                    tmpLabel = "Import Configuration"
+                End If
+
+            Case "PT4G1B8"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Organisation"
+                Else
+                    tmpLabel = "Organisation"
+                End If
+
+            Case "PT4G1B11"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Custom Nutzer Rollen"
+                Else
+                    tmpLabel = "Custom User Roles"
+                End If
+
             Case "PTproj" ' Project
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekt"
@@ -4850,6 +4871,15 @@ Imports System.Web
         appInstance.ScreenUpdating = True
 
 
+
+    End Sub
+
+    Public Sub PTImportCustomUserRoles(control As IRibbonControl)
+
+        Dim allCustomUserRoles As New clsCustomUserRoles
+        Call awinImportCustomUserRoles(allCustomUserRoles)
+
+        '??? Aufruf speichern der CustomUser Roles über rest-Server ...
 
     End Sub
 

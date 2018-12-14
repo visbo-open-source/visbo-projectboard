@@ -6896,6 +6896,132 @@ Public Module agm2
 
     End Sub
 
+    ''' <summary>
+    ''' liest aus der geöffneten Excel Datei alle Custom User Roles 
+    ''' </summary>
+    ''' <param name="allCustomUserRoles"></param>
+    Public Sub awinImportCustomUserRoles(ByRef allCustomUserRoles As clsCustomUserRoles)
+
+        Dim tmpResult As New clsCustomUserRoles
+        Dim currentCustomUserRole As New clsCustomUserRole
+        Dim mappingNameID As New SortedList(Of String, String)
+
+
+
+        Dim userName As String = "rv@visbo.de"
+        Dim curType As ptCustomUserRoles = ptCustomUserRoles.portfoliomgr
+        Dim specifics As String = ""
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+        End If
+
+        ' nächster ..
+        userName = "jt@visbo.de"
+        curType = ptCustomUserRoles.resourcemgr
+        specifics = "D-BOSV-KB1"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+        End If
+
+        ' nächster ..
+        userName = "jt@visbo.de"
+        curType = ptCustomUserRoles.resourcemgr
+        specifics = "D-BOSV-KB2"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+        End If
+
+        ' nächster ..
+        userName = "jt@visbo.de"
+        curType = ptCustomUserRoles.resourcemgr
+        specifics = "D-BOSV-KB3"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+        End If
+
+        ' nächster ..
+        userName = "jt@visbo.de"
+        curType = ptCustomUserRoles.orgaadmin
+        specifics = ""
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+        End If
+
+        ' nächster ..
+        userName = "jt@visbo.de"
+        curType = ptCustomUserRoles.portfoliomgr
+        specifics = ""
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+        End If
+
+        ' nächster ..
+        userName = "ss@visbo.de"
+        curType = ptCustomUserRoles.resourcemgr
+        specifics = "D-BOSV-GRP"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' prüft, ob es sich beim Namen/der Email um eine bekannte Email Adresse handelt. 
+    ''' Bei Erfolg wird das Werte-Paar in mappingNameID eingetragen
+    ''' </summary>
+    ''' <param name="userName"></param>
+    ''' <param name="roleType"></param>
+    ''' <param name="specifics"></param>
+    ''' <param name="mappingNameID"></param>
+    ''' <returns></returns>
+    Public Function isValidCustomUserRole(ByVal userName As String,
+                                          ByVal roleType As ptCustomUserRoles,
+                                          ByVal specifics As String,
+                                          ByRef mappingNameID As SortedList(Of String, String)) As Boolean
+
+        Dim stillOk As Boolean = True
+
+        If Not mappingNameID.ContainsKey(userName) Then
+            Dim userID As String = bestimmeUserIDFromName(userName)
+            If userID.Length > 0 Then
+                mappingNameID.Add(userName, userID)
+            Else
+                ' wenn der Name keiner ID zugeordnet werden konnte ... 
+                stillOk = False
+            End If
+        End If
+
+        If stillOk Then
+            If roleType = ptCustomUserRoles.resourcemgr Then
+                If RoleDefinitions.containsName(specifics) Then
+                    ' alles ok
+                    stillOk = True
+                Else
+                    stillOk = False
+                End If
+            End If
+        End If
+
+
+        isValidCustomUserRole = stillOk
+    End Function
+
+    Public Function bestimmeUserIDFromName(ByVal userName As String) As String
+
+        Dim tmpResult As String = ""
+        '??? hole vom Rest-Server die UserID des angegebenen Users
+        ' weise den UserID Wert dann tmpResult zu
+
+        bestimmeUserIDFromName = tmpResult
+
+    End Function
 
     ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
@@ -15448,22 +15574,31 @@ Public Module agm2
 
                     loginErfolgreich = logInToMongoDB(True)
 
+                    ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
+                    Dim allMyCustomUserRoles As New clsCustomUserRoles
+                    '??? Dim allMyCustomUserRoles As clsCustomUserRoles = retrieveCustomUserRolesOf(dbUserID)
+
+                    If allMyCustomUserRoles.count > 1 Then
+
+                    Else
+                        myCustomUserRole = allMyCustomUserRoles.elementAt(0)
+                    End If
 
                     If Not loginErfolgreich Then
-                        ' Customization-File wird geschlossen
-                        xlsCustomization.Close(SaveChanges:=False)
-                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
-                        Call logfileSchliessen()
-                        If awinSettings.englishLanguage Then
-                            Throw New ArgumentException("LOGIN cancelled ...")
-                        Else
-                            Throw New ArgumentException("LOGIN abgebrochen ...")
+                            ' Customization-File wird geschlossen
+                            xlsCustomization.Close(SaveChanges:=False)
+                            Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                            Call logfileSchliessen()
+                            If awinSettings.englishLanguage Then
+                                Throw New ArgumentException("LOGIN cancelled ...")
+                            Else
+                                Throw New ArgumentException("LOGIN abgebrochen ...")
+                            End If
+
                         End If
-
                     End If
-                End If
 
-            End If 'if special="ProjectBoard"
+                End If 'if special="ProjectBoard"
 
 
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _

@@ -12,7 +12,7 @@ Public Class clsCustomUserRole
     Public Sub New()
         _userName = ""
         _userID = ""
-        _customUserRole = ptCustomUserProfils.projectlead
+        _customUserRole = ptCustomUserRoles.projectlead
         _specifics = Nothing
     End Sub
 
@@ -45,7 +45,7 @@ Public Class clsCustomUserRole
         Set(value As Integer)
 
             If Not IsNothing(value) Then
-                If [Enum].IsDefined(GetType(ptCustomUserProfils), value) Then
+                If [Enum].IsDefined(GetType(ptCustomUserRoles), value) Then
                     _customUserRole = value
                 End If
             End If

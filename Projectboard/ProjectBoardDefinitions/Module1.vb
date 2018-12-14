@@ -144,6 +144,9 @@ Public Module Module1
     ' welche CustomFields gibt es ? 
     Public customFieldDefinitions As New clsCustomFieldDefinitions
 
+    ' was ist meine CustomUser Role ? 
+    Public myCustomUserRole As New clsCustomUserRole
+
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
     Public missingMilestoneDefinitions As New clsMeilensteine
@@ -263,11 +266,13 @@ Public Module Module1
         generalexcelcharts = 7
     End Enum
 
+    Public customUserRoleBezeichner() = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
+
     ''' <summary>
     ''' Werte-Bereich: {0=Admin, 1=PortfolioMgr; 2=RessourcenManager; 3=Projektleiter
     ''' </summary>
-    Public Enum ptCustomUserProfils
-        admin = 0
+    Public Enum ptCustomUserRoles
+        orgaadmin = 0
         portfoliomgr = 1
         resourcemgr = 2
         projectlead = 3
