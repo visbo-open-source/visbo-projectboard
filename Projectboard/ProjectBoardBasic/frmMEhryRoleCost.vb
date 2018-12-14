@@ -5,6 +5,9 @@ Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Public Class frmMEhryRoleCost
 
+    ' stellt sicher, dass der Check-/Uncheck Event nicht endlos aufgerufen wird ... 
+    Dim dontFireInCheck As Boolean = False
+
     ' tk 9.12.18 enthält die Rollen, die beim Load des Formulars in der Projekt-Phase enthalten sind   
     Private initialRolesOfPhase As New SortedList(Of String, String)
 
@@ -32,6 +35,9 @@ Public Class frmMEhryRoleCost
     ' der Phasen-Name in der Zeile 
     Public phaseName As String
 
+    ' die PhaseNameID der Zeile  
+    Public phaseNameID As String
+
     ' der Rollen-Kosten Name in der Zeile 
     Public rcName As String
 
@@ -41,8 +47,6 @@ Public Class frmMEhryRoleCost
     ' der ggf dazugehörende Team-Name 
     Public teamName As String
 
-    ' die PhaseNameID der Zeile  
-    Public phaseNameID As String
 
     ' das in der Zeile aktive Projekt
     Public hproj As clsProjekt
@@ -62,9 +66,24 @@ Public Class frmMEhryRoleCost
             Me.Left = 100
         End If
 
+
         ' welche Rollen & Kosten sind in der aktuellen Phase drin ... 
         initialRolesOfPhase = hproj.getRoleIDs(phaseNameID)
         initialCostsOfPhase = hproj.getCostIDs(phaseNameID)
+
+        Dim tmpPhaseName As String = phaseName
+        If phaseNameID = rootPhaseName Then
+            tmpPhaseName = "gesamte Projektphase"
+        Else
+            tmpPhaseName = "Phase " & phaseName
+        End If
+
+        If phaseName.Length > 40 Then
+            Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName.Substring(0, 39)
+        Else
+            Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName
+        End If
+
 
         ' wie lautet der Identifier der aktuellen Zeile: setzet sich zusammen aus roleuid;teamid
         ' der wird bereits beim Right Click ermittelt und steht in rcNameID - siehe oben ...
@@ -246,6 +265,7 @@ Public Class frmMEhryRoleCost
 
                     ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
                     If initialRolesOfPhase.ContainsKey(topLevelNode.Name) Then
+                        dontFireInCheck = True
                         topLevelNode.Checked = True
                     End If
 
@@ -370,6 +390,8 @@ Public Class frmMEhryRoleCost
 
 
         If childIds.Count > 0 Then
+            ' hier muss - im Falle einer customUserRole = Portfolio Mgr bei der "letzten" Stufe abgebrochen werden
+            ' die dürfen also nicht die Personen sehen ... aber nur , wenn 
             currentNode.Nodes.Clear()
             currentNode.Nodes.Add("-")
             nrTag.pTag = "P"
@@ -383,6 +405,7 @@ Public Class frmMEhryRoleCost
 
         ' ist die Rolle bereits in der Phase, die in der Zeile dargestellt wird ? 
         If initialRolesOfPhase.ContainsKey(currentNode.Name) Then
+            dontFireInCheck = True
             currentNode.Checked = True
         End If
 
@@ -543,27 +566,58 @@ Public Class frmMEhryRoleCost
 
         Dim node As TreeNode = e.Node
 
-        If node.Checked = False Then
-            Dim checkItem As String = node.Name
-            ' es wurde unchecked ... das ist nur erlaubt, wenn die betreffende Rolle nicht bereits initial in der Phase war ... 
-            If CType(node.Tag, clsNodeRoleTag).isRole Then
+        If dontFireInCheck Then
+            dontFireInCheck = False
+        Else
+            If node.Checked = False Then
+                Dim checkItem As String = node.Name
+                ' es wurde unchecked ... das ist nur erlaubt, wenn die betreffende Rolle nicht bereits initial in der Phase war ... 
+                If CType(node.Tag, clsNodeRoleTag).isRole Then
 
-                If Not initialRolesOfPhase.ContainsKey(checkItem) Then
-                    ' alles ok 
+                    If Not initialRolesOfPhase.ContainsKey(checkItem) Then
+                        ' alles ok 
+                    Else
+                        ' hier prüfen, ob es für diese Rolle in dieser Phase Istdaten gibt, denn darf nicht rausgenommen werden 
+                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, rcNameID, True, False).Sum
+                        If sumActualValues > 0 Then
+                            Call MsgBox("Rolle hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
+                            dontFireInCheck = True
+                            node.Checked = True
+                        Else
+                            ' alles ok
+                        End If
+
+                    End If
                 Else
-                    ' hier prüfen, ob es für diese Rolle in dieser Phase Istdaten gibt, denn darf nicht rausgenommen werden 
-                    node.Checked = True
-                    Call MsgBox("Rolle hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
+                    If Not initialCostsOfPhase.ContainsKey(checkItem) Then
+                        ' alles ok , weil checken, dann un-checken schon erlaubt ist 
+                    Else
+                        ' prüfen, ob die Rolle Istdaten enthält ? 
+                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, rcNameID, False, True).Sum
+                        If sumActualValues > 0 Then
+                            Call MsgBox("Kostenart hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
+                            dontFireInCheck = True
+                            node.Checked = True ' nimmt die de-selection wieder zurück 
+                        End If
+                    End If
                 End If
             Else
-                If Not initialCostsOfPhase.ContainsKey(checkItem) Then
-                    ' alles ok , weil checken, dann un-checken schon erlaubt ist 
+                ' prüfen, ob die Phase überhaupt noch Zukunfts-Monate, also Forecast Monate hat, 
+                ' in denen was eingegeben werden darf 
+                Dim hasStillForecastMonths As Boolean = hproj.isPhaseWithForecastMonths(phaseNameID)
+                If hasStillForecastMonths Then
+                    ' alles paletti 
                 Else
-                    node.Checked = True
-                    Call MsgBox("bitte verwenden Sie zum Löschen einer Kostenart den Befehl 'Zeile löschen'.")
+                    Call MsgBox("es gibt in dieser Phase keine Forecast Monate mehr ..." & vbLf &
+                                "deshalb wird die Selektion wieder zurückgenommen ...")
+                    dontFireInCheck = True
+                    node.Checked = False ' nimmt die de-selection wieder zurück 
                 End If
             End If
         End If
 
+
     End Sub
+
+
 End Class

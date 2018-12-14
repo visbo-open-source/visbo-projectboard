@@ -19,7 +19,7 @@ Public Class clsListOfCostAndRoles
     ''' <param name="roleUID"></param>
     ''' <param name="teamID"></param>
     ''' <returns></returns>
-    Public ReadOnly Property phaseContainsRole(ByVal phaseNameID As String, ByVal roleUID As Integer, Optional ByVal teamID As Integer = -1) As Boolean
+    Public ReadOnly Property phaseContainsRoleID(ByVal phaseNameID As String, ByVal roleUID As Integer, Optional ByVal teamID As Integer = -1) As Boolean
 
         Get
             Dim tmpResult As Boolean = False
@@ -48,7 +48,7 @@ Public Class clsListOfCostAndRoles
                 End If
             End If
 
-            phaseContainsRole = tmpResult
+            phaseContainsRoleID = tmpResult
         End Get
     End Property
 

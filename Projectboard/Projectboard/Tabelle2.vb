@@ -378,7 +378,7 @@ Public Class Tabelle2
                     Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                     ' jetzt wird 
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                    Dim rcNameID As String = getRCNameIDfromCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                    Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
                     Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
                     'Dim phaseNameID As String = calcHryElemKey(phaseName, False)
@@ -405,7 +405,7 @@ Public Class Tabelle2
                         frmMERoleCost.vName = vName
                         frmMERoleCost.phaseName = phaseName
                         frmMERoleCost.rcName = rcName
-                        frmMERoleCost.rcNameID = getRCNameIDfromCell(Target)
+                        frmMERoleCost.rcNameID = getRCNameIDfromMeRcCell(Target)
                         frmMERoleCost.phaseNameID = phaseNameID
                         frmMERoleCost.hproj = hproj
 
@@ -413,9 +413,9 @@ Public Class Tabelle2
 
                         If returnValue = DialogResult.OK Then
 
-                            With frmMERoleCost
-                                Dim anz As Integer = .rolesToAdd.Count + .costsToAdd.Count + .rolesToDelete.Count + .costsToDelete.Count
-                            End With
+                            'With frmMERoleCost
+                            '    Dim anz As Integer = .rolesToAdd.Count + .costsToAdd.Count + .rolesToDelete.Count + .costsToDelete.Count
+                            'End With
 
                             ' eintragen der selektierten Rollen
 

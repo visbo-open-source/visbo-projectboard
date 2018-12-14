@@ -3146,6 +3146,24 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
+    ''' liefert zurück, ob die angegegebene Phase des Projekts überhaupt noch Forecast Monate hat 
+    ''' das steuert z.Bsp ob überhaupt noch editiert werden darf
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property isPhaseWithForecastMonths(ByVal phaseNameID As String) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim cphase As clsPhase = getPhaseByID(phaseNameID)
+            If Not IsNothing(cphase) Then
+                tmpResult = DateDiff(DateInterval.Month, actualDataUntil, cphase.getEndDate) > 0
+            End If
+
+            isPhaseWithForecastMonths = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liefert für eine ausgewählte Phase zurück, wieviel für eine bestimmte Rolle, angegeben als roleID;teamID oder eine 
     ''' Kostenart, angegeben als costID bis zum angegebenen Datum aufgelaufen ist 
     ''' </summary>
@@ -3192,20 +3210,20 @@ Public Class clsProjekt
                         ' enthält diese Phase überhaupt diese Rolle ?
                         Dim teamID As Integer = -1
                         Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
-                        If rcLists.phaseContainsRole(phaseNameID, roleID, teamID) Then
+                    If rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
 
-                            cphase = getPhaseByID(phaseNameID)
-                            Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
-                            If Not IsNothing(tmpRole) Then
-                                tagessatz = tmpRole.tagessatzIntern
-                                xWerte = tmpRole.Xwerte
-                            Else
-                                ReDim tmpResult(0)
-                                tmpResult(0) = 0
-                                notYetDone = False
-                            End If
+                        cphase = getPhaseByID(phaseNameID)
+                        Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                        If Not IsNothing(tmpRole) Then
+                            tagessatz = tmpRole.tagessatzIntern
+                            xWerte = tmpRole.Xwerte
                         Else
                             ReDim tmpResult(0)
+                            tmpResult(0) = 0
+                            notYetDone = False
+                        End If
+                    Else
+                        ReDim tmpResult(0)
                             tmpResult(0) = 0
                             notYetDone = False
                         End If

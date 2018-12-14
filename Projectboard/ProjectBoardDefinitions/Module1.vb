@@ -6654,21 +6654,144 @@ Public Module Module1
 
     Sub massEditZeileEinfügen(ByVal controlID As String)
 
-        Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
-        Dim currentCell As Excel.Range
-        Dim currentCellPlus1 As Excel.Range
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
+        Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+        Dim currentCell As Excel.Range
+        'Dim currentCellPlus1 As Excel.Range
+
         Try
+
+
             ' hier nicht benötigt
             '' '' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
             ' ''Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
 
             currentCell = CType(appInstance.ActiveCell, Excel.Range)
+            Dim zeile As Integer = currentCell.Row
+            Dim spalte As Integer = currentCell.Column
 
-            'Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
+            Call meRCZeileEinfuegen(zeile, spalte)
+
+            '' old stuff
+            ''Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
+
+            'Dim columnEndData As Integer = visboZustaende.meColED
+            'Dim columnStartData As Integer = visboZustaende.meColSD
+
+            'Dim columnRC As Integer = visboZustaende.meColRC
+
+            'Dim hoehe As Double = CDbl(currentCell.Height)
+            'currentCellPlus1 = CType(ws.Cells(currentCell.Row + 1, currentCell.Column), Excel.Range)
+            'currentCellPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+
+
+            '' Blattschutz aufheben ... 
+            'If Not awinSettings.meEnableSorting Then
+            '    ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
+            '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            '        .Unprotect(Password:="x")
+            '    End With
+            'End If
+
+
+
+            'With CType(appInstance.ActiveSheet, Excel.Worksheet)
+
+            '    'Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
+            '    Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
+            '    Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
+            '    copySource.Copy(Destination:=copyDestination)
+
+            '    CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
+
+            '    For c As Integer = columnStartData - 2 To columnEndData
+            '        CType(.Cells(zeile + 1, c), Excel.Range).Value = Nothing
+            '    Next
+
+            '    '' jetzt wieder ausblenden ... 
+            '    'If Not awinSettings.meExtendedColumnsView Then
+            '    '    ' ausblenden ... 
+            '    '    .Range("MahleInfo").EntireColumn.Hidden = True
+            '    '    appInstance.ScreenUpdating = True
+            '    'End If
+            'End With
+
+            '' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
+            'CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range).Select()
+
+            'With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
+
+            '    ' wenn eine neue Zeile eingefügt ist und Ist-Spalten existieren , dann müssen die jetzt wieder auf frei gesetzt werden 
+            '    .Locked = False
+
+            '    ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
+            '    Try
+            '        If Not IsNothing(.Validation) Then
+            '            .Validation.Delete()
+            '        End If
+
+            '    Catch ex As Exception
+
+            '    End Try
+
+            'End With
+
+            '' jetzt wird der Old-Value gesetzt 
+            'With visboZustaende
+            '    If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
+            '        Call MsgBox("Fehler 099 in PTzeileEinfügen")
+            '    End If
+            '    .oldValue = ""
+            '    .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
+            'End With
+
+
+            '' jetzt den Blattschutz wiederherstellen ... 
+            'If Not awinSettings.meEnableSorting Then
+            '    ' es muss der Blattschutz wieder aktiviert werden ... 
+            '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            '        .Protect(Password:="x", UserInterfaceOnly:=True,
+            '                 AllowFormattingCells:=True,
+            '                 AllowFormattingColumns:=True,
+            '                 AllowInsertingColumns:=False,
+            '                 AllowInsertingRows:=True,
+            '                 AllowDeletingColumns:=False,
+            '                 AllowDeletingRows:=True,
+            '                 AllowSorting:=True,
+            '                 AllowFiltering:=True)
+            '        .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+            '        .EnableAutoFilter = True
+            '    End With
+            'End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+        'appInstance.EnableEvents = True
+        appInstance.EnableEvents = formerEE
+    End Sub
+
+    ''' <summary>
+    ''' 
+    ''' fügt nach der Zeile eine Zeile ein ...     ''' 
+    ''' die neue Zeile bekommt die gleichen Inhalte wie die kopierte Zelle bis auf rcName, rcNameID, Summe und alle Werte  
+    ''' Vorbedingung: enableEvents ist false ..
+    ''' vorab gecheckt: hat die Phase überhaupt Planungs-Monate oder liegt sie vollständig in der Vergangenheit ? 
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    Public Sub meRCZeileEinfuegen(ByVal zeile As Integer, ByVal spalte As Integer)
+
+        Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+        Dim currentCell As Excel.Range
+        Dim currentCellPlus1 As Excel.Range
+
+        Try
+
+            currentCell = CType(ws.Cells(zeile, spalte), Excel.Range)
 
             Dim columnEndData As Integer = visboZustaende.meColED
             Dim columnStartData As Integer = visboZustaende.meColSD
@@ -6678,7 +6801,6 @@ Public Module Module1
             Dim hoehe As Double = CDbl(currentCell.Height)
             currentCellPlus1 = CType(ws.Cells(currentCell.Row + 1, currentCell.Column), Excel.Range)
             currentCellPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
-            Dim zeile As Integer = currentCell.Row
 
             ' Blattschutz aufheben ... 
             If Not awinSettings.meEnableSorting Then
@@ -6689,26 +6811,25 @@ Public Module Module1
             End If
 
 
-
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
 
-                'Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
                 Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
                 Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
+
                 copySource.Copy(Destination:=copyDestination)
 
                 CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
 
                 For c As Integer = columnStartData - 2 To columnEndData
-                    CType(.Cells(zeile + 1, c), Excel.Range).Value = Nothing
+                    With CType(.Cells(zeile + 1, c), Excel.Range)
+                        .Value = Nothing
+                        If c = columnStartData - 2 Or c = columnStartData - 1 Then
+                            .ClearComments()
+                        End If
+                    End With
+
                 Next
 
-                '' jetzt wieder ausblenden ... 
-                'If Not awinSettings.meExtendedColumnsView Then
-                '    ' ausblenden ... 
-                '    .Range("MahleInfo").EntireColumn.Hidden = True
-                '    appInstance.ScreenUpdating = True
-                'End If
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
@@ -6716,7 +6837,7 @@ Public Module Module1
 
             With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
 
-                ' wenn eine neue Zeile eingefügt ist und Ist-Spalten existieren , dann müssen die jetzt wieder auf frei gesetzt werden 
+                ' wenn eine neue Zeile eingefügt ist  müssen die jetzt wieder auf frei gesetzt werden 
                 .Locked = False
 
                 ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
@@ -6763,11 +6884,11 @@ Public Module Module1
             Call MsgBox("Fehler beim Kopieren einer Zeile ...")
         End Try
 
-        'appInstance.EnableEvents = True
-        appInstance.EnableEvents = formerEE
+
     End Sub
 
     Sub massEditZeileLoeschen(ByVal ID As String)
+
         Dim currentCell As Excel.Range
         Dim meWS As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
         appInstance.EnableEvents = False
@@ -6780,6 +6901,7 @@ Public Module Module1
             Dim zeile As Integer = currentCell.Row
 
             If zeile >= 2 And zeile <= visboZustaende.meMaxZeile Then
+
                 Dim columnEndData As Integer = visboZustaende.meColED
                 Dim columnStartData As Integer = visboZustaende.meColSD
                 Dim columnRC As Integer = visboZustaende.meColRC
@@ -6787,93 +6909,26 @@ Public Module Module1
 
                 Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
+
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
-                Dim phaseNameID As String = calcHryElemKey(phaseName, False)
-                Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
-                If Not IsNothing(curComment) Then
-                    phaseNameID = curComment.Text
-                End If
+                Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, 4), Excel.Range))
+
 
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
+                Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
 
-                ' hier wird die Rolle- bzw. Kostenart aus der Projekt-Phase gelöscht 
+                Dim isRole As Boolean = RoleDefinitions.containsName(rcName)
+
+                ' Überprüfen, ob es actualData gibt ... 
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                Dim actualDataExists As Boolean = hproj.getPhaseRCActualValues(phaseNameID, rcNameID, isRole, False).Sum > 0
 
-                Dim actualDataExists As Boolean = False
-                If hproj.actualDataUntil > cphase.getStartDate Then
-                    actualDataExists = True
-                End If
-
-                If IsNothing(rcName) Then
-                    ' nichts tun
-                ElseIf rcName.Trim.Length = 0 Then
-                    ' nichts tun ... 
-                ElseIf RoleDefinitions.containsName(rcName) Then
-                    ' es handelt sich um eine Rolle
-                    ' das darf aber nur gelöscht werden, wenn die Phase komplett im showrangeleft / showrangeright liegt 
-                    ' gibt es Ist-Daten ? 
-
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
-                        cphase.removeRoleByName(rcName)
-                    Else
-                        If actualDataExists Then
-                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
-                                    " nicht gelöscht werden ...")
-                        Else
-                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
-                                    " nicht gelöscht werden ...")
-                        End If
-
-                        ok = False
-                    End If
-
-                ElseIf CostDefinitions.containsName(rcName) Then
-                    ' es handelt sich um eine Kostenart 
-                    If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
-                        cphase.removeCostByName(rcName)
-                    Else
-                        If actualDataExists Then
-                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Kostenart " & rcName & vbLf &
-                                    " nicht gelöscht werden ...")
-                        Else
-                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcName & vbLf &
-                                    " nicht gelöscht werden ...")
-                        End If
-
-                        ok = False
-                    End If
-
-
-                End If
-
-
-                If ok Then
-                    ' jetzt wird die Zeile gelöscht, wenn sie nicht die letzte ihrer Art ist
-                    ' denn es sollte für weitere Eingaben immer wenigstens ein Projekt-/Phasen-Repräsentant da sein 
-                    If noDuplicatesInSheet(pName, phaseNameID, Nothing, zeile) Then
-                        ' diese Zeile nicht löschen, soll weiter als Platzhalter für diese Projekt-Phase dienen können 
-                        ' aber die Werte müssen alle gelöscht werden 
-                        For ix As Integer = columnRC To columnEndData + 1
-                            CType(meWS.Cells(zeile, ix), Excel.Range).Value = ""
-                        Next
-                    Else
-                        CType(meWS.Rows(zeile), Excel.Range).Delete()
-                    End If
-
-                    ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-                    CType(meWS.Cells(zeile, columnRC), Excel.Range).Select()
-
-                    ' jetzt wird der Old-Value gesetzt 
-                    With visboZustaende
-                        .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
-                        .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
-                    End With
-
+                ' jetzt wird gelöscht, wenn es noch keine Ist-Daten gibt ..
+                If Not actualDataExists Then
+                    Call meRCZeileLoeschen(currentCell.Row, pName, phaseNameID, rcNameID:="", isRole:=True)
                 Else
-                    ' nichts tun 
+                    Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
+                                    " nicht gelöscht werden ...")
                 End If
 
 
@@ -6894,7 +6949,7 @@ Public Module Module1
     ''' </summary>
     ''' <param name="currentCell"></param>
     ''' <returns></returns>
-    Public Function getRCNameIDfromCell(ByVal currentCell As Excel.Range) As String
+    Public Function getRCNameIDfromMeRcCell(ByVal currentCell As Excel.Range) As String
 
         Dim tmpResult As String = ""
         Try
@@ -6921,7 +6976,7 @@ Public Module Module1
             tmpResult = ""
         End Try
 
-        getRCNameIDfromCell = tmpResult
+        getRCNameIDfromMeRcCell = tmpResult
 
     End Function
 
@@ -7069,6 +7124,15 @@ Public Module Module1
 
 
 
+    ''' <summary>
+    ''' löscht eine Zeile im Massen-Edit; dabei ist bereits überprüft, ob sie gelöscht werden darf ... 
+    ''' dass heisst, actualDataExists = false
+    ''' </summary>
+    ''' <param name="zeile"></param>
+    ''' <param name="pName"></param>
+    ''' <param name="phNameID"></param>
+    ''' <param name="rcNameID"></param>
+    ''' <param name="isRole"></param>
     Sub meRCZeileLoeschen(ByVal zeile As Integer,
                           ByVal pName As String,
                           ByVal phNameID As String,
@@ -7087,28 +7151,10 @@ Public Module Module1
                 Dim columnStartData As Integer = visboZustaende.meColSD
                 Dim columnRC As Integer = visboZustaende.meColRC
 
-
-                'Dim pName As String = CStr(meWS.Cells(zeile, 2).value)
-                'Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
-                'Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
-                'Dim phaseNameID As String = calcHryElemKey(phaseName, False)
-                'Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
-                'If Not IsNothing(curComment) Then
-                '    phaseNameID = curComment.Text
-                'End If
-
-                'Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                ''Dim rcNameID As String = 
-
                 ' hier wird die Rolle- bzw. Kostenart aus der Projekt-Phase gelöscht 
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                 Dim cphase As clsPhase = hproj.getPhaseByID(phNameID)
 
-                ' das muss noch besser überprüft werden 
-                Dim actualDataExists As Boolean = False
-                If hproj.actualDataUntil > cphase.getStartDate Then
-                    actualDataExists = True
-                End If
 
                 Dim teamID As Integer = -1
                 If IsNothing(rcNameID) Then
@@ -7121,17 +7167,13 @@ Public Module Module1
                     ' gibt es Ist-Daten ? 
 
                     If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
+                                             showRangeLeft, showRangeRight, True) Then
                         cphase.removeRoleByNameID(rcNameID)
                     Else
                         Dim rcName As String = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).name
-                        If actualDataExists Then
-                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
+
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
                                     " nicht gelöscht werden ...")
-                        Else
-                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Rolle " & rcName & vbLf &
-                                    " nicht gelöscht werden ...")
-                        End If
 
                         ok = False
                     End If
@@ -7139,16 +7181,12 @@ Public Module Module1
                 ElseIf CostDefinitions.containsName(rcNameID) Then
                     ' es handelt sich um eine Kostenart 
                     If phaseWithinTimeFrame(hproj.Start, cphase.relStart, cphase.relEnde,
-                                             showRangeLeft, showRangeRight, True) And Not actualDataExists Then
+                                             showRangeLeft, showRangeRight, True) Then
                         cphase.removeCostByName(rcNameID)
                     Else
-                        If actualDataExists Then
-                            Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Kostenart " & rcNameID & vbLf &
+
+                        Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcNameID & vbLf &
                                     " nicht gelöscht werden ...")
-                        Else
-                            Call MsgBox("die Phase wird nicht vollständig angezeigt - deshalb kann die Kostenart " & rcNameID & vbLf &
-                                    " nicht gelöscht werden ...")
-                        End If
 
                         ok = False
                     End If
@@ -7235,7 +7273,7 @@ Public Module Module1
             If Not isRole Then
                 chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
             Else
-                chckRCNameID = getRCNameIDfromCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                chckRCNameID = getRCNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
             End If
 
 
@@ -7275,7 +7313,7 @@ Public Module Module1
                     If Not isRole Then
                         chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
                     Else
-                        chckRCNameID = getRCNameIDfromCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                        chckRCNameID = getRCNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
                     End If
 
 

@@ -5789,7 +5789,7 @@ Public Module awinGeneralModules
         Dim found As Boolean = False
 
         Dim vglPname As String = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-        Dim vglRcNameID As String = getRCNameIDfromCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+        Dim vglRcNameID As String = getRCNameIDfromMeRcCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
         Dim vglPhaseNameID As String = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
 
 
@@ -5802,7 +5802,7 @@ Public Module awinGeneralModules
             Else
                 zeile = zeile + 1
                 vglPname = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-                vglRcNameID = getRCNameIDfromCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+                vglRcNameID = getRCNameIDfromMeRcCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
                 vglPhaseNameID = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
             End If
 
