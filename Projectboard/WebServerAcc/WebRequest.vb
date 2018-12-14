@@ -1759,13 +1759,32 @@ Public Class Request
     ''' <returns></returns>
     Public Function storeVCsettingsToDB(ByVal listofCustomUserRoles As clsCustomUserRoles,
                                         ByVal type As String,
+                                        ByVal name As String,
                                         ByVal ts As DateTime,
                                         ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Dim setting As Object = Nothing
+        Dim newsetting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
         Try
-            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime())
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = New List(Of clsVCSettingCustomroles)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
+
+                Case settingTypes(ptSettingTypes.customfields)
+                Case settingTypes(ptSettingTypes.organisation)
+            End Select
+
+            Dim timestamp As String = ""
+            If ts > Date.MinValue Then
+                timestamp = DateTimeToISODate(ts.ToUniversalTime())
+            End If
+
 
             Dim listofCURsWeb As New clsCustomUserRolesWeb
             Dim listlistofCURsWeb As New List(Of clsCustomUserRolesWeb)
@@ -1780,16 +1799,41 @@ Public Class Request
             listofCURsWeb.customUserRoles.Add(CustUserRole)
             listlistofCURsWeb.Add(listofCURsWeb)
 
+            ' der Unique-Key für customroles besteht aus: name, type
             If type = settingTypes(ptSettingTypes.customroles) Then
-                setting = New clsVCSettingCustomroles
-                CType(setting, clsVCSettingCustomroles).name = "BOSV"
-                CType(setting, clsVCSettingCustomroles).timestamp = DateTimeToISODate(Date.Now)
-                CType(setting, clsVCSettingCustomroles).userId = aktUser._id
-                CType(setting, clsVCSettingCustomroles).vcid = aktVCid
-                CType(setting, clsVCSettingCustomroles).type = type
-                CType(setting, clsVCSettingCustomroles).value = listlistofCURsWeb
+                newsetting = New clsVCSettingCustomroles
+                CType(newsetting, clsVCSettingCustomroles).name = type         ' customroles '
+                CType(newsetting, clsVCSettingCustomroles).timestamp = ""
+                CType(newsetting, clsVCSettingCustomroles).userId = ""
+                CType(newsetting, clsVCSettingCustomroles).vcid = aktVCid
+                CType(newsetting, clsVCSettingCustomroles).type = type
+                CType(newsetting, clsVCSettingCustomroles).value = listlistofCURsWeb
 
-                result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), setting, err)
+                If anzSetting = 1 Then
+                    newsetting._id = settingID
+                    ' Update der customroles - Setting
+                    result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
+                Else
+                    ' Create der customroles - Setting
+                    result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
+                End If
+
+
+
+                If err.errorCode <> 200 Then
+
+                    Select Case err.errorCode
+                        Case 400
+                        Case 401
+                        Case 403
+                        Case 409
+                            ' PUTOneVCSetting erforderlich
+                            Call MsgBox(err.errorMsg)
+                        Case Else
+                            Call MsgBox(err.errorMsg)
+                    End Select
+
+                End If
 
             End If
 
@@ -3353,6 +3397,139 @@ Public Class Request
     End Function
 
 
+    ''' <summary>
+    ''' liest ein Setting
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="type"></param>
+    ''' <param name="name"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="userId"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Private Function GETOneVCsetting(ByVal vcid As String,
+                                     ByVal type As String,
+                                     ByVal name As String,
+                                     ByVal ts As Date,
+                                     ByVal userId As String,
+                                     ByRef err As clsErrorCodeMsg,
+                                     Optional ByVal refnext As Boolean = False) As Object
+
+        Dim result As Object = Nothing
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim webVCsetting As Object = Nothing
+
+        Try
+            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime)
+
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    result = CType(result, clsVCSettingCustomroles)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    result = CType(result, clsVCSettingCustomfields)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    result = CType(result, clsVCSettingOrganisation)
+
+                Case Else
+                    Call MsgBox("settingType = " & type)
+            End Select
+
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/setting"
+
+            If type <> "" Or name <> "" Or ts > Date.MinValue Then
+                serverUriString = serverUriString & "?"
+
+
+                If type <> "" Then
+                    serverUriString = serverUriString & "type=" & type
+                End If
+
+                If name <> "" Then
+                    If type <> "" Then
+                        serverUriString = serverUriString & "&name=" & type
+                    Else
+                        serverUriString = serverUriString & "name=" & type
+                    End If
+                End If
+
+                If name <> "" Or type <> "" Then
+                    If ts > Date.MinValue Then
+                        serverUriString = serverUriString & "&refdate=" & timestamp
+                        If refnext Then
+                            serverUriString = serverUriString & "&refNext=" & refnext.ToString
+                        End If
+                    Else
+                        If refnext Then
+                            serverUriString = serverUriString & "&refDate=" & timestamp
+                            serverUriString = serverUriString & "&refNext=" & refnext.ToString
+                        End If
+                    End If
+                End If
+
+            End If
+
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                If errcode = 200 Then
+                    Select Case type
+                        Case settingTypes(ptSettingTypes.customroles)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomroles))
+                        Case settingTypes(ptSettingTypes.customfields)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomfields))
+                        Case settingTypes(ptSettingTypes.organisation)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingOrganisation))
+                        Case Else
+                            Call MsgBox("settingType = " & type)
+                    End Select
+                Else
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+                End If
+
+            End Using
+
+            If errcode = 200 Then
+                'nothing to do
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETOneVCsetting", errcode, errmsg & " : " & webVCsetting.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "GETOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETOneVCsetting = result
+
+    End Function
 
     ''' <summary>
     ''' erzeugt ein Setting
@@ -3366,13 +3543,6 @@ Public Class Request
         Dim errmsg As String = ""
         Dim errcode As Integer
         Dim webVCsetting As Object = Nothing
-        'Dim listofCustomUserRoles As New clsCustomUserRolesWeb
-        'Dim CustUserRole As New clsCustomUserRoleWeb
-        'CustUserRole.userID = aktUser._id
-        'CustUserRole.userName = aktUser.email
-        'CustUserRole.customUserRole = 1
-        'CustUserRole.specifics = "testCustomRolle 1"
-        'listofCustomUserRoles.customUserRoles.Add(CustUserRole)
 
 
         Try
@@ -3380,13 +3550,6 @@ Public Class Request
             Select Case type
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = CType(setting, clsVCSettingCustomroles)
-
-                    'CType(setting, clsVCSettingCustomroles).name = "BOSV"
-                    'CType(setting, clsVCSettingCustomroles).timestamp = DateTimeToISODate(Date.Now)
-                    'CType(setting, clsVCSettingCustomroles).userId = aktUser._id
-                    'CType(setting, clsVCSettingCustomroles).vcid = aktVCid
-                    'CType(setting, clsVCSettingCustomroles).type = type
-                    'CType(setting, clsVCSettingCustomroles).value = listofCustomUserRoles
 
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = CType(setting, clsVCSettingCustomfields)
@@ -3415,21 +3578,24 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCroleantwort As clsWebVCroles = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                Select Case type
-                    Case settingTypes(ptSettingTypes.customroles)
-                        webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
-                    Case settingTypes(ptSettingTypes.customfields)
-                        webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
-                    Case settingTypes(ptSettingTypes.organisation)
-                        webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
-                    Case Else
-                        Call MsgBox("settingType = " & type)
-                End Select
+                If errcode = 200 Then
+                    Select Case type
+                        Case settingTypes(ptSettingTypes.customroles)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
+                        Case settingTypes(ptSettingTypes.customfields)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
+                        Case settingTypes(ptSettingTypes.organisation)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
+                        Case Else
+                            Call MsgBox("settingType = " & type)
+                    End Select
+                Else
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+                End If
 
             End Using
 
@@ -3449,6 +3615,99 @@ Public Class Request
         End Try
 
         POSTOneVCsetting = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' update von Setting mit SettingID
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="setting"></param>
+    ''' <returns></returns>
+    Private Function PUTOneVCsetting(ByVal vcid As String, ByVal type As String, ByRef setting As Object, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim webVCsetting As Object = Nothing
+
+
+        Try
+
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomroles)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomfields)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingOrganisation)
+
+                Case Else
+                    Call MsgBox("settingType = " & type)
+            End Select
+
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/setting/" & setting._id
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(setting, "")
+
+
+
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                If errcode = 200 Then
+                    Select Case type
+                        Case settingTypes(ptSettingTypes.customroles)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomroles)).ElementAt(0)
+                        Case settingTypes(ptSettingTypes.customfields)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomfields)).ElementAt(0)
+                        Case settingTypes(ptSettingTypes.organisation)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingOrganisation)).ElementAt(0)
+                        Case Else
+                            Call MsgBox("settingType = " & type)
+                    End Select
+                    result = True
+                Else
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+                    result = False
+                End If
+
+            End Using
+
+            If errcode = 200 Then
+                ' nothing to do
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("PUTOneVCsetting", errcode, errmsg & " : " & webVCsetting.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "PUTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        PUTOneVCsetting = result
 
     End Function
 

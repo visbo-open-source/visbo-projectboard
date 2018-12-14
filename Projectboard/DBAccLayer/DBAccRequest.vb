@@ -1492,7 +1492,7 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, ts, err)
+                result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, type, ts, err)
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = False

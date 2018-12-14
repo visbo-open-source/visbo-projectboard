@@ -8,6 +8,16 @@
     End Sub
 
     ''' <summary>
+    ''' gibt die sortierte Liste der customUserRoles zurück
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property liste()
+        Get
+            liste = _customUserRoles
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt eine customerUserRole zurück 
     ''' </summary>
     ''' <param name="userID"></param>
