@@ -8,22 +8,51 @@
     End Sub
 
     ''' <summary>
-    ''' gibt eine customerUserRole zurück 
+    ''' gibt Zugriif auf die sortierte Liste 
     ''' </summary>
-    ''' <param name="userID"></param>
-    ''' <param name="customType"></param>
     ''' <returns></returns>
-    Public ReadOnly Property getCustomUserRole(ByVal userID As String, ByVal customType As ptCustomUserProfils) As clsCustomUserRole
+    Public ReadOnly Property liste() As SortedList(Of String, clsCustomUserRole)
+        Get
+            liste = _customUserRoles
+        End Get
+    End Property
+    ''' <summary>
+    ''' liefert das Element an der Stelle index. Index kann von 9 bis count-1 gehen
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property elementAt(ByVal index As Integer) As clsCustomUserRole
+        Get
+            If index >= 0 And index < _customUserRoles.Count Then
+                elementAt = _customUserRoles.ElementAt(index).Value
+            Else
+                elementAt = Nothing
+            End If
+        End Get
+    End Property
+
+    Public ReadOnly Property count() As Integer
+        Get
+            count = _customUserRoles.Count
+        End Get
+    End Property
+    ''' <summary>
+    ''' gibt eine Collection of clsCustomUserRole zurück, die zu dem User mit Name userNAme gehören  
+    ''' </summary>
+    ''' <param name="userName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCustomUserRoles(ByVal userName As String) As Collection
         Get
 
-            Dim key As String = userID & customType.ToString.Trim
-            Dim tmpResult As clsCustomUserRole = Nothing
+            Dim tmpCollection As New Collection
 
-            If _customUserRoles.ContainsKey(key) Then
-                tmpResult = _customUserRoles.Item(key)
-            End If
+            For Each kvp As KeyValuePair(Of String, clsCustomUserRole) In _customUserRoles
+                If kvp.Value.userName = userName Then
+                    tmpCollection.Add(kvp.Value)
+                End If
+            Next
 
-            getCustomUserRole = tmpResult
+            getCustomUserRoles = tmpCollection
 
         End Get
 
@@ -36,24 +65,23 @@
     ''' <param name="userID"></param>
     ''' <param name="customRoleType"></param>
     ''' <param name="specifics"></param>
-    Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserProfils, ByVal specifics As String)
+    Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserRoles, ByVal specifics As String)
 
-        Dim key As String = userName.Trim & customRoleType.ToString.Trim
+        Dim key As String = userName.Trim & customRoleType.ToString.Trim & specifics
         If _customUserRoles.ContainsKey(key) Then
-            ' Löschen ...
-            _customUserRoles.Remove(key)
+            ' nichts tun, ist ja schon drin ... 
+        Else
+            ' jetzt ist sichergestellt, dass der key nicht mehr existiert ..
+            Dim newCustomUserRole As New clsCustomUserRole
+            With newCustomUserRole
+                .userName = userName
+                .userID = userID
+                .customUserRole = customRoleType
+                .specifics = specifics
+            End With
+
+            _customUserRoles.Add(key, newCustomUserRole)
         End If
-
-        ' jetzt ist sichergestellt, dass der key nicht mehr existiert ..
-        Dim newCustomUserRole As New clsCustomUserRole
-        With newCustomUserRole
-            .userName = userName
-            .userID = userID
-            .customUserRole = customRoleType
-            .specifics = specifics
-        End With
-
-        _customUserRoles.Add(key, newCustomUserRole)
 
     End Sub
 End Class

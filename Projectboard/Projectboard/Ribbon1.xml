@@ -76,6 +76,12 @@
           <splitButton id="PT4G1split" size ="large">
             <button id="PT4G1" getLabel ="bestimmeLabel" imageMso="Import" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
             <menu id="PT4G1M" >
+              <menu id="PT4G1M1-1" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
+                <!--label="Organisation"-->
+                <button id="PT4G1B8" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>
+                <!--label="Custom User Roles"-->
+                <button id="PT4G1B11" getLabel ="bestimmeLabel" onAction="PTImportCustomUserRoles" supertip ="Es werden die vollständigen User Roles importiert"/>
+              </menu>    
               <!--label="VISBO-Steckbriefe"-->
               <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
               <!--label ="VISBO Open XML-->
