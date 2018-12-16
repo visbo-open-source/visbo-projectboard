@@ -5536,7 +5536,129 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+    ''' <summary>
+    ''' nur zu verwenden, wenn AutoReduce falsch 
+    ''' dann aber wesentlich schneller als mit autoReduce 
+    ''' aktualisiert nur in der aktuellen Zeile die Summe 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="cphase"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="rcNameID"></param>
+    ''' <param name="isRole"></param>
+    ''' <param name="zeile"></param>
+    Public Sub updateMassEditSummenValue(ByVal hproj As clsProjekt, ByVal cphase As clsPhase,
+                                              ByVal von As Integer, ByVal bis As Integer,
+                                              ByVal rcNameID As String,
+                                              ByVal isRole As Boolean,
+                                              ByVal zeile As Integer)
 
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        Dim columnSummen As Integer = visboZustaende.meColRC + 1
+        Dim columnRC As Integer = visboZustaende.meColRC
+        Dim tmpSum As Double = 0.0
+
+        If CType(appInstance.ActiveSheet, Excel.Worksheet).Name = arrWsNames(ptTables.meRC) Then
+            ' nur dann befindet sich das Programm im MassEdit Sheet 
+
+            'Dim meWS As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+            Dim meWS As Excel.Worksheet = CType(CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook) _
+            .Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
+
+            If rcNameID.Trim.Length = 0 Then
+                ' nichts tun 
+
+            Else
+                ' Update Lauf der Summen 
+
+                If Not IsNothing(hproj) And Not IsNothing(cphase) Then
+
+                    Dim xWerte() As Double
+                    Dim ixZeitraum As Integer
+                    Dim ix As Integer
+                    Dim anzLoops As Integer
+
+                    ' diese MEthode definiert, wo der Zeitraum sich mit den Werte überlappt ... 
+                    ' Anzloops sind die Anzahl Überlappungen 
+                    Call awinIntersectZeitraum(getColumnOfDate(cphase.getStartDate), getColumnOfDate(cphase.getEndDate),
+                                       ixZeitraum, ix, anzLoops)
+
+                    If isRole Then
+                        If RoleDefinitions.containsNameID(rcNameID) Then
+                            Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+
+                            If Not IsNothing(tmpRole) Then
+                                xWerte = tmpRole.Xwerte
+
+                                ' jetzt werden die Werte summiert ...
+                                Try
+                                    For al As Integer = 1 To anzLoops
+                                        tmpSum = tmpSum + xWerte(ix + al - 1)
+                                    Next
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler bei Summenbildung ...")
+                                    tmpSum = 0
+                                End Try
+
+
+                            Else
+                                ' Summe löschen
+                            End If
+                        Else
+                            ' Summe löschen
+                        End If
+
+                    Else
+                        Dim costName As String = rcNameID
+                        If CostDefinitions.containsName(costName) Then
+                            Dim tmpCost As clsKostenart = cphase.getCost(costName)
+
+                            If Not IsNothing(tmpCost) Then
+                                xWerte = tmpCost.Xwerte
+
+                                ' jetzt werden die Werte summiert ...
+                                Try
+                                    For al As Integer = 1 To anzLoops
+                                        tmpSum = tmpSum + xWerte(ix + al - 1)
+                                    Next
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler bei Summenbildung ...")
+                                    tmpSum = 0
+                                End Try
+
+                            Else
+                                ' Summe löschen
+                            End If
+                        Else
+                            ' Summe löschen
+                        End If
+
+                    End If
+
+                Else
+                    ' Summe löschen 
+                End If
+            End If
+
+            ' jetzt den Wert in die Zelle schreiben
+            If tmpSum > 0 Then
+                CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = tmpSum
+                '.ToString("#,##0")
+            Else
+                CType(meWS.Cells(zeile, columnSummen), Excel.Range).Value = ""
+            End If
+
+        Else
+            Call MsgBox("Mass-Edit Sheet nicht aktiv ...")
+        End If
+
+        appInstance.EnableEvents = formerEE
+
+
+    End Sub
 
     ''' <summary>
     ''' aktualisiert die Summen-Werte im Massen-Edit Sheet der Ressourcen-/Kostenzuordnungen  

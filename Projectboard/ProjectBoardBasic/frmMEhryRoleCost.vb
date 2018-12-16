@@ -94,83 +94,86 @@ Public Class frmMEhryRoleCost
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-        Dim anzahlKnoten As Integer = hryRoleCost.Nodes.Count
-        Dim tmpnode As TreeNode
+
+        ' die rolesToAdd, rolesToDelete, costToAdd und costToDelete sind beriets bestimmt - 
+        ' in Checked_changed ...
+        'Dim anzahlKnoten As Integer = hryRoleCost.Nodes.Count
+        'Dim tmpnode As TreeNode
 
 
-        ' 1. bestimmen der Rollen und Kosten, die gecheckt sind ... -> in rolesToadd bzw. costsToAdd
-        ' 2. alles aus initialRolesOfPhase, die nicht mehr in rolesToadd sind : in rolesTobeDeleted übernehmen ; same for costs
-        ' 3. alle, die bereits in initialRolesOfPhase sind, aus rolesToAdd rausnehmen , same for costs 
+        '' 1. bestimmen der Rollen und Kosten, die gecheckt sind ... -> in rolesToadd bzw. costsToAdd
+        '' 2. alles aus initialRolesOfPhase, die nicht mehr in rolesToadd sind : in rolesTobeDeleted übernehmen ; same for costs
+        '' 3. alle, die bereits in initialRolesOfPhase sind, aus rolesToAdd rausnehmen , same for costs 
 
 
-        With hryRoleCost
+        'With hryRoleCost
 
-            ' Schritt 1: bestimmen der Rollen und Kosten, die gecheckt sind ... -> in rolesToadd bzw. costsToAdd
-            For px As Integer = 1 To anzahlKnoten
+        '    ' Schritt 1: bestimmen der Rollen und Kosten, die gecheckt sind ... -> in rolesToadd bzw. costsToAdd
+        '    For px As Integer = 1 To anzahlKnoten
 
-                tmpnode = .Nodes.Item(px - 1)
+        '        tmpnode = .Nodes.Item(px - 1)
 
-                If tmpnode.Checked Then
+        '        If tmpnode.Checked Then
 
-                    If CType(tmpnode.Tag, clsNodeRoleTag).isRole Then
-                        If Not rolesToAdd.Contains(tmpnode.Name) Then
-                            rolesToAdd.Add(tmpnode.Name, tmpnode.Name)
-                        End If
-                    Else
-                        If Not costsToAdd.Contains(tmpnode.Name) Then
-                            costsToAdd.Add(tmpnode.Name, tmpnode.Name)
-                        End If
-                    End If
+        '            If CType(tmpnode.Tag, clsNodeRoleTag).isRole Then
+        '                If Not rolesToAdd.Contains(tmpnode.Name) Then
+        '                    rolesToAdd.Add(tmpnode.Name, tmpnode.Name)
+        '                End If
+        '            Else
+        '                If Not costsToAdd.Contains(tmpnode.Name) Then
+        '                    costsToAdd.Add(tmpnode.Name, tmpnode.Name)
+        '                End If
+        '            End If
 
-                End If
+        '        End If
 
-                If tmpnode.Nodes.Count > 0 Then
-                    Call pickupMECheckedRoleCostItems(tmpnode)
-                End If
+        '        If tmpnode.Nodes.Count > 0 Then
+        '            Call pickupMECheckedRoleCostItems(tmpnode)
+        '        End If
 
-            Next
+        '    Next
 
-        End With
+        'End With
 
-        ' Schritt 2: alles aus initialRolesOfPhase, die nicht mehr in rolesToadd sind : in rolesTobeDeleted übernehmen 
-        ' Schritt 2 - Rollen 
-        For Each kvp As KeyValuePair(Of String, String) In initialRolesOfPhase
+        '' Schritt 2: alles aus initialRolesOfPhase, die nicht mehr in rolesToadd sind : in rolesTobeDeleted übernehmen 
+        '' Schritt 2 - Rollen 
+        'For Each kvp As KeyValuePair(Of String, String) In initialRolesOfPhase
 
-            If Not rolesToAdd.Contains(kvp.Key) Then
-                rolesToDelete.Add(kvp.Key, kvp.Key)
-            End If
+        '    If Not rolesToAdd.Contains(kvp.Key) Then
+        '        rolesToDelete.Add(kvp.Key, kvp.Key)
+        '    End If
 
-        Next
+        'Next
 
-        ' Schritt 2 - Kosten 
-        For Each kvp As KeyValuePair(Of String, String) In initialCostsOfPhase
+        '' Schritt 2 - Kosten 
+        'For Each kvp As KeyValuePair(Of String, String) In initialCostsOfPhase
 
-            If Not costsToAdd.Contains(kvp.Key) Then
-                costsToDelete.Add(kvp.Key, kvp.Key)
-            End If
+        '    If Not costsToAdd.Contains(kvp.Key) Then
+        '        costsToDelete.Add(kvp.Key, kvp.Key)
+        '    End If
 
-        Next
+        'Next
 
-        ' Ende Schritt 2
-        ' 
+        '' Ende Schritt 2
+        '' 
 
-        ' Schritt 3: alle, die bereits in initialRolesOfPhase sind, aus rolesToAdd rausnehmen, same for costs 
-        For Each kvp As KeyValuePair(Of String, String) In initialRolesOfPhase
+        '' Schritt 3: alle, die bereits in initialRolesOfPhase sind, aus rolesToAdd rausnehmen, same for costs 
+        'For Each kvp As KeyValuePair(Of String, String) In initialRolesOfPhase
 
-            If rolesToAdd.Contains(kvp.Key) Then
-                rolesToAdd.Remove(kvp.Key)
-            End If
+        '    If rolesToAdd.Contains(kvp.Key) Then
+        '        rolesToAdd.Remove(kvp.Key)
+        '    End If
 
-        Next
+        'Next
 
-        ' Schritt 2 - Kosten 
-        For Each kvp As KeyValuePair(Of String, String) In initialCostsOfPhase
+        '' Schritt 2 - Kosten 
+        'For Each kvp As KeyValuePair(Of String, String) In initialCostsOfPhase
 
-            If Not costsToAdd.Contains(kvp.Key) Then
-                costsToDelete.Remove(kvp.Key)
-            End If
+        '    If Not costsToAdd.Contains(kvp.Key) Then
+        '        costsToDelete.Remove(kvp.Key)
+        '    End If
 
-        Next
+        'Next
 
         DialogResult = System.Windows.Forms.DialogResult.OK
         MyBase.Close()
@@ -569,53 +572,107 @@ Public Class frmMEhryRoleCost
         If dontFireInCheck Then
             dontFireInCheck = False
         Else
+            Dim checkItem As String = node.Name
+            ' un-Checked ...
             If node.Checked = False Then
-                Dim checkItem As String = node.Name
-                ' es wurde unchecked ... das ist nur erlaubt, wenn die betreffende Rolle nicht bereits initial in der Phase war ... 
+
+                ' es wurde unchecked ... webb sie bereits in initialRoles/initialcosts ist, dann muss sie in toDeleteRoles / to deleteCosts..
                 If CType(node.Tag, clsNodeRoleTag).isRole Then
 
                     If Not initialRolesOfPhase.ContainsKey(checkItem) Then
-                        ' alles ok 
+                        ' aus rolesToAdd raustun: sie wurde gecheckt, dann unchecked  
+                        If rolesToAdd.Contains(checkItem) Then
+                            rolesToAdd.Remove(checkItem)
+                        End If
                     Else
                         ' hier prüfen, ob es für diese Rolle in dieser Phase Istdaten gibt, denn darf nicht rausgenommen werden 
-                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, rcNameID, True, False).Sum
+                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, checkItem, True, False).Sum
                         If sumActualValues > 0 Then
                             Call MsgBox("Rolle hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
                             dontFireInCheck = True
                             node.Checked = True
                         Else
-                            ' alles ok
+                            ' initialroles enthält sie: also muss sie in rolesToDelete
+                            If Not rolesToDelete.Contains(checkItem) Then
+                                rolesToDelete.Add(checkItem)
+                            End If
                         End If
 
                     End If
                 Else
                     If Not initialCostsOfPhase.ContainsKey(checkItem) Then
-                        ' alles ok , weil checken, dann un-checken schon erlaubt ist 
+                        ' aus costsToAdd raustun: sie wurde gecheckt, dann unchecked  
+                        If costsToAdd.Contains(checkItem) Then
+                            costsToAdd.Remove(checkItem)
+                        End If
                     Else
                         ' prüfen, ob die Rolle Istdaten enthält ? 
-                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, rcNameID, False, True).Sum
+                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, checkItem, False, True).Sum
                         If sumActualValues > 0 Then
                             Call MsgBox("Kostenart hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
                             dontFireInCheck = True
                             node.Checked = True ' nimmt die de-selection wieder zurück 
+                        Else
+                            ' initialcosts enthält sie: also muss sie in costsToDelete
+                            If Not costsToDelete.Contains(rcNameID) Then
+                                costsToDelete.Add(rcNameID)
+                            End If
                         End If
                     End If
                 End If
             Else
+                ' Check des Knoten
                 ' prüfen, ob die Phase überhaupt noch Zukunfts-Monate, also Forecast Monate hat, 
                 ' in denen was eingegeben werden darf 
                 Dim hasStillForecastMonths As Boolean = hproj.isPhaseWithForecastMonths(phaseNameID)
                 If hasStillForecastMonths Then
-                    ' alles paletti 
-                Else
-                    Call MsgBox("es gibt in dieser Phase keine Forecast Monate mehr ..." & vbLf &
-                                "deshalb wird die Selektion wieder zurückgenommen ...")
-                    dontFireInCheck = True
-                    node.Checked = False ' nimmt die de-selection wieder zurück 
-                End If
-            End If
-        End If
 
+                    ' jetzt koommt die Behandlung für Check-.Role bzw Check-Cost 
+                    If CType(node.Tag, clsNodeRoleTag).isRole Then
+
+                        If Not initialRolesOfPhase.ContainsKey(checkItem) Then
+                            ' in rolesToAdd reintun:   
+                            If Not rolesToAdd.Contains(checkItem) Then
+                                rolesToAdd.Add(checkItem)
+                            End If
+                        Else
+                            ' wurde unchecked, dann checked 
+                            If rolesToDelete.Contains(checkItem) Then
+                                rolesToDelete.Remove(checkItem)
+                            End If
+
+                        End If
+                    Else
+                        If Not initialCostsOfPhase.ContainsKey(checkItem) Then
+                            ' is costsToAdd reintun: 
+                            If Not costsToAdd.Contains(checkItem) Then
+                                costsToAdd.Add(checkItem)
+                            End If
+                        Else
+                            ' wurde unchecked, jetzt wieder checked 
+                            If costsToDelete.Contains(checkItem) Then
+                                costsToDelete.Remove(checkItem)
+                            End If
+
+                        End If
+                    End If
+                Else
+                    ' es gibt einen Fall, wo das trotzdem gehen soll 
+                    If CType(node.Tag, clsNodeRoleTag).isRole And rolesToDelete.Contains(checkItem) Then
+                        rolesToDelete.Remove(checkItem)
+                    ElseIf Not CType(node.Tag, clsNodeRoleTag).isRole And costsToDelete.Contains(checkItem) Then
+                        costsToDelete.Remove(checkItem)
+                    Else
+                        Call MsgBox("es gibt in dieser Phase keine Forecast Monate mehr ..." & vbLf &
+                                "deshalb wird die Selektion wieder zurückgenommen ...")
+                        dontFireInCheck = True
+                        node.Checked = False ' nimmt die de-selection wieder zurück 
+                    End If
+                End If
+
+            End If
+
+        End If
 
     End Sub
 

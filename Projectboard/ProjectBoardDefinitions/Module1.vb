@@ -6673,99 +6673,26 @@ Public Module Module1
             Dim zeile As Integer = currentCell.Row
             Dim spalte As Integer = currentCell.Column
 
-            Call meRCZeileEinfuegen(zeile, spalte)
-
-            '' old stuff
-            ''Dim columnEndData As Integer = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Range("EndData"), Excel.Range).Column
-
-            'Dim columnEndData As Integer = visboZustaende.meColED
-            'Dim columnStartData As Integer = visboZustaende.meColSD
-
-            'Dim columnRC As Integer = visboZustaende.meColRC
-
-            'Dim hoehe As Double = CDbl(currentCell.Height)
-            'currentCellPlus1 = CType(ws.Cells(currentCell.Row + 1, currentCell.Column), Excel.Range)
-            'currentCellPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+            Call meRCZeileEinfuegen(zeile, spalte, "", True)
 
 
-            '' Blattschutz aufheben ... 
-            'If Not awinSettings.meEnableSorting Then
-            '    ' es muss der Blattschutz aufgehoben werden, nachher wieder aktiviert werden ...
-            '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
-            '        .Unprotect(Password:="x")
-            '    End With
-            'End If
-
-
-
-            'With CType(appInstance.ActiveSheet, Excel.Worksheet)
-
-            '    'Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnEndData - 1)), Excel.Range)
-            '    Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
-            '    Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
-            '    copySource.Copy(Destination:=copyDestination)
-
-            '    CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
-
-            '    For c As Integer = columnStartData - 2 To columnEndData
-            '        CType(.Cells(zeile + 1, c), Excel.Range).Value = Nothing
-            '    Next
-
-            '    '' jetzt wieder ausblenden ... 
-            '    'If Not awinSettings.meExtendedColumnsView Then
-            '    '    ' ausblenden ... 
-            '    '    .Range("MahleInfo").EntireColumn.Hidden = True
-            '    '    appInstance.ScreenUpdating = True
-            '    'End If
-            'End With
-
-            '' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-            'CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range).Select()
-
-            'With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
-
-            '    ' wenn eine neue Zeile eingefügt ist und Ist-Spalten existieren , dann müssen die jetzt wieder auf frei gesetzt werden 
-            '    .Locked = False
-
-            '    ' jetzt für die Zelle die Validation neu bestimmen, der Blattschutz muss aufgehoben sein ...  
-            '    Try
-            '        If Not IsNothing(.Validation) Then
-            '            .Validation.Delete()
-            '        End If
-
-            '    Catch ex As Exception
-
-            '    End Try
-
-            'End With
-
-            '' jetzt wird der Old-Value gesetzt 
-            'With visboZustaende
-            '    If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
-            '        Call MsgBox("Fehler 099 in PTzeileEinfügen")
-            '    End If
-            '    .oldValue = ""
-            '    .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
-            'End With
-
-
-            '' jetzt den Blattschutz wiederherstellen ... 
-            'If Not awinSettings.meEnableSorting Then
-            '    ' es muss der Blattschutz wieder aktiviert werden ... 
-            '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
-            '        .Protect(Password:="x", UserInterfaceOnly:=True,
-            '                 AllowFormattingCells:=True,
-            '                 AllowFormattingColumns:=True,
-            '                 AllowInsertingColumns:=False,
-            '                 AllowInsertingRows:=True,
-            '                 AllowDeletingColumns:=False,
-            '                 AllowDeletingRows:=True,
-            '                 AllowSorting:=True,
-            '                 AllowFiltering:=True)
-            '        .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
-            '        .EnableAutoFilter = True
-            '    End With
-            'End If
+            ' jetzt den Blattschutz wiederherstellen ... 
+            If Not awinSettings.meEnableSorting Then
+                ' es muss der Blattschutz wieder aktiviert werden ... 
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                             AllowFormattingCells:=True,
+                             AllowFormattingColumns:=True,
+                             AllowInsertingColumns:=False,
+                             AllowInsertingRows:=True,
+                             AllowDeletingColumns:=False,
+                             AllowDeletingRows:=True,
+                             AllowSorting:=True,
+                             AllowFiltering:=True)
+                    .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+                    .EnableAutoFilter = True
+                End With
+            End If
 
         Catch ex As Exception
             Call MsgBox(ex.Message)
@@ -6783,11 +6710,14 @@ Public Module Module1
     ''' vorab gecheckt: hat die Phase überhaupt Planungs-Monate oder liegt sie vollständig in der Vergangenheit ? 
     ''' </summary>
     ''' <param name="zeile"></param>
-    Public Sub meRCZeileEinfuegen(ByVal zeile As Integer, ByVal spalte As Integer)
+    Public Sub meRCZeileEinfuegen(ByVal zeile As Integer, ByVal spalte As Integer,
+                                  ByVal rcNameID As String, ByVal isRole As Boolean)
 
         Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim currentCell As Excel.Range
         Dim currentCellPlus1 As Excel.Range
+
+        appInstance.EnableEvents = False
 
         Try
 
@@ -6820,7 +6750,22 @@ Public Module Module1
 
                 CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
 
-                For c As Integer = columnStartData - 2 To columnEndData
+                ' hier wird jetzt der Rollen- bzw Kostenart-NAme eingetragen 
+                Dim rcName As String = rcNameID
+                Dim islocked As Boolean = False
+
+                If isRole And rcNameID <> "" Then
+                    ' der rcname muss erst noch bestimmt werden 
+                    Dim teamID As Integer = -1
+                    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
+                    If roleID > 0 Then
+                        rcName = RoleDefinitions.getRoleDefByID(roleID).name
+                    End If
+                End If
+
+                Call writeMECellWithRoleNameID(CType(.Cells(zeile + 1, 5), Excel.Range), islocked, rcName, rcNameID, isRole)
+
+                For c As Integer = columnStartData - 1 To columnEndData
                     With CType(.Cells(zeile + 1, c), Excel.Range)
                         .Value = Nothing
                         If c = columnStartData - 2 Or c = columnStartData - 1 Then
@@ -6854,36 +6799,37 @@ Public Module Module1
 
             ' jetzt wird der Old-Value gesetzt 
             With visboZustaende
-                If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
-                    Call MsgBox("Fehler 099 in PTzeileEinfügen")
-                End If
-                .oldValue = ""
+                'If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
+                '    Call MsgBox("Fehler 099 in PTzeileEinfügen")
+                'End If
+                .oldValue = rcNameID
                 .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
             End With
 
-
-            ' jetzt den Blattschutz wiederherstellen ... 
-            If Not awinSettings.meEnableSorting Then
-                ' es muss der Blattschutz wieder aktiviert werden ... 
-                With CType(appInstance.ActiveSheet, Excel.Worksheet)
-                    .Protect(Password:="x", UserInterfaceOnly:=True,
-                             AllowFormattingCells:=True,
-                             AllowFormattingColumns:=True,
-                             AllowInsertingColumns:=False,
-                             AllowInsertingRows:=True,
-                             AllowDeletingColumns:=False,
-                             AllowDeletingRows:=True,
-                             AllowSorting:=True,
-                             AllowFiltering:=True)
-                    .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
-                    .EnableAutoFilter = True
-                End With
-            End If
+            ' tk 14.12.18 wird an aufrufender Stelle gemacht 
+            '' jetzt den Blattschutz wiederherstellen ... 
+            'If Not awinSettings.meEnableSorting Then
+            '    ' es muss der Blattschutz wieder aktiviert werden ... 
+            '    With CType(appInstance.ActiveSheet, Excel.Worksheet)
+            '        .Protect(Password:="x", UserInterfaceOnly:=True,
+            '                 AllowFormattingCells:=True,
+            '                 AllowFormattingColumns:=True,
+            '                 AllowInsertingColumns:=False,
+            '                 AllowInsertingRows:=True,
+            '                 AllowDeletingColumns:=False,
+            '                 AllowDeletingRows:=True,
+            '                 AllowSorting:=True,
+            '                 AllowFiltering:=True)
+            '        .EnableSelection = Excel.XlEnableSelection.xlUnlockedCells
+            '        .EnableAutoFilter = True
+            '    End With
+            'End If
 
         Catch ex As Exception
             Call MsgBox("Fehler beim Kopieren einer Zeile ...")
         End Try
 
+        appInstance.EnableEvents = True
 
     End Sub
 
@@ -6925,7 +6871,7 @@ Public Module Module1
 
                 ' jetzt wird gelöscht, wenn es noch keine Ist-Daten gibt ..
                 If Not actualDataExists Then
-                    Call meRCZeileLoeschen(currentCell.Row, pName, phaseNameID, rcNameID:="", isRole:=True)
+                    Call meRCZeileLoeschen(currentCell.Row, pName, phaseNameID, rcNameID, isRole)
                 Else
                     Call MsgBox("zur Phase gibt es bereits Ist-Daten - deshalb kann die Rolle " & rcName & vbLf &
                                     " nicht gelöscht werden ...")

@@ -15431,7 +15431,7 @@ Public Module agm2
                 ' ab jetzt braucht man keine Lizenzen mehr ... 
                 Dim pilot As Date = "15.11.2118"
 
-                If Date.Now > pilot Then
+                If special = "BHTC" Then
 
                     Dim user As String = myWindowsName
                     Dim komponente As String = LizenzKomponenten(PTSWKomp.Premium)     ' Lizenz für Projectboard notwendig
@@ -15592,17 +15592,17 @@ Public Module agm2
                 RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
                 CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
+
                 If RoleDefinitions.Count > 0 Then
                     ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
                     ' jetzt kommt der Validation-Check 
                     Dim TeamsAreNotOK As Boolean = checkTeamDefinitions()
-                    If Not TeamsAreNotOK Then
-                        Call MsgBox("keine Team-Definitions-Konflikte in DB")
+                    If TeamsAreNotOK Then
+                        Call MsgBox("Team-Definitions-Konflikte in DB !")
                     End If
+
                     Dim existingOverloads As Boolean = checkTeamMemberOverloads()
-                    If Not existingOverloads Then
-                        Call MsgBox("keine Team-Member Überlastungen ... ")
-                    End If
+
                 End If
 
                 ' jetzt prüfen , ob alles ok 

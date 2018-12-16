@@ -430,14 +430,15 @@ Public Class Tabelle2
                             ' Zeile merken 
                             Dim tmpzeile As Integer = Target.Row
 
+
                             For Each roleNameIDItem As String In frmMERoleCost.rolesToDelete
                                 Dim zeileToDelete As Integer = findeZeileInMeRC(meWS, pName, phaseNameID, roleNameIDItem)
                                 Call meRCZeileLoeschen(zeileToDelete, pName, phaseNameID, roleNameIDItem, True)
                             Next
 
-
+                            Dim spalte As Integer = Target.Column
                             For Each roleNameIDitem As String In frmMERoleCost.rolesToAdd
-
+                                Call meRCZeileEinfuegen(zeile, spalte, roleNameIDitem, True)
                             Next
 
 
@@ -633,7 +634,7 @@ Public Class Tabelle2
             Dim summenChanged As Boolean = False
             ' muss extra überwacht werden, um das ProjectInfo1 Fenster auch immer zu aktualisieren
             Dim kostenChanged As Boolean = False
-            Dim newStrValue As String = ""
+            Dim newRCName As String = ""
 
             Dim meWB As Excel.Workbook = CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook)
             Dim meWS As Excel.Worksheet = CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.meRC)), Excel.Worksheet)
@@ -648,72 +649,49 @@ Public Class Tabelle2
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                Dim phaseNameID As String = calcHryElemKey(phaseName, False)
-                Dim curComment As Excel.Comment = CType(meWS.Cells(zeile, 4), Excel.Range).Comment
-                If Not IsNothing(curComment) Then
-                    phaseNameID = curComment.Text
-                End If
+                Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
 
-                If Target.Column = columnRC Then
-                    ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
-
-
-                    newStrValue = CStr(Target.Cells(1, 1).value)
-                    If isValidRCChange(newStrValue, visboZustaende.oldValue) Then
-                        ' es ist eine gültige Änderung, das heisst es wurde eine Rolle in eine andere gewechselt , oder 
-                        ' eine Kostenart in eine andere; Kategorie-übergreifende Wechsel sind nicht erlaubt 
-
-                        ' jetzt muss noch geprüft werden, ob auch keine Duplikate vorkommen: zu einem Projekt dürfen z.Bsp keine 
-                        ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
-                        If noDuplicatesInSheet(pName, phaseNameID, newStrValue, zeile) Then
-
-                            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-
-                            ' jetzt werden die Validation-Strings für alles, alleRollen, alleKosten und die einzelnen SammelRollen aufgebaut 
-                            'Dim validationStrings As SortedList(Of String, String) = createMassEditRcValidations()
-                            'Dim anzahlRollen As Integer = RoleDefinitions.Count
-                            'Dim rcValidation() As String
-                            '' in rcValidation(0) steht der Name "alleKosten" für den Validation-String für alle Kosten
-                            '' in rcValidation(i) steht der Name des Validation-String für Rolle mit UID i 
-                            'ReDim rcValidation(anzahlRollen + 1)
-
-                            'rcValidation(0) = "alleKosten"
-                            'rcValidation(anzahlRollen + 1) = "alles"
-
-                            'For i As Integer = 1 To anzahlRollen
-                            '    Dim tmprole As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-                            '    If tmprole.isCombinedRole Then
-                            '        rcValidation(i) = tmprole.name
-                            '    Else
-                            '        Dim parentrole As clsRollenDefinition = RoleDefinitions.getParentRoleOf(tmprole.UID)
-                            '        If IsNothing(parentrole) Then
-                            '            rcValidation(i) = "alleRollen"
-                            '        Else
-                            '            rcValidation(i) = parentrole.name
-                            '        End If
-
-                            '    End If
-                            'Next
-                            ' Ende Preparation für Validierungs-Strings
+                Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                Dim cphase As clsPhase = Nothing
+                Dim isRole As Boolean = RoleDefinitions.containsName(newRCName)
+                Dim isCost As Boolean = CostDefinitions.containsName(newRCName)
 
 
-                            If Not IsNothing(hproj) Then
-                                Dim cPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                If Not IsNothing(hproj) Then
+                    cphase = hproj.getPhaseByID(phaseNameID)
+                    If Not IsNothing(cphase) Then
 
-                                If Not IsNothing(cPhase) Then
-                                    If RoleDefinitions.containsName(newStrValue) Then
+                        If Target.Column = columnRC Then
+                            ' es handelt sich um eine Rollen- oder Kosten-Änderung ...
+
+
+                            newRCName = CStr(Target.Cells(1, 1).value)
+                            If isValidRCChange(newRCName, visboZustaende.oldValue) Then
+                                ' es ist eine gültige Änderung, das heisst es wurde eine Rolle in eine andere gewechselt , oder 
+                                ' eine Kostenart in eine andere; Kategorie-übergreifende Wechsel sind nicht erlaubt 
+
+                                ' jetzt muss noch geprüft werden, ob auch keine Duplikate vorkommen: zu einem Projekt dürfen z.Bsp keine 
+                                ' 2 Zeilen existieren mit jeweils der gleichen Rolle oder Kostenart ...
+                                If noDuplicatesInSheet(pName, phaseNameID, rcNameID, zeile) Then
+
+                                    If isRole Then
                                         ' es handelt sich um eine Rollen-Änderung
-                                        Dim newRoleID As Integer = RoleDefinitions.getRoledef(newStrValue).UID
-                                        If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> newStrValue.Trim Then
+
+                                        Dim teamID As Integer = -1
+                                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)
+
+                                        Dim newRoleID As Integer = tmpRole.UID
+                                        If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> newRCName.Trim Then
                                             ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
                                             Try
                                                 auslastungChanged = True
-                                                Dim cRole As clsRolle = cPhase.getRole(visboZustaende.oldValue)
+                                                Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue)
                                                 If IsNothing(cRole) Then
                                                 Else
-                                                    hproj.rcLists.removeRP(cRole.uid, cPhase.nameID)
+                                                    hproj.rcLists.removeRP(cRole.uid, cphase.nameID, teamID)
                                                     cRole.uid = newRoleID
-                                                    hproj.rcLists.addRP(newRoleID, cPhase.nameID)
+                                                    hproj.rcLists.addRP(newRoleID, cphase.nameID, teamID)
                                                 End If
 
                                             Catch ex As Exception
@@ -738,30 +716,6 @@ Public Class Tabelle2
                                             End With
                                         End If
 
-                                        With currentCell
-
-                                            'Try
-                                            '    If Not IsNothing(.Validation) Then
-                                            '        .Validation.Delete()
-                                            '    End If
-                                            '    ' jetzt wird die ValidationList aufgebaut 
-                                            '    Dim tmpVal As String = validationStrings.Item(rcValidation(newRoleID))
-
-                                            '    '' ur: 28.09.2017
-                                            '    ''.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
-                                            '    ''                               Formula1:=tmpVal)
-
-                                            '    ' wenn es sich um die Projekt-Phase handelt
-                                            '    If phaseNameID = rootPhaseName Then
-                                            '        tmpVal = tmpVal & ";" &
-                                            '                    validationStrings.Item(rcValidation(0))
-                                            '        Call updateEmptyRcCellValidations(pName, tmpVal)
-                                            '    End If
-
-                                            'Catch ex As Exception
-
-                                            'End Try
-                                        End With
 
                                         If Not awinSettings.meEnableSorting Then
                                             ' es muss der Blattschutz aufgehoben werden, nachher wieder mit diesen Einstellungen aktiviert werden ...
@@ -780,112 +734,109 @@ Public Class Tabelle2
                                             End With
                                         End If
 
-                                        ' jetzt die Rollen bestimmen, die neu berechnet werden müssen ... 
-                                        roleCostNames = RoleDefinitions.getSummaryRoles(newStrValue)
-                                        If Not roleCostNames.Contains(newStrValue) Then
-                                            roleCostNames.Add(newStrValue, newStrValue)
-                                        End If
-
-                                        If visboZustaende.oldValue.Length > 0 Then
-                                            If Not roleCostNames.Contains(visboZustaende.oldValue) Then
-                                                roleCostNames.Add(visboZustaende.oldValue, visboZustaende.oldValue)
+                                        If awinSettings.meAutoReduce Then
+                                            ' jetzt die Rollen bestimmen, die neu berechnet werden müssen ... 
+                                            roleCostNames = RoleDefinitions.getSummaryRoles(newRCName)
+                                            If Not roleCostNames.Contains(newRCName) Then
+                                                roleCostNames.Add(newRCName, newRCName)
                                             End If
 
-                                            Dim tmpSummaryNames As Collection = RoleDefinitions.getSummaryRoles(visboZustaende.oldValue)
-                                            For sr As Integer = 1 To tmpSummaryNames.Count
-                                                Dim srName As String = CStr(tmpSummaryNames.Item(sr))
-                                                If Not roleCostNames.Contains(srName) Then
-                                                    roleCostNames.Add(srName, srName)
+                                            If visboZustaende.oldValue.Length > 0 Then
+                                                If Not roleCostNames.Contains(visboZustaende.oldValue) Then
+                                                    roleCostNames.Add(visboZustaende.oldValue, visboZustaende.oldValue)
                                                 End If
-                                            Next
+
+                                                Dim tmpSummaryNames As Collection = RoleDefinitions.getSummaryRoles(visboZustaende.oldValue)
+                                                For sr As Integer = 1 To tmpSummaryNames.Count
+                                                    Dim srName As String = CStr(tmpSummaryNames.Item(sr))
+                                                    If Not roleCostNames.Contains(srName) Then
+                                                        roleCostNames.Add(srName, srName)
+                                                    End If
+                                                Next
+                                            End If
                                         End If
-                                    Else
+
+                                        ' Ende Rollen-Behandlung
+                                    ElseIf isCost Then
                                         ' es handelt sich um eine Kostenart Änderung 
-                                        If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> newStrValue.Trim Then
+                                        If visboZustaende.oldValue.Length > 0 And visboZustaende.oldValue.Trim <> newRCName.Trim Then
                                             ' es handelt sich um einen Wechsel, von RoleID1 -> RoleID2
-                                            Dim newCostID As Integer = CostDefinitions.getCostdef(newStrValue).UID
-                                            Dim cCost As clsKostenart = cPhase.getCost(visboZustaende.oldValue)
+                                            Dim newCostID As Integer = CostDefinitions.getCostdef(newRCName).UID
+                                            Dim cCost As clsKostenart = cphase.getCost(visboZustaende.oldValue)
                                             If IsNothing(cCost) Then
                                             Else
-                                                hproj.rcLists.removeCP(cCost.KostenTyp, cPhase.nameID)
+                                                hproj.rcLists.removeCP(cCost.KostenTyp, cphase.nameID)
                                                 cCost.KostenTyp = newCostID
-                                                hproj.rcLists.addCP(newCostID, cPhase.nameID)
+                                                hproj.rcLists.addCP(newCostID, cphase.nameID)
                                             End If
                                             kostenChanged = True
                                         Else
                                             ' es kam eine neue Kostenart hinzu, da es aber nicht möglich ist, im Datenbereich Eingaben zu machen, ohne dass eine Rolle / Kostenart ausgewählt wurde,
                                             ' muss an dieser Stelle noch gar nichts gemacht werden ..
                                         End If
+                                    Else
+                                        ' falsche/unbekannte Eingabe
+                                        Call MsgBox("unbekannte Rolle / Kostenart ... ")
+                                        Target.Cells(1, 1).value = visboZustaende.oldValue
                                     End If
 
 
-
                                 Else
-                                    Call MsgBox("Projekt-Phase kann nicht bestimmt werden: " & pName & ", " & phaseName)
+                                    Call MsgBox("keine Doppelbelegung innerhalb einer Projektphase erlaubt ... ")
+                                    Target.Cells(1, 1).value = visboZustaende.oldValue
+
+                                    If visboZustaende.oldValue = "" Or IsNothing(visboZustaende.oldValue) Then
+                                        ' Zeile löschen mit Doppelbelegung
+                                        Call massEditZeileLoeschen("")
+
+                                    ElseIf RoleDefinitions.containsName(visboZustaende.oldValue) Then
+                                        Target.ClearComments()
+
+                                    End If
+
+
                                 End If
+
                             Else
-                                Call MsgBox("Projekt kann nicht bestimmt werden: " & pName)
+                                Call MsgBox("nicht zugelassen ... ")
+                                Target.Cells(1, 1).value = visboZustaende.oldValue
                             End If
 
 
+                        ElseIf Target.Column = columnRC + 1 Then
+                            ' es handelt sich um eine Summenänderung
+                            Dim newDblValue As Double
+                            Dim difference As Double
+                            Dim teamID As Integer = -1
+                            Dim ok As Boolean = False
 
-                        Else
-                            Call MsgBox("keine Doppelbelegung innerhalb einer Projektphase erlaubt ... ")
-                            Target.Cells(1, 1).value = visboZustaende.oldValue
+                            Dim uid As Integer
 
-                            If visboZustaende.oldValue = "" Or IsNothing(visboZustaende.oldValue) Then
-                                ' Zeile löschen mit Doppelbelegung
-                                Call massEditZeileLoeschen("")
+                            If isRole Then
+                                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID)
+                                If Not IsNothing(tmpRole) Then
+                                    uid = tmpRole.UID
+                                    ok = True
+                                End If
 
-                            ElseIf RoleDefinitions.containsName(visboZustaende.oldValue) Then
-                                Target.ClearComments()
+                            ElseIf isCost Then
+                                Dim tmpCost As clsKostenartDefinition = CostDefinitions.getCostdef(rcName)
+                                If Not IsNothing(tmpCost) Then
+                                    uid = tmpCost.UID
+                                    ok = True
+                                End If
 
+                            Else
+                                Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
+                                Target.Cells(1, 1).value = visboZustaende.oldValue
                             End If
 
+                            If ok Then
 
-                        End If
+                                If inputIsAcknowledged(Target, newDblValue, difference) Then
 
-
-
-                    Else
-                        Call MsgBox("bitte nur innerhalb Rollen bzw. innerhalb Kostenarten wechseln !")
-                        Target.Cells(1, 1).value = visboZustaende.oldValue
-                    End If
-
-
-                ElseIf Target.Column = columnRC + 1 Then
-                    ' es handelt sich um eine Summenänderung
-                    Dim newDblValue As Double
-                    Dim difference As Double
-                    Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-                    Dim ok As Boolean = False
-                    Dim isRole As Boolean
-                    Dim uid As Integer
-
-                    If RoleDefinitions.containsName(rcName) Then
-                        isRole = True
-                        uid = RoleDefinitions.getRoledef(rcName).UID
-                        ok = True
-                    ElseIf CostDefinitions.containsName(rcName) Then
-                        isRole = False
-                        uid = CostDefinitions.getCostdef(rcName).UID
-                        ok = True
-                    Else
-                        Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
-                        Target.Cells(1, 1).value = visboZustaende.oldValue
-                    End If
-
-                    If ok Then
-
-                        If inputIsAcknowledged(Target, newDblValue, difference) Then
-
-                            If Not IsNothing(hproj) Then
-                                Dim cPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
-
-                                If Not IsNothing(cPhase) Then
-
-                                    Dim phStart As Integer = hproj.Start + cPhase.relStart - 1
-                                    Dim phEnde As Integer = hproj.Start + cPhase.relEnde - 1
+                                    Dim phStart As Integer = hproj.Start + cphase.relStart - 1
+                                    Dim phEnde As Integer = hproj.Start + cphase.relEnde - 1
 
                                     Dim ixZeitraum As Integer
                                     Dim ix As Integer
@@ -899,19 +850,19 @@ Public Class Tabelle2
                                     Dim xEndDate As Date
 
                                     If ix = 0 Then
-                                        xStartDate = cPhase.getStartDate
+                                        xStartDate = cphase.getStartDate
                                     Else
-                                        xStartDate = cPhase.getStartDate.AddDays(-1 * (cPhase.getStartDate.Day - 1)).AddMonths(ix)
+                                        xStartDate = cphase.getStartDate.AddDays(-1 * (cphase.getStartDate.Day - 1)).AddMonths(ix)
                                     End If
 
                                     xEndDate = xStartDate.AddDays(-1 * (xStartDate.Day - 1)).AddMonths(breite).AddDays(-1)
 
-                                    If DateDiff(DateInterval.Day, cPhase.getEndDate, xEndDate) > 0 Then
-                                        xEndDate = cPhase.getEndDate
+                                    If DateDiff(DateInterval.Day, cphase.getEndDate, xEndDate) > 0 Then
+                                        xEndDate = cphase.getEndDate
                                     End If
 
-                                    Dim xValues() As Double = cPhase.berechneBedarfeNew(xStartDate,
-                                                                                        xEndDate, vSum, 1)
+                                    Dim xValues() As Double = cphase.berechneBedarfeNew(xStartDate,
+                                                                                                xEndDate, vSum, 1)
 
                                     If isRole Then
 
@@ -919,25 +870,26 @@ Public Class Tabelle2
                                         Dim parentRoleSum As Double = -1
                                         If awinSettings.meAutoReduce Then
                                             Call autoReduceRowOfParentRole(Target.Row, Target.Column, newDblValue, difference,
-                                                                           hproj, cPhase, rcName)
+                                                                                   hproj, cphase, rcName)
 
                                             ' durch autoReduce kann der newDblValue verändert sein
                                             vSum(0) = newDblValue
-                                            xValues = cPhase.berechneBedarfeNew(xStartDate,
-                                                                                       xEndDate, vSum, 1)
+                                            xValues = cphase.berechneBedarfeNew(xStartDate,
+                                                                                               xEndDate, vSum, 1)
 
                                         End If
 
                                         ' jetzt muss die Rolle aktualisiert werden ...
-                                        Dim tmpRole As clsRolle = cPhase.getRole(rcName)
+                                        Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
 
                                         If IsNothing(tmpRole) Then
                                             tmpRole = New clsRolle(phEnde - phStart)
 
                                             With tmpRole
                                                 .uid = uid
+                                                .teamID = teamID
                                             End With
-                                            With cPhase
+                                            With cphase
                                                 .addRole(tmpRole)
                                             End With
                                         End If
@@ -956,13 +908,13 @@ Public Class Tabelle2
 
                                         ' jetzt muss die Excel Zeile geschreiben werden - dort wird auch der auslastungs-Array aktualisiert 
                                         Call aktualisiereRoleCostInSheet(Target.Row, rcName, isRole,
-                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight,
-                                                                     phStart, phEnde, xValues)
+                                                                             visboZustaende.meColSD, showRangeLeft, showRangeRight,
+                                                                             phStart, phEnde, xValues)
 
 
                                     Else
                                         ' es handelt sich um eine Kostenart 
-                                        Dim tmpCost As clsKostenart = cPhase.getCost(rcName)
+                                        Dim tmpCost As clsKostenart = cphase.getCost(rcName)
 
                                         If IsNothing(tmpCost) Then
                                             tmpCost = New clsKostenart(phEnde - phStart)
@@ -970,7 +922,7 @@ Public Class Tabelle2
                                             With tmpCost
                                                 .KostenTyp = uid
                                             End With
-                                            With cPhase
+                                            With cphase
                                                 .AddCost(tmpCost)
                                             End With
                                         End If
@@ -988,77 +940,61 @@ Public Class Tabelle2
                                         kostenChanged = True
                                         ' jetzt muss die Excel Zeile geschreiben werden 
                                         Call aktualisiereRoleCostInSheet(Target.Row, rcName, isRole,
-                                                                     visboZustaende.meColSD, showRangeLeft, showRangeRight,
-                                                                     phStart, phEnde, xValues)
+                                                                             visboZustaende.meColSD, showRangeLeft, showRangeRight,
+                                                                             phStart, phEnde, xValues)
 
                                     End If
 
-
+                                Else
+                                    ' nichts tun 
                                 End If
+
                             End If
 
-                        Else
-                            ' nichts tun 
-                        End If
-
-                    End If
 
 
+                        ElseIf Target.Column > columnRC + 1 Then
 
-                ElseIf Target.Column > columnRC + 1 Then
+                            ' es handelt sich um eine Datenänderung
+                            Dim newDblValue As Double
+                            Dim difference As Double
 
-                    ' es handelt sich um eine Datenänderung
-                    Dim newDblValue As Double
-                    Dim difference As Double
+                            ' zu welcher / welchen Sammelrollen gehört die ausgewählte Rolle ? 
+                            Dim sammelRollenName As String = ""
+                            Dim zeileSammelRolle As Integer = 0
 
-                    ' zu welcher / welchen Sammelrollen gehört die ausgewählte Rolle ? 
-                    Dim sammelRollenName As String = ""
-                    Dim zeileSammelRolle As Integer = 0
-                    Dim isRole As Boolean
 
-                    If RoleDefinitions.containsName(rcName) Then
-                        isRole = True
-                        ' hier muss jetzt bestimmt werden, wo die zugehörige Sammelrolle steht ... 
-                    End If
+                            If isRole Or isCost Then
+                                ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
 
-                    If isRole Or CostDefinitions.containsName(rcName) Then
-                        ' hier ist etwas gültiges vorhanden .. es kann also weitergemacht werden 
+                                Try
+                                    If IsNothing(Target.Cells(1, 1).value) Then
+                                        newDblValue = 0.0
+                                    ElseIf IsNumeric(Target.Cells(1, 1).value) Then
+                                        newDblValue = CDbl(Target.Cells(1, 1).value)
+                                    Else
+                                        newDblValue = 0.0
+                                    End If
+                                Catch ex As Exception
+                                    newDblValue = 0.0
+                                End Try
 
-                        Try
-                            If IsNothing(Target.Cells(1, 1).value) Then
-                                newDblValue = 0.0
-                            ElseIf IsNumeric(Target.Cells(1, 1).value) Then
-                                newDblValue = CDbl(Target.Cells(1, 1).value)
-                            Else
-                                newDblValue = 0.0
-                            End If
-                        Catch ex As Exception
-                            newDblValue = 0.0
-                        End Try
+                                Try
+                                    If IsNothing(visboZustaende.oldValue) Then
+                                        difference = newDblValue
+                                        visboZustaende.oldValue = "0"
+                                    ElseIf visboZustaende.oldValue = "" Then
+                                        difference = newDblValue
+                                        visboZustaende.oldValue = "0"
+                                    Else
+                                        difference = newDblValue - CDbl(visboZustaende.oldValue)
+                                    End If
+                                Catch ex As Exception
+                                    difference = newDblValue
+                                    visboZustaende.oldValue = "0"
+                                End Try
 
-                        Try
-                            If IsNothing(visboZustaende.oldValue) Then
-                                difference = newDblValue
-                                visboZustaende.oldValue = "0"
-                            ElseIf visboZustaende.oldValue = "" Then
-                                difference = newDblValue
-                                visboZustaende.oldValue = "0"
-                            Else
-                                difference = newDblValue - CDbl(visboZustaende.oldValue)
-                            End If
-                        Catch ex As Exception
-                            difference = newDblValue
-                            visboZustaende.oldValue = "0"
-                        End Try
-
-                        Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
-
-                        Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
-
-                        If Not IsNothing(hproj) Then
-                            Dim cphase As clsPhase = hproj.getPhaseByID(phaseNameID)
-
-                            If Not IsNothing(cphase) Then
+                                Dim monthCol As Integer = showRangeLeft + Target.Column - columnStartData
 
                                 Dim xWerteIndex As Integer = monthCol - getColumnOfDate(cphase.getStartDate)
                                 Dim xWerte() As Double
@@ -1069,18 +1005,20 @@ Public Class Tabelle2
                                     If awinSettings.meAutoReduce Then
 
                                         Call autoReduceCellOfParentRole(Target.Row, Target.Column, newDblValue,
-                                                                  hproj, cphase, rcName, xWerteIndex, difference, summenChanged)
+                                                                          hproj, cphase, rcName, xWerteIndex, difference, summenChanged)
 
                                     End If
 
                                     ' es muss einfach die Rolle hinzugefügt bzw. die Werte abgeändert werden 
-                                    Dim tmpRole As clsRolle = cphase.getRole(rcName)
+                                    Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
 
                                     If IsNothing(tmpRole) Then
                                         ' die Rolle muss neu angelegt und der Phase hinzugefügt werden  
 
                                         tmpRole = New clsRolle(cphase.relEnde - cphase.relStart)
-                                        tmpRole.uid = RoleDefinitions.getRoledef(rcName).UID
+                                        Dim teamID As Integer = -1
+                                        tmpRole.uid = RoleDefinitions.getRoleDefByIDKennung(rcNameID, teamID).UID
+                                        tmpRole.teamID = teamID
 
                                         Call cphase.addRole(tmpRole)
 
@@ -1102,9 +1040,11 @@ Public Class Tabelle2
                                     'CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value = tmpSum
 
                                     ' bestimmt zu welchen Rollen die Auslastungs-Werte neu berechnet werden müssen ..
-                                    roleCostNames = RoleDefinitions.getSummaryRoles(rcName)
-                                    If Not roleCostNames.Contains(rcName) Then
-                                        roleCostNames.Add(rcName, rcName)
+                                    If awinSettings.meAutoReduce Then
+                                        roleCostNames = RoleDefinitions.getSummaryRoles(rcName)
+                                        If Not roleCostNames.Contains(rcName) Then
+                                            roleCostNames.Add(rcName, rcName)
+                                        End If
                                     End If
 
                                     ' ur: 24.11.2017: Neuberechnung der Auslastung soll hier angestoßen werden, da Veränderung an Rolle in einem Monat mit entsprechenden Reduktion in Sammelrolle
@@ -1148,21 +1088,19 @@ Public Class Tabelle2
                                     End If
 
                                 End If
+
+
                             Else
-                                Call MsgBox("Projekt-Phase existiert nicht: " & pName & ", " & phaseName)
+                                Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
+                                Target.Cells(1, 1).value = visboZustaende.oldValue
                             End If
+
                         Else
-                            Call MsgBox("Projekt existiert nicht: " & pName)
+                            ' es wurde die Business Unit selektiert ..
+
                         End If
 
-
-                    Else
-                        Call MsgBox("bitte erst eine Rolle oder Kostenart auswählen !")
-                        Target.Cells(1, 1).value = visboZustaende.oldValue
                     End If
-
-                Else
-                    ' es wurde die Business Unit selektiert ..
 
                 End If
 
@@ -1176,6 +1114,7 @@ Public Class Tabelle2
 
                 'Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
                 If summenChanged Then
+                    'Call updateMassEditSummenValue(hproj:=,)
                     Call updateMassEditSummenValues(pName, phaseNameID, showRangeLeft, showRangeRight, roleCostNames)
                 End If
                 'Dim testValue2 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
@@ -1207,7 +1146,7 @@ Public Class Tabelle2
 
             Else
                 'appInstance.Undo()
-                Call MsgBox("bitte nur eine Zelle selektieren ...")
+                'Call MsgBox("bitte nur eine Zelle selektieren ...")
                 Target.Cells(1, 1).value = visboZustaende.oldValue
             End If
 
@@ -1840,19 +1779,28 @@ Public Class Tabelle2
 
         Dim tmpValue As Boolean = False
 
-        'If RoleDefinitions.containsName(newValue) Then
-        '    If RoleDefinitions.containsName(oldValue) Or oldValue = "" Then
-        '        tmpValue = True
-        '    End If
-        'ElseIf CostDefinitions.containsName(newValue) Then
-        '    If CostDefinitions.containsName(oldValue) Or oldValue = "" Then
-        '        tmpValue = True
-        '    End If
-        'End If
+        If oldValue.Trim.Length = 0 Then
+            ' ist erlaubt, wenn der Wert in einer der Definitions vorkommt 
+            tmpValue = RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue)
+        Else
+            ' es war vorher was drin 
+            If RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue) Then
 
-        If RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue) Then
-            tmpValue = True
+                If RoleDefinitions.containsName(newValue) = RoleDefinitions.containsName(oldValue) Then
+                    ' ist erlaubt 
+                    tmpValue = True
+                ElseIf CostDefinitions.containsName(newValue) = missingCostDefinitions.containsName(oldValue) Then
+                    ' ist erlaubt
+                    tmpValue = True
+                Else
+                    ' ist nicht erlaubt
+                    tmpValue = True
+                End If
+
+            End If
+
         End If
+
 
         isValidRCChange = tmpValue
 
@@ -1957,13 +1905,13 @@ Public Class Tabelle2
         End If
 
         ' wird nur benötigt im Falle isRole ... 
-        Dim roleCollection As New Collection
-        Dim roleUID As Integer
+        'Dim roleCollection As New Collection
+        'Dim roleUID As Integer
         Dim auslastungsArray(,) As Double = Nothing
 
         If isRole Then
-            roleUID = RoleDefinitions.getRoledef(rcName).UID
-            roleCollection.Add(rcName)
+            'roleUID = RoleDefinitions.getRoledef(rcName).UID
+            'roleCollection.Add(rcName)
             'If awinSettings.meExtendedColumnsView Then
             '    auslastungsArray = visboZustaende.getUpDatedAuslastungsArray(roleCollection, von, bis, awinSettings.mePrzAuslastung)
             'End If

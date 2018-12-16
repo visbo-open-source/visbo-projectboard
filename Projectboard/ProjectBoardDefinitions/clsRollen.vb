@@ -739,6 +739,31 @@ Public Class clsRollen
         End Get
     End Property
 
+    Public ReadOnly Property containsNameID(nameID As String) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim teamID As Integer = -1
+            Dim roleUID As Integer = parseRoleNameID(nameID, teamID)
+
+            If nameID.Contains(";") And teamID = -1 Then
+                ' nicht ok 
+            ElseIf roleUID = -1 Then
+                ' nicht ok 
+            ElseIf roleUID > 0 And teamID = -1 Then
+                ' alles ok 
+                tmpResult = True
+            ElseIf roleUID > 0 And teamID > 0 Then
+                ' alles ok 
+                tmpResult = True
+            End If
+
+            containsNameID = tmpResult
+
+        End Get
+    End Property
+
+
+
     ''' <summary>
     ''' gibt zurück, ob der Key bereits enthalten ist 
     ''' </summary>
@@ -823,27 +848,45 @@ Public Class clsRollen
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
         Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
-        Dim tmpResult As Integer = -1
+        Dim roleID As Integer = -1
 
+        ' die RoleUID bestimmen 
+        If IsNumeric(tmpStr(0)) Then
+            roleID = CInt(tmpStr(0))
+            If _allRollen.ContainsKey(roleID) Then
+                ' alles ok 
+            Else
+                roleID = -1
+            End If
+        Else
+            If _allNames.ContainsKey(tmpStr(0)) Then
+                roleID = _allNames.Item(tmpStr(0))
+            Else
+                roleID = -1
+            End If
+        End If
 
-        tmpResult = CInt(tmpStr(0))
-
+        ' bestimme teamID
         If tmpStr.Length = 2 Then
-            ' ist Team 
+            ' hat noch Team Info  
             If IsNumeric(tmpStr(1)) Then
                 teamID = CInt(tmpStr(1))
                 If _allRollen.ContainsKey(teamID) Then
-                    ' alles in Ordnung
+                    ' alles ok 
                 Else
                     teamID = -1
                 End If
             Else
-                teamID = -1
+                If _allNames.ContainsKey(tmpStr(1)) Then
+                    teamID = _allNames.Item(tmpStr(1))
+                Else
+                    teamID = -1
+                End If
             End If
         End If
 
 
-        parseRoleNameID = tmpResult
+        parseRoleNameID = roleID
 
     End Function
     ''' <summary>
