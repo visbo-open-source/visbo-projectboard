@@ -2392,7 +2392,7 @@ Public Class clsPhase
             Dim tmpResult As clsRolle = Nothing
             Dim found As Boolean = False
             Dim ix As Integer = 0
-            Dim teamID As Integer
+            Dim teamID As Integer = -1
             Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
 
             Do While Not found And ix <= _allRoles.Count - 1

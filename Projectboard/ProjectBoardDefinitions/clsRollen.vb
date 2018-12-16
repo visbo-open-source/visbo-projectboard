@@ -850,6 +850,9 @@ Public Class clsRollen
         Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
         Dim roleID As Integer = -1
 
+        ' Vorbesetzung von teamID 
+        teamID = -1
+
         ' die RoleUID bestimmen 
         If IsNumeric(tmpStr(0)) Then
             roleID = CInt(tmpStr(0))
