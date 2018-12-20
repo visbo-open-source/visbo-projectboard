@@ -1133,7 +1133,9 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-                    Call verarbeiteTreeRoleItem(tmpNode)
+                    If Not IsNothing(tmpNode.Tag) Then
+                        Call verarbeiteTreeRoleItem(tmpNode)
+                    End If
 
                 Next
 
@@ -2760,7 +2762,9 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-                    Call verarbeiteTreeRoleItem(tmpNode)
+                    If Not IsNothing(tmpNode.Tag) Then
+                        Call verarbeiteTreeRoleItem(tmpNode)
+                    End If
 
                 Next
 
@@ -3349,7 +3353,10 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-                    Call verarbeiteTreeRoleItem(tmpNode)
+                    If Not IsNothing(tmpNode.Tag) Then
+                        Call verarbeiteTreeRoleItem(tmpNode)
+                    End If
+
 
                 Next
 
@@ -4848,8 +4855,9 @@ Public Class frmHierarchySelection
                     For px As Integer = 1 To anzahlKnoten
 
                         tmpnode = .Nodes.Item(px - 1)
-
-                        Call verarbeiteTreeRoleItem(tmpnode)
+                        If Not IsNothing(tmpnode.Tag) Then
+                            Call verarbeiteTreeRoleItem(tmpnode)
+                        End If
 
                     Next
 

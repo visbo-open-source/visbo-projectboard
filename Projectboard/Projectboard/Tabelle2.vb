@@ -427,8 +427,7 @@ Public Class Tabelle2
                             ' ad1: alle toDelete Rollen und Kosten löschen; es ist bereits sichergestellt, dass nur Rollen und Kosten gelöscht werden sollen
                             ' die noch keine Ist-Daten enthalten
 
-                            ' Zeile merken 
-                            Dim tmpzeile As Integer = Target.Row
+
 
 
                             For Each roleNameIDItem As String In frmMERoleCost.rolesToDelete
@@ -436,9 +435,17 @@ Public Class Tabelle2
                                 Call meRCZeileLoeschen(zeileToDelete, pName, phaseNameID, roleNameIDItem, True)
                             Next
 
-                            Dim spalte As Integer = Target.Column
+                            If Not frmMERoleCost.rolesToDelete.Contains(frmMERoleCost.rcNameID) Then
+                                ' dann gibt es den noch ... 
+                                zeile = findeZeileInMeRC(meWS, pName, phaseNameID, frmMERoleCost.rcNameID)
+                            Else
+                                ' andernfalls - such eine beliebige Zeile mit pName, PhaseNamID
+                                zeile = findeZeileInMeRC(meWS, pName, phaseNameID, "*")
+                            End If
+
                             For Each roleNameIDitem As String In frmMERoleCost.rolesToAdd
-                                Call meRCZeileEinfuegen(zeile, spalte, roleNameIDitem, True)
+                                Call meRCZeileEinfuegen(zeile, roleNameIDitem, True)
+                                zeile = visboZustaende.oldRow
                             Next
 
 
@@ -563,22 +570,22 @@ Public Class Tabelle2
 
 
                             With meWS
-                                .Protect(Password:="x", UserInterfaceOnly:=True,
-                                    AllowFormattingCells:=True,
-                                    AllowFormattingColumns:=True,
-                                    AllowInsertingColumns:=False,
-                                    AllowInsertingRows:=True,
-                                    AllowDeletingColumns:=False,
-                                    AllowDeletingRows:=True,
-                                    AllowSorting:=True,
-                                    AllowFiltering:=True)
-                                .EnableSelection = XlEnableSelection.xlUnlockedCells
-                                .EnableAutoFilter = True
-                            End With
-                            Cancel = True
-                        End If
+                                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                                        AllowFormattingCells:=True,
+                                        AllowFormattingColumns:=True,
+                                        AllowInsertingColumns:=False,
+                                        AllowInsertingRows:=True,
+                                        AllowDeletingColumns:=False,
+                                        AllowDeletingRows:=True,
+                                        AllowSorting:=True,
+                                        AllowFiltering:=True)
+                                    .EnableSelection = XlEnableSelection.xlUnlockedCells
+                                    .EnableAutoFilter = True
+                                End With
+                                Cancel = True
+                            End If
 
-                    End If
+                        End If
 
                 Else
                     Call MsgBox("bitte nur eine Zelle selektieren ...")
@@ -1123,18 +1130,23 @@ Public Class Tabelle2
 
 
 
-                If auslastungChanged And awinSettings.meExtendedColumnsView Then
-                    'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
-                End If
+                'If auslastungChanged And awinSettings.meExtendedColumnsView Then
+                '    'Call updateMassEditAuslastungsValues(showRangeLeft, showRangeRight, roleCostNames)
+                'End If
 
                 ' das Folgende ist eigentlich eine Test Routine , die normalerweise gar nicht nötig ist 
                 ' aber für Testzwecke gut geeignet ist ...
 
                 'Dim testValue1 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
                 If summenChanged Then
-                    'Call updateMassEditSummenValue(hproj:=,)
+
+                    If IsNothing(cphase) Then
+                        ' wenn in Zweig target.columns.count > 1 gewesen
+                        cphase = hproj.getPhaseByID(phaseNameID)
+                    End If
+
                     Call updateMassEditSummenValue(hproj, cphase, showRangeLeft, showRangeRight, rcNameID, isRole, zeile)
-                    'Call updateMassEditSummenValues(pName, phaseNameID, showRangeLeft, showRangeRight, roleCostNames)
+
                 End If
                 'Dim testValue2 As Double = CDbl(CType(meWS.Cells(zeile, columnRC + 1), Excel.Range).Value)
 

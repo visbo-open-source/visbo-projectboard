@@ -6673,7 +6673,7 @@ Public Module Module1
             Dim zeile As Integer = currentCell.Row
             Dim spalte As Integer = currentCell.Column
 
-            Call meRCZeileEinfuegen(zeile, spalte, "", True)
+            Call meRCZeileEinfuegen(zeile, "", True)
 
 
             ' jetzt den Blattschutz wiederherstellen ... 
@@ -6710,27 +6710,26 @@ Public Module Module1
     ''' vorab gecheckt: hat die Phase überhaupt Planungs-Monate oder liegt sie vollständig in der Vergangenheit ? 
     ''' </summary>
     ''' <param name="zeile"></param>
-    Public Sub meRCZeileEinfuegen(ByVal zeile As Integer, ByVal spalte As Integer,
-                                  ByVal rcNameID As String, ByVal isRole As Boolean)
+    Public Sub meRCZeileEinfuegen(ByVal zeile As Integer, ByVal rcNameID As String, ByVal isRole As Boolean)
 
         Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
-        Dim currentCell As Excel.Range
-        Dim currentCellPlus1 As Excel.Range
+        Dim currentRow As Excel.Range
+        Dim currentRowPlus1 As Excel.Range
 
         appInstance.EnableEvents = False
 
         Try
 
-            currentCell = CType(ws.Cells(zeile, spalte), Excel.Range)
+            currentRow = CType(ws.Rows(zeile), Excel.Range)
 
             Dim columnEndData As Integer = visboZustaende.meColED
             Dim columnStartData As Integer = visboZustaende.meColSD
 
             Dim columnRC As Integer = visboZustaende.meColRC
 
-            Dim hoehe As Double = CDbl(currentCell.Height)
-            currentCellPlus1 = CType(ws.Cells(currentCell.Row + 1, currentCell.Column), Excel.Range)
-            currentCellPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+            Dim hoehe As Double = CDbl(currentRow.Height)
+            currentRowPlus1 = CType(ws.Cells(currentRow.Row + 1, currentRow.Column), Excel.Range)
+            currentRowPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
 
             ' Blattschutz aufheben ... 
             If Not awinSettings.meEnableSorting Then
@@ -6802,6 +6801,7 @@ Public Module Module1
                 'If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
                 '    Call MsgBox("Fehler 099 in PTzeileEinfügen")
                 'End If
+                .oldRow = zeile + 1
                 .oldValue = rcNameID
                 .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
             End With
@@ -7152,6 +7152,10 @@ Public Module Module1
                         Next
                     Else
                         CType(meWS.Rows(zeile), Excel.Range).Delete()
+                        zeile = zeile - 1
+                        If zeile < 2 Then
+                            zeile = 2
+                        End If
                     End If
 
                     ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
@@ -7159,6 +7163,7 @@ Public Module Module1
 
                     ' jetzt wird der Old-Value gesetzt 
                     With visboZustaende
+                        .oldRow = zeile
                         .oldValue = CStr(CType(meWS.Cells(zeile, columnRC), Excel.Range).Value)
                         .meMaxZeile = CType(meWS.UsedRange, Excel.Range).Rows.Count
                     End With

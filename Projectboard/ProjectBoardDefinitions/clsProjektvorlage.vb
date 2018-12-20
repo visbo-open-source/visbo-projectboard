@@ -2655,7 +2655,7 @@
             Dim lookforIndex As Boolean
             Dim phasenStart As Integer
             Dim tempArray As Double()
-            Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
+
 
             Dim roleUID As Integer
             Dim roleName As String = ""
@@ -2675,6 +2675,14 @@
                         roleName = CStr(roleID)
                     End If
                 End If
+
+                ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
+                ' ein Team kann nicht zu sich selber gehören ...
+                If roleUID = teamID Then
+                    teamID = -1
+                End If
+                Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
+
 
                 ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
                 If inclSubRoles Then

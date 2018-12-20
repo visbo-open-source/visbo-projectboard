@@ -594,7 +594,7 @@ Public Class frmMEhryRoleCost
                         Else
                             ' initialroles enthält sie: also muss sie in rolesToDelete
                             If Not rolesToDelete.Contains(checkItem) Then
-                                rolesToDelete.Add(checkItem)
+                                rolesToDelete.Add(checkItem, checkItem)
                             End If
                         End If
 
@@ -614,8 +614,8 @@ Public Class frmMEhryRoleCost
                             node.Checked = True ' nimmt die de-selection wieder zurück 
                         Else
                             ' initialcosts enthält sie: also muss sie in costsToDelete
-                            If Not costsToDelete.Contains(rcNameID) Then
-                                costsToDelete.Add(rcNameID)
+                            If Not costsToDelete.Contains(checkItem) Then
+                                costsToDelete.Add(checkItem, checkItem)
                             End If
                         End If
                     End If
@@ -633,7 +633,7 @@ Public Class frmMEhryRoleCost
                         If Not initialRolesOfPhase.ContainsKey(checkItem) Then
                             ' in rolesToAdd reintun:   
                             If Not rolesToAdd.Contains(checkItem) Then
-                                rolesToAdd.Add(checkItem)
+                                rolesToAdd.Add(checkItem, checkItem)
                             End If
                         Else
                             ' wurde unchecked, dann checked 
@@ -646,7 +646,7 @@ Public Class frmMEhryRoleCost
                         If Not initialCostsOfPhase.ContainsKey(checkItem) Then
                             ' is costsToAdd reintun: 
                             If Not costsToAdd.Contains(checkItem) Then
-                                costsToAdd.Add(checkItem)
+                                costsToAdd.Add(checkItem, checkItem)
                             End If
                         Else
                             ' wurde unchecked, jetzt wieder checked 

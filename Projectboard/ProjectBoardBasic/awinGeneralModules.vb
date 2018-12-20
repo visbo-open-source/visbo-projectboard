@@ -5917,11 +5917,18 @@ Public Module awinGeneralModules
 
         Do While zeile <= visboZustaende.meMaxZeile And Not found
 
-            If vglPname = pName And
-                    vglPhaseNameID = phaseNameID And
-                    vglRcNameID = rcNameID Then
-                found = True
+            If rcNameID = "*" Then
+                ' Wildcard für rcNameID
+                found = vglPname = pName And
+                        vglPhaseNameID = phaseNameID
             Else
+                ' rcNameID ist mit entscheidend
+                found = vglPname = pName And
+                        vglPhaseNameID = phaseNameID And
+                        vglRcNameID = rcNameID
+            End If
+
+            If Not found Then
                 zeile = zeile + 1
                 vglPname = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
                 vglRcNameID = getRCNameIDfromMeRcCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
