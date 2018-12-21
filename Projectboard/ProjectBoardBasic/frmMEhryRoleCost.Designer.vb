@@ -63,8 +63,11 @@ Partial Class frmMEhryRoleCost
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.hryRoleCost)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.MaximizeBox = False
+        Me.MinimizeBox = False
         Me.Name = "frmMEhryRoleCost"
         Me.Text = "Auswahl Rollen/Kosten"
+        Me.TopMost = True
         Me.ResumeLayout(False)
 
     End Sub

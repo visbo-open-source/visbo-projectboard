@@ -481,7 +481,7 @@ Public Class clsOpenXML
                     End If
 
 
-                    newRole.RollenTyp = roleUID
+                    newRole.uid = roleUID
                     newRole.Xwerte = roleXML.monthlyNeeds
 
                     ' jetzt zur Phase dazu tun 

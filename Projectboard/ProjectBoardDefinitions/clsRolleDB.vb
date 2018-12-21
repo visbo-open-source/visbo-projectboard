@@ -20,7 +20,7 @@ Public Class clsRolleDB
     Sub copyFrom(ByVal role As clsRolle)
 
         With role
-            Me.RollenTyp = .RollenTyp
+            Me.RollenTyp = .uid
             Me.Bedarf = .Xwerte
             Me.teamID = .teamID
 
@@ -39,7 +39,7 @@ Public Class clsRolleDB
     Sub copyto(ByRef role As clsRolle)
 
         With role
-            .RollenTyp = Me.RollenTyp
+            .uid = Me.RollenTyp
             .Xwerte = Me.Bedarf
             .teamID = Me.teamID
             '.isCalculated = Me.isCalculated
