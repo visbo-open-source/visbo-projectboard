@@ -1175,8 +1175,6 @@ Public Class Tabelle2
 
                 End Try
 
-            ElseIf Target.Rows.Count = 1 Then
-
             ElseIf Target.Rows.Count > 1 Then
 
                 'appInstance.Undo()
