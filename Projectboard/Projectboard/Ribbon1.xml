@@ -73,9 +73,9 @@
         <!--label="IMPORT/EXPORT"-->
         <group id="PTIpExp">
           <!--label="IMPORT"-->
-          <splitButton id="PT4G1split" size ="large">
-            <button id="PT4G1" getLabel ="bestimmeLabel" imageMso="Import" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-            <menu id="PT4G1M" getLabel ="bestimmeLabel" >
+          <!--<splitButton id="PT4G1split" size ="large">-->
+            <!--<button id="PT4G1" getLabel ="bestimmeLabel" imageMso="Import" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>-->
+            <menu id="PT4G1M" imageMso="Import" size ="large" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
               <menu id="PT4G1M1-1" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="Organisation"-->
                 <button id="PT4G1B8" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>
@@ -115,41 +115,45 @@
             <!--
             </menu>-->
            </menu>
-          </splitButton>
-          <splitButton id="PT4G2split" size ="large">
-            <button id="PT4G2" getLabel ="bestimmeLabel" imageMso="ExportFile" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
+          <!--</splitButton>-->
+          <!--<splitButton id="PT4G2split" size ="large">-->
+            <!--<button id="PT4G2" getLabel ="bestimmeLabel" imageMso="ExportFile" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>-->
             <!--label="EXPORT"-->
-            <menu id="PT4G2M" >
-              <!--label="Export VISBO-Steckbriefe"-->
-              <button id="PT4G1M1B3" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
-              <!--label="Export VISBO Open XML"-->
-              <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" enabled ="false" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
-              <!--label="Export Excel"-->
-              <button id="PT4G1M1B1" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="planExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
-              <!--label="exportieren in MSProject Projekte-->
-              <!--<button id="PT4G1M2B2" label="MSProject Projekte" onAction="Tom2G4M2ExportMSProject" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>-->
-              <menuSeparator id="menuSeparator3"/>
-              <button id="PT4G1M0B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine"/>
-              <!--<menu id="PT4G1M0" getLabel ="bestimmeLabel" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine">
+            <menu id="PT4G2M" getVisible="chckVisibility" getLabel ="bestimmeLabel" size ="large" imageMso="ExportFile">
+              <menu id="PT4G2M-1" getLabel ="bestimmeLabel" getVisible="chckVisibility">
+                <!--label="Export VISBO-Steckbriefe"-->
+                <button id="PT4G1M1B3" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner 'Export\VISBO Steckbriefe' "/>
+                <!--label="Export VISBO Open XML"-->
+                <button id="PT4G1M1B2" imageMso="ExportXmlFile" getLabel ="bestimmeLabel" enabled ="false" onAction="xxx (fehlt)" supertip="VISBO Projekt als XML-File exportieren" />
+                <!--label="Export Excel"-->
+                <button id="PT4G1M1B1" imageMso="ExportExcel" getLabel ="bestimmeLabel" onAction="planExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner 'Export\"/>
+                <!--label="exportieren in MSProject Projekte-->
+                <!--<button id="PT4G1M2B2" label="MSProject Projekte" onAction="Tom2G4M2ExportMSProject" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>-->
+              </menu>
+              <menu id="PT4G2M-2" getLabel ="bestimmeLabel" getVisible="chckVisibility">
+                <button id="PT4G1M0B2" getLabel ="bestimmeLabel" onAction="NameHierarchySelAction" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine"/>
+                <!--<menu id="PT4G1M0" getLabel ="bestimmeLabel" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine">
               <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
               <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
               </menu>-->
-              <menuSeparator id="menuSeparator4"/>
-              <!--label="Export Priorisierungsliste"-->
-              <button id="PT4G2B3" getLabel ="bestimmeLabel" onAction="awinWritePrioList" supertip ="es wird eine Excel-Liste mit den Attributen der Projekte exportiert, die für die Priorisierung verwendet und dann wieder eingelasen werden kann"/>
-              <!--label="Export to Excel"-->
-              <menu id="PT4G2M3" getLabel ="bestimmeLabel" supertip ="Export in Summe/Details zu ausgewählten Projekten">
-                <!--<button id="PT4G2M3B1" label="Exportieren" onAction="awinWriteProjektBedarfeXLSX" supertip ="alle Werte im sogenannten Massen-Edit bearbeiten"/>-->
-                <button id="PT4G2M3B1" getLabel ="bestimmeLabel" onAction="exportExcelSumme" supertip ="pro Projekt wird eine Übersichtszeile exportiert"/>
-                <button id="PT4G2M3B2" getLabel ="bestimmeLabel" onAction="exportExcelDetails" supertip ="pro Projekt werden alle ausgewählten Rollen/Kosten exportiert, sofern sie zu der angegebenen Organisations-Einheit gehören"/>
-                <!--<button id="PT4G2M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
-              </menu>
+                <menuSeparator id="menuSeparator4"/>
+                <!--label="Export Priorisierungsliste"-->
+                <button id="PT4G2B3" getLabel ="bestimmeLabel" onAction="awinWritePrioList" supertip ="es wird eine Excel-Liste mit den Attributen der Projekte exportiert, die für die Priorisierung verwendet und dann wieder eingelasen werden kann"/>
+                <!--label="Export to Excel"-->
+                <menu id="PT4G2M3" getLabel ="bestimmeLabel" supertip ="Export in Summe/Details zu ausgewählten Projekten">
+                  <!--<button id="PT4G2M3B1" label="Exportieren" onAction="awinWriteProjektBedarfeXLSX" supertip ="alle Werte im sogenannten Massen-Edit bearbeiten"/>-->
+                  <button id="PT4G2M3B1" getLabel ="bestimmeLabel" onAction="exportExcelSumme" supertip ="pro Projekt wird eine Übersichtszeile exportiert"/>
+                  <button id="PT4G2M3B2" getLabel ="bestimmeLabel" onAction="exportExcelDetails" supertip ="pro Projekt werden alle ausgewählten Rollen/Kosten exportiert, sofern sie zu der angegebenen Organisations-Einheit gehören"/>
+                  <!--<button id="PT4G2M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
+                </menu>
+              </menu>              
+              <!--<menuSeparator id="menuSeparator3"/>-->              
               <!--<menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
               <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
               <button id="PT4G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Hierarchie"/>
               </menu>-->
             </menu>
-          </splitButton>
+          <!--</splitButton>-->
         </group>
         <group id="PTneu">
           <!--label="Neues Projekt anlegen"-->

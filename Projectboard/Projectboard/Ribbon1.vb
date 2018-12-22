@@ -1743,6 +1743,18 @@ Imports System.Web
                 Else
                     tmpLabel = "Import Portfolios and project mass data"
                 End If
+            Case "PT4G2M-1"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export Einzelprojekte"
+                Else
+                    tmpLabel = "Export single Projects"
+                End If
+            Case "PT4G2M-2"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export Portfolios und Projektinformationen"
+                Else
+                    tmpLabel = "Export Portfolios and projects"
+                End If
             Case "PT4G1B12"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Ist-Daten"
@@ -2683,6 +2695,13 @@ Imports System.Web
                     tmpLabel = "Import"
                 Else
                     tmpLabel = "Import"
+                End If
+
+            Case "PT4G2M" ' EXPORT
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export"
+                Else
+                    tmpLabel = "Export"
                 End If
 
             Case "PT4G1B6" ' VISBO Open XML
