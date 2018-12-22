@@ -266,7 +266,10 @@ Public Module Module1
         generalexcelcharts = 7
     End Enum
 
-    Public customUserRoleBezeichner() = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
+    Public customUserRoleBezeichner() As String = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
+
+    ' hier wird geregelt, wer denn welche Menu-Punkte sehen darf
+    Public customUserRoleAllowance(,) As String = Nothing
 
     ''' <summary>
     ''' Werte-Bereich: {0=Admin, 1=PortfolioMgr; 2=RessourcenManager; 3=Projektleiter
@@ -7071,6 +7074,7 @@ Public Module Module1
         bestimmeRollenDiagrammTitel = tmpResult
 
     End Function
+
 
 
 

@@ -9,12 +9,55 @@ Public Class clsCustomUserRole
     Private _customUserRole As Integer
     Private _specifics As String
 
+    ' wird benötigt, um später bestimmen zu können, welche projectboard Funktionalität erlaubt / nicht erlaubt ist 
+    Private _nonAllowance() As String
+
     Public Sub New()
         _userName = ""
         _userID = ""
-        _customUserRole = ptCustomUserRoles.projectlead
+        _customUserRole = ptCustomUserRoles.all
         _specifics = Nothing
+        _nonAllowance = {""}
     End Sub
+
+    ''' <summary>
+    ''' setzt , in Abhängigkeit von _customUserRole die Menu-Punkt Allowance
+    ''' muss aufgerufen werden, sobald eine customUSerRole gewählt wurde 
+    ''' </summary>
+    Public Sub setNonAllowances()
+
+        Select Case _customUserRole
+
+            Case ptCustomUserRoles.all
+                _nonAllowance = {""}
+
+            Case ptCustomUserRoles.orgaadmin
+                _nonAllowance = {""}
+
+            Case ptCustomUserRoles.portfoliomgr
+                _nonAllowance = {""}
+
+            Case ptCustomUserRoles.projectlead
+                _nonAllowance = {""}
+
+            Case ptCustomUserRoles.resourcemgr
+                _nonAllowance = {""}
+
+            Case Else
+                _nonAllowance = {""}
+        End Select
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt an, ob die userRole für die angegebene MenuID berechtigt ist, dass heisst nicht in der nonAllowance aufgeführt ist 
+    ''' true
+    ''' </summary>
+    ''' <param name="menuID"></param>
+    ''' <returns></returns>
+    Public Function isEntitledForMenu(ByVal menuID As String) As Boolean
+        isEntitledForMenu = Not _nonAllowance.Contains(menuID)
+    End Function
 
     Public Property userName As String
         Get

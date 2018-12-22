@@ -1731,6 +1731,24 @@ Imports System.Web
                 Else
                     tmpLabel = "Import Configuration"
                 End If
+            Case "PT4G1M1-2"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Einzelprojekte"
+                Else
+                    tmpLabel = "Import single Projects"
+                End If
+            Case "PT4G1M1-3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Portfolios und Projektlisten"
+                Else
+                    tmpLabel = "Import Portfolios and project mass data"
+                End If
+            Case "PT4G1B12"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ist-Daten"
+                Else
+                    tmpLabel = "Actual Data"
+                End If
 
             Case "PT4G1B8"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2658,7 +2676,13 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Import"
                 Else
-                    tmpLabel = "Import from Filesystem"
+                    tmpLabel = "Import"
+                End If
+            Case "PT4G1M" ' IMPORT
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import"
+                Else
+                    tmpLabel = "Import"
                 End If
 
             Case "PT4G1B6" ' VISBO Open XML
@@ -2808,11 +2832,11 @@ Imports System.Web
                     tmpLabel = "Project/s"
                 End If
 
-            Case "Pt5G2B4" ' Alles Speichern
+            Case "Pt5G2B4" ' Organisations-Daten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Alles Speichern"
+                    tmpLabel = "Organisations-Daten"
                 Else
-                    tmpLabel = "Save everything"
+                    tmpLabel = "Organisation-Data"
                 End If
 
             Case "PT5G3" ' Löschen

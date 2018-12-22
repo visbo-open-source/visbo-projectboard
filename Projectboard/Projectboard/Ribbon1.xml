@@ -45,15 +45,15 @@
               <button id="PT5G2" getLabel ="bestimmeLabel"  imageMso="MindMapImportData" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
               <menu id ="PT5G2M" >
                 <!--label="Portfolio/s"-->
-                <button id="Pt5G2B1" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Portfolios werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
+                <button id="Pt5G2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Portfolios werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
                 <!--label="Projekt/e"-->
-                <button id="Pt5G2B3" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
-                <!--label="Alles Speichern"-->
-                <button id="Pt5G2B4" imageMso="SaveAll" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
+                <button id="Pt5G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
+                <!--label="Organisations-Daten"-->
+                <button id="Pt5G2B4" imageMso="SaveAll" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
               </menu>
             </splitButton>
-          <!--label="Löschen"-->
-          <splitButton id="PT5G3split" size ="large">
+            <!--label="Löschen"-->
+            <splitButton id="PT5G3split" size ="large">
             <!--label="Projekte/Varianten/TimeStamps auswählen"-->
             <button id="PT5G3" getLabel ="bestimmeLabel"  imageMso="Delete" onAction="PT5DeleteProjectsInDB" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten, Varianten und zeitlichen Snapshots in der Datenbank; durch Selektieren können eine oder mehrere Projekte/Varianten/Snapshots gelöscht werden; Selektieren eines Projektes löscht alle Snapshots und auch alle Varianten des Projektes aus der Datenbank; Selektieren einer Variante löscht alle zugehörigen Snapshots der Variante aus der Datenbank"/>
             <menu id ="PT5G3M"  >
@@ -75,35 +75,41 @@
           <!--label="IMPORT"-->
           <splitButton id="PT4G1split" size ="large">
             <button id="PT4G1" getLabel ="bestimmeLabel" imageMso="Import" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-            <menu id="PT4G1M" >
+            <menu id="PT4G1M" getLabel ="bestimmeLabel" >
               <menu id="PT4G1M1-1" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="Organisation"-->
                 <button id="PT4G1B8" getLabel ="bestimmeLabel" onAction="PTImportOrga" supertip ="Es wird die komplette Organisations-Struktur inkl Tagessätzen importiert "/>
+                <!--label="Ist-Daten"-->
+                <button id="PT4G1B12" getLabel ="bestimmeLabel" onAction="PTImportIstDaten" supertip ="Es werden die Istdaten aus dem Stundenerfassungs- bzw. ERP-System importiert"/>
                 <!--label="Custom User Roles"-->
                 <button id="PT4G1B11" getLabel ="bestimmeLabel" onAction="PTImportCustomUserRoles" supertip ="Es werden die vollständigen User Roles importiert"/>
-              </menu>    
-              <!--label="VISBO-Steckbriefe"-->
-              <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-              <!--label ="VISBO Open XML-->
-              <button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
-              <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
-              <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
-              <!--<separator id="PT4G1s1"/>-->
-              <!--label="Import Excel"-->
-              <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Folder 'Import\RPLAN-Excel' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-              <!--label="Import MS Project"-->
-              <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
-              <!--label="Import RPLAN RXF"-->
-              <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
-              <menuSeparator id="menuSeparator1"/>
+              </menu>
+              <menu id="PT4G1M1-2" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
+                <!--label="VISBO-Steckbriefe"-->
+                <button id="PT4G1B1" imageMso="ImportExcel" getLabel ="bestimmeLabel" onAction="Tom2G4M1Import" supertip ="Es werden die selektierten Projekte, die als VISBO Steckbrief beschrieben im Folder 'Import\VISBO Steckbriefe' liegen, importiert; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+                <!--label ="VISBO Open XML-->
+                <button id="PT4G1B6" imageMso="DataFromXmlFile" enabled="false" getLabel="bestimmeLabel" onAction="Tom2G4B1OpenXML" supertip="Es werden die selektierten Projekte, die in Form einer XML-Datei beschrieben sind, importiert"/>
+                <!--<button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>
+                <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" supertip="Test-Funktion! offizielle Verfügbarkeit Q1/2016"/>-->
+                <!--<separator id="PT4G1s1"/>-->
+                <!--label="Import Excel"-->
+                <button id="PT4G1B2"  imageMso="ImportExcel" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4B1RPLANImport" supertip ="es können eine oder mehrere Excel Dateien (nicht Visbo Steckbriefe) aus dem entsprechenden Folder 'Import\RPLAN-Excel' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+                <!--label="Import MS Project"-->
+                <button id="PT4G1B4" imageMso="MicrosoftProject" getLabel ="bestimmeLabel" enabled ="true" onAction="Tom2G4M2ImportMSProject" supertip ="es können eine oder mehrere Microsoft Project Dateien aus dem Folder 'Import\MSProject' importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; "/>
+                <!--label="Import RPLAN RXF"-->
+                <button id="PT4G1B3" getLabel ="bestimmeLabel" enabled ="false" onAction ="Tom2G4B3RPLANRxfImport" supertip ="es können eine oder mehrere RPLAN RXF-Dateien aus dem Folder 'Import\RXF Files' importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
+              </menu>
+              <!--<menuSeparator id="menuSeparator1"/>-->
               <!--label="Projekte (Batch)"-->
-              <button id="PT4G1B7" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="auf Basis einer Batch-Datei können neue Projekte unter Verwendung von Projekt-Templates erzeugt werden"/>
-              <menuSeparator id="menuSeparator2"/>
-              <!--label="Import Portfolio Definition"-->
-              <button id="PT4G1B5" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Portfolio-Definitionen eingelesen werden"/>
-              <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
+              <menu id="PT4G1M1-3" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
+                <button id="PT4G1B7" getLabel ="bestimmeLabel" onAction="Tom2G4B1InventurImport" supertip="auf Basis einer Batch-Datei können neue Projekte unter Verwendung von Projekt-Templates erzeugt werden"/>
+                <menuSeparator id="menuSeparator2"/>
+                <!--label="Import Portfolio Definition"-->
+                <button id="PT4G1B5" getLabel ="bestimmeLabel" onAction="Tom2G4B1ScenarioImport" supertip="auf Basis einer Excel-Datei können Portfolio-Definitionen eingelesen werden"/>
+                <!--<menu id="PT4G1M3" label ="Rollen - Kostenzuordnung " supertip ="Import der Rollen-/Kostenzuordnungen">
               <button id="PT4G1M3B1" label="Importieren" onAction="awinImportMassenEdit" supertip ="alle Werte aus der Massen-Edit Datei importieren"/>
               -->
+              </menu>              
             <!--<button id="PT4G1M3B2" label="Aktuell" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur Werte aus der Vergangenheit sind editierbar"/>
             <button id="PT4G1M3B3" label="Zukunft" enabled ="false" onAction="awinWriteProjektBedarfeXLSX" supertip ="nur zukünftige Werte sind editierbar"/>-->
             <!--
