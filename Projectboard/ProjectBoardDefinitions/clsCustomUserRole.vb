@@ -32,16 +32,31 @@ Public Class clsCustomUserRole
                 _nonAllowance = {""}
 
             Case ptCustomUserRoles.OrgaAdmin
-                _nonAllowance = {"Pt5G2B1", "Pt5G2B3"}
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B3", "PT5G3M",
+                                 "PT4G1M1-2", "PT4G1M1-3", "PT4G2M",
+                                 "PTneu", "PTedit", "PTview",
+                                 "PTfilter", "PTsort", "PT0G1s9",
+                                 "PTOPTB1", "PTreport",
+                                 "PTeinst", "PThelp", "PTWebServer"}
 
             Case ptCustomUserRoles.PortfolioManager
-                _nonAllowance = {""}
+                _nonAllowance = {"Pt5G2B4", "PT4G1M1-1", "PT4G1M1-2",
+                                 "PTview", "PTfilter", "PTWebServer"}
 
             Case ptCustomUserRoles.ProjektLeitung
-                _nonAllowance = {""}
+                _nonAllowance = {"Pt5G2B4", "Pt5G3B1", "PT4G1M1-1",
+                                 "PT2G1B1", "PT2G1B3", "PTfilter", "PTsort", "PTeinst", "PThelp",
+                                 "PTWebServer"}
 
             Case ptCustomUserRoles.RessourceManager
-                _nonAllowance = {""}
+                _nonAllowance = {"Pt5G2B4", "PT5G3M",
+                                 "PT4G1B8", "PT4G1B12", "PT4G1B11",
+                                 "PT4G1M1-2", "PT4G1M1-3",
+                                 "PT2G1M2B3", "PT2G1M2B8",
+                                 "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
+                                 "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4",
+                                 "PTview", "PTfilter", "PTsort", "PTeinst", "PThelp",
+                                 "PTWebServer"}
 
             Case Else
                 _nonAllowance = {""}

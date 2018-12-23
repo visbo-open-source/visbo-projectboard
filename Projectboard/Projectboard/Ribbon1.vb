@@ -2873,6 +2873,13 @@ Imports System.Web
                     tmpLabel = "Portfolio/s..."
                 End If
 
+            Case "PT5G3M" ' Löschen aus Datenbank 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Löschen aus DB"
+                Else
+                    tmpLabel = "Delete in Database"
+                End If
+
             Case "PT5G3M2" ' Projekte/Varianten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Projekt/e"
