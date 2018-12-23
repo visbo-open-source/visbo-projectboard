@@ -6896,78 +6896,64 @@ Public Module agm2
     ''' <summary>
     ''' liest aus der geöffneten Excel Datei alle Custom User Roles 
     ''' </summary>
-    ''' <param name="allCustomUserRoles"></param>
-    Public Sub awinImportCustomUserRoles(ByRef allCustomUserRoles As clsCustomUserRoles)
+    Public Function awinImportCustomUserRoles() As clsCustomUserRoles
 
         Dim tmpResult As New clsCustomUserRoles
         Dim currentCustomUserRole As New clsCustomUserRole
         Dim mappingNameID As New SortedList(Of String, String)
 
-
-
-        Dim userName As String = "rv@visbo.de"
-        Dim curType As ptCustomUserRoles = ptCustomUserRoles.portfoliomgr
+        ' für jetzige Testzwecke 
+        Dim userName As String = "thomas.koytek@visbo.de"
+        Dim curType As ptCustomUserRoles = ptCustomUserRoles.OrgaAdmin
         Dim specifics As String = ""
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.PortfolioManager
+        specifics = ""
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB1"
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB2"
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
+        specifics = "Grp-BOSV-KB"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "ute.rittinghaus-koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB3"
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.orgaadmin
-        specifics = ""
+        awinImportCustomUserRoles = tmpResult
 
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
-        End If
-
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.portfoliomgr
-        specifics = ""
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
-        End If
-
-        ' nächster ..
-        userName = "ss@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
-        specifics = "D-BOSV-GRP"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
-        End If
-
-    End Sub
+    End Function
 
     ''' <summary>
     ''' prüft, ob es sich beim Namen/der Email um eine bekannte Email Adresse handelt. 
@@ -6990,13 +6976,14 @@ Public Module agm2
             If userID.Length > 0 Then
                 mappingNameID.Add(userName, userID)
             Else
-                ' wenn der Name keiner ID zugeordnet werden konnte ... 
-                stillOk = False
+                ' wenn der Name keiner ID zugeordnet werden konnte ...
+                ' das wird jetzt erstmal auf true gesetzt 
+                stillOk = True ' sollte hier eigentlich auf false sein 
             End If
         End If
 
         If stillOk Then
-            If roleType = ptCustomUserRoles.resourcemgr Then
+            If roleType = ptCustomUserRoles.RessourceManager Then
                 If RoleDefinitions.containsName(specifics) Then
                     ' alles ok
                     stillOk = True
@@ -14157,13 +14144,10 @@ Public Module agm2
 
                                 Dim validRole As Boolean = True
 
-
-                                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-                                        ' prüfen, ob es eine gültige Restriction ist 
-
-                                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
-                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                    If myCustomUserRole.specifics.Length > 0 Then
+                                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
+                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(myCustomUserRole.specifics)
 
                                             If RoleDefinitions.hasAnyChildParentRelationsship(roleUID, restrictedTopRole.UID) Then
                                                 validRole = True
@@ -15570,7 +15554,6 @@ Public Module agm2
             myWindowsName = myUser.Name
 
 
-
             globalPath = awinSettings.globalPath
 
 
@@ -15908,31 +15891,22 @@ Public Module agm2
 
                     loginErfolgreich = logInToMongoDB(True)
 
-                    ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-                    Dim allMyCustomUserRoles As New clsCustomUserRoles
-                    '??? Dim allMyCustomUserRoles As clsCustomUserRoles = retrieveCustomUserRolesOf(dbUserID)
-
-                    If allMyCustomUserRoles.count > 1 Then
-
-                    Else
-                        myCustomUserRole = allMyCustomUserRoles.elementAt(0)
-                    End If
-
                     If Not loginErfolgreich Then
-                            ' Customization-File wird geschlossen
-                            xlsCustomization.Close(SaveChanges:=False)
-                            Call logfileSchreiben("LOGIN cancelled ...", "", -1)
-                            Call logfileSchliessen()
-                            If awinSettings.englishLanguage Then
-                                Throw New ArgumentException("LOGIN cancelled ...")
-                            Else
-                                Throw New ArgumentException("LOGIN abgebrochen ...")
-                            End If
-
+                        ' Customization-File wird geschlossen
+                        xlsCustomization.Close(SaveChanges:=False)
+                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                        Call logfileSchliessen()
+                        If awinSettings.englishLanguage Then
+                            Throw New ArgumentException("LOGIN cancelled ...")
+                        Else
+                            Throw New ArgumentException("LOGIN abgebrochen ...")
                         End If
+
                     End If
 
-                End If 'if special="ProjectBoard"
+                End If
+
+            End If 'if special="ProjectBoard"
 
 
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -16222,6 +16196,11 @@ Public Module agm2
 
                     End If
 
+
+                    ' jetzt werden die Rollen besetzt 
+                    Call setUserRoles()
+
+
                     ' Logfile wird geschlossen
                     Call logfileSchliessen()
 
@@ -16286,6 +16265,48 @@ Public Module agm2
 
     End Sub
 
+    Private Sub setUserRoles()
+        ' Test tk 23.12.18
+        ' tk 23.12.18 hier werden die Test Custom User Roles besetzt 
+        Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
+        ' Ende Test 
+
+        ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
+        Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
+        '??? Dim allMyCustomUserRoles As clsCustomUserRoles = retrieveCustomUserRolesOf(dbUserID)
+
+
+        If allMyCustomUserRoles.Count > 1 Then
+            Dim chooseUserRole As New frmChooseCustomUserRole
+
+            With chooseUserRole
+                .myUserRoles = allMyCustomUserRoles
+            End With
+            ' Formular zur Auswahl der User Rolle anzeigen 
+            Dim returnResult As DialogResult = chooseUserRole.ShowDialog()
+
+            If returnResult = DialogResult.OK Then
+                myCustomUserRole = allMyCustomUserRoles.Item(chooseUserRole.selectedIndex)
+            Else
+                myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+            End If
+
+        ElseIf allMyCustomUserRoles.Count = 1 Then
+            myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+
+        Else
+            myCustomUserRole = New clsCustomUserRole
+            With myCustomUserRole
+                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                .specifics = ""
+                .userName = dbUsername
+            End With
+        End If
+
+        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+        Call myCustomUserRole.setNonAllowances()
+
+    End Sub
 
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
@@ -17978,15 +17999,16 @@ Public Module agm2
                     awinSettings.actualDataMonth = Date.MinValue
                 End Try
 
-                Try
-                    awinSettings.isRestrictedToOrgUnit = CStr(.Range("roleAccessIsRestrictedTo").Value)
+                ' tk 23.12.18 deprecated
+                'Try
+                '    awinSettings.isRestrictedToOrgUnit = CStr(.Range("roleAccessIsRestrictedTo").Value)
 
-                    If IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                        awinSettings.isRestrictedToOrgUnit = ""
-                    End If
-                Catch ex As Exception
-                    awinSettings.isRestrictedToOrgUnit = ""
-                End Try
+                '    If IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                '        awinSettings.isRestrictedToOrgUnit = ""
+                '    End If
+                'Catch ex As Exception
+                '    awinSettings.isRestrictedToOrgUnit = ""
+                'End Try
 
 
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color

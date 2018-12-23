@@ -261,7 +261,8 @@ Public Class clsawinSettings
     Public Property actualDataMonth As Date
 
     ' ist notwendig, um ggf die Sicht-Rechte auf eine Teil-Organisation zu beschränken ..
-    Public Property isRestrictedToOrgUnit As String
+    ' tk 23.12.18  ist jetzt ersetzt durch customUserRole.specifics  
+    'Public Property isRestrictedToOrgUnit As String
 
 
     Sub New()
@@ -415,7 +416,7 @@ Public Class clsawinSettings
         _isHryNameFrmActive = False
         _isChangePortfolioFrmActive = False
 
-        _isRestrictedToOrgUnit = ""
+        '_isRestrictedToOrgUnit = ""
 
         _visboDebug = False
         _visboServer = False

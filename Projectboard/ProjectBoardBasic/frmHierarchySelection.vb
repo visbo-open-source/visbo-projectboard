@@ -5179,20 +5179,17 @@ Public Class frmHierarchySelection
             'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-
-            If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-
-                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.specifics.Length > 0 Then
+                    If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
 
                         topNodes.Clear()
-                        topNodes.Add(RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit).UID)
+                        topNodes.Add(RoleDefinitions.getRoledef(myCustomUserRole.specifics).UID)
 
                     End If
-
                 End If
-            End If
 
+            End If
 
 
 

@@ -6,7 +6,7 @@ Public Class clsCustomUserRole
 
     Private _userName As String
     Private _userID As String
-    Private _customUserRole As Integer
+    Private _customUserRole As ptCustomUserRoles
     Private _specifics As String
 
     ' wird benötigt, um später bestimmen zu können, welche projectboard Funktionalität erlaubt / nicht erlaubt ist 
@@ -15,7 +15,7 @@ Public Class clsCustomUserRole
     Public Sub New()
         _userName = ""
         _userID = ""
-        _customUserRole = ptCustomUserRoles.all
+        _customUserRole = ptCustomUserRoles.Alles
         _specifics = Nothing
         _nonAllowance = {""}
     End Sub
@@ -28,19 +28,19 @@ Public Class clsCustomUserRole
 
         Select Case _customUserRole
 
-            Case ptCustomUserRoles.all
+            Case ptCustomUserRoles.Alles
                 _nonAllowance = {""}
 
-            Case ptCustomUserRoles.orgaadmin
+            Case ptCustomUserRoles.OrgaAdmin
+                _nonAllowance = {"Pt5G2B1", "Pt5G2B3"}
+
+            Case ptCustomUserRoles.PortfolioManager
                 _nonAllowance = {""}
 
-            Case ptCustomUserRoles.portfoliomgr
+            Case ptCustomUserRoles.ProjektLeitung
                 _nonAllowance = {""}
 
-            Case ptCustomUserRoles.projectlead
-                _nonAllowance = {""}
-
-            Case ptCustomUserRoles.resourcemgr
+            Case ptCustomUserRoles.RessourceManager
                 _nonAllowance = {""}
 
             Case Else
@@ -81,11 +81,11 @@ Public Class clsCustomUserRole
         End Set
     End Property
 
-    Public Property customUserRole As Integer
+    Public Property customUserRole As ptCustomUserRoles
         Get
             customUserRole = _customUserRole
         End Get
-        Set(value As Integer)
+        Set(value As ptCustomUserRoles)
 
             If Not IsNothing(value) Then
                 If [Enum].IsDefined(GetType(ptCustomUserRoles), value) Then

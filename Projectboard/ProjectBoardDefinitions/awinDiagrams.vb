@@ -584,9 +584,9 @@ Public Module awinDiagrams
                                 legendName = prcName & " " & repMessages.getmsg(275)
                             Else
                                 If awinSettings.englishLanguage Then
-                                    legendName = prcName & " " & "Sum over all projects"
+                                    legendName = "Sum over all projects"
                                 Else
-                                    legendName = prcName & " " & "Summe über alle Projekte"
+                                    legendName = "Summe über alle Projekte"
                                 End If
                             End If
 

@@ -33,7 +33,7 @@
               <!--<button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="DataFromDatabase"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />-->
               <button id="PT5G1"  getLabel ="bestimmeLabel"  imageMso="MindMapExportData"  onAction="PTLadenKonstellation" keytip="L" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
               <menu id ="PT5G1M" >
-                <!--label="Portfolio/s"-->
+                <!--label="Portfolio/s"-->                
                 <button id="PT5G1B1"  getLabel ="bestimmeLabel" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Portfolio ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Portfolio geladen. Vorsicht: neu definierte noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren" />
                 <!--label="Project/s"-->
                 <button id="PT5G1B3" getLabel ="bestimmeLabel" onAction="PT5DatenbankLoadProjekte" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten und Varianten in der Datenbank; Achtung: Wenn in der Kalenderleiste ein Zeitraum markiert ist, so zeigt das Auswahlfenster auch nur diese Projekte an"/>
@@ -48,8 +48,8 @@
                 <button id="Pt5G2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Portfolios werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
                 <!--label="Projekt/e"-->
                 <button id="Pt5G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
-                <!--label="Organisations-Daten"-->
-                <button id="Pt5G2B4" imageMso="SaveAll" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="alle geänderten bzw. neuen Projekte und Projekt-Varianten sowie alle Portfolios und Filter werden gespeichert"/>
+                <!--label="Organisations-Daten" Image war ursprünglich SaveAll-->
+                <button id="Pt5G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="die Organisations-Struktur inkl. der Tagessätze und Defualt Kapazitäten wird gespeichert"/>
               </menu>
             </splitButton>
             <!--label="Löschen"-->

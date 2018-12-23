@@ -275,11 +275,11 @@ Public Module Module1
     ''' Werte-Bereich: {0=Admin, 1=PortfolioMgr; 2=RessourcenManager; 3=Projektleiter
     ''' </summary>
     Public Enum ptCustomUserRoles
-        orgaadmin = 0
-        portfoliomgr = 1
-        resourcemgr = 2
-        projectlead = 3
-        all = 4
+        OrgaAdmin = 0
+        PortfolioManager = 1
+        RessourceManager = 2
+        ProjektLeitung = 3
+        Alles = 4
     End Enum
 
     ''' <summary>
