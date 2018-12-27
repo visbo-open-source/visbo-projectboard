@@ -6913,7 +6913,7 @@ Public Module agm2
 
         userName = "thomas.koytek@visbo.de"
         curType = ptCustomUserRoles.PortfolioManager
-        specifics = ""
+        specifics = "AMIS;D-BOSV-KB0;D-BOSV-KB1;D-BOSV-KB2;D-BOSV-KB3;D-BOSV-SBF0;D-BOSV-SBF1;D-BOSV-SBF2;D-BOSV-SBP0;D-BOSV-SBP1;D-BOSV-SBP2;D-BOSV-SBP3;Grp-BOSV-KB"
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
             tmpResult.addCustomUserRole(userName, "", curType, specifics)
@@ -6990,6 +6990,11 @@ Public Module agm2
                 Else
                     stillOk = False
                 End If
+            ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
+                Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
+                For Each tmpName As String In tmpStr
+                    stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
+                Next
             End If
         End If
 
@@ -9224,9 +9229,13 @@ Public Module agm2
                                 If Not IsNothing(CType(.Cells(iz, colRoleName), Excel.Range).Value) Then
                                     roleName = CStr(CType(.Cells(iz, colRoleName), Excel.Range).Value).Trim
 
+
                                     If roleName <> "" Then
 
                                         If RoleDefinitions.containsName(roleName) Then
+
+                                            ' jetzt muss die RCNameID bestimmt werden 
+                                            Dim rcNameID As String = RoleDefinitions.getRoledef(roleName).UID.ToString
                                             For ip As Integer = 1 To anzPhasen - 1
                                                 phaseValues(ip) = CDbl(CType(.Cells(iz, colRelValues + ip - 1), Excel.Range).Value)
                                             Next
@@ -9234,14 +9243,14 @@ Public Module agm2
                                             If phaseValues.Sum = 0 Then
                                                 ' nichts tun
                                             Else
-                                                If rolePhaseValues.ContainsKey(roleName) Then
+                                                If rolePhaseValues.ContainsKey(rcNameID) Then
                                                     ' addieren ...
                                                     For px As Integer = 1 To anzPhasen - 1
-                                                        rolePhaseValues.Item(roleName)(px) = rolePhaseValues.Item(roleName)(px) + phaseValues(px)
+                                                        rolePhaseValues.Item(rcNameID)(px) = rolePhaseValues.Item(rcNameID)(px) + phaseValues(px)
                                                     Next
                                                 Else
                                                     ' neu aufnehmen 
-                                                    rolePhaseValues.Add(roleName, phaseValues)
+                                                    rolePhaseValues.Add(rcNameID, phaseValues)
                                                 End If
                                             End If
                                         Else
@@ -13337,173 +13346,173 @@ Public Module agm2
 
     End Sub
 
+    '' tk 26.12.18 deprecated
+    '''' <summary>
+    '''' erstellt für alles, alleRollen, alleKosten und die einzelnen Sammel-Rollen die ValidationStrings
+    '''' die dann im Mass-Edit verwendet werden können 
+    '''' </summary>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public Function createMassEditRcValidations() As SortedList(Of String, String)
+    '    Dim validationStrings As New SortedList(Of String, String)
+    '    Dim validationName As String
 
-    ''' <summary>
-    ''' erstellt für alles, alleRollen, alleKosten und die einzelnen Sammel-Rollen die ValidationStrings
-    ''' die dann im Mass-Edit verwendet werden können 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function createMassEditRcValidations() As SortedList(Of String, String)
-        Dim validationStrings As New SortedList(Of String, String)
-        Dim validationName As String
+    '    ' Aufbau Alles
+    '    validationName = "alles"
+    '    Dim sortedRCListe As New SortedList(Of String, String)
+    '    Dim rcDefinition As String = ""
+    '    Dim tmpName As String
 
-        ' Aufbau Alles
-        validationName = "alles"
-        Dim sortedRCListe As New SortedList(Of String, String)
-        Dim rcDefinition As String = ""
-        Dim tmpName As String
+    '    For iz As Integer = 1 To RoleDefinitions.Count
+    '        tmpName = RoleDefinitions.getRoledef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To RoleDefinitions.Count
-            tmpName = RoleDefinitions.getRoledef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
+    '    sortedRCListe.Clear()
 
-        sortedRCListe.Clear()
+    '    For iz As Integer = 1 To CostDefinitions.Count - 1
+    '        tmpName = CostDefinitions.getCostdef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To CostDefinitions.Count - 1
-            tmpName = CostDefinitions.getCostdef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
-
-        If Not validationStrings.ContainsKey(validationName) Then
-            validationStrings.Add(validationName, rcDefinition)
-        End If
-
-
-        '
-        ' jetzt kommen alleRollen 
-
-        validationName = "alleRollen"
-        sortedRCListe = New SortedList(Of String, String)
-        rcDefinition = ""
-
-        For iz As Integer = 1 To RoleDefinitions.Count
-            tmpName = RoleDefinitions.getRoledef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
-
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
-
-        If Not validationStrings.ContainsKey(validationName) Then
-            validationStrings.Add(validationName, rcDefinition)
-        End If
-
-        ' Ende alleRollen
-        '
-
-        '
-        ' jetzt kommen alleKosten 
-
-        validationName = "alleKosten"
-        sortedRCListe = New SortedList(Of String, String)
-        rcDefinition = ""
-
-        For iz As Integer = 1 To CostDefinitions.Count - 1
-            tmpName = CostDefinitions.getCostdef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
-
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
-
-        If Not validationStrings.ContainsKey(validationName) Then
-            validationStrings.Add(validationName, rcDefinition)
-        End If
-
-        ' Ende alleKosten
-        '
-
-        '
-        ' jetzt kommen die einzelnen Sammelrollen, unter Angabe ihres Namens 
-
-        Dim sammelrollenNamen As Collection = RoleDefinitions.getSummaryRoles
-
-        For iz As Integer = 1 To sammelrollenNamen.Count
-            tmpName = CStr(sammelrollenNamen.Item(iz))
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
-
-        For Each validationName In sammelrollenNamen
-
-            sortedRCListe = New SortedList(Of String, String)
-            rcDefinition = ""
-
-            For iz As Integer = 1 To sammelrollenNamen.Count
-                tmpName = CStr(sammelrollenNamen.Item(iz))
-                If Not sortedRCListe.ContainsKey(tmpName) Then
-                    sortedRCListe.Add(tmpName, tmpName)
-                End If
-            Next
-
-            Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(validationName, PTcbr.all)
-
-            For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(srKvP.Key)
-                If Not IsNothing(tmpRole) Then
-                    tmpName = tmpRole.name
-                    If Not sortedRCListe.ContainsKey(tmpName) Then
-                        sortedRCListe.Add(tmpName, tmpName)
-                    End If
-                End If
-
-            Next
+    '    If Not validationStrings.ContainsKey(validationName) Then
+    '        validationStrings.Add(validationName, rcDefinition)
+    '    End If
 
 
-            For iz As Integer = 1 To sortedRCListe.Count
-                If rcDefinition.Length = 0 Then
-                    rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-                Else
-                    rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-                End If
-            Next
+    '    '
+    '    ' jetzt kommen alleRollen 
 
-            ' jetzt den Validation String hinzufügen 
-            If Not validationStrings.ContainsKey(validationName) Then
-                validationStrings.Add(validationName, rcDefinition)
-            End If
+    '    validationName = "alleRollen"
+    '    sortedRCListe = New SortedList(Of String, String)
+    '    rcDefinition = ""
 
-        Next
+    '    For iz As Integer = 1 To RoleDefinitions.Count
+    '        tmpName = RoleDefinitions.getRoledef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
 
-        createMassEditRcValidations = validationStrings
-    End Function
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
+
+    '    If Not validationStrings.ContainsKey(validationName) Then
+    '        validationStrings.Add(validationName, rcDefinition)
+    '    End If
+
+    '    ' Ende alleRollen
+    '    '
+
+    '    '
+    '    ' jetzt kommen alleKosten 
+
+    '    validationName = "alleKosten"
+    '    sortedRCListe = New SortedList(Of String, String)
+    '    rcDefinition = ""
+
+    '    For iz As Integer = 1 To CostDefinitions.Count - 1
+    '        tmpName = CostDefinitions.getCostdef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
+
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
+
+    '    If Not validationStrings.ContainsKey(validationName) Then
+    '        validationStrings.Add(validationName, rcDefinition)
+    '    End If
+
+    '    ' Ende alleKosten
+    '    '
+
+    '    '
+    '    ' jetzt kommen die einzelnen Sammelrollen, unter Angabe ihres Namens 
+
+    '    Dim sammelrollenNamen As Collection = RoleDefinitions.getSummaryRoles
+
+    '    For iz As Integer = 1 To sammelrollenNamen.Count
+    '        tmpName = CStr(sammelrollenNamen.Item(iz))
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
+
+    '    For Each validationName In sammelrollenNamen
+
+    '        sortedRCListe = New SortedList(Of String, String)
+    '        rcDefinition = ""
+
+    '        For iz As Integer = 1 To sammelrollenNamen.Count
+    '            tmpName = CStr(sammelrollenNamen.Item(iz))
+    '            If Not sortedRCListe.ContainsKey(tmpName) Then
+    '                sortedRCListe.Add(tmpName, tmpName)
+    '            End If
+    '        Next
+
+    '        Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(validationName, PTcbr.all)
+
+    '        For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
+    '            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(srKvP.Key)
+    '            If Not IsNothing(tmpRole) Then
+    '                tmpName = tmpRole.name
+    '                If Not sortedRCListe.ContainsKey(tmpName) Then
+    '                    sortedRCListe.Add(tmpName, tmpName)
+    '                End If
+    '            End If
+
+    '        Next
+
+
+    '        For iz As Integer = 1 To sortedRCListe.Count
+    '            If rcDefinition.Length = 0 Then
+    '                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '            Else
+    '                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '            End If
+    '        Next
+
+    '        ' jetzt den Validation String hinzufügen 
+    '        If Not validationStrings.ContainsKey(validationName) Then
+    '            validationStrings.Add(validationName, rcDefinition)
+    '        End If
+
+    '    Next
+
+    '    createMassEditRcValidations = validationStrings
+    'End Function
 
     Sub massEditZeileLoeschen(ByVal ID As String)
 

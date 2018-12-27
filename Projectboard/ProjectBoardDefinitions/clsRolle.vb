@@ -16,11 +16,27 @@ Public Class clsRolle
         End Get
         Set(value As Integer)
             If Not IsNothing(value) Then
-                If RoleDefinitions.containsUid(value) Then
+
+                If value = -1 Then
                     _teamID = value
+
+                ElseIf RoleDefinitions.containsUid(value) Then
+                    _teamID = value
+
                 End If
+
             End If
         End Set
+    End Property
+
+    ''' <summary>
+    ''' gibt die NAmeID zurück, in der Form uid.toString; teamID.to string bzw uid.tostring
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getNameID As String
+        Get
+            getNameID = RoleDefinitions.bestimmeRoleNameID(_uid, _teamID)
+        End Get
     End Property
 
     ''' <summary>

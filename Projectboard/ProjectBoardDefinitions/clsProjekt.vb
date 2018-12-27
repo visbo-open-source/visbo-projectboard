@@ -1325,10 +1325,10 @@ Public Class clsProjekt
     ''' Vorbedingung: alle Plausibilitätsbedingungen wurden im Vorfeld abgeklärt, also Phase existiert, Rolle/Kostenart existiert und Summe ist positiv 
     ''' </summary>
     ''' <param name="phaseNameID"></param>
-    ''' <param name="rcName"></param>(
+    ''' <param name="rcNameID">wenn Rolle: uid.tostring; teamID.tostring oder roleUid.tostring</param>(
     ''' <param name="summe"></param>
     ''' <param name="addWhenExisting"></param>
-    Public Sub addCostRoleToPhase(ByVal phaseNameID As String, ByVal rcName As String, ByVal summe As Double,
+    Public Sub addCostRoleToPhase(ByVal phaseNameID As String, ByVal rcNameID As String, ByVal summe As Double,
                               ByVal isrole As Boolean,
                               ByVal addWhenExisting As Boolean)
 
@@ -1338,11 +1338,11 @@ Public Class clsProjekt
         If Not IsNothing(cphase) Then
             If isrole Then
                 ' eine Rolle wird hinzugefügt 
-                Call cphase.AddRole(rcName, summe, addWhenExisting)
+                Call cphase.AddRole(rcNameID, summe, addWhenExisting)
 
             Else
                 ' eine Kostenart wird hinzugefügt
-                Call cphase.AddCost(rcName, summe, addWhenExisting)
+                Call cphase.AddCost(rcNameID, summe, addWhenExisting)
             End If
         Else
 
@@ -1368,8 +1368,8 @@ Public Class clsProjekt
     ''' <summary>
     ''' gibt ein PRojekt zurück, wo die angegebenen Rollen , ggf. inkl Kinder, und die Kosten gelöscht werden 
     ''' </summary>
-    ''' <param name="rolesToBeDeleted"></param>
-    ''' <param name="costsToBedeleted"></param>
+    ''' <param name="rolesToBeDeleted">werden in der Form string: uid;teamID übergeben</param>
+    ''' <param name="costsToBedeleted">werden in der Form uid übergeben</param>
     ''' <param name="includingChilds"></param>
     ''' <returns></returns>
     Public Function deleteRolesAndCosts(ByVal rolesToBeDeleted As Collection,
@@ -1379,32 +1379,39 @@ Public Class clsProjekt
         Dim newProj As clsProjekt = Me.createVariant("$delete$", "")
 
         ' hier passiert das jetzt 
-        Dim roleIDs As New SortedList(Of Integer, Double)
+        Dim roleNameIDs As New SortedList(Of String, Double)
 
         If Not IsNothing(rolesToBeDeleted) Then
             For Each roleName As String In rolesToBeDeleted
 
-                If includingChilds Then
-                    Dim tmpRoleIDS As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
-                    For Each srKvP As KeyValuePair(Of Integer, Double) In tmpRoleIDS
-                        If roleIDs.ContainsKey(srKvP.Key) Then
-                            ' muss nichts getan werden - ist schon in der Liste  
-                        Else
-                            ' der Value entspricht dem Anteil der Kapa der Subrole in der übergeordneten Sammelrolle, 
-                            ' das ist hier aber irrerelevant .. deswegen immer auf 1 setzen 
-                            roleIDs.Add(srKvP.Key, 1.0)
-                        End If
-                    Next
-                Else
+                Dim teamID As Integer = -1
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleName, teamID)
+                If Not IsNothing(tmpRole) Then
 
-                    Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
-                    If Not IsNothing(tmpRole) Then
-                        If Not roleIDs.ContainsKey(tmpRole.UID) Then
-                            roleIDs.Add(tmpRole.UID, 1.0)
+                    Dim curRoleNameID As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, teamID)
+
+                    If includingChilds Then
+                        Dim tmpRoleIDS As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(curRoleNameID, type:=PTcbr.all)
+                        For Each srKvP As KeyValuePair(Of String, Double) In tmpRoleIDS
+                            If roleNameIDs.ContainsKey(srKvP.Key) Then
+                                ' muss nichts getan werden - ist schon in der Liste  
+                            Else
+                                ' der Value entspricht dem Anteil der Kapa der Subrole in der übergeordneten Sammelrolle, 
+                                ' das ist hier aber irrerelevant .. deswegen immer auf 1 setzen 
+                                roleNameIDs.Add(srKvP.Key, 1.0)
+                            End If
+                        Next
+                    Else
+
+                        If Not roleNameIDs.ContainsKey(curRoleNameID) Then
+                            roleNameIDs.Add(curRoleNameID, 1.0)
                         End If
+
                     End If
 
                 End If
+
+
 
             Next
         End If
@@ -1416,14 +1423,15 @@ Public Class clsProjekt
             Dim cPhase As clsPhase = newProj.getPhase(ip)
 
             If Not IsNothing(rolesToBeDeleted) Then
-                If roleIDs.Count > 0 Then
+                If roleNameIDs.Count > 0 Then
                     Dim delCollection As New Collection
                     For dx As Integer = 1 To cPhase.countRoles
                         Dim tmpRole As clsRolle = cPhase.getRole(dx)
-                        If roleIDs.ContainsKey(tmpRole.uid) Then
+                        Dim tmpKey As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
+                        If roleNameIDs.ContainsKey(tmpKey) Then
                             ' löschen 
-                            If Not delCollection.Contains(tmpRole.name) Then
-                                delCollection.Add(tmpRole.name, tmpRole.name)
+                            If Not delCollection.Contains(tmpKey) Then
+                                delCollection.Add(tmpKey, tmpKey)
                             End If
                         End If
                     Next
@@ -1431,7 +1439,7 @@ Public Class clsProjekt
                     ' jetzt müssen alle delCollection Einträge gelöscht werden 
                     For Each item As String In delCollection
                         If item <> "" Then
-                            cPhase.removeRoleByName(item)
+                            cPhase.removeRoleByNameID(item)
                         End If
                     Next
 
@@ -2820,9 +2828,144 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
-    ''' für AllianzImport  
+    ''' macht für den Portfolio Manager aus einem Projekt mit Detail-Ressourcen-Zuordnungen  ein Projekt mit den aggregierten Werten für die 
+    ''' in der summaryRoleIDs angegebenen Sammelrollen
     ''' </summary>
-    ''' <param name="rolePhaseValues"></param>
+    ''' <param name="summaryRoleIDs"></param>
+    ''' <returns></returns>
+    Public Function aggregateForPortfolioMgr(ByVal summaryRoleIDs() As Integer) As clsProjekt
+
+        Dim newProj As clsProjekt = Me.createVariant("$aggregate$", "")
+
+        For i As Integer = 1 To CountPhases
+
+            Dim cphase As clsPhase = getPhase(i)
+
+            For Each curRole As clsRolle In cphase.rollenListe
+
+                Dim roleNameID As String = curRole.getNameID
+
+                Dim found As Boolean = False
+                Dim ix As Integer = 1
+
+                Do While ix <= summaryRoleIDs.Length And Not found
+                    If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1)) Then
+                        found = True
+                    End If
+                Loop
+
+                If found Then
+                    ' gibt es diese Sammelrolle schon in dieser Phase? 
+                    Dim sRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleIDs(ix - 1))
+
+                    If Not IsNothing(sRoleDef) Then
+
+                        Dim curTagessatz As Double = curRole.tagessatzIntern
+                        Dim sRoleTagessatz As Double = sRoleDef.tagessatzIntern
+                        Dim ptFaktor As Double = 1.0
+                        If curTagessatz > 0 And sRoleTagessatz > 0 Then
+                            ptFaktor = curTagessatz / sRoleTagessatz
+                        End If
+
+                        ' jetzt wird die alte Rolle removed ..
+                        cphase.removeRoleByNameID(roleNameID)
+
+                        ' jetzt werden die PT Werte der curRole umgerechnet ... damit die Kosten gleich bleiben: PT * tagessatz
+                        For x As Integer = 0 To curRole.Xwerte.Length - 1
+                            curRole.Xwerte(x) = ptFaktor * curRole.Xwerte(x)
+                        Next
+
+                        ' jetzt wird die curRole "umdefiniert" 
+                        curRole.uid = sRoleDef.UID
+                        curRole.teamID = -1
+
+                        ' jetzt wird sie in die Phase aufgenommen ..
+                        cphase.addRole(curRole)
+
+                    End If
+
+                End If
+
+            Next
+
+        Next
+
+        newProj.variantName = variantName
+        aggregateForPortfolioMgr = newProj
+
+    End Function
+    ''' <summary>
+    ''' merged zwei Projekte; dabei werden die in RoleNameID Collction und CostCollection angegebenen Rollen / Kosten im aktuellen Projekt gelöscht und 
+    ''' und durch die Rollen / Kosten im anderen ersetzt; aber nur die Rollen + Kinder, die in den Collections angegeben sind 
+    ''' </summary>
+    ''' <param name="summaryRoleIDCollection"></param>
+    ''' <param name="costCollection"></param>
+    ''' <param name="mProj"></param>
+    ''' <returns></returns>
+    Public Function deleteAndMerge(ByVal summaryRoleIDCollection As Collection,
+                                   ByVal costCollection As Collection,
+                                   ByVal mProj As clsProjekt) As clsProjekt
+
+        Dim newProj As clsProjekt = Nothing
+
+        ' es wird überprüft , ob die beiden identische Struktur haben ... 
+        Dim areHavingSameStructure As Boolean = areHavingSamePSP(mProj)
+
+
+        If areHavingSameStructure Then
+            newProj = Me.deleteRolesAndCosts(summaryRoleIDCollection, costCollection, True)
+
+            ' jetzt wird für jede Phase / Rolle überprüft, ob sie übernommen werden muss 
+            For Each cPhase As clsPhase In mProj.AllPhases
+
+                Dim newprojPhase As clsPhase = newProj.getPhaseByID(cPhase.nameID)
+
+                ' jetzt alle Kosten übernehmen 
+                For Each tmpRole As clsRolle In cPhase.rollenListe
+
+                    Dim found As Boolean = False
+                    For Each srNameID As String In summaryRoleIDCollection
+
+                        Dim teamID As Integer = -9
+                        Dim summaryRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(srNameID, teamID)
+
+                        If RoleDefinitions.hasAnyChildParentRelationsship(tmpRole.getNameID, summaryRole.UID) = True Then
+                            ' merken, dass die Rolle übernommen werden muss 
+                            found = True
+                            Exit For
+                        End If
+                    Next
+
+                    If found Then
+                        newprojPhase.addRole(tmpRole)
+                    End If
+
+                Next
+
+                For Each tmpCost As clsKostenart In cPhase.kostenListe
+
+                    If costCollection.Contains(tmpCost.name) Then
+                        newprojPhase.AddCost(tmpCost)
+                    End If
+
+                Next
+
+            Next
+
+        Else
+            deleteAndMerge = Nothing
+        End If
+
+
+        newProj.variantName = Me.variantName
+        deleteAndMerge = newProj
+    End Function
+
+    ''' <summary>
+    ''' für AllianzImport 2
+    ''' Dimension double() und phaseNameIDs() muss gleich sein
+    ''' </summary>
+    ''' <param name="rolePhaseValues">enthält rcNameID als Key, dann die Summenwerte für die angegebenen Phasen</param>
     ''' <param name="phaseNameIDs"></param>
     ''' <returns></returns>
     Public Function merge(ByVal rolePhaseValues As SortedList(Of String, Double()),

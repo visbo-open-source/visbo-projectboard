@@ -1420,6 +1420,25 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' prüft, ob es sich um eine Aggregations-Rolle handelt, nur bei Portfolio Mgr relevant;
+    ''' in diesem Fall kann ind er Hierarchie nicht weiter runtergegangen werden
+    ''' </summary>
+    ''' <param name="role"></param>
+    ''' <returns></returns>
+    Public Function isAggregationRole(ByVal role As clsRollenDefinition) As Boolean
+        Dim tmpResult As Boolean = False
+
+        If Not IsNothing(role) Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                ' nur dann muss mehr geprüft werden 
+                tmpResult = myCustomUserRole.getAggregationRoleIDs.Contains(role.UID)
+            End If
+        End If
+
+        isAggregationRole = tmpResult
+    End Function
+
+    ''' <summary>
     ''' setzt die Markierungen alle Projekte zurück ...
     ''' wenn die alle schon unmarkiert waren, wird false zurückgegeben, andernfalls true
     ''' </summary>
