@@ -1419,6 +1419,52 @@ Public Module Module1
 
     End Sub
 
+    Public Function prepProjectsForRoles(ByVal pList As SortedList(Of String, clsProjekt)) As SortedList(Of String, clsProjekt)
+
+        Dim tmpResult As New SortedList(Of String, clsProjekt)
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In pList
+
+            Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
+            tmpResult.Add(kvp.Key, newProj)
+
+        Next
+
+        prepProjectsForRoles = tmpResult
+    End Function
+
+    Public Function prepProjectsForRoles(ByVal pList As SortedList(Of DateTime, clsProjekt)) As SortedList(Of DateTime, clsProjekt)
+
+        Dim tmpResult As New SortedList(Of DateTime, clsProjekt)
+
+        For Each kvp As KeyValuePair(Of DateTime, clsProjekt) In pList
+            Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
+            tmpResult.Add(kvp.Key, newProj)
+        Next
+
+        prepProjectsForRoles = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' wenn myCustomUserRole = Portfolio Mgr: Ressourcen Zuordnungen müssen aggregiert werden 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    Public Function prepProjectForRoles(ByVal hproj As clsProjekt) As clsProjekt
+
+        Dim tmpResult As clsProjekt = hproj
+        ' wenn customUserRole = Portfolio 
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            If myCustomUserRole.getAggregationRoleIDs.Length > 1 Then
+                tmpResult = hproj.aggregateForPortfolioMgr(myCustomUserRole.getAggregationRoleIDs)
+            End If
+        End If
+
+        prepProjectForRoles = tmpResult
+
+    End Function
+
     ''' <summary>
     ''' prüft, ob es sich um eine Aggregations-Rolle handelt, nur bei Portfolio Mgr relevant;
     ''' in diesem Fall kann ind er Hierarchie nicht weiter runtergegangen werden

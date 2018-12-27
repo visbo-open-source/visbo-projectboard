@@ -6920,6 +6920,14 @@ Public Module agm2
         End If
 
         userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.PortfolioManager
+        specifics = ""
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "thomas.koytek@visbo.de"
         curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB1"
 

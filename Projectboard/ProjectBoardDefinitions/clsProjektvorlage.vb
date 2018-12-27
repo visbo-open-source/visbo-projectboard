@@ -2761,29 +2761,6 @@
 
     End Property
 
-    ''' <summary>
-    ''' true, wenn die Anzahl Phase und die einzelnen PhaseNameIDs identisch sind
-    ''' </summary>
-    ''' <param name="vglProj"></param>
-    ''' <returns></returns>
-    Public Function areHavingSamePSP(ByVal vglProj As clsProjekt) As Boolean
-        Dim tmpResult As Boolean = True
-
-        If CountPhases = vglProj.CountPhases Then
-            For Each cPhase As clsPhase In AllPhases
-                If Not IsNothing(vglProj.getPhaseByID(cPhase.nameID)) Then
-                    ' alles ok 
-                Else
-                    tmpResult = False
-                    Exit For
-                End If
-            Next
-        Else
-            tmpResult = False
-        End If
-
-        areHavingSamePSP = tmpResult
-    End Function
 
     ''' <summary>
     ''' übergibt in getResponsibleNames eine Collection von Namen, die für Meilensteine oder Phasen verantwortlich sind

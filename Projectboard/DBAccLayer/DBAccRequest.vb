@@ -385,7 +385,7 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
-        retrieveProjectsFromDB = result
+        retrieveProjectsFromDB = prepProjectsForRoles(result)
 
     End Function
 
@@ -467,7 +467,9 @@ Public Class Request
         Catch ex As Exception
 
         End Try
-        retrieveOneProjectfromDB = result
+
+
+        retrieveOneProjectfromDB = prepProjectForRoles(result)
 
     End Function
 
@@ -517,7 +519,6 @@ Public Class Request
         renameProjectsInDB = result
 
     End Function
-
 
 
     ''' <summary>
@@ -692,7 +693,8 @@ Public Class Request
         Catch ex As Exception
             Throw New ArgumentException("retrieveProjectHistoryFromDB: " & ex.Message)
         End Try
-        retrieveProjectHistoryFromDB = result
+
+        retrieveProjectHistoryFromDB = prepProjectsForRoles(result)
 
     End Function
 

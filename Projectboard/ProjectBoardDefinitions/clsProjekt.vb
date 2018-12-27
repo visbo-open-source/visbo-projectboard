@@ -2837,9 +2837,12 @@ Public Class clsProjekt
 
         Dim newProj As clsProjekt = Me.createVariant("$aggregate$", "")
 
+
         For i As Integer = 1 To CountPhases
 
             Dim cphase As clsPhase = getPhase(i)
+            Dim toDoList As New SortedList(Of String, clsRolle)
+            Dim toDoListSR As New SortedList(Of String, Integer)
 
             For Each curRole As clsRolle In cphase.rollenListe
 
@@ -2849,44 +2852,64 @@ Public Class clsProjekt
                 Dim ix As Integer = 1
 
                 Do While ix <= summaryRoleIDs.Length And Not found
-                    If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1)) Then
-                        found = True
+
+                    If curRole.uid <> summaryRoleIDs(ix - 1) Then
+                        ' darauf achten, dass nicht unnötigerweise Rolle1 durch Rolle1 erstetzt wird 
+                        If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, summaryRoleIDs(ix - 1)) Then
+                            found = True
+                        Else
+                            ix = ix + 1
+                        End If
+                    Else
+                        ix = ix + 1
                     End If
+
                 Loop
 
                 If found Then
-                    ' gibt es diese Sammelrolle schon in dieser Phase? 
-                    Dim sRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleIDs(ix - 1))
-
-                    If Not IsNothing(sRoleDef) Then
-
-                        Dim curTagessatz As Double = curRole.tagessatzIntern
-                        Dim sRoleTagessatz As Double = sRoleDef.tagessatzIntern
-                        Dim ptFaktor As Double = 1.0
-                        If curTagessatz > 0 And sRoleTagessatz > 0 Then
-                            ptFaktor = curTagessatz / sRoleTagessatz
-                        End If
-
-                        ' jetzt wird die alte Rolle removed ..
-                        cphase.removeRoleByNameID(roleNameID)
-
-                        ' jetzt werden die PT Werte der curRole umgerechnet ... damit die Kosten gleich bleiben: PT * tagessatz
-                        For x As Integer = 0 To curRole.Xwerte.Length - 1
-                            curRole.Xwerte(x) = ptFaktor * curRole.Xwerte(x)
-                        Next
-
-                        ' jetzt wird die curRole "umdefiniert" 
-                        curRole.uid = sRoleDef.UID
-                        curRole.teamID = -1
-
-                        ' jetzt wird sie in die Phase aufgenommen ..
-                        cphase.addRole(curRole)
-
-                    End If
-
+                    ' in toDoList eintragen 
+                    toDoList.Add(roleNameID, curRole)
+                    toDoListSR.Add(roleNameID, summaryRoleIDs(ix - 1))
                 End If
 
             Next
+
+            ' jetzt müssen diese rollen gelöscht und in aggregierter Form neu aufgenommen werden 
+            ' dass soll kostenneutral erfolgen ...
+            If toDoList.Count > 0 Then
+
+                ' löschen der alten, detaillierten Rollen ..
+                For Each kvp As KeyValuePair(Of String, clsRolle) In toDoList
+
+                    Dim teamID As Integer = -1
+                    Dim sRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(toDoListSR.Item(kvp.Key))
+
+                    ' jetzt wird die alte Rolle removed ..
+                    cphase.removeRoleByNameID(kvp.Key)
+
+                    ' jetzt wird der Umrechnungsfaktor bestimmt 
+                    Dim curTagessatz As Double = kvp.Value.tagessatzIntern
+                    Dim sRoleTagessatz As Double = sRoleDef.tagessatzIntern
+                    Dim ptFaktor As Double = 1.0
+                    If curTagessatz > 0 And sRoleTagessatz > 0 Then
+                        ptFaktor = curTagessatz / sRoleTagessatz
+                    End If
+
+                    ' jetzt werden die PT Werte der current Role umgerechnet ... damit die Kosten gleich bleiben: PT * tagessatz
+                    For x As Integer = 0 To kvp.Value.Xwerte.Length - 1
+                        kvp.Value.Xwerte(x) = ptFaktor * kvp.Value.Xwerte(x)
+                    Next
+
+                    ' jetzt wird die curRole "umdefiniert" 
+                    kvp.Value.uid = sRoleDef.UID
+                    kvp.Value.teamID = -1
+
+                    ' jetzt wird sie in die Phase aufgenommen ..
+                    cphase.addRole(kvp.Value)
+
+                Next
+
+            End If
 
         Next
 
@@ -2894,6 +2917,39 @@ Public Class clsProjekt
         aggregateForPortfolioMgr = newProj
 
     End Function
+
+    ''' <summary>
+    ''' true, wenn die Anzahl Phase und die einzelnen PhaseNameIDs identisch sind und ebenso die Start- und Endezeitpunkte 
+    ''' </summary>
+    ''' <param name="vglProj"></param>
+    ''' <returns></returns>
+    Public Function areHavingSamePSP(ByVal vglProj As clsProjekt) As Boolean
+        Dim tmpResult As Boolean = True
+
+        If CountPhases = vglProj.CountPhases Then
+            For Each cPhase As clsPhase In AllPhases
+
+                Dim vglPhase As clsPhase = vglProj.getPhaseByID(cPhase.nameID)
+                If Not IsNothing(vglPhase) Then
+                    ' erstmal alles ok
+                    tmpResult = tmpResult And cPhase.getStartDate.Date = vglPhase.getStartDate.Date And
+                                              cPhase.getEndDate.Date = vglPhase.getEndDate.Date
+                    If tmpResult = False Then
+                        Exit For
+                    End If
+                Else
+                    tmpResult = False
+                    Exit For
+                End If
+            Next
+        Else
+            tmpResult = False
+        End If
+
+        areHavingSamePSP = tmpResult
+    End Function
+
+
     ''' <summary>
     ''' merged zwei Projekte; dabei werden die in RoleNameID Collction und CostCollection angegebenen Rollen / Kosten im aktuellen Projekt gelöscht und 
     ''' und durch die Rollen / Kosten im anderen ersetzt; aber nur die Rollen + Kinder, die in den Collections angegeben sind 
