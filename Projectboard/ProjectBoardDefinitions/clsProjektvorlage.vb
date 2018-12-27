@@ -2574,7 +2574,7 @@
         Get
 
             Dim phIndex As Integer = Me.hierarchy.getPMIndexOfID(elemID)
-            If phIndex >= 0 Or phIndex < AllPhases.Count Then
+            If phIndex > 0 And phIndex <= AllPhases.Count Then
                 getPhaseByID = AllPhases.Item(phIndex - 1)
             Else
                 getPhaseByID = Nothing
@@ -2655,7 +2655,7 @@
             Dim lookforIndex As Boolean
             Dim phasenStart As Integer
             Dim tempArray As Double()
-            Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
+
 
             Dim roleUID As Integer
             Dim roleName As String = ""
@@ -2676,6 +2676,14 @@
                     End If
                 End If
 
+                ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
+                ' ein Team kann nicht zu sich selber gehören ...
+                If roleUID = teamID Then
+                    teamID = -1
+                End If
+                Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
+
+
                 ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
                 If inclSubRoles Then
                     roleIDs = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
@@ -2687,7 +2695,7 @@
                 ReDim roleValues(_Dauer - 1)
 
                 For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
-                    roleName = RoleDefinitions.getRoledef(srkvp.Key).name
+                    roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
 
                     Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
                     anzPhasen = listOfPhases.Count
@@ -2711,7 +2719,7 @@
 
                                 With role
 
-                                    If .RollenTyp = srkvp.Key Then
+                                    If .uid = srkvp.Key Then
 
                                         If considerTeam Then
                                             found = teamID = role.teamID
@@ -2828,9 +2836,8 @@
                 For r = 1 To cPhase.countRoles
 
                     Dim hrole As clsRolle = cPhase.getRole(r)
-                    Dim teamMember As Boolean = (hrole.teamID > 0)
 
-                    roleID = RoleDefinitions.bestimmeRoleNodeName(hrole.RollenTyp, teamMember, hrole.teamID)
+                    roleID = RoleDefinitions.bestimmeRoleNameID(hrole.uid, hrole.teamID)
                     '
                     ' das ist performanter als der Weg über try .. catch 
                     '
@@ -3461,6 +3468,7 @@
 
             Dim roleIDs As New SortedList(Of Integer, Double)
 
+
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
             ElseIf awinSettings.kapaEinheit = "PW" Then
@@ -3477,13 +3485,14 @@
 
                 If IsNumeric(roleID) Then
                     roleUID = CInt(roleID)
-                    roleName = RoleDefinitions.getRoledef(roleUID).name
+                    roleName = RoleDefinitions.getRoleDefByID(roleUID).name
                 Else
                     If RoleDefinitions.containsName(CStr(roleID)) Then
                         roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
                         roleName = CStr(roleID)
                     End If
                 End If
+
 
                 ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
                 If inclSubRoles Then
@@ -3516,7 +3525,7 @@
 
                                 With role
 
-                                    If .RollenTyp = srkvp.Key Then
+                                    If .uid = srkvp.Key Then
 
                                         tagessatz = .tagessatzIntern
                                         dimension = .getDimension

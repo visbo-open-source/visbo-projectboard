@@ -76,6 +76,10 @@ Public Class clsProjekt
         End Get
         Set(value As Date)
             If Not IsNothing(value) Then
+                ' 13.12. mit dem folgenden wird sichergestellt, dass actualdatauntil nie größer sein kann als das Ende date. 
+                If endeDate < value Then
+                    value = endeDate
+                End If
                 _actualDataUntil = value
             Else
                 _actualDataUntil = Date.MinValue
@@ -1416,7 +1420,7 @@ Public Class clsProjekt
                     Dim delCollection As New Collection
                     For dx As Integer = 1 To cPhase.countRoles
                         Dim tmpRole As clsRolle = cPhase.getRole(dx)
-                        If roleIDs.ContainsKey(tmpRole.RollenTyp) Then
+                        If roleIDs.ContainsKey(tmpRole.uid) Then
                             ' löschen 
                             If Not delCollection.Contains(tmpRole.name) Then
                                 delCollection.Add(tmpRole.name, tmpRole.name)
@@ -2621,8 +2625,8 @@ Public Class clsProjekt
         Try
 
             ' wenn das Projekt keine Custom-Fields hat 
-            If Me.customStringFields.Count = 0 And _
-                Me.customDblFields.Count = 0 And _
+            If Me.customStringFields.Count = 0 And
+                Me.customDblFields.Count = 0 And
                 Me.customBoolFields.Count = 0 Then
 
                 For Each kvp As KeyValuePair(Of Integer, String) In baseProject.customStringFields
@@ -2655,7 +2659,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getSortKeyForConstellation(ByVal sortType As Integer, _
+    Public ReadOnly Property getSortKeyForConstellation(ByVal sortType As Integer,
                                                               Optional ByVal lfdNr As Integer = 99999) As String
         Get
             Dim formatStr As String = "00000000"
@@ -2717,8 +2721,8 @@ Public Class clsProjekt
     Public ReadOnly Property getCustomFieldsCount() As Integer
         Get
 
-            Dim tmpResult As Integer = Me.customStringFields.Count + _
-                                        Me.customDblFields.Count + _
+            Dim tmpResult As Integer = Me.customStringFields.Count +
+                                        Me.customDblFields.Count +
                                         Me.customBoolFields.Count
 
             getCustomFieldsCount = tmpResult
@@ -2945,7 +2949,7 @@ Public Class clsProjekt
             Dim newRole As New clsRolle(newLength - 1)
 
             With newRole
-                .RollenTyp = RoleDefinitions.getRoledef(tmpRole).UID
+                .uid = RoleDefinitions.getRoledef(tmpRole).UID
                 For ix As Integer = myIndexStart To myIndexStart + myLength - 1
                     newValues(ix) = myValues(ix - myIndexStart)
                 Next
@@ -2989,7 +2993,7 @@ Public Class clsProjekt
             If IsNothing(newRole) Then
                 roleDidExist = False
                 newRole = New clsRolle(newLength - 1)
-                newRole.RollenTyp = RoleDefinitions.getRoledef(tmpRole).UID
+                newRole.uid = RoleDefinitions.getRoledef(tmpRole).UID
             End If
 
             newValues = newRole.Xwerte
@@ -3079,7 +3083,7 @@ Public Class clsProjekt
                     Dim curRole As clsRolle = New clsRolle(cPhase.relEnde - cPhase.relStart)
 
                     With curRole
-                        .RollenTyp = hroleDef.UID
+                        .uid = hroleDef.UID
                         .Xwerte = roleXwerte
                     End With
                     ' wenn es schon existiert, werden die Werte addiert ...
@@ -3139,6 +3143,129 @@ Public Class clsProjekt
         End If
 
         isRelevantForNulling = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' liefert zurück, ob die angegegebene Phase des Projekts überhaupt noch Forecast Monate hat 
+    ''' das steuert z.Bsp ob überhaupt noch editiert werden darf
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property isPhaseWithForecastMonths(ByVal phaseNameID As String) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim cphase As clsPhase = getPhaseByID(phaseNameID)
+            If Not IsNothing(cphase) Then
+                tmpResult = DateDiff(DateInterval.Month, actualDataUntil, cphase.getEndDate) > 0
+            End If
+
+            isPhaseWithForecastMonths = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert für eine ausgewählte Phase zurück, wieviel für eine bestimmte Rolle, angegeben als roleID;teamID oder eine 
+    ''' Kostenart, angegeben als costID bis zum angegebenen Datum aufgelaufen ist 
+    ''' </summary>
+    ''' <param name="phaseNameID"></param>
+    ''' <param name="rcNameID"></param>
+    ''' <param name="isRole"></param>
+    ''' <param name="outputInEuro">true, wenn Rolle in Euro ausgegeben werden soll; in PT sonst
+    ''' Kosten werden immer in Euro ausgegeben</param>
+    ''' <returns></returns>
+    Public Function getPhaseRCActualValues(ByVal phaseNameID As String,
+                                          ByVal rcNameID As String,
+                                          ByVal isRole As Boolean,
+                                          ByVal outputInEuro As Boolean) As Double()
+
+        ' die Ist-Werte sind immer die Werte vom anfang der Phase bis atualDatauntil einschließlich
+
+        Dim tmpResult() As Double = Nothing
+        Dim xWerte() As Double = Nothing
+        Dim cphase As clsPhase = Me.getPhaseByID(phaseNameID)
+        Dim notYetDone As Boolean = True
+        Dim tagessatz As Double = 800
+
+        If Not IsNothing(cphase) Then
+
+            Dim pstart As Integer = getColumnOfDate(cphase.getStartDate)
+            Dim pEnde As Integer = getColumnOfDate(cphase.getEndDate)
+            Dim actualIX As Integer
+
+            If DateDiff(DateInterval.Month, StartofCalendar, actualDataUntil) > 0 Then
+                actualIX = getColumnOfDate(actualDataUntil)
+            Else
+                actualIX = -9999
+            End If
+
+
+            If pstart > actualIX Then
+                    ' es kann noch keine Ist-Daten geben 
+                    ReDim tmpResult(0)
+                    tmpResult(0) = 0
+
+                ElseIf pstart <= actualIX Then
+                    ReDim tmpResult(actualIX - pstart)
+                    If isRole Then
+                        ' enthält diese Phase überhaupt diese Rolle ?
+                        Dim teamID As Integer = -1
+                        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
+                    If rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
+
+                        cphase = getPhaseByID(phaseNameID)
+                        Dim tmpRole As clsRolle = cphase.getRoleByRoleNameID(rcNameID)
+                        If Not IsNothing(tmpRole) Then
+                            tagessatz = tmpRole.tagessatzIntern
+                            xWerte = tmpRole.Xwerte
+                        Else
+                            ReDim tmpResult(0)
+                            tmpResult(0) = 0
+                            notYetDone = False
+                        End If
+                    Else
+                        ReDim tmpResult(0)
+                            tmpResult(0) = 0
+                            notYetDone = False
+                        End If
+                    Else
+                        Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+                        If rcLists.phaseContainsCost(phaseNameID, costID) Then
+
+                            cphase = getPhaseByID(phaseNameID)
+                            Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                            If Not IsNothing(tmpCost) Then
+                                xWerte = tmpCost.Xwerte
+                            Else
+                                ReDim tmpResult(0)
+                                tmpResult(0) = 0
+                                notYetDone = False
+                            End If
+                        Else
+                            ReDim tmpResult(0)
+                            tmpResult(0) = 0
+                            notYetDone = False
+                        End If
+                    End If
+
+                    If notYetDone Then
+
+                        For i As Integer = 0 To actualIX - pstart
+                            If isRole And outputInEuro Then
+                                ' mit Tagessatz multiplizieren 
+                                tmpResult(i) = xWerte(i) * tagessatz
+                            Else
+                                tmpResult(i) = xWerte(i)
+                            End If
+
+                        Next
+                    End If
+
+                End If
+
+            End If
+
+            getPhaseRCActualValues = tmpResult
+
     End Function
 
     ''' <summary>

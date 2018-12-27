@@ -1133,7 +1133,9 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-                    Call verarbeiteTreeRoleItem(tmpNode)
+                    If Not IsNothing(tmpNode.Tag) Then
+                        Call verarbeiteTreeRoleItem(tmpNode)
+                    End If
 
                 Next
 
@@ -2760,7 +2762,9 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-                    Call verarbeiteTreeRoleItem(tmpNode)
+                    If Not IsNothing(tmpNode.Tag) Then
+                        Call verarbeiteTreeRoleItem(tmpNode)
+                    End If
 
                 Next
 
@@ -3349,7 +3353,10 @@ Public Class frmHierarchySelection
                 For px As Integer = 1 To anzahlKnoten
 
                     tmpNode = .Nodes.Item(px - 1)
-                    Call verarbeiteTreeRoleItem(tmpNode)
+                    If Not IsNothing(tmpNode.Tag) Then
+                        Call verarbeiteTreeRoleItem(tmpNode)
+                    End If
+
 
                 Next
 
@@ -4848,8 +4855,9 @@ Public Class frmHierarchySelection
                     For px As Integer = 1 To anzahlKnoten
 
                         tmpnode = .Nodes.Item(px - 1)
-
-                        Call verarbeiteTreeRoleItem(tmpnode)
+                        If Not IsNothing(tmpnode.Tag) Then
+                            Call verarbeiteTreeRoleItem(tmpnode)
+                        End If
 
                     Next
 
@@ -5218,7 +5226,9 @@ Public Class frmHierarchySelection
 
                 topLevelNode.Tag = nrTag
 
-                topLevelNode.Name = RoleDefinitions.bestimmeRoleNodeName(role.UID, nrTag.isTeamMember, nrTag.membershipID)
+
+                topLevelNode.Name = RoleDefinitions.bestimmeRoleNameID(role.UID, nrTag.membershipID)
+
 
                 If selectedRoles.Contains(topLevelNode.Name) Then
                     topLevelNode.Checked = True
@@ -5261,7 +5271,7 @@ Public Class frmHierarchySelection
                 .isTeamMember = False
             End With
 
-        ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsnodeRoleTag).isTeam Then
+        ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
 
             nrTag = New clsNodeRoleTag
             With nrTag
@@ -5283,7 +5293,8 @@ Public Class frmHierarchySelection
 
         currentNode.Tag = nrTag
 
-        currentNode.Name = RoleDefinitions.bestimmeRoleNodeName(currentRoleUid, nrTag.isTeamMember, nrTag.membershipID)
+        currentNode.Name = RoleDefinitions.bestimmeRoleNameID(currentRoleUid, nrTag.membershipID)
+
 
         If selectedRoles.Contains(currentNode.Name) Then
             currentNode.Checked = True

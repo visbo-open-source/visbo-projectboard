@@ -1,7 +1,7 @@
 ﻿Imports System.Math
 Public Class clsRolle
 
-    Private _typus As Integer
+    Private _uid As Integer
     Private _bedarf() As Double
 
     ' tk 24.11.18 isCalculated wird nie gebraucht 
@@ -36,7 +36,7 @@ Public Class clsRolle
 
             With vRolle
 
-                If Me.RollenTyp = .RollenTyp And
+                If Me.uid = .uid And
                     Not arraysAreDifferent(Me.Xwerte, .Xwerte) And
                     Me.teamID = .teamID Then
                     stillOK = True
@@ -56,16 +56,20 @@ Public Class clsRolle
     '    End Set
     'End Property
 
-    Public Property RollenTyp() As Integer
+    Public Property uid() As Integer
         Get
 
-            RollenTyp = _typus
+            uid = _uid
 
         End Get
 
         Set(value As Integer)
 
-            _typus = value
+            If Not IsNothing(value) Then
+                If RoleDefinitions.containsUid(value) Then
+                    _uid = value
+                End If
+            End If
 
         End Set
     End Property
@@ -116,7 +120,7 @@ Public Class clsRolle
 
         Get
 
-            name = RoleDefinitions.getRoledef(_typus).name
+            name = RoleDefinitions.getRoleDefByID(_uid).name
 
         End Get
 
@@ -128,7 +132,7 @@ Public Class clsRolle
 
         Get
 
-            farbe = RoleDefinitions.getRoledef(_typus).farbe
+            farbe = RoleDefinitions.getRoleDefByID(_uid).farbe
 
         End Get
 
@@ -140,62 +144,24 @@ Public Class clsRolle
 
         Get
 
-            Startkapa = RoleDefinitions.getRoledef(_typus).defaultKapa
+            Startkapa = RoleDefinitions.getRoleDefByID(_uid).defaultKapa
 
         End Get
 
 
     End Property
 
-    ' Änderung 26.6: wird nicht als Methode in clsRolle benötigt 
-    'Public ReadOnly Property kapazitaet(von As Integer, bis As Integer) As Double()
 
-    '    Get
-    '        Dim tmpArray() As Double
-    '        Dim i As Integer
-    '        Dim size As Integer = RoleDefinitions.getRoledef(typus).kapazitaet.Length
-
-
-    '        If von < 1 Or von > size Or bis > size Or bis < von Then
-    '            Throw New ArgumentException("unzulässige Grenzen " & von.ToString & ", " & bis.ToString)
-    '        Else
-    '            ReDim tmpArray(bis - von)
-    '            For i = von To bis
-    '                tmpArray(i - von) = RoleDefinitions.getRoledef(typus).kapazitaet(i)
-    '            Next
-    '        End If
-
-    '        kapazitaet = tmpArray
-    '    End Get
-
-    'End Property
-    '
-    '
-    '
     Public ReadOnly Property tagessatzIntern() As Double
 
         Get
 
-            tagessatzIntern = RoleDefinitions.getRoledef(_typus).tagessatzIntern
+            tagessatzIntern = RoleDefinitions.getRoleDefByID(_uid).tagessatzIntern
 
         End Get
 
     End Property
-    '
-    '
-    ' 24.11.18 deprecated
-    ''Public ReadOnly Property tagessatzExtern() As Double
 
-    ''    Get
-
-    ''        tagessatzExtern = 0
-    ''        ' 24.11.18 deprecated
-    ''        'tagessatzExtern = RoleDefinitions.getRoledef(_typus).tagessatzExtern
-
-    ''    End Get
-
-
-    ''End Property
     '
     '
     '
@@ -214,7 +180,8 @@ Public Class clsRolle
     Public Sub CopyTo(ByRef newrole As clsRolle)
 
         With newrole
-            .RollenTyp = _typus
+            .uid = _uid
+            .teamID = _teamID
             .Xwerte = _bedarf
         End With
 
