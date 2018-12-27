@@ -455,13 +455,13 @@ Public Class clsRollen
     ''' </summary>
     ''' <param name="roleUID"></param>
     ''' <param name="teamID"></param>
-    ''' <param name="isTeamMember"></param>
     ''' <returns></returns>
-    Public Function bestimmeRoleNodeName(ByVal roleUID As Integer, ByVal isTeamMember As Boolean, ByVal teamID As Integer) As String
+    Public Function bestimmeRoleNameID(ByVal roleUID As Integer, ByVal teamID As Integer) As String
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
         Dim tmpResult As String = ""
         Dim ok As Boolean = True
+        Dim isTeamMember As Boolean = (teamID > 0)
 
         If teamID > 0 Then
             ok = _allRollen.ContainsKey(teamID)
@@ -471,7 +471,7 @@ Public Class clsRollen
             Dim nodeName As String = roleUID.ToString
 
             If isTeamMember Then
-                nodeName = roleUID.ToString & ";" & teamID
+                nodeName = roleUID.ToString & ";" & teamID.ToString
             Else
                 nodeName = roleUID.ToString
             End If
@@ -482,8 +482,43 @@ Public Class clsRollen
             tmpResult = ""
         End If
 
-        bestimmeRoleNodeName = tmpResult
+        bestimmeRoleNameID = tmpResult
 
+    End Function
+
+    ''' <summary>
+    ''' bestimmt den rollen-ID-String in der Form: roleUid;teamUid
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="teamName"></param>
+    ''' <returns></returns>
+    Public Function bestimmeRoleNameID(ByVal roleName As String, ByVal teamName As String) As String
+        Dim tmpResult As String = ""
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+
+        Try
+            If Not IsNothing(tmpRole) Then
+
+                If teamName.Length > 0 Then
+                    Dim tmpRoleTeam As clsRollenDefinition = RoleDefinitions.getRoledef(teamName)
+                    If Not IsNothing(tmpRoleTeam) Then
+                        If tmpRoleTeam.getSubRoleIDs.ContainsKey(tmpRole.UID) Then
+                            tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, tmpRoleTeam.UID)
+                        Else
+                            Dim dummy As Integer = -1
+                            tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, dummy)
+                        End If
+                    End If
+                Else
+                    tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRole.UID, -1)
+                End If
+
+            End If
+        Catch ex As Exception
+            tmpResult = ""
+        End Try
+
+        bestimmeRoleNameID = tmpResult
     End Function
 
 
@@ -704,6 +739,31 @@ Public Class clsRollen
         End Get
     End Property
 
+    Public ReadOnly Property containsNameID(nameID As String) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim teamID As Integer = -1
+            Dim roleUID As Integer = parseRoleNameID(nameID, teamID)
+
+            If nameID.Contains(";") And teamID = -1 Then
+                ' nicht ok 
+            ElseIf roleUID = -1 Then
+                ' nicht ok 
+            ElseIf roleUID > 0 And teamID = -1 Then
+                ' alles ok 
+                tmpResult = True
+            ElseIf roleUID > 0 And teamID > 0 Then
+                ' alles ok 
+                tmpResult = True
+            End If
+
+            containsNameID = tmpResult
+
+        End Get
+    End Property
+
+
+
     ''' <summary>
     ''' gibt zurück, ob der Key bereits enthalten ist 
     ''' </summary>
@@ -784,31 +844,52 @@ Public Class clsRollen
     ''' <param name="selRoleItem"></param>
     ''' <param name="teamID"></param>
     ''' <returns></returns>
-    Private Function bestimmeRoleNodeID(ByVal selRoleItem As String, ByRef teamID As Integer) As Integer
+    Public Function parseRoleNameID(ByVal selRoleItem As String, ByRef teamID As Integer) As Integer
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
         Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
-        Dim tmpResult As Integer = -1
+        Dim roleID As Integer = -1
 
+        ' Vorbesetzung von teamID 
+        teamID = -1
 
-        tmpResult = CInt(tmpStr(0))
+        ' die RoleUID bestimmen 
+        If IsNumeric(tmpStr(0)) Then
+            roleID = CInt(tmpStr(0))
+            If _allRollen.ContainsKey(roleID) Then
+                ' alles ok 
+            Else
+                roleID = -1
+            End If
+        Else
+            If _allNames.ContainsKey(tmpStr(0)) Then
+                roleID = _allNames.Item(tmpStr(0))
+            Else
+                roleID = -1
+            End If
+        End If
 
+        ' bestimme teamID
         If tmpStr.Length = 2 Then
-            ' ist Team 
+            ' hat noch Team Info  
             If IsNumeric(tmpStr(1)) Then
                 teamID = CInt(tmpStr(1))
                 If _allRollen.ContainsKey(teamID) Then
-                    ' alles in Ordnung
+                    ' alles ok 
                 Else
                     teamID = -1
                 End If
             Else
-                teamID = -1
+                If _allNames.ContainsKey(tmpStr(1)) Then
+                    teamID = _allNames.Item(tmpStr(1))
+                Else
+                    teamID = -1
+                End If
             End If
         End If
 
 
-        bestimmeRoleNodeID = tmpResult
+        parseRoleNameID = roleID
 
     End Function
     ''' <summary>
@@ -821,7 +902,7 @@ Public Class clsRollen
 
         teamID = -1
         Try
-            getRoleDefByIDKennung = getRoleDefByID(bestimmeRoleNodeID(idK, teamID))
+            getRoleDefByIDKennung = getRoleDefByID(parseRoleNameID(idK, teamID))
         Catch ex As Exception
             getRoleDefByIDKennung = Nothing
         End Try

@@ -1097,7 +1097,7 @@ Public Class Request
                                                 variantName:=variantname,
                                                 storedAtorBefore:=Nothing)
 
-                    If hresult.Count >= 0 Then
+                    If hresult.Count > 0 Then
                         hresult.Item(0).copyto(hproj)
                     Else
                         hproj = Nothing
@@ -1160,7 +1160,7 @@ Public Class Request
                                             variantName:=variantname,
                                             storedAtorBefore:=storedAtOrBefore)
 
-                    If hresult.Count >= 0 Then
+                    If hresult.Count > 0 Then
                         hresult.Item(0).copyto(hproj)
                     Else
                         hproj = Nothing

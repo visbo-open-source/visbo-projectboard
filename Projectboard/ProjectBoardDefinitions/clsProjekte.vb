@@ -3221,7 +3221,7 @@ Public Class clsProjekte
             ReDim tmpArray(bis - von + 1)
 
             Try
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleID)
+                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
 
                 Dim roleUID As Integer = tmpRole.UID
                 Dim roleName As String = tmpRole.name

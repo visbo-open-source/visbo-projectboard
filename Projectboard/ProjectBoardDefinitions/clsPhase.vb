@@ -55,77 +55,77 @@ Public Class clsPhase
         _allRoles.Clear()
     End Sub
 
-    ''' <summary>
-    ''' entfernt die Rolle mit Name rolename aus der Phase
-    ''' wenn die nicht als Rollendefinition gar nicht existiert, gibt es eine Exception
-    ''' andernfalls, wenn Rolle nur nicht in der Phase vorkommt, gibt es keine Meldung 
-    ''' 
-    ''' </summary>
-    ''' <param name="roleName"></param>
-    Public Sub deleteRole(ByVal roleName As String)
+    '''' <summary>
+    '''' entfernt die Rolle mit Name rolename aus der Phase
+    '''' wenn die nicht als Rollendefinition gar nicht existiert, gibt es eine Exception
+    '''' andernfalls, wenn Rolle nur nicht in der Phase vorkommt, gibt es keine Meldung 
+    '''' 
+    '''' </summary>
+    '''' <param name="roleName"></param>
+    'Public Sub deleteRole(ByVal roleName As String)
 
-        If RoleDefinitions.containsName(roleName) Then
-            Dim ix As Integer = 0
-            Dim found As Boolean = False
+    '    If RoleDefinitions.containsName(roleName) Then
+    '        Dim ix As Integer = 0
+    '        Dim found As Boolean = False
 
-            While Not found And ix <= _allRoles.Count - 1
-                If _allRoles.Item(ix).name = roleName Then
-                    found = True
-                Else
-                    ix = ix + 1
-                End If
-            End While
+    '        While Not found And ix <= _allRoles.Count - 1
+    '            If _allRoles.Item(ix).name = roleName Then
+    '                found = True
+    '            Else
+    '                ix = ix + 1
+    '            End If
+    '        End While
 
-            If found Then
-                _allRoles.RemoveAt(ix)
-            End If
-        Else
-            'Fehler ...
-            Dim errmsg As String
-            If awinSettings.englishLanguage Then
-                errmsg = "role unknown: " & roleName
-            Else
-                errmsg = "unbekannte Rolle: " & roleName
-            End If
-            Throw New ArgumentException(errmsg)
-        End If
+    '        If found Then
+    '            _allRoles.RemoveAt(ix)
+    '        End If
+    '    Else
+    '        'Fehler ...
+    '        Dim errmsg As String
+    '        If awinSettings.englishLanguage Then
+    '            errmsg = "role unknown: " & roleName
+    '        Else
+    '            errmsg = "unbekannte Rolle: " & roleName
+    '        End If
+    '        Throw New ArgumentException(errmsg)
+    '    End If
 
-    End Sub
+    'End Sub
 
-    ''' <summary>
-    ''' entfernt die Kostenart mit Name costname aus der Phase
-    ''' wenn die als Kostenartdefinition gar nicht existiert, gibt es eine Exception
-    ''' andernfalls, wenn Kostenart nur nicht in der Phase vorkommt, gibt es keine Meldung 
-    ''' </summary>
-    ''' <param name="costname"></param>
-    Public Sub deleteCost(ByVal costname As String)
-        If CostDefinitions.containsName(costname) Then
-            Dim ix As Integer = 0
-            Dim found As Boolean = False
+    '''' <summary>
+    '''' entfernt die Kostenart mit Name costname aus der Phase
+    '''' wenn die als Kostenartdefinition gar nicht existiert, gibt es eine Exception
+    '''' andernfalls, wenn Kostenart nur nicht in der Phase vorkommt, gibt es keine Meldung 
+    '''' </summary>
+    '''' <param name="costname"></param>
+    'Public Sub deleteCost(ByVal costname As String)
+    '    If CostDefinitions.containsName(costname) Then
+    '        Dim ix As Integer = 0
+    '        Dim found As Boolean = False
 
-            While Not found And ix <= _allCosts.Count - 1
-                If _allCosts.Item(ix).name = costname Then
-                    found = True
-                Else
-                    ix = ix + 1
-                End If
-            End While
+    '        While Not found And ix <= _allCosts.Count - 1
+    '            If _allCosts.Item(ix).name = costname Then
+    '                found = True
+    '            Else
+    '                ix = ix + 1
+    '            End If
+    '        End While
 
-            If found Then
-                _allCosts.RemoveAt(ix)
-            End If
-        Else
-            'Fehler ...
-            Dim errmsg As String
-            If awinSettings.englishLanguage Then
-                errmsg = "role unknown: " & costname
-            Else
-                errmsg = "unbekannte Rolle: " & costname
-            End If
-            Throw New ArgumentException(errmsg)
-        End If
+    '        If found Then
+    '            _allCosts.RemoveAt(ix)
+    '        End If
+    '    Else
+    '        'Fehler ...
+    '        Dim errmsg As String
+    '        If awinSettings.englishLanguage Then
+    '            errmsg = "role unknown: " & costname
+    '        Else
+    '            errmsg = "unbekannte Rolle: " & costname
+    '        End If
+    '        Throw New ArgumentException(errmsg)
+    '    End If
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' löscht alle Kostenbedarfe der Phase
@@ -145,17 +145,24 @@ Public Class clsPhase
             percentDone = _percentDone
         End Get
         Set(value As Double)
-            If value >= 0 Then
-                If value <= 1.0 Then
-                    _percentDone = value
-                Else
-                    ' dann müssen die PErcentDone Werte erst noch normiert werden 
-                    _percentDone = value / 100
-                End If
 
+            If Not IsNothing(value) Then
+                If value >= 0 Then
+                    If value <= 1.0 Then
+                        _percentDone = value
+                    Else
+                        ' dann müssen die PErcentDone Werte erst noch normiert werden 
+                        _percentDone = value / 100
+                    End If
+
+                Else
+                    Throw New ArgumentException("percent Done Value must not be negativ ...")
+                End If
             Else
-                Throw New ArgumentException("percent Done Value must not be negativ ...")
+                ' einfach nichts tun ... 
             End If
+
+
         End Set
     End Property
 
@@ -208,7 +215,7 @@ Public Class clsPhase
         Else
             If rcType = PThcc.persbedarf Then
 
-                Dim rcName As String = RoleDefinitions.getRoledef(rcID).name
+                Dim rcName As String = RoleDefinitions.getRoleDefByID(rcID).name
                 Dim role As clsRolle = Me.getRole(rcName)
                 If Not IsNothing(role) Then
                     For i As Integer = 1 To tValues.Length
@@ -218,12 +225,12 @@ Public Class clsPhase
                     Dim dimension As Integer = _relEnde - _relStart
                     role = New clsRolle(dimension)
                     With role
-                        .RollenTyp = rcID
+                        .uid = rcID
                         For i As Integer = 1 To tValues.Length
                             role.Xwerte(start - 1) = role.Xwerte(start - 1) + tValues(i - 1)
                         Next
                     End With
-                        ' Rolle hinzufügen
+                    ' Rolle hinzufügen
                     With Me
                         .addRole(role)
                     End With
@@ -274,7 +281,7 @@ Public Class clsPhase
                     ' administratives ...
                     If Me.nameID = .nameID Then
 
-                        If Me.dauerInDays = .dauerInDays And _
+                        If Me.dauerInDays = .dauerInDays And
                             Me.startOffsetinDays = .startOffsetinDays Then
 
                             If Me.countCosts = .countCosts And
@@ -476,7 +483,7 @@ Public Class clsPhase
                 If i = 1 Then
                     tmpDeliverables = _deliverables.Item(i - 1)
                 Else
-                    tmpDeliverables = tmpDeliverables & trennzeichen & _
+                    tmpDeliverables = tmpDeliverables & trennzeichen &
                         _deliverables.Item(i - 1)
                 End If
             Next
@@ -1537,13 +1544,13 @@ Public Class clsPhase
 
 
     ''' <summary>
-    ''' gibt die Rollen Instanz der Phase zurück, die den Namen roleName hat 
+    ''' gibt die Rollen Instanz der Phase zurück, die den Namen roleName hat und die 
     ''' </summary>
     ''' <param name="roleName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRole(ByVal roleName As String) As clsRolle
+    Public ReadOnly Property getRole(ByVal roleName As String, Optional ByVal teamID As Integer = -1) As clsRolle
 
         Get
             Dim returnValue As clsRolle = Nothing
@@ -1551,7 +1558,7 @@ Public Class clsPhase
             Dim found As Boolean = False
 
             While Not found And ix <= _allRoles.Count - 1
-                If _allRoles.Item(ix).name = roleName Then
+                If _allRoles.Item(ix).name = roleName And _allRoles.Item(ix).teamID = teamID Then
                     found = True
                     returnValue = _allRoles.Item(ix)
                 Else
@@ -1622,13 +1629,14 @@ Public Class clsPhase
     ''' <param name="roleName"></param>
     ''' <param name="summe"></param>
     ''' <param name="addToExisting"></param>
-    Public Sub AddRole(ByVal roleName As String, ByVal summe As Double, ByVal addToExisting As Boolean)
+    Public Sub AddRole(ByVal roleName As String, ByVal summe As Double, ByVal addToExisting As Boolean,
+                       Optional ByVal teamID As Integer = -1)
 
         Dim rSum As Double()
         ReDim rSum(0)
         rSum(0) = summe
 
-        Dim tmpRole As clsRolle = Me.getRole(roleName)
+        Dim tmpRole As clsRolle = Me.getRole(roleName, teamID)
         Dim xWerte As Double() = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, rSum, 1.0)
 
         If IsNothing(tmpRole) Then
@@ -1637,7 +1645,8 @@ Public Class clsPhase
             tmpRole = New clsRolle(dimension)
 
             With tmpRole
-                .RollenTyp = RoleDefinitions.getRoledef(roleName).UID
+                .uid = RoleDefinitions.getRoledef(roleName).UID
+                .teamID = teamID
                 .Xwerte = xWerte
             End With
 
@@ -1670,7 +1679,7 @@ Public Class clsPhase
 
         ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
         Try
-            Me.parentProject.rcLists.addRP(tmpRole.RollenTyp, Me.nameID)
+            Me.parentProject.rcLists.addRP(tmpRole.uid, Me.nameID, teamID:=teamID)
         Catch ex As Exception
 
         End Try
@@ -1688,9 +1697,13 @@ Public Class clsPhase
     ''' <param name="prozentSatz">wenn nur ein bestimmter Prozentsatz auf die Phase verteilt werden sollen; by Default 1</param>
     Public Sub addCostsAndRoles(ByVal roleNames() As String, ByVal roleValues() As Double,
                                 ByVal costNames() As String, ByVal costValues() As Double,
-                                ByVal Optional prozentSatz As Double = 1.0)
+                                ByVal Optional prozentSatz As Double = 1.0,
+                                Optional roleNamesAreIds As Boolean = False)
+
         Dim anzRoles As Integer
         Dim anzCosts As Integer
+        Dim teamID As Integer = -1
+        Dim roleID As Integer = 0
 
         Dim tmpRCvalue As Double = 0.0
         Dim tmpRCname As String
@@ -1710,8 +1723,14 @@ Public Class clsPhase
         For r = 0 To anzRoles - 1
             tmpRCvalue = prozentSatz * roleValues(r)
             tmpRCname = roleNames(r)
+            If roleNamesAreIds Then
+                roleID = RoleDefinitions.parseRoleNameID(tmpRCname, teamID)
+            Else
+                teamID = -1
+            End If
+
             If tmpRCvalue > 0 Then
-                Me.addCostRole(tmpRCname, tmpRCvalue, True, False)
+                Me.addCostRole(tmpRCname, tmpRCvalue, True, False, teamID:=teamID)
             End If
 
         Next
@@ -1735,12 +1754,13 @@ Public Class clsPhase
     ''' <param name="addWhenExisting"></param>
     Public Sub addCostRole(ByVal rcName As String, ByVal summe As Double,
                               ByVal isrole As Boolean,
-                              ByVal addWhenExisting As Boolean)
+                              ByVal addWhenExisting As Boolean,
+                              Optional ByVal teamID As Integer = -1)
 
 
         If isrole Then
             ' eine Rolle wird hinzugefügt 
-            Call Me.AddRole(rcName, summe, addWhenExisting)
+            Call Me.AddRole(rcName, summe, addWhenExisting, teamID:=teamID)
 
         Else
             ' eine Kostenart wird hinzugefügt
@@ -1761,6 +1781,8 @@ Public Class clsPhase
         'sollte nach dem 8.7.16 aktiviert werden 
         'ebenso für addCost, mehrere Rollen/Kosten des gleichen NAmens sollen aufsummiert werden 
         Dim roleName As String = role.name
+        Dim teamID As Integer = role.teamID
+
         Dim returnValue As clsRolle = Nothing
         Dim ix As Integer = 0
         Dim found As Boolean = False
@@ -1768,7 +1790,7 @@ Public Class clsPhase
         Dim newXwerte() As Double
 
         While Not found And ix <= _allRoles.Count - 1
-            If _allRoles.Item(ix).name = roleName Then
+            If _allRoles.Item(ix).name = roleName And _allRoles.Item(ix).teamID = teamID Then
                 found = True
             Else
                 ix = ix + 1
@@ -1798,7 +1820,7 @@ Public Class clsPhase
 
         ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
         Try
-            Me.parentProject.rcLists.addRP(role.RollenTyp, Me.nameID)
+            Me.parentProject.rcLists.addRP(role.uid, Me.nameID, teamID)
         Catch ex As Exception
 
         End Try
@@ -1819,13 +1841,13 @@ Public Class clsPhase
     ''' </summary>
     ''' <param name="roleName"></param>
     ''' <remarks></remarks>
-    Public Sub removeRoleByName(ByVal roleName As String)
+    Public Sub removeRoleByName(ByVal roleName As String, Optional ByVal teamID As Integer = -1)
 
         Dim toDoList As New List(Of clsRolle)
 
         For i As Integer = 1 To _allRoles.Count
             Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
-            If tmpRole.name = roleName Then
+            If tmpRole.name = roleName And tmpRole.teamID = teamID Then
                 toDoList.Add(tmpRole)
             End If
         Next
@@ -1834,9 +1856,32 @@ Public Class clsPhase
             _allRoles.Remove(tmpRole)
             ' Änderung tk 20.09.16
             ' jetzt müssen die sortierten Listen im Projekt entsprechend aktualisiert werden 
-            Me.parentProject.rcLists.removeRP(tmpRole.RollenTyp, Me.nameID)
+            Me.parentProject.rcLists.removeRP(tmpRole.uid, Me.nameID, teamID, False)
         Next
 
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt alle Rollen-Instanzen mut RolleName-ID "roleuid;teamUid" aus der Phase
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    Public Sub removeRoleByNameID(ByVal roleNameID As String)
+
+        Dim toDoList As New List(Of clsRolle)
+
+        For i As Integer = 1 To _allRoles.Count
+            Dim tmpRole As clsRolle = _allRoles.Item(i - 1)
+            Dim IdStr As String = RoleDefinitions.bestimmeRoleNameID(tmpRole.uid, tmpRole.teamID)
+            If IdStr = roleNameID Then
+                toDoList.Add(tmpRole)
+            End If
+        Next
+
+        For Each tmpRole As clsRolle In toDoList
+            _allRoles.Remove(tmpRole)
+            Me.parentProject.rcLists.removeRP(tmpRole.uid, Me.nameID, tmpRole.teamID, False)
+        Next
 
     End Sub
 
@@ -2133,7 +2178,7 @@ Public Class clsPhase
     ''' <param name="zielrenditeFaktor">wenn Nothing angegeben wird: die Ressourcen- und Kostenbedarfe werden über corrFactor und propanpassRess bestimmt
     ''' wenn ein Wert angegeben ist, dann werden die alten Ressourcen- und Kosten-Summen mit diesem Wert modifiziert; das sichert eine vorgegebene Rendite </param>
     ''' <remarks></remarks>
-    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double, ByVal newPhaseNameID As String, _
+    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double, ByVal newPhaseNameID As String,
                           Optional ByVal zielrenditeFaktor As Double = -99999.0)
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
@@ -2187,7 +2232,8 @@ Public Class clsPhase
 
 
                     With newrole
-                        .RollenTyp = oldrole.RollenTyp
+                        .uid = oldrole.uid
+                        .teamID = oldrole.teamID
                         .Xwerte = newXwerte
                     End With
                     With newphase
@@ -2294,27 +2340,27 @@ Public Class clsPhase
 
     End Sub
 
-    Public Property Role(ByVal index As Integer) As clsRolle
-        Get
-            Role = _allRoles.Item(index - 1)
-        End Get
+    'Public Property Role(ByVal index As Integer) As clsRolle
+    '    Get
+    '        Role = _allRoles.Item(index - 1)
+    '    End Get
 
-        Set(value As clsRolle)
-            _allRoles.Item(index - 1) = value
-        End Set
+    '    Set(value As clsRolle)
+    '        _allRoles.Item(index - 1) = value
+    '    End Set
 
-    End Property
+    'End Property
 
-    Public Property Cost(ByVal index As Integer) As clsKostenart
-        Get
-            Cost = _allCosts.Item(index - 1)
-        End Get
+    'Public Property Cost(ByVal index As Integer) As clsKostenart
+    '    Get
+    '        Cost = _allCosts.Item(index - 1)
+    '    End Get
 
-        Set(value As clsKostenart)
-            _allCosts.Item(index - 1) = value
-        End Set
+    '    Set(value As clsKostenart)
+    '        _allCosts.Item(index - 1) = value
+    '    End Set
 
-    End Property
+    'End Property
 
     ''' <summary>
     ''' liefert die Rolle an Index-Stelle i; i darf Werte zwischen 1 und AnzahlRollen annehmen
@@ -2326,9 +2372,40 @@ Public Class clsPhase
     Public ReadOnly Property getRole(ByVal index As Integer) As clsRolle
 
         Get
-            getRole = _allRoles.Item(index - 1)
+            If index > 0 And index <= _allRoles.Count Then
+                getRole = _allRoles.Item(index - 1)
+            Else
+                getRole = Nothing
+            End If
+
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' liefert zu der angegebenen ID in Form von roleID;teamId die zugehörige Rolle, sofern sie in der Phase existiert
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getRoleByRoleNameID(ByVal roleNameID As String) As clsRolle
+        Get
+            Dim tmpResult As clsRolle = Nothing
+            Dim found As Boolean = False
+            Dim ix As Integer = 0
+            Dim teamID As Integer = -1
+            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
+            Do While Not found And ix <= _allRoles.Count - 1
+                found = _allRoles.Item(ix).uid = roleID And _allRoles.Item(ix).teamID = teamID
+                If found Then
+                    tmpResult = _allRoles.Item(ix)
+                Else
+                    ix = ix + 1
+                End If
+            Loop
+
+            getRoleByRoleNameID = tmpResult
+        End Get
     End Property
 
     Public ReadOnly Property getMilestone(ByVal index As Integer) As clsMeilenstein
@@ -2626,7 +2703,12 @@ Public Class clsPhase
     Public ReadOnly Property getCost(ByVal index As Integer) As clsKostenart
 
         Get
-            getCost = _allCosts.Item(index - 1)
+            If index > 0 And index <= _allCosts.Count Then
+                getCost = _allCosts.Item(index - 1)
+            Else
+                getCost = Nothing
+            End If
+
         End Get
 
     End Property
