@@ -783,7 +783,7 @@ Public Class Request
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException(ex.Message & ": storeProjectToDB")
+            'Throw New ArgumentException(ex.Message & ": storeProjectToDB")
         End Try
 
         storeProjectToDB = result
@@ -1403,11 +1403,12 @@ Public Class Request
 
                 ' Portfolio-Name
                 cVP.name = c.constellationName
-                ' berechtiger User
-                Dim user As New clsUser
-                user.email = aktUser.email
-                user.role = "Admin"
-                cVP.users.Add(user)
+                ' ur:14.12.2018: liste der User ist nicht mehr in den VPs enthalten
+                '' berechtiger User
+                'Dim user As New clsUser
+                'user.email = aktUser.email
+                'user.role = "Admin"
+                'cVP.users.Add(user)
                 ' VisboCenter - Id
                 cVP.vcid = aktVCid
                 ' VisboProject-Type - Portfolio
@@ -1773,8 +1774,12 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = New List(Of clsVCSettingCustomroles)
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
-                    settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
                     anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
 
                 Case settingTypes(ptSettingTypes.customfields)
                 Case settingTypes(ptSettingTypes.organisation)
@@ -1797,7 +1802,7 @@ Public Class Request
             CustUserRole.customUserRole = 1
             CustUserRole.specifics = "testCustomRolle 1"
             listofCURsWeb.customUserRoles.Add(CustUserRole)
-            listlistofCURsWeb.Add(listofCURsWeb)
+            'listlistofCURsWeb.Add(listofCURsWeb)
 
             ' der Unique-Key für customroles besteht aus: name, type
             If type = settingTypes(ptSettingTypes.customroles) Then
@@ -1807,7 +1812,7 @@ Public Class Request
                 CType(newsetting, clsVCSettingCustomroles).userId = ""
                 CType(newsetting, clsVCSettingCustomroles).vcid = aktVCid
                 CType(newsetting, clsVCSettingCustomroles).type = type
-                CType(newsetting, clsVCSettingCustomroles).value = listlistofCURsWeb
+                CType(newsetting, clsVCSettingCustomroles).value = listofCURsWeb
 
                 If anzSetting = 1 Then
                     newsetting._id = settingID
@@ -1846,6 +1851,71 @@ Public Class Request
         End Try
 
         storeVCsettingsToDB = result
+    End Function
+
+
+    Public Function retrieveCustomUserRolesOf(ByVal dbusername As String, ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
+
+        Dim result As New clsCustomUserRoles
+        Dim interimResult As New clsCustomUserRoles
+        Dim setting As Object = Nothing
+        Dim newsetting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.customroles)
+        Dim name As String = type
+        Dim allCustomUserRoles As New clsCustomUserRoles
+        Dim webCustomUserRoles As New clsCustomUserRolesWeb
+        Try
+
+            setting = New List(Of clsVCSettingCustomroles)
+            setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+            anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
+
+            If anzSetting > 0 Then
+
+                settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
+                webCustomUserRoles = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0).value
+                webCustomUserRoles.copyTo(interimResult)
+
+                For Each kvp As KeyValuePair(Of String, clsCustomUserRole) In interimResult.liste
+
+                    Dim aktUserKey As String = dbusername.Trim & kvp.Value.customUserRole.ToString.Trim & kvp.Value.specifics
+
+                    If kvp.Key = aktUserKey Then
+                        result.addCustomUserRole(kvp.Value.userName, kvp.Value.userID, kvp.Value.customUserRole, kvp.Value.specifics)
+                    End If
+                Next
+
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+        retrieveCustomUserRolesOf = result
+    End Function
+
+    Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
+
+        Dim result As String = ""
+
+        Try
+
+
+
+
+
+        Catch ex As Exception
+
+        End Try
+        retrieveUserIDFromName = result
     End Function
 
     ' ------------------------------------------------------------------------------------------

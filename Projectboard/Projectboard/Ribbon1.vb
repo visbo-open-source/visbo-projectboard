@@ -4876,10 +4876,18 @@ Imports System.Web
 
     Public Sub PTImportCustomUserRoles(control As IRibbonControl)
 
+        Dim err As New clsErrorCodeMsg
         Dim allCustomUserRoles As New clsCustomUserRoles
+        Dim result As Boolean = False
+
         Call awinImportCustomUserRoles(allCustomUserRoles)
 
         '??? Aufruf speichern der CustomUser Roles über rest-Server ...
+
+        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(allCustomUserRoles,
+                                                                            CStr(settingTypes(ptSettingTypes.customroles)),
+                                                                            Nothing,
+                                                                            err)
 
     End Sub
 

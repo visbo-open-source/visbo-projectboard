@@ -7015,9 +7015,17 @@ Public Module agm2
 
     Public Function bestimmeUserIDFromName(ByVal userName As String) As String
 
+        Dim err As New clsErrorCodeMsg
         Dim tmpResult As String = ""
-        '??? hole vom Rest-Server die UserID des angegebenen Users
-        ' weise den UserID Wert dann tmpResult zu
+        Try
+
+            ' hole vom Rest-Server die UserID des angegebenen Users
+            ' weise den UserID Wert dann tmpResult zu
+            tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveUserIDFromName(userName, err)
+
+        Catch ex As Exception
+
+        End Try
 
         bestimmeUserIDFromName = tmpResult
 
@@ -15576,10 +15584,10 @@ Public Module agm2
 
                     ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
                     Dim allMyCustomUserRoles As New clsCustomUserRoles
-                    '??? Dim allMyCustomUserRoles As clsCustomUserRoles = retrieveCustomUserRolesOf(dbUserID)
+                    allMyCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRolesOf(dbUsername, err)
 
                     If allMyCustomUserRoles.count > 1 Then
-
+                        Call MsgBox("hier muss eine Auswahl der Rollen getroffen werden")
                     Else
                         myCustomUserRole = allMyCustomUserRoles.elementAt(0)
                     End If

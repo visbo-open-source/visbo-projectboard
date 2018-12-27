@@ -22,10 +22,10 @@ End Class
 Public Class clsVCSettingCustomroles
 
     Inherits clsVCSetting
-    Public Property value As List(Of clsCustomUserRolesWeb)
+    Public Property value As clsCustomUserRolesWeb
 
     Sub New()
-        _value = New List(Of clsCustomUserRolesWeb)
+        _value = New clsCustomUserRolesWeb
     End Sub
 End Class
 
