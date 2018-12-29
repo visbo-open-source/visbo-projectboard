@@ -371,9 +371,10 @@ Public Module testModule
 
                         ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                         Dim tmpVariantName As String = ""
-                        If hproj.projectType = ptPRPFType.portfolio Then
-                            tmpVariantName = portfolioVName
-                        End If
+                        ' 28.12.18 tk deprecated
+                        'If hproj.projectType = ptPRPFType.portfolio Then
+                        '    tmpVariantName = portfolioVName
+                        'End If
 
                         bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)

@@ -8036,6 +8036,7 @@ Public Module agm2
                                 .projectName = pName
                                 .variantName = variantName
                                 .show = True
+                                .projectTyp = ptPRPFType.project.ToString
                                 .zeile = zeile
                             End With
 
@@ -8817,13 +8818,13 @@ Public Module agm2
 
                                 Try ' Status
                                     If itemType = 6 Then
-                                        allianzStatus = ProjektStatus(PTProjektStati.geplanteVorgabe)
+                                        allianzStatus = ProjektStatus(PTProjektStati.geplant)
                                     Else
-                                        allianzStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe)
+                                        allianzStatus = ProjektStatus(PTProjektStati.beauftragt)
                                     End If
 
                                 Catch ex As Exception
-                                    allianzStatus = ProjektStatus(PTProjektStati.geplanteVorgabe)
+                                    allianzStatus = ProjektStatus(PTProjektStati.geplant)
                                 End Try
 
                             End If
@@ -8916,6 +8917,7 @@ Public Module agm2
                                                 .projectName = hproj.name
                                                 .variantName = hproj.variantName
                                                 .show = True
+                                                .projectTyp = CType(hproj.projectType, ptPRPFType).ToString
                                                 .zeile = lfdNr1program
                                             End With
 
@@ -9837,6 +9839,7 @@ Public Module agm2
 
                     If Not IsNothing(hproj) Then
                         ' es wird pro Projekt eine Variante erzeugt 
+                        Dim istDatenVName As String = ptVariantFixNames.acd.ToString
                         Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
                         ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 

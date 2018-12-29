@@ -191,7 +191,7 @@ Public Class clsProjekteAlle
         ' Aufbau der inQuestion Sorted Liste 
         If isConstellation Then
             Dim tmpconstellation As clsConstellation = projectConstellations.getConstellation(pvName)
-            Dim summaryName As String = calcProjektKey(pvName, portfolioVName)
+            Dim summaryName As String = calcProjektKey(pvName, "")
 
             If Not sortedListInQuestion.ContainsKey(summaryName) Then
                 sortedListInQuestion.Add(summaryName, True)
@@ -199,8 +199,8 @@ Public Class clsProjekteAlle
 
             If Not IsNothing(tmpconstellation) Then
                 For Each kvp As KeyValuePair(Of String, clsConstellationItem) In tmpconstellation.Liste
-
-                    If kvp.Value.variantName = portfolioVName Then
+                    ' tk 28.12. reasontoExclude wurde umbenannt / umgewidmet in projectTyp 
+                    If kvp.Value.projectTyp = ptPRPFType.portfolio.ToString Then
                         Try
                             If sortedListInQuestion.ContainsKey(kvp.Key) Then
                                 ' nichts tun, ist schon drin 
@@ -329,6 +329,7 @@ Public Class clsProjekteAlle
                 With cItem
                     .projectName = project.name
                     .variantName = project.variantName
+                    .projectTyp = CType(project.projectType, ptPRPFType).ToString
                 End With
                 currentSessionConstellation.add(cItem, sKey:=sortkey)
             End If

@@ -524,6 +524,7 @@ Public Class Request
     ''' <summary>
     ''' speichert ein einzelnes Projekt in der Datenbank
     ''' Zeitstempel wird aus den Projekt-Infos genommen
+    ''' ein Protfolio Manager speicher immer mit entsprechendem Varianten-Name 
     ''' </summary>
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
@@ -532,6 +533,16 @@ Public Class Request
 
         Dim result As Boolean = False
         Try
+            ' tk 28.12.18
+            ' wenn es sich bei der aktuellen Rolle um den Portfolio Manager handelt, dann soll immer mit entsprechendem Varianten-Name gespeichert werden 
+            ' aber nur, wenn er nicht schon einen Varianten-Namen vergeben hat; 
+            ' also jedes Speichern der Basis-Variante eines Portfolio Managers hat den entsprechenden Varianten-Namen  
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                If projekt.variantName = "" Then
+                    projekt.variantName = ptVariantFixNames.pfv.ToString
+                End If
+            End If
+
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
@@ -759,6 +770,10 @@ Public Class Request
         Dim result As New clsProjekt
         Try
 
+            ' tk 28.12.18 
+            ' es wird immer mit der durch den Portfolio Manager gemachten Vorgabe verglichen; und die hat immer den Varianten-Namen pfv (siehe Enum) 
+            variantname = ptVariantFixNames.pfv.ToString
+
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
@@ -803,6 +818,9 @@ Public Class Request
         Dim result As New clsProjekt
 
         Try
+            ' tk 28.12.18 
+            ' es wird immer mit der durch den Portfolio Manager gemachten Vorgabe verglichen; und die hat immer den Varianten-Namen pfv (siehe Enum) 
+            variantname = ptVariantFixNames.pfv.ToString
 
             If usedWebServer Then
                 Try

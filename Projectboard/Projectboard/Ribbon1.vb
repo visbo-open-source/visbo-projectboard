@@ -7015,9 +7015,10 @@ Imports System.Web
 
             ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
             Dim tmpVariantName As String = ""
-            If hproj.projectType = ptPRPFType.portfolio Then
-                tmpVariantName = portfolioVName
-            End If
+            ' tk 28.12.18 deprecated
+            'If hproj.projectType = ptPRPFType.portfolio Then
+            '    tmpVariantName = portfolioVName
+            'End If
 
             Dim repObj As Excel.ChartObject
             appInstance.EnableEvents = False
@@ -7153,9 +7154,10 @@ Imports System.Web
 
                     ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                     Dim tmpVariantName As String = ""
-                    If hproj.projectType = ptPRPFType.portfolio Then
-                        tmpVariantName = portfolioVName
-                    End If
+                    ' tk 28.12.18 deprecated
+                    'If hproj.projectType = ptPRPFType.portfolio Then
+                    '    tmpVariantName = portfolioVName
+                    'End If
 
                     Dim repObj As Excel.ChartObject
                     appInstance.EnableEvents = False
@@ -7278,9 +7280,10 @@ Imports System.Web
 
                 ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                 Dim tmpVariantName As String = ""
-                If hproj.projectType = ptPRPFType.portfolio Then
-                    tmpVariantName = portfolioVName
-                End If
+                ' tk 28.12.18 deprecated
+                'If hproj.projectType = ptPRPFType.portfolio Then
+                '    tmpVariantName = portfolioVName
+                'End If
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -7905,9 +7908,10 @@ Imports System.Web
 
                 ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                 Dim tmpVariantName As String = ""
-                If hproj.projectType = ptPRPFType.portfolio Then
-                    tmpVariantName = portfolioVName
-                End If
+                ' tk 28.12.18 deprecated
+                'If hproj.projectType = ptPRPFType.portfolio Then
+                '    tmpVariantName = portfolioVName
+                'End If
 
                 ' das bproj bestimmen 
                 bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)

@@ -1860,8 +1860,8 @@ Public Module awinGeneralModules
             If collectionsAreDifferent(uRoles, GPRoles) Then
                 tmpResult = False
             Else
-                showRangeLeft = getColumnOfDate(CDate("1.1.2018"))
-                showRangeRight = getColumnOfDate(CDate("31.12.2018"))
+                showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
+                showRangeRight = getColumnOfDate(CDate("31.12.2019"))
 
                 For Each tmpRole As String In uRoles
                     Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRole)
@@ -2175,6 +2175,7 @@ Public Module awinGeneralModules
 
                 newCItem.start = impProjekt.startDate
                 newCItem.zeile = lfdZeilenNr
+                newCItem.projectTyp = CType(impProjekt.projectType, ptPRPFType).ToString
                 'newCItem.zeile = lfdZeilenNr
                 newC.add(newCItem, sKey:=lfdZeilenNr)
 
@@ -3029,7 +3030,7 @@ Public Module awinGeneralModules
                             End If
                         End If
 
-                        unionProj.variantName = portfolioVName
+                        unionProj.variantName = ""
                         unionProj = unionProj.unionizeWith(hproj)
 
                     End If
@@ -3122,7 +3123,7 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
                 ' hier wird das Summary Projekt immer neu gebildet .. evtl ist das an der Stelle unnötig; das wird sich zeigen müssen 
-                Dim curSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, portfolioVName, AlleProjekte, storedAtOrBefore)
+                Dim curSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, "", AlleProjekte, storedAtOrBefore)
                 Dim oldBudget As Double = 0.0
                 If Not IsNothing(curSummaryProj) Then
                     oldBudget = curSummaryProj.Erloes
@@ -3141,7 +3142,8 @@ Public Module awinGeneralModules
                         Dim cItem As New clsConstellationItem
                         With cItem
                             .projectName = kvp.Value.constellationName
-                            .variantName = portfolioVName
+                            .variantName = ""
+                            .projectTyp = CType(curSummaryProj.projectType, ptPRPFType).ToString
                             .zeile = zaehler
                             .show = True
                         End With
@@ -3357,7 +3359,7 @@ Public Module awinGeneralModules
                 budget = -1
             End If
 
-            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, portfolioVName, AlleProjekte, Date.Now)
+            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, "", AlleProjekte, Date.Now)
             If Not IsNothing(oldSummaryP) Then
                 budget = oldSummaryP.budgetWerte.Sum
             End If
@@ -6610,9 +6612,10 @@ Public Module awinGeneralModules
 
             ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
             Dim tmpVariantName As String = ""
-            If hproj.projectType = ptPRPFType.portfolio Then
-                tmpVariantName = portfolioVName
-            End If
+            ' tk 28.12.18 deprectaed
+            'If hproj.projectType = ptPRPFType.portfolio Then
+            '    tmpVariantName = portfolioVName
+            'End If
 
             With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentWsName), Excel.Worksheet)
                 Dim tmpArray() As String

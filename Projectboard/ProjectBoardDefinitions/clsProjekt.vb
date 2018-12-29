@@ -1073,7 +1073,7 @@ Public Class clsProjekt
     Public ReadOnly Property getShapeText() As String
         Get
             If Not IsNothing(Me.variantName) Then
-                If Me.variantName.Length > 0 And Me.variantName <> portfolioVName Then
+                If Me.variantName.Length > 0 Then
                     getShapeText = Me.name & "[ " & Me.variantName & " ]"
                 Else
                     getShapeText = Me.name
@@ -2841,6 +2841,7 @@ Public Class clsProjekt
         For i As Integer = 1 To CountPhases
 
             Dim cphase As clsPhase = getPhase(i)
+            Dim newPhase As clsPhase = newProj.getPhase(i)
             Dim toDoList As New SortedList(Of String, clsRolle)
             Dim toDoListSR As New SortedList(Of String, Integer)
 
@@ -2885,7 +2886,7 @@ Public Class clsProjekt
                     Dim sRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(toDoListSR.Item(kvp.Key))
 
                     ' jetzt wird die alte Rolle removed ..
-                    cphase.removeRoleByNameID(kvp.Key)
+                    newPhase.removeRoleByNameID(kvp.Key)
 
                     ' jetzt wird der Umrechnungsfaktor bestimmt 
                     Dim curTagessatz As Double = kvp.Value.tagessatzIntern
@@ -2905,7 +2906,7 @@ Public Class clsProjekt
                     kvp.Value.teamID = -1
 
                     ' jetzt wird sie in die Phase aufgenommen ..
-                    cphase.addRole(kvp.Value)
+                    newPhase.addRole(kvp.Value)
 
                 Next
 
@@ -3090,7 +3091,7 @@ Public Class clsProjekt
             .farbe = Me.farbe
             .Schrift = Me.Schrift
             .Schriftfarbe = Me.Schriftfarbe
-            .VorlagenName = portfolioVName
+            .VorlagenName = ""
             .Risiko = Me.Risiko
             .StrategicFit = Me.StrategicFit
             .Erloes = Me.Erloes + otherProj.Erloes

@@ -194,9 +194,9 @@ Public Module Module1
     Public Const rootPhaseName As String = "0§.§"
 
     ' diese Konstante bestimmt, welchen Varianten Namen Portfolios bzw. Programme bekommen 
-    Public Const portfolioVName As String = "Portfolio/Prog."
+    'Public Const portfolioVName As String = ""
     ' diese Konstante bestimmt, wie die Variante heissen soll, die die Ist-Daten - zumindest temporär - aufnimmt 
-    Public Const istDatenVName As String = "ActualData"
+    'Public Const istDatenVName As String = "ActualData"
     ' diese Konstante wird benutzt, wenn keine Variante angegeben wurde, d.h. meistens das alle Variante relevant sind.
     Public Const noVariantName As String = "-9999999"
 
@@ -252,6 +252,11 @@ Public Module Module1
 
 
     Public Const maxProjektdauer As Integer = 60
+
+    Public Enum ptVariantFixNames
+        pfv = 0 ' für den Portfolio Manager, für die Vorgaben reserviert
+        acd = 1 ' ggf später für ActualData 
+    End Enum
 
     Public settingTypes() = {"customfields", "customroles", "organisation", "clientsettings", "phasemilestonedefs", "reportprofiles", "reportprofiles", "generalexcelcharts"}
 
@@ -823,6 +828,7 @@ Public Module Module1
         ChangeRequest = 2
         abgebrochen = 3
         abgeschlossen = 4
+        ' die beiden folgenden nicht mehr verwenden ! 
         geplanteVorgabe = 5
         beauftragteVorgabe = 6
     End Enum

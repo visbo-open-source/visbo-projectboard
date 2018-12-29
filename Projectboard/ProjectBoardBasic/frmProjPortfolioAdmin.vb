@@ -2411,15 +2411,23 @@ Public Class frmProjPortfolioAdmin
 
                                 Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
 
+
+
                                 If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
                                     ' nichts tun , ist schon drin 
                                     currentBrowserConstellation.getItem(calcProjektKey(pname, variantName)).show = showAttribute
                                 Else
                                     Dim cItem As New clsConstellationItem
+                                    ' tk 28.12.18 , um nachher das Attribut setzen zu können
+                                    Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(pname, variantName, AlleProjekte, Date.Now)
+
                                     With cItem
                                         .projectName = pname
                                         .variantName = variantName
                                         .show = showAttribute
+                                        If Not IsNothing(tmpProj) Then
+                                            .projectTyp = CType(tmpProj.projectType, ptPRPFType).ToString
+                                        End If
                                     End With
                                     currentBrowserConstellation.add(cItem)
                                 End If
@@ -2485,9 +2493,16 @@ Public Class frmProjPortfolioAdmin
                                         ' nichts tun , ist schon drin 
                                     Else
                                         Dim cItem As New clsConstellationItem
+
+                                        ' tk 28.12.18 , um nachher das Attribut setzen zu können
+                                        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(pname, variantName, AlleProjekte, Date.Now)
+
                                         With cItem
                                             .projectName = pname
                                             .variantName = variantName
+                                            If Not IsNothing(tmpProj) Then
+                                                .projectTyp = CType(tmpProj.projectType, ptPRPFType).ToString
+                                            End If
                                             .show = (v = 1)
                                         End With
                                         currentBrowserConstellation.add(cItem)
@@ -2617,7 +2632,7 @@ Public Class frmProjPortfolioAdmin
                             budget = -1
                         End If
 
-                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, portfolioVName, AlleProjekte, Date.Now)
+                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, "", AlleProjekte, Date.Now)
                         If Not IsNothing(oldSummaryP) Then
                             budget = oldSummaryP.budgetWerte.Sum
                         End If

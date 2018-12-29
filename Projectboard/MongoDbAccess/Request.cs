@@ -364,11 +364,11 @@ namespace MongoDbAccess
     
         /// <summary>
         /// holt die erste beauftragte Version des Projects 
-        /// muss bei Projekten aufgerufen werden mit "", bei Summary Projekten mit VPortfolioName
-        /// </summary>
+        /// muss bei Projekten aufgerufen werden mit "", 
         /// <param name="projectname">gibt den Projektnamen an </param>
         /// <param name="variantName">gibt den Varianten-Namen an</param>
         /// <returns></returns>
+        /// </summary>
         public clsProjekt retrieveFirstContractedPFromDB(string projectname, string variantName)
         {
             var result = new clsProjektDB();                       
@@ -410,7 +410,7 @@ namespace MongoDbAccess
         }
 
         /// <summary>
-        /// gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; bei Projekten muss variantNAme = "" sein, bei Summary Projekten VPortfolioName
+        /// gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; 
         /// </summary>
         /// <param name="projectname">beuaftragte werden nur von Variant-Name "" gesucht </param>
         /// <param name="storedAtOrBefore"></param>
