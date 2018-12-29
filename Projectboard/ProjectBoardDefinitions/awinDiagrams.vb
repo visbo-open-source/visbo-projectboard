@@ -5821,7 +5821,9 @@ Public Module awinDiagrams
                                  Optional ByVal roleCost As String = Nothing)
         Dim anz_diagrams As Integer
         Dim chtobj As ChartObject
-        Dim formerActiveSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+        ' tk 28.12.18  ein Wechsel soll / darf nicht gemacht werden; das führt ggf zu Schwierigkeiten
+        'Dim formerActiveSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
+
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
 
@@ -5858,14 +5860,6 @@ Public Module awinDiagrams
             currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
-        ' nur etwas tun, wenn ShowProjekte.count > 0 ...
-        'If ShowProjekte.Count > 0 Then
-
-        ' temporärer Check: 
-        'If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
-        '    Call MsgBox("Fehler: " & currentSheetName & " ist ungleich " & _
-        '                CType(appInstance.ActiveSheet, Excel.Worksheet).Name)
-        'End If
 
 
         ' typus:
@@ -5882,24 +5876,8 @@ Public Module awinDiagrams
         ' Schutz Funktion : wenn showrangeleft = 0 und showrangeright = 0 , dann nichts tun
         If showRangeRight - showRangeLeft >= minColumns - 1 Then
 
-            ' wenn das ActiveSheet ungleich dem currentSheetName ist, muss gewechselt werden ... 
-            If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> currentSheetName Then
-                appInstance.ScreenUpdating = False
-                appInstance.EnableEvents = False
-                CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet).Activate()
-            End If
-
             With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentSheetName), Excel.Worksheet)
 
-                ' 24.5.17 das wird nicht mehr benötigt, weil die Charts jetzt in einem eigenen Sheet sind ... 
-                'Dim wasProtected As Boolean = False
-                'If currentSheetName = arrWsNames(ptTables.meRC) Then
-                '    wasProtected = .ProtectContents
-
-                '    If wasProtected And visboZustaende.projectBoardMode = ptModus.massEditRessCost Then
-                '        .Unprotect(Password:="x")
-                '    End If
-                'End If
 
                 anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 For i = 1 To anz_diagrams
@@ -5910,21 +5888,21 @@ Public Module awinDiagrams
                         '
                         Case 8 ' Selection hat sich geändert 
 
-                            If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or
                                 istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
-                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, _
-                                                                    roleCost:=roleCost, _
+                                Call awinUpdateprcCollectionDiagram(chtobj:=chtobj,
+                                                                    roleCost:=roleCost,
                                                                     isRole:=isRole)
 
                             End If
                         Case 99
                             ' nur die Strategie - / Risiko Diagramme sollen neu gezeichnet, d.h die Markierungen zurückgesetzt werden 
                             If istSummenDiagramm(chtobj, p) Then
-                                If p = PTpfdk.Dependencies Or _
-                                       p = PTpfdk.FitRisiko Or _
-                                       p = PTpfdk.FitRisikoVol Or _
-                                       p = PTpfdk.ZeitRisiko Or _
+                                If p = PTpfdk.Dependencies Or
+                                       p = PTpfdk.FitRisiko Or
+                                       p = PTpfdk.FitRisikoVol Or
+                                       p = PTpfdk.ZeitRisiko Or
                                        p = PTpfdk.ComplexRisiko Then
                                     Call awinUpdateMarkerInPortfolioDiagrams(chtobj)
                                     'Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.AmpelFarbe)
@@ -5941,7 +5919,7 @@ Public Module awinDiagrams
                             ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
                             ' 9: Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
-                            If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or
                                 istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
 
                                 Call awinUpdateprcCollectionDiagram(chtobj:=chtobj, roleCost:=roleCost, isRole:=isRole)
@@ -5952,10 +5930,10 @@ Public Module awinDiagrams
                                 If p = PTpfdk.ErgebnisWasserfall Then
                                     Call awinUpdateErgebnisDiagramm(chtobj)
 
-                                ElseIf p = PTpfdk.Dependencies Or _
-                                       p = PTpfdk.FitRisiko Or _
-                                       p = PTpfdk.FitRisikoVol Or _
-                                       p = PTpfdk.ZeitRisiko Or _
+                                ElseIf p = PTpfdk.Dependencies Or
+                                       p = PTpfdk.FitRisiko Or
+                                       p = PTpfdk.FitRisikoVol Or
+                                       p = PTpfdk.ZeitRisiko Or
                                        p = PTpfdk.ComplexRisiko Then
 
                                     Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.AmpelFarbe)
@@ -5998,17 +5976,32 @@ Public Module awinDiagrams
 
                 Next i
 
-                ' wenn das ActiveSheet ungleich dem currentSheetName war, muss jetzt zurück gewechselt werden ... 
-                Dim xName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
-                If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> formerActiveSheet.Name Then
-                    CType(formerActiveSheet, Excel.Worksheet).Activate()
-                    If appInstance.EnableEvents <> formerEE Then
-                        appInstance.EnableEvents = formerEE
-                    End If
-                    If appInstance.ScreenUpdating <> formerSU Then
-                        appInstance.ScreenUpdating = formerSU
-                    End If
+                If appInstance.EnableEvents <> formerEE Then
+                    appInstance.EnableEvents = formerEE
                 End If
+
+                'CType(formerActiveSheet, Excel.Worksheet).Activate()
+
+                If appInstance.ScreenUpdating <> formerSU Then
+                    appInstance.ScreenUpdating = formerSU
+                End If
+
+                ' tk 28.12.18 deprectaed, unsinnig!?
+                ' wenn das ActiveSheet ungleich dem currentSheetName war, muss jetzt zurück gewechselt werden ... 
+                'Dim xName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
+                'If CType(appInstance.ActiveSheet, Excel.Worksheet).Name <> formerActiveSheet.Name Then
+
+                '    If appInstance.EnableEvents <> formerEE Then
+                '        appInstance.EnableEvents = formerEE
+                '    End If
+
+                '    'CType(formerActiveSheet, Excel.Worksheet).Activate()
+
+                '    If appInstance.ScreenUpdating <> formerSU Then
+                '        appInstance.ScreenUpdating = formerSU
+                '    End If
+                'End If
+                ' Ende Änderung 28.12.18
 
                 ' tk 24.5.17 das wird nicht mehr benötigt, weil die Charts jetzt in einem Extra Sheet sind ... 
                 '' '' wenn es geschützt war .. 

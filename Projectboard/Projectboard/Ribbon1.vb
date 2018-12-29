@@ -4990,6 +4990,7 @@ Imports System.Web
 
                                 projectConstellations.Add(sessionConstellationS)
                                 ' jetzt auf Projekt-Tafel anzeigen 
+
                                 Call loadSessionConstellation(scenarioNameS, False, False, True)
 
                             Else
@@ -5024,6 +5025,7 @@ Imports System.Web
 
                     Call logfileSchliessen()
 
+
                 Catch ex As Exception
                     Call logfileSchliessen()
 
@@ -5040,7 +5042,12 @@ Imports System.Web
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
+
+        'projectboardWindows(PTwindows.mpt).Activate()
+
         appInstance.ScreenUpdating = True
+
+
 
 
 

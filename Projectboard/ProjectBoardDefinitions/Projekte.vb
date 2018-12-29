@@ -16295,7 +16295,8 @@ Public Module Projekte
 
         ' jetzt müssen alle Shapes, die keine Charts sind, gelöscht werden ....
 
-        For Each shp As Excel.Shape In CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+
+        For Each shp As Excel.Shape In CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
             Try
                 If CBool(shp.HasChart) Then
@@ -16559,9 +16560,13 @@ Public Module Projekte
 
             'appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
+
             Call awinClearPlanTafel()
+
             Call awinZeichnePlanTafel(True)
+
             Call awinNeuZeichnenDiagramme(2)
+            'Dim vglName as string = CType(projectboardWindows(PTwindows.mpt).ActiveSheet, Excel.Worksheet).Name
             'Call diagramsVisible(True)
             'appInstance.ScreenUpdating = True
 
