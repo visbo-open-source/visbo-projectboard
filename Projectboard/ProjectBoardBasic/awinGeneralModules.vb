@@ -3268,6 +3268,9 @@ Public Module awinGeneralModules
 
             Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
 
+            ' prüfen auf Rolle 
+            Call hproj.setVariantNameAccordingUserRole()
+
             If Not IsNothing(hproj) Then
                 If hproj.projectType = ptPRPFType.portfolio Then
                     ' dann muss erst diese Child-Constellation gespeichert werden ...
@@ -3358,8 +3361,12 @@ Public Module awinGeneralModules
             If budget = 0 Then
                 budget = -1
             End If
+            Dim tmpVariantName As String = ""
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                tmpVariantName = ptVariantFixNames.pfv.ToString
+            End If
+            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
 
-            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, "", AlleProjekte, Date.Now)
             If Not IsNothing(oldSummaryP) Then
                 budget = oldSummaryP.budgetWerte.Sum
             End If

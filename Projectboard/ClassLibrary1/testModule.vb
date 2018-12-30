@@ -6252,6 +6252,12 @@ Public Module testModule
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                     Try
+                        ' wenn es sich jetzt um einen Portfolio Manager handelt 
+                        ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
+                        ' es handelt sich bereits um die pfv Variante 
+                        ' prüfen auf Rolle 
+                        Call kvp.Value.setVariantNameAccordingUserRole()
+
                         Dim pvName As String = calcProjektKey(kvp.Value.name, kvp.Value.variantName)
                         If Not writeProtections.isProtected(pvName, dbUsername) Then
                             ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
@@ -6304,7 +6310,7 @@ Public Module testModule
                                         outPutCollection.Add(outputline)
                                     End If
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, Err)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, err)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -6593,6 +6599,13 @@ Public Module testModule
 
                     Try
                         hilfshproj = ShowProjekte.getProject(singleShp1.Name, True)
+
+                        ' wenn es sich jetzt um einen Portfolio Manager handelt 
+                        ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
+                        ' es handelt sich bereits um die pfv Variante 
+                        ' prüfen auf Rolle 
+                        Call hilfshproj.setVariantNameAccordingUserRole()
+
 
                     Catch ex As Exception
                         Throw New ArgumentException("Projekt nicht gefunden ...")

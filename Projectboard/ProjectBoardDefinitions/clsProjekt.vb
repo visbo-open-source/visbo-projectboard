@@ -2920,6 +2920,26 @@ Public Class clsProjekt
     End Function
 
     ''' <summary>
+    ''' setzt den Varianten-Namen entsprechend der customUSerRole
+    ''' wird üblicherweise vor dem Speichern aufgerufen:
+    ''' - ein Portfolio Manager schreibt nur mit Varianten-Name "pfv" oder einem anderen Varianten-Namen
+    ''' - ein Resource Manager schreibt nur mit Varianten-NAme "" oder einem anderen Varianten-Namen 
+    ''' </summary>
+    Public Sub setVariantNameAccordingUserRole()
+
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            If variantName = "" Then
+                variantName = ptVariantFixNames.pfv.ToString
+            End If
+        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            If variantName = ptVariantFixNames.pfv.ToString Then
+                variantName = ""
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' true, wenn die Anzahl Phase und die einzelnen PhaseNameIDs identisch sind und ebenso die Start- und Endezeitpunkte 
     ''' </summary>
     ''' <param name="vglProj"></param>

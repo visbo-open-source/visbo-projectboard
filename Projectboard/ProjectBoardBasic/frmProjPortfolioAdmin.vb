@@ -18,7 +18,12 @@ Public Class frmProjPortfolioAdmin
     ' PlusMinus Saving 
     Private browserConstellationSavPM As clsConstellation = Nothing
     ' wenn aus der Datenbank schnell gelesen werden soll ..
+
+    ' die  pvNameslistRaw enthält alle Varianten sowohl die Basis-Variante, die pfv-Variante und alle anderen 
+    Private pvNamesListRaw As New SortedList(Of String, String)
+    ' die pvNamesList enthält nur die BasisVariante+alle anderen bzw. die pfv-Variante plus alle anderen
     Private pvNamesList As New SortedList(Of String, String)
+
     Private quickList As Boolean
     Private lastIndexChecked As Integer = -1
     Private lastLevelChecked As Integer = -1
@@ -121,6 +126,8 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Activate Variant"
                 End If
 
+                .showPFV.Visible = False
+
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
 
@@ -156,6 +163,8 @@ Public Class frmProjPortfolioAdmin
                 Else
                     .Text = "Portfolio "
                 End If
+
+                .showPFV.Visible = False
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -223,6 +232,8 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete Variant"
                 End If
 
+                .showPFV.Visible = False
+
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
 
@@ -265,6 +276,11 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete projects, variants, timestamps from DB"
                 End If
 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    .showPFV.Visible = True
+                Else
+                    .showPFV.Visible = False
+                End If
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -307,6 +323,11 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete all timestamps except ..."
                 End If
 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    .showPFV.Visible = True
+                Else
+                    .showPFV.Visible = False
+                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -360,6 +381,7 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete projects, variants from Session"
                 End If
 
+                .showPFV.Visible = False
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -398,6 +420,11 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Load projects and variants to the session "
                 End If
 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    .showPFV.Visible = True
+                Else
+                    .showPFV.Visible = False
+                End If
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -438,6 +465,8 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Load projects and variants to the session "
                 End If
 
+                .showPFV.Visible = False
+
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
 
@@ -474,6 +503,8 @@ Public Class frmProjPortfolioAdmin
                 Else
                     .Text = "Write Protections for Project Variants"
                 End If
+
+                .showPFV.Visible = False
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -525,8 +556,8 @@ Public Class frmProjPortfolioAdmin
 
         ' den hilfetext setzen ...
         If awinSettings.englishLanguage Then
-            Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf & _
-                                                  "das ist die 1.Zeile " & vbLf & _
+            Me.portfolioBrowserHelp.SetHelpString(TreeViewProjekte, "HelpMessage TreeView" & vbLf &
+                                                  "das ist die 1.Zeile " & vbLf &
                                                   "das ist die zweite Zeile")
             Me.portfolioBrowserHelp.SetShowHelp(TreeViewProjekte, True)
         End If
@@ -548,8 +579,8 @@ Public Class frmProjPortfolioAdmin
 
 
         ' bestimmen, ob es sich um quicklist handelt ...
-        If aKtionskennung = PTTvActions.loadPV Or _
-            aKtionskennung = PTTvActions.delFromDB Or _
+        If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.delFromDB Or
             aKtionskennung = PTTvActions.delAllExceptFromDB Then
             quickList = True
         Else
@@ -563,39 +594,18 @@ Public Class frmProjPortfolioAdmin
         ' wie heisst das aktuelle Szenario ? 
         Me.Text = Me.Text & ": " & currentConstellationName
 
-        ' '' jetzt muss bestimmt werden , was die aktuelle SessionConstellation ist 
-        ''If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
-        ''    currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy("Last")
-        ''    'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
-
-        ''ElseIf projectConstellations.Contains("Last") And AlleProjekte.Count > 0 Then
-        ''    currentBrowserConstellation = projectConstellations.getConstellation("Last")
-        ''    'browserAlleProjekte = AlleProjekte.createCopy(filteredBy:=currentBrowserConstellation)
-
-        ''ElseIf AlleProjekte.Count > 0 Then
-        ''    'browserAlleProjekte = AlleProjekte.createCopy
-        ''    'currentBrowserConstellation = New clsConstellation(browserAlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
-        ''    currentBrowserConstellation = New clsConstellation(AlleProjekte, Nothing, "Last", ptSzenarioConsider.all)
-        ''End If
-
         ' neuer Ansatz
-        '' das hier nicht machen, weil man damit nicht mehr an alle kommt 
         If Not quickList Then
             If projectConstellations.Contains(currentConstellationName) And AlleProjekte.Count > 0 Then
+
                 currentBrowserConstellation = projectConstellations.getConstellation(currentConstellationName).copy()
 
-
-                'ElseIf projectConstellations.Contains(calcLastEditorScenarioName) And AlleProjekte.Count > 0 Then
-                '    currentBrowserConstellation = projectConstellations.getConstellation(calcLastEditorScenarioName)
-
-
             ElseIf AlleProjekte.Count > 0 Then
+
                 currentBrowserConstellation = currentSessionConstellation.copy()
+
             End If
         End If
-
-
-
 
         ' jetzt die Korrektheitsprüfung ...
         If awinSettings.visboDebug And aKtionskennung = PTTvActions.chgInSession Then
@@ -606,9 +616,9 @@ Public Class frmProjPortfolioAdmin
         ' jetzt die vorkommenden Timestamps auslesen 
         ' aber nicht bei allen Aktionskennungen 
 
-        If aKtionskennung = PTTvActions.chgInSession Or _
-            aKtionskennung = PTTvActions.delFromSession Or _
-            aKtionskennung = PTTvActions.deleteV Or _
+        If aKtionskennung = PTTvActions.chgInSession Or
+            aKtionskennung = PTTvActions.delFromSession Or
+            aKtionskennung = PTTvActions.deleteV Or
             aKtionskennung = PTTvActions.activateV Then
 
         Else
@@ -623,13 +633,6 @@ Public Class frmProjPortfolioAdmin
                     earliestDate = Date.Now.Date.AddHours(23).AddMinutes(59)
                 End If
 
-
-                'dropBoxTimeStamps.Items.Clear()
-
-                'For k As Integer = 1 To tCollection.Count
-                '    Dim tmpDate As Date = CDate(tCollection.Item(k))
-                '    dropBoxTimeStamps.Items.Add(tmpDate)
-                'Next
 
             Catch ex As Exception
 
@@ -660,12 +663,15 @@ Public Class frmProjPortfolioAdmin
         Dim storedAtOrBefore As Date = Date.Now.Date.AddHours(23).AddMinutes(59)
         requiredDate.Value = storedAtOrBefore
 
+
         ' hier wird jetzt die Browser Gesamt-Liste bestimmt  
-        If aKtionskennung = PTTvActions.loadPV Or _
-            aKtionskennung = PTTvActions.delFromDB Or _
+        If aKtionskennung = PTTvActions.loadPV Or
+            aKtionskennung = PTTvActions.delFromDB Or
             aKtionskennung = PTTvActions.delAllExceptFromDB Then
 
-            pvNamesList = buildPvNamesList(storedAtOrBefore)
+            ' hier wird jetzt die Raw-List geholt, d.h die enthält neben allen anderen Varianten auch die Basis- und Vorgabe-(PFV)Variante 
+            pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
+            pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
             quickList = True
 
             If pvNamesList.Count = 0 Then
@@ -684,7 +690,9 @@ Public Class frmProjPortfolioAdmin
                 pvNamesList.Clear()
             Else
 
-                pvNamesList = buildPvNamesList(storedAtOrBefore)
+                ' hier wird jetzt die Raw-List geholt, d.h die enthält neben allen anderen Varianten auch die Basis- und Vorgabe-(PFV)Variante 
+                pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
+                pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
                 quickList = True
 
                 If pvNamesList.Count = 0 Then
@@ -723,9 +731,38 @@ Public Class frmProjPortfolioAdmin
         dropboxScenarioNames.Focus()
 
 
-        
+
 
     End Sub
+
+    ''' <summary>
+    ''' die Rawliste enthält alle Varianten, inkl der Basis- wie der Vorgabe-Varianten
+    ''' mit dieser Funktion wird die Liste entweder bereinigt um die Basis- oder die PFV-Variante 
+    ''' </summary>
+    ''' <param name="completeList"></param>
+    ''' <param name="showPFV"></param>
+    ''' <returns></returns>
+    Private Function reduceRawListTo(ByVal completeList As SortedList(Of String, String), ByVal showPFV As Boolean) As SortedList(Of String, String)
+        Dim tmpResult As New SortedList(Of String, String)
+        Dim ausschluss As String = ""
+        If showPFV Then
+            ausschluss = ""
+        Else
+            ausschluss = ptVariantFixNames.pfv.ToString
+        End If
+
+        For Each kvp As KeyValuePair(Of String, String) In completeList
+
+            Dim vName As String = getVariantnameFromKey(kvp.Key)
+
+            If Not vName = ausschluss Then
+                tmpResult.Add(kvp.Key, kvp.Value)
+            End If
+
+        Next
+
+        reduceRawListTo = tmpResult
+    End Function
 
 
     Private Sub TreeViewProjekte_AfterCheck(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterCheck
@@ -3956,6 +3993,24 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
+    Private Sub showPFV_CheckedChanged(sender As Object, e As EventArgs) Handles showPFV.CheckedChanged
+
+        If stopRecursion Then
+            Exit Sub
+        End If
+
+        stopRecursion = True
+
+        pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
+        Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
+
+        stopRecursion = False
+
+
+        ' Fokus an TreeViewPRojekte geben 
+        TreeViewProjekte.Focus()
+
+    End Sub
 
 
     Private Sub requiredDate_ValueChanged(sender As Object, e As EventArgs) Handles requiredDate.ValueChanged
@@ -4000,8 +4055,10 @@ Public Class frmProjPortfolioAdmin
         If aKtionskennung = PTTvActions.loadPV Or _
             aKtionskennung = PTTvActions.delFromDB Then
 
-            pvNamesList = buildPvNamesList(storedAtOrBefore)
+            pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
+            pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
             quickList = True
+
         End If
 
         Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
@@ -4643,7 +4700,6 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    Private Sub frmProjPortfolioAdmin_Resize(sender As Object, e As EventArgs) Handles Me.Resize
 
-    End Sub
+
 End Class
