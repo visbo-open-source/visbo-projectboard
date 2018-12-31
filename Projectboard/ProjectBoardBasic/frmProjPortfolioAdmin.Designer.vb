@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class frmProjPortfolioAdmin
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,7 +20,7 @@ Partial Class frmProjPortfolioAdmin
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.  
     'Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmProjPortfolioAdmin))
@@ -45,7 +45,6 @@ Partial Class frmProjPortfolioAdmin
         Me.requiredDate = New System.Windows.Forms.DateTimePicker()
         Me.chkbxPermanent = New System.Windows.Forms.CheckBox()
         Me.portfolioBrowserHelp = New System.Windows.Forms.HelpProvider()
-        Me.showPFV = New System.Windows.Forms.CheckBox()
         CType(Me.versionsToKeep, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.backToInit, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.onlyInactive, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -62,7 +61,7 @@ Partial Class frmProjPortfolioAdmin
         '
         Me.TreeViewProjekte.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.TreeViewProjekte.Location = New System.Drawing.Point(22, 32)
-        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
         Me.TreeViewProjekte.Size = New System.Drawing.Size(296, 310)
         Me.TreeViewProjekte.TabIndex = 1
@@ -259,22 +258,11 @@ Partial Class frmProjPortfolioAdmin
         Me.chkbxPermanent.Text = "permanent"
         Me.chkbxPermanent.UseVisualStyleBackColor = True
         '
-        'showPFV
-        '
-        Me.showPFV.AutoSize = True
-        Me.showPFV.Location = New System.Drawing.Point(22, 422)
-        Me.showPFV.Name = "showPFV"
-        Me.showPFV.Size = New System.Drawing.Size(98, 17)
-        Me.showPFV.TabIndex = 73
-        Me.showPFV.Text = "load Allowance"
-        Me.showPFV.UseVisualStyleBackColor = True
-        '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(343, 473)
-        Me.Controls.Add(Me.showPFV)
         Me.Controls.Add(Me.chkbxPermanent)
         Me.Controls.Add(Me.requiredDate)
         Me.Controls.Add(Me.storeToDBasWell)
@@ -335,5 +323,4 @@ Partial Class frmProjPortfolioAdmin
     Friend WithEvents requiredDate As System.Windows.Forms.DateTimePicker
     Friend WithEvents chkbxPermanent As System.Windows.Forms.CheckBox
     Friend WithEvents portfolioBrowserHelp As System.Windows.Forms.HelpProvider
-    Friend WithEvents showPFV As Windows.Forms.CheckBox
 End Class

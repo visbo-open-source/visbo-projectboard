@@ -126,8 +126,6 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Activate Variant"
                 End If
 
-                .showPFV.Visible = False
-
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
 
@@ -163,8 +161,6 @@ Public Class frmProjPortfolioAdmin
                 Else
                     .Text = "Portfolio "
                 End If
-
-                .showPFV.Visible = False
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -232,8 +228,6 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete Variant"
                 End If
 
-                .showPFV.Visible = False
-
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
 
@@ -276,11 +270,6 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete projects, variants, timestamps from DB"
                 End If
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    .showPFV.Visible = True
-                Else
-                    .showPFV.Visible = False
-                End If
 
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
@@ -323,11 +312,6 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete all timestamps except ..."
                 End If
 
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    .showPFV.Visible = True
-                Else
-                    .showPFV.Visible = False
-                End If
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -381,8 +365,6 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Delete projects, variants from Session"
                 End If
 
-                .showPFV.Visible = False
-
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
 
@@ -418,12 +400,6 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Projekte und Varianten in die Session laden "
                 Else
                     .Text = "Load projects and variants to the session "
-                End If
-
-                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    .showPFV.Visible = True
-                Else
-                    .showPFV.Visible = False
                 End If
 
                 .requiredDate.Visible = True
@@ -465,8 +441,6 @@ Public Class frmProjPortfolioAdmin
                     .Text = "Load projects and variants to the session "
                 End If
 
-                .showPFV.Visible = False
-
                 .requiredDate.Visible = True
                 .lblStandvom.Visible = True
 
@@ -503,8 +477,6 @@ Public Class frmProjPortfolioAdmin
                 Else
                     .Text = "Write Protections for Project Variants"
                 End If
-
-                .showPFV.Visible = False
 
                 .requiredDate.Visible = False
                 .lblStandvom.Visible = False
@@ -671,7 +643,7 @@ Public Class frmProjPortfolioAdmin
 
             ' hier wird jetzt die Raw-List geholt, d.h die enthält neben allen anderen Varianten auch die Basis- und Vorgabe-(PFV)Variante 
             pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
-            pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
+            pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
             quickList = True
 
             If pvNamesList.Count = 0 Then
@@ -692,7 +664,7 @@ Public Class frmProjPortfolioAdmin
 
                 ' hier wird jetzt die Raw-List geholt, d.h die enthält neben allen anderen Varianten auch die Basis- und Vorgabe-(PFV)Variante 
                 pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
-                pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
+                pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
                 quickList = True
 
                 If pvNamesList.Count = 0 Then
@@ -3993,7 +3965,7 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    Private Sub showPFV_CheckedChanged(sender As Object, e As EventArgs) Handles showPFV.CheckedChanged
+    Private Sub showPFV_CheckedChanged(sender As Object, e As EventArgs)
 
         If stopRecursion Then
             Exit Sub
@@ -4001,7 +3973,7 @@ Public Class frmProjPortfolioAdmin
 
         stopRecursion = True
 
-        pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
+        pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
         Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
 
         stopRecursion = False
@@ -4056,7 +4028,7 @@ Public Class frmProjPortfolioAdmin
             aKtionskennung = PTTvActions.delFromDB Then
 
             pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
-            pvNamesList = reduceRawListTo(pvNamesListRaw, showPFV.Checked)
+            pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
             quickList = True
 
         End If
