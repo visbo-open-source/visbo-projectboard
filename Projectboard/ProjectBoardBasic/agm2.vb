@@ -6967,6 +6967,7 @@ Public Module agm2
             tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
         End If
 
+        allCustomUserRoles = tmpResult
     End Sub
 
     ''' <summary>

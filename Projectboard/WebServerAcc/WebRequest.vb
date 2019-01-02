@@ -1792,17 +1792,18 @@ Public Class Request
 
 
             Dim listofCURsWeb As New clsCustomUserRolesWeb
-            Dim listlistofCURsWeb As New List(Of clsCustomUserRolesWeb)
+
+            listofCURsWeb.copyFrom(listofCustomUserRoles)
 
             ' hier fehtl noch der copyto und copyfrom für die customUserRollen
 
-            Dim CustUserRole As New clsCustomUserRoleWeb
-            CustUserRole.userID = aktUser._id
-            CustUserRole.userName = aktUser.email
-            CustUserRole.customUserRole = 1
-            CustUserRole.specifics = "testCustomRolle 1"
-            listofCURsWeb.customUserRoles.Add(CustUserRole)
-            'listlistofCURsWeb.Add(listofCURsWeb)
+            ''''Dim CustUserRole As New clsCustomUserRoleWeb
+            ''''CustUserRole.userID = aktUser._id
+            ''''CustUserRole.userName = aktUser.email
+            ''''CustUserRole.customUserRole = 1
+            ''''CustUserRole.specifics = "testCustomRolle 1"
+            ''''listofCURsWeb.customUserRoles.Add(CustUserRole)
+            '''''listlistofCURsWeb.Add(listofCURsWeb)
 
             ' der Unique-Key für customroles besteht aus: name, type
             If type = settingTypes(ptSettingTypes.customroles) Then
@@ -1907,11 +1908,7 @@ Public Class Request
         Dim result As String = ""
 
         Try
-
-
-
-
-
+            result = "not defined"
         Catch ex As Exception
 
         End Try
