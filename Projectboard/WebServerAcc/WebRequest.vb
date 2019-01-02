@@ -211,17 +211,21 @@ Public Class Request
 
             vpid = GETvpid(projectname, err)._id
 
+            ' tk 28.12.18 hier eigentlich kritisch
+            ' es kann nämlich den Fall geben, dass variantName <> "" existiert, aber variantNAme = "" existiert nicht 
+            ' vorläufig dringelassen - es wird gecheckt, ob der Fall überhaupt auftreten kann bzw. ob das nicht grundsätzlich verhindert werden soll  
+            'If vpid <> "" Then
             If vpid <> "" And variantname <> "" Then
-                ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
-                For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
-                    If vpVar.variantName = variantname Then
-                        If vpVar.createdAt <= storedAtorBefore Then
-                            result = True
-                            Exit For
+                    ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
+                    For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
+                        If vpVar.variantName = variantname Then
+                            If vpVar.createdAt <= storedAtorBefore Then
+                                result = True
+                                Exit For
+                            End If
                         End If
-                    End If
-                Next
-            Else
+                    Next
+                Else
                 result = (vpid <> "")
             End If
 
@@ -728,6 +732,11 @@ Public Class Request
                 projekt.variantName = standardVariante ' STANDARD-Variante
                 Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
 
+                ' jetzt müste der Fall behandelt werden: Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
+                ' warum wurde diese Änderung gemacht: bis heute 28.12.18 wurde nur die Variante-Version angelegt, aber keine Basis Variante ; das soll jetzt hier gemacht werden 
+                ' Anfang zusätzlicher Code von Ute ..
+                ' ...
+                ' Ende zusätzlicher Code von Ute 
             End If
 
             ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
@@ -1142,7 +1151,7 @@ Public Class Request
 
     End Function
     ''' <summary>
-    ''' gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; bei Projekten muss variantNAme = "" sein, bei Summary Projekten VPortfolioName
+    ''' gibt den zum Zeitpunkt zuletzt beauftragten Stand zurück; 
     ''' </summary>
     ''' <param name="projectname"></param>
     ''' <param name="variantname"></param>
@@ -4612,7 +4621,7 @@ Public Class Request
                 .start = vpfItem.start
                 .show = vpfItem.show
                 .zeile = vpfItem.zeile
-                .reasonToExclude = vpfItem.reasonToExclude
+                .projectTyp = vpfItem.reasonToExclude
                 .reasonToInclude = vpfItem.reasonToInclude
 
             End With
@@ -4645,7 +4654,7 @@ Public Class Request
                 result.start = cItem.start
                 result.show = cItem.show
                 result.zeile = cItem.zeile
-                result.reasonToExclude = cItem.reasonToExclude
+                result.reasonToExclude = cItem.projectTyp
                 result.reasonToInclude = cItem.reasonToInclude
 
             End With

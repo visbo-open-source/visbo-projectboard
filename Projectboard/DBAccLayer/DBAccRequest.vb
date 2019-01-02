@@ -385,7 +385,7 @@ Public Class Request
             Throw New ArgumentException(ex.Message)
         End Try
 
-        retrieveProjectsFromDB = result
+        retrieveProjectsFromDB = prepProjectsForRoles(result)
 
     End Function
 
@@ -467,7 +467,9 @@ Public Class Request
         Catch ex As Exception
 
         End Try
-        retrieveOneProjectfromDB = result
+
+
+        retrieveOneProjectfromDB = prepProjectForRoles(result)
 
     End Function
 
@@ -519,10 +521,10 @@ Public Class Request
     End Function
 
 
-
     ''' <summary>
     ''' speichert ein einzelnes Projekt in der Datenbank
     ''' Zeitstempel wird aus den Projekt-Infos genommen
+    ''' ein Protfolio Manager speicher immer mit entsprechendem Varianten-Name 
     ''' </summary>
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
@@ -531,6 +533,15 @@ Public Class Request
 
         Dim result As Boolean = False
         Try
+            ' tk 28.12.18
+            ' wenn es sich bei der aktuellen Rolle um den Portfolio Manager handelt, dann soll immer mit entsprechendem Varianten-Name gespeichert werden 
+            ' aber nur, wenn er nicht schon einen Varianten-Namen vergeben hat; 
+            ' also jedes Speichern der Basis-Variante eines Portfolio Managers hat den entsprechenden Varianten-Namen
+
+            ' prüfen auf Rolle 
+            Call projekt.setVariantNameAccordingUserRole()
+
+
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
@@ -692,7 +703,8 @@ Public Class Request
         Catch ex As Exception
             Throw New ArgumentException("retrieveProjectHistoryFromDB: " & ex.Message)
         End Try
-        retrieveProjectHistoryFromDB = result
+
+        retrieveProjectHistoryFromDB = prepProjectsForRoles(result)
 
     End Function
 
@@ -757,6 +769,10 @@ Public Class Request
         Dim result As New clsProjekt
         Try
 
+            ' tk 28.12.18 
+            ' es wird immer mit der durch den Portfolio Manager gemachten Vorgabe verglichen; und die hat immer den Varianten-Namen pfv (siehe Enum) 
+            variantname = ptVariantFixNames.pfv.ToString
+
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
@@ -801,6 +817,9 @@ Public Class Request
         Dim result As New clsProjekt
 
         Try
+            ' tk 28.12.18 
+            ' es wird immer mit der durch den Portfolio Manager gemachten Vorgabe verglichen; und die hat immer den Varianten-Namen pfv (siehe Enum) 
+            variantname = ptVariantFixNames.pfv.ToString
 
             If usedWebServer Then
                 Try

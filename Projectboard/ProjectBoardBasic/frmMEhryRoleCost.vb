@@ -219,20 +219,17 @@ Public Class frmMEhryRoleCost
             If RoleDefinitions.Count > 0 Then
                 Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-                ' wenn die Sicht eingeschränkt werden soll ... 
-                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-
-                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    If myCustomUserRole.specifics.Length > 0 Then
+                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
 
                             topNodes.Clear()
-                            topNodes.Add(RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit).UID)
+                            topNodes.Add(RoleDefinitions.getRoledef(myCustomUserRole.specifics).UID)
 
                         End If
-
                     End If
-                End If
 
+                End If
 
                 For i = 0 To topNodes.Count - 1
 
@@ -244,7 +241,7 @@ Public Class frmMEhryRoleCost
 
                     Dim nrTag As New clsNodeRoleTag
                     With nrTag
-                        If role.getSubRoleCount > 0 Then
+                        If role.getSubRoleCount > 0 And Not isAggregationRole(role) Then
                             .pTag = "P"
                             topLevelNode.Nodes.Clear()
                             topLevelNode.Nodes.Add("-")
@@ -350,6 +347,8 @@ Public Class frmMEhryRoleCost
 
         End With
     End Sub
+
+
     ''' <summary>
     ''' baut den Rollen-SubtreeView für die Rolle mit der ID roleUID auf. 
     ''' es wird ein neuer Knoten unterhalb des des parent-Knotens aufgebaut 
@@ -392,7 +391,7 @@ Public Class frmMEhryRoleCost
         End If
 
 
-        If childIds.Count > 0 Then
+        If childIds.Count > 0 And Not isAggregationRole(currentRole) Then
             ' hier muss - im Falle einer customUserRole = Portfolio Mgr bei der "letzten" Stufe abgebrochen werden
             ' die dürfen also nicht die Personen sehen ... aber nur , wenn 
             currentNode.Nodes.Clear()

@@ -55,6 +55,7 @@ Imports System.Web
     'Erstellen Sie hier Rückrufmethoden. Weitere Informationen über das Hinzufügen von Rückrufmethoden erhalten Sie, indem Sie das Menüband-XML-Element im Projektmappen-Explorer markieren und dann F1 drücken.
     Public Sub Ribbon_Load(ByVal ribbonUI As Microsoft.Office.Core.IRibbonUI)
         Me.ribbon = ribbonUI
+        Me.ribbon.Invalidate()
     End Sub
 
     Sub PTNeueKonstellation(control As IRibbonControl)
@@ -1731,6 +1732,36 @@ Imports System.Web
                 Else
                     tmpLabel = "Import Configuration"
                 End If
+            Case "PT4G1M1-2"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Einzelprojekte"
+                Else
+                    tmpLabel = "Import single Projects"
+                End If
+            Case "PT4G1M1-3"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import Portfolios und Projektlisten"
+                Else
+                    tmpLabel = "Import Portfolios and project mass data"
+                End If
+            Case "PT4G2M-1"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export Einzelprojekte"
+                Else
+                    tmpLabel = "Export single Projects"
+                End If
+            Case "PT4G2M-2"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export Portfolios und Projektinformationen"
+                Else
+                    tmpLabel = "Export Portfolios and projects"
+                End If
+            Case "PT4G1B12"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Ist-Daten"
+                Else
+                    tmpLabel = "Actual Data"
+                End If
 
             Case "PT4G1B8"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -2658,7 +2689,20 @@ Imports System.Web
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Import"
                 Else
-                    tmpLabel = "Import from Filesystem"
+                    tmpLabel = "Import"
+                End If
+            Case "PT4G1M" ' IMPORT
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Import"
+                Else
+                    tmpLabel = "Import"
+                End If
+
+            Case "PT4G2M" ' EXPORT
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Export"
+                Else
+                    tmpLabel = "Export"
                 End If
 
             Case "PT4G1B6" ' VISBO Open XML
@@ -2808,11 +2852,11 @@ Imports System.Web
                     tmpLabel = "Project/s"
                 End If
 
-            Case "Pt5G2B4" ' Alles Speichern
+            Case "Pt5G2B4" ' Organisations-Daten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Alles Speichern"
+                    tmpLabel = "Organisations-Daten"
                 Else
-                    tmpLabel = "Save everything"
+                    tmpLabel = "Organisation-Data"
                 End If
 
             Case "PT5G3" ' Löschen
@@ -2827,6 +2871,13 @@ Imports System.Web
                     tmpLabel = "Portfolio/s..."
                 Else
                     tmpLabel = "Portfolio/s..."
+                End If
+
+            Case "PT5G3M" ' Löschen aus Datenbank 
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Löschen aus DB"
+                Else
+                    tmpLabel = "Delete in Database"
                 End If
 
             Case "PT5G3M2" ' Projekte/Varianten
@@ -3045,38 +3096,45 @@ Imports System.Web
     '''          false: wenn der entsprechende Menubutton unsichtbar sein soll </returns>
     ''' <remarks></remarks>
     Function chckVisibility(control As IRibbonControl) As Boolean
+
         If visboZustaende.projectBoardMode = ptModus.graficboard Then
-            Select Case control.Id
-                Case "PTMEC" ' Massen-Edit Charts
-                    chckVisibility = False
-                Case "PTmassEdit" ' Mass-Edit bearbeiten
-                    chckVisibility = False
-                Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
-                    chckVisibility = False
-                Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
-                    chckVisibility = False
-                Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
-                    chckVisibility = False
-                Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
-                    chckVisibility = False
-                Case "PTzurück" ' Zurück
-                    chckVisibility = False
-                Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
-                    chckVisibility = False
-                Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
-                    chckVisibility = False
-                Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
-                    chckVisibility = False
-                Case "PT6G2B5" ' Sortierung ermöglichen
-                    chckVisibility = False
-                Case "PT6G2B7" ' Header anzeigen
-                    chckVisibility = False
-                Case "PThelp" ' Help anzeigen
-                    chckVisibility = False
-                Case Else
-                    ' alle anderen werden sichtbar gemacht
-                    chckVisibility = True
-            End Select
+
+            If myCustomUserRole.isEntitledForMenu(control.Id) Then
+                Select Case control.Id
+                    Case "PTMEC" ' Massen-Edit Charts
+                        chckVisibility = False
+                    Case "PTmassEdit" ' Mass-Edit bearbeiten
+                        chckVisibility = False
+                    Case "PT2G1M2B4" ' Bearbeiten - Zeile (Rolle) einfügen
+                        chckVisibility = False
+                    Case "PT2G1M2B5" ' Bearbeiten - Zeile löschen
+                        chckVisibility = False
+                    Case "PT2G1M2B6" ' Bearbeiten - Änderungen verwerfen
+                        chckVisibility = False
+                    Case "PT2G1M2B7" ' Bearbeiten - Zeile (Kostenart) einfügen
+                        chckVisibility = False
+                    Case "PTzurück" ' Zurück
+                        chckVisibility = False
+                    Case "PTMECsettings" ' Massen-Edit Einstellungen/Settings
+                        chckVisibility = False
+                    Case "PT6G2B3" ' Einstellungen - Berechnung - prozentuale Auslastungs-Werte anzeigen
+                        chckVisibility = False
+                    Case "PT6G2B4" ' Platzhalter Rollen automatisch reduzieren
+                        chckVisibility = False
+                    Case "PT6G2B5" ' Sortierung ermöglichen
+                        chckVisibility = False
+                    Case "PT6G2B7" ' Header anzeigen
+                        chckVisibility = False
+                    Case "PThelp" ' Help anzeigen
+                        chckVisibility = False
+                    Case Else
+                        ' alle anderen werden sichtbar gemacht
+                        chckVisibility = True
+                End Select
+            Else
+                chckVisibility = False
+            End If
+
         Else
             Select Case control.Id
 
@@ -4776,11 +4834,11 @@ Imports System.Web
 
     Public Sub PTImportCustomUserRoles(control As IRibbonControl)
 
+
         Dim err As New clsErrorCodeMsg
-        Dim allCustomUserRoles As New clsCustomUserRoles
         Dim result As Boolean = False
 
-        Call awinImportCustomUserRoles(allCustomUserRoles)
+        Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
 
         '??? Aufruf speichern der CustomUser Roles über rest-Server ...
 
@@ -4788,7 +4846,6 @@ Imports System.Web
                                                                             CStr(settingTypes(ptSettingTypes.customroles)),
                                                                             Nothing,
                                                                             err)
-
     End Sub
 
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
@@ -4941,6 +4998,7 @@ Imports System.Web
 
                                 projectConstellations.Add(sessionConstellationS)
                                 ' jetzt auf Projekt-Tafel anzeigen 
+
                                 Call loadSessionConstellation(scenarioNameS, False, False, True)
 
                             Else
@@ -4975,6 +5033,7 @@ Imports System.Web
 
                     Call logfileSchliessen()
 
+
                 Catch ex As Exception
                     Call logfileSchliessen()
 
@@ -4991,7 +5050,12 @@ Imports System.Web
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
+
+        'projectboardWindows(PTwindows.mpt).Activate()
+
         appInstance.ScreenUpdating = True
+
+
 
 
 
@@ -6966,9 +7030,10 @@ Imports System.Web
 
             ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
             Dim tmpVariantName As String = ""
-            If hproj.projectType = ptPRPFType.portfolio Then
-                tmpVariantName = portfolioVName
-            End If
+            ' tk 28.12.18 deprecated
+            'If hproj.projectType = ptPRPFType.portfolio Then
+            '    tmpVariantName = portfolioVName
+            'End If
 
             Dim repObj As Excel.ChartObject
             appInstance.EnableEvents = False
@@ -7104,9 +7169,10 @@ Imports System.Web
 
                     ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                     Dim tmpVariantName As String = ""
-                    If hproj.projectType = ptPRPFType.portfolio Then
-                        tmpVariantName = portfolioVName
-                    End If
+                    ' tk 28.12.18 deprecated
+                    'If hproj.projectType = ptPRPFType.portfolio Then
+                    '    tmpVariantName = portfolioVName
+                    'End If
 
                     Dim repObj As Excel.ChartObject
                     appInstance.EnableEvents = False
@@ -7229,9 +7295,10 @@ Imports System.Web
 
                 ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                 Dim tmpVariantName As String = ""
-                If hproj.projectType = ptPRPFType.portfolio Then
-                    tmpVariantName = portfolioVName
-                End If
+                ' tk 28.12.18 deprecated
+                'If hproj.projectType = ptPRPFType.portfolio Then
+                '    tmpVariantName = portfolioVName
+                'End If
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -7856,9 +7923,10 @@ Imports System.Web
 
                 ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                 Dim tmpVariantName As String = ""
-                If hproj.projectType = ptPRPFType.portfolio Then
-                    tmpVariantName = portfolioVName
-                End If
+                ' tk 28.12.18 deprecated
+                'If hproj.projectType = ptPRPFType.portfolio Then
+                '    tmpVariantName = portfolioVName
+                'End If
 
                 ' das bproj bestimmen 
                 bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
@@ -9123,27 +9191,34 @@ Imports System.Web
                 lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now, err)
                 comparisonTyp = PTprdk.KostenBalken2
 
-                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    If myCustomUserRole.specifics.Length > 0 Then
+                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
+
                             comparisonTyp = PTprdk.PersonalBalken2
-                            qualifier2 = awinSettings.isRestrictedToOrgUnit
+                            qualifier2 = myCustomUserRole.specifics
+
                         End If
                     End If
+
                 End If
+
 
 
             Else
                 lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, hproj.variantName, err)
                 comparisonTyp = PTprdk.KostenBalken
 
-                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    If myCustomUserRole.specifics.Length > 0 Then
+                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
+
                             comparisonTyp = PTprdk.PersonalBalken
-                            qualifier2 = awinSettings.isRestrictedToOrgUnit
+                            qualifier2 = myCustomUserRole.specifics
+
                         End If
                     End If
+
                 End If
 
             End If

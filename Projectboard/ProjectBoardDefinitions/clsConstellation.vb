@@ -41,8 +41,8 @@
             Dim tmpResult As New SortedList(Of String, Boolean)
 
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-
-                If kvp.Value.variantName = portfolioVName Then
+                ' tk Kriterium ist jetzt, ob es vom Typ Portfolio ist
+                If kvp.Value.projectTyp = ptPRPFType.portfolio.ToString Then
                     Try
                         If tmpResult.ContainsKey(kvp.Key) Then
                             ' nichts tun, ist schon drin 
@@ -1115,7 +1115,7 @@
             Dim tmpResult As Boolean = False
 
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
-                If kvp.Value.variantName = portfolioVName Then
+                If kvp.Value.projectTyp = ptPRPFType.portfolio.ToString Then
                     tmpResult = True
                     Exit For
                 End If
@@ -1370,6 +1370,7 @@
                             .projectName = hproj.name
                             .variantName = hproj.variantName
                             .zeile = 0
+                            .projectTyp = CType(hproj.projectType, ptPRPFType).ToString
                             .start = hproj.startDate
 
                             If ShowProjekte.contains(.projectName) Then
@@ -1416,6 +1417,7 @@
                         .projectName = kvp.Value.name
                         .variantName = kvp.Value.variantName
                         .zeile = 0
+                        .projectTyp = CType(kvp.Value.projectType, ptPRPFType).ToString
                         .start = kvp.Value.startDate
 
                         If ShowProjekte.contains(.projectName) Then

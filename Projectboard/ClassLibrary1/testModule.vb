@@ -371,9 +371,10 @@ Public Module testModule
 
                         ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                         Dim tmpVariantName As String = ""
-                        If hproj.projectType = ptPRPFType.portfolio Then
-                            tmpVariantName = portfolioVName
-                        End If
+                        ' 28.12.18 tk deprecated
+                        'If hproj.projectType = ptPRPFType.portfolio Then
+                        '    tmpVariantName = portfolioVName
+                        'End If
 
                         bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
@@ -6251,6 +6252,12 @@ Public Module testModule
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                     Try
+                        ' wenn es sich jetzt um einen Portfolio Manager handelt 
+                        ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
+                        ' es handelt sich bereits um die pfv Variante 
+                        ' prüfen auf Rolle 
+                        Call kvp.Value.setVariantNameAccordingUserRole()
+
                         Dim pvName As String = calcProjektKey(kvp.Value.name, kvp.Value.variantName)
                         If Not writeProtections.isProtected(pvName, dbUsername) Then
                             ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
@@ -6303,7 +6310,7 @@ Public Module testModule
                                         outPutCollection.Add(outputline)
                                     End If
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, Err)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, err)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -6591,6 +6598,7 @@ Public Module testModule
                     singleShp1 = awinSelection.Item(i)
 
                     Try
+
                         hilfshproj = ShowProjekte.getProject(singleShp1.Name, True)
 
                     Catch ex As Exception
@@ -6599,24 +6607,31 @@ Public Module testModule
                     End Try
 
                     ' alle geladenen Variante in variantCollection holen
-                    variantCollection = AlleProjekte.getVariantNames(hilfshproj.name, True)
+                    variantCollection = AlleProjekte.getVariantNames(hilfshproj.name, False)
 
                     For vi = 1 To variantCollection.Count
 
-                        Dim hVname As String
-                        Dim tmpStr(5) As String
-                        Dim trennzeichen1 As String = "("
-                        Dim trennzeichen2 As String = ")"
+                        Dim hVname As String = variantCollection.Item(vi)
+                        'Dim tmpStr(5) As String
+                        'Dim trennzeichen1 As String = "("
+                        'Dim trennzeichen2 As String = ")"
 
-                        ' VariantenNamen von den () befreien
-                        tmpStr = variantCollection(vi).Split(New Char() {CChar(trennzeichen1)}, 4)
-                        tmpStr = tmpStr(1).Split(New Char() {CChar(trennzeichen2)}, 4)
-                        hVname = tmpStr(0)
+                        '' VariantenNamen von den () befreien
+                        'tmpStr = variantCollection(vi).Split(New Char() {CChar(trennzeichen1)}, 4)
+                        'tmpStr = tmpStr(1).Split(New Char() {CChar(trennzeichen2)}, 4)
+                        'hVname = tmpStr(0)
 
                         ' gesamte ProjektInfo der Variante aus Liste AlleProjekte lesen
                         hproj = AlleProjekte.getProject(calcProjektKey(hilfshproj.name, hVname))
 
+
                         Try
+                            ' wenn es sich jetzt um einen Portfolio Manager handelt 
+                            ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
+                            ' es handelt sich bereits um die pfv Variante 
+                            ' prüfen auf Rolle 
+                            Call hproj.setVariantNameAccordingUserRole()
+
                             ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
                             If demoModusHistory Then
