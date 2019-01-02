@@ -6598,14 +6598,8 @@ Public Module testModule
                     singleShp1 = awinSelection.Item(i)
 
                     Try
+
                         hilfshproj = ShowProjekte.getProject(singleShp1.Name, True)
-
-                        ' wenn es sich jetzt um einen Portfolio Manager handelt 
-                        ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
-                        ' es handelt sich bereits um die pfv Variante 
-                        ' prüfen auf Rolle 
-                        Call hilfshproj.setVariantNameAccordingUserRole()
-
 
                     Catch ex As Exception
                         Throw New ArgumentException("Projekt nicht gefunden ...")
@@ -6613,24 +6607,31 @@ Public Module testModule
                     End Try
 
                     ' alle geladenen Variante in variantCollection holen
-                    variantCollection = AlleProjekte.getVariantNames(hilfshproj.name, True)
+                    variantCollection = AlleProjekte.getVariantNames(hilfshproj.name, False)
 
                     For vi = 1 To variantCollection.Count
 
-                        Dim hVname As String
-                        Dim tmpStr(5) As String
-                        Dim trennzeichen1 As String = "("
-                        Dim trennzeichen2 As String = ")"
+                        Dim hVname As String = variantCollection.Item(vi)
+                        'Dim tmpStr(5) As String
+                        'Dim trennzeichen1 As String = "("
+                        'Dim trennzeichen2 As String = ")"
 
-                        ' VariantenNamen von den () befreien
-                        tmpStr = variantCollection(vi).Split(New Char() {CChar(trennzeichen1)}, 4)
-                        tmpStr = tmpStr(1).Split(New Char() {CChar(trennzeichen2)}, 4)
-                        hVname = tmpStr(0)
+                        '' VariantenNamen von den () befreien
+                        'tmpStr = variantCollection(vi).Split(New Char() {CChar(trennzeichen1)}, 4)
+                        'tmpStr = tmpStr(1).Split(New Char() {CChar(trennzeichen2)}, 4)
+                        'hVname = tmpStr(0)
 
                         ' gesamte ProjektInfo der Variante aus Liste AlleProjekte lesen
                         hproj = AlleProjekte.getProject(calcProjektKey(hilfshproj.name, hVname))
 
+
                         Try
+                            ' wenn es sich jetzt um einen Portfolio Manager handelt 
+                            ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
+                            ' es handelt sich bereits um die pfv Variante 
+                            ' prüfen auf Rolle 
+                            Call hproj.setVariantNameAccordingUserRole()
+
                             ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
                             If demoModusHistory Then
