@@ -665,6 +665,7 @@ Public Class Request
 
             Dim pname As String = projekt.name
             Dim vname As String = projekt.variantName
+            Dim standardVariante As String = ""
 
             Dim aktvp As clsVP = GETvpid(pname, err, projekt.projectType)
             Dim vpid As String = aktvp._id
@@ -686,6 +687,13 @@ Public Class Request
                 VP.vcid = aktVCid
                 VP.vpPublic = True
                 VP.vpType = projekt.projectType
+
+                If Not IsNothing(projekt.kundenNummer) Then
+                    VP.kundennummer = projekt.kundenNummer
+                Else
+                    VP.kundennummer = ""
+                End If
+
 
                 vpErg = POSTOneVP(VP, err)
 
@@ -714,6 +722,11 @@ Public Class Request
                 Else
                     Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
+                '--------------------------------------------------------
+                '     standard-Variante erzeugen aus angegebener Variante
+                '--------------------------------------------------------
+                projekt.variantName = standardVariante ' STANDARD-Variante
+                Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
 
             End If
 
@@ -733,53 +746,62 @@ Public Class Request
                     storedVPVariant = POSTVPVariant(vpid, vname, err)
                 Else
                     ' zu diesem Projekt gibt es nur die Standardvariante = > nichts tun
+                    storedVPVariant = True
                 End If
             End If
 
             ' Projekt ist bereits in VisboProjects Collection gespeichert, es existiert eine vpid
-            If storedVP Then
+            If storedVP And storedVPVariant Then
 
-                ' jetzt muss noch VisboProjectVersion gespeichert werden
-                Dim typeRequest As String = "/vpv"
-                Dim serverUriString As String = serverUriName & typeRequest
-                Dim serverUri As New Uri(serverUriString)
+                '--------------------------------------------------------
+                '' ' jetzt muss noch VisboProjectVersion gespeichert werden
+                '
+                '     variantName-Variante erzeugen 
+                '--------------------------------------------------------
+                projekt.variantName = vname
+                result = POSTOneVPv(vpid, projekt, userName, err)
 
 
-                If checkChgPermission(pname, vname, userName, err) Then
+                ''Dim typeRequest As String = "/vpv"
+                ''Dim serverUriString As String = serverUriName & typeRequest
+                ''Dim serverUri As New Uri(serverUriString)
 
-                    Dim projektWeb As New clsProjektWebLong
-                    projektWeb.copyfrom(projekt)
-                    projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
-                    projektWeb.vpid = vpid
 
-                    data = serverInputDataJson(projektWeb, "")
+                ''If checkChgPermission(pname, vname, userName, err) Then
 
-                    Dim storeAntwort As clsWebLongVPv
-                    Dim Antwort As String
-                    Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-                        Antwort = ReadResponseContent(httpresp)
-                        errcode = CType(httpresp.StatusCode, Integer)
-                        errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                        storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
-                    End Using
+                ''    Dim projektWeb As New clsProjektWebLong
+                ''    projektWeb.copyfrom(projekt)
+                ''    projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
+                ''    projektWeb.vpid = vpid
 
-                    If errcode = 200 Then
+                ''    data = serverInputDataJson(projektWeb, "")
 
-                        result = (storeAntwort.state = "success")
-                        result = True
+                ''    Dim storeAntwort As clsWebLongVPv
+                ''    Dim Antwort As String
+                ''    Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                ''        Antwort = ReadResponseContent(httpresp)
+                ''        errcode = CType(httpresp.StatusCode, Integer)
+                ''        errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                ''        storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
+                ''    End Using
 
-                        ' vpv zu Cache hinzufügen
-                        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+                ''    If errcode = 200 Then
 
-                    Else
+                ''        result = (storeAntwort.state = "success")
+                ''        result = True
 
-                        ' Fehlerbehandlung je nach errcode
-                        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+                ''        ' vpv zu Cache hinzufügen
+                ''        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
 
-                    End If
-                    err.errorCode = errcode
-                    err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
-                End If
+                ''    Else
+
+                ''        ' Fehlerbehandlung je nach errcode
+                ''        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+
+                ''    End If
+                ''    err.errorCode = errcode
+                ''    err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
+                ''End If
             End If
 
         Catch ex As Exception
@@ -926,7 +948,7 @@ Public Class Request
             Dim vpid As String = ""
             Dim anzLoop As Integer = 0
             'Dim allVP As New List(Of clsVP)
-            While (result.Count <= 0 And anzLoop <= 2)
+            While (result.Count <= 0 And anzLoop < 2)
 
                 ' zuerst nur im Cache nachsehen
                 For Each kvp As KeyValuePair(Of String, clsVP) In VRScache.VPsId
@@ -4291,6 +4313,71 @@ Public Class Request
 
         POSTOneVP = result
 
+    End Function
+
+    Private Function POSTOneVPv(ByVal vpid As String,
+                                ByVal projekt As clsProjekt,
+                                ByVal username As String, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+
+            'Dim webVP As New clsWebVP
+            'Dim vpErg As New List(Of clsVP)
+            Dim data() As Byte
+
+            Dim pname As String = projekt.name
+            Dim vname As String = projekt.variantName
+
+            ' jetzt muss noch VisboProjectVersion gespeichert werden
+            Dim typeRequest As String = "/vpv"
+            Dim serverUriString As String = serverUriName & typeRequest
+            Dim serverUri As New Uri(serverUriString)
+
+
+            If checkChgPermission(pname, vname, username, err) Then
+
+                Dim projektWeb As New clsProjektWebLong
+                projektWeb.copyfrom(projekt)
+                projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
+                projektWeb.vpid = vpid
+
+                data = serverInputDataJson(projektWeb, "")
+
+                Dim storeAntwort As clsWebLongVPv
+                Dim Antwort As String
+                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                    Antwort = ReadResponseContent(httpresp)
+                    errcode = CType(httpresp.StatusCode, Integer)
+                    errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                    storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
+                End Using
+
+                If errcode = 200 Then
+
+                    result = (storeAntwort.state = "success")
+                    result = True
+
+                    ' vpv zu Cache hinzufügen
+                    VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+
+                Else
+
+                    ' Fehlerbehandlung je nach errcode
+                    Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+
+                End If
+                err.errorCode = errcode
+                err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        POSTOneVPv = result
     End Function
 
     ''' <summary>
