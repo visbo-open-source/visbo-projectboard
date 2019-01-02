@@ -14624,8 +14624,9 @@ Public Module Projekte
                         Case PTProjektStati.geplant
                             ' old darf beauftragt, aber noch nicht begonnen sein
                             ' changerequest aber noch nicht begonnen 
-                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or
-                                ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) And hproj.startDate > Date.Now)) Then
+                            If oldStatus = ProjektStatus(PTProjektStati.geplant) Or oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+                                ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) And
+                                 hproj.startDate > Date.Now)) Then
                                 hproj.Status = ProjektStatus(type)
                             Else
 
@@ -14641,7 +14642,9 @@ Public Module Projekte
                             ' old darf nicht abgebrochen oder abgeschlossen sein 
                             If oldStatus = ProjektStatus(PTProjektStati.geplant) Or
                                 oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Then
+                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or
+                                 oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+                                 oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Then
                                 hproj.Status = ProjektStatus(type)
                             Else
                                 If awinSettings.englishLanguage Then
@@ -14656,6 +14659,8 @@ Public Module Projekte
 
                             If oldStatus = ProjektStatus(PTProjektStati.geplant) Or
                                 oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
+                                 oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+                                 oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Or
                                  oldStatus = ProjektStatus(PTProjektStati.ChangeRequest) Or
                                     oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
                                 hproj.Status = ProjektStatus(type)
@@ -14671,7 +14676,9 @@ Public Module Projekte
                         Case PTProjektStati.abgebrochen
 
                             If ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or
-                                 oldStatus = ProjektStatus(PTProjektStati.ChangeRequest)) And hproj.startDate < Date.Now) Or
+                                    oldStatus = ProjektStatus(PTProjektStati.geplanteVorgabe) Or
+                                    oldStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe) Or
+                                    oldStatus = ProjektStatus(PTProjektStati.ChangeRequest)) And hproj.startDate < Date.Now) Or
                                     oldStatus = ProjektStatus(PTProjektStati.abgebrochen) Then
                                 hproj.Status = ProjektStatus(type)
                             Else
@@ -14685,7 +14692,7 @@ Public Module Projekte
 
                         Case PTProjektStati.abgeschlossen
 
-                            If (oldStatus = ProjektStatus(PTProjektStati.beauftragt) And hproj.endeDate < Date.Now) Then
+                            If ((oldStatus = ProjektStatus(PTProjektStati.beauftragt) Or oldStatus = ProjektStatus(PTProjektStati.beauftragt)) And hproj.endeDate < Date.Now) Then
                                 hproj.Status = ProjektStatus(type)
                             Else
                                 If awinSettings.englishLanguage Then
@@ -16295,7 +16302,8 @@ Public Module Projekte
 
         ' jetzt müssen alle Shapes, die keine Charts sind, gelöscht werden ....
 
-        For Each shp As Excel.Shape In CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+
+        For Each shp As Excel.Shape In CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Shapes
 
             Try
                 If CBool(shp.HasChart) Then
@@ -16559,9 +16567,13 @@ Public Module Projekte
 
             'appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
+
             Call awinClearPlanTafel()
+
             Call awinZeichnePlanTafel(True)
+
             Call awinNeuZeichnenDiagramme(2)
+            'Dim vglName as string = CType(projectboardWindows(PTwindows.mpt).ActiveSheet, Excel.Worksheet).Name
             'Call diagramsVisible(True)
             'appInstance.ScreenUpdating = True
 

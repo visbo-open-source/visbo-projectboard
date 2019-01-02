@@ -5179,20 +5179,17 @@ Public Class frmHierarchySelection
             'If allRoles.Count > 0 Then
             Dim topNodes As List(Of Integer) = RoleDefinitions.getTopLevelNodeIDs
 
-
-            If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-
-                    If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                If myCustomUserRole.specifics.Length > 0 Then
+                    If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
 
                         topNodes.Clear()
-                        topNodes.Add(RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit).UID)
+                        topNodes.Add(RoleDefinitions.getRoledef(myCustomUserRole.specifics).UID)
 
                     End If
-
                 End If
-            End If
 
+            End If
 
 
 
@@ -5206,7 +5203,7 @@ Public Class frmHierarchySelection
 
                 Dim nrTag As New clsNodeRoleTag
                 With nrTag
-                    If role.getSubRoleCount > 0 Then
+                    If role.getSubRoleCount > 0 And Not isAggregationRole(role) Then
                         .pTag = "P"
                         topLevelNode.Nodes.Clear()
                         topLevelNode.Nodes.Add("-")
@@ -5283,7 +5280,7 @@ Public Class frmHierarchySelection
         End If
 
 
-        If childIds.Count > 0 Then
+        If childIds.Count > 0 And Not isAggregationRole(currentRole) Then
             currentNode.Nodes.Clear()
             currentNode.Nodes.Add("-")
             nrTag.pTag = "P"

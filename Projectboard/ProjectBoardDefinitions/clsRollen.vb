@@ -335,6 +335,27 @@ Public Class clsRollen
         End Get
     End Property
 
+    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer) As Boolean
+        Dim tmpResult As Boolean = False
+        Dim teamID As Integer = -1
+
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+        If roleID = summaryRoleID Then
+            tmpResult = True
+
+        Else
+            Dim sRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(summaryRoleID)
+            If Not IsNothing(sRole) Then
+                Dim alleChildIDs As SortedList(Of String, Double) = RoleDefinitions.getSubRoleNameIDsOf(sRole.name, type:=PTcbr.all)
+                If alleChildIDs.Count > 0 Then
+                    tmpResult = alleChildIDs.ContainsKey(roleNameID)
+                End If
+            End If
+        End If
+
+        hasAnyChildParentRelationsship = tmpResult
+    End Function
+
     ''' <summary>
     ''' gibt true zurück, wenn roleID irgendwo unterhalb der Hierarchy von summaryRoleID zu finden ist ..
     ''' das gilt für Team-Member ebenso wie für Orga-Mitglieder
@@ -520,6 +541,157 @@ Public Class clsRollen
 
         bestimmeRoleNameID = tmpResult
     End Function
+
+    ''' <summary>
+    ''' ähnlich wie getSubroleIDsOf , gibt die NameIDs in der Form roleUid;teamUid zurück  
+    ''' </summary>
+    ''' <param name="roleNameID">wird in der Form uid;teamId übergeben</param>
+    ''' <param name="type"></param>
+    ''' <param name="excludedNames">jeder Eintrag muss in der Form uid;teamID sein</param>
+    ''' <returns></returns>
+    Public ReadOnly Property getSubRoleNameIDsOf(ByVal roleNameID As String,
+                                               Optional ByVal type As Integer = PTcbr.all,
+                                               Optional ByVal excludedNames As Collection = Nothing) As SortedList(Of String, Double)
+        Get
+
+            ' hier muss überprüft werden, ob die myCollection Sammelrollen enthält 
+            ' wenn ja, werden die alle solange um die enthaltenen Sammelrollen ergänzt, bis keine Sammelrolle mehr in der Collection drin ist  
+            ' die Sammelrollen werden am Schluss wieder aufgenommen, weil sie ja als Platzhalter Rollen ihre Bedarfs-Werte auch mit geben müssen 
+
+            Dim sammelRollenCollection As New SortedList(Of String, Double)
+            Dim realCollection As New SortedList(Of String, Double)
+            Dim addToRealCollection As New SortedList(Of String, Double)
+            Dim noUntreatedCombinedRole As Boolean = False
+            Dim teamID As Integer = -1
+            Dim initialRole As clsRollenDefinition = getRoleDefByIDKennung(roleNameID, teamID)
+
+
+            If Not IsNothing(initialRole) Then
+
+
+                ' initial besetzen, um es in Gang zu setzen
+                'realCollection.Add(roleName, roleName)
+
+                realCollection.Add(roleNameID, 1.0)
+
+                Do Until noUntreatedCombinedRole
+
+                    noUntreatedCombinedRole = True
+
+                    For Each kvp As KeyValuePair(Of String, Double) In realCollection
+
+                        Dim roleDef As clsRollenDefinition = getRoleDefByIDKennung(kvp.Key, teamID)
+
+                        If Not IsNothing(roleDef) Then
+
+                            If roleDef.isCombinedRole Then
+
+                                Dim curTeamID As Integer = -1
+
+                                If roleDef.isTeam Then
+                                    curTeamID = roleDef.UID
+                                End If
+
+                                If Not sammelRollenCollection.ContainsKey(kvp.Key) Then
+
+                                    noUntreatedCombinedRole = False
+                                    ' dann wurde sie nicht schon mal ersetzt  und die Kinder müssen aufgenommen werden  
+                                    sammelRollenCollection.Add(kvp.Key, kvp.Value)
+
+                                    Dim listofSubRoles As SortedList(Of Integer, Double) = roleDef.getSubRoleIDs
+
+                                    If Not IsNothing(listofSubRoles) Then
+
+                                        For Each srkvp As KeyValuePair(Of Integer, Double) In listofSubRoles
+
+                                            Dim tmpKey As String = bestimmeRoleNameID(srkvp.Key, curTeamID)
+                                            If Not realCollection.ContainsKey(tmpKey) And Not addToRealCollection.ContainsKey(tmpKey) Then
+                                                addToRealCollection.Add(tmpKey, srkvp.Value)
+
+                                            ElseIf addToRealCollection.ContainsKey(tmpkey) Then
+                                                ' addieren, aber Gesamt-Summe darf nie größer 1 sein
+                                                Dim newValue As Double = addToRealCollection(tmpKey) + srkvp.Value
+                                                If newValue > 1.0 Then
+                                                    newValue = 1.0
+                                                End If
+                                                addToRealCollection(tmpKey) = newValue
+                                            End If
+
+
+                                        Next
+
+                                    Else
+                                        ' darf eigentlich nicht sein , aber ist im Fehlerfall notwenig, um Endlos schleife zu verhindern 
+                                        noUntreatedCombinedRole = True
+                                    End If
+
+                                End If
+
+                            End If
+                        End If
+
+
+                    Next
+
+                    ' jetzt müssen die addToRealCollection Items übertragen werden 
+                    For Each kvp As KeyValuePair(Of String, Double) In addToRealCollection
+                        If Not realCollection.ContainsKey(kvp.Key) Then
+                            realCollection.Add(kvp.Key, kvp.Value)
+                        Else
+                            Dim newValue As Double = realCollection(kvp.Key) + kvp.Value
+                            If newValue > 1.0 Then
+                                newValue = 1.0
+                            End If
+                            realCollection(kvp.Key) = newValue
+                        End If
+                    Next
+
+                    addToRealCollection.Clear()
+
+                Loop
+
+                ' jetzt müssen die realCollections ggf noch bereinigt werden: die Namen der Sammelrollen müssen raus
+
+                If type = PTcbr.all Then
+                    ' nichts tun - realCollections enthält schon alles 
+
+                ElseIf type = PTcbr.placeholders Then
+                    realCollection = sammelRollenCollection
+
+                ElseIf type = PTcbr.realRoles Then
+                    For Each cRKvp As KeyValuePair(Of String, Double) In sammelRollenCollection
+                        If realCollection.ContainsKey(cRKvp.Key) Then
+                            realCollection.Remove(cRKvp.Key)
+                        End If
+                    Next
+
+                Else
+                    ' nichts tun - realCollection enthält alles  
+                End If
+
+
+                If Not IsNothing(excludedNames) Then
+                    ' jetzt müssen aus realCollection alle Namen raus, die in excludedNames drin sind ... 
+                    For Each exclName As String In excludedNames
+
+                        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(exclName, teamID)
+
+                        If Not IsNothing(tmpRole) Then
+                            If realCollection.ContainsKey(exclName) And exclName <> roleNameID Then
+                                realCollection.Remove(exclName)
+                            End If
+                        End If
+
+                    Next
+                End If
+            End If
+
+
+            getSubRoleNameIDsOf = realCollection
+
+
+        End Get
+    End Property
 
 
     ''' <summary>

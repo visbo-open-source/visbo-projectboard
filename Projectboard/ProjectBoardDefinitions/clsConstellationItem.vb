@@ -1,7 +1,7 @@
 ﻿
 Public Class clsConstellationItem
 
-    Private _reasonToExclude As String = ""
+    Private _projectTyp As String = ""
     Private _reasonToInclude As String = ""
     Private _projectName As String = ""
     Private _variantName As String = ""
@@ -20,13 +20,13 @@ Public Class clsConstellationItem
         End Set
     End Property
 
-    Public Property reasonToExclude As String
+    Public Property projectTyp As String
         Get
-            reasonToExclude = _reasonToExclude
+            projectTyp = _projectTyp
         End Get
         Set(value As String)
             If Not IsNothing(value) Then
-                _reasonToExclude = value
+                _projectTyp = value
             End If
         End Set
     End Property
@@ -108,7 +108,7 @@ Public Class clsConstellationItem
                 .projectName = Me.projectName
                 .variantName = Me.variantName
                 .show = Me.show
-                .reasonToExclude = Me.reasonToExclude
+                .projectTyp = Me.projectTyp
                 .reasonToInclude = Me.reasonToInclude
                 .start = Me.start
                 .zeile = Me.zeile
@@ -123,11 +123,12 @@ Public Class clsConstellationItem
 
         _projectName = ""
         _variantName = ""
-        _Start = StartofCalendar.AddMonths(-1)
+        _start = StartofCalendar.AddMonths(-1)
         _show = False
         _zeile = 0
         _reasonToInclude = ""
-        _reasonToExclude = ""
+        ' war vorher reasonToExclude - istz umgewidmet worden, weil ohnehin nicht gebraucht 
+        _projectTyp = ptPRPFType.project.ToString
 
     End Sub
 End Class

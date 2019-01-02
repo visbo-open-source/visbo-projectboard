@@ -146,7 +146,7 @@
                 Me.show = .show
                 Me.zeile = .zeile
                 Me.reasonToInclude = .reasonToInclude
-                Me.reasonToExclude = .reasonToExclude
+                Me.reasonToExclude = .projectTyp
             End With
         End Sub
 
@@ -159,7 +159,7 @@
                 .show = Me.show
                 .zeile = Me.zeile
                 .reasonToInclude = Me.reasonToInclude
-                .reasonToExclude = Me.reasonToExclude
+                .projectTyp = Me.reasonToExclude
             End With
 
         End Sub

@@ -12,6 +12,7 @@ Public Class frmEinstellungen
         'chkboxMassEdit.Checked = awinSettings.meExtendedColumnsView
         chkboxAmpel.Checked = awinSettings.mppShowAmpel
         chkboxPropAnpass.Checked = awinSettings.propAnpassRess
+        loadPFV.Checked = awinSettings.loadPFV
 
         dontFire = True
         If awinSettings.meCompareWithLastVersion Then
@@ -46,6 +47,12 @@ Public Class frmEinstellungen
         statusLabel.Enabled = False
         statusLabel.Visible = True
         statusLabel.Text = ""
+    End Sub
+
+    Private Sub setVisibility()
+        loadPFV.Visible = myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager
+        Label1.Visible = False
+        SprachAusw.Visible = False
     End Sub
 
     'Private Sub chkboxMassEdit_CheckedChanged(sender As Object, e As EventArgs) Handles chkboxMassEdit.CheckedChanged
@@ -114,5 +121,9 @@ Public Class frmEinstellungen
         If rdbLast.Checked = True And Not dontFire Then
             awinSettings.meCompareWithLastVersion = True
         End If
+    End Sub
+
+    Private Sub loadPFV_CheckedChanged(sender As Object, e As EventArgs) Handles loadPFV.CheckedChanged
+        awinSettings.loadPFV = loadPFV.Checked
     End Sub
 End Class

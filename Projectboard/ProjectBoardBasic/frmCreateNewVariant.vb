@@ -148,7 +148,7 @@ Public Class frmCreateNewVariant
 
         If Not IsNothing(vName) Then
             If vName.Trim.Length > 0 Then
-                tmpResult = (vName.Trim <> portfolioVName And vName.Trim <> istDatenVName)
+                tmpResult = Not [Enum].GetNames(GetType(ptVisboImportTypen)).Contains(vName.Trim)
             End If
         End If
 

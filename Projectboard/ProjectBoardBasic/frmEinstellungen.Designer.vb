@@ -31,13 +31,14 @@ Partial Class frmEinstellungen
         Me.rdbFirst = New System.Windows.Forms.RadioButton()
         Me.rdbLast = New System.Windows.Forms.RadioButton()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.loadPFV = New System.Windows.Forms.CheckBox()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
         '
         'chkboxPropAnpass
         '
         Me.chkboxPropAnpass.AutoSize = True
-        Me.chkboxPropAnpass.Location = New System.Drawing.Point(27, 70)
+        Me.chkboxPropAnpass.Location = New System.Drawing.Point(27, 88)
         Me.chkboxPropAnpass.Name = "chkboxPropAnpass"
         Me.chkboxPropAnpass.Size = New System.Drawing.Size(230, 17)
         Me.chkboxPropAnpass.TabIndex = 1
@@ -47,7 +48,7 @@ Partial Class frmEinstellungen
         'chkboxAmpel
         '
         Me.chkboxAmpel.AutoSize = True
-        Me.chkboxAmpel.Location = New System.Drawing.Point(27, 94)
+        Me.chkboxAmpel.Location = New System.Drawing.Point(27, 111)
         Me.chkboxAmpel.Name = "chkboxAmpel"
         Me.chkboxAmpel.Size = New System.Drawing.Size(101, 17)
         Me.chkboxAmpel.TabIndex = 2
@@ -58,7 +59,7 @@ Partial Class frmEinstellungen
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!)
-        Me.Label1.Location = New System.Drawing.Point(24, 130)
+        Me.Label1.Location = New System.Drawing.Point(24, 151)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(116, 15)
         Me.Label1.TabIndex = 4
@@ -68,7 +69,7 @@ Partial Class frmEinstellungen
         '
         Me.SprachAusw.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.SprachAusw.FormattingEnabled = True
-        Me.SprachAusw.Location = New System.Drawing.Point(146, 129)
+        Me.SprachAusw.Location = New System.Drawing.Point(146, 148)
         Me.SprachAusw.MaxDropDownItems = 4
         Me.SprachAusw.Name = "SprachAusw"
         Me.SprachAusw.Size = New System.Drawing.Size(158, 21)
@@ -78,7 +79,7 @@ Partial Class frmEinstellungen
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(24, 165)
+        Me.statusLabel.Location = New System.Drawing.Point(24, 180)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(45, 15)
         Me.statusLabel.TabIndex = 45
@@ -89,7 +90,7 @@ Partial Class frmEinstellungen
         'rdbFirst
         '
         Me.rdbFirst.AutoSize = True
-        Me.rdbFirst.Location = New System.Drawing.Point(13, 23)
+        Me.rdbFirst.Location = New System.Drawing.Point(13, 19)
         Me.rdbFirst.Name = "rdbFirst"
         Me.rdbFirst.Size = New System.Drawing.Size(52, 17)
         Me.rdbFirst.TabIndex = 46
@@ -100,7 +101,7 @@ Partial Class frmEinstellungen
         'rdbLast
         '
         Me.rdbLast.AutoSize = True
-        Me.rdbLast.Location = New System.Drawing.Point(132, 23)
+        Me.rdbLast.Location = New System.Drawing.Point(132, 19)
         Me.rdbLast.Name = "rdbLast"
         Me.rdbLast.Size = New System.Drawing.Size(53, 17)
         Me.rdbLast.TabIndex = 47
@@ -112,18 +113,29 @@ Partial Class frmEinstellungen
         '
         Me.GroupBox1.Controls.Add(Me.rdbLast)
         Me.GroupBox1.Controls.Add(Me.rdbFirst)
-        Me.GroupBox1.Location = New System.Drawing.Point(14, 13)
+        Me.GroupBox1.Location = New System.Drawing.Point(14, 9)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(309, 51)
         Me.GroupBox1.TabIndex = 48
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Vergleich mit welcher Version"
         '
+        'loadPFV
+        '
+        Me.loadPFV.AutoSize = True
+        Me.loadPFV.Location = New System.Drawing.Point(27, 65)
+        Me.loadPFV.Name = "loadPFV"
+        Me.loadPFV.Size = New System.Drawing.Size(125, 17)
+        Me.loadPFV.TabIndex = 49
+        Me.loadPFV.Text = "immer Vorgabe laden"
+        Me.loadPFV.UseVisualStyleBackColor = True
+        '
         'frmEinstellungen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(335, 200)
+        Me.ClientSize = New System.Drawing.Size(335, 207)
+        Me.Controls.Add(Me.loadPFV)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.statusLabel)
         Me.Controls.Add(Me.SprachAusw)
@@ -147,4 +159,5 @@ Partial Class frmEinstellungen
     Friend WithEvents rdbFirst As Windows.Forms.RadioButton
     Friend WithEvents rdbLast As Windows.Forms.RadioButton
     Friend WithEvents GroupBox1 As Windows.Forms.GroupBox
+    Friend WithEvents loadPFV As Windows.Forms.CheckBox
 End Class

@@ -250,6 +250,10 @@ Public Class clsawinSettings
 
     Public Property visboServer As Boolean
 
+    ' Variable bestimmt, ob als Portfolio Manager immer die Vorgabe oder immer der aktuelle Planungs-Stand geladen werden soll 
+    ' Voreinstellung ist Plan
+    Public Property loadPFV As Boolean
+
 
     ' das ist ein Setting, das bewirkt, das zu jedem Projekt das ActualDataDate auf einen Monat vor dem aktuellem Timestamp gesetzt wird
     ' wurde eingeführt von tk am 27.7.18, sehr wichtig für Demo Zwecke ...
@@ -261,7 +265,8 @@ Public Class clsawinSettings
     Public Property actualDataMonth As Date
 
     ' ist notwendig, um ggf die Sicht-Rechte auf eine Teil-Organisation zu beschränken ..
-    Public Property isRestrictedToOrgUnit As String
+    ' tk 23.12.18  ist jetzt ersetzt durch customUserRole.specifics  
+    'Public Property isRestrictedToOrgUnit As String
 
 
     Sub New()
@@ -415,7 +420,8 @@ Public Class clsawinSettings
         _isHryNameFrmActive = False
         _isChangePortfolioFrmActive = False
 
-        _isRestrictedToOrgUnit = ""
+        '_isRestrictedToOrgUnit = ""
+        _loadPFV = False
 
         _visboDebug = False
         _visboServer = False

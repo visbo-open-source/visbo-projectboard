@@ -1598,8 +1598,7 @@
     End Property
 
     ''' <summary>
-    ''' gibt die Phase mit Index zurück, wenn Index kleiner bzw. gleich 1 oder größer Anzahl Phasen, 
-    ''' dann Nothing 
+    ''' gibt die Phase mit Index zurück; index zwischen 1 und count; ansonsten Nothing
     ''' </summary>
     ''' <param name="index"></param>
     ''' <value></value>
@@ -2761,6 +2760,7 @@
         End Get
 
     End Property
+
 
     ''' <summary>
     ''' übergibt in getResponsibleNames eine Collection von Namen, die für Meilensteine oder Phasen verantwortlich sind

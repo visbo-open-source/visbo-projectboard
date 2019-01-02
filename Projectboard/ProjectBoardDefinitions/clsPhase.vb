@@ -1724,6 +1724,7 @@ Public Class clsPhase
             tmpRCvalue = prozentSatz * roleValues(r)
             tmpRCname = roleNames(r)
             If roleNamesAreIds Then
+                ' dieser Aufruf dient dazu teamID entsprechend zu setzen, falls angegeben
                 roleID = RoleDefinitions.parseRoleNameID(tmpRCname, teamID)
             Else
                 teamID = -1
@@ -1747,12 +1748,13 @@ Public Class clsPhase
 
     ''' <summary>
     ''' fügt der aktuellen Phase eine Rolle bzw. Kostenart hinzu
+    ''' wenn es eine Rolle ist, so ist sie in der form rcNameID roleUID;teamID bzw roleUID anzugeben
     ''' </summary>
-    ''' <param name="rcName"></param>
+    ''' <param name="rcNameID"></param>
     ''' <param name="summe"></param>
     ''' <param name="isrole"></param>
     ''' <param name="addWhenExisting"></param>
-    Public Sub addCostRole(ByVal rcName As String, ByVal summe As Double,
+    Public Sub addCostRole(ByVal rcNameID As String, ByVal summe As Double,
                               ByVal isrole As Boolean,
                               ByVal addWhenExisting As Boolean,
                               Optional ByVal teamID As Integer = -1)
@@ -1760,11 +1762,11 @@ Public Class clsPhase
 
         If isrole Then
             ' eine Rolle wird hinzugefügt 
-            Call Me.AddRole(rcName, summe, addWhenExisting, teamID:=teamID)
+            Call Me.AddRole(rcNameID, summe, addWhenExisting, teamID:=teamID)
 
         Else
             ' eine Kostenart wird hinzugefügt
-            Call Me.AddCost(rcName, summe, addWhenExisting)
+            Call Me.AddCost(rcNameID, summe, addWhenExisting)
         End If
 
 

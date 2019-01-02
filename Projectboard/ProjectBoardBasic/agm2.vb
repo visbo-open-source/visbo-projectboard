@@ -6896,78 +6896,72 @@ Public Module agm2
     ''' <summary>
     ''' liest aus der geöffneten Excel Datei alle Custom User Roles 
     ''' </summary>
-    ''' <param name="allCustomUserRoles"></param>
-    Public Sub awinImportCustomUserRoles(ByRef allCustomUserRoles As clsCustomUserRoles)
+    Public Function awinImportCustomUserRoles() As clsCustomUserRoles
 
         Dim tmpResult As New clsCustomUserRoles
         Dim currentCustomUserRole As New clsCustomUserRole
         Dim mappingNameID As New SortedList(Of String, String)
 
-
-
-        Dim userName As String = "rv@visbo.de"
-        Dim curType As ptCustomUserRoles = ptCustomUserRoles.portfoliomgr
+        ' für jetzige Testzwecke 
+        Dim userName As String = "thomas.koytek@visbo.de"
+        Dim curType As ptCustomUserRoles = ptCustomUserRoles.OrgaAdmin
         Dim specifics As String = ""
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.PortfolioManager
+        specifics = "AMIS;D-BOSV-KB0;D-BOSV-KB1;D-BOSV-KB2;D-BOSV-KB3;D-BOSV-SBF0;D-BOSV-SBF1;D-BOSV-SBF2;D-BOSV-SBP0;D-BOSV-SBP1;D-BOSV-SBP2;D-BOSV-SBP3;Grp-BOSV-KB"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.PortfolioManager
+        specifics = ""
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB1"
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB2"
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
+        userName = "thomas.koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
+        specifics = "Grp-BOSV-KB"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "ute.rittinghaus-koytek@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB3"
 
         If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.orgaadmin
-        specifics = ""
+        awinImportCustomUserRoles = tmpResult
 
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
-        End If
-
-        ' nächster ..
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.portfoliomgr
-        specifics = ""
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
-        End If
-
-        ' nächster ..
-        userName = "ss@visbo.de"
-        curType = ptCustomUserRoles.resourcemgr
-        specifics = "D-BOSV-GRP"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, mappingNameID.Item(userName), curType, specifics)
-        End If
-
-    End Sub
+    End Function
 
     ''' <summary>
     ''' prüft, ob es sich beim Namen/der Email um eine bekannte Email Adresse handelt. 
@@ -6990,19 +6984,25 @@ Public Module agm2
             If userID.Length > 0 Then
                 mappingNameID.Add(userName, userID)
             Else
-                ' wenn der Name keiner ID zugeordnet werden konnte ... 
-                stillOk = False
+                ' wenn der Name keiner ID zugeordnet werden konnte ...
+                ' das wird jetzt erstmal auf true gesetzt 
+                stillOk = True ' sollte hier eigentlich auf false sein 
             End If
         End If
 
         If stillOk Then
-            If roleType = ptCustomUserRoles.resourcemgr Then
+            If roleType = ptCustomUserRoles.RessourceManager Then
                 If RoleDefinitions.containsName(specifics) Then
                     ' alles ok
                     stillOk = True
                 Else
                     stillOk = False
                 End If
+            ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
+                Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
+                For Each tmpName As String In tmpStr
+                    stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
+                Next
             End If
         End If
 
@@ -8036,6 +8036,7 @@ Public Module agm2
                                 .projectName = pName
                                 .variantName = variantName
                                 .show = True
+                                .projectTyp = ptPRPFType.project.ToString
                                 .zeile = zeile
                             End With
 
@@ -8817,13 +8818,13 @@ Public Module agm2
 
                                 Try ' Status
                                     If itemType = 6 Then
-                                        allianzStatus = ProjektStatus(PTProjektStati.geplanteVorgabe)
+                                        allianzStatus = ProjektStatus(PTProjektStati.geplant)
                                     Else
-                                        allianzStatus = ProjektStatus(PTProjektStati.beauftragteVorgabe)
+                                        allianzStatus = ProjektStatus(PTProjektStati.beauftragt)
                                     End If
 
                                 Catch ex As Exception
-                                    allianzStatus = ProjektStatus(PTProjektStati.geplanteVorgabe)
+                                    allianzStatus = ProjektStatus(PTProjektStati.geplant)
                                 End Try
 
                             End If
@@ -8916,6 +8917,7 @@ Public Module agm2
                                                 .projectName = hproj.name
                                                 .variantName = hproj.variantName
                                                 .show = True
+                                                .projectTyp = CType(hproj.projectType, ptPRPFType).ToString
                                                 .zeile = lfdNr1program
                                             End With
 
@@ -9237,9 +9239,13 @@ Public Module agm2
                                 If Not IsNothing(CType(.Cells(iz, colRoleName), Excel.Range).Value) Then
                                     roleName = CStr(CType(.Cells(iz, colRoleName), Excel.Range).Value).Trim
 
+
                                     If roleName <> "" Then
 
                                         If RoleDefinitions.containsName(roleName) Then
+
+                                            ' jetzt muss die RCNameID bestimmt werden 
+                                            Dim rcNameID As String = RoleDefinitions.getRoledef(roleName).UID.ToString
                                             For ip As Integer = 1 To anzPhasen - 1
                                                 phaseValues(ip) = CDbl(CType(.Cells(iz, colRelValues + ip - 1), Excel.Range).Value)
                                             Next
@@ -9247,14 +9253,14 @@ Public Module agm2
                                             If phaseValues.Sum = 0 Then
                                                 ' nichts tun
                                             Else
-                                                If rolePhaseValues.ContainsKey(roleName) Then
+                                                If rolePhaseValues.ContainsKey(rcNameID) Then
                                                     ' addieren ...
                                                     For px As Integer = 1 To anzPhasen - 1
-                                                        rolePhaseValues.Item(roleName)(px) = rolePhaseValues.Item(roleName)(px) + phaseValues(px)
+                                                        rolePhaseValues.Item(rcNameID)(px) = rolePhaseValues.Item(rcNameID)(px) + phaseValues(px)
                                                     Next
                                                 Else
                                                     ' neu aufnehmen 
-                                                    rolePhaseValues.Add(roleName, phaseValues)
+                                                    rolePhaseValues.Add(rcNameID, phaseValues)
                                                 End If
                                             End If
                                         Else
@@ -9833,6 +9839,7 @@ Public Module agm2
 
                     If Not IsNothing(hproj) Then
                         ' es wird pro Projekt eine Variante erzeugt 
+                        Dim istDatenVName As String = ptVariantFixNames.acd.ToString
                         Dim newProj As clsProjekt = hproj.createVariant(istDatenVName, "temporär für Ist-Daten-Aufnahme")
 
                         ' es werden in jeder Phase, die einen der actual Monate enthält, die Werte gelöscht ... 
@@ -13350,173 +13357,173 @@ Public Module agm2
 
     End Sub
 
+    '' tk 26.12.18 deprecated
+    '''' <summary>
+    '''' erstellt für alles, alleRollen, alleKosten und die einzelnen Sammel-Rollen die ValidationStrings
+    '''' die dann im Mass-Edit verwendet werden können 
+    '''' </summary>
+    '''' <returns></returns>
+    '''' <remarks></remarks>
+    'Public Function createMassEditRcValidations() As SortedList(Of String, String)
+    '    Dim validationStrings As New SortedList(Of String, String)
+    '    Dim validationName As String
 
-    ''' <summary>
-    ''' erstellt für alles, alleRollen, alleKosten und die einzelnen Sammel-Rollen die ValidationStrings
-    ''' die dann im Mass-Edit verwendet werden können 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function createMassEditRcValidations() As SortedList(Of String, String)
-        Dim validationStrings As New SortedList(Of String, String)
-        Dim validationName As String
+    '    ' Aufbau Alles
+    '    validationName = "alles"
+    '    Dim sortedRCListe As New SortedList(Of String, String)
+    '    Dim rcDefinition As String = ""
+    '    Dim tmpName As String
 
-        ' Aufbau Alles
-        validationName = "alles"
-        Dim sortedRCListe As New SortedList(Of String, String)
-        Dim rcDefinition As String = ""
-        Dim tmpName As String
+    '    For iz As Integer = 1 To RoleDefinitions.Count
+    '        tmpName = RoleDefinitions.getRoledef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To RoleDefinitions.Count
-            tmpName = RoleDefinitions.getRoledef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
+    '    sortedRCListe.Clear()
 
-        sortedRCListe.Clear()
+    '    For iz As Integer = 1 To CostDefinitions.Count - 1
+    '        tmpName = CostDefinitions.getCostdef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To CostDefinitions.Count - 1
-            tmpName = CostDefinitions.getCostdef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
 
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
-
-        If Not validationStrings.ContainsKey(validationName) Then
-            validationStrings.Add(validationName, rcDefinition)
-        End If
-
-
-        '
-        ' jetzt kommen alleRollen 
-
-        validationName = "alleRollen"
-        sortedRCListe = New SortedList(Of String, String)
-        rcDefinition = ""
-
-        For iz As Integer = 1 To RoleDefinitions.Count
-            tmpName = RoleDefinitions.getRoledef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
-
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
-
-        If Not validationStrings.ContainsKey(validationName) Then
-            validationStrings.Add(validationName, rcDefinition)
-        End If
-
-        ' Ende alleRollen
-        '
-
-        '
-        ' jetzt kommen alleKosten 
-
-        validationName = "alleKosten"
-        sortedRCListe = New SortedList(Of String, String)
-        rcDefinition = ""
-
-        For iz As Integer = 1 To CostDefinitions.Count - 1
-            tmpName = CostDefinitions.getCostdef(iz).name
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
-
-        For iz As Integer = 1 To sortedRCListe.Count
-            If rcDefinition.Length = 0 Then
-                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-            Else
-                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-            End If
-        Next
-
-        If Not validationStrings.ContainsKey(validationName) Then
-            validationStrings.Add(validationName, rcDefinition)
-        End If
-
-        ' Ende alleKosten
-        '
-
-        '
-        ' jetzt kommen die einzelnen Sammelrollen, unter Angabe ihres Namens 
-
-        Dim sammelrollenNamen As Collection = RoleDefinitions.getSummaryRoles
-
-        For iz As Integer = 1 To sammelrollenNamen.Count
-            tmpName = CStr(sammelrollenNamen.Item(iz))
-            If Not sortedRCListe.ContainsKey(tmpName) Then
-                sortedRCListe.Add(tmpName, tmpName)
-            End If
-        Next
-
-        For Each validationName In sammelrollenNamen
-
-            sortedRCListe = New SortedList(Of String, String)
-            rcDefinition = ""
-
-            For iz As Integer = 1 To sammelrollenNamen.Count
-                tmpName = CStr(sammelrollenNamen.Item(iz))
-                If Not sortedRCListe.ContainsKey(tmpName) Then
-                    sortedRCListe.Add(tmpName, tmpName)
-                End If
-            Next
-
-            Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(validationName, PTcbr.all)
-
-            For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(srKvP.Key)
-                If Not IsNothing(tmpRole) Then
-                    tmpName = tmpRole.name
-                    If Not sortedRCListe.ContainsKey(tmpName) Then
-                        sortedRCListe.Add(tmpName, tmpName)
-                    End If
-                End If
-
-            Next
+    '    If Not validationStrings.ContainsKey(validationName) Then
+    '        validationStrings.Add(validationName, rcDefinition)
+    '    End If
 
 
-            For iz As Integer = 1 To sortedRCListe.Count
-                If rcDefinition.Length = 0 Then
-                    rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
-                Else
-                    rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
-                End If
-            Next
+    '    '
+    '    ' jetzt kommen alleRollen 
 
-            ' jetzt den Validation String hinzufügen 
-            If Not validationStrings.ContainsKey(validationName) Then
-                validationStrings.Add(validationName, rcDefinition)
-            End If
+    '    validationName = "alleRollen"
+    '    sortedRCListe = New SortedList(Of String, String)
+    '    rcDefinition = ""
 
-        Next
+    '    For iz As Integer = 1 To RoleDefinitions.Count
+    '        tmpName = RoleDefinitions.getRoledef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
 
-        createMassEditRcValidations = validationStrings
-    End Function
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
+
+    '    If Not validationStrings.ContainsKey(validationName) Then
+    '        validationStrings.Add(validationName, rcDefinition)
+    '    End If
+
+    '    ' Ende alleRollen
+    '    '
+
+    '    '
+    '    ' jetzt kommen alleKosten 
+
+    '    validationName = "alleKosten"
+    '    sortedRCListe = New SortedList(Of String, String)
+    '    rcDefinition = ""
+
+    '    For iz As Integer = 1 To CostDefinitions.Count - 1
+    '        tmpName = CostDefinitions.getCostdef(iz).name
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
+
+    '    For iz As Integer = 1 To sortedRCListe.Count
+    '        If rcDefinition.Length = 0 Then
+    '            rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '        Else
+    '            rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '        End If
+    '    Next
+
+    '    If Not validationStrings.ContainsKey(validationName) Then
+    '        validationStrings.Add(validationName, rcDefinition)
+    '    End If
+
+    '    ' Ende alleKosten
+    '    '
+
+    '    '
+    '    ' jetzt kommen die einzelnen Sammelrollen, unter Angabe ihres Namens 
+
+    '    Dim sammelrollenNamen As Collection = RoleDefinitions.getSummaryRoles
+
+    '    For iz As Integer = 1 To sammelrollenNamen.Count
+    '        tmpName = CStr(sammelrollenNamen.Item(iz))
+    '        If Not sortedRCListe.ContainsKey(tmpName) Then
+    '            sortedRCListe.Add(tmpName, tmpName)
+    '        End If
+    '    Next
+
+    '    For Each validationName In sammelrollenNamen
+
+    '        sortedRCListe = New SortedList(Of String, String)
+    '        rcDefinition = ""
+
+    '        For iz As Integer = 1 To sammelrollenNamen.Count
+    '            tmpName = CStr(sammelrollenNamen.Item(iz))
+    '            If Not sortedRCListe.ContainsKey(tmpName) Then
+    '                sortedRCListe.Add(tmpName, tmpName)
+    '            End If
+    '        Next
+
+    '        Dim subRoleIDs As SortedList(Of Integer, Double) = RoleDefinitions.getSubRoleIDsOf(validationName, PTcbr.all)
+
+    '        For Each srKvP As KeyValuePair(Of Integer, Double) In subRoleIDs
+    '            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(srKvP.Key)
+    '            If Not IsNothing(tmpRole) Then
+    '                tmpName = tmpRole.name
+    '                If Not sortedRCListe.ContainsKey(tmpName) Then
+    '                    sortedRCListe.Add(tmpName, tmpName)
+    '                End If
+    '            End If
+
+    '        Next
+
+
+    '        For iz As Integer = 1 To sortedRCListe.Count
+    '            If rcDefinition.Length = 0 Then
+    '                rcDefinition = sortedRCListe.ElementAt(iz - 1).Value
+    '            Else
+    '                rcDefinition = rcDefinition & ";" & sortedRCListe.ElementAt(iz - 1).Value
+    '            End If
+    '        Next
+
+    '        ' jetzt den Validation String hinzufügen 
+    '        If Not validationStrings.ContainsKey(validationName) Then
+    '            validationStrings.Add(validationName, rcDefinition)
+    '        End If
+
+    '    Next
+
+    '    createMassEditRcValidations = validationStrings
+    'End Function
 
     Sub massEditZeileLoeschen(ByVal ID As String)
 
@@ -14157,13 +14164,10 @@ Public Module agm2
 
                                 Dim validRole As Boolean = True
 
-
-                                If Not IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                                    If awinSettings.isRestrictedToOrgUnit.Length > 0 Then
-                                        ' prüfen, ob es eine gültige Restriction ist 
-
-                                        If RoleDefinitions.containsName(awinSettings.isRestrictedToOrgUnit) Then
-                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(awinSettings.isRestrictedToOrgUnit)
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                    If myCustomUserRole.specifics.Length > 0 Then
+                                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
+                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(myCustomUserRole.specifics)
 
                                             If RoleDefinitions.hasAnyChildParentRelationsship(roleUID, restrictedTopRole.UID) Then
                                                 validRole = True
@@ -15570,7 +15574,6 @@ Public Module agm2
             myWindowsName = myUser.Name
 
 
-
             globalPath = awinSettings.globalPath
 
 
@@ -15908,31 +15911,22 @@ Public Module agm2
 
                     loginErfolgreich = logInToMongoDB(True)
 
-                    ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-                    Dim allMyCustomUserRoles As New clsCustomUserRoles
-                    '??? Dim allMyCustomUserRoles As clsCustomUserRoles = retrieveCustomUserRolesOf(dbUserID)
-
-                    If allMyCustomUserRoles.count > 1 Then
-
-                    Else
-                        myCustomUserRole = allMyCustomUserRoles.elementAt(0)
-                    End If
-
                     If Not loginErfolgreich Then
-                            ' Customization-File wird geschlossen
-                            xlsCustomization.Close(SaveChanges:=False)
-                            Call logfileSchreiben("LOGIN cancelled ...", "", -1)
-                            Call logfileSchliessen()
-                            If awinSettings.englishLanguage Then
-                                Throw New ArgumentException("LOGIN cancelled ...")
-                            Else
-                                Throw New ArgumentException("LOGIN abgebrochen ...")
-                            End If
-
+                        ' Customization-File wird geschlossen
+                        xlsCustomization.Close(SaveChanges:=False)
+                        Call logfileSchreiben("LOGIN cancelled ...", "", -1)
+                        Call logfileSchliessen()
+                        If awinSettings.englishLanguage Then
+                            Throw New ArgumentException("LOGIN cancelled ...")
+                        Else
+                            Throw New ArgumentException("LOGIN abgebrochen ...")
                         End If
+
                     End If
 
-                End If 'if special="ProjectBoard"
+                End If
+
+            End If 'if special="ProjectBoard"
 
 
             ''Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -16222,6 +16216,11 @@ Public Module agm2
 
                     End If
 
+
+                    ' jetzt werden die Rollen besetzt 
+                    Call setUserRoles()
+
+
                     ' Logfile wird geschlossen
                     Call logfileSchliessen()
 
@@ -16286,6 +16285,48 @@ Public Module agm2
 
     End Sub
 
+    Private Sub setUserRoles()
+        ' Test tk 23.12.18
+        ' tk 23.12.18 hier werden die Test Custom User Roles besetzt 
+        Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
+        ' Ende Test 
+
+        ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
+        Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
+        '??? Dim allMyCustomUserRoles As clsCustomUserRoles = retrieveCustomUserRolesOf(dbUserID)
+
+
+        If allMyCustomUserRoles.Count > 1 Then
+            Dim chooseUserRole As New frmChooseCustomUserRole
+
+            With chooseUserRole
+                .myUserRoles = allMyCustomUserRoles
+            End With
+            ' Formular zur Auswahl der User Rolle anzeigen 
+            Dim returnResult As DialogResult = chooseUserRole.ShowDialog()
+
+            If returnResult = DialogResult.OK Then
+                myCustomUserRole = allMyCustomUserRoles.Item(chooseUserRole.selectedIndex)
+            Else
+                myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+            End If
+
+        ElseIf allMyCustomUserRoles.Count = 1 Then
+            myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+
+        Else
+            myCustomUserRole = New clsCustomUserRole
+            With myCustomUserRole
+                .customUserRole = ptCustomUserRoles.OrgaAdmin
+                .specifics = ""
+                .userName = dbUsername
+            End With
+        End If
+
+        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+        Call myCustomUserRole.setNonAllowances()
+
+    End Sub
 
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
@@ -17978,15 +18019,16 @@ Public Module agm2
                     awinSettings.actualDataMonth = Date.MinValue
                 End Try
 
-                Try
-                    awinSettings.isRestrictedToOrgUnit = CStr(.Range("roleAccessIsRestrictedTo").Value)
+                ' tk 23.12.18 deprecated
+                'Try
+                '    awinSettings.isRestrictedToOrgUnit = CStr(.Range("roleAccessIsRestrictedTo").Value)
 
-                    If IsNothing(awinSettings.isRestrictedToOrgUnit) Then
-                        awinSettings.isRestrictedToOrgUnit = ""
-                    End If
-                Catch ex As Exception
-                    awinSettings.isRestrictedToOrgUnit = ""
-                End Try
+                '    If IsNothing(awinSettings.isRestrictedToOrgUnit) Then
+                '        awinSettings.isRestrictedToOrgUnit = ""
+                '    End If
+                'Catch ex As Exception
+                '    awinSettings.isRestrictedToOrgUnit = ""
+                'End Try
 
 
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
