@@ -194,9 +194,9 @@ Public Module Module1
     Public Const rootPhaseName As String = "0§.§"
 
     ' diese Konstante bestimmt, welchen Varianten Namen Portfolios bzw. Programme bekommen 
-    Public Const portfolioVName As String = "Portfolio/Prog."
+    'Public Const portfolioVName As String = ""
     ' diese Konstante bestimmt, wie die Variante heissen soll, die die Ist-Daten - zumindest temporär - aufnimmt 
-    Public Const istDatenVName As String = "ActualData"
+    'Public Const istDatenVName As String = "ActualData"
     ' diese Konstante wird benutzt, wenn keine Variante angegeben wurde, d.h. meistens das alle Variante relevant sind.
     Public Const noVariantName As String = "-9999999"
 
@@ -253,6 +253,11 @@ Public Module Module1
 
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum ptVariantFixNames
+        pfv = 0 ' für den Portfolio Manager, für die Vorgaben reserviert
+        acd = 1 ' ggf später für ActualData 
+    End Enum
+
     Public settingTypes() = {"customfields", "customroles", "organisation", "clientsettings", "phasemilestonedefs", "reportprofiles", "reportprofiles", "generalexcelcharts"}
 
     Public Enum ptSettingTypes
@@ -266,17 +271,20 @@ Public Module Module1
         generalexcelcharts = 7
     End Enum
 
-    Public customUserRoleBezeichner() = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
+    Public customUserRoleBezeichner() As String = {"Organiations-Admin", "Portfolio", "Ressourcen", "Projektleiter", "All"}
+
+    ' hier wird geregelt, wer denn welche Menu-Punkte sehen darf
+    Public customUserRoleAllowance(,) As String = Nothing
 
     ''' <summary>
     ''' Werte-Bereich: {0=Admin, 1=PortfolioMgr; 2=RessourcenManager; 3=Projektleiter
     ''' </summary>
     Public Enum ptCustomUserRoles
-        orgaadmin = 0
-        portfoliomgr = 1
-        resourcemgr = 2
-        projectlead = 3
-        all = 4
+        OrgaAdmin = 0
+        PortfolioManager = 1
+        RessourceManager = 2
+        ProjektLeitung = 3
+        Alles = 4
     End Enum
 
     ''' <summary>
@@ -820,6 +828,7 @@ Public Module Module1
         ChangeRequest = 2
         abgebrochen = 3
         abgeschlossen = 4
+        ' die beiden folgenden nicht mehr verwenden ! 
         geplanteVorgabe = 5
         beauftragteVorgabe = 6
     End Enum
@@ -1415,6 +1424,71 @@ Public Module Module1
         End Try
 
     End Sub
+
+    Public Function prepProjectsForRoles(ByVal pList As SortedList(Of String, clsProjekt)) As SortedList(Of String, clsProjekt)
+
+        Dim tmpResult As New SortedList(Of String, clsProjekt)
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In pList
+
+            Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
+            tmpResult.Add(kvp.Key, newProj)
+
+        Next
+
+        prepProjectsForRoles = tmpResult
+    End Function
+
+    Public Function prepProjectsForRoles(ByVal pList As SortedList(Of DateTime, clsProjekt)) As SortedList(Of DateTime, clsProjekt)
+
+        Dim tmpResult As New SortedList(Of DateTime, clsProjekt)
+
+        For Each kvp As KeyValuePair(Of DateTime, clsProjekt) In pList
+            Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
+            tmpResult.Add(kvp.Key, newProj)
+        Next
+
+        prepProjectsForRoles = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' wenn myCustomUserRole = Portfolio Mgr: Ressourcen Zuordnungen müssen aggregiert werden 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    Public Function prepProjectForRoles(ByVal hproj As clsProjekt) As clsProjekt
+
+        Dim tmpResult As clsProjekt = hproj
+        ' wenn customUserRole = Portfolio 
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            If myCustomUserRole.getAggregationRoleIDs.Length > 1 Then
+                tmpResult = hproj.aggregateForPortfolioMgr(myCustomUserRole.getAggregationRoleIDs)
+            End If
+        End If
+
+        prepProjectForRoles = tmpResult
+
+    End Function
+
+    ''' <summary>
+    ''' prüft, ob es sich um eine Aggregations-Rolle handelt, nur bei Portfolio Mgr relevant;
+    ''' in diesem Fall kann ind er Hierarchie nicht weiter runtergegangen werden
+    ''' </summary>
+    ''' <param name="role"></param>
+    ''' <returns></returns>
+    Public Function isAggregationRole(ByVal role As clsRollenDefinition) As Boolean
+        Dim tmpResult As Boolean = False
+
+        If Not IsNothing(role) Then
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                ' nur dann muss mehr geprüft werden 
+                tmpResult = myCustomUserRole.getAggregationRoleIDs.Contains(role.UID)
+            End If
+        End If
+
+        isAggregationRole = tmpResult
+    End Function
 
     ''' <summary>
     ''' setzt die Markierungen alle Projekte zurück ...
@@ -7071,6 +7145,7 @@ Public Module Module1
         bestimmeRollenDiagrammTitel = tmpResult
 
     End Function
+
 
 
 

@@ -33,7 +33,7 @@ Partial Class frmChooseCustomUserRole
         'btnOK
         '
         Me.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.btnOK.Location = New System.Drawing.Point(155, 203)
+        Me.btnOK.Location = New System.Drawing.Point(160, 203)
         Me.btnOK.Name = "btnOK"
         Me.btnOK.Size = New System.Drawing.Size(75, 23)
         Me.btnOK.TabIndex = 0

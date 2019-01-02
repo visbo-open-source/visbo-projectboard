@@ -1860,8 +1860,8 @@ Public Module awinGeneralModules
             If collectionsAreDifferent(uRoles, GPRoles) Then
                 tmpResult = False
             Else
-                showRangeLeft = getColumnOfDate(CDate("1.1.2018"))
-                showRangeRight = getColumnOfDate(CDate("31.12.2018"))
+                showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
+                showRangeRight = getColumnOfDate(CDate("31.12.2019"))
 
                 For Each tmpRole As String In uRoles
                     Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRole)
@@ -2175,6 +2175,7 @@ Public Module awinGeneralModules
 
                 newCItem.start = impProjekt.startDate
                 newCItem.zeile = lfdZeilenNr
+                newCItem.projectTyp = CType(impProjekt.projectType, ptPRPFType).ToString
                 'newCItem.zeile = lfdZeilenNr
                 newC.add(newCItem, sKey:=lfdZeilenNr)
 
@@ -2668,15 +2669,18 @@ Public Module awinGeneralModules
 
 
     End Sub
- 
+
     ''' <summary>
     ''' visualisiert die in der Konstellation aufgeführten Projekte hinzu; 
     ''' wenn Sie bereits geladen sind, wird nachgesehen, ob die richtige Variante aktiviert ist 
     ''' ggf. wird diese Variante dann aktiviert 
     ''' </summary>
     ''' <param name="activeConstellation"></param>
+    ''' <param name="storedAtOrBefore"></param>
+    ''' <param name="loadPFV">gibt an, ob die Vorgabe des Portfolio Managers geladen werden soll </param>
     ''' <remarks></remarks>
-    Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date)
+    Public Sub addConstellation(ByVal activeConstellation As clsConstellation, ByVal storedAtOrBefore As Date,
+                                Optional ByVal loadPFV As Boolean = False)
 
 
         Dim neErrorMessage As String = " (Datum kann nicht angepasst werden)"
@@ -2701,61 +2705,19 @@ Public Module awinGeneralModules
         End If
 
 
-        ' jetzt werden die einzelnen Projekte dazugeholt oder nur das Summary Projekt
-        'If showOnlySummary Then
 
-        '    ' das Summary Projekt suchen 
-        '    Dim spName As String = activeConstellation.constellationName
-        '    Dim svName As String = portfolioVName
-        '    Dim skey As String = calcProjektKey(spName, svName)
-        '    Dim sProj As clsProjekt = getProjektFromSessionOrDB(spName, svName, AlleProjekte, storedAtOrBefore)
-
-
-        '    If IsNothing(sProj) Then
-        '        sProj = calcUnionProject(activeConstellation, False, 0, "Summen-Projekt von " & spName)
-        '        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-        '        Dim newPosition As Integer = -1
-        '        If currentSessionConstellation.sortCriteria = ptSortCriteria.customTF Then
-        '            If boardwasEmpty Then
-        '                ' den gleichen key verwenden wie in der activeConstellation
-        '                newPosition = activeConstellation.getBoardZeile(sProj.name)
-        '            Else
-        '                newPosition = activeConstellation.getBoardZeile(sProj.name) + startOfFreeRows
-        '            End If
-        '        End If
-        '        AlleProjekte.Add(sProj, True, newPosition)
-        '    End If
-
-
-        '    If Not IsNothing(sProj) Then
-
-        '        Dim showIT As Boolean = True
-
-        '        Try
-        '            Call putItemOnVisualBoard(skey, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
-
-        '            If AlleProjektSummaries.Containskey(skey) Then
-        '                AlleProjektSummaries.Remove(skey, False)
-        '            End If
-
-        '            AlleProjektSummaries.Add(sProj, False)
-
-        '            If ShowProjekteSummaries.contains(sProj.name) Then
-        '                ShowProjekteSummaries.Remove(sProj.name)
-        '            End If
-        '            ShowProjekteSummaries.Add(sProj, False)
-        '        Catch ex As Exception
-
-        '        End Try
-
-        '    End If
-
-        'Else
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
             Dim showIT As Boolean = kvp.Value.show
             Try
-                Call putItemOnVisualBoard(kvp.Key, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
+                Dim realKey As String = kvp.Key
+                If loadPFV Then
+                    Dim pName As String = getPnameFromKey(kvp.Key)
+                    Dim vName As String = ptVariantFixNames.pfv.ToString
+                    realKey = calcProjektKey(pName, vName)
+                End If
+
+                Call putItemOnVisualBoard(realKey, showIT, storedAtOrBefore, boardwasEmpty, activeConstellation, startOfFreeRows, outPutCollection)
             Catch ex As Exception
                 Exit For
             End Try
@@ -3029,7 +2991,7 @@ Public Module awinGeneralModules
                             End If
                         End If
 
-                        unionProj.variantName = portfolioVName
+                        unionProj.variantName = ""
                         unionProj = unionProj.unionizeWith(hproj)
 
                     End If
@@ -3103,7 +3065,10 @@ Public Module awinGeneralModules
             Dim boardWasEmpty As Boolean = (ShowProjekte.Count = 0)
             Dim sessionWasEmpty As Boolean = (AlleProjekte.Count = 0)
 
+            Dim calculateSummaryProjekt As Boolean = ((myCustomUserRole.customUserRole <> ptCustomUserRoles.PortfolioManager) Or
+                                                     (Not awinSettings.loadPFV))
             Dim activeSummaryConstellation As clsConstellation = Nothing
+            Dim pfvVariantName As String = ptVariantFixNames.pfv.ToString
 
             If clearSession And Not sessionWasEmpty Then
                 Call clearCompleteSession()
@@ -3121,14 +3086,18 @@ Public Module awinGeneralModules
 
             For Each kvp As KeyValuePair(Of String, clsConstellation) In constellationsToShow.Liste
 
-                ' hier wird das Summary Projekt immer neu gebildet .. evtl ist das an der Stelle unnötig; das wird sich zeigen müssen 
-                Dim curSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, portfolioVName, AlleProjekte, storedAtOrBefore)
-                Dim oldBudget As Double = 0.0
+                ' hier wird das Summary Projekt erst mal geholt , um das vorgegebene Budget zu ermitteln
+                Dim curSummaryProj As clsProjekt = getProjektFromSessionOrDB(kvp.Value.constellationName, pfvVariantName, AlleProjekte, storedAtOrBefore)
+                Dim oldBudget As Double = -1
                 If Not IsNothing(curSummaryProj) Then
                     oldBudget = curSummaryProj.Erloes
                 End If
 
-                curSummaryProj = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
+                ' wenn es keine Vorgabe gibt, wird das Budget aus der Summe der Budgets der Einzelprojekte gebildet 
+                If calculateSummaryProjekt Then
+                    curSummaryProj = calcUnionProject(kvp.Value, False, storedAtOrBefore, budget:=oldBudget, description:="Summen-Projekt von " & kvp.Key)
+                End If
+
 
                 If showSummaryProject Then
                     ' dann sollen die Summary Projekte in AlleProjekte eingetragen werden ...
@@ -3141,7 +3110,8 @@ Public Module awinGeneralModules
                         Dim cItem As New clsConstellationItem
                         With cItem
                             .projectName = kvp.Value.constellationName
-                            .variantName = portfolioVName
+                            .variantName = curSummaryProj.variantName
+                            .projectTyp = CType(curSummaryProj.projectType, ptPRPFType).ToString
                             .zeile = zaehler
                             .show = True
                         End With
@@ -3201,7 +3171,7 @@ Public Module awinGeneralModules
                 End If
                 ' jetzt den Sortier-Modus anpassen 
 
-                Call addConstellation(kvp.Value, storedAtOrBefore)
+                Call addConstellation(kvp.Value, storedAtOrBefore, awinSettings.loadPFV)
 
             Next
 
@@ -3265,6 +3235,9 @@ Public Module awinGeneralModules
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In currentConstellation.Liste
 
             Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
+
+            ' prüfen auf Rolle 
+            Call hproj.setVariantNameAccordingUserRole()
 
             If Not IsNothing(hproj) Then
                 If hproj.projectType = ptPRPFType.portfolio Then
@@ -3356,8 +3329,12 @@ Public Module awinGeneralModules
             If budget = 0 Then
                 budget = -1
             End If
+            Dim tmpVariantName As String = ""
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                tmpVariantName = ptVariantFixNames.pfv.ToString
+            End If
+            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
 
-            Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(currentConstellation.constellationName, portfolioVName, AlleProjekte, Date.Now)
             If Not IsNothing(oldSummaryP) Then
                 budget = oldSummaryP.budgetWerte.Sum
             End If
@@ -6610,9 +6587,10 @@ Public Module awinGeneralModules
 
             ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
             Dim tmpVariantName As String = ""
-            If hproj.projectType = ptPRPFType.portfolio Then
-                tmpVariantName = portfolioVName
-            End If
+            ' tk 28.12.18 deprectaed
+            'If hproj.projectType = ptPRPFType.portfolio Then
+            '    tmpVariantName = portfolioVName
+            'End If
 
             With CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(currentWsName), Excel.Worksheet)
                 Dim tmpArray() As String

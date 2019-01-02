@@ -28,7 +28,7 @@
             tmpResult = False
         End If
         ' was ist mit dem entsprechenden Summary Projekt ... 
-        Dim skey As String = calcProjektKey(portfolioName, portfolioVName)
+        Dim skey As String = calcProjektKey(portfolioName, "")
 
         Dim hproj As clsProjekt = AlleProjekte.getProject(key:=skey)
         If Not IsNothing(hproj) Then
@@ -57,7 +57,7 @@
         Get
             Dim tmpResult As Double = 0.0
             For Each pfKvP As KeyValuePair(Of String, Boolean) In _listOfLoadedSessionPortfolios
-                Dim key As String = calcProjektKey(pfKvP.Key, portfolioVName)
+                Dim key As String = calcProjektKey(pfKvP.Key, "")
                 Dim hproj As clsProjekt = AlleProjekte.getProject(key)
 
                 ' wenn ein Portfolio nicht über Platzhalter geladen wird, dann werden die Summary Projekte in AlleProjektSummaries platziert ..
