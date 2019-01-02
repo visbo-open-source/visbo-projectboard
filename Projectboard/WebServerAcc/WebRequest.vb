@@ -146,6 +146,7 @@ Public Class Request
 
     End Function
 
+
     ''' <summary>
     ''' prüft die Verfügbarkeit der MongoDB bzw. ob ein Login bereits erfolgte, d.h. gültiger token vorhanden
     ''' </summary>
@@ -668,6 +669,7 @@ Public Class Request
 
             Dim pname As String = projekt.name
             Dim vname As String = projekt.variantName
+            Dim standardVariante As String = ""
 
             Dim aktvp As clsVP = GETvpid(pname, err, projekt.projectType)
             Dim vpid As String = aktvp._id
@@ -689,6 +691,13 @@ Public Class Request
                 VP.vcid = aktVCid
                 VP.vpPublic = True
                 VP.vpType = projekt.projectType
+
+                If Not IsNothing(projekt.kundenNummer) Then
+                    VP.kundennummer = projekt.kundenNummer
+                Else
+                    VP.kundennummer = ""
+                End If
+
 
                 vpErg = POSTOneVP(VP, err)
 
@@ -717,6 +726,11 @@ Public Class Request
                 Else
                     Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
+                '--------------------------------------------------------
+                '     standard-Variante erzeugen aus angegebener Variante
+                '--------------------------------------------------------
+                projekt.variantName = standardVariante ' STANDARD-Variante
+                Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
 
                 ' jetzt müste der Fall behandelt werden: Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
                 ' warum wurde diese Änderung gemacht: bis heute 28.12.18 wurde nur die Variante-Version angelegt, aber keine Basis Variante ; das soll jetzt hier gemacht werden 
@@ -741,57 +755,66 @@ Public Class Request
                     storedVPVariant = POSTVPVariant(vpid, vname, err)
                 Else
                     ' zu diesem Projekt gibt es nur die Standardvariante = > nichts tun
+                    storedVPVariant = True
                 End If
             End If
 
             ' Projekt ist bereits in VisboProjects Collection gespeichert, es existiert eine vpid
-            If storedVP Then
+            If storedVP And storedVPVariant Then
 
-                ' jetzt muss noch VisboProjectVersion gespeichert werden
-                Dim typeRequest As String = "/vpv"
-                Dim serverUriString As String = serverUriName & typeRequest
-                Dim serverUri As New Uri(serverUriString)
+                '--------------------------------------------------------
+                '' ' jetzt muss noch VisboProjectVersion gespeichert werden
+                '
+                '     variantName-Variante erzeugen 
+                '--------------------------------------------------------
+                projekt.variantName = vname
+                result = POSTOneVPv(vpid, projekt, userName, err)
 
 
-                If checkChgPermission(pname, vname, userName, err) Then
+                ''Dim typeRequest As String = "/vpv"
+                ''Dim serverUriString As String = serverUriName & typeRequest
+                ''Dim serverUri As New Uri(serverUriString)
 
-                    Dim projektWeb As New clsProjektWebLong
-                    projektWeb.copyfrom(projekt)
-                    projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
-                    projektWeb.vpid = vpid
 
-                    data = serverInputDataJson(projektWeb, "")
+                ''If checkChgPermission(pname, vname, userName, err) Then
 
-                    Dim storeAntwort As clsWebLongVPv
-                    Dim Antwort As String
-                    Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-                        Antwort = ReadResponseContent(httpresp)
-                        errcode = CType(httpresp.StatusCode, Integer)
-                        errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                        storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
-                    End Using
+                ''    Dim projektWeb As New clsProjektWebLong
+                ''    projektWeb.copyfrom(projekt)
+                ''    projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
+                ''    projektWeb.vpid = vpid
 
-                    If errcode = 200 Then
+                ''    data = serverInputDataJson(projektWeb, "")
 
-                        result = (storeAntwort.state = "success")
-                        result = True
+                ''    Dim storeAntwort As clsWebLongVPv
+                ''    Dim Antwort As String
+                ''    Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                ''        Antwort = ReadResponseContent(httpresp)
+                ''        errcode = CType(httpresp.StatusCode, Integer)
+                ''        errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                ''        storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
+                ''    End Using
 
-                        ' vpv zu Cache hinzufügen
-                        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+                ''    If errcode = 200 Then
 
-                    Else
+                ''        result = (storeAntwort.state = "success")
+                ''        result = True
 
-                        ' Fehlerbehandlung je nach errcode
-                        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+                ''        ' vpv zu Cache hinzufügen
+                ''        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
 
-                    End If
-                    err.errorCode = errcode
-                    err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
-                End If
+                ''    Else
+
+                ''        ' Fehlerbehandlung je nach errcode
+                ''        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+
+                ''    End If
+                ''    err.errorCode = errcode
+                ''    err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
+                ''End If
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException(ex.Message & ": storeProjectToDB")
+            'Throw New ArgumentException(ex.Message & ": storeProjectToDB")
         End Try
 
         storeProjectToDB = result
@@ -934,7 +957,7 @@ Public Class Request
             Dim vpid As String = ""
             Dim anzLoop As Integer = 0
             'Dim allVP As New List(Of clsVP)
-            While (result.Count <= 0 And anzLoop <= 2)
+            While (result.Count <= 0 And anzLoop < 2)
 
                 ' zuerst nur im Cache nachsehen
                 For Each kvp As KeyValuePair(Of String, clsVP) In VRScache.VPsId
@@ -1411,11 +1434,12 @@ Public Class Request
 
                 ' Portfolio-Name
                 cVP.name = c.constellationName
-                ' berechtiger User
-                Dim user As New clsUser
-                user.email = aktUser.email
-                user.role = "Admin"
-                cVP.users.Add(user)
+                ' ur:14.12.2018: liste der User ist nicht mehr in den VPs enthalten
+                '' berechtiger User
+                'Dim user As New clsUser
+                'user.email = aktUser.email
+                'user.role = "Admin"
+                'cVP.users.Add(user)
                 ' VisboCenter - Id
                 cVP.vcid = aktVCid
                 ' VisboProject-Type - Portfolio
@@ -1754,6 +1778,172 @@ Public Class Request
 
         retrieveCostsFromDB = result
 
+    End Function
+
+
+    ''' <summary>
+    ''' speichert eine VCSetting in der Datenbank; 
+    ''' </summary>
+    ''' <param name="listofCustomUserRoles"></param>
+    ''' <param name="type"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function storeVCsettingsToDB(ByVal listofCustomUserRoles As clsCustomUserRoles,
+                                        ByVal type As String,
+                                        ByVal name As String,
+                                        ByVal ts As DateTime,
+                                        ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim setting As Object = Nothing
+        Dim newsetting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Try
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = New List(Of clsVCSettingCustomroles)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
+
+                Case settingTypes(ptSettingTypes.customfields)
+                Case settingTypes(ptSettingTypes.organisation)
+            End Select
+
+            Dim timestamp As String = ""
+            If ts > Date.MinValue Then
+                timestamp = DateTimeToISODate(ts.ToUniversalTime())
+            End If
+
+
+            Dim listofCURsWeb As New clsCustomUserRolesWeb
+
+            listofCURsWeb.copyFrom(listofCustomUserRoles)
+
+            ' hier fehtl noch der copyto und copyfrom für die customUserRollen
+
+            ''''Dim CustUserRole As New clsCustomUserRoleWeb
+            ''''CustUserRole.userID = aktUser._id
+            ''''CustUserRole.userName = aktUser.email
+            ''''CustUserRole.customUserRole = 1
+            ''''CustUserRole.specifics = "testCustomRolle 1"
+            ''''listofCURsWeb.customUserRoles.Add(CustUserRole)
+            '''''listlistofCURsWeb.Add(listofCURsWeb)
+
+            ' der Unique-Key für customroles besteht aus: name, type
+            If type = settingTypes(ptSettingTypes.customroles) Then
+                newsetting = New clsVCSettingCustomroles
+                CType(newsetting, clsVCSettingCustomroles).name = type         ' customroles '
+                CType(newsetting, clsVCSettingCustomroles).timestamp = ""
+                CType(newsetting, clsVCSettingCustomroles).userId = ""
+                CType(newsetting, clsVCSettingCustomroles).vcid = aktVCid
+                CType(newsetting, clsVCSettingCustomroles).type = type
+                CType(newsetting, clsVCSettingCustomroles).value = listofCURsWeb
+
+                If anzSetting = 1 Then
+                    newsetting._id = settingID
+                    ' Update der customroles - Setting
+                    result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
+                Else
+                    ' Create der customroles - Setting
+                    result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
+                End If
+
+
+
+                If err.errorCode <> 200 Then
+
+                    Select Case err.errorCode
+                        Case 400
+                        Case 401
+                        Case 403
+                        Case 409
+                            ' PUTOneVCSetting erforderlich
+                            Call MsgBox(err.errorMsg)
+                        Case Else
+                            Call MsgBox(err.errorMsg)
+                    End Select
+
+                End If
+
+            End If
+
+
+
+
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        storeVCsettingsToDB = result
+    End Function
+
+
+    Public Function retrieveCustomUserRolesOf(ByVal dbusername As String, ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
+
+        Dim result As New clsCustomUserRoles
+        Dim interimResult As New clsCustomUserRoles
+        Dim setting As Object = Nothing
+        Dim newsetting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.customroles)
+        Dim name As String = type
+        Dim allCustomUserRoles As New clsCustomUserRoles
+        Dim webCustomUserRoles As New clsCustomUserRolesWeb
+        Try
+
+            setting = New List(Of clsVCSettingCustomroles)
+            setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+            anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
+
+            If anzSetting > 0 Then
+
+                settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
+                webCustomUserRoles = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0).value
+                webCustomUserRoles.copyTo(interimResult)
+
+                For Each kvp As KeyValuePair(Of String, clsCustomUserRole) In interimResult.liste
+
+                    Dim aktUserKey As String = dbusername.Trim & kvp.Value.customUserRole.ToString.Trim & kvp.Value.specifics
+
+                    If kvp.Key = aktUserKey Then
+                        result.addCustomUserRole(kvp.Value.userName, kvp.Value.userID, kvp.Value.customUserRole, kvp.Value.specifics)
+                    End If
+                Next
+
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+        retrieveCustomUserRolesOf = result
+    End Function
+
+    Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
+
+        Dim result As String = ""
+
+        Try
+            result = "not defined"
+        Catch ex As Exception
+
+        End Try
+        retrieveUserIDFromName = result
     End Function
 
     ' ------------------------------------------------------------------------------------------
@@ -2973,12 +3163,12 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As String
-            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Dim webVCroleantwort As clsWebVCroles = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCroles)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3044,12 +3234,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Dim webVCroleantwort As clsWebVCroles = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCroles)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3102,12 +3292,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCroleantwort As clsWebVCrole = Nothing
+            Dim webVCroleantwort As clsWebVCroles = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCrole)(Antwort)
+                webVCroleantwort = JsonConvert.DeserializeObject(Of clsWebVCroles)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3161,12 +3351,12 @@ Public Class Request
             Dim data As Byte() = encoding.GetBytes(datastr)
 
             Dim Antwort As String
-            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Dim webVCcostantwort As clsWebVCcosts = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcosts)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3219,12 +3409,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Dim webVCcostantwort As clsWebVCcosts = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcosts)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3276,12 +3466,12 @@ Public Class Request
 
 
             Dim Antwort As String
-            Dim webVCcostantwort As clsWebVCcost = Nothing
+            Dim webVCcostantwort As clsWebVCcosts = Nothing
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
                 Antwort = ReadResponseContent(httpresp)
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcost)(Antwort)
+                webVCcostantwort = JsonConvert.DeserializeObject(Of clsWebVCcosts)(Antwort)
             End Using
 
             If errcode = 200 Then
@@ -3304,6 +3494,320 @@ Public Class Request
 
     End Function
 
+
+    ''' <summary>
+    ''' liest ein Setting
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="type"></param>
+    ''' <param name="name"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="userId"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Private Function GETOneVCsetting(ByVal vcid As String,
+                                     ByVal type As String,
+                                     ByVal name As String,
+                                     ByVal ts As Date,
+                                     ByVal userId As String,
+                                     ByRef err As clsErrorCodeMsg,
+                                     Optional ByVal refnext As Boolean = False) As Object
+
+        Dim result As Object = Nothing
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim webVCsetting As Object = Nothing
+
+        Try
+            Dim timestamp As String = DateTimeToISODate(ts.ToUniversalTime)
+
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    result = CType(result, clsVCSettingCustomroles)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    result = CType(result, clsVCSettingCustomfields)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    result = CType(result, clsVCSettingOrganisation)
+
+                Case Else
+                    Call MsgBox("settingType = " & type)
+            End Select
+
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/setting"
+
+            If type <> "" Or name <> "" Or ts > Date.MinValue Then
+                serverUriString = serverUriString & "?"
+
+
+                If type <> "" Then
+                    serverUriString = serverUriString & "type=" & type
+                End If
+
+                If name <> "" Then
+                    If type <> "" Then
+                        serverUriString = serverUriString & "&name=" & type
+                    Else
+                        serverUriString = serverUriString & "name=" & type
+                    End If
+                End If
+
+                If name <> "" Or type <> "" Then
+                    If ts > Date.MinValue Then
+                        serverUriString = serverUriString & "&refdate=" & timestamp
+                        If refnext Then
+                            serverUriString = serverUriString & "&refNext=" & refnext.ToString
+                        End If
+                    Else
+                        If refnext Then
+                            serverUriString = serverUriString & "&refDate=" & timestamp
+                            serverUriString = serverUriString & "&refNext=" & refnext.ToString
+                        End If
+                    End If
+                End If
+
+            End If
+
+
+            Dim datastr As String = ""
+            Dim encoding As New System.Text.UTF8Encoding()
+            Dim data As Byte() = encoding.GetBytes(datastr)
+
+            Dim serverUri As New Uri(serverUriString)
+
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "GET")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                If errcode = 200 Then
+                    Select Case type
+                        Case settingTypes(ptSettingTypes.customroles)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomroles))
+                        Case settingTypes(ptSettingTypes.customfields)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomfields))
+                        Case settingTypes(ptSettingTypes.organisation)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
+                            result = CType(webVCsetting.vcsetting, List(Of clsVCSettingOrganisation))
+                        Case Else
+                            Call MsgBox("settingType = " & type)
+                    End Select
+                Else
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+                End If
+
+            End Using
+
+            If errcode = 200 Then
+                'nothing to do
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("GETOneVCsetting", errcode, errmsg & " : " & webVCsetting.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "GETOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        GETOneVCsetting = result
+
+    End Function
+
+    ''' <summary>
+    ''' erzeugt ein Setting
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="setting"></param>
+    ''' <returns></returns>
+    Private Function POSTOneVCsetting(ByVal vcid As String, ByVal type As String, ByVal setting As Object, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim webVCsetting As Object = Nothing
+
+
+        Try
+
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomroles)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomfields)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingOrganisation)
+
+                Case Else
+                    Call MsgBox("settingType = " & type)
+            End Select
+
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/setting"
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(setting, "")
+
+
+
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                If errcode = 200 Then
+                    Select Case type
+                        Case settingTypes(ptSettingTypes.customroles)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
+                        Case settingTypes(ptSettingTypes.customfields)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
+                        Case settingTypes(ptSettingTypes.organisation)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
+                        Case Else
+                            Call MsgBox("settingType = " & type)
+                    End Select
+                Else
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+                End If
+
+            End Using
+
+            If errcode = 200 Then
+                result = True
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("POSTOneVCsetting", errcode, errmsg & " : " & webVCsetting.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "POSTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        POSTOneVCsetting = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' update von Setting mit SettingID
+    ''' </summary>
+    ''' <param name="vcid"></param>
+    ''' <param name="setting"></param>
+    ''' <returns></returns>
+    Private Function PUTOneVCsetting(ByVal vcid As String, ByVal type As String, ByRef setting As Object, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+        Dim webVCsetting As Object = Nothing
+
+
+        Try
+
+            Select Case type
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomroles)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingCustomfields)
+
+                Case settingTypes(ptSettingTypes.customroles)
+                    setting = CType(setting, clsVCSettingOrganisation)
+
+                Case Else
+                    Call MsgBox("settingType = " & type)
+            End Select
+
+            Dim serverUriString As String
+            Dim typeRequest As String = "/vc"
+
+            ' URL zusammensetzen
+            If vcid = "" Then
+                serverUriString = serverUriName & typeRequest
+            Else
+                serverUriString = serverUriName & typeRequest & "/" & vcid
+            End If
+            serverUriString = serverUriString & "/setting/" & setting._id
+
+            Dim serverUri As New Uri(serverUriString)
+            Dim data As Byte() = serverInputDataJson(setting, "")
+
+
+
+            Dim Antwort As String
+            Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "PUT")
+                Antwort = ReadResponseContent(httpresp)
+                errcode = CType(httpresp.StatusCode, Integer)
+                errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                If errcode = 200 Then
+                    Select Case type
+                        Case settingTypes(ptSettingTypes.customroles)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomroles)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomroles)).ElementAt(0)
+                        Case settingTypes(ptSettingTypes.customfields)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingCustomfields)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingCustomfields)).ElementAt(0)
+                        Case settingTypes(ptSettingTypes.organisation)
+                            webVCsetting = JsonConvert.DeserializeObject(Of clsWebVCSettingOrganisation)(Antwort)
+                            setting = CType(webVCsetting.vcsetting, List(Of clsVCSettingOrganisation)).ElementAt(0)
+                        Case Else
+                            Call MsgBox("settingType = " & type)
+                    End Select
+                    result = True
+                Else
+                    webVCsetting = JsonConvert.DeserializeObject(Of clsWebOutput)(Antwort)
+                    result = False
+                End If
+
+            End Using
+
+            If errcode = 200 Then
+                ' nothing to do
+            Else
+                ' Fehlerbehandlung je nach errcode
+                Dim statError As Boolean = errorHandling_withBreak("PUTOneVCsetting", errcode, errmsg & " : " & webVCsetting.message)
+            End If
+
+
+            err.errorCode = errcode
+            err.errorMsg = "PUTOneVCsetting" & " : " & errmsg & " : " & webVCsetting.message
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+
+        PUTOneVCsetting = result
+
+    End Function
 
 
     ''' <summary>
@@ -3818,6 +4322,71 @@ Public Class Request
 
         POSTOneVP = result
 
+    End Function
+
+    Private Function POSTOneVPv(ByVal vpid As String,
+                                ByVal projekt As clsProjekt,
+                                ByVal username As String, ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+        Dim errmsg As String = ""
+        Dim errcode As Integer
+
+        Try
+
+            'Dim webVP As New clsWebVP
+            'Dim vpErg As New List(Of clsVP)
+            Dim data() As Byte
+
+            Dim pname As String = projekt.name
+            Dim vname As String = projekt.variantName
+
+            ' jetzt muss noch VisboProjectVersion gespeichert werden
+            Dim typeRequest As String = "/vpv"
+            Dim serverUriString As String = serverUriName & typeRequest
+            Dim serverUri As New Uri(serverUriString)
+
+
+            If checkChgPermission(pname, vname, username, err) Then
+
+                Dim projektWeb As New clsProjektWebLong
+                projektWeb.copyfrom(projekt)
+                projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
+                projektWeb.vpid = vpid
+
+                data = serverInputDataJson(projektWeb, "")
+
+                Dim storeAntwort As clsWebLongVPv
+                Dim Antwort As String
+                Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
+                    Antwort = ReadResponseContent(httpresp)
+                    errcode = CType(httpresp.StatusCode, Integer)
+                    errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
+                    storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
+                End Using
+
+                If errcode = 200 Then
+
+                    result = (storeAntwort.state = "success")
+                    result = True
+
+                    ' vpv zu Cache hinzufügen
+                    VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+
+                Else
+
+                    ' Fehlerbehandlung je nach errcode
+                    Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
+
+                End If
+                err.errorCode = errcode
+                err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        POSTOneVPv = result
     End Function
 
     ''' <summary>

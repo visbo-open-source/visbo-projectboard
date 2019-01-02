@@ -8,7 +8,7 @@
     End Sub
 
     ''' <summary>
-    ''' gibt Zugriif auf die sortierte Liste 
+    ''' gibt Zugriff auf die sortierte Liste 
     ''' </summary>
     ''' <returns></returns>
     Public ReadOnly Property liste() As SortedList(Of String, clsCustomUserRole)
@@ -16,6 +16,8 @@
             liste = _customUserRoles
         End Get
     End Property
+
+
     ''' <summary>
     ''' liefert das Element an der Stelle index. Index kann von 9 bis count-1 gehen
     ''' </summary>
@@ -67,7 +69,7 @@
     ''' <param name="specifics"></param>
     Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserRoles, ByVal specifics As String)
 
-        Dim key As String = userName.Trim & customRoleType.ToString.Trim & specifics
+        Dim key As String = userName.Trim & CInt(customRoleType).ToString.Trim & specifics
         If _customUserRoles.ContainsKey(key) Then
             ' nichts tun, ist ja schon drin ... 
         Else
