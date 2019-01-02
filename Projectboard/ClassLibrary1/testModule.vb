@@ -369,16 +369,16 @@ Public Module testModule
                         End If
 
 
-                        ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-                        Dim tmpVariantName As String = ""
+                        ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
+                        Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
                         ' 28.12.18 tk deprecated
                         'If hproj.projectType = ptPRPFType.portfolio Then
                         '    tmpVariantName = portfolioVName
                         'End If
 
-                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate, err:=err)
+                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=lDate, err:=err)
 
 
 

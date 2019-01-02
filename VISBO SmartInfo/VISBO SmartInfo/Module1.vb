@@ -2323,10 +2323,8 @@ Module Module1
                                     Dim newchtobj As xlNS.ChartObject = Nothing
 
                                     ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-                                    Dim tmpVariantName As String = ""
-                                    If tsProj.projectType = ptPRPFType.portfolio Then
-                                        tmpVariantName = portfolioVName
-                                    End If
+                                    Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
 
                                     Dim qualifier1 As String = pptShape.Tags.Item("Q1")
                                     Dim qualifier2 As String = pptShape.Tags.Item("Q2")
@@ -2370,7 +2368,7 @@ Module Module1
 
                                                         ' jetzt das lProj (Beauftragung) holen
                                                         Try
-                                                            'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                                            'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
                                                             lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
                                                         Catch ex As Exception
                                                             lProj = Nothing
@@ -2413,7 +2411,7 @@ Module Module1
 
                                                     ' jetzt das bProj (Beauftragung) holen
                                                     Try
-                                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
                                                         bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
                                                     Catch ex As Exception
                                                         bProj = Nothing
@@ -2432,7 +2430,7 @@ Module Module1
 
                                                     ' jetzt das lProj (Beauftragung) holen
                                                     Try
-                                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
                                                         lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
                                                     Catch ex As Exception
                                                         lProj = Nothing
@@ -2495,10 +2493,8 @@ Module Module1
                         If Not IsNothing(tsProj) Then
 
                             ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-                            Dim tmpVariantName As String = ""
-                            If tsProj.projectType = ptPRPFType.portfolio Then
-                                tmpVariantName = portfolioVName
-                            End If
+                            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+
 
                             If bigType = ptReportBigTypes.components Then
                                 Call updatePPTComponent(tsProj, pptShape, detailID, curTimeStamp)
@@ -2510,9 +2506,9 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
                                     Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
                                         bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddMinutes(-1))
+                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
                                         lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
@@ -2532,9 +2528,9 @@ Module Module1
 
                                 ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
                                     Try
-                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, tmpVariantName)
+                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
                                         bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, tmpVariantName, curTimeStamp.AddHours(-1))
+                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddHours(-1))
                                         lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
@@ -2645,7 +2641,7 @@ Module Module1
             repmsg(0) = "Personnel Costs" '164
             repmsg(1) = "Forecast" ' 38
             repmsg(2) = "other Costs" ' 165
-            repmsg(3) = "approved version from" ' 273, vorher 43
+            repmsg(3) = "approved version" ' 273, vorher 43
             repmsg(4) = "Personnel Needs" '159
             repmsg(5) = "Total Costs" ' 166
             repmsg(6) = "Actual data"
@@ -2653,7 +2649,7 @@ Module Module1
             repmsg(0) = "Personalkosten" '164
             repmsg(1) = "Prognose" ' 38
             repmsg(2) = "sonstige Kosten" ' 165
-            repmsg(3) = "Beauftragung vom" ' 273 ; Beauftragung 43
+            repmsg(3) = "Beauftragung" ' 273 ; Beauftragung 43
             repmsg(4) = "Personalbedarf" '159
             repmsg(5) = "Gesamtkosten" ' 166
             repmsg(6) = "Ist-Werte"

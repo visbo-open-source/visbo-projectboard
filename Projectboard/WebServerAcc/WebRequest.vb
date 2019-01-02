@@ -659,13 +659,13 @@ Public Class Request
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
-        Dim errcode As Integer
+        'Dim errcode As Integer
 
         Try
 
             Dim webVP As New clsWebVP
             Dim vpErg As New List(Of clsVP)
-            Dim data() As Byte
+            'Dim data() As Byte
 
             Dim pname As String = projekt.name
             Dim vname As String = projekt.variantName

@@ -6157,6 +6157,7 @@ Public Module Module1
 
             Case PTwindows.mpt
                 Dim outputmsg As String = ""
+                Dim roleName As String = myCustomUserRole.customUserRole.ToString
 
                 If currentConstellationName = "" Then
                     outputmsg = " : " & ShowProjekte.Count & " "
@@ -6164,10 +6165,12 @@ Public Module Module1
                     outputmsg = " '" & currentConstellationName & "' : " & ShowProjekte.Count & " "
                 End If
 
+                tmpResult = roleName & outputmsg & "objects"
+
                 If awinSettings.englishLanguage Then
-                    tmpResult = "Visual Board" & outputmsg & "objects"
+                    tmpResult = "Projectboard ( " & roleName & " ) " & outputmsg & "objects"
                 Else
-                    tmpResult = "Visual Board" & outputmsg & "Objekte"
+                    tmpResult = "Projectboard ( " & roleName & " ) " & outputmsg & "Objekte"
                 End If
 
             Case PTwindows.massEdit
