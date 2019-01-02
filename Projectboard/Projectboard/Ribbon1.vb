@@ -4834,10 +4834,18 @@ Imports System.Web
 
     Public Sub PTImportCustomUserRoles(control As IRibbonControl)
 
+
+        Dim err As New clsErrorCodeMsg
+        Dim result As Boolean = False
+
         Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
 
         '??? Aufruf speichern der CustomUser Roles über rest-Server ...
 
+        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(allCustomUserRoles,
+                                                                            CStr(settingTypes(ptSettingTypes.customroles)),
+                                                                            Nothing,
+                                                                            err)
     End Sub
 
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
@@ -11607,7 +11615,18 @@ Imports System.Web
 
         End Try
     End Sub
+    Public Sub PTWebVCSettingTest(control As IRibbonControl)
+        Try
 
+            Dim listofCURs As New clsCustomUserRoles
+            Dim type As String = CStr(settingTypes(ptSettingTypes.customroles))
+            Dim err As New clsErrorCodeMsg
+
+            Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCsettingsToDB(listofCURs, type, Date.Now, err)
+        Catch ex As Exception
+
+        End Try
+    End Sub
 
 #End Region
 

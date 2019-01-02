@@ -6,7 +6,7 @@
     Public Property vpvCount As Integer
     Public Property vpType As Integer
     Public Property vpPublic As Boolean
-    Public Property users As List(Of clsUser)
+    'Public Property users As List(Of clsUser)
     Public Property updatedAt As String
     Public Property createdAt As String
     Public Property lock As List(Of clsVPLock)
@@ -20,7 +20,7 @@
         _vpvCount = 0
         _vpType = 0
         _vpPublic = False
-        _users = New List(Of clsUser)
+        '_users = New List(Of clsUser)
         _updatedAt = Date.MinValue.ToString
         _createdAt = Date.MinValue.ToString
         _lock = New List(Of clsVPLock)

@@ -1491,4 +1491,98 @@ Public Class Request
         storeDependencyofPToDB = result
 
     End Function
+
+
+    ''' <summary>
+    ''' speichert VC Settings in DB 
+    ''' </summary>
+    ''' <param name="hlist"></param>
+    ''' <param name="type"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function storeVCSettingsToDB(ByVal hlist As clsCustomUserRoles,
+                                        ByVal type As String,
+                                        ByVal ts As Date,
+                                        ByRef err As clsErrorCodeMsg) As Boolean
+
+        Dim result As Boolean = False
+
+        Try
+
+            If usedWebServer Then
+                result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, type, ts, err)
+
+                ' Token is no longer valid: erneuter Login
+                If err.errorCode = 401 Then
+                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                    If loginErfolgreich Then
+                        result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, type, ts, err)
+                    End If
+
+                End If
+            Else 'es wird eine MongoDB direkt adressiert
+                result = False
+            End If
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("storeVCSettingsToDB: " & ex.Message)
+        End Try
+        storeVCSettingsToDB = result
+
+    End Function
+    Public Function retrieveCustomUserRolesOf(ByVal dbUsername As String, ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
+
+        Dim result As New clsCustomUserRoles
+
+        Try
+            If usedWebServer Then
+
+                result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRolesOf(dbUsername, err)
+
+                ' Token is no longer valid: erneuter Login
+                If err.errorCode = 401 Then
+                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                    If loginErfolgreich Then
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRolesOf(dbUsername, err)
+                    End If
+
+                End If
+            Else
+                ' nothing to do for direct MongoAccess
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        retrieveCustomUserRolesOf = result
+    End Function
+
+    Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
+
+        Dim result As String = ""
+        Try
+
+            If usedWebServer Then
+
+                result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+
+                ' Token is no longer valid: erneuter Login
+                If err.errorCode = 401 Then
+                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                    If loginErfolgreich Then
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                    End If
+
+                End If
+            Else
+                ' nothing to do for direct MongoAccess
+            End If
+
+        Catch ex As Exception
+
+        End Try
+        retrieveUserIDFromName = result
+    End Function
 End Class
