@@ -6959,9 +6959,11 @@ Public Module agm2
             tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
+
         awinImportCustomUserRoles = tmpResult
 
     End Function
+
 
     ''' <summary>
     ''' prüft, ob es sich beim Namen/der Email um eine bekannte Email Adresse handelt. 
@@ -7012,9 +7014,17 @@ Public Module agm2
 
     Public Function bestimmeUserIDFromName(ByVal userName As String) As String
 
+        Dim err As New clsErrorCodeMsg
         Dim tmpResult As String = ""
-        '??? hole vom Rest-Server die UserID des angegebenen Users
-        ' weise den UserID Wert dann tmpResult zu
+        Try
+
+            ' hole vom Rest-Server die UserID des angegebenen Users
+            ' weise den UserID Wert dann tmpResult zu
+            tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveUserIDFromName(userName, err)
+
+        Catch ex As Exception
+
+        End Try
 
         bestimmeUserIDFromName = tmpResult
 
@@ -15910,6 +15920,18 @@ Public Module agm2
                     'loginErfolgreich = loginProzedur()
 
                     loginErfolgreich = logInToMongoDB(True)
+
+                    ' ur:02012019: eigentlich wird das mit setUserRole erledigt!!!
+                    '' ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
+                    ''Dim allMyCustomUserRoles As New clsCustomUserRoles
+                    ''allMyCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRolesOf(dbUsername, err)
+
+                    ''If allMyCustomUserRoles.count > 1 Then
+                    ''    Call MsgBox("hier muss eine Auswahl der Rollen getroffen werden")
+                    ''Else
+                    ''    myCustomUserRole = allMyCustomUserRoles.elementAt(0)
+                    ''End If
+
 
                     If Not loginErfolgreich Then
                         ' Customization-File wird geschlossen
