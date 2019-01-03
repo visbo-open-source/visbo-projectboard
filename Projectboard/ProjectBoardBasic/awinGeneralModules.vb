@@ -3745,7 +3745,7 @@ Public Module awinGeneralModules
                             projekthistorie.clear() ' alte Historie löschen
                         End If
 
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                                 (projectname:=pname, variantName:=variantName,
                                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1), err:=err)
 
@@ -3872,7 +3872,7 @@ Public Module awinGeneralModules
             projekthistorie.clear() ' alte Historie löschen
         End If
 
-        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
+        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                 (projectname:=pName, variantName:=vName,
                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1), err:=err)
 
@@ -4054,7 +4054,7 @@ Public Module awinGeneralModules
 
         If first Then
             projekthistorie.clear() ' alte Historie löschen
-            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
+            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                    (projectname:=pname, variantName:=variantName,
                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
             first = False
@@ -4860,7 +4860,7 @@ Public Module awinGeneralModules
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                             projekthistorie.Add(Date.Now, hproj)
 
@@ -6526,7 +6526,7 @@ Public Module awinGeneralModules
                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
                         If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now, err) Then
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
                         Else
                             projekthistorie.clear()

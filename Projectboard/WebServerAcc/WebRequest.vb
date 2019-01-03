@@ -1002,9 +1002,9 @@ Public Class Request
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
                                                  ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime,
-                                                 ByRef err As clsErrorCodeMsg) As SortedList(Of DateTime, clsProjekt)
+                                                 ByRef err As clsErrorCodeMsg) As clsProjektHistorie
 
-        Dim result As New SortedList(Of DateTime, clsProjekt)
+        Dim result As New clsProjektHistorie
         storedLatest = storedLatest.ToUniversalTime()
         storedEarliest = storedEarliest.ToUniversalTime()
 
@@ -1019,7 +1019,9 @@ Public Class Request
 
             If vpid <> "" Then
 
+
                 Dim allVPv As New List(Of clsProjektWebLong)
+                ' erst alle mit dem angegebenen Varianten-NAmen holen 
                 allVPv = GETallVPvLong(vpid, err, , , , variantName)
 
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
@@ -1029,6 +1031,18 @@ Public Class Request
                         Dim hproj As New clsProjekt
                         vpv.copyto(hproj)
                         result.Add(hproj.timeStamp, hproj)
+                    End If
+                Next
+
+                ' jetzt alle Vorgaben holen, das sind die Versionen mit Varianten-NAme = "pfv" 
+                allVPv = GETallVPvLong(vpid, err, , , , ptVariantFixNames.pfv.ToString)
+                ' einschränken auf alle versionen in dem angegebenen Zeitraum
+                For Each vpv In allVPv
+                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest And vpv.variantName = variantName Then
+                        'zwischenResult.Add(vpv.timestamp, vpv)
+                        Dim hproj As New clsProjekt
+                        vpv.copyto(hproj)
+                        result.AddPfv(hproj)
                     End If
                 Next
 
@@ -1123,7 +1137,7 @@ Public Class Request
                     Dim hresult As New List(Of clsProjektWebLong)
 
                     hresult = GETallVPvLong(vpid:=vpid, err:=err, vpvid:="",
-                                                status:="beauftragt",
+                                                status:="",
                                                 refNext:=True,
                                                 variantName:=variantname,
                                                 storedAtorBefore:=Nothing)
@@ -1186,7 +1200,7 @@ Public Class Request
 
 
                     hresult = GETallVPvLong(vpid:=vpid, err:=err, vpvid:="",
-                                            status:="beauftragt",
+                                            status:="",
                                             refNext:=False,
                                             variantName:=variantname,
                                             storedAtorBefore:=storedAtOrBefore)

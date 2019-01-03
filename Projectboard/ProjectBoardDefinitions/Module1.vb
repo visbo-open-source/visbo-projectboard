@@ -1425,25 +1425,37 @@ Public Module Module1
 
     End Sub
 
-    Public Function prepProjectsForRoles(ByVal pList As SortedList(Of String, clsProjekt)) As SortedList(Of String, clsProjekt)
+    ''' <summary>
+    ''' im Falle Rolle=PortfolioMgr: aggregiert alle Rollen der einzelnen Timestamps in der  Projekthistorie zu den entsprechenden Mutter-Rollen
+    ''' </summary>
+    ''' <param name="pHist"></param>
+    ''' <returns></returns>
+    Public Function prepProjectsForRoles(ByVal pHist As clsProjektHistorie) As clsProjektHistorie
 
-        Dim tmpResult As New SortedList(Of String, clsProjekt)
+        Dim tmpResult As New clsProjektHistorie
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In pList
+        For Each kvp As KeyValuePair(Of Date, clsProjekt) In pHist.liste
 
             Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
-            tmpResult.Add(kvp.Key, newProj)
+            tmpResult.add(kvp.Key, newProj)
+
+        Next
+
+        For Each kvp As KeyValuePair(Of Date, clsProjekt) In pHist.pfvListe
+
+            Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
+            tmpResult.AddPfv(newProj)
 
         Next
 
         prepProjectsForRoles = tmpResult
     End Function
 
-    Public Function prepProjectsForRoles(ByVal pList As SortedList(Of DateTime, clsProjekt)) As SortedList(Of DateTime, clsProjekt)
+    Public Function prepProjectsForRoles(ByVal pList As SortedList(Of String, clsProjekt)) As SortedList(Of String, clsProjekt)
 
-        Dim tmpResult As New SortedList(Of DateTime, clsProjekt)
+        Dim tmpResult As New SortedList(Of String, clsProjekt)
 
-        For Each kvp As KeyValuePair(Of DateTime, clsProjekt) In pList
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In pList
             Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
             tmpResult.Add(kvp.Key, newProj)
         Next

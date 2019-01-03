@@ -10347,7 +10347,7 @@ Imports System.Web
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                             projekthistorie.Add(Date.Now, hproj)
                             lastElem = projekthistorie.Count - 1
@@ -10490,7 +10490,7 @@ Imports System.Web
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                         lastElem = projekthistorie.Count - 1
@@ -10683,7 +10683,7 @@ Imports System.Web
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
 
@@ -10792,7 +10792,7 @@ Imports System.Web
                 If vglName <> hproj.getShapeText Then
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
