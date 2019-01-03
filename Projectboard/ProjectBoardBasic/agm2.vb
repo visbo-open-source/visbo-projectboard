@@ -6959,6 +6959,21 @@ Public Module agm2
             tmpResult.addCustomUserRole(userName, "", curType, specifics)
         End If
 
+        userName = "jt@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
+        specifics = "Grp-BOSV-KB"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "ss@visbo.de"
+        curType = ptCustomUserRoles.RessourceManager
+        specifics = "Grp-BOSV-KB"
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
 
         awinImportCustomUserRoles = tmpResult
 
