@@ -265,7 +265,7 @@ Public Class ThisWorkbook
 
                         If returnValue = DialogResult.Yes Then
 
-                            Call StoreAllProjectsinDB(True)
+                            Call StoreAllProjectsinDB()
 
                         ElseIf returnValue = DialogResult.Cancel Then
 
