@@ -2363,18 +2363,27 @@ Module Module1
 
                                                 ElseIf chartTyp = PTprdk.PersonalBalken2 Or chartTyp = PTprdk.KostenBalken2 Then
 
-
-                                                    ' jetzt das lProj (Beauftragung) holen
                                                     Try
-                                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                                        lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+
+
+                                                        ' jetzt das lProj (Beauftragung) holen
+                                                        Try
+                                                            'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
+                                                            lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                                        Catch ex As Exception
+                                                            lProj = Nothing
+                                                        End Try
+
+                                                        Call updatePPTBalkenOfProjectInPPT(tsProj, lProj, pptShape, prcTyp, auswahl, qualifier2)
+                                                        pptAPP.Activate()
+
                                                     Catch ex As Exception
+                                                        bProj = Nothing
                                                         lProj = Nothing
                                                     End Try
 
                                                     Call updatePPTBalkenOfProjectInPPT(tsProj, lProj, pptShape, prcTyp, auswahl, qualifier2)
-                                                        pptAPP.Activate()
-
+                                                    pptAPP.Activate()
 
                                                 ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
                                                     ' Aktualisieren der Personal- bzw. Kosten-Pies ...
