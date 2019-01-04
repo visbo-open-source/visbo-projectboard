@@ -2123,7 +2123,7 @@ Public Class frmProjPortfolioAdmin
                                 projekthistorie = New clsProjektHistorie
                             End If
 
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName,
                                                                              storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
 
                         Catch ex As Exception

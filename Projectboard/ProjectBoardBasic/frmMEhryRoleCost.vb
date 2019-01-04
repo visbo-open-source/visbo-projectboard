@@ -66,22 +66,27 @@ Public Class frmMEhryRoleCost
             Me.Left = 100
         End If
 
-
-        ' welche Rollen & Kosten sind in der aktuellen Phase drin ... 
-        initialRolesOfPhase = hproj.getRoleIDs(phaseNameID)
-        initialCostsOfPhase = hproj.getCostIDs(phaseNameID)
-
-        Dim tmpPhaseName As String = phaseName
-        If phaseNameID = rootPhaseName Then
-            tmpPhaseName = "gesamte Projektphase"
+        If IsNothing(hproj) Then
+            Me.Text = "Auswahl Rollen/Kosten für Excel-Export"
         Else
-            tmpPhaseName = "Phase " & phaseName
-        End If
 
-        If phaseName.Length > 40 Then
-            Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName.Substring(0, 39)
-        Else
-            Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName
+            ' welche Rollen & Kosten sind in der aktuellen Phase drin ... 
+            initialRolesOfPhase = hproj.getRoleIDs(phaseNameID)
+            initialCostsOfPhase = hproj.getCostIDs(phaseNameID)
+
+            Dim tmpPhaseName As String = phaseName
+            If phaseNameID = rootPhaseName Then
+                tmpPhaseName = "gesamte Projektphase"
+            Else
+                tmpPhaseName = "Phase " & phaseName
+            End If
+
+            If phaseName.Length > 40 Then
+                Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName.Substring(0, 39)
+            Else
+                Me.Text = "Auswahl Rollen/Kosten für " & tmpPhaseName
+            End If
+
         End If
 
 
@@ -585,7 +590,14 @@ Public Class frmMEhryRoleCost
                         End If
                     Else
                         ' hier prüfen, ob es für diese Rolle in dieser Phase Istdaten gibt, denn darf nicht rausgenommen werden 
-                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, checkItem, True, False).Sum
+                        Dim sumActualValues As Double = 0.0
+
+                        If IsNothing(hproj) Then
+                            ' im Falle Excel Export etc. 
+                        Else
+                            sumActualValues = hproj.getPhaseRCActualValues(phaseNameID, checkItem, True, False).Sum
+                        End If
+
                         If sumActualValues > 0 Then
                             Call MsgBox("Rolle hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
                             dontFireInCheck = True
@@ -606,7 +618,14 @@ Public Class frmMEhryRoleCost
                         End If
                     Else
                         ' prüfen, ob die Rolle Istdaten enthält ? 
-                        Dim sumActualValues As Double = hproj.getPhaseRCActualValues(phaseNameID, checkItem, False, True).Sum
+                        Dim sumActualValues As Double = 0.0
+
+                        If IsNothing(hproj) Then
+                            ' kann im Fall Excel Export sein ...
+                        Else
+                            sumActualValues = hproj.getPhaseRCActualValues(phaseNameID, checkItem, False, True).Sum
+                        End If
+
                         If sumActualValues > 0 Then
                             Call MsgBox("Kostenart hat bereits Ist-Daten und kann deshalb nicht mehr gelöscht werden ...")
                             dontFireInCheck = True
@@ -622,9 +641,15 @@ Public Class frmMEhryRoleCost
             Else
                 ' Check des Knoten
                 ' prüfen, ob die Phase überhaupt noch Zukunfts-Monate, also Forecast Monate hat, 
-                ' in denen was eingegeben werden darf 
-                Dim hasStillForecastMonths As Boolean = hproj.isPhaseWithForecastMonths(phaseNameID)
-                If hasStillForecastMonths Then
+                ' in denen was eingegeben werden darf  
+                Dim hasStillForecastMonthsOrOtherwiseOK As Boolean = True
+                If IsNothing(hproj) Then
+                    ' es kann bei Excel Export weitergemacht werden 
+                Else
+                    hasStillForecastMonthsOrOtherwiseOK = hproj.isPhaseWithForecastMonths(phaseNameID)
+                End If
+
+                If hasStillForecastMonthsOrOtherwiseOK Then
 
                     ' jetzt koommt die Behandlung für Check-.Role bzw Check-Cost 
                     If CType(node.Tag, clsNodeRoleTag).isRole Then

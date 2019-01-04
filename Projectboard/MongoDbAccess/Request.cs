@@ -1490,9 +1490,9 @@ namespace MongoDbAccess
         /// <param name="storedEarliest"></param>
         /// <param name="storedLatest"></param>
         /// <returns></returns>
-        public SortedList<DateTime, clsProjekt> retrieveProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
+        public clsProjektHistorie retrieveProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
         {
-            var result = new SortedList<DateTime, clsProjekt>();
+            var result = new clsProjektHistorie();
 
             storedLatest = storedLatest.ToUniversalTime();
             storedEarliest = storedEarliest.ToUniversalTime();
@@ -1501,17 +1501,12 @@ namespace MongoDbAccess
             // pName, sonst
             
             string searchstr = Projekte.calcProjektKeyDB(projectname, variantName); 
-
-
-            //if (variantName != null && variantName.Length > 0)
-            //    searchstr = Projekte.calcProjektKey(projectname, variantName);
-            //else
-            //    searchstr = projectname;
-
+                        
             var builder = Builders<clsProjektDB>.Filter;
             
             var filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedLatest);
             var sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
+
             //var result = await collection.Find(filter).Sort(sort).ToListAsync();
             var projects = CollectionProjects.Find(filter).Sort(sort).ToList();
 
@@ -1533,7 +1528,25 @@ namespace MongoDbAccess
                     DateTime schluessel = projekt.timeStamp;
                     result.Add(schluessel, projekt);
                 }
-            
+
+            // jetzt kommt die Suche nach den Vorgaben ..
+            searchstr = Projekte.calcProjektKeyDB(projectname, Module1.ptVariantFixNames.pfv.ToString());
+            builder = Builders<clsProjektDB>.Filter;
+            filter = builder.Eq("name", searchstr) & builder.Lte("timestamp", storedLatest);
+            sort = Builders<clsProjektDB>.Sort.Ascending("timestamp");
+            projects = CollectionProjects.Find(filter).Sort(sort).ToList();
+
+            foreach (clsProjektDB p in projects)
+            {
+                //TODO: rückumwandeln
+                var projekt = new clsProjekt();
+                p.copyto(ref projekt);
+
+                int a = projekt.dauerInDays;
+                                
+                result.AddPfv(projekt);
+            }
+
 
             return result;
         }
