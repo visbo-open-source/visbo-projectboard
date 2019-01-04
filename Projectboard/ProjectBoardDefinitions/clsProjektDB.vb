@@ -193,20 +193,6 @@ Public Class clsProjektDB
                 .kundenNummer = Me.kundenNummer
             End If
 
-            If awinSettings.autoSetActualDataDate Then
-
-                If Me.timestamp.AddMonths(-1) > Me.startDate Then
-                    .actualDataUntil = Me.timestamp.AddMonths(-1)
-                End If
-
-            Else
-                If IsNothing(Me.actualDataUntil) Then
-                    .actualDataUntil = Date.MinValue
-                Else
-                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
-                End If
-            End If
-
 
             If IsNothing(Me.variantDescription) Then
                 .variantDescription = ""
@@ -288,6 +274,22 @@ Public Class clsProjektDB
                 For Each kvp As KeyValuePair(Of String, Boolean) In Me.customBoolFields
                     projekt.customBoolFields.Add(CInt(kvp.Key), kvp.Value)
                 Next
+            End If
+
+            ' ur: 04.01.2019: muss am Ende stehen, da beim Setzen von actualDataUntil die DauerinDays und damit die Phasen
+            ' des aktuellen Projektes und nicht der Vorlage benötigt werden.
+            If awinSettings.autoSetActualDataDate Then
+
+                If Me.timestamp.AddMonths(-1) > Me.startDate Then
+                    .actualDataUntil = Me.timestamp.AddMonths(-1)
+                End If
+
+            Else
+                If IsNothing(Me.actualDataUntil) Then
+                    .actualDataUntil = Date.MinValue
+                Else
+                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
+                End If
             End If
 
 
