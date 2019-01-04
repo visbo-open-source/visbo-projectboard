@@ -2325,7 +2325,7 @@ Module Module1
                                     ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                                     Dim tmpVariantName As String = ""
                                     If tsProj.projectType = ptPRPFType.portfolio Then
-                                        tmpVariantName = portfolioVName
+                                        tmpVariantName = ptVariantFixNames.pfv.ToString
                                     End If
 
                                     Dim qualifier1 As String = pptShape.Tags.Item("Q1")
@@ -2497,7 +2497,7 @@ Module Module1
                             ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
                             Dim tmpVariantName As String = ""
                             If tsProj.projectType = ptPRPFType.portfolio Then
-                                tmpVariantName = portfolioVName
+                                tmpVariantName = ptVariantFixNames.pfv.ToString
                             End If
 
                             If bigType = ptReportBigTypes.components Then
