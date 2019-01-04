@@ -2487,15 +2487,8 @@ Module Module1
                         If Not IsNothing(tsProj) Then
 
                             ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-<<<<<<< HEAD
-                            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
-=======
-                            Dim tmpVariantName As String = ""
-                            If tsProj.projectType = ptPRPFType.portfolio Then
-                                tmpVariantName = ptVariantFixNames.pfv.ToString
-                            End If
->>>>>>> feature/AllianzMaster
+                            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
                             If bigType = ptReportBigTypes.components Then
                                 Call updatePPTComponent(tsProj, pptShape, detailID, curTimeStamp)
