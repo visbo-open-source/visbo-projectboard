@@ -59,7 +59,7 @@ Public Class clsCustomUserRole
                                  "PT4G1M1-2", "PT4G1M1-3",
                                  "PT2G1M2B3", "PT2G1M2B8",
                                  "PT4G1M1B2", "PT2G1B1", "PT2G1B3",
-                                 "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4",
+                                 "PTfreezeB1", "PTfreezeB2", "PT2G1M1B4", "PT2G1split",
                                  "PTview", "PTfilter", "PTsort", "PTeinst", "PThelp",
                                  "PTWebServer"}
 

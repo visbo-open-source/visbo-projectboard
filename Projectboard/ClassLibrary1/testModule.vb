@@ -112,7 +112,7 @@ Public Module testModule
                 If vglName <> maxProj.getShapeText Then
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         Try
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
                             projekthistorie.Add(Date.Now, maxProj)
                         Catch ex As Exception
@@ -183,7 +183,7 @@ Public Module testModule
                         If vglName <> hproj.getShapeText Then
                             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                                 Try
-                                    projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                                    projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err1)
                                     projekthistorie.Add(Date.Now, hproj)
                                 Catch ex As Exception
@@ -364,21 +364,21 @@ Public Module testModule
                     Try
 
                         If Not aktprojekthist Then
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
-                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=Err)
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
+                                                                        storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
                         End If
 
 
-                        ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-                        Dim tmpVariantName As String = ""
+                        ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
+                        Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
                         ' 28.12.18 tk deprecated
                         'If hproj.projectType = ptPRPFType.portfolio Then
                         '    tmpVariantName = portfolioVName
                         'End If
 
-                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                         Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, storedAtOrBefore:=lDate, err:=err)
+                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=lDate, err:=err)
 
 
 
@@ -3576,7 +3576,7 @@ Public Module testModule
         ' jetzt muss herausgefunden werden, um welches Projekt es sich handelt ...
         Dim hproj As clsProjekt = Nothing
         Try
-            hproj = ShowProjekte.getProject(pname)
+            hproj = ShowProjekte.getProject(pName)
         Catch ex As Exception
 
         End Try
@@ -3705,11 +3705,11 @@ Public Module testModule
     ''' <param name="worker">background Worker</param>
     ''' <param name="e">hier werden die Progress Meldungen zurückgegeben</param>
     ''' <remarks></remarks>
-    Public Sub createPPTSlidesFromConstellation(ByVal pptTemplateName As String, _
-                                                    ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-                                                    ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
-                                                    ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
-                                                    ByRef pptFirstTime As Boolean, _
+    Public Sub createPPTSlidesFromConstellation(ByVal pptTemplateName As String,
+                                                    ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection,
+                                                    ByVal selectedRoles As Collection, ByVal selectedCosts As Collection,
+                                                    ByVal selectedBUs As Collection, ByVal selectedTyps As Collection,
+                                                    ByRef pptFirstTime As Boolean,
                                                     ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         'ByVal showNames As Boolean, ByVal showProjectLine As Boolean,
         'ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal strict As Boolean, _
@@ -3794,7 +3794,7 @@ Public Module testModule
                 pptCurrentPresentation = pptApp.ActivePresentation
                 pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
 
-                If pptTemplatePresentation.PageSetup.SlideOrientation = pptCurrentPresentation.PageSetup.SlideOrientation And _
+                If pptTemplatePresentation.PageSetup.SlideOrientation = pptCurrentPresentation.PageSetup.SlideOrientation And
                     pptTemplatePresentation.PageSetup.SlideSize = pptCurrentPresentation.PageSetup.SlideSize Then
                     ' also in Ordnung, es kann weiter in die Current Presentation geschrieben werden ... 
                 Else
@@ -3869,7 +3869,7 @@ Public Module testModule
         Try
 
             ' löschen, wenn der Name bereits existiert ...
-            If My.Computer.FileSystem.FileExists(newFileName) And _
+            If My.Computer.FileSystem.FileExists(newFileName) And
                 pptCurrentPresentation.Name <> "MP Report.pptx" Then
 
                 Try
@@ -3946,7 +3946,7 @@ Public Module testModule
 
             Else
                 anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
-                tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides,
                                                                               SlideStart:=folieIX, SlideEnd:=folieIX)
             End If
 
@@ -6769,9 +6769,9 @@ Public Module testModule
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Sub awinCreateStatusDiagram1(ByRef ProjektListe As Collection, ByRef repChart As Excel.ChartObject, ByVal compareToID As Integer, _
-                                         ByVal auswahl As Integer, ByVal qualifier As String, _
-                                         ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
+    Sub awinCreateStatusDiagram1(ByRef ProjektListe As Collection, ByRef repChart As Excel.ChartObject, ByVal compareToID As Integer,
+                                         ByVal auswahl As Integer, ByVal qualifier As String,
+                                         ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean,
                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
 
@@ -6874,7 +6874,7 @@ Public Module testModule
                 If vglName <> hproj.getShapeText Then
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -7221,7 +7221,7 @@ Public Module testModule
                     Do While Not achieved And anzahlVersuche < 10
                         Try
                             'Call Sleep(100)
-                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
+                            .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject,
                                   Name:=CType(appInstance.Workbooks.Item(myProjektTafel).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet).Name)
                             achieved = True
                         Catch ex As Exception
@@ -7318,7 +7318,7 @@ Public Module testModule
     ''' Rückgabe Parameter: entweder grün, gelb oder rot
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String, _
+    Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String,
                                   ByRef statusValue As Double, ByRef statusColor As Long)
 
         Dim err As New clsErrorCodeMsg
@@ -7361,7 +7361,7 @@ Public Module testModule
         If vglName <> hproj.getShapeText Then
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
+                projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                 If projekthistorie.Count > 0 Then
                     projekthistorie.Add(Date.Now, hproj)
@@ -10268,34 +10268,18 @@ Public Module testModule
                         trendShapesAreDefined = False
                     End If
 
-                    ' hat das Projekt bereits eine Historie ? 
-
-                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
-                    ' If awinSettings.compareWithStandardVariant Then
-                    If hproj.projectType = ptPRPFType.project And awinSettings.compareWithStandardVariant Then
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:="",
+                    projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
-                    Else
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName,
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
-                    End If
 
-                    'If vergleichstyp = PThis.letzterStand Then
-                    '    vproj = projekthistorie.Last
-
-                    'ElseIf vergleichstyp = PThis.beauftragung Then
-                    '    vproj = projekthistorie.beauftragung
-
-                    'End If
 
                     If Not IsNothing(projekthistorie) Then
                         If projekthistorie.Count > 0 Then
                             If vergleichstyp = PThis.letzterStand Then
                                 vproj = projekthistorie.ElementAtorBefore(vglDate)
                             Else
-                                vproj = projekthistorie.First
+                                vproj = projekthistorie.beauftragung
                             End If
                         End If
                     End If
@@ -11194,7 +11178,7 @@ Public Module testModule
 
             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                 ' es soll mit der Standard-Variante verglichen werden ... 
-                projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:="",
+                projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:="",
                                                             storedEarliest:=StartofCalendar, storedLatest:=aktuellesDatum, err:=err)
 
                 anzH = anzH + 1
@@ -11793,7 +11777,7 @@ Public Module testModule
                 variantName = hproj.variantName
                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                    projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
+                    projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName,
                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                     If compareToLast Then
                         vproj = projekthistorie.Last

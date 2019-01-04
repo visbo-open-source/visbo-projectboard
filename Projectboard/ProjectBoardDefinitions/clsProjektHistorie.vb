@@ -7,7 +7,12 @@
     ' _currentIndex ist insbesondere für prevdiff und nextdiff wichtig: Methoden, die auf das nächste Element "springen", 
     ' das sich im angegebenen Kriterium vom ElementAt(_currentIndex) unterscheiden 
 
-    Private _liste As New SortedList(Of Date, clsProjekt)
+    ' die _liste enthält die Timestamps des Projektes
+    Private _liste As SortedList(Of Date, clsProjekt)
+
+    ' 3.1.19 die _pfvliste enthält die Timestamps der Vorgabe-Projekte durch den Portfolio Manager 
+    Private _pfvliste As SortedList(Of Date, clsProjekt)
+
     Private _currentIndex As Integer
 
     Public Property liste As SortedList(Of Date, clsProjekt)
@@ -17,6 +22,12 @@
         Set(value As SortedList(Of Date, clsProjekt))
             _liste = value
         End Set
+    End Property
+
+    Public ReadOnly Property pfvListe As SortedList(Of Date, clsProjekt)
+        Get
+            pfvListe = _pfvliste
+        End Get
     End Property
 
     ''' <summary>
@@ -90,44 +101,9 @@
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt das Projekt zurück , das relativ zur aktuellen Position den status "freigegeben/beauftragt" hat 
-    ''' falls es das nicht gibt, wird eine Exception geworfen
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property letzteFreigabe As clsProjekt
-        Get
-
-            Dim found As Boolean = False
-            Dim index As Integer = _currentIndex - 1
-
-
-            ' jetzt wird der Planungs-Stand der letzten Freigabe gesucht 
-            Do While index >= 0 And Not found
-
-                If _liste.ElementAt(index).Value.Status = ProjektStatus(PTProjektStati.beauftragt) Then
-                    found = True
-                Else
-                    index = index - 1
-                End If
-
-            Loop
-
-            If Not found Then
-                letzteFreigabe = Nothing
-            Else
-                _currentIndex = index
-                letzteFreigabe = _liste.ElementAt(index).Value
-            End If
-
-        End Get
-    End Property
 
     ''' <summary>
-    ''' gibt das Element zurück , das das erste Mal den Status "Beauftragung/freigegeben" hat
-    ''' setzt den Index auf dieses Element
+    ''' gibt das Element zurück , das die erste Vorgabe vom Portfolio Manager war
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
@@ -135,63 +111,48 @@
     Public ReadOnly Property beauftragung As clsProjekt
         Get
 
-            Dim abbruch As Boolean = False
-            Dim index As Integer = 0
-            Dim anzSnapshots As Integer = _liste.Count - 1
-
-
-            ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
-            ' ein ChangeRequest ist noch keine Beauftragung, deswegen wurde das rausgenommen 
-            Do While _liste.ElementAt(index).Value.Status <> ProjektStatus(PTProjektStati.beauftragt) And Not abbruch
-                If index + 1 < anzSnapshots Then
-                    index = index + 1
-                Else
-                    abbruch = True
-                End If
-            Loop
-
-            If abbruch Then
-                beauftragung = Nothing
+            If _pfvliste.Count > 0 Then
+                beauftragung = _pfvliste.First.Value
             Else
-                _currentIndex = index
-                beauftragung = _liste.ElementAt(index).Value
+                beauftragung = Nothing
             End If
+
 
         End Get
     End Property
 
     ''' <summary>
-    ''' gibt das Element zurück, das zum Zeitpunkt refDate das zuletzt beauftragte war 
+    ''' gibt das Element zurück, das zum Zeitpunkt refDate das vom Portfolio Manager zuletzt beauftragte war 
+    ''' Nothing, wenn zu dem Zeitpunkt noch keine Beauftragung existierte 
     ''' </summary>
     ''' <param name="refDate"></param>
     ''' <returns></returns>
     Public ReadOnly Property lastBeauftragung(ByVal refDate As Date) As clsProjekt
+
         Get
             Dim found = False
-            Dim anzSnapshots As Integer = _liste.Count - 1
-            Dim index As Integer = anzSnapshots
+            Dim tmpResult As clsProjekt = Nothing
 
-            Dim abbruch As Boolean = (index >= 0)
-            found = (_liste.ElementAt(index).Value.Status = ProjektStatus(PTProjektStati.beauftragt) And _liste.ElementAt(index).Value.timeStamp <= refDate)
-
-
-            ' jetzt wird der Planungs-Stand der Beauftragung gesucht 
-            ' ein ChangeRequest ist noch keine Beauftragung, deswegen wurde das rausgenommen 
-            Do While Not found And Not abbruch
-                index = index - 1
-                If index >= 0 Then
-                    found = (_liste.ElementAt(index).Value.Status = ProjektStatus(PTProjektStati.beauftragt) And _liste.ElementAt(index).Value.timeStamp <= refDate)
-                Else
-                    abbruch = True
-                End If
-            Loop
-
-            If abbruch Then
-                lastBeauftragung = Nothing
+            If _pfvliste.Count = 0 Then
+                ' nichts tun, es gibt keine Beauftragung 
             Else
-                _currentIndex = index
-                lastBeauftragung = _liste.ElementAt(index).Value
+                Dim ix As Integer = _pfvliste.Count - 1
+                Dim curTimestamp As Date = _pfvliste.ElementAt(ix).Value.timeStamp
+
+                found = (refDate > curTimestamp)
+                Do While ix >= 0 And Not found
+                    ix = ix - 1
+                    curTimestamp = _pfvliste.ElementAt(ix).Value.timeStamp
+                    found = (refDate > curTimestamp)
+                Loop
+
+                If found Then
+                    tmpResult = _pfvliste.ElementAt(ix).Value
+                End If
+
             End If
+
+            lastBeauftragung = tmpResult
 
         End Get
     End Property
@@ -752,6 +713,28 @@
 
         End Get
     End Property
+    ''' <summary>
+    ''' fügt der pfvListe ein Projekt hinzu
+    ''' </summary>
+    ''' <param name="value"></param>
+    Public Sub AddPfv(ByVal value As clsProjekt)
+
+        Try
+            Dim ok As Boolean = True
+
+            If _pfvliste.ContainsKey(value.timeStamp) Then
+                ok = _pfvliste.Remove(value.timeStamp)
+            End If
+
+            If ok Then
+                _pfvliste.Add(value.timeStamp, value)
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 
     ''' <summary>
     ''' fügt ein Element der Historie hinzu 
@@ -810,7 +793,9 @@
     End Property
 
     Sub New()
-
+        _liste = New SortedList(Of Date, clsProjekt)
+        _pfvliste = New SortedList(Of Date, clsProjekt)
+        _currentIndex = -1
     End Sub
 
 End Class

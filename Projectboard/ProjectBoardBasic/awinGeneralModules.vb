@@ -3745,7 +3745,7 @@ Public Module awinGeneralModules
                             projekthistorie.clear() ' alte Historie löschen
                         End If
 
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                                 (projectname:=pname, variantName:=variantName,
                                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1), err:=err)
 
@@ -3872,7 +3872,7 @@ Public Module awinGeneralModules
             projekthistorie.clear() ' alte Historie löschen
         End If
 
-        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
+        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                 (projectname:=pName, variantName:=vName,
                                  storedEarliest:=Date.MinValue, storedLatest:=Date.Now.AddDays(1), err:=err)
 
@@ -4054,7 +4054,7 @@ Public Module awinGeneralModules
 
         If first Then
             projekthistorie.clear() ' alte Historie löschen
-            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
+            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB _
                                    (projectname:=pname, variantName:=variantName,
                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
             first = False
@@ -4860,7 +4860,7 @@ Public Module awinGeneralModules
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                             projekthistorie.Add(Date.Now, hproj)
 
@@ -6526,7 +6526,7 @@ Public Module awinGeneralModules
                 If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                     Try
                         If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, Date.Now, err) Then
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=vName,
                                                                         storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
                         Else
                             projekthistorie.clear()
@@ -6585,9 +6585,8 @@ Public Module awinGeneralModules
 
         If Not (hproj Is Nothing) Then
 
-            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-            Dim tmpVariantName As String = ""
-            ' tk 28.12.18 deprectaed
+            ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
+            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
             'If hproj.projectType = ptPRPFType.portfolio Then
             '    tmpVariantName = portfolioVName
             'End If
@@ -6629,8 +6628,31 @@ Public Module awinGeneralModules
                                             End If
 
                                         Case PTprdk.KostenBalken
+                                            Dim vglProj As clsProjekt = Nothing
+
+
+                                            Try
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+                                            Catch ex As Exception
+                                                vglProj = Nothing
+                                            End Try
+
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
+                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
 
                                         Case PTprdk.KostenBalken2
+                                            Dim vglProj As clsProjekt = Nothing
+
+                                            Try
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
+                                            Catch ex As Exception
+                                                vglProj = Nothing
+                                            End Try
+
+                                            'Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, chartPname)
+                                            ' an der letzten Stelle stelle steht wenn dann die Rolle 
+                                            Call updateRessBalkenOfProject(hproj, vglProj, chtobj, auswahl, replaceProj, roleCostName)
 
 
                                         Case PTprdk.PersonalBalken
@@ -6638,7 +6660,7 @@ Public Module awinGeneralModules
 
 
                                             Try
-                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
@@ -6651,7 +6673,7 @@ Public Module awinGeneralModules
                                             Dim vglProj As clsProjekt = Nothing
 
                                             Try
-                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
@@ -6671,7 +6693,7 @@ Public Module awinGeneralModules
 
                                             Dim vglProj As clsProjekt = Nothing
                                             Try
-                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
@@ -6682,7 +6704,7 @@ Public Module awinGeneralModules
 
                                             Dim vglProj As clsProjekt = Nothing
                                             Try
-                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
+                                                vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                                             Catch ex As Exception
                                                 vglProj = Nothing
                                             End Try
