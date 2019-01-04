@@ -176,7 +176,7 @@ Public Class clsSmartSlideListen
                             tmpDateVon = _listOfTimeStamps.First.Key
                         End If
                     End If
-                    timeStamps.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now, err)
+                    timeStamps = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now, err)
                     _projectTimeStamps.Item(pvName) = timeStamps
 
                     tmpProject = timeStamps.ElementAtorBefore(tsDate)

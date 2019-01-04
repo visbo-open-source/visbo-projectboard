@@ -225,20 +225,6 @@ Public Class clsProjektWeb
             '    .kundenNummer = Me.kundennummer
             'End If
 
-            ' ergänzt am 17.10.18
-            If awinSettings.autoSetActualDataDate Then
-
-                If Me.timestamp.AddMonths(-1) > Me.startDate Then
-                    .actualDataUntil = Me.timestamp.AddMonths(-1)
-                End If
-
-            Else
-                If IsNothing(Me.actualDataUntil) Then
-                    .actualDataUntil = Date.MinValue
-                Else
-                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
-                End If
-            End If
 
             If IsNothing(Me.variantDescription) Then
                 .variantDescription = ""
@@ -261,6 +247,7 @@ Public Class clsProjektWeb
             .earliestStart = Me.earliestStart
             .latestStart = Me.latestStart
             .Status = Me.status
+
 
             .farbe = Me.farbe
             .Schrift = Me.Schrift
@@ -324,6 +311,25 @@ Public Class clsProjektWeb
                     projekt.customBoolFields.Add(CInt(hvar.str), hvar.bool)
                 Next
             End If
+
+
+            ' ergänzt am 17.10.18: 
+            ' ur: 04.01.2019: muss am Ende stehen, da beim Setzen von actualDataUntil die DauerinDays und damit die Phasen
+            ' des aktuellen Projektes und nicht der Vorlage benötigt werden.
+            If awinSettings.autoSetActualDataDate Then
+
+                If Me.timestamp.AddMonths(-1) > Me.startDate Then
+                    .actualDataUntil = Me.timestamp.AddMonths(-1)
+                End If
+
+            Else
+                If IsNothing(Me.actualDataUntil) Then
+                    .actualDataUntil = Date.MinValue
+                Else
+                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
+                End If
+            End If
+
 
             ' ur:04.12.2018: ergänzt
             .updatedAt = Me.updatedAt
