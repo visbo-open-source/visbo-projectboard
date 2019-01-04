@@ -4671,7 +4671,7 @@ Public Module Projekte
                             '.name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
                             '.Name = repMessages.getmsg(43) & " " & beauftragung.timeStamp.ToString("d")
                             ' Stand vom ...
-                            .Name = repMessages.getmsg(273) & " " & beauftragung.timeStamp.ToString("d")
+                            .Name = repMessages.getmsg(43) & " " & beauftragung.timeStamp.ToString("d")
 
                         End If
                         '.Name = "Version (" & beauftragung.timeStamp.ToString("d") & ")"
@@ -4824,8 +4824,8 @@ Public Module Projekte
             repMSg(0) = "cumulated Personnel Cost"
             repMSg(1) = "cumulated Other Cost"
             repMSg(2) = "cumulated Total Cost"
-            'repMSg(3) = "approved version"
-            repMSg(3) = "version from"
+            repMSg(3) = "approved version"
+            'repMSg(3) = "version from"
             repMSg(4) = "last version"
             repMSg(5) = "actual values"
             repMSg(6) = "Forecast"
@@ -4833,8 +4833,8 @@ Public Module Projekte
             repMSg(0) = "kumulierte Personalkosten"
             repMSg(1) = "kumulierte Sonstige Kosten"
             repMSg(2) = "kumulierte Gesamtkosten"
-            'repMSg(3) = "Beauftragung"
-            repMSg(3) = "Stand vom"
+            repMSg(3) = "Beauftragung"
+            'repMSg(3) = "Stand vom"
             repMSg(4) = "letzter Stand"
             repMSg(5) = "Ist-Werte"
             repMSg(6) = "Prognose"
@@ -5935,7 +5935,7 @@ Public Module Projekte
                     With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                         '.Name = repMessages.getmsg(43).Trim & " " & vglproj.timeStamp.ToShortDateString
                         ' Stand vom ... (273)
-                        .Name = repMessages.getmsg(273).Trim & " " & vglproj.timeStamp.ToShortDateString
+                        .Name = repMessages.getmsg(43).Trim & " " & vglproj.timeStamp.ToShortDateString
                         '.Interior.Color = 0
                         .Values = vdatenreihe
                         .XValues = Xdatenreihe
@@ -6147,7 +6147,7 @@ Public Module Projekte
             repmsg(0) = "Personnel Costs" '164
             repmsg(1) = "Forecast" ' 38
             repmsg(2) = "other Costs" ' 165
-            repmsg(3) = "version from" ' 273, vorher 43
+            repmsg(3) = "approved version from" ' 273, vorher 43
             repmsg(4) = "Personnel Needs" '159
             repmsg(5) = "Total Costs" ' 166
             repmsg(6) = "Actual data"
@@ -6155,7 +6155,7 @@ Public Module Projekte
             repmsg(0) = "Personalkosten" '164
             repmsg(1) = "Prognose" ' 38
             repmsg(2) = "sonstige Kosten" ' 165
-            repmsg(3) = "Stand vom" ' 273 ; Beauftragung 43
+            repmsg(3) = "Beauftragung vom" ' 273 ; Beauftragung 43
             repmsg(4) = "Personalbedarf" '159
             repmsg(5) = "Gesamtkosten" ' 166
             repmsg(6) = "Ist-Werte"
@@ -6727,7 +6727,7 @@ Public Module Projekte
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
                     '.Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
                     ' Stand vom (273)
-                    .Name = repMessages.getmsg(273) & " " & vglProj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
                     '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
@@ -8562,7 +8562,7 @@ Public Module Projekte
 
                 'series
                 With CType(CType(.SeriesCollection, Excel.SeriesCollection).NewSeries, Excel.Series)
-                    .Name = repMessages.getmsg(273) & " " & vglProj.timeStamp.ToShortDateString
+                    .Name = repMessages.getmsg(43) & " " & vglProj.timeStamp.ToShortDateString
                     '.Interior.Color = 0
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe

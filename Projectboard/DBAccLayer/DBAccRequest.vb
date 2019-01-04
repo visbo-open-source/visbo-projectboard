@@ -671,9 +671,9 @@ Public Class Request
     ''' <param name="storedLatest"></param>
     ''' <returns>sortierte Liste (DateTime, clsProjekt)</returns>
     Public Function retrieveProjectHistoryFromDB(ByVal projectname As String, ByVal variantName As String,
-                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg) As SortedList(Of DateTime, clsProjekt)
+                                                 ByVal storedEarliest As DateTime, ByVal storedLatest As DateTime, ByRef err As clsErrorCodeMsg) As clsProjektHistorie
 
-        Dim result As New SortedList(Of DateTime, clsProjekt)
+        Dim result As New clsProjektHistorie
 
         Try
 

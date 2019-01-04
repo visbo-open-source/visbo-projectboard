@@ -656,6 +656,10 @@ Imports System.Web
 
         appInstance.ScreenUpdating = True
 
+        If Not appInstance.EnableEvents Then
+            appInstance.EnableEvents = True
+        End If
+
 
     End Sub
     Sub PT0SaveCockpit(control As IRibbonControl)
@@ -7028,8 +7032,8 @@ Imports System.Web
 
         If ok And Not IsNothing(hproj) Then
 
-            ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-            Dim tmpVariantName As String = ""
+            ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorgaben-Variante verglichen
+            Dim tmpVariantName As String = ptVariantFixNames.pfv.ToString
             ' tk 28.12.18 deprecated
             'If hproj.projectType = ptPRPFType.portfolio Then
             '    tmpVariantName = portfolioVName
@@ -7133,7 +7137,7 @@ Imports System.Web
         'Dim SID As String
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
-        Dim auswahl As Integer = 1
+        Dim auswahl As Integer = 2
         Dim top As Double, left As Double, width As Double, height As Double
 
         ' wird für das LEsen des Vergleichs-Projekts gebraucht ... 
@@ -7167,8 +7171,7 @@ Imports System.Web
 
                 If ok Then
 
-                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-                    Dim tmpVariantName As String = ""
+
                     ' tk 28.12.18 deprecated
                     'If hproj.projectType = ptPRPFType.portfolio Then
                     '    tmpVariantName = portfolioVName
@@ -7194,12 +7197,14 @@ Imports System.Web
                         Dim compareLast As Boolean = awinSettings.meCompareWithLastVersion
                         Dim compareTyp As Integer
                         Try
+                            ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
+                            Dim vorgabenVariantName As String = ptVariantFixNames.pfv.ToString
 
                             If compareLast Then
-                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabenVariantName, Date.Now, err)
                                 compareTyp = PTprdk.PersonalBalken2
                             Else
-                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                                vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabenVariantName, err)
                                 compareTyp = PTprdk.PersonalBalken
                             End If
 
@@ -7293,8 +7298,7 @@ Imports System.Web
                     Exit Sub
                 End Try
 
-                ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-                Dim tmpVariantName As String = ""
+
                 ' tk 28.12.18 deprecated
                 'If hproj.projectType = ptPRPFType.portfolio Then
                 '    tmpVariantName = portfolioVName
@@ -7323,12 +7327,14 @@ Imports System.Web
                     Dim compareTyp As Integer
 
                     Try
+                        ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorlagen-Variante verglichen
+                        Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
 
                         If compareWithLast Then
-                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
+                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                             compareTyp = PTprdk.KostenBalken2
                         Else
-                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                            vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                             compareTyp = PTprdk.KostenBalken
                         End If
 
@@ -9187,8 +9193,9 @@ Imports System.Web
             Dim comparisonTyp As Integer
             Dim qualifier2 As String = ""
 
+            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
             If awinSettings.meCompareWithLastVersion Then
-                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, hproj.variantName, Date.Now, err)
+                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                 comparisonTyp = PTprdk.KostenBalken2
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
@@ -9206,7 +9213,7 @@ Imports System.Web
 
 
             Else
-                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, hproj.variantName, err)
+                lproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                 comparisonTyp = PTprdk.KostenBalken
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
@@ -10340,7 +10347,7 @@ Imports System.Web
                         If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                             projekthistorie.Add(Date.Now, hproj)
                             lastElem = projekthistorie.Count - 1
@@ -10483,7 +10490,7 @@ Imports System.Web
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                         lastElem = projekthistorie.Count - 1
@@ -10676,7 +10683,7 @@ Imports System.Web
                     If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
 
@@ -10785,7 +10792,7 @@ Imports System.Web
                 If vglName <> hproj.getShapeText Then
                     If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName,
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now, err:=err)
                         projekthistorie.Add(Date.Now, hproj)
                     Else

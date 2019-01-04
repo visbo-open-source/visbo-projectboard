@@ -161,7 +161,7 @@
         </group>
         <group id="PTneu" getVisible="chckVisibility" >
           <!--label="Neues Projekt anlegen"-->
-          <splitButton id="PT2G1split" size ="large">
+          <splitButton getVisible ="chckVisibility" id="PT2G1split" size ="large">
             <button id="PT2G1M0" getLabel ="bestimmeLabel" imageMso="CreateNewDrawing" onAction="PT2ProjektNeu" supertip="ein neues Projekt auf Basis einer Projekt-Vorlage anlegen; Projekt-Start und -Ende kann unabhängig von der Vorlage beliebig definiert werden"/>
             <menu id="PT2G1M" getVisible="chckVisibility">
               <!--label="Neu auf Basis Vorlage"-->
