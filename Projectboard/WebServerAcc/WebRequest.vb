@@ -4724,9 +4724,12 @@ Public Class Request
 
                 Case 403        ' Forbidden
 
-                    'Call MsgBox("Fehler in GETallVPvShort: " & errmsg & " : " & webVPvAntwort.message)
-                    Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
-
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+                    If withBreak Then
+                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
                 Case 404 To 408
 
                 Case 409        ' Conflict
