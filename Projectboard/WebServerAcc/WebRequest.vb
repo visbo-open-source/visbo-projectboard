@@ -1840,7 +1840,7 @@ Public Class Request
 
             listofCURsWeb.copyFrom(listofCustomUserRoles)
 
-            ' hier fehtl noch der copyto und copyfrom für die customUserRollen
+            ' hier fehlt noch der copyto und copyfrom für die customUserRollen
 
             ''''Dim CustUserRole As New clsCustomUserRoleWeb
             ''''CustUserRole.userID = aktUser._id

@@ -4836,21 +4836,7 @@ Imports System.Web
 
     End Sub
 
-    Public Sub PTImportCustomUserRoles(control As IRibbonControl)
 
-
-        Dim err As New clsErrorCodeMsg
-        Dim result As Boolean = False
-
-        Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
-
-        '??? Aufruf speichern der CustomUser Roles über rest-Server ...
-
-        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(allCustomUserRoles,
-                                                                            CStr(settingTypes(ptSettingTypes.customroles)),
-                                                                            Nothing,
-                                                                            err)
-    End Sub
 
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
         ' Übernahme 
@@ -5569,6 +5555,111 @@ Imports System.Web
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+
+    End Sub
+    ''' <summary>
+    ''' importiert und speichert die Organisation; wenn mehrere existieren, dann wird ein Formular aufgeschaltet zur Auswahl der Organisation
+    ''' </summary>
+    ''' <param name="Control"></param>
+    Public Sub PTImportOrga(Control As IRibbonControl)
+
+        Dim selectedWB As String = ""
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "organisation*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        If anzFiles = 1 Then
+            selectedWB = listOfImportfiles.Item(0)
+        ElseIf anzFiles > 1 Then
+            Dim getOrgaFile As New frmSelectImportFiles
+            getOrgaFile.menueAswhl = PTImpExp.Orga
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                selectedWB = getOrgaFile.selectedDateiName
+                Dim dateiname As String = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+                Try
+                    ' hier wird jetzt der Import gemacht 
+                    Call logfileSchreiben("Beginn Import Organisation ", selectedWB, -1)
+
+                    appInstance.Workbooks.Open(dateiname)
+                    Dim outputCollection As New Collection
+                    Dim importedOrga As clsOrganisation = orgaImport(outputCollection)
+
+                    If outputCollection.Count > 0 Then
+                        Dim errmsg As String = vbLf & " .. Abbruch .. nicht importiert "
+                        outputCollection.Add(errmsg)
+                        Call showOutPut(outputCollection, "Organisations-Import", "")
+
+                    ElseIf importedOrga.count > 0 Then
+                        ' jetzt wird die Orga als Setting weggespeichert ... 
+                        Call MsgBox("hier ist es jetzt erledigt")
+                        ' dann kann jetzt die Organisation geschrieben werden 
+                        ' die Kapas sidn auch bereits übertragen ... 
+                        'Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga, Type, Date.Now, Err)
+
+                    End If
+                Catch ex As Exception
+
+                End Try
+            End If
+        End If
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
+
+    ''' <summary>
+    ''' importiert und speichert die Istdaten; darf nur Orga-Admin
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportIstDaten(control As IRibbonControl)
+
+    End Sub
+
+    ''' <summary>
+    ''' importiert und speichert die CustomUserRoles
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportCustomUserRoles(control As IRibbonControl)
+
+
+        Dim err As New clsErrorCodeMsg
+        Dim result As Boolean = False
+
+        Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
+
+        '??? Aufruf speichern der CustomUser Roles über rest-Server ...
+
+        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(allCustomUserRoles,
+                                                                            CStr(settingTypes(ptSettingTypes.customroles)),
+                                                                            Nothing,
+                                                                            err)
+
+        If result = True Then
+            Call MsgBox("ok, Custom User Roles gespeichert ...")
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' importiert und speichert die Kapazitäten 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportKapas(control As IRibbonControl)
 
     End Sub
 

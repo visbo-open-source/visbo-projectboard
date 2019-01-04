@@ -324,6 +324,7 @@
                 If Me._subRoleIDs.Count = 0 Then
                     stillok = True
                 Else
+
                     Dim i As Integer = 0
                     Do While i < Me._subRoleIDs.Count And stillok
                         stillok = (Me._subRoleIDs.ElementAt(i).Key = vglRole.getSubRoleIDs.ElementAt(i).Key And
@@ -331,8 +332,18 @@
                         i = i + 1
                     Loop
 
-                    ' jetzt die TeamIDs
-                    i = 0
+                End If
+            Else
+                stillok = False
+            End If
+
+            ' jetzt die TeamIDs prüfen 
+            If Me._teamIDs.Count = vglRole.getTeamIDs.Count Then
+                If Me._teamIDs.Count = 0 Then
+                    stillok = True
+                Else
+
+                    Dim i As Integer = 0
                     Do While i < Me._teamIDs.Count And stillok
                         stillok = (Me._teamIDs.ElementAt(i).Key = vglRole.getTeamIDs.ElementAt(i).Key And
                                    Me._teamIDs.ElementAt(i).Value = vglRole.getTeamIDs.ElementAt(i).Value)
@@ -343,6 +354,7 @@
             Else
                 stillok = False
             End If
+
 
 
             ' jetzt alle anderen Attribute überprüfen ...

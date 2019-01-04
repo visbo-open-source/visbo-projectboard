@@ -157,6 +157,7 @@ Public Class frmSelectImportFiles
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
             Me.alleButton.Visible = False
+
         ElseIf menueAswhl = PTImpExp.scenariodefs Then
             dirName = importOrdnerNames(PTImpExp.scenariodefs)
             If awinSettings.englishLanguage Then
@@ -165,6 +166,17 @@ Public Class frmSelectImportFiles
                 Me.Text = "Portfolio-Definitions-Datei auswählen"
             End If
 
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
+
+        ElseIf menueAswhl = PTImpExp.Orga Then
+            dirName = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select organisation definition file"
+            Else
+                Me.Text = "Organisations-Datei auswählen"
+            End If
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
             Me.alleButton.Visible = False
