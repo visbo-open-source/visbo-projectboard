@@ -28,7 +28,7 @@ Module Module1
     Friend xlApp As xlNS.Application = Nothing
     Friend updateWorkbook As xlNS.Workbook = Nothing
 
-    Friend Const changeColor As Integer = PowerPoint.XlRgbColor.rgbSteelBlue
+    Friend Const changeColor As Integer = Excel.XlRgbColor.rgbSteelBlue
     Friend currentSlide As PowerPoint.Slide
     ' Wasserzeichen für eingefrorene Slide
     Friend waterSign = "\\KOYTEK-NAS\backup\Entwicklung\Icons\x_collection_png\16x16\plain\snowflake.png"
@@ -4278,7 +4278,7 @@ Module Module1
                                     .TextFrame2.TextRange.Text = newCmtText
                                     ' Farbe
                                     If newCmtColor < 1 Or newCmtColor > 4 Then
-                                        .Shadow.ForeColor.RGB = PowerPoint.XlRgbColor.rgbGrey
+                                        .Shadow.ForeColor.RGB = Excel.XlRgbColor.rgbGrey
                                     Else
                                         .Shadow.ForeColor.RGB = trafficLightColors(newCmtColor)
                                     End If
