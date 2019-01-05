@@ -1798,12 +1798,12 @@ Public Class Request
     ''' <summary>
     ''' speichert eine VCSetting in der Datenbank; 
     ''' </summary>
-    ''' <param name="listofCustomUserRoles"></param>
+    ''' <param name="listofSetting"></param>
     ''' <param name="type"></param>
     ''' <param name="ts"></param>
     ''' <param name="err"></param>
     ''' <returns></returns>
-    Public Function storeVCsettingsToDB(ByVal listofCustomUserRoles As clsCustomUserRoles,
+    Public Function storeVCsettingsToDB(ByVal listofSetting As Object,
                                         ByVal type As String,
                                         ByVal name As String,
                                         ByVal ts As DateTime,
@@ -1814,8 +1814,11 @@ Public Class Request
         Dim newsetting As Object = Nothing
         Dim settingID As String = ""
         Dim anzSetting As Integer = 0
+
         Try
+
             Select Case type
+
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = New List(Of clsVCSettingCustomroles)
                     setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
@@ -1827,7 +1830,9 @@ Public Class Request
                     End If
 
                 Case settingTypes(ptSettingTypes.customfields)
+
                 Case settingTypes(ptSettingTypes.organisation)
+
             End Select
 
             Dim timestamp As String = ""
@@ -1836,60 +1841,54 @@ Public Class Request
             End If
 
 
-            Dim listofCURsWeb As New clsCustomUserRolesWeb
+            Select Case type
 
-            listofCURsWeb.copyFrom(listofCustomUserRoles)
+                Case settingTypes(ptSettingTypes.customroles)
 
-            ' hier fehtl noch der copyto und copyfrom für die customUserRollen
+                    Dim listofCURsWeb As New clsCustomUserRolesWeb
+                    listofCURsWeb.copyFrom(listofSetting)
 
-            ''''Dim CustUserRole As New clsCustomUserRoleWeb
-            ''''CustUserRole.userID = aktUser._id
-            ''''CustUserRole.userName = aktUser.email
-            ''''CustUserRole.customUserRole = 1
-            ''''CustUserRole.specifics = "testCustomRolle 1"
-            ''''listofCURsWeb.customUserRoles.Add(CustUserRole)
-            '''''listlistofCURsWeb.Add(listofCURsWeb)
+                    ' der Unique-Key für customroles besteht aus: name, type
 
-            ' der Unique-Key für customroles besteht aus: name, type
-            If type = settingTypes(ptSettingTypes.customroles) Then
-                newsetting = New clsVCSettingCustomroles
-                CType(newsetting, clsVCSettingCustomroles).name = type         ' customroles '
-                CType(newsetting, clsVCSettingCustomroles).timestamp = ""
-                CType(newsetting, clsVCSettingCustomroles).userId = ""
-                CType(newsetting, clsVCSettingCustomroles).vcid = aktVCid
-                CType(newsetting, clsVCSettingCustomroles).type = type
-                CType(newsetting, clsVCSettingCustomroles).value = listofCURsWeb
+                    newsetting = New clsVCSettingCustomroles
+                    CType(newsetting, clsVCSettingCustomroles).name = type         ' customroles '
+                    CType(newsetting, clsVCSettingCustomroles).timestamp = timestamp
+                    CType(newsetting, clsVCSettingCustomroles).userId = aktUser._id
+                    CType(newsetting, clsVCSettingCustomroles).vcid = aktVCid
+                    CType(newsetting, clsVCSettingCustomroles).type = type
+                    CType(newsetting, clsVCSettingCustomroles).value = listofCURsWeb
 
-                If anzSetting = 1 Then
-                    newsetting._id = settingID
-                    ' Update der customroles - Setting
-                    result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
-                Else
-                    ' Create der customroles - Setting
-                    result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
-                End If
+                    If anzSetting = 1 Then
+                        newsetting._id = settingID
+                        ' Update der customroles - Setting
+                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
+                    Else
+                        ' Create der customroles - Setting
+                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customroles), newsetting, err)
+                    End If
 
 
+                Case settingTypes(ptSettingTypes.customfields)
 
-                If err.errorCode <> 200 Then
+                Case settingTypes(ptSettingTypes.organisation)
 
-                    Select Case err.errorCode
-                        Case 400
-                        Case 401
-                        Case 403
-                        Case 409
-                            ' PUTOneVCSetting erforderlich
-                            Call MsgBox(err.errorMsg)
-                        Case Else
-                            Call MsgBox(err.errorMsg)
-                    End Select
+            End Select
 
-                End If
+
+            If err.errorCode <> 200 Then
+
+                Select Case err.errorCode
+                    Case 400
+                    Case 401
+                    Case 403
+                    Case 409
+                        ' PUTOneVCSetting erforderlich
+                        Call MsgBox(err.errorMsg)
+                    Case Else
+                        Call MsgBox(err.errorMsg)
+                End Select
 
             End If
-
-
-
 
 
         Catch ex As Exception
@@ -1900,7 +1899,7 @@ Public Class Request
     End Function
 
 
-    Public Function retrieveCustomUserRolesOf(ByVal dbusername As String, ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
+    Public Function retrieveCustomUserRoles(ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
 
         Dim result As New clsCustomUserRoles
         Dim interimResult As New clsCustomUserRoles
@@ -1922,16 +1921,8 @@ Public Class Request
 
                 settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
                 webCustomUserRoles = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0).value
-                webCustomUserRoles.copyTo(interimResult)
+                webCustomUserRoles.copyTo(result)
 
-                For Each kvp As KeyValuePair(Of String, clsCustomUserRole) In interimResult.liste
-
-                    Dim aktUserKey As String = dbusername.Trim & kvp.Value.customUserRole.ToString.Trim & kvp.Value.specifics
-
-                    If kvp.Key = aktUserKey Then
-                        result.addCustomUserRole(kvp.Value.userName, kvp.Value.userID, kvp.Value.customUserRole, kvp.Value.specifics)
-                    End If
-                Next
 
             Else
                 If err.errorCode = 403 Then
@@ -1945,7 +1936,7 @@ Public Class Request
         Catch ex As Exception
 
         End Try
-        retrieveCustomUserRolesOf = result
+        retrieveCustomUserRoles = result
     End Function
 
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
@@ -3539,10 +3530,10 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customroles)
                     result = CType(result, clsVCSettingCustomroles)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.customfields)
                     result = CType(result, clsVCSettingCustomfields)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.organisation)
                     result = CType(result, clsVCSettingOrganisation)
 
                 Case Else
