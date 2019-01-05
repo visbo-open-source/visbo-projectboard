@@ -6,6 +6,11 @@ Public Class clsOrganisations
     ' Der integer key entspricht der Monatsspalte ab StartofCalendar; damit lässt sich die entsprechend gültige Org schnell bestimmen
     Private _validOrganisations As SortedList(Of Integer, clsOrganisation)
 
+    Public ReadOnly Property count As Integer
+        Get
+            count = _validOrganisations.Count
+        End Get
+    End Property
     Public ReadOnly Property getOrganisationValidAt(ByVal datum As Date) As clsOrganisation
         Get
             Dim searchkey As Integer = getColumnOfDate(datum)

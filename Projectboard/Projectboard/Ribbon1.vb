@@ -5568,17 +5568,24 @@ Imports System.Web
         Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "organisation*.xls*")
         Dim anzFiles As Integer = listOfImportfiles.Count
 
-        ' öffnen des LogFiles
-        Call logfileOpen()
+        Dim dateiname As String = ""
 
-        Call projektTafelInit()
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+
         If anzFiles = 1 Then
             selectedWB = listOfImportfiles.Item(0)
+            weiterMachen = True
+
         ElseIf anzFiles > 1 Then
             Dim getOrgaFile As New frmSelectImportFiles
             getOrgaFile.menueAswhl = PTImpExp.Orga
@@ -5586,36 +5593,54 @@ Imports System.Web
 
             If returnValue = DialogResult.OK Then
                 selectedWB = getOrgaFile.selectedDateiName
-                Dim dateiname As String = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
-
-                Try
-                    ' hier wird jetzt der Import gemacht 
-                    Call logfileSchreiben("Beginn Import Organisation ", selectedWB, -1)
-
-                    appInstance.Workbooks.Open(dateiname)
-                    Dim outputCollection As New Collection
-                    Dim importedOrga As clsOrganisation = orgaImport(outputCollection)
-
-                    If outputCollection.Count > 0 Then
-                        Dim errmsg As String = vbLf & " .. Abbruch .. nicht importiert "
-                        outputCollection.Add(errmsg)
-                        Call showOutPut(outputCollection, "Organisations-Import", "")
-
-                    ElseIf importedOrga.count > 0 Then
-                        ' jetzt wird die Orga als Setting weggespeichert ... 
-                        Call MsgBox("hier ist es jetzt erledigt")
-                        ' dann kann jetzt die Organisation geschrieben werden 
-                        ' die Kapas sidn auch bereits übertragen ... 
-                        'Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga, Type, Date.Now, Err)
-
-                    End If
-                Catch ex As Exception
-
-                End Try
+                weiterMachen = True
             End If
         End If
 
+        If weiterMachen Then
 
+            dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+            Try
+                ' hier wird jetzt der Import gemacht 
+                Call logfileSchreiben("Beginn Import Organisation ", selectedWB, -1)
+
+                ' Öffnen des Organisations-Files
+                appInstance.Workbooks.Open(dateiname)
+
+                Dim outputCollection As New Collection
+                Dim importedOrga As clsOrganisation = orgaImport(outputCollection)
+
+                Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
+
+                ' Schliessen des Organisations-Files
+                appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+
+                If outputCollection.Count > 0 Then
+                    Dim errmsg As String = vbLf & " .. Abbruch .. nicht importiert "
+                    outputCollection.Add(errmsg)
+                    Call showOutPut(outputCollection, "Organisations-Import", "")
+
+                    Call logfileSchreiben(outputCollection)
+
+                ElseIf importedOrga.count > 0 Then
+                    ' jetzt wird die Orga als Setting weggespeichert ... 
+                    Call MsgBox("hier ist es jetzt erledigt")
+                    ' dann kann jetzt die Organisation geschrieben werden 
+                    ' die Kapas sidn auch bereits übertragen ... 
+                    'Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga, Type, Date.Now, Err)
+
+                End If
+            Catch ex As Exception
+
+            End Try
+        End If
+
+
+
+
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True

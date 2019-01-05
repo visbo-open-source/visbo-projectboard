@@ -5938,6 +5938,32 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' schreibt die Inhalte der Collection als String in das Logfile
+    ''' </summary>
+    ''' <param name="meldungen"></param>
+    Public Sub logfileSchreiben(ByVal meldungen As Collection)
+        Dim obj As Object
+        Dim anzZeilen As Integer = meldungen.Count
+
+        Try
+
+            For i As Integer = 1 To anzZeilen
+
+                ' neue Zeile einfügen 
+                obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+                Dim text As String = CStr(meldungen.Item(i))
+                With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                    CType(.Cells(1, 1), Excel.Range).Value = text
+                End With
+            Next
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
+
+    ''' <summary>
     ''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
     ''' </summary>
     ''' <param name="text"></param>

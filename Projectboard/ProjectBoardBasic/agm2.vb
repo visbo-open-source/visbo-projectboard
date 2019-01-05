@@ -8275,7 +8275,14 @@ Public Module agm2
 
         End Try
 
-        Dim oldOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(validFrom)
+        Dim oldOrga As clsOrganisation = Nothing
+
+        If Not IsNothing(validOrganisations) Then
+            If validOrganisations.count > 0 Then
+                oldOrga = validOrganisations.getOrganisationValidAt(validFrom)
+            End If
+        End If
+
 
         ' Auslesen der Rollen Definitionen 
         Dim newRoleDefinitions As New clsRollen
@@ -16126,6 +16133,15 @@ Public Module agm2
 
 
                 End If
+
+                ' jetzt sind die RoleDefinitions gesetzt 
+                Dim currentOrga As New clsOrganisation
+                With currentOrga
+                    .validFrom = StartofCalendar
+                    .allRoles = RoleDefinitions
+                    .allCosts = CostDefinitions
+                End With
+                validOrganisations.addOrga(currentOrga)
 
 
                 ' Auslesen der Custom Field Definitions

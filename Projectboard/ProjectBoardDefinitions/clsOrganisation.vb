@@ -98,7 +98,7 @@
                         End If
                     Else
                         ' nicht ok 
-                        errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..." )
+                        errmsg = "ID: " & oldRoleDefinition.UID.ToString & " : " & oldRoleDefinition.name & " ist nicht in neuer Orga-Definition vorhanden ..."
                         outputCollection.Add(errmsg)
                     End If
 
@@ -141,7 +141,7 @@
                         End If
                     Else
                         ' nicht ok 
-                        errmsg = "ID: " & oldCostDefinition.UID.ToString & " : " & oldCostDefinition.name & " ist nicht in neuer Kosten Orga-Definition vorhanden ..." )
+                        errmsg = "ID: " & oldCostDefinition.UID.ToString & " : " & oldCostDefinition.name & " ist nicht in neuer Kosten Orga-Definition vorhanden ..."
                         outputCollection.Add(errmsg)
                     End If
                 Next
