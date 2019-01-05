@@ -8259,6 +8259,84 @@ Public Module agm2
     End Function
 
     ''' <summary>
+    ''' Voraussetzungen: das File ist geöffnet 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function orgaImport(ByRef outputCollection As Collection) As clsOrganisation
+
+        Dim importedOrga As New clsOrganisation
+        Dim orgaSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        ' auslesen der Gültigkeit
+        Dim validFrom As Date = Date.Now
+        Try
+            validFrom = CDate(CType(orgaSheet.Cells(1, 2), Excel.Range).Value)
+        Catch ex As Exception
+
+        End Try
+
+        Dim oldOrga As clsOrganisation = Nothing
+
+        If Not IsNothing(validOrganisations) Then
+            If validOrganisations.count > 0 Then
+                oldOrga = validOrganisations.getOrganisationValidAt(validFrom)
+            End If
+        End If
+
+
+        ' Auslesen der Rollen Definitionen 
+        Dim newRoleDefinitions As New clsRollen
+        Call readRoleDefinitions(orgaSheet, newRoleDefinitions)
+
+        If awinSettings.visboDebug Then
+            Call MsgBox("readRoleDefinitions")
+        End If
+
+        ' Auslesen der Kosten Definitionen 
+        Dim newCostDefinitions As New clsKostenarten
+        Call readCostDefinitions(orgaSheet, newCostDefinitions)
+
+        If awinSettings.visboDebug Then
+            Call MsgBox("readCostDefinitions")
+        End If
+
+        ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+        Call readRoleDefinitions(orgaSheet, newRoleDefinitions, readingGroups:=True)
+
+        ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
+        If newRoleDefinitions.Count > 0 Then
+            ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+            ' jetzt kommt der Validation-Check 
+
+            Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
+            Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
+
+            If outputCollection.Count > 0 Then
+                ' wird an der aurufenden Stelle ausgegeben ... 
+            ElseIf TeamsAreNotOK Or existingOverloads Then
+                ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
+            Else
+                'bis hier ist alles in Ordnung 
+                With importedOrga
+                    .allRoles = newRoleDefinitions
+                    .allCosts = newCostDefinitions
+                    .validFrom = validFrom
+                End With
+
+                If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
+                    ' wieder zurück setzen ..
+                    importedOrga = New clsOrganisation
+                Else
+
+                End If
+            End If
+
+        End If
+
+        orgaImport = importedOrga
+    End Function
+
+    ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
     ''' stellt sie in ImportProjekte 
     ''' erstellt ein Szenario mit Namen der Batch-Datei; die Sortierung erfolgt über die Reihenfolge in der Batch-Datei 
@@ -15572,6 +15650,7 @@ Public Module agm2
     End Function
 
 
+
     ''' <summary>
     ''' liest das Customization File aus und initialisiert die globalen Variablen entsprechend
     ''' </summary>
@@ -15585,7 +15664,6 @@ Public Module agm2
             Dim needToBeSaved As Boolean = False
             '  um dahinter temporär die Darstellungsklassen kopieren zu können , nur für ProjectBoard nötig 
             Dim projectBoardSheet As Excel.Worksheet = Nothing
-
 
             Dim xlsCustomization As Excel.Workbook = Nothing
 
@@ -16001,23 +16079,6 @@ Public Module agm2
                     Call MsgBox("readOtherDefinitions")
                 End If
 
-                ' 
-                ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
-
-
-                If RoleDefinitions.Count > 0 Then
-                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                    ' jetzt kommt der Validation-Check 
-                    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions()
-                    If TeamsAreNotOK Then
-                        Call MsgBox("Team-Definitions-Konflikte in DB !")
-                    End If
-
-                    Dim existingOverloads As Boolean = checkTeamMemberOverloads()
-
-                End If
 
                 ' jetzt prüfen , ob alles ok 
                 If awinSettings.visboDebug Then
@@ -16029,27 +16090,58 @@ Public Module agm2
                 If Not awinSettings.readCostRolesFromDB Then
 
                     ' Auslesen der Rollen Definitionen 
-                    Call readRoleDefinitions(wsName4)
+                    Call readRoleDefinitions(wsName4, RoleDefinitions)
 
                     If awinSettings.visboDebug Then
                         Call MsgBox("readRoleDefinitions")
                     End If
 
                     ' Auslesen der Kosten Definitionen 
-                    Call readCostDefinitions(wsName4)
+                    Call readCostDefinitions(wsName4, CostDefinitions)
 
                     If awinSettings.visboDebug Then
                         Call MsgBox("readCostDefinitions")
                     End If
 
                     ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                    Call readRoleDefinitions(wsName4, readingGroups:=True)
+                    Call readRoleDefinitions(wsName4, RoleDefinitions, readingGroups:=True)
+
+                    If RoleDefinitions.Count > 0 Then
+                        ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                        ' jetzt kommt der Validation-Check 
+                        Dim outputCollection As New Collection
+                        Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
+                        Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
+
+                        If outputCollection.Count > 0 Then
+                            Call showOutPut(outputCollection, "Organisations-Definition", "")
+                        End If
+
+                    End If
 
                     ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
                     ' jetzt kommt der Validation-Check 
                     'Dim allTeamsAreOK As Boolean = checkTeamDefinitions()
                     'Dim existingOverloads As Boolean = checkTeamMemberOverloads()
+                Else
+
+                    ' 
+                    ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
+                    ' tk/urk todo 4.1.19 hier muss das Organisations-Setting ausgelesen werden ..
+                    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                    CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+
+
                 End If
+
+                ' jetzt sind die RoleDefinitions gesetzt 
+                Dim currentOrga As New clsOrganisation
+                With currentOrga
+                    .validFrom = StartofCalendar
+                    .allRoles = RoleDefinitions
+                    .allCosts = CostDefinitions
+                End With
+                validOrganisations.addOrga(currentOrga)
 
 
                 ' Auslesen der Custom Field Definitions
@@ -17460,7 +17552,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname"></param>
     ''' <remarks></remarks>
-    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet,
+    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet, ByRef rollendefinitionen As clsRollen,
                                     Optional ByVal readingGroups As Boolean = False)
 
         '
@@ -17560,7 +17652,7 @@ Public Module agm2
                         If readingGroups And isWithoutID Then
                             ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
                             Dim roleName As String = CStr(c.Value.trim)
-                            If Not RoleDefinitions.containsName(roleName) Then
+                            If Not rollendefinitionen.containsName(roleName) Then
                                 Call MsgBox("Gruppen-Rolle " & roleName & " existiert nicht ...")
                                 groupDefinitionIsOk = False
                             End If
@@ -17639,12 +17731,12 @@ Public Module agm2
                             End With
 
                             ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
-                            If readingGroups And RoleDefinitions.containsName(hrole.name) Then
+                            If readingGroups And rollendefinitionen.containsName(hrole.name) Then
                                 ' nichts tun, alles gut : 
                             Else
                                 ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
-                                If Not RoleDefinitions.containsName(hrole.name) Then
-                                    RoleDefinitions.Add(hrole)
+                                If Not rollendefinitionen.containsName(hrole.name) Then
+                                    rollendefinitionen.Add(hrole)
                                 End If
 
                             End If
@@ -17694,8 +17786,8 @@ Public Module agm2
                                 If curLevel > 0 Then
                                     ' als Child aufnehmen 
                                     ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
-                                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                    Dim parentRole As clsRollenDefinition = rollendefinitionen.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = rollendefinitionen.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
 
                                     If curLevel = maxIndent And readingGroups Then
@@ -17744,8 +17836,8 @@ Public Module agm2
 
                                 If curLevel > 0 Then
                                     ' als Child aufnehmen 
-                                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                    Dim parentRole As clsRollenDefinition = rollendefinitionen.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = rollendefinitionen.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
 
                                     ' hier kann er eigentlich nie hinkommen ...
@@ -18478,7 +18570,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname"></param>
     ''' <remarks></remarks>
-    Private Sub readCostDefinitions(ByVal wsname As Excel.Worksheet)
+    Private Sub readCostDefinitions(ByVal wsname As Excel.Worksheet, ByRef kostendefinitionen As clsKostenarten)
 
 
         Dim index As Integer = 0
@@ -18513,7 +18605,7 @@ Public Module agm2
                             .UID = index
                         End With
 
-                        CostDefinitions.Add(hcost)
+                        kostendefinitionen.Add(hcost)
                     End If
 
                 Next

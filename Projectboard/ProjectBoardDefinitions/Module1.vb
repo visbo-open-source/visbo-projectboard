@@ -80,6 +80,11 @@ Public Module Module1
     '' MongoDB ist gestartet mongoDBaktiv = true; MongoDB ist unterbrochen mongoDBaktiv=false
     'Public mongoDBaktiv = False
 
+
+    ' hier werden die gültigen Organisationen mitgemerkt ... 
+    Public validOrganisations As New clsOrganisations
+
+
     Public Projektvorlagen As New clsProjektvorlagen
     Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
@@ -810,6 +815,9 @@ Public Module Module1
         addElements = 6
         rplanrxf = 7
         scenariodefs = 8
+        Orga = 9
+        Kapas = 10
+        customUserRoles = 11
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung
@@ -5930,6 +5938,32 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' schreibt die Inhalte der Collection als String in das Logfile
+    ''' </summary>
+    ''' <param name="meldungen"></param>
+    Public Sub logfileSchreiben(ByVal meldungen As Collection)
+        Dim obj As Object
+        Dim anzZeilen As Integer = meldungen.Count
+
+        Try
+
+            For i As Integer = 1 To anzZeilen
+
+                ' neue Zeile einfügen 
+                obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+                Dim text As String = CStr(meldungen.Item(i))
+                With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
+                    CType(.Cells(1, 1), Excel.Range).Value = text
+                End With
+            Next
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
+
+    ''' <summary>
     ''' ganz aanlog zu dem anderen logfile Schrieben, nur dass jetzt ein Array von String Werten übergeben wird, der in die einzelnen Spalten kommt 
     ''' </summary>
     ''' <param name="text"></param>
@@ -7080,22 +7114,23 @@ Public Module Module1
     ''' Test-Funktion: überprüft die Team-Definitionen 
     ''' </summary>
     ''' <returns></returns>
-    Public Function checkTeamDefinitions() As Boolean
+    Public Function checkTeamDefinitions(ByVal roleDefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
 
-        Dim allTeams As SortedList(Of Integer, Double) = RoleDefinitions.getAllTeamIDs
+        Dim allTeams As SortedList(Of Integer, Double) = roleDefinitionsToCheck.getAllTeamIDs
         Dim atleastOneError As Boolean = False
 
         For Each kvp As KeyValuePair(Of Integer, Double) In allTeams
 
             Dim ok As Boolean = True
-            Dim teamRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim teamRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(kvp.Key)
             Dim childIDs As SortedList(Of Integer, Double) = teamRole.getSubRoleIDs
 
             For Each child As KeyValuePair(Of Integer, Double) In childIDs
-                Dim childRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(child.Key)
+                Dim childRole As clsRollenDefinition = roleDefinitionsToCheck.getRoleDefByID(child.Key)
                 ok = ok And childRole.getTeamIDs.ContainsKey(kvp.Key)
                 If Not ok Then
-                    Call MsgBox("teamRole " & teamRole.name & " conflicts with " & childRole.name)
+                    Dim outmsg As String = "teamRole " & teamRole.name & " conflicts with " & childRole.name
+                    outputCollection.Add(outmsg)
                     atleastOneError = True
                     ok = True
                 End If
@@ -7110,14 +7145,14 @@ Public Module Module1
     ''' Test-Funktion für Teams und Überlastung 
     ''' </summary>
     ''' <returns></returns>
-    Public Function checkTeamMemberOverloads() As Boolean
+    Public Function checkTeamMemberOverloads(ByVal roledefinitionsToCheck As clsRollen, ByRef outputCollection As Collection) As Boolean
 
-        Dim allIDs As SortedList(Of Integer, Double) = RoleDefinitions.getAllIDs
+        Dim allIDs As SortedList(Of Integer, Double) = roledefinitionsToCheck.getAllIDs
         Dim atleastOneOverload As Boolean = False
 
         For Each kvp As KeyValuePair(Of Integer, Double) In allIDs
 
-            Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(kvp.Key)
+            Dim tmpRole As clsRollenDefinition = roledefinitionsToCheck.getRoleDefByID(kvp.Key)
             Dim memberships As SortedList(Of Integer, Double) = tmpRole.getTeamIDs
 
             If Not IsNothing(memberships) Then
@@ -7129,7 +7164,8 @@ Public Module Module1
 
                     If wholeKapa > 1.0 Then
                         atleastOneOverload = True
-                        Call MsgBox("Overloaded Role: " & tmpRole.name & "Kapa: " & wholeKapa.ToString("#0.#"))
+                        Dim errmsg As String = "Overloaded Role: " & tmpRole.name & "Kapa: " & wholeKapa.ToString("#0.#")
+                        outputCollection.Add(errmsg)
                     End If
                 End If
             End If
