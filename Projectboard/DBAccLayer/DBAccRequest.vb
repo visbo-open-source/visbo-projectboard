@@ -1501,8 +1501,9 @@ Public Class Request
     ''' <param name="ts"></param>
     ''' <param name="err"></param>
     ''' <returns></returns>
-    Public Function storeVCSettingsToDB(ByVal hlist As clsCustomUserRoles,
+    Public Function storeVCSettingsToDB(ByVal hlist As Object,
                                         ByVal type As String,
+                                        ByVal name As String,
                                         ByVal ts As Date,
                                         ByRef err As clsErrorCodeMsg) As Boolean
 
@@ -1511,13 +1512,14 @@ Public Class Request
         Try
 
             If usedWebServer Then
-                result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, type, ts, err)
+
+                result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, name, ts, err)
 
                 ' Token is no longer valid: erneuter Login
                 If err.errorCode = 401 Then
                     loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                     If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, type, ts, err)
+                        result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, name, ts, err)
                     End If
 
                 End If
@@ -1532,20 +1534,20 @@ Public Class Request
         storeVCSettingsToDB = result
 
     End Function
-    Public Function retrieveCustomUserRolesOf(ByVal dbUsername As String, ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
+    Public Function retrieveCustomUserRoles(ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
 
         Dim result As New clsCustomUserRoles
 
         Try
             If usedWebServer Then
 
-                result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRolesOf(dbUsername, err)
+                result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
 
                 ' Token is no longer valid: erneuter Login
                 If err.errorCode = 401 Then
                     loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                     If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRolesOf(dbUsername, err)
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
                     End If
 
                 End If
@@ -1556,7 +1558,7 @@ Public Class Request
         Catch ex As Exception
 
         End Try
-        retrieveCustomUserRolesOf = result
+        retrieveCustomUserRoles = result
     End Function
 
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String

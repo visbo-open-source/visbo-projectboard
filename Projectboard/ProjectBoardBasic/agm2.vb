@@ -6952,6 +6952,14 @@ Public Module agm2
         End If
 
         userName = "ute.rittinghaus-koytek@visbo.de"
+        curType = ptCustomUserRoles.OrgaAdmin
+        specifics = ""
+
+        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
+            tmpResult.addCustomUserRole(userName, "", curType, specifics)
+        End If
+
+        userName = "ute.rittinghaus-koytek@visbo.de"
         curType = ptCustomUserRoles.RessourceManager
         specifics = "D-BOSV-KB3"
 
@@ -16415,14 +16423,19 @@ Public Module agm2
     End Sub
 
     Private Sub setUserRoles()
+
+        Dim err As New clsErrorCodeMsg
+
         ' Test tk 23.12.18
+
         ' tk 23.12.18 hier werden die Test Custom User Roles besetzt 
-        Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
+        ''Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
+        Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+
         ' Ende Test 
 
         ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
         Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
-        '??? Dim allMyCustomUserRoles As clsCustomUserRoles = retrieveCustomUserRolesOf(dbUserID)
 
 
         If allMyCustomUserRoles.Count > 1 Then

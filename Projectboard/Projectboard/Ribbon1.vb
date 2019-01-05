@@ -4837,7 +4837,6 @@ Imports System.Web
     End Sub
 
 
-
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
         ' Übernahme 
 
@@ -5671,6 +5670,7 @@ Imports System.Web
         '??? Aufruf speichern der CustomUser Roles über rest-Server ...
 
         result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(allCustomUserRoles,
+                                                                            CStr(settingTypes(ptSettingTypes.customroles)),
                                                                             CStr(settingTypes(ptSettingTypes.customroles)),
                                                                             Nothing,
                                                                             err)
@@ -11743,9 +11743,10 @@ Imports System.Web
 
             Dim listofCURs As New clsCustomUserRoles
             Dim type As String = CStr(settingTypes(ptSettingTypes.customroles))
+            Dim name As String = type
             Dim err As New clsErrorCodeMsg
 
-            Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCsettingsToDB(listofCURs, type, Date.Now, err)
+            Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(listofCURs, type, name, Date.Now, err)
         Catch ex As Exception
 
         End Try
