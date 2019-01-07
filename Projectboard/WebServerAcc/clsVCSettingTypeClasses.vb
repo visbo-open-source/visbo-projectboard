@@ -38,10 +38,10 @@ End Class
 Public Class clsVCSettingOrganisation
 
     Inherits clsVCSetting
-    Public Property value As List(Of clsVCOrganisationWeb)
+    Public Property value As clsOrganisationWeb
 
     Sub New()
-        _value = New List(Of clsVCOrganisationWeb)
+        _value = New clsOrganisationWeb
     End Sub
     End Class
 

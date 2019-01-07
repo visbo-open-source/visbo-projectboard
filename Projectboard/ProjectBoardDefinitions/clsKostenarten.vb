@@ -15,7 +15,7 @@
         Else
             Throw New ArgumentException("Kostenart darf nicht Nothing sein")
         End If
-        
+
 
         ''Try
         ''    _allKostenarten.Add(Item:=costdef, Key:=costdef.name)
@@ -25,6 +25,12 @@
 
 
     End Sub
+
+    Public ReadOnly Property liste() As SortedList(Of Integer, clsKostenartDefinition)
+        Get
+            liste = _allKostenarten
+        End Get
+    End Property
 
     ''Public Sub Remove(myitem As Object)
 

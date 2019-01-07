@@ -77,6 +77,7 @@
     <Compile Include="clsCustomUserRoleWeb.vb" />
     <Compile Include="clsHierarchyWeb.vb" />
     <Compile Include="clsHryNodeWeb.vb" />
+    <Compile Include="clsKostenartDefinitionWeb.vb" />
     <Compile Include="clsPhaseWeb.vb" />
     <Compile Include="clsProjektWebLong.vb" />
     <Compile Include="clsProjektWebShort.vb" />
@@ -90,7 +91,7 @@
     <Compile Include="clsUserAddress.vb" />
     <Compile Include="clsUserLoginSignup.vb" />
     <Compile Include="clsVCcost.vb" />
-    <Compile Include="clsVCOrganisationWeb.vb" />
+    <Compile Include="clsOrganisationWeb.vb" />
     <Compile Include="clsVCrole.vb" />
     <Compile Include="clsVCSetting.vb" />
     <Compile Include="clsVCSettingTypeClasses.vb" />

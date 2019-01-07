@@ -3,7 +3,7 @@
     Public Property errorMsg As String
     Public Sub New()
         _errorCode = 0
-        _errorMsg = "no Error"
+        _errorMsg = "perhaps direct MongoAccess"
     End Sub
 
 End Class
