@@ -49,6 +49,11 @@ Public Class frmSelectImportFiles
                                 ListImportFiles.Items.Add(dateiName)
                             End If
 
+                        ElseIf menueAswhl = PTImpExp.actualData Then
+                            If dateiName.Contains("Istdaten") Then
+                                ListImportFiles.Items.Add(dateiName)
+                            End If
+
                         Else
                             ListImportFiles.Items.Add(dateiName)
                         End If
@@ -222,6 +227,17 @@ Public Class frmSelectImportFiles
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
             Me.alleButton.Visible = True
 
+        ElseIf menueAswhl = PTImpExp.actualData Then
+
+            dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select actual Data file"
+            Else
+                Me.Text = "Datei mit Ist-Daten auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = True
         End If
 
 
@@ -270,6 +286,9 @@ Public Class frmSelectImportFiles
 
         ElseIf menueAswhl = PTImpExp.Kapas Then
             dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
+
+        ElseIf menueAswhl = PTImpExp.actualData Then
+            dirName = importOrdnerNames(PTImpExp.scenariodefs)
 
         End If
 
@@ -338,6 +357,8 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.Kapas Then
             dirName = My.Computer.FileSystem.CombinePath(awinPath, projektRessOrdner)
 
+        ElseIf menueAswhl = PTImpExp.actualData Then
+            dirName = importOrdnerNames(PTImpExp.scenariodefs)
         End If
 
 

@@ -818,6 +818,7 @@ Public Module Module1
         Orga = 9
         Kapas = 10
         customUserRoles = 11
+        actualData = 12
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung

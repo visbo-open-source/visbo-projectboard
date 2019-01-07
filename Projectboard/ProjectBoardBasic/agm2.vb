@@ -9431,7 +9431,8 @@ Public Module agm2
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
     ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
     ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean)
+    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
+                                  ByRef outputCollection As Collection)
 
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
@@ -9443,9 +9444,7 @@ Public Module agm2
         ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
         Dim projectRoleValues(,,) As Double = Nothing
 
-        ' für den Output 
-        Dim outputFenster As New frmOutputWindow
-        Dim outputCollection As New Collection
+        ' für die Meldungen
         Dim outPutLine As String = ""
 
         Dim lastRow As Integer = -1
@@ -9473,7 +9472,8 @@ Public Module agm2
 
 
             If monat < 1 Or monat > 12 Then
-                Call MsgBox("ungültige Angabe des ActualDataUntil-Monats: " & monat)
+                logmessage = "ungültige Angabe des ActualDataUntil-Monats: " & monat
+                outputCollection.Add(logmessage)
                 Exit Sub
             End If
 
@@ -9487,7 +9487,8 @@ Public Module agm2
                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
                 End If
             Catch ex As Exception
-                Call MsgBox("Keine Tabelle mit Berichts-Daten gefunden ... Abbruch")
+                logmessage = "Keine Tabelle mit Namen 'Bericht_RL_Kapa_Excel> gefunden' ... Abbruch"
+                outputCollection.Add(logmessage)
                 Exit Sub
             End Try
 
@@ -9556,7 +9557,9 @@ Public Module agm2
             Dim firstZeile As Excel.Range = currentWS.Rows(1)
 
             If Not isCorrectAllianzImportStructure(firstZeile, 3) Then
-                Call MsgBox("Datei hat nicht den für den Istdaten-Import erforderlichen Spalten-Aufbau!")
+                logmessage = "Datei hat nicht den für den Istdaten-Import erforderlichen Spalten-Aufbau!"
+                outputCollection.Add(logmessage)
+
                 Exit Sub
             End If
 
@@ -9720,6 +9723,8 @@ Public Module agm2
                                         unKnownRoleNames.Add(fullRoleName, True)
                                         'outPutLine = "unbekannt: " & fullRoleName
                                         'outputCollection.Add(outPutLine)
+                                        logmessage = "unbekannte Rolle wird ersetzt durch Referat " & fullRoleName & " -> " & tmpReferat
+                                        outputCollection.Add(logmessage)
 
                                         ReDim logArray(4)
                                         logArray(0) = "unbekannte Rolle wird ersetzt durch Referat"
@@ -9737,6 +9742,8 @@ Public Module agm2
                                         unKnownRoleNames.Add(fullRoleName, True)
                                         'outPutLine = "unbekannt: " & fullRoleName
                                         'outputCollection.Add(outPutLine)
+                                        logmessage = "unbekannte Rolle ohne Referat: " & fullRoleName
+                                        outputCollection.Add(logmessage)
 
                                         ReDim logArray(4)
                                         logArray(0) = "unbekannte Rolle ohne Referat"
@@ -9825,6 +9832,9 @@ Public Module agm2
                                         End If
                                     Else
                                         ' darf/kann eigentlich nicht sein ...
+                                        logmessage = "unbekannte Rolle ohne Referat: " & roleName
+                                        outputCollection.Add(logmessage)
+
                                         ReDim logArray(3)
                                         logArray(0) = "Rollendefinition nicht gefunden ... Fehler 100412: "
                                         logArray(1) = ""
@@ -9841,8 +9851,11 @@ Public Module agm2
 
                             Else
                                 ' darf/kann eigentlich nicht sein ...
+                                logmessage = "Fehler 100411: Projekt mit Name nicht gefunden: " & pName
+                                outputCollection.Add(logmessage)
+
                                 ReDim logArray(1)
-                                logArray(0) = "Projekt Fehler 100411: "
+                                logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
                                 logArray(1) = pvkey
                                 Call logfileSchreiben(logArray)
                             End If
@@ -10004,13 +10017,17 @@ Public Module agm2
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 
+
+        logmessage = vbLf & "Zeilen gelesen: " & lastRow - 1 & vbLf &
+                    "Projekte aktualisiert: " & updatedProjects
+        outputCollection.Add(logmessage)
+
+        logmessage = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+        outputCollection.Add(logmessage)
+
         If outputCollection.Count > 0 Then
-            Call showOutPut(outputCollection, "Import Detail-Planungs Typ 3", "")
+            Call showOutPut(outputCollection, "Import Ist-Daten", "")
         End If
-
-        Call MsgBox("Zeilen gelesen: " & lastRow - 1 & vbLf &
-                    "Projekte aktualisiert: " & updatedProjects)
-
 
     End Sub
 

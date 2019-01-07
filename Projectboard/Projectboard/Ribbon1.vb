@@ -4934,8 +4934,8 @@ Imports System.Web
                                 Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
                                 Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
-
-                                Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects)
+                                Dim outputCollection As New Collection
+                                Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
                             End If
 
@@ -5674,6 +5674,116 @@ Imports System.Web
     ''' </summary>
     ''' <param name="control"></param>
     Public Sub PTImportIstDaten(control As IRibbonControl)
+
+        Dim selectedWB As String = ""
+
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.simpleScen))
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Istdaten*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+
+        If anzFiles = 1 Then
+            selectedWB = listOfImportfiles.Item(0)
+            weiterMachen = True
+
+        ElseIf anzFiles > 1 Then
+            Dim getOrgaFile As New frmSelectImportFiles
+            getOrgaFile.menueAswhl = PTImpExp.actualData
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
+                weiterMachen = True
+            End If
+        Else
+            Call MsgBox("keine Istdaten vorhaben ...")
+        End If
+
+        If weiterMachen Then
+
+            ' öffnen des LogFiles
+            Call logfileOpen()
+
+            dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+            Try
+                ' hier wird jetzt der Import gemacht 
+                Call logfileSchreiben("Beginn Import Istdaten", selectedWB, -1)
+
+                ' Öffnen des Organisations-Files
+                appInstance.Workbooks.Open(dateiname)
+                Dim scenarioNameP As String = appInstance.ActiveWorkbook.Name
+
+                Dim outputCollection As New Collection
+
+                ' das Formular aufschalten mit 
+                '
+                Dim editActualDataMonth As New frmProvideActualDataMonth
+
+                If editActualDataMonth.ShowDialog = DialogResult.OK Then
+
+                    Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
+
+                    Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
+                    Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+
+
+                    Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+
+                End If
+
+
+                Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
+
+                ' Schliessen des CustomUser Role-Files
+                appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+
+                'sessionConstellationP enthält alle Projekte aus dem Import 
+                Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+
+
+                If sessionConstellationP.count > 0 Then
+
+                    If projectConstellations.Contains(scenarioNameP) Then
+                        projectConstellations.Remove(scenarioNameP)
+                    End If
+
+                    projectConstellations.Add(sessionConstellationP)
+                    ' jetzt auf Projekt-Tafel anzeigen 
+                    Call loadSessionConstellation(scenarioNameP, False, False, True)
+
+                Else
+                    Call MsgBox("keine Projekte importiert ...")
+                End If
+
+                If ImportProjekte.Count > 0 Then
+                    ImportProjekte.Clear(False)
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+            ' Schließen des LogFiles
+            Call logfileSchliessen()
+
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
     End Sub
 
