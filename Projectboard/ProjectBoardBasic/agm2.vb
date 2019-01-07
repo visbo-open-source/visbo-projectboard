@@ -6893,100 +6893,6 @@ Public Module agm2
 
     End Sub
 
-    ''' <summary>
-    ''' liest aus der geöffneten Excel Datei alle Custom User Roles 
-    ''' </summary>
-    Public Function awinImportCustomUserRoles() As clsCustomUserRoles
-
-        Dim tmpResult As New clsCustomUserRoles
-        Dim currentCustomUserRole As New clsCustomUserRole
-        Dim mappingNameID As New SortedList(Of String, String)
-
-        ' für jetzige Testzwecke 
-        Dim userName As String = "thomas.koytek@visbo.de"
-        Dim curType As ptCustomUserRoles = ptCustomUserRoles.OrgaAdmin
-        Dim specifics As String = ""
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "thomas.koytek@visbo.de"
-        curType = ptCustomUserRoles.PortfolioManager
-        specifics = "AMIS;D-BOSV-KB0;D-BOSV-KB1;D-BOSV-KB2;D-BOSV-KB3;D-BOSV-SBF0;D-BOSV-SBF1;D-BOSV-SBF2;D-BOSV-SBP0;D-BOSV-SBP1;D-BOSV-SBP2;D-BOSV-SBP3;Grp-BOSV-KB"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "thomas.koytek@visbo.de"
-        curType = ptCustomUserRoles.PortfolioManager
-        specifics = ""
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "thomas.koytek@visbo.de"
-        curType = ptCustomUserRoles.RessourceManager
-        specifics = "D-BOSV-KB1"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "thomas.koytek@visbo.de"
-        curType = ptCustomUserRoles.RessourceManager
-        specifics = "D-BOSV-KB2"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "thomas.koytek@visbo.de"
-        curType = ptCustomUserRoles.RessourceManager
-        specifics = "Grp-BOSV-KB"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "ute.rittinghaus-koytek@visbo.de"
-        curType = ptCustomUserRoles.OrgaAdmin
-        specifics = ""
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "ute.rittinghaus-koytek@visbo.de"
-        curType = ptCustomUserRoles.RessourceManager
-        specifics = "D-BOSV-KB3"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "jt@visbo.de"
-        curType = ptCustomUserRoles.RessourceManager
-        specifics = "Grp-BOSV-KB"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        userName = "ss@visbo.de"
-        curType = ptCustomUserRoles.RessourceManager
-        specifics = "Grp-BOSV-KB"
-
-        If isValidCustomUserRole(userName, curType, specifics, mappingNameID) Then
-            tmpResult.addCustomUserRole(userName, "", curType, specifics)
-        End If
-
-        awinImportCustomUserRoles = tmpResult
-
-    End Function
-
 
     ''' <summary>
     ''' prüft, ob es sich beim Namen/der Email um eine bekannte Email Adresse handelt. 
@@ -6995,41 +6901,35 @@ Public Module agm2
     ''' <param name="userName"></param>
     ''' <param name="roleType"></param>
     ''' <param name="specifics"></param>
-    ''' <param name="mappingNameID"></param>
     ''' <returns></returns>
     Public Function isValidCustomUserRole(ByVal userName As String,
                                           ByVal roleType As ptCustomUserRoles,
-                                          ByVal specifics As String,
-                                          ByRef mappingNameID As SortedList(Of String, String)) As Boolean
+                                          ByVal specifics As String) As Boolean
 
         Dim stillOk As Boolean = True
 
-        If Not mappingNameID.ContainsKey(userName) Then
-            Dim userID As String = bestimmeUserIDFromName(userName)
-            If userID.Length > 0 Then
-                mappingNameID.Add(userName, userID)
-            Else
-                ' wenn der Name keiner ID zugeordnet werden konnte ...
-                ' das wird jetzt erstmal auf true gesetzt 
-                stillOk = True ' sollte hier eigentlich auf false sein 
-            End If
-        End If
-
-        If stillOk Then
-            If roleType = ptCustomUserRoles.RessourceManager Then
-                If RoleDefinitions.containsName(specifics) Then
-                    ' alles ok
-                    stillOk = True
-                Else
-                    stillOk = False
+        Try
+            If userName.Length > 0 And userName.Contains("@") And userName.Contains(".") Then
+                If roleType = ptCustomUserRoles.RessourceManager Then
+                    If RoleDefinitions.containsName(specifics) Then
+                        ' alles ok
+                        stillOk = True
+                    Else
+                        stillOk = False
+                    End If
+                ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
+                    Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
+                    For Each tmpName As String In tmpStr
+                        stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
+                    Next
                 End If
-            ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
-                Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
-                For Each tmpName As String In tmpStr
-                    stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
-                Next
+            Else
+                stillOk = False
             End If
-        End If
+
+        Catch ex As Exception
+            stillOk = False
+        End Try
 
 
         isValidCustomUserRole = stillOk
@@ -8267,6 +8167,141 @@ Public Module agm2
     End Function
 
     ''' <summary>
+    ''' importiert alle Custom User Roles 
+    ''' </summary>
+    ''' <param name="outputCollection"></param>
+    ''' <returns></returns>
+    Public Function ImportCustomUserRoles(ByRef outputCollection As Collection) As clsCustomUserRoles
+
+        Dim importedUserRoles As New clsCustomUserRoles
+        Dim UserRoleSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        Try
+            Dim errMsg As String = ""
+            Dim myRange As Excel.Range = UserRoleSheet.UsedRange
+            Dim maxZeile As Integer = myRange.Rows.Count
+            Dim curType As ptCustomUserRoles = ptCustomUserRoles.OrgaAdmin
+            Dim emailAdresse As String = ""
+            Dim userRole As String = ""
+            Dim roleSpecifics As String = ""
+
+            For zeile As Integer = 2 To maxZeile
+
+                Try
+                    emailAdresse = CStr(CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Value).Trim
+                    userRole = CStr(CType(UserRoleSheet.Cells(zeile, 2), Excel.Range).Value).Trim
+                    roleSpecifics = CStr(CType(UserRoleSheet.Cells(zeile, 3), Excel.Range).Value)
+
+                    If Not IsNothing(roleSpecifics) Then
+                        roleSpecifics = roleSpecifics.Trim
+                    Else
+                        roleSpecifics = ""
+                    End If
+
+                    Dim tmpstr() As String = userRole.Split(New Char() {CChar("-")})
+                    curType = CType(tmpstr(0), ptCustomUserRoles)
+
+                    If isValidCustomUserRole(emailAdresse, curType, roleSpecifics) Then
+                        importedUserRoles.addCustomUserRole(emailAdresse, "", curType, roleSpecifics)
+                    Else
+                        errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & roleSpecifics
+                        outputCollection.Add(errMsg)
+                        CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                    End If
+                Catch ex As Exception
+                    errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & roleSpecifics
+                    outputCollection.Add(errMsg)
+                    CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                End Try
+
+
+            Next
+        Catch ex As Exception
+
+        End Try
+
+        ImportCustomUserRoles = importedUserRoles
+    End Function
+
+    ''' <summary>
+    ''' Voraussetzungen: das File ist geöffnet 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function ImportOrganisation(ByRef outputCollection As Collection) As clsOrganisation
+
+        Dim importedOrga As New clsOrganisation
+        Dim orgaSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        ' auslesen der Gültigkeit
+        Dim validFrom As Date = Date.Now
+        Try
+            validFrom = CDate(CType(orgaSheet.Cells(1, 2), Excel.Range).Value)
+        Catch ex As Exception
+
+        End Try
+
+        Dim oldOrga As clsOrganisation = Nothing
+
+        If Not IsNothing(validOrganisations) Then
+            If validOrganisations.count > 0 Then
+                oldOrga = validOrganisations.getOrganisationValidAt(validFrom)
+            End If
+        End If
+
+
+        ' Auslesen der Rollen Definitionen 
+        Dim newRoleDefinitions As New clsRollen
+        Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection)
+
+        If awinSettings.visboDebug Then
+            Call MsgBox("readRoleDefinitions")
+        End If
+
+        ' Auslesen der Kosten Definitionen 
+        Dim newCostDefinitions As New clsKostenarten
+        Call readCostDefinitions(orgaSheet, newCostDefinitions, outputCollection)
+
+        If awinSettings.visboDebug Then
+            Call MsgBox("readCostDefinitions")
+        End If
+
+        ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+        Call readRoleDefinitions(orgaSheet, newRoleDefinitions, outputCollection, readingGroups:=True)
+
+        ' jetzt kommen die Validierungen .. wenn etwas davon schief geht 
+        If newRoleDefinitions.Count > 0 Then
+            ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+            ' jetzt kommt der Validation-Check 
+
+            Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(newRoleDefinitions, outputCollection)
+            Dim existingOverloads As Boolean = checkTeamMemberOverloads(newRoleDefinitions, outputCollection)
+
+            If outputCollection.Count > 0 Then
+                ' wird an der aurufenden Stelle ausgegeben ... 
+            ElseIf TeamsAreNotOK Or existingOverloads Then
+                ' darf eigentlich nicht vorkommen, weil man dann im oberen Zweig landen müsste ...
+            Else
+                'bis hier ist alles in Ordnung 
+                With importedOrga
+                    .allRoles = newRoleDefinitions
+                    .allCosts = newCostDefinitions
+                    .validFrom = validFrom
+                End With
+
+                If Not importedOrga.validityCheckWith(oldOrga, outputCollection) = True Then
+                    ' wieder zurück setzen ..
+                    importedOrga = New clsOrganisation
+                Else
+
+                End If
+            End If
+
+        End If
+
+        ImportOrganisation = importedOrga
+    End Function
+
+    ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
     ''' stellt sie in ImportProjekte 
     ''' erstellt ein Szenario mit Namen der Batch-Datei; die Sortierung erfolgt über die Reihenfolge in der Batch-Datei 
@@ -9396,7 +9431,8 @@ Public Module agm2
     ''' <param name="monat">gibt an, bis wohin einschließlich Ist-Werte gelesen werden </param>
     ''' <param name="readAll">gibt an, ob Vergangenheit und Zukunft gelesen werden soll</param>
     ''' <param name="createUnknown">gibt an, ob Unbekannte Projekte angelegt werden sollen</param>
-    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean)
+    Public Sub ImportAllianzType3(ByVal monat As Integer, ByVal readAll As Boolean, ByVal createUnknown As Boolean,
+                                  ByRef outputCollection As Collection)
 
 
         ' im Key steht der Projekt-Name, im Value steht eine sortierte Liste mit key=Rollen-Name, values die Ist-Werte
@@ -9408,9 +9444,7 @@ Public Module agm2
         ' nimmt dann die Werte pro Projekt, Rolle und Monat auf  
         Dim projectRoleValues(,,) As Double = Nothing
 
-        ' für den Output 
-        Dim outputFenster As New frmOutputWindow
-        Dim outputCollection As New Collection
+        ' für die Meldungen
         Dim outPutLine As String = ""
 
         Dim lastRow As Integer = -1
@@ -9438,7 +9472,8 @@ Public Module agm2
 
 
             If monat < 1 Or monat > 12 Then
-                Call MsgBox("ungültige Angabe des ActualDataUntil-Monats: " & monat)
+                logmessage = "ungültige Angabe des ActualDataUntil-Monats: " & monat
+                outputCollection.Add(logmessage)
                 Exit Sub
             End If
 
@@ -9452,7 +9487,8 @@ Public Module agm2
                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
                 End If
             Catch ex As Exception
-                Call MsgBox("Keine Tabelle mit Berichts-Daten gefunden ... Abbruch")
+                logmessage = "Keine Tabelle mit Namen 'Bericht_RL_Kapa_Excel> gefunden' ... Abbruch"
+                outputCollection.Add(logmessage)
                 Exit Sub
             End Try
 
@@ -9521,7 +9557,9 @@ Public Module agm2
             Dim firstZeile As Excel.Range = currentWS.Rows(1)
 
             If Not isCorrectAllianzImportStructure(firstZeile, 3) Then
-                Call MsgBox("Datei hat nicht den für den Istdaten-Import erforderlichen Spalten-Aufbau!")
+                logmessage = "Datei hat nicht den für den Istdaten-Import erforderlichen Spalten-Aufbau!"
+                outputCollection.Add(logmessage)
+
                 Exit Sub
             End If
 
@@ -9685,6 +9723,8 @@ Public Module agm2
                                         unKnownRoleNames.Add(fullRoleName, True)
                                         'outPutLine = "unbekannt: " & fullRoleName
                                         'outputCollection.Add(outPutLine)
+                                        logmessage = "unbekannte Rolle wird ersetzt durch Referat " & fullRoleName & " -> " & tmpReferat
+                                        outputCollection.Add(logmessage)
 
                                         ReDim logArray(4)
                                         logArray(0) = "unbekannte Rolle wird ersetzt durch Referat"
@@ -9702,6 +9742,8 @@ Public Module agm2
                                         unKnownRoleNames.Add(fullRoleName, True)
                                         'outPutLine = "unbekannt: " & fullRoleName
                                         'outputCollection.Add(outPutLine)
+                                        logmessage = "unbekannte Rolle ohne Referat: " & fullRoleName
+                                        outputCollection.Add(logmessage)
 
                                         ReDim logArray(4)
                                         logArray(0) = "unbekannte Rolle ohne Referat"
@@ -9790,6 +9832,9 @@ Public Module agm2
                                         End If
                                     Else
                                         ' darf/kann eigentlich nicht sein ...
+                                        logmessage = "unbekannte Rolle ohne Referat: " & roleName
+                                        outputCollection.Add(logmessage)
+
                                         ReDim logArray(3)
                                         logArray(0) = "Rollendefinition nicht gefunden ... Fehler 100412: "
                                         logArray(1) = ""
@@ -9806,8 +9851,11 @@ Public Module agm2
 
                             Else
                                 ' darf/kann eigentlich nicht sein ...
+                                logmessage = "Fehler 100411: Projekt mit Name nicht gefunden: " & pName
+                                outputCollection.Add(logmessage)
+
                                 ReDim logArray(1)
-                                logArray(0) = "Projekt Fehler 100411: "
+                                logArray(0) = "Fehler 100411: Projekt mit Name nicht gefunden: "
                                 logArray(1) = pvkey
                                 Call logfileSchreiben(logArray)
                             End If
@@ -9969,13 +10017,17 @@ Public Module agm2
             Throw New Exception("Fehler in Import-Datei Typ 3" & ex.Message)
         End Try
 
+
+        logmessage = vbLf & "Zeilen gelesen: " & lastRow - 1 & vbLf &
+                    "Projekte aktualisiert: " & updatedProjects
+        outputCollection.Add(logmessage)
+
+        logmessage = vbLf & "detailllierte Protokollierung LogFile ./requirements/logfile.xlsx"
+        outputCollection.Add(logmessage)
+
         If outputCollection.Count > 0 Then
-            Call showOutPut(outputCollection, "Import Detail-Planungs Typ 3", "")
+            Call showOutPut(outputCollection, "Import Ist-Daten", "")
         End If
-
-        Call MsgBox("Zeilen gelesen: " & lastRow - 1 & vbLf &
-                    "Projekte aktualisiert: " & updatedProjects)
-
 
     End Sub
 
@@ -10545,7 +10597,7 @@ Public Module agm2
     ''' liest alle Dateien mit Kapazität und weist den Rollen die Kapa zu 
     ''' es werden nur Personen ausgelesen ! alle anderen werden ignoriert ...
     ''' </summary>
-    Friend Sub readMonthlyKapasOfRole()
+    Public Sub readMonthlyExternKapas(ByRef meldungen As Collection)
 
         Dim kapaFolder As String
 
@@ -10560,6 +10612,7 @@ Public Module agm2
         Dim tmpDate As Date
         Dim tmpKapa As Double
         Dim lastSpalte As Integer
+        Dim errMsg As String = ""
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -10651,7 +10704,8 @@ Public Module agm2
                                                             spalte = spalte + 1
                                                             tmpDate = CDate(CType(currentWS.Cells(1, spalte), Excel.Range).Value)
                                                         Catch ex As Exception
-
+                                                            errMsg = "File " & dateiName & ": error when setting value for " & subRoleName & " in row, column: " & aktzeile & ", " & spalte
+                                                            meldungen.Add(errMsg)
                                                         End Try
 
 
@@ -10660,9 +10714,15 @@ Public Module agm2
                                                 Catch ex As Exception
 
                                                 End Try
-
+                                            Else
+                                                errMsg = "File " & dateiName & ": " & subRoleName & " is combinedRole; combinedRoles are calculated automatically"
+                                                meldungen.Add(errMsg)
                                             End If
-
+                                        Else
+                                            If subRoleName.Length > 0 Then
+                                                errMsg = "File " & dateiName & ": " & subRoleName & " does not exist ..."
+                                                meldungen.Add(errMsg)
+                                            End If
                                         End If
 
                                     End If
@@ -10673,7 +10733,8 @@ Public Module agm2
                                 Loop
 
                             Catch ex2 As Exception
-
+                                errMsg = "File " & dateiName & ": unidentified error ... "
+                                meldungen.Add(errMsg)
                             End Try
 
                             appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -10711,7 +10772,7 @@ Public Module agm2
     ''' und hinterlegt an entsprechender Stelle im hrole.kapazitaet die verfügbaren Tage der entsprechenden Rolle
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub readUrlOfRole(ByVal kapaFileName As String)
+    Friend Sub readUrlOfRole(ByVal kapaFileName As String, ByRef oPCollection As Collection)
 
         Dim err As New clsErrorCodeMsg
 
@@ -10720,7 +10781,6 @@ Public Module agm2
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim msgtxt As String = ""
         Dim fehler As Boolean = False
-        Dim oPCollection As New Collection
 
         Dim kapaWB As Microsoft.Office.Interop.Excel.Workbook = Nothing
         Dim spalte As Integer = 2
@@ -11038,7 +11098,8 @@ Public Module agm2
         enableOnUpdate = True
         kapaWB.Close(SaveChanges:=False)
 
-        Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Probleme sind beim Lesen der Urlaubsplanung aufgetreten")
+        ' das wird jetzt an der übergeordneten Stelle gemacht
+        'Call showOutPut(oPCollection, "Meldungen zu Lesen Urlaubsplanung", "Folgende Probleme sind beim Lesen der Urlaubsplanung aufgetreten")
 
         ' ''If outPutCollection.Count > 0 Then
         ' ''    Call showOutPut(outPutCollection, _
@@ -15580,6 +15641,7 @@ Public Module agm2
     End Function
 
 
+
     ''' <summary>
     ''' liest das Customization File aus und initialisiert die globalen Variablen entsprechend
     ''' </summary>
@@ -15593,7 +15655,6 @@ Public Module agm2
             Dim needToBeSaved As Boolean = False
             '  um dahinter temporär die Darstellungsklassen kopieren zu können , nur für ProjectBoard nötig 
             Dim projectBoardSheet As Excel.Worksheet = Nothing
-
 
             Dim xlsCustomization As Excel.Workbook = Nothing
 
@@ -16009,55 +16070,62 @@ Public Module agm2
                     Call MsgBox("readOtherDefinitions")
                 End If
 
-                ' 
-                ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
-
-
-                If RoleDefinitions.Count > 0 Then
-                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                    ' jetzt kommt der Validation-Check 
-                    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions()
-                    If TeamsAreNotOK Then
-                        Call MsgBox("Team-Definitions-Konflikte in DB !")
-                    End If
-
-                    Dim existingOverloads As Boolean = checkTeamMemberOverloads()
-
-                End If
-
-                ' jetzt prüfen , ob alles ok 
-                If awinSettings.visboDebug Then
-
-                End If
 
                 ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
                 ' sonst von der DB
                 If Not awinSettings.readCostRolesFromDB Then
+                    Dim outputCollection As New Collection
 
                     ' Auslesen der Rollen Definitionen 
-                    Call readRoleDefinitions(wsName4)
+                    Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
 
                     If awinSettings.visboDebug Then
                         Call MsgBox("readRoleDefinitions")
                     End If
 
                     ' Auslesen der Kosten Definitionen 
-                    Call readCostDefinitions(wsName4)
+                    Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("readCostDefinitions")
-                    End If
 
                     ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                    Call readRoleDefinitions(wsName4, readingGroups:=True)
+                    Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
+
+                    If RoleDefinitions.Count > 0 Then
+                        ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                        ' jetzt kommt der Validation-Check 
+
+                        Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
+                        Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
+
+                        If outputCollection.Count > 0 Then
+                            Call showOutPut(outputCollection, "Organisations-Definition", "")
+                        End If
+
+                    End If
 
                     ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
                     ' jetzt kommt der Validation-Check 
                     'Dim allTeamsAreOK As Boolean = checkTeamDefinitions()
                     'Dim existingOverloads As Boolean = checkTeamMemberOverloads()
+                Else
+
+                    ' 
+                    ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
+                    ' tk/urk todo 4.1.19 hier muss das Organisations-Setting ausgelesen werden ..
+                    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                    CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+
+
                 End If
+
+                ' jetzt sind die RoleDefinitions gesetzt 
+                Dim currentOrga As New clsOrganisation
+                With currentOrga
+                    .validFrom = StartofCalendar
+                    .allRoles = RoleDefinitions
+                    .allCosts = CostDefinitions
+                End With
+                validOrganisations.addOrga(currentOrga)
 
 
                 ' Auslesen der Custom Field Definitions
@@ -16188,15 +16256,19 @@ Public Module agm2
                     Call aufbauenAppearanceDefinitions(wsName7810)
 
 
-
+                    Dim meldungen As New Collection
                     If Not awinSettings.readCostRolesFromDB Then
 
                         ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                        Call readRessourcenDetails()
+                        Call readRessourcenDetails(meldungen)
 
                         ' jetzt werden die ggf vorhandenen  Urlaubstage berücksichtigt 
-                        Call readRessourcenDetails2()
+                        Call readRessourcenDetails2(meldungen)
 
+                        If meldungen.Count > 0 Then
+                            Call showOutPut(meldungen, "Errors Reading Capacities", "")
+                            Call logfileSchreiben(meldungen)
+                        End If
 
                         '    RoleDefinitions.buildTopNodes()
 
@@ -17473,7 +17545,7 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname"></param>
     ''' <remarks></remarks>
-    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet,
+    Private Sub readRoleDefinitions(ByVal wsname As Excel.Worksheet, ByRef rollendefinitionen As clsRollen, ByRef meldungen As Collection,
                                     Optional ByVal readingGroups As Boolean = False)
 
         '
@@ -17486,6 +17558,7 @@ Public Module agm2
         Dim roleUidsDefined As Boolean = False
         Dim przSatz As Double = 1.0
         Dim defaultTagessatz As Double = 800.0
+        Dim errMsg As String = ""
 
         Try
             Dim hasHierarchy As Boolean = False
@@ -17495,21 +17568,29 @@ Public Module agm2
 
             If readingGroups Then
                 Try
+                    errMsg = "Range <awin_Gruppen_Definition> nicht definiert ! Abbruch ..."
                     rolesRange = wsname.Range("awin_Gruppen_Definition")
                 Catch ex As Exception
                     rolesRange = Nothing
                 End Try
 
             Else
-                rolesRange = wsname.Range("awin_Rollen_Definition")
-                przSatz = 1.0
+                Try
+                    errMsg = "Range <awin_Rollen_Definition> nicht definiert ! Abbruch ..."
+                    rolesRange = wsname.Range("awin_Rollen_Definition")
+                    przSatz = 1.0
+                Catch ex As Exception
+                    rolesRange = Nothing
+                End Try
+
             End If
 
             ' Exit, wenn es keine Definitionen gibt ... 
             If IsNothing(rolesRange) Then
+                meldungen.Add(errMsg)
                 Exit Sub
             Else
-
+                errMsg = ""
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
 
@@ -17553,7 +17634,9 @@ Public Module agm2
                                                 IDCollection.Add(tmpValue.Trim, tmpValue.Trim)
                                                 isWithoutID = False
                                             Else
-                                                Throw New ArgumentException("roles with identical IDs are not allowed: " & tmpValue.Trim)
+                                                errMsg = "roles with identical IDs are not allowed: " & tmpValue.Trim
+                                                meldungen.Add(errMsg)
+                                                CType(rolesRange.Cells(i, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                                             End If
                                         Else
                                             anzWithoutID = anzWithoutID + 1
@@ -17573,8 +17656,12 @@ Public Module agm2
                         If readingGroups And isWithoutID Then
                             ' c.value muss in RoleDefinitions vorkommen, sonst Fehler ...
                             Dim roleName As String = CStr(c.Value.trim)
-                            If Not RoleDefinitions.containsName(roleName) Then
-                                Call MsgBox("Gruppen-Rolle " & roleName & " existiert nicht ...")
+
+                            If Not rollendefinitionen.containsName(roleName) Then
+                                errMsg = "Team-Role " & roleName & " does not exist ..."
+                                meldungen.Add(errMsg)
+                                CType(rolesRange.Cells(i, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+
                                 groupDefinitionIsOk = False
                             End If
 
@@ -17588,9 +17675,13 @@ Public Module agm2
 
                 anzWithID = IDCollection.Count
                 If anzWithID > 0 And anzWithoutID > 0 And Not readingGroups Then
-                    Throw New ArgumentException("some roles do contain IDs, others not ...")
+                    errMsg = "some roles do contain IDs, others not ..."
+                    meldungen.Add(errMsg)
+                    Exit Sub
                 ElseIf Not groupDefinitionIsOk Then
-                    Throw New ArgumentException("Group Definitions not correct - abort ... ...")
+                    errMsg = "Group Definitions not correct ..."
+                    meldungen.Add(errMsg)
+                    Exit Sub
                 Else
                     ' jetzt ist sichergestellt, dass alle Rollen eine ID haben oder keine ; dann wird sie generiert .. 
                     ' oder aber man ist im Reading Group Modus, wo ja nur die Gruppen eine ID benötigen
@@ -17652,12 +17743,12 @@ Public Module agm2
                             End With
 
                             ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
-                            If readingGroups And RoleDefinitions.containsName(hrole.name) Then
+                            If readingGroups And rollendefinitionen.containsName(hrole.name) Then
                                 ' nichts tun, alles gut : 
                             Else
                                 ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
-                                If Not RoleDefinitions.containsName(hrole.name) Then
-                                    RoleDefinitions.Add(hrole)
+                                If Not rollendefinitionen.containsName(hrole.name) Then
+                                    rollendefinitionen.Add(hrole)
                                 End If
 
                             End If
@@ -17707,8 +17798,8 @@ Public Module agm2
                                 If curLevel > 0 Then
                                     ' als Child aufnehmen 
                                     ' hier, wenn maxIndent = curlevel, auf alle Fälle Team-Member
-                                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                    Dim parentRole As clsRollenDefinition = rollendefinitionen.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = rollendefinitionen.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
 
                                     If curLevel = maxIndent And readingGroups Then
@@ -17757,8 +17848,8 @@ Public Module agm2
 
                                 If curLevel > 0 Then
                                     ' als Child aufnehmen 
-                                    Dim parentRole As clsRollenDefinition = RoleDefinitions.getRoledef(parents(curLevel - 1))
-                                    Dim subRole As clsRollenDefinition = RoleDefinitions.getRoledef(curRoleName)
+                                    Dim parentRole As clsRollenDefinition = rollendefinitionen.getRoledef(parents(curLevel - 1))
+                                    Dim subRole As clsRollenDefinition = rollendefinitionen.getRoledef(curRoleName)
                                     parentRole.addSubRole(subRole.UID, przSatz)
 
                                     ' hier kann er eigentlich nie hinkommen ...
@@ -17779,7 +17870,9 @@ Public Module agm2
 
                             End If
                         Catch ex As Exception
-                            Call MsgBox("Fehler bei " & ix & " Role: " & curRoleName)
+                            errMsg = "zeile: " & ix.ToString & " : " & ex.Message
+                            meldungen.Add(errMsg)
+                            CType(rolesRange.Cells(ix, 1), Excel.Range).Offset(0, -1).Interior.Color = XlRgbColor.rgbOrangeRed
                         End Try
 
 
@@ -17792,7 +17885,8 @@ Public Module agm2
 
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler im Customization-File: Rollen-Definitionen auslesen " & ex.Message)
+            errMsg = "general, unidentified error: " & ex.Message
+            meldungen.Add(errMsg)
         End Try
 
 
@@ -18254,34 +18348,17 @@ Public Module agm2
     ''' liest für die definierten Rollen ggf vorhandene detaillierte Ressourcen Kapazitäten ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Private Sub readRessourcenDetails()
+    Public Sub readRessourcenDetails(ByRef meldungen As Collection)
 
         ' tk 28.5.18 hier werden, sofern es was gibt die monatlichen Details für die Rollen ausgelesen 
-        Call readMonthlyKapasOfRole()
-
-        '' tk 28.5.18 alte Version - nicht mehr benötigt ....
-        '' jetzt werden  für die einzelnen Rollen in dem Directory Ressource Manager Dateien 
-        '' die evtl vorhandenen Dateien für die genaue Bestimmung der Kapazität ausgelesen  
-        'Dim tmpRole As clsRollenDefinition
-        'Dim tmpRoleDefinitions As New clsRollen
-        'Dim ix As Integer
-        'For ix = 1 To RoleDefinitions.Count
-        '    tmpRole = RoleDefinitions.getRoledef(ix)
-        '    ' hier werden die betreffenden Dateien geöffnet und auch wieder geschlossen
-        '    ' wenn es zu Problemen kommen sollte, bleiben die Kapa Werte unverändert ...
-        '    Call readKapaOfRole(tmpRole)
-        '    tmpRoleDefinitions.Add(tmpRole)
-        'Next
-
-        'RoleDefinitions = New clsRollen
-        'RoleDefinitions = tmpRoleDefinitions
+        Call readMonthlyExternKapas(meldungen)
 
     End Sub
     ''' <summary>
     ''' liest für die definierten Rollen ggf vorhandene Urlaubsplanung ein 
     ''' </summary>
     ''' <remarks></remarks>
-    Private Sub readRessourcenDetails2()
+    Public Sub readRessourcenDetails2(ByRef meldungen As Collection)
 
         Dim kapaFileName As String
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -18310,13 +18387,13 @@ Public Module agm2
         If listOfFiles.Count >= 1 Then
 
             For Each tmpDatei As String In listOfFiles
-                Call readUrlOfRole(tmpDatei)
+                Call readUrlOfRole(tmpDatei, meldungen)
             Next
 
         Else
-            Call logfileSchreiben("Es gibt keine Datei zur Urlaubsplanung" & vbLf _
-                         & "Es wurde daher jetzt keine berücksichtigt",
-                         "", anzFehler)
+            Dim errMsg As String = "Es gibt keine Datei zur Urlaubsplanung" & vbLf _
+                         & "Es wurde daher jetzt keine berücksichtigt"
+            meldungen.Add(errMsg)
         End If
 
     End Sub
@@ -18491,12 +18568,13 @@ Public Module agm2
     ''' </summary>
     ''' <param name="wsname"></param>
     ''' <remarks></remarks>
-    Private Sub readCostDefinitions(ByVal wsname As Excel.Worksheet)
+    Private Sub readCostDefinitions(ByVal wsname As Excel.Worksheet, ByRef kostendefinitionen As clsKostenarten, ByRef outputCollection As Collection)
 
 
         Dim index As Integer = 0
         Dim hcost As clsKostenartDefinition
         Dim tmpStr As String
+        Dim errmsg As String = ""
 
 
         Try
@@ -18504,38 +18582,48 @@ Public Module agm2
             With wsname
 
                 Dim costRange As Excel.Range = .Range("awin_Kosten_Definition")
-                Dim anzZeilen As Integer = costRange.Rows.Count
-                Dim c As Excel.Range
 
-                For i As Integer = 2 To anzZeilen - 1
+                If Not IsNothing(costRange) Then
+                    Dim anzZeilen As Integer = costRange.Rows.Count
+                    Dim c As Excel.Range
 
-                    c = CType(costRange.Cells(i, 1), Excel.Range)
-                    If CStr(c.Value) <> "" Or index > 0 Then
-                        index = index + 1
+                    For i As Integer = 2 To anzZeilen - 1
 
-                        ' jetzt kommt die Kostenarten Definition
-                        hcost = New clsKostenartDefinition
-                        With hcost
-                            If CStr(c.Value) <> "" Then
-                                tmpStr = CType(c.Value, String)
-                                .name = tmpStr.Trim
-                            Else
-                                .name = "Personalkosten"
-                            End If
-                            .farbe = c.Interior.Color
-                            .UID = index
-                        End With
+                        c = CType(costRange.Cells(i, 1), Excel.Range)
+                        If CStr(c.Value) <> "" Or index > 0 Then
+                            index = index + 1
 
-                        CostDefinitions.Add(hcost)
-                    End If
+                            ' jetzt kommt die Kostenarten Definition
+                            hcost = New clsKostenartDefinition
+                            With hcost
+                                If CStr(c.Value) <> "" Then
+                                    tmpStr = CType(c.Value, String)
+                                    .name = tmpStr.Trim
+                                Else
+                                    .name = "Personalkosten"
+                                End If
+                                .farbe = c.Interior.Color
+                                .UID = index
+                            End With
 
-                Next
+                            kostendefinitionen.Add(hcost)
+                        End If
+
+                    Next
+                Else
+                    errmsg = "Range <awin_Kosten_Definition> not defined - exit ..."
+                    outputCollection.Add(errmsg)
+                    kostendefinitionen = New clsKostenarten
+                End If
+
 
             End With
 
 
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in Customization File: Kosten")
+            errmsg = "Range <awin_Kosten_Definition> not defined - exit ..."
+            outputCollection.Add(errmsg)
+            kostendefinitionen = New clsKostenarten
         End Try
 
 
