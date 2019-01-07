@@ -73,7 +73,7 @@
         If _customUserRoles.ContainsKey(key) Then
             ' nichts tun, ist ja schon drin ... 
         Else
-            ' jetzt ist sichergestellt, dass der key nicht mehr existiert ..
+            ' jetzt ist sichergestellt, dass der key noch nicht  existiert ..
             Dim newCustomUserRole As New clsCustomUserRole
             With newCustomUserRole
                 .userName = userName

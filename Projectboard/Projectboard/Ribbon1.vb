@@ -1767,6 +1767,13 @@ Imports System.Web
                     tmpLabel = "Actual Data"
                 End If
 
+            Case "PT4G1B13"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Kapazitäten"
+                Else
+                    tmpLabel = "Capacities"
+                End If
+
             Case "PT4G1B8"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Organisation"
@@ -4753,7 +4760,7 @@ Imports System.Web
         returnValue = getMassenEditImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            dateiName = getMassenEditImport.selectedDateiName
+            dateiName = CStr(getMassenEditImport.selImportFiles.Item(1))
 
             Try
 
@@ -4870,7 +4877,7 @@ Imports System.Web
             returnValue = getInventurImport.ShowDialog
 
             If returnValue = DialogResult.OK Then
-                dateiName = getInventurImport.selectedDateiName
+                dateiName = CStr(getInventurImport.selImportFiles.Item(1))
 
                 Try
                     ' jetzt das Logfile öffnen 
@@ -4927,8 +4934,8 @@ Imports System.Web
                                 Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
                                 Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
-
-                                Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects)
+                                Dim outputCollection As New Collection
+                                Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
                             End If
 
@@ -5075,7 +5082,7 @@ Imports System.Web
         returnValue = getScenarioImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            dateiName = getScenarioImport.selectedDateiName
+            dateiName = CStr(getScenarioImport.selImportFiles.Item(1))
 
             Try
 
@@ -5188,7 +5195,7 @@ Imports System.Web
         returnValue = getModuleImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            dateiName = getModuleImport.selectedDateiName
+            dateiName = CStr(getModuleImport.selImportFiles.Item(1))
 
             Try
                 appInstance.Workbooks.Open(dateiName)
@@ -5242,7 +5249,7 @@ Imports System.Web
         returnValue = getModuleImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            dateiName = getModuleImport.selectedDateiName
+            dateiName = CStr(getModuleImport.selImportFiles.Item(1))
             Dim ruleSet As New clsAddElements
             Dim ok As Boolean = True
             Try
@@ -5501,7 +5508,7 @@ Imports System.Web
         returnValue = getRPLANImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            dateiName = getRPLANImport.selectedDateiName
+            dateiName = CStr(getRPLANImport.selImportFiles.Item(1))
 
             Try
 
@@ -5556,6 +5563,8 @@ Imports System.Web
         appInstance.ScreenUpdating = True
 
     End Sub
+
+
     ''' <summary>
     ''' importiert und speichert die Organisation; wenn mehrere existieren, dann wird ein Formular aufgeschaltet zur Auswahl der Organisation
     ''' </summary>
@@ -5591,7 +5600,7 @@ Imports System.Web
             Dim returnValue As DialogResult = getOrgaFile.ShowDialog
 
             If returnValue = DialogResult.OK Then
-                selectedWB = getOrgaFile.selectedDateiName
+                selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
                 weiterMachen = True
             End If
         End If
@@ -5608,7 +5617,7 @@ Imports System.Web
                 appInstance.Workbooks.Open(dateiname)
 
                 Dim outputCollection As New Collection
-                Dim importedOrga As clsOrganisation = orgaImport(outputCollection)
+                Dim importedOrga As clsOrganisation = ImportOrganisation(outputCollection)
 
                 Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
 
@@ -5623,12 +5632,25 @@ Imports System.Web
                     Call logfileSchreiben(outputCollection)
 
                 ElseIf importedOrga.count > 0 Then
-                    ' jetzt wird die Orga als Setting weggespeichert ... 
-                    Call MsgBox("hier ist es jetzt erledigt")
-                    ' dann kann jetzt die Organisation geschrieben werden 
-                    ' die Kapas sidn auch bereits übertragen ... 
-                    'Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga, Type, Date.Now, Err)
 
+                    ' jetzt wird die Orga als Setting weggespeichert ... 
+                    Dim err As New clsErrorCodeMsg
+                    Dim result As Boolean = False
+                    ' ute -> überprüfen bzw. fertigstellen ... 
+                    Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & importedOrga.validFrom.ToString
+                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedOrga,
+                                                                                    CStr(settingTypes(ptSettingTypes.organisation)),
+                                                                                    orgaName,
+                                                                                    importedOrga.validFrom,
+                                                                                    err)
+
+                    If result = True Then
+                        Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...")
+                        Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
+                    Else
+                        Call MsgBox("Error when writing Organisation")
+                        Call logfileSchreiben("Error when writing Organisation ...", selectedWB, -1)
+                    End If
                 End If
             Catch ex As Exception
 
@@ -5653,6 +5675,116 @@ Imports System.Web
     ''' <param name="control"></param>
     Public Sub PTImportIstDaten(control As IRibbonControl)
 
+        Dim selectedWB As String = ""
+
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.simpleScen))
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "Istdaten*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+
+        If anzFiles = 1 Then
+            selectedWB = listOfImportfiles.Item(0)
+            weiterMachen = True
+
+        ElseIf anzFiles > 1 Then
+            Dim getOrgaFile As New frmSelectImportFiles
+            getOrgaFile.menueAswhl = PTImpExp.actualData
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
+                weiterMachen = True
+            End If
+        Else
+            Call MsgBox("keine Istdaten vorhaben ...")
+        End If
+
+        If weiterMachen Then
+
+            ' öffnen des LogFiles
+            Call logfileOpen()
+
+            dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+            Try
+                ' hier wird jetzt der Import gemacht 
+                Call logfileSchreiben("Beginn Import Istdaten", selectedWB, -1)
+
+                ' Öffnen des Organisations-Files
+                appInstance.Workbooks.Open(dateiname)
+                Dim scenarioNameP As String = appInstance.ActiveWorkbook.Name
+
+                Dim outputCollection As New Collection
+
+                ' das Formular aufschalten mit 
+                '
+                Dim editActualDataMonth As New frmProvideActualDataMonth
+
+                If editActualDataMonth.ShowDialog = DialogResult.OK Then
+
+                    Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
+
+                    Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
+                    Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+
+
+                    Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+
+                End If
+
+
+                Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
+
+                ' Schliessen des CustomUser Role-Files
+                appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+
+                'sessionConstellationP enthält alle Projekte aus dem Import 
+                Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+
+
+                If sessionConstellationP.count > 0 Then
+
+                    If projectConstellations.Contains(scenarioNameP) Then
+                        projectConstellations.Remove(scenarioNameP)
+                    End If
+
+                    projectConstellations.Add(sessionConstellationP)
+                    ' jetzt auf Projekt-Tafel anzeigen 
+                    Call loadSessionConstellation(scenarioNameP, False, False, True)
+
+                Else
+                    Call MsgBox("keine Projekte importiert ...")
+                End If
+
+                If ImportProjekte.Count > 0 Then
+                    ImportProjekte.Clear(False)
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+            ' Schließen des LogFiles
+            Call logfileSchliessen()
+
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
     End Sub
 
     ''' <summary>
@@ -5661,23 +5793,102 @@ Imports System.Web
     ''' <param name="control"></param>
     Public Sub PTImportCustomUserRoles(control As IRibbonControl)
 
+        Dim selectedWB As String = ""
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, requirementsOrdner)
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*roles*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
 
-        Dim err As New clsErrorCodeMsg
-        Dim result As Boolean = False
+        Dim dateiname As String = ""
 
-        Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
+        Dim weiterMachen As Boolean = False
 
-        '??? Aufruf speichern der CustomUser Roles über rest-Server ...
+        'Call projektTafelInit()
 
-        result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(allCustomUserRoles,
-                                                                            CStr(settingTypes(ptSettingTypes.customroles)),
-                                                                            CStr(settingTypes(ptSettingTypes.customroles)),
-                                                                            Nothing,
-                                                                            err)
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
 
-        If result = True Then
-            Call MsgBox("ok, Custom User Roles gespeichert ...")
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+
+        If anzFiles = 1 Then
+            selectedWB = listOfImportfiles.Item(0)
+            weiterMachen = True
+
+        ElseIf anzFiles > 1 Then
+            Dim getOrgaFile As New frmSelectImportFiles
+            getOrgaFile.menueAswhl = PTImpExp.Orga
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
+                weiterMachen = True
+            End If
         End If
+
+        If weiterMachen Then
+
+            dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+            Try
+                ' hier wird jetzt der Import gemacht 
+                Call logfileSchreiben("Beginn Import Custom User Roles", selectedWB, -1)
+
+                ' Öffnen des Organisations-Files
+                appInstance.Workbooks.Open(dateiname)
+
+                Dim outputCollection As New Collection
+                Dim importedRoles As clsCustomUserRoles = ImportCustomUserRoles(outputCollection)
+
+                Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
+
+                ' Schliessen des CustomUser Role-Files
+                appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+
+                If outputCollection.Count > 0 Then
+                    Dim errmsg As String = vbLf & " .. Abbruch .. nicht importiert "
+                    outputCollection.Add(errmsg)
+                    Call showOutPut(outputCollection, "User Role Import", "")
+
+                    Call logfileSchreiben(outputCollection)
+
+                ElseIf importedRoles.count > 0 Then
+                    ' jetzt wird die Orga als Setting weggespeichert ... 
+                    ' alles ok 
+                    Dim err As New clsErrorCodeMsg
+                    Dim result As Boolean = False
+                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(importedRoles,
+                                                                                    CStr(settingTypes(ptSettingTypes.customroles)),
+                                                                                    CStr(settingTypes(ptSettingTypes.customroles)),
+                                                                                    Nothing,
+                                                                                    err)
+
+                    If result = True Then
+                        Call MsgBox("ok, Custom User Roles stored ...")
+                        Call logfileSchreiben("Custom User Roles stored ...", selectedWB, -1)
+                    Else
+                        Call MsgBox("Error when writing Custom User Roles")
+                        Call logfileSchreiben("Error when writing Custom User Roles ...", selectedWB, -1)
+                    End If
+                Else
+                    Call MsgBox("no roles found ...")
+                End If
+            Catch ex As Exception
+
+            End Try
+        End If
+
+
+
+
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
     End Sub
 
     ''' <summary>
@@ -5685,6 +5896,62 @@ Imports System.Web
     ''' </summary>
     ''' <param name="control"></param>
     Public Sub PTImportKapas(control As IRibbonControl)
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+        Dim outputCollection As New Collection
+
+        Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+        RoleDefinitions = changedOrga.allRoles
+        CostDefinitions = changedOrga.allCosts
+
+        ' Einlesen der Kapas
+        Call readMonthlyExternKapas(outputCollection)
+        Call readRessourcenDetails2(outputCollection)
+
+
+        changedOrga.allRoles = RoleDefinitions
+
+        If outputCollection.Count = 0 Then
+            ' keine Fehler aufgetreten ... 
+            ' jetzt wird die Orga als Setting weggespeichert ... 
+            Dim err As New clsErrorCodeMsg
+            Dim result As Boolean = False
+            ' ute -> überprüfen bzw. fertigstellen ... 
+            Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & changedOrga.validFrom.ToString
+            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                                                                            CStr(settingTypes(ptSettingTypes.organisation)),
+                                                                            orgaName,
+                                                                            changedOrga.validFrom,
+                                                                            err)
+
+            If result = True Then
+                Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
+                Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+            Else
+                Call MsgBox("Error when writing Organisation to Database")
+                Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+            End If
+
+
+        Else
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logfileSchreiben(outputCollection)
+        End If
+
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
 
     End Sub
 
