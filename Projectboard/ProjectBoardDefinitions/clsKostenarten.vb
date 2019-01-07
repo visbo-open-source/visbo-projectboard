@@ -114,7 +114,20 @@
         End Get
     End Property
 
-
+    ''' <summary>
+    ''' gibt die Kostenart mit ID = uid zurück; Nothing, wenn sie nicht existiert
+    ''' </summary>
+    ''' <param name="uid"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getCostDefByID(ByVal uid As Integer) As clsKostenartDefinition
+        Get
+            If _allKostenarten.ContainsKey(uid) Then
+                getCostDefByID = _allKostenarten.Item(uid)
+            Else
+                getCostDefByID = Nothing
+            End If
+        End Get
+    End Property
 
     Public ReadOnly Property getCostdef(ByVal myitem As String) As clsKostenartDefinition
         Get
