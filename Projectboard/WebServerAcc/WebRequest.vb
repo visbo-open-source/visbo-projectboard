@@ -1832,6 +1832,14 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customfields)
 
                 Case settingTypes(ptSettingTypes.organisation)
+                    setting = New List(Of clsVCSettingOrganisation)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
 
             End Select
 
@@ -1872,6 +1880,27 @@ Public Class Request
 
                 Case settingTypes(ptSettingTypes.organisation)
 
+                    Dim listofOrgaWeb As New clsOrganisationWeb
+                    listofOrgaWeb.copyFrom(listofSetting)
+
+                    ' der Unique-Key für customroles besteht aus: name, type
+
+                    newsetting = New clsVCSettingOrganisation
+                    CType(newsetting, clsVCSettingOrganisation).name = name         ' customroles '
+                    CType(newsetting, clsVCSettingOrganisation).timestamp = timestamp
+                    CType(newsetting, clsVCSettingOrganisation).userId = aktUser._id
+                    CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
+                    CType(newsetting, clsVCSettingOrganisation).type = type
+                    CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
+
+                    If anzSetting = 1 Then
+                        newsetting._id = settingID
+                        ' Update der customroles - Setting
+                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                    Else
+                        ' Create der customroles - Setting
+                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                    End If
             End Select
 
 
@@ -1902,14 +1931,11 @@ Public Class Request
     Public Function retrieveCustomUserRoles(ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
 
         Dim result As New clsCustomUserRoles
-        Dim interimResult As New clsCustomUserRoles
         Dim setting As Object = Nothing
-        Dim newsetting As Object = Nothing
         Dim settingID As String = ""
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.customroles)
         Dim name As String = type
-        Dim allCustomUserRoles As New clsCustomUserRoles
         Dim webCustomUserRoles As New clsCustomUserRolesWeb
         Try
 
@@ -1937,6 +1963,48 @@ Public Class Request
 
         End Try
         retrieveCustomUserRoles = result
+    End Function
+
+
+    Public Function retrieveOrganisation(ByVal name As String,
+                                         ByVal validfrom As Date,
+                                         ByRef err As clsErrorCodeMsg) As clsOrganisation
+
+        Dim result As New clsOrganisation
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.organisation)
+
+        Dim webOrganisation As New clsOrganisationWeb
+        Try
+
+            setting = New List(Of clsVCSettingOrganisation)
+            setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, False)
+            anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
+
+            If anzSetting > 0 Then
+
+                settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
+                webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+                webOrganisation.copyTo(result)
+
+                ' bestimmen der _topLevelNodeIDs
+                result.allRoles.buildTopNodes()
+
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+        retrieveOrganisation = result
     End Function
 
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
@@ -3560,11 +3628,7 @@ Public Class Request
                 End If
 
                 If name <> "" Then
-                    If type <> "" Then
-                        serverUriString = serverUriString & "&name=" & type
-                    Else
-                        serverUriString = serverUriString & "name=" & type
-                    End If
+                    serverUriString = serverUriString & "&name=" & name
                 End If
 
                 If name <> "" Or type <> "" Then
@@ -3654,10 +3718,10 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = CType(setting, clsVCSettingCustomroles)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.customfields)
                     setting = CType(setting, clsVCSettingCustomfields)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.organisation)
                     setting = CType(setting, clsVCSettingOrganisation)
 
                 Case Else

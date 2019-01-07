@@ -434,7 +434,13 @@ Module Module1
             Else
                 tmpResult = True
 
-                ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                'Dim currentOrga As New clsOrganisation
+                'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisation("", Date.Now, err)
+
+                '' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                'RoleDefinitions = currentOrga.allRoles
+                'CostDefinitions = currentOrga.allCosts
+
                 RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
                 CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
@@ -2656,6 +2662,7 @@ Module Module1
         With pptChart
 
             If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+                '??? If CBool(.HasAxis(Microsoft.Office.Interop.Excel.XlAxisType.xlValue)) Then
 
                 With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 

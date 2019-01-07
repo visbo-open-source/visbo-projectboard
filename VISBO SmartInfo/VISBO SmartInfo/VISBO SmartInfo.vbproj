@@ -205,6 +205,7 @@
   <ItemGroup>
     <Import Include="Microsoft.Office.Interop" />
     <Import Include="Microsoft.VisualBasic" />
+    <Import Include="PowerPoint = Microsoft.Office.Interop.PowerPoint" />
     <Import Include="System" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.IO" />
@@ -215,7 +216,6 @@
     <Import Include="System.Xml" />
     <Import Include="System.Xml.Linq" />
     <Import Include="Office = Microsoft.Office.Core" />
-    <Import Include="PowerPoint = Microsoft.Office.Interop.PowerPoint" />
     <Import Include="System.Xml.Serialization" />
   </ItemGroup>
   <!--

@@ -1523,7 +1523,8 @@ Public Class Request
                     End If
 
                 End If
-            Else 'es wird eine MongoDB direkt adressiert
+            Else 'es wird eine MongoDB direkt adressiert; hier gibt es keine Settings
+
                 result = False
             End If
 
@@ -1552,13 +1553,46 @@ Public Class Request
 
                 End If
             Else
-                ' nothing to do for direct MongoAccess
+                ' nothing can be done for direct MongoAccess
             End If
 
         Catch ex As Exception
 
         End Try
         retrieveCustomUserRoles = result
+    End Function
+    Public Function retrieveOrganisation(ByVal name As String,
+                                          ByVal timestamp As Date,
+                                          ByRef err As clsErrorCodeMsg) As clsOrganisation
+
+        Dim result As New clsOrganisation
+
+        Try
+            If usedWebServer Then
+
+                result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisation("", Date.Now, err)
+
+                ' Token is no longer valid: erneuter Login
+                If err.errorCode = 401 Then
+                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                    If loginErfolgreich Then
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisation("", Date.Now, err)
+                    End If
+
+                End If
+            Else
+                ' to do for direct MongoAccess
+                result.allRoles = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(Date.Now)
+                result.allCosts = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(Date.Now)
+                result.validFrom = StartofCalendar
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveOrganisation = result
     End Function
 
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String

@@ -16073,6 +16073,10 @@ Public Module agm2
 
                 ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
                 ' sonst von der DB
+
+                ' jetzt die CurrentOrga definieren
+                Dim currentOrga As New clsOrganisation
+
                 If Not awinSettings.readCostRolesFromDB Then
                     Dim outputCollection As New Collection
 
@@ -16103,29 +16107,34 @@ Public Module agm2
 
                     End If
 
-                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                    ' jetzt kommt der Validation-Check 
-                    'Dim allTeamsAreOK As Boolean = checkTeamDefinitions()
-                    'Dim existingOverloads As Boolean = checkTeamMemberOverloads()
+                    ' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
+                    RoleDefinitions.buildTopNodes()
+                    With currentOrga
+                        .validFrom = StartofCalendar
+                        .allRoles = RoleDefinitions
+                        .allCosts = CostDefinitions
+                    End With
+
                 Else
 
                     ' 
                     ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                    ' tk/urk todo 4.1.19 hier muss das Organisations-Setting ausgelesen werden ..
-                    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                    CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+                    ' das Organisations-Setting auslesen  ..
+
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisation("", Date.Now, err)
+
+                    CostDefinitions = currentOrga.allCosts
+                    RoleDefinitions = currentOrga.allRoles
+
+
+                    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
 
                 End If
 
-                ' jetzt sind die RoleDefinitions gesetzt 
-                Dim currentOrga As New clsOrganisation
-                With currentOrga
-                    .validFrom = StartofCalendar
-                    .allRoles = RoleDefinitions
-                    .allCosts = CostDefinitions
-                End With
                 validOrganisations.addOrga(currentOrga)
+
 
 
                 ' Auslesen der Custom Field Definitions
@@ -16288,7 +16297,8 @@ Public Module agm2
 
                     End If
 
-                    RoleDefinitions.buildTopNodes()
+                    '
+                    ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
 
                     If awinSettings.visboDebug Then
                         Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
