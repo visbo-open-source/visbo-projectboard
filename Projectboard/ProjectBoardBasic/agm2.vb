@@ -16121,7 +16121,7 @@ Public Module agm2
                     ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
                     ' das Organisations-Setting auslesen  ..
 
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisation("", Date.Now, err)
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, err)
 
                     CostDefinitions = currentOrga.allCosts
                     RoleDefinitions = currentOrga.allRoles
@@ -16136,13 +16136,30 @@ Public Module agm2
                 validOrganisations.addOrga(currentOrga)
 
 
+                If Not awinSettings.readCostRolesFromDB Then
 
-                ' Auslesen der Custom Field Definitions
-                Try
-                    Call readCustomFieldDefinitions(wsName4)
-                Catch ex As Exception
+                    ' Auslesen der Custom Field Definitions aus Customization-File
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
+                    Catch ex As Exception
 
-                End Try
+                    End Try
+
+                Else
+
+                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                    Try
+                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomfieldsFromDB("", Date.Now, err)
+
+                        If IsNothing(customFieldDefinitions) Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
 
                 '' auslesen der anderen Informationen 
                 'Call readOtherDefinitions(wsName4)
@@ -17389,10 +17406,22 @@ Public Module agm2
 
             End With
 
+
+            Dim err As New clsErrorCodeMsg
+            Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
+            Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
+                                                                                           CStr(settingTypes(ptSettingTypes.customfields)),
+                                                                                           customFieldsName,
+                                                                                           Nothing,
+                                                                                           err)
+            If Not result Then
+                Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & err.errorMsg)
+            End If
+
+
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Customization-File: Custom Field Definitions")
         End Try
-
 
 
 
