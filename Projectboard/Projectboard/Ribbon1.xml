@@ -87,6 +87,8 @@
                 <button id="PT4G1B11" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTImportCustomUserRoles" supertip ="Es werden die vollständigen User Roles importiert"/>
                 <!--label="Kapazitäten"-->
                 <button id="PT4G1B13" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportKapas" supertip ="Es werden die Kapazitätsdateien für interne / externe Mitarbeiter eingelesen"/>
+                <!--label="Offline Erfassung"-->
+                <button id="PT4G1B14" getVisible="chckVisibility"  getLabel ="bestimmeLabel" onAction="PTImportOfflineData" supertip ="Es werden offline editierte Ressourcenbedarfe eingelesen"/>
               </menu>
               <menu id="PT4G1M1-2" getVisible="chckVisibility" getLabel ="bestimmeLabel" >
                 <!--label="VISBO-Steckbriefe"-->

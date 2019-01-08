@@ -335,6 +335,95 @@ Public Class clsRollen
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt zu dem übergebenen String, der RoleNames in der Form D-BOSV-KB1; D-BOSV-KB2; etc enthält 
+    ''' die gültigen Namen in Form eines Id-Arrays zurück 
+    ''' </summary>
+    ''' <param name="aufzaehlung"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getIDArray(ByVal aufzaehlung As String) As Integer()
+        Get
+            Dim tmpResult() As Integer = Nothing
+            Dim realAnzahl As Integer = 0
+
+            Dim tmpStr() As String = aufzaehlung.Split(New Char() {CChar(";")})
+            For Each tmpName As String In tmpStr
+                If RoleDefinitions.containsName(tmpName) Then
+                    realAnzahl = realAnzahl + 1
+                End If
+            Next
+
+            If realAnzahl > 0 Then
+                ReDim tmpResult(realAnzahl - 1)
+                Dim ix As Integer = 0
+                For Each tmpName As String In tmpStr
+                    If RoleDefinitions.containsName(tmpName) Then
+                        tmpResult(ix) = RoleDefinitions.getRoledef(tmpName).UID
+                        ix = ix + 1
+                    End If
+                Next
+            End If
+
+            getIDArray = tmpResult
+        End Get
+    End Property
+
+    Public Function chooseParentFromList(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As String
+        Dim tmpResult As String = ""
+
+        Dim teamID As Integer = -1
+
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+        If summaryRoleIDs.Contains(roleID) Then
+            tmpResult = RoleDefinitions.getRoleDefByID(roleID).name
+
+        Else
+            For Each summaryRoleID As Integer In summaryRoleIDs
+                Dim chckRelation As Boolean = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
+                If chckRelation = True Then
+                    tmpResult = RoleDefinitions.getRoleDefByID(summaryRoleID).name
+                    Exit For
+                End If
+            Next
+
+        End If
+
+        chooseParentFromList = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' überprüft, ob die angegebene roleNameID in der Form roleID;teamID bzw roleId Kind einer der angegebenen Sammelrollen ist
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="summaryRoleIDs"></param>
+    ''' <returns></returns>
+    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Dim teamID As Integer = -1
+
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+        If summaryRoleIDs.Contains(roleID) Then
+            tmpResult = True
+
+        Else
+            For Each summaryRoleID As Integer In summaryRoleIDs
+                tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
+                If tmpResult = True Then
+                    Exit For
+                End If
+            Next
+
+        End If
+        hasAnyChildParentRelationsship = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="summaryRoleID"></param>
+    ''' <returns></returns>
     Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer) As Boolean
         Dim tmpResult As Boolean = False
         Dim teamID As Integer = -1
@@ -911,22 +1000,36 @@ Public Class clsRollen
         End Get
     End Property
 
-    Public ReadOnly Property containsNameID(nameID As String) As Boolean
+    ''' <summary>
+    ''' gibt true zurück, wenn es sich bei dem NameID-String roleUID;teamID um eine valide Kombination handelt
+    ''' Strongtest=true: gibt nur true zurück, wenn roleUID, TeamUID existieren und RoleUId auch Kind von TeamID ist 
+    ''' strongTest=false: gibt true zurück, wenn RoleUID und TeamID existieren  
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsNameID(ByVal nameID As String, Optional ByVal strongTest As Boolean = True) As Boolean
         Get
             Dim tmpResult As Boolean = False
             Dim teamID As Integer = -1
             Dim roleUID As Integer = parseRoleNameID(nameID, teamID)
 
-            If nameID.Contains(";") And teamID = -1 Then
-                ' nicht ok 
-            ElseIf roleUID = -1 Then
-                ' nicht ok 
-            ElseIf roleUID > 0 And teamID = -1 Then
-                ' alles ok 
-                tmpResult = True
-            ElseIf roleUID > 0 And teamID > 0 Then
-                ' alles ok 
-                tmpResult = True
+            If _allRollen.ContainsKey(roleUID) Then
+                ' ist ein Team angegeben ? 
+                If teamID > 0 Then
+                    If _allRollen.ContainsKey(teamID) Then
+                        If Not strongTest Then
+                            tmpResult = True
+                        Else
+                            ' ist die RoleUID auch Kind des Teams ? 
+                            If getRoleDefByID(teamID).getSubRoleIDs.ContainsKey(roleUID) Then
+                                tmpResult = True
+                            End If
+                        End If
+
+                    End If
+                End If
+            Else
+                tmpResult = False
             End If
 
             containsNameID = tmpResult

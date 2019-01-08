@@ -819,6 +819,7 @@ Public Module Module1
         Kapas = 10
         customUserRoles = 11
         actualData = 12
+        offlineData = 13
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung
@@ -6783,7 +6784,7 @@ Public Module Module1
     ''' </summary>
     ''' <param name="currentCell"></param>
     ''' <returns></returns>
-    Public Function getRCNameIDfromMeRcCell(ByVal currentCell As Excel.Range) As String
+    Public Function getRCNameIDfromExcelCell(ByVal currentCell As Excel.Range) As String
 
         Dim tmpResult As String = ""
         Try
@@ -6810,7 +6811,7 @@ Public Module Module1
             tmpResult = ""
         End Try
 
-        getRCNameIDfromMeRcCell = tmpResult
+        getRCNameIDfromExcelCell = tmpResult
 
     End Function
 
@@ -6931,11 +6932,11 @@ Public Module Module1
 
 
     ''' <summary>
-    ''' ermittelt in einem MassEdit RoleCost Fenster die PhaseNameID  
+    ''' ermittelt in einem Excel Zelle die PhaseNameID  
     ''' </summary>
     ''' <param name="currentCell"></param>
     ''' <returns></returns>
-    Public Function getPhaseNameIDfromMeRcCell(ByVal currentCell As Excel.Range) As String
+    Public Function getPhaseNameIDfromExcelCell(ByVal currentCell As Excel.Range) As String
         Dim tmpResult As String = ""
 
         Try
@@ -6953,7 +6954,7 @@ Public Module Module1
         End Try
 
 
-        getPhaseNameIDfromMeRcCell = tmpResult
+        getPhaseNameIDfromExcelCell = tmpResult
     End Function
 
 
@@ -6990,7 +6991,7 @@ Public Module Module1
             chckName = CStr(meWS.Cells(curZeile, 2).value)
 
             'Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
-            chckPhNameID = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
+            chckPhNameID = getPhaseNameIDfromExcelCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
 
             'chckPhNameID = calcHryElemKey(phaseName, False)
             'Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
@@ -7000,7 +7001,7 @@ Public Module Module1
             If Not isRole Then
                 chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
             Else
-                chckRCNameID = getRCNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                chckRCNameID = getRCNameIDfromExcelCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
             End If
 
 
@@ -7030,7 +7031,7 @@ Public Module Module1
 
                     'Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
                     'chckPhNameID = calcHryElemKey(phaseName, False)
-                    chckPhNameID = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
+                    chckPhNameID = getPhaseNameIDfromExcelCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
                     'Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
                     'If Not IsNothing(curComment) Then
                     '    chckPhNameID = curComment.Text
@@ -7040,7 +7041,7 @@ Public Module Module1
                     If Not isRole Then
                         chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
                     Else
-                        chckRCNameID = getRCNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                        chckRCNameID = getRCNameIDfromExcelCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
                     End If
 
 

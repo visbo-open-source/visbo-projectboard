@@ -2890,7 +2890,8 @@ Public Module awinGeneralModules
     ''' <param name="projektliste"></param>
     ''' <param name="storedAt"></param>
     ''' <returns></returns>
-    Public Function getProjektFromSessionOrDB(ByVal pName As String, ByVal vName As String, ByVal projektliste As clsProjekteAlle, ByVal storedAt As Date) As clsProjekt
+    Public Function getProjektFromSessionOrDB(ByVal pName As String, ByVal vName As String, ByVal projektliste As clsProjekteAlle, ByVal storedAt As Date,
+                                              ByVal Optional kdNr As String = "") As clsProjekt
 
         Dim err As New clsErrorCodeMsg
 
@@ -2904,6 +2905,15 @@ Public Module awinGeneralModules
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt, err) Then
                     hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAt, err)
+                Else
+                    ' jetzt soll versucht werden, das Projekt über die Kunden-Nummer zu bestimmen, sofern die Kunden-Nummer angegeben wurde 
+                    If kdNr <> "" Then
+                        Dim nameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(kdNr, err)
+                        If nameCollection.Count > 0 Then
+                            Dim newPname As String = CStr(nameCollection.Item(1))
+                            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(newPname, vName, storedAt, err)
+                        End If
+                    End If
                 End If
             End If
         Catch ex As Exception
@@ -5888,8 +5898,8 @@ Public Module awinGeneralModules
         Dim found As Boolean = False
 
         Dim vglPname As String = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-        Dim vglRcNameID As String = getRCNameIDfromMeRcCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
-        Dim vglPhaseNameID As String = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
+        Dim vglRcNameID As String = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+        Dim vglPhaseNameID As String = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
 
 
         Do While zeile <= visboZustaende.meMaxZeile And Not found
@@ -5908,8 +5918,8 @@ Public Module awinGeneralModules
             If Not found Then
                 zeile = zeile + 1
                 vglPname = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-                vglRcNameID = getRCNameIDfromMeRcCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
-                vglPhaseNameID = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
+                vglRcNameID = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+                vglPhaseNameID = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
             End If
 
         Loop

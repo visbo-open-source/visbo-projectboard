@@ -1774,6 +1774,13 @@ Imports System.Web
                     tmpLabel = "Capacities"
                 End If
 
+            Case "PT4G1B14"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Offline Ressourcen Zuweisung"
+                Else
+                    tmpLabel = "Offline Resource Assignments"
+                End If
+
             Case "PT4G1B8"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Organisation"
@@ -5666,6 +5673,96 @@ Imports System.Web
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+
+    End Sub
+
+    ''' <summary>
+    ''' ordnet existierenden Projekten pro Phase eine Ressourcen-Summe zu. 
+    ''' wenn bereits Istdaten existieren, so werden die angegebenen Summen so verteilt, dass 
+    ''' die Formel Istdaten+Prognose = Summe 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportOfflineData(control As IRibbonControl)
+
+
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.offlineData))
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*ffline*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        Dim getOrgaFile As New frmSelectImportFiles
+
+        If anzFiles > 0 Then
+
+            getOrgaFile.menueAswhl = PTImpExp.actualData
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                weiterMachen = True
+            End If
+        Else
+            Call MsgBox("keine Offline-Daten vorhanden ...")
+            weiterMachen = False
+        End If
+
+        If weiterMachen Then
+
+            ' öffnen des LogFiles
+            Call logfileOpen()
+
+            For Each selectedWB As String In getOrgaFile.selImportFiles
+
+                dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+                Try
+                    ' hier wird jetzt der Import gemacht 
+                    Call logfileSchreiben("Beginn Import Offline-Daten", selectedWB, -1)
+
+                    ' Öffnen des Offline Data -Files
+                    appInstance.Workbooks.Open(dateiname)
+                    Dim offlineName As String = appInstance.ActiveWorkbook.Name
+
+                    Dim outputCollection As New Collection
+                    Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
+
+                    ' jetzt wird die Aktion durchgeführt ...
+                    Call ImportOfflineData(wbName, outputCollection)
+
+                    ' Schliessen des CustomUser Role-Files
+                    appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+
+                    If outputCollection.Count > 0 Then
+                        Call showOutPut(outputCollection, "Import Offline Data " & offlineName, "")
+                        outputCollection.Clear()
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+            Next
+
+
+
+            ' Schließen des LogFiles
+            Call logfileSchliessen()
+
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
 
     End Sub
 

@@ -378,8 +378,8 @@ Public Class Tabelle2
                     Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                     ' jetzt wird 
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                    Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
-                    Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
+                    Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                    Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
                     'Dim phaseNameID As String = calcHryElemKey(phaseName, False)
 
@@ -405,7 +405,7 @@ Public Class Tabelle2
                         frmMERoleCost.vName = vName
                         frmMERoleCost.phaseName = phaseName
                         frmMERoleCost.rcName = rcName
-                        frmMERoleCost.rcNameID = getRCNameIDfromMeRcCell(Target)
+                        frmMERoleCost.rcNameID = getRCNameIDfromExcelCell(Target)
                         frmMERoleCost.phaseNameID = phaseNameID
                         frmMERoleCost.hproj = hproj
 
@@ -570,7 +570,7 @@ Public Class Tabelle2
 
 
                             With meWS
-                                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                                .Protect(Password:="x", UserInterfaceOnly:=True,
                                         AllowFormattingCells:=True,
                                         AllowFormattingColumns:=True,
                                         AllowInsertingColumns:=False,
@@ -579,13 +579,13 @@ Public Class Tabelle2
                                         AllowDeletingRows:=True,
                                         AllowSorting:=True,
                                         AllowFiltering:=True)
-                                    .EnableSelection = XlEnableSelection.xlUnlockedCells
-                                    .EnableAutoFilter = True
-                                End With
-                                Cancel = True
-                            End If
-
+                                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                                .EnableAutoFilter = True
+                            End With
+                            Cancel = True
                         End If
+
+                    End If
 
                 Else
                     Call MsgBox("bitte nur eine Zelle selektieren ...")
@@ -656,8 +656,8 @@ Public Class Tabelle2
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
-                Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
+                Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                 Dim cphase As clsPhase = Nothing

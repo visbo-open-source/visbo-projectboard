@@ -76,11 +76,18 @@ Public Class clsProjekt
         End Get
         Set(value As Date)
             If Not IsNothing(value) Then
-                ' 13.12. mit dem folgenden wird sichergestellt, dass actualdatauntil nie größer sein kann als das Ende date. 
-                If endeDate < value Then
-                    value = endeDate
+                If value > StartofCalendar Then
+                    'stellt sicher dass es sich um dem letzten Tag, da aber um den Tagesbeginn handelt 
+                    value = value.AddDays(-1 * value.Day).AddMonths(1).Date
+                    ' 13.12. mit dem folgenden wird sichergestellt, dass actualdatauntil nie größer sein kann als das Ende date. 
+                    If DateDiff(DateInterval.Month, endeDate, value) > 0 Then
+                        value = endeDate.AddDays(-1 * endeDate.Day).AddMonths(1).Date
+                    End If
+                    _actualDataUntil = value
+                Else
+                    _actualDataUntil = Date.MinValue
                 End If
-                _actualDataUntil = value
+
             Else
                 _actualDataUntil = Date.MinValue
             End If
@@ -3938,6 +3945,12 @@ Public Class clsProjekt
 
             hasDifferentRoleNeeds = Not istIdentisch
 
+        End Get
+    End Property
+
+    Public ReadOnly Property hasActualValues As Boolean
+        Get
+            hasActualValues = startDate < actualDataUntil
         End Get
     End Property
 
