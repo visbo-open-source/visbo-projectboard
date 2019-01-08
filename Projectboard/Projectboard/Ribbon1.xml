@@ -56,7 +56,7 @@
             <!--<splitButton id="PT5G3split" size ="large">-->
             <!--label="Projekte/Varianten/TimeStamps auswählen"-->
             <!--<button id="PT5G3" getLabel="bestimmeLabel"  imageMso="Delete" onAction="PT5DeleteProjectsInDB" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten, Varianten und zeitlichen Snapshots in der Datenbank; durch Selektieren können eine oder mehrere Projekte/Varianten/Snapshots gelöscht werden; Selektieren eines Projektes löscht alle Snapshots und auch alle Varianten des Projektes aus der Datenbank; Selektieren einer Variante löscht alle zugehörigen Snapshots der Variante aus der Datenbank"/>-->
-            <menu id ="PT5G3M" getVisible="chckVisibility" getLabel="bestimmeLabel" >
+            <menu id ="PT5G3M"  size ="large" getVisible="chckVisibility" getLabel="bestimmeLabel" imageMso="Delete" >
               <!--label="Portfolio"-->
               <button id="Pt5G3B1" getLabel ="bestimmeLabel" onAction="PTRemoveKonstellation" supertip ="das ausgewählte Portfolio wird in der Datenbank gelöscht; damit wird lediglich die Definition des Portfolios in der Datenbank gelöscht; die im Portfolio ursprünglich referenzierten Projekte oder Varianten werden nicht gelöscht"/>
               <!--label="Projekte/Varianten/TimeStamps auswählen"-->

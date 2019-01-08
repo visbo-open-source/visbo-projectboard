@@ -1830,6 +1830,15 @@ Public Class Request
                     End If
 
                 Case settingTypes(ptSettingTypes.customfields)
+                    setting = New List(Of clsVCSettingCustomfields)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomfields)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
+
 
                 Case settingTypes(ptSettingTypes.organisation)
                     setting = New List(Of clsVCSettingOrganisation)
@@ -1877,6 +1886,29 @@ Public Class Request
 
 
                 Case settingTypes(ptSettingTypes.customfields)
+
+                    Dim listofCustomFields As New clsCustomFieldDefinitionsWeb
+                    listofCustomFields.copyFrom(listofSetting)
+
+                    ' der Unique-Key für customroles besteht aus: name, type
+
+                    newsetting = New clsVCSettingCustomfields
+                    CType(newsetting, clsVCSettingCustomfields).name = name         ' customfields-Date.now '
+                    CType(newsetting, clsVCSettingCustomfields).timestamp = timestamp
+                    CType(newsetting, clsVCSettingCustomfields).userId = aktUser._id
+                    CType(newsetting, clsVCSettingCustomfields).vcid = aktVCid
+                    CType(newsetting, clsVCSettingCustomfields).type = type
+                    CType(newsetting, clsVCSettingCustomfields).value = listofCustomFields
+
+                    If anzSetting = 1 Then
+                        newsetting._id = settingID
+                        ' Update der customroles - Setting
+                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customfields), newsetting, err)
+                    Else
+                        ' Create der customroles - Setting
+                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customfields), newsetting, err)
+                    End If
+
 
                 Case settingTypes(ptSettingTypes.organisation)
 
@@ -1966,7 +1998,14 @@ Public Class Request
     End Function
 
 
-    Public Function retrieveOrganisation(ByVal name As String,
+    ''' <summary>
+    ''' liest die komplette Organisation (Kosten und Rollen) aus den VCSettings
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="validfrom"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveOrganisationFromDB(ByVal name As String,
                                          ByVal validfrom As Date,
                                          ByRef err As clsErrorCodeMsg) As clsOrganisation
 
@@ -2004,7 +2043,52 @@ Public Class Request
         Catch ex As Exception
 
         End Try
-        retrieveOrganisation = result
+        retrieveOrganisationFromDB = result
+    End Function
+
+    ''' <summary>
+    ''' liest alle CustomFields aus VCSetting über ReST-Server
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveCustomFieldsFromDB(ByVal name As String,
+                                         ByVal ts As Date,
+                                         ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
+
+        Dim result As New clsCustomFieldDefinitions
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.customfields)
+
+        Dim webCustomFields As New clsCustomFieldDefinitionsWeb
+        Try
+
+            setting = New List(Of clsVCSettingCustomfields)
+            setting = GETOneVCsetting(aktVCid, type, name, ts, "", err, False)
+            anzSetting = CType(setting, List(Of clsVCSettingCustomfields)).Count
+
+            If anzSetting > 0 Then
+
+                settingID = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)._id
+                webCustomFields = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0).value
+                webCustomFields.copyTo(result)
+
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+        retrieveCustomFieldsFromDB = result
     End Function
 
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
@@ -3725,7 +3809,7 @@ Public Class Request
                     setting = CType(setting, clsVCSettingOrganisation)
 
                 Case Else
-                    Call MsgBox("settingType = " & type)
+                    Call MsgBox("Fehler: settingType = " & type & " íst nicht definiert")
             End Select
 
             Dim serverUriString As String
@@ -3806,10 +3890,10 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = CType(setting, clsVCSettingCustomroles)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.customfields)
                     setting = CType(setting, clsVCSettingCustomfields)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.organisation)
                     setting = CType(setting, clsVCSettingOrganisation)
 
                 Case Else

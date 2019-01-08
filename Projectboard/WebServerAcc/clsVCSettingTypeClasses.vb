@@ -6,9 +6,9 @@
 Public Class clsVCSettingCustomfields
 
     Inherits clsVCSetting
-    Public Property value As List(Of clsCustomFieldDefinitions)
+    Public Property value As clsCustomFieldDefinitionsWeb
     Sub New()
-        _value = New List(Of clsCustomFieldDefinitions)
+        _value = New clsCustomFieldDefinitionsWeb
     End Sub
 End Class
 

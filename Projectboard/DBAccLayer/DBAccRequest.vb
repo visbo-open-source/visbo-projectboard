@@ -1561,7 +1561,7 @@ Public Class Request
         End Try
         retrieveCustomUserRoles = result
     End Function
-    Public Function retrieveOrganisation(ByVal name As String,
+    Public Function retrieveOrganisationFromDB(ByVal name As String,
                                           ByVal timestamp As Date,
                                           ByRef err As clsErrorCodeMsg) As clsOrganisation
 
@@ -1570,13 +1570,13 @@ Public Class Request
         Try
             If usedWebServer Then
 
-                result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisation("", Date.Now, err)
+                result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", Date.Now, err)
 
                 ' Token is no longer valid: erneuter Login
                 If err.errorCode = 401 Then
                     loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                     If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisation("", Date.Now, err)
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", Date.Now, err)
                     End If
 
                 End If
@@ -1592,9 +1592,43 @@ Public Class Request
 
         End Try
 
-        retrieveOrganisation = result
+        retrieveOrganisationFromDB = result
     End Function
 
+
+    Public Function retrieveCustomfieldsFromDB(ByVal name As String,
+                                          ByVal timestamp As Date,
+                                          ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
+
+        Dim result As New clsCustomFieldDefinitions
+
+        Try
+            If usedWebServer Then
+
+                result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+
+                ' Token is no longer valid: erneuter Login
+                If err.errorCode = 401 Then
+                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                    If loginErfolgreich Then
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                    End If
+
+                End If
+            Else
+                ' to do for direct MongoAccess
+                result = Nothing
+                err.errorCode = 403
+                err.errorMsg = "Fehler: CustomFields sind nicht in der DB abgespeichert"
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveCustomfieldsFromDB = result
+    End Function
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
 
         Dim result As String = ""
