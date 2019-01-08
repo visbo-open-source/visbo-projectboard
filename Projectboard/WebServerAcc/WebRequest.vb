@@ -2007,6 +2007,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function retrieveOrganisationFromDB(ByVal name As String,
                                          ByVal validfrom As Date,
+                                         ByVal refnext As Boolean,
                                          ByRef err As clsErrorCodeMsg) As clsOrganisation
 
         Dim result As New clsOrganisation
@@ -2019,7 +2020,7 @@ Public Class Request
         Try
 
             setting = New List(Of clsVCSettingOrganisation)
-            setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, False)
+            setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
             anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
 
             If anzSetting > 0 Then
@@ -2036,6 +2037,7 @@ Public Class Request
                     Call MsgBox(err.errorMsg)
                 End If
                 settingID = ""
+                result = Nothing
             End If
 
 
@@ -3717,7 +3719,7 @@ Public Class Request
 
                 If name <> "" Or type <> "" Then
                     If ts > Date.MinValue Then
-                        serverUriString = serverUriString & "&refdate=" & timestamp
+                        serverUriString = serverUriString & "&refDate=" & timestamp
                         If refnext Then
                             serverUriString = serverUriString & "&refNext=" & refnext.ToString
                         End If

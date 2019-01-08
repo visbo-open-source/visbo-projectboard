@@ -16119,9 +16119,9 @@ Public Module agm2
 
                     ' 
                     ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                    ' das Organisations-Setting auslesen  ..
+                    ' das Organisations-Setting auslesen  mit heutigem Datum ...
 
-                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, err)
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
                     CostDefinitions = currentOrga.allCosts
                     RoleDefinitions = currentOrga.allRoles
@@ -16130,11 +16130,37 @@ Public Module agm2
                     'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
                     'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
-
                 End If
 
                 validOrganisations.addOrga(currentOrga)
 
+                ' Auslesen der Orga, die vor der currentOrga gültig war
+                ' also mit validFrom aus currentOrga lesen - 1 Tag
+
+                Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                Dim beforeOrga As clsOrganisation =
+                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
+
+                If Not IsNothing(beforeOrga) Then
+                    validOrganisations.addOrga(beforeOrga)
+                End If
+
+                ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
+                ' also mit validFrom aus currentOrga lesen +  1 Tag
+
+                Dim validNext As Date = currentOrga.validFrom.AddDays(1)
+                Dim nextOrga As clsOrganisation =
+                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
+
+                If Not IsNothing(nextOrga) Then
+                    validOrganisations.addOrga(nextOrga)
+                End If
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
+                End If
+
+                ' Lesen der Custom Field Definitions
 
                 If Not awinSettings.readCostRolesFromDB Then
 
