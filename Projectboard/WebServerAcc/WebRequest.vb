@@ -726,18 +726,33 @@ Public Class Request
                 Else
                     Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
+
+
+                ' hier wird der Fall behandelt : Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
+
                 '--------------------------------------------------------
-                '     standard-Variante erzeugen aus angegebener Variante
+                '     Basis-Variante erzeugen aus gegebener Variante
                 '--------------------------------------------------------
                 projekt.variantName = standardVariante ' STANDARD-Variante
                 Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
 
-                ' jetzt müste der Fall behandelt werden: Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
-                ' warum wurde diese Änderung gemacht: bis heute 28.12.18 wurde nur die Variante-Version angelegt, aber keine Basis Variante ; das soll jetzt hier gemacht werden 
-                ' Anfang zusätzlicher Code von Ute ..
-                ' ...
-                ' Ende zusätzlicher Code von Ute 
-            End If
+            Else
+                Try
+                    ' KundenNummer in vorhandenem VP ergänzen
+
+                    If (aktvp.kundennummer = "") And (projekt.kundenNummer <> "") Then
+
+                        aktvp.kundennummer = projekt.kundenNummer
+                        Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                    Else
+                        ' nothing to do
+                    End If
+
+                Catch ex As Exception
+                    Call MsgBox("Fehler beim Update von VP")
+                End Try
+
+            End If      ' Ende von "If Not storedVP Then"
 
             ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
             Dim storedVPVariant As Boolean = False
@@ -770,47 +785,42 @@ Public Class Request
                 projekt.variantName = vname
                 result = POSTOneVPv(vpid, projekt, userName, err)
 
+                ' hier wird behandelt, wenn  von Seiten der RessourceManager konkurrierendes Schreiben vorkommt.
+                If result = False Then
+                    Select Case err.errorCode
 
-                ''Dim typeRequest As String = "/vpv"
-                ''Dim serverUriString As String = serverUriName & typeRequest
-                ''Dim serverUri As New Uri(serverUriString)
+                        Case 409
 
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                Dim errNew As New clsErrorCodeMsg
+                                Dim newResult As Boolean = result
+                                Dim loopIndex As Integer = 1
+                                While (newResult = False) And (loopIndex <= 10)
 
-                ''If checkChgPermission(pname, vname, userName, err) Then
+                                    Dim summaryRoleIDs As New Collection
+                                    summaryRoleIDs.Add(myCustomUserRole.specifics)
 
-                ''    Dim projektWeb As New clsProjektWebLong
-                ''    projektWeb.copyfrom(projekt)
-                ''    projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
-                ''    projektWeb.vpid = vpid
+                                    Dim newproj As clsProjekt = retrieveOneProjectfromDB(projekt.name, projekt.variantName, Date.Now, errNew)
+                                    If Not IsNothing(newproj) Then
+                                        If Not newproj.isIdenticalTo(projekt) Then
+                                            ' Merge der geänderten Ressourcen => neues Projekt "mergeProj"
+                                            Dim mergeProj As clsProjekt = projekt.deleteAndMerge(summaryRoleIDs, Nothing, newproj)
+                                            newResult = POSTOneVPv(vpid, mergeProj, userName, err)
+                                        End If
+                                    Else
+                                        err = errNew
+                                    End If
+                                    loopIndex = loopIndex + 1
 
-                ''    data = serverInputDataJson(projektWeb, "")
+                                End While
 
-                ''    Dim storeAntwort As clsWebLongVPv
-                ''    Dim Antwort As String
-                ''    Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-                ''        Antwort = ReadResponseContent(httpresp)
-                ''        errcode = CType(httpresp.StatusCode, Integer)
-                ''        errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                ''        storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
-                ''    End Using
+                                result = newResult
+                            End If
 
-                ''    If errcode = 200 Then
+                    End Select
 
-                ''        result = (storeAntwort.state = "success")
-                ''        result = True
+                End If
 
-                ''        ' vpv zu Cache hinzufügen
-                ''        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
-
-                ''    Else
-
-                ''        ' Fehlerbehandlung je nach errcode
-                ''        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
-
-                ''    End If
-                ''    err.errorCode = errcode
-                ''    err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
-                ''End If
             End If
 
         Catch ex As Exception
@@ -835,17 +845,17 @@ Public Class Request
         Try
             Dim vpid As String = ""
 
-            ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectName, err)._id
-
             ' nun ist sicher die VPs aufgebaut
-            Dim vp As clsVP = VRScache.VPsN(projectName)
+            Dim vp As clsVP = GETvpid(projectName, err)
 
-            ' alle Variantenamen in der Collection sammeln
-            For Each vpVar As clsVPvariant In vp.Variant
-                ergebnisCollection.Add(vpVar.variantName, vpVar.variantName)
-            Next
+            If vp._id <> "" Then
+                ' alle Variantenamen in der Collection sammeln
+                For Each vpVar As clsVPvariant In vp.Variant
+                    ergebnisCollection.Add(vpVar.variantName, vpVar.variantName)
+                Next
+            Else
 
+            End If
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -1830,8 +1840,25 @@ Public Class Request
                     End If
 
                 Case settingTypes(ptSettingTypes.customfields)
+                    setting = New List(Of clsVCSettingCustomfields)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    anzSetting = CType(setting, List(Of clsVCSettingCustomfields)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
+
 
                 Case settingTypes(ptSettingTypes.organisation)
+                    setting = New List(Of clsVCSettingOrganisation)
+                    setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
+                    anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
+                    If anzSetting > 0 Then
+                        settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
+                    Else
+                        settingID = ""
+                    End If
 
             End Select
 
@@ -1870,8 +1897,52 @@ Public Class Request
 
                 Case settingTypes(ptSettingTypes.customfields)
 
+                    Dim listofCustomFields As New clsCustomFieldDefinitionsWeb
+                    listofCustomFields.copyFrom(listofSetting)
+
+                    ' der Unique-Key für customroles besteht aus: name, type
+
+                    newsetting = New clsVCSettingCustomfields
+                    CType(newsetting, clsVCSettingCustomfields).name = name         ' customfields-Date.now '
+                    CType(newsetting, clsVCSettingCustomfields).timestamp = timestamp
+                    CType(newsetting, clsVCSettingCustomfields).userId = aktUser._id
+                    CType(newsetting, clsVCSettingCustomfields).vcid = aktVCid
+                    CType(newsetting, clsVCSettingCustomfields).type = type
+                    CType(newsetting, clsVCSettingCustomfields).value = listofCustomFields
+
+                    If anzSetting = 1 Then
+                        newsetting._id = settingID
+                        ' Update der customroles - Setting
+                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customfields), newsetting, err)
+                    Else
+                        ' Create der customroles - Setting
+                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.customfields), newsetting, err)
+                    End If
+
+
                 Case settingTypes(ptSettingTypes.organisation)
 
+                    Dim listofOrgaWeb As New clsOrganisationWeb
+                    listofOrgaWeb.copyFrom(listofSetting)
+
+                    ' der Unique-Key für customroles besteht aus: name, type
+
+                    newsetting = New clsVCSettingOrganisation
+                    CType(newsetting, clsVCSettingOrganisation).name = name         ' customroles '
+                    CType(newsetting, clsVCSettingOrganisation).timestamp = timestamp
+                    CType(newsetting, clsVCSettingOrganisation).userId = aktUser._id
+                    CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
+                    CType(newsetting, clsVCSettingOrganisation).type = type
+                    CType(newsetting, clsVCSettingOrganisation).value = listofOrgaWeb
+
+                    If anzSetting = 1 Then
+                        newsetting._id = settingID
+                        ' Update der customroles - Setting
+                        result = PUTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                    Else
+                        ' Create der customroles - Setting
+                        result = POSTOneVCsetting(aktVCid, settingTypes(ptSettingTypes.organisation), newsetting, err)
+                    End If
             End Select
 
 
@@ -1902,14 +1973,11 @@ Public Class Request
     Public Function retrieveCustomUserRoles(ByRef err As clsErrorCodeMsg) As clsCustomUserRoles
 
         Dim result As New clsCustomUserRoles
-        Dim interimResult As New clsCustomUserRoles
         Dim setting As Object = Nothing
-        Dim newsetting As Object = Nothing
         Dim settingID As String = ""
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.customroles)
         Dim name As String = type
-        Dim allCustomUserRoles As New clsCustomUserRoles
         Dim webCustomUserRoles As New clsCustomUserRolesWeb
         Try
 
@@ -1937,6 +2005,102 @@ Public Class Request
 
         End Try
         retrieveCustomUserRoles = result
+    End Function
+
+
+    ''' <summary>
+    ''' liest die komplette Organisation (Kosten und Rollen) aus den VCSettings
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="validfrom"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveOrganisationFromDB(ByVal name As String,
+                                         ByVal validfrom As Date,
+                                         ByVal refnext As Boolean,
+                                         ByRef err As clsErrorCodeMsg) As clsOrganisation
+
+        Dim result As New clsOrganisation
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.organisation)
+
+        Dim webOrganisation As New clsOrganisationWeb
+        Try
+
+            setting = New List(Of clsVCSettingOrganisation)
+            setting = GETOneVCsetting(aktVCid, type, name, validfrom, "", err, refnext)
+            anzSetting = CType(setting, List(Of clsVCSettingOrganisation)).Count
+
+            If anzSetting > 0 Then
+
+                settingID = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0)._id
+                webOrganisation = CType(setting, List(Of clsVCSettingOrganisation)).ElementAt(0).value
+                webOrganisation.copyTo(result)
+
+                ' bestimmen der _topLevelNodeIDs
+                result.allRoles.buildTopNodes()
+
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+                result = Nothing
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+        retrieveOrganisationFromDB = result
+    End Function
+
+    ''' <summary>
+    ''' liest alle CustomFields aus VCSetting über ReST-Server
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="ts"></param>
+    ''' <param name="err"></param>
+    ''' <returns></returns>
+    Public Function retrieveCustomFieldsFromDB(ByVal name As String,
+                                         ByVal ts As Date,
+                                         ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
+
+        Dim result As New clsCustomFieldDefinitions
+        Dim setting As Object = Nothing
+        Dim settingID As String = ""
+        Dim anzSetting As Integer = 0
+        Dim type As String = settingTypes(ptSettingTypes.customfields)
+
+        Dim webCustomFields As New clsCustomFieldDefinitionsWeb
+        Try
+
+            setting = New List(Of clsVCSettingCustomfields)
+            setting = GETOneVCsetting(aktVCid, type, name, ts, "", err, False)
+            anzSetting = CType(setting, List(Of clsVCSettingCustomfields)).Count
+
+            If anzSetting > 0 Then
+
+                settingID = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0)._id
+                webCustomFields = CType(setting, List(Of clsVCSettingCustomfields)).ElementAt(0).value
+                webCustomFields.copyTo(result)
+
+            Else
+                If err.errorCode = 403 Then
+                    Call MsgBox(err.errorMsg)
+                End If
+                settingID = ""
+            End If
+
+
+
+        Catch ex As Exception
+
+        End Try
+        retrieveCustomFieldsFromDB = result
     End Function
 
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
@@ -3560,16 +3724,12 @@ Public Class Request
                 End If
 
                 If name <> "" Then
-                    If type <> "" Then
-                        serverUriString = serverUriString & "&name=" & type
-                    Else
-                        serverUriString = serverUriString & "name=" & type
-                    End If
+                    serverUriString = serverUriString & "&name=" & name
                 End If
 
                 If name <> "" Or type <> "" Then
                     If ts > Date.MinValue Then
-                        serverUriString = serverUriString & "&refdate=" & timestamp
+                        serverUriString = serverUriString & "&refDate=" & timestamp
                         If refnext Then
                             serverUriString = serverUriString & "&refNext=" & refnext.ToString
                         End If
@@ -3654,14 +3814,14 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = CType(setting, clsVCSettingCustomroles)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.customfields)
                     setting = CType(setting, clsVCSettingCustomfields)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.organisation)
                     setting = CType(setting, clsVCSettingOrganisation)
 
                 Case Else
-                    Call MsgBox("settingType = " & type)
+                    Call MsgBox("Fehler: settingType = " & type & " íst nicht definiert")
             End Select
 
             Dim serverUriString As String
@@ -3742,10 +3902,10 @@ Public Class Request
                 Case settingTypes(ptSettingTypes.customroles)
                     setting = CType(setting, clsVCSettingCustomroles)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.customfields)
                     setting = CType(setting, clsVCSettingCustomfields)
 
-                Case settingTypes(ptSettingTypes.customroles)
+                Case settingTypes(ptSettingTypes.organisation)
                     setting = CType(setting, clsVCSettingOrganisation)
 
                 Case Else

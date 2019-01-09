@@ -1523,7 +1523,8 @@ Public Class Request
                     End If
 
                 End If
-            Else 'es wird eine MongoDB direkt adressiert
+            Else 'es wird eine MongoDB direkt adressiert; hier gibt es keine Settings
+
                 result = False
             End If
 
@@ -1552,7 +1553,7 @@ Public Class Request
 
                 End If
             Else
-                ' nothing to do for direct MongoAccess
+                ' nothing can be done for direct MongoAccess
             End If
 
         Catch ex As Exception
@@ -1560,7 +1561,75 @@ Public Class Request
         End Try
         retrieveCustomUserRoles = result
     End Function
+    Public Function retrieveOrganisationFromDB(ByVal name As String,
+                                          ByVal timestamp As Date,
+                                          ByVal refnext As Boolean,
+                                          ByRef err As clsErrorCodeMsg) As clsOrganisation
 
+        Dim result As New clsOrganisation
+
+        Try
+            If usedWebServer Then
+
+                result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
+
+                ' Token is no longer valid: erneuter Login
+                If err.errorCode = 401 Then
+                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                    If loginErfolgreich Then
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
+                    End If
+
+                End If
+            Else
+                ' to do for direct MongoAccess
+                result.allRoles = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(timestamp)
+                result.allCosts = CType(DBAcc, MongoDbAccess.Request).retrieveCostsFromDB(timestamp)
+                result.validFrom = StartofCalendar
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveOrganisationFromDB = result
+    End Function
+
+
+    Public Function retrieveCustomfieldsFromDB(ByVal name As String,
+                                          ByVal timestamp As Date,
+                                          ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
+
+        Dim result As New clsCustomFieldDefinitions
+
+        Try
+            If usedWebServer Then
+
+                result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+
+                ' Token is no longer valid: erneuter Login
+                If err.errorCode = 401 Then
+                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                    If loginErfolgreich Then
+                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                    End If
+
+                End If
+            Else
+                ' to do for direct MongoAccess
+                result = Nothing
+                err.errorCode = 403
+                err.errorMsg = "Fehler: CustomFields sind nicht in der DB abgespeichert"
+
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+        retrieveCustomfieldsFromDB = result
+    End Function
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
 
         Dim result As String = ""
