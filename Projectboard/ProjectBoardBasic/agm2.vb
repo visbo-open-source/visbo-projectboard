@@ -16073,6 +16073,10 @@ Public Module agm2
 
                 ' Kosten und Rollen sollen nur bei Initialisierung des system vom CustomizationFile gelsen werden,
                 ' sonst von der DB
+
+                ' jetzt die CurrentOrga definieren
+                Dim currentOrga As New clsOrganisation
+
                 If Not awinSettings.readCostRolesFromDB Then
                     Dim outputCollection As New Collection
 
@@ -16103,37 +16107,85 @@ Public Module agm2
 
                     End If
 
-                    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                    ' jetzt kommt der Validation-Check 
-                    'Dim allTeamsAreOK As Boolean = checkTeamDefinitions()
-                    'Dim existingOverloads As Boolean = checkTeamMemberOverloads()
+                    ' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
+                    RoleDefinitions.buildTopNodes()
+                    With currentOrga
+                        .validFrom = StartofCalendar
+                        .allRoles = RoleDefinitions
+                        .allCosts = CostDefinitions
+                    End With
+
                 Else
 
                     ' 
                     ' initiales Auslesen der Rollen und Kosten aus der Datenbank ! 
-                    ' tk/urk todo 4.1.19 hier muss das Organisations-Setting ausgelesen werden ..
-                    RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                    CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+                    ' das Organisations-Setting auslesen  mit heutigem Datum ...
 
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                    CostDefinitions = currentOrga.allCosts
+                    RoleDefinitions = currentOrga.allRoles
+
+
+                    'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                    'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
                 End If
 
-                ' jetzt sind die RoleDefinitions gesetzt 
-                Dim currentOrga As New clsOrganisation
-                With currentOrga
-                    .validFrom = StartofCalendar
-                    .allRoles = RoleDefinitions
-                    .allCosts = CostDefinitions
-                End With
                 validOrganisations.addOrga(currentOrga)
 
+                ' Auslesen der Orga, die vor der currentOrga gültig war
+                ' also mit validFrom aus currentOrga lesen - 1 Tag
 
-                ' Auslesen der Custom Field Definitions
-                Try
-                    Call readCustomFieldDefinitions(wsName4)
-                Catch ex As Exception
+                Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                Dim beforeOrga As clsOrganisation =
+                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
 
-                End Try
+                If Not IsNothing(beforeOrga) Then
+                    validOrganisations.addOrga(beforeOrga)
+                End If
+
+                ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
+                ' also mit validFrom aus currentOrga lesen +  1 Tag
+
+                Dim validNext As Date = currentOrga.validFrom.AddDays(1)
+                Dim nextOrga As clsOrganisation =
+                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
+
+                If Not IsNothing(nextOrga) Then
+                    validOrganisations.addOrga(nextOrga)
+                End If
+
+                If awinSettings.visboDebug Then
+                    Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
+                End If
+
+                ' Lesen der Custom Field Definitions
+
+                If Not awinSettings.readCostRolesFromDB Then
+
+                    ' Auslesen der Custom Field Definitions aus Customization-File
+                    Try
+                        Call readCustomFieldDefinitions(wsName4)
+                    Catch ex As Exception
+
+                    End Try
+
+                Else
+
+                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                    Try
+                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomfieldsFromDB("", Date.Now, err)
+
+                        If IsNothing(customFieldDefinitions) Then
+                            Call MsgBox(err.errorMsg)
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
 
                 '' auslesen der anderen Informationen 
                 'Call readOtherDefinitions(wsName4)
@@ -16288,7 +16340,8 @@ Public Module agm2
 
                     End If
 
-                    RoleDefinitions.buildTopNodes()
+                    '
+                    ' ur: 07.01.2019: RoleDefinitions.buildTopNodes() wurde ersetzt durch Aufruf in .addOrga 
 
                     If awinSettings.visboDebug Then
                         Call MsgBox("Anzahl gelesene Rolen Definitionen: " & RoleDefinitions.Count.ToString)
@@ -17379,10 +17432,22 @@ Public Module agm2
 
             End With
 
+
+            Dim err As New clsErrorCodeMsg
+            Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
+            Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
+                                                                                           CStr(settingTypes(ptSettingTypes.customfields)),
+                                                                                           customFieldsName,
+                                                                                           Nothing,
+                                                                                           err)
+            If Not result Then
+                Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & err.errorMsg)
+            End If
+
+
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Customization-File: Custom Field Definitions")
         End Try
-
 
 
 

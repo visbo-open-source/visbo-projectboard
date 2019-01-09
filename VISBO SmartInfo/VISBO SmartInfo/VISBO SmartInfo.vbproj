@@ -215,7 +215,6 @@
     <Import Include="System.Xml" />
     <Import Include="System.Xml.Linq" />
     <Import Include="Office = Microsoft.Office.Core" />
-    <Import Include="PowerPoint = Microsoft.Office.Interop.PowerPoint" />
     <Import Include="System.Xml.Serialization" />
   </ItemGroup>
   <!--

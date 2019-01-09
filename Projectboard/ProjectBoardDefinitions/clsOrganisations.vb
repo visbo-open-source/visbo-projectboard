@@ -23,7 +23,7 @@ Public Class clsOrganisations
                 Dim ix As Integer = _validOrganisations.Count - 1
 
                 Do While ix >= 0 And Not found
-                    If searchkey > _validOrganisations.ElementAt(ix).Key Then
+                    If searchkey >= _validOrganisations.ElementAt(ix).Key Then
                         ' das erste Auftreten searchkey > Orga-validFrom heisst : das ist die gesuchte Orga 
                         found = True
                     ElseIf ix = _validOrganisations.Count - 1 And searchkey < _validOrganisations.ElementAt(ix).Key Then

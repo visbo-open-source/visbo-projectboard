@@ -31,6 +31,13 @@ Public Class clsRollen
 
     End Sub
 
+    Public ReadOnly Property liste() As SortedList(Of Integer, clsRollenDefinition)
+        Get
+            liste = _allRollen
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt eine Liste aller Rollen zurück
     ''' der Value hat hier keine Bedeutung 
