@@ -9152,7 +9152,7 @@ Public Module agm2
         Dim firstRow As Integer = 0
         Dim lastRow As Integer = 0
         Dim lastColumn As Integer = 0
-        Dim geleseneProjekte As Integer
+
         Dim ok As Boolean = False
 
         ' die Projekte
@@ -14614,7 +14614,7 @@ Public Module agm2
                                 Dim roleUID As Integer = role.uid
                                 Dim teamID As Integer = role.teamID
 
-
+                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                                 Dim validRole As Boolean = True
 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
@@ -14622,7 +14622,7 @@ Public Module agm2
                                         If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
                                             Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(myCustomUserRole.specifics)
 
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleUID, restrictedTopRole.UID) Then
+                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
                                                 validRole = True
                                             Else
                                                 validRole = False
@@ -14635,8 +14635,6 @@ Public Module agm2
                                 If validRole Then
                                     Dim xValues() As Double = role.Xwerte
 
-                                    ' neu 12.12.18 
-                                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(role.uid, role.teamID)
                                     ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
                                     Dim hasActualData As Boolean = hproj.getPhaseRCActualValues(phaseNameID, roleNameID, True, False).Sum > 0
 
