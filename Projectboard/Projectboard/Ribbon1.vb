@@ -4815,7 +4815,7 @@ Imports System.Web
                         End If
 
                         projectConstellations.Add(sessionConstellation)
-                        Call loadSessionConstellation(scenarioName, False, False, True)
+                        Call loadSessionConstellation(scenarioName, False, True)
                     Else
                         Call MsgBox("keine Projekte importiert ...")
                     End If
@@ -5002,7 +5002,7 @@ Imports System.Web
                                 projectConstellations.Add(sessionConstellationS)
                                 ' jetzt auf Projekt-Tafel anzeigen 
 
-                                Call loadSessionConstellation(scenarioNameS, False, False, True)
+                                Call loadSessionConstellation(scenarioNameS, False, True)
 
                             Else
                                 Call MsgBox("keine Programmlinien importiert ...")
@@ -5016,7 +5016,7 @@ Imports System.Web
 
                                 projectConstellations.Add(sessionConstellationP)
                                 ' jetzt auf Projekt-Tafel anzeigen 
-                                Call loadSessionConstellation(scenarioNameP, False, False, True)
+                                Call loadSessionConstellation(scenarioNameP, False, True)
 
                             Else
                                 Call MsgBox("keine Projekte importiert ...")
@@ -5704,7 +5704,7 @@ Imports System.Web
 
         If anzFiles > 0 Then
 
-            getOrgaFile.menueAswhl = PTImpExp.actualData
+            getOrgaFile.menueAswhl = PTImpExp.offlineData
             Dim returnValue As DialogResult = getOrgaFile.ShowDialog
 
             If returnValue = DialogResult.OK Then
@@ -5733,14 +5733,42 @@ Imports System.Web
                     Dim offlineName As String = appInstance.ActiveWorkbook.Name
 
                     Dim outputCollection As New Collection
-                    Dim wbName As String = My.Computer.FileSystem.GetName(dateiname)
 
                     ' jetzt wird die Aktion durchgeführt ...
-                    Call ImportOfflineData(wbName, outputCollection)
+                    Call ImportOfflineData(offlineName, outputCollection)
 
                     ' Schliessen des CustomUser Role-Files
-                    appInstance.Workbooks(wbName).Close(SaveChanges:=True)
+                    appInstance.Workbooks(offlineName).Close(SaveChanges:=True)
 
+                    ' -----------------------------------------------------------------------------
+                    ' Start Verarbeitung Import-Projekte verarbeitet 
+                    'sessionConstellationP enthält alle Projekte aus dem Import 
+                    Dim importScenarioName As String = "offline Data"
+                    Dim importConstellation As clsConstellation = verarbeiteImportProjekte(importScenarioName, noComparison:=False, considerSummaryProjects:=False)
+
+
+                    If importConstellation.count > 0 Then
+
+                        If projectConstellations.Contains(importScenarioName) Then
+                            projectConstellations.Remove(importScenarioName)
+                        End If
+
+                        projectConstellations.Add(importConstellation)
+                        ' jetzt auf Projekt-Tafel anzeigen 
+                        Call loadSessionConstellation(importScenarioName, False, True)
+
+                    Else
+                        logmessage = "keine Projekte importiert ..."
+                        outputCollection.Add(logmessage)
+                    End If
+
+                    If ImportProjekte.Count > 0 Then
+                        ImportProjekte.Clear(False)
+                    End If
+
+
+                    ' Ende Verarbeitung Import-Projekte
+                    ' -----------------------------------------------------------------------------
                     If outputCollection.Count > 0 Then
                         Call showOutPut(outputCollection, "Import Offline Data " & offlineName, "")
                         outputCollection.Clear()
@@ -5858,7 +5886,7 @@ Imports System.Web
 
                     projectConstellations.Add(sessionConstellationP)
                     ' jetzt auf Projekt-Tafel anzeigen 
-                    Call loadSessionConstellation(scenarioNameP, False, False, True)
+                    Call loadSessionConstellation(scenarioNameP, False, True)
 
                 Else
                     Call MsgBox("keine Projekte importiert ...")

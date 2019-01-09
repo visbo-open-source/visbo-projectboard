@@ -1015,7 +1015,7 @@ Public Class clsRollen
 
             If _allRollen.ContainsKey(roleUID) Then
                 ' ist ein Team angegeben ? 
-                If teamID > 0 Then
+                If teamID <> -1 Then
                     If _allRollen.ContainsKey(teamID) Then
                         If Not strongTest Then
                             tmpResult = True
@@ -1027,6 +1027,8 @@ Public Class clsRollen
                         End If
 
                     End If
+                Else
+                    tmpResult = True
                 End If
             Else
                 tmpResult = False

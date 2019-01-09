@@ -6021,7 +6021,7 @@ Public Module Module1
     ''' öffnet das LogFile
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub logfileOpen()
+    Public Sub logfileOpen(ByVal Optional clear As Boolean = False)
 
         appInstance.ScreenUpdating = False
 
@@ -6048,6 +6048,10 @@ Public Module Module1
             xlsLogfile.SaveAs(awinPath & logFileName)
             myLogfile = xlsLogfile.Name
 
+        End If
+
+        If clear Then
+            CType(xlsLogfile.ActiveSheet, Excel.Worksheet).UsedRange.Clear()
         End If
 
         ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
@@ -6789,7 +6793,7 @@ Public Module Module1
         Dim tmpResult As String = ""
         Try
             If Not IsNothing(currentCell.Value) Then
-                Dim tmpRCname As String = CStr(currentCell.Value)
+                Dim tmpRCname As String = CStr(currentCell.Value).Trim
 
                 If RoleDefinitions.containsName(tmpRCname) Then
                     Dim tmpComment As Excel.Comment = currentCell.Comment
@@ -6940,12 +6944,12 @@ Public Module Module1
         Dim tmpResult As String = ""
 
         Try
-            Dim phaseName As String = CStr(currentCell.Value)
+            Dim phaseName As String = CStr(currentCell.Value).Trim
             Dim phaseNameID As String = calcHryElemKey(phaseName, False)
             Dim curComment As Excel.Comment = currentCell.Comment
 
             If Not IsNothing(curComment) Then
-                phaseNameID = curComment.Text
+                phaseNameID = curComment.Text.Trim
             End If
 
             tmpResult = phaseNameID

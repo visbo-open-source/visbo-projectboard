@@ -16463,10 +16463,9 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="constellationName">Name der Konstellation</param>
     ''' <param name="addProjects">gibt an, ob Projekte hinzugefügt werden sollen oder ob komplett neu gezeichnet werden soll</param>
-    ''' <param name="storeLast">gibt an, ob die aktuelle Konstellation gespeichert werden soll</param>
     ''' <param name="updateProjektTafel">gibt an, ob die Projekt-Tafel neu gezeichnet werden soll oder ob die Konstellation nur im Showprojekte geladen werden soll</param> 
     ''' <remarks></remarks>
-    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean, ByVal storeLast As Boolean,
+    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean,
                                         ByVal updateProjektTafel As Boolean)
 
         Dim activeConstellation As New clsConstellation
@@ -16834,7 +16833,7 @@ Public Module Projekte
 
         If anzOptimierungen > 0 Then
             ' wieder den alten Zustand herstellen 
-            Call loadSessionConstellation(autoSzenarioNamen(0), False, False, True)
+            Call loadSessionConstellation(autoSzenarioNamen(0), False, True)
         Else
             ' es hat sich eh nichts geändert ... 
             'Call loadSessionConstellation(autoSzenarioNamen(0), False, False)

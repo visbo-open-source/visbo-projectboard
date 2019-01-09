@@ -1626,17 +1626,19 @@ Public Class clsPhase
     ''' erstellt eine neue Rolle, weist der Rolle monatliche Ressourcenbedarfe zu, deren Summe dem Wert der Variable summe entspricht  
     ''' der RoleName muss in Roledefinitions existieren , sonst gibt es eine Fehlermeldung 
     ''' </summary>
-    ''' <param name="roleName"></param>
+    ''' <param name="roleNameID"></param>
     ''' <param name="summe"></param>
     ''' <param name="addToExisting"></param>
-    Public Sub AddRole(ByVal roleName As String, ByVal summe As Double, ByVal addToExisting As Boolean,
-                       Optional ByVal teamID As Integer = -1)
+    Public Sub AddRole(ByVal roleNameID As String, ByVal summe As Double, ByVal addToExisting As Boolean)
 
         Dim rSum As Double()
         ReDim rSum(0)
         rSum(0) = summe
 
-        Dim tmpRole As clsRolle = Me.getRole(roleName, teamID)
+        Dim teamID As Integer = -1
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
+        Dim tmpRole As clsRolle = Me.getRoleByRoleNameID(roleNameID)
         Dim xWerte As Double() = Me.berechneBedarfeNew(Me.getStartDate, Me.getEndDate, rSum, 1.0)
 
         If IsNothing(tmpRole) Then
@@ -1645,7 +1647,7 @@ Public Class clsPhase
             tmpRole = New clsRolle(dimension)
 
             With tmpRole
-                .uid = RoleDefinitions.getRoledef(roleName).UID
+                .uid = roleID
                 .teamID = teamID
                 .Xwerte = xWerte
             End With
@@ -1706,7 +1708,7 @@ Public Class clsPhase
         Dim roleID As Integer = 0
 
         Dim tmpRCvalue As Double = 0.0
-        Dim tmpRCname As String
+        Dim tmpRCnameID As String
 
         If IsNothing(roleNames) Then
             anzRoles = 0
@@ -1722,25 +1724,25 @@ Public Class clsPhase
 
         For r = 0 To anzRoles - 1
             tmpRCvalue = prozentSatz * roleValues(r)
-            tmpRCname = roleNames(r)
+            tmpRCnameID = RoleDefinitions.bestimmeRoleNameID(roleNames(r), "")
             If roleNamesAreIds Then
-                ' dieser Aufruf dient dazu teamID entsprechend zu setzen, falls angegeben
-                roleID = RoleDefinitions.parseRoleNameID(tmpRCname, teamID)
+                ' dann ist es schon in der Form RoleId;TeamID bzw RoleID
+                tmpRCnameID = roleNames(r)
             Else
-                teamID = -1
+                tmpRCnameID = RoleDefinitions.bestimmeRoleNameID(roleNames(r), "")
             End If
 
             If tmpRCvalue > 0 Then
-                Me.addCostRole(tmpRCname, tmpRCvalue, True, False, teamID:=teamID)
+                Me.addCostRole(tmpRCnameID, tmpRCvalue, True, False)
             End If
 
         Next
 
         For c = 0 To anzCosts - 1
             tmpRCvalue = prozentSatz * costValues(c)
-            tmpRCname = costNames(c)
+            tmpRCnameID = costNames(c)
             If tmpRCvalue > 0 Then
-                Me.addCostRole(tmpRCname, tmpRCvalue, False, False)
+                Me.addCostRole(tmpRCnameID, tmpRCvalue, False, False)
             End If
         Next
 
@@ -1756,13 +1758,12 @@ Public Class clsPhase
     ''' <param name="addWhenExisting"></param>
     Public Sub addCostRole(ByVal rcNameID As String, ByVal summe As Double,
                               ByVal isrole As Boolean,
-                              ByVal addWhenExisting As Boolean,
-                              Optional ByVal teamID As Integer = -1)
+                              ByVal addWhenExisting As Boolean)
 
 
         If isrole Then
             ' eine Rolle wird hinzugefügt 
-            Call Me.AddRole(rcNameID, summe, addWhenExisting, teamID:=teamID)
+            Call Me.AddRole(rcNameID, summe, addWhenExisting)
 
         Else
             ' eine Kostenart wird hinzugefügt
