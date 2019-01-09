@@ -2975,7 +2975,7 @@ Public Class clsProjekt
     ''' merged zwei Projekte; dabei werden die in RoleNameID Collction und CostCollection angegebenen Rollen / Kosten im aktuellen Projekt gelöscht und 
     ''' und durch die Rollen / Kosten im anderen ersetzt; aber nur die Rollen + Kinder, die in den Collections angegeben sind 
     ''' </summary>
-    ''' <param name="summaryRoleIDCollection"></param>
+    ''' <param name="summaryRoleIDCollection">specifics aus myCustomUserRole</param>
     ''' <param name="costCollection"></param>
     ''' <param name="mProj"></param>
     ''' <returns></returns>

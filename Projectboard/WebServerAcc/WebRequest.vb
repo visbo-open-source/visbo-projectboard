@@ -726,18 +726,33 @@ Public Class Request
                 Else
                     Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
+
+
+                ' hier wird der Fall behandelt : Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
+
                 '--------------------------------------------------------
-                '     standard-Variante erzeugen aus angegebener Variante
+                '     Basis-Variante erzeugen aus gegebener Variante
                 '--------------------------------------------------------
                 projekt.variantName = standardVariante ' STANDARD-Variante
                 Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
 
-                ' jetzt müste der Fall behandelt werden: Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
-                ' warum wurde diese Änderung gemacht: bis heute 28.12.18 wurde nur die Variante-Version angelegt, aber keine Basis Variante ; das soll jetzt hier gemacht werden 
-                ' Anfang zusätzlicher Code von Ute ..
-                ' ...
-                ' Ende zusätzlicher Code von Ute 
-            End If
+            Else
+                Try
+                    ' KundenNummer in vorhandenem VP ergänzen
+
+                    If (aktvp.kundennummer = "") And (projekt.kundenNummer <> "") Then
+
+                        aktvp.kundennummer = projekt.kundenNummer
+                        Dim vpList As List(Of clsVP) = PUTOneVP(vpid, aktvp, err)
+                    Else
+                        ' nothing to do
+                    End If
+
+                Catch ex As Exception
+                    Call MsgBox("Fehler beim Update von VP")
+                End Try
+
+            End If      ' Ende von "If Not storedVP Then"
 
             ' überprüfen, ob die gewünschte Variante im VisboProject enthalten ist
             Dim storedVPVariant As Boolean = False
@@ -770,47 +785,42 @@ Public Class Request
                 projekt.variantName = vname
                 result = POSTOneVPv(vpid, projekt, userName, err)
 
+                ' hier wird behandelt, wenn  von Seiten der RessourceManager konkurrierendes Schreiben vorkommt.
+                If result = False Then
+                    Select Case err.errorCode
 
-                ''Dim typeRequest As String = "/vpv"
-                ''Dim serverUriString As String = serverUriName & typeRequest
-                ''Dim serverUri As New Uri(serverUriString)
+                        Case 409
 
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                                Dim errNew As New clsErrorCodeMsg
+                                Dim newResult As Boolean = result
+                                Dim loopIndex As Integer = 1
+                                While (newResult = False) And (loopIndex <= 10)
 
-                ''If checkChgPermission(pname, vname, userName, err) Then
+                                    Dim summaryRoleIDs As New Collection
+                                    summaryRoleIDs.Add(myCustomUserRole.specifics)
 
-                ''    Dim projektWeb As New clsProjektWebLong
-                ''    projektWeb.copyfrom(projekt)
-                ''    projektWeb.origId = projektWeb.name & "#" & projektWeb.variantName & "#" & projektWeb.timestamp.ToString()
-                ''    projektWeb.vpid = vpid
+                                    Dim newproj As clsProjekt = retrieveOneProjectfromDB(projekt.name, projekt.variantName, Date.Now, errNew)
+                                    If Not IsNothing(newproj) Then
+                                        If Not newproj.isIdenticalTo(projekt) Then
+                                            ' Merge der geänderten Ressourcen => neues Projekt "mergeProj"
+                                            Dim mergeProj As clsProjekt = projekt.deleteAndMerge(summaryRoleIDs, Nothing, newproj)
+                                            newResult = POSTOneVPv(vpid, mergeProj, userName, err)
+                                        End If
+                                    Else
+                                        err = errNew
+                                    End If
+                                    loopIndex = loopIndex + 1
 
-                ''    data = serverInputDataJson(projektWeb, "")
+                                End While
 
-                ''    Dim storeAntwort As clsWebLongVPv
-                ''    Dim Antwort As String
-                ''    Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
-                ''        Antwort = ReadResponseContent(httpresp)
-                ''        errcode = CType(httpresp.StatusCode, Integer)
-                ''        errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                ''        storeAntwort = JsonConvert.DeserializeObject(Of clsWebLongVPv)(Antwort)
-                ''    End Using
+                                result = newResult
+                            End If
 
-                ''    If errcode = 200 Then
+                    End Select
 
-                ''        result = (storeAntwort.state = "success")
-                ''        result = True
+                End If
 
-                ''        ' vpv zu Cache hinzufügen
-                ''        VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
-
-                ''    Else
-
-                ''        ' Fehlerbehandlung je nach errcode
-                ''        Dim statError As Boolean = errorHandling_withBreak("POSTOneVPv", errcode, errmsg & " : " & storeAntwort.message)
-
-                ''    End If
-                ''    err.errorCode = errcode
-                ''    err.errorMsg = "POSTOneVPv" & " : " & errmsg & " : " & storeAntwort.message
-                ''End If
             End If
 
         Catch ex As Exception
@@ -835,17 +845,17 @@ Public Class Request
         Try
             Dim vpid As String = ""
 
-            ' VPID zu Projekt projectName holen vom WebServer/DB
-            vpid = GETvpid(projectName, err)._id
-
             ' nun ist sicher die VPs aufgebaut
-            Dim vp As clsVP = VRScache.VPsN(projectName)
+            Dim vp As clsVP = GETvpid(projectName, err)
 
-            ' alle Variantenamen in der Collection sammeln
-            For Each vpVar As clsVPvariant In vp.Variant
-                ergebnisCollection.Add(vpVar.variantName, vpVar.variantName)
-            Next
+            If vp._id <> "" Then
+                ' alle Variantenamen in der Collection sammeln
+                For Each vpVar As clsVPvariant In vp.Variant
+                    ergebnisCollection.Add(vpVar.variantName, vpVar.variantName)
+                Next
+            Else
 
+            End If
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)

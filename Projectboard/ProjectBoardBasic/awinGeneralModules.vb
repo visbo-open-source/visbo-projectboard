@@ -3268,18 +3268,56 @@ Public Module awinGeneralModules
                         writeProtections.upsert(wpItem)
 
                     Else
-                        ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
-                        If awinSettings.englishLanguage Then
-                            outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
+                        If awinSettings.visboServer Then
+                            Select Case err.errorCode
+                                Case 403  'No Permission to Create Visbo Project Version
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = "!!  No permission to store : " & hproj.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputLine)
+                                    Else
+                                        outputLine = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputLine)
+                                    End If
+
+                                Case 409 ' VisboProjectVersion was already updated in between
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = "!! Projekt was already updated in between : " & hproj.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputLine)
+                                    Else
+                                        outputLine = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputLine)
+                                    End If
+
+                                    '' erneut das projekt holen und abändern
+                                    '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                    'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+
+                                Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = err.errorMsg & ": " & hproj.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputLine)
+                                    Else
+                                        outputLine = "geschüztes Projekt : " & hproj.name & ", " & kvp.Value.variantName
+                                        outPutCollection.Add(outputLine)
+                                    End If
+
+                            End Select
                         Else
-                            outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+
+                            ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                            If awinSettings.englishLanguage Then
+                                outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
+                            Else
+                                outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+                            End If
+                            outPutCollection.Add(outputLine)
+
+                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                            writeProtections.upsert(wpItem)
+
                         End If
-                        outPutCollection.Add(outputLine)
-
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                        writeProtections.upsert(wpItem)
-
                     End If
+
                 Else
                     ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
                     Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now, err)
@@ -3302,12 +3340,51 @@ Public Module awinGeneralModules
                             Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                             writeProtections.upsert(wpItem)
                         Else
-                            If awinSettings.englishLanguage Then
-                                outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
+
+                            If awinSettings.visboServer Then
+                                Select Case err.errorCode
+                                    Case 403  'No Permission to Create Visbo Project Version
+                                        If awinSettings.englishLanguage Then
+                                            outputLine = "!!  No permission to store : " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputLine)
+                                        Else
+                                            outputLine = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputLine)
+                                        End If
+
+                                    Case 409 ' VisboProjectVersion was already updated in between
+                                        If awinSettings.englishLanguage Then
+                                            outputLine = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputLine)
+                                        Else
+                                            outputLine = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputLine)
+                                        End If
+                                                '' erneut das projekt holen und abändern
+                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+
+                                    Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                        If awinSettings.englishLanguage Then
+                                            outputLine = err.errorMsg & ": " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputLine)
+                                        Else
+                                            outputLine = "geschüztes Projekt : " & hproj.name & ", " & hproj.variantName
+                                            outPutCollection.Add(outputLine)
+                                        End If
+
+                                End Select
                             Else
-                                outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+
+                                ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "protected project: " & hproj.name & ", " & hproj.variantName
+                                Else
+                                    outputLine = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+                                End If
+                                outPutCollection.Add(outputLine)
+
                             End If
-                            outPutCollection.Add(outputLine)
 
                             Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                             writeProtections.upsert(wpItem)
@@ -3365,12 +3442,50 @@ Public Module awinGeneralModules
 
                 Else
                     ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
-                    If awinSettings.englishLanguage Then
-                        outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                    If awinSettings.visboServer Then
+                        Select Case err.errorCode
+                            Case 403  'No Permission to Create Visbo Project Version
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "!!  No permission to store : " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                Else
+                                    outputLine = "!!  Keine Erlaubnis zu speichern : " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                End If
+
+                            Case 409 ' VisboProjectVersion was already updated in between
+                                If awinSettings.englishLanguage Then
+                                    outputLine = "!! Projekt was already updated in between : " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                Else
+                                    outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                End If
+                                '' erneut das projekt holen und abändern
+                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+
+                            Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                If awinSettings.englishLanguage Then
+                                    outputLine = err.errorMsg & ": " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                Else
+                                    outputLine = "geschüztes Projekt : " & sproj.name & ", " & sproj.variantName
+                                    outPutCollection.Add(outputLine)
+                                End If
+
+                        End Select
                     Else
-                        outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+
+                        ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                        If awinSettings.englishLanguage Then
+                            outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                        Else
+                            outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+                        End If
+                        outPutCollection.Add(outputLine)
+
                     End If
-                    outPutCollection.Add(outputLine)
 
                     Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
                     writeProtections.upsert(wpItem)
@@ -3398,12 +3513,50 @@ Public Module awinGeneralModules
                         Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
                         writeProtections.upsert(wpItem)
                     Else
-                        If awinSettings.englishLanguage Then
-                            outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                        If awinSettings.visboServer Then
+                            Select Case err.errorCode
+                                Case 403  'No Permission to Create Visbo Project Version
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = "!!  No permission to store : " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    Else
+                                        outputLine = "!!  Keine Erlaubnis zu speichern : " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    End If
+
+                                Case 409 ' VisboProjectVersion was already updated in between
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = "!! Projekt was already updated in between : " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    Else
+                                        outputLine = "!!  Projekt wurde inzwischen verändert : " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    End If
+                                                '' erneut das projekt holen und abändern
+                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+
+                                Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                    If awinSettings.englishLanguage Then
+                                        outputLine = err.errorMsg & ": " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    Else
+                                        outputLine = "geschüztes Projekt : " & sproj.name & ", " & sproj.variantName
+                                        outPutCollection.Add(outputLine)
+                                    End If
+
+                            End Select
                         Else
-                            outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+
+                            ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                            If awinSettings.englishLanguage Then
+                                outputLine = "protected project: " & sproj.name & ", " & sproj.variantName
+                            Else
+                                outputLine = "geschütztes Projekt: " & sproj.name & ", " & sproj.variantName
+                            End If
+                            outPutCollection.Add(outputLine)
+
                         End If
-                        outPutCollection.Add(outputLine)
 
                         Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
                         writeProtections.upsert(wpItem)
@@ -6845,13 +6998,50 @@ Public Module awinGeneralModules
                         tmpResult = True
                         'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                     Else
-                        If awinSettings.englishLanguage Then
-                            outputline = "project protected: " & hproj.name
-                        Else
-                            outputline = "geschütztes Projekt: " & hproj.name
-                        End If
+                        If awinSettings.visboServer Then
+                            Select Case err.errorCode
+                                Case 403  'No Permission to Create Visbo Project Version
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "!!  No permission to store : " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    Else
+                                        outputline = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    End If
 
-                        outputCollection.Add(outputline)
+                                Case 409 ' VisboProjectVersion was already updated in between
+                                    If awinSettings.englishLanguage Then
+                                        outputline = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    Else
+                                        outputline = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    End If
+                                                '' erneut das projekt holen und abändern
+                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+
+                                Case 423 ' Visbo Project (Portfolio) is locked by another user
+                                    If awinSettings.englishLanguage Then
+                                        outputline = err.errorMsg & ": " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    Else
+                                        outputline = "geschüztes Projekt : " & hproj.name & ", " & hproj.variantName
+                                        outputCollection.Add(outputline)
+                                    End If
+
+                            End Select
+                        Else
+
+                            ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                            If awinSettings.englishLanguage Then
+                                outputline = "protected project: " & hproj.name & ", " & hproj.variantName
+                            Else
+                                outputline = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+                            End If
+                            outputCollection.Add(outputline)
+
+                        End If
 
                         Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                         writeProtections.upsert(wpItem, False)
@@ -6982,7 +7172,18 @@ Public Module awinGeneralModules
                                                 End If
 
                                             Case 409 ' VisboProjectVersion was already updated in between
-                                                ' erneut das projekt holen und abändern
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = "!! Projekt was already updated in between : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outPutCollection.Add(outputline)
+                                                Else
+                                                    outputline = "!!  Projekt wurde inzwischen verändert : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outPutCollection.Add(outputline)
+                                                End If
+
+
+                                                '' erneut das projekt holen und abändern
+                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
 
                                             Case 423 ' Visbo Project (Portfolio) is locked by another user
                                                 If awinSettings.englishLanguage Then
@@ -7374,42 +7575,47 @@ Public Module awinGeneralModules
                                 Else
 
                                     If awinSettings.visboServer Then
-                                        '???? Fehlermeldung für ErrCode 403 muss heißen: user ... hat nicht das Recht, VisboProjektVersion zu schreiben
-
                                         Select Case err.errorCode
                                             Case 403  'No Permission to Create Visbo Project Version
                                                 If awinSettings.englishLanguage Then
-                                                    outputline = "!!  No permission to store : " & hproj.name
+                                                    outputline = "!!  No permission to store : " & hproj.name & ", " & hproj.variantName
                                                     outputCollection.Add(outputline)
                                                 Else
-                                                    outputline = "!!  Keine Erlaubnis zu speichern : " & hproj.name
+                                                    outputline = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & hproj.variantName
                                                     outputCollection.Add(outputline)
                                                 End If
 
                                             Case 409 ' VisboProjectVersion was already updated in between
-                                                ' erneut das projekt holen und abändern
+                                                If awinSettings.englishLanguage Then
+                                                    outputline = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
+                                                    outputCollection.Add(outputline)
+                                                Else
+                                                    outputline = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
+                                                    outputCollection.Add(outputline)
+                                                End If
+                                                '' erneut das projekt holen und abändern
+                                                '' ur: 09.01.2019: wird in storeProjectToDB direkt gemacht
+                                                'Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
 
                                             Case 423 ' Visbo Project (Portfolio) is locked by another user
                                                 If awinSettings.englishLanguage Then
-                                                    outputline = err.errorMsg & " : " & hproj.name
+                                                    outputline = err.errorMsg & ": " & hproj.name & ", " & hproj.variantName
                                                     outputCollection.Add(outputline)
                                                 Else
-                                                    outputline = "geschüztes Projekt : " & hproj.name
+                                                    outputline = "geschüztes Projekt : " & hproj.name & ", " & hproj.variantName
                                                     outputCollection.Add(outputline)
                                                 End If
 
                                         End Select
-
-
                                     Else
-                                        If awinSettings.englishLanguage Then
-                                            outputline = "project protected : " & hproj.name
-                                            outputCollection.Add(outputline)
-                                        Else
-                                            outputline = "geschütztes Projekt : " & hproj.name
-                                            outputCollection.Add(outputline)
-                                        End If
 
+                                        ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
+                                        If awinSettings.englishLanguage Then
+                                            outputline = "protected project: " & hproj.name & ", " & hproj.variantName
+                                        Else
+                                            outputline = "geschütztes Projekt: " & hproj.name & ", " & hproj.variantName
+                                        End If
+                                        outputCollection.Add(outputline)
 
                                     End If
 
