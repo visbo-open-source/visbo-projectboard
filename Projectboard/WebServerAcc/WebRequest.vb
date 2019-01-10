@@ -804,7 +804,7 @@ Public Class Request
                                     If Not IsNothing(newproj) Then
                                         If Not newproj.isIdenticalTo(projekt) Then
                                             ' Merge der geänderten Ressourcen => neues Projekt "mergeProj"
-                                            Dim mergeProj As clsProjekt = projekt.deleteAndMerge(summaryRoleIDs, Nothing, newproj)
+                                            Dim mergeProj As clsProjekt = newproj.deleteAndMerge(summaryRoleIDs, Nothing, projekt)
                                             newResult = POSTOneVPv(vpid, mergeProj, userName, err)
                                         End If
                                     Else
