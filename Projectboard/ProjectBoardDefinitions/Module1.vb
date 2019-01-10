@@ -6211,6 +6211,10 @@ Public Module Module1
                 Dim outputmsg As String = ""
                 Dim roleName As String = myCustomUserRole.customUserRole.ToString
 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    roleName = roleName & " " & myCustomUserRole.specifics
+                End If
+
                 If currentConstellationName = "" Then
                     outputmsg = " : " & ShowProjekte.Count & " "
                 Else

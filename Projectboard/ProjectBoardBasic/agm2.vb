@@ -14186,21 +14186,34 @@ Public Module agm2
         Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim currentRow As Excel.Range
         Dim currentRowPlus1 As Excel.Range
-
+        Dim insertRow As Boolean = True
+        Dim newZeile As Integer
         appInstance.EnableEvents = False
 
         Try
 
             currentRow = CType(ws.Rows(zeile), Excel.Range)
+            Dim columnRC As Integer = visboZustaende.meColRC
+
+            Dim currentValue As String = getStringFromExcelCell(ws.Cells(zeile, columnRC))
+            insertRow = (currentValue <> "" Or rcNameID = "")
+
 
             Dim columnEndData As Integer = visboZustaende.meColED
             Dim columnStartData As Integer = visboZustaende.meColSD
 
-            Dim columnRC As Integer = visboZustaende.meColRC
+
 
             Dim hoehe As Double = CDbl(currentRow.Height)
-            currentRowPlus1 = CType(ws.Cells(currentRow.Row + 1, currentRow.Column), Excel.Range)
-            currentRowPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+
+            If insertRow Then
+                currentRowPlus1 = CType(ws.Cells(currentRow.Row + 1, currentRow.Column), Excel.Range)
+                currentRowPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+                newZeile = zeile + 1
+            Else
+                newZeile = zeile
+            End If
+
 
             ' Blattschutz aufheben ... 
             If Not awinSettings.meEnableSorting Then
@@ -14213,12 +14226,15 @@ Public Module agm2
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
 
-                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
 
-                copySource.Copy(Destination:=copyDestination)
+                If insertRow Then
+                    Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
+                    Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
 
-                CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
+                    copySource.Copy(Destination:=copyDestination)
+
+                    CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
+                End If
 
                 ' hier wird jetzt der Rollen- bzw Kostenart-NAme eingetragen 
                 Dim rcName As String = rcNameID
@@ -14233,10 +14249,10 @@ Public Module agm2
                     End If
                 End If
 
-                Call writeMECellWithRoleNameID(CType(.Cells(zeile + 1, 5), Excel.Range), islocked, rcName, rcNameID, isRole)
+                Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
 
                 For c As Integer = columnStartData - 1 To columnEndData
-                    With CType(.Cells(zeile + 1, c), Excel.Range)
+                    With CType(.Cells(newZeile, c), Excel.Range)
                         .Value = Nothing
                         If c = columnStartData - 2 Or c = columnStartData - 1 Then
                             .ClearComments()
@@ -14248,9 +14264,9 @@ Public Module agm2
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range).Select()
+            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(newZeile, columnRC), Excel.Range).Select()
 
-            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
+            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(newZeile, columnRC), Excel.Range)
 
                 ' wenn eine neue Zeile eingefügt ist  müssen die jetzt wieder auf frei gesetzt werden 
                 .Locked = False
@@ -14272,7 +14288,7 @@ Public Module agm2
                 'If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
                 '    Call MsgBox("Fehler 099 in PTzeileEinfügen")
                 'End If
-                .oldRow = zeile + 1
+                .oldRow = newZeile
                 .oldValue = rcNameID
                 .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
             End With
