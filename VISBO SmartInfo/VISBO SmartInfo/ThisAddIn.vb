@@ -38,6 +38,9 @@ Public Class ThisAddIn
             awinSettings.userNamePWD = My.Settings.userNamePWD
         End If
 
+        ' Refresh von Projekte im Cache  in Minuten
+        cacheUpdateDelay = 60
+
         ' für Demo Zwecke only !! 
         ' vor Auslieferung auf false setzen ! 
         awinSettings.autoSetActualDataDate = True

@@ -1597,7 +1597,7 @@ Public Class Request
     End Function
 
 
-    Public Function retrieveCustomfieldsFromDB(ByVal name As String,
+    Public Function retrieveCustomFieldsFromDB(ByVal name As String,
                                           ByVal timestamp As Date,
                                           ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
 
@@ -1620,7 +1620,8 @@ Public Class Request
                 ' to do for direct MongoAccess
                 result = Nothing
                 err.errorCode = 403
-                err.errorMsg = "Fehler: CustomFields sind nicht in der DB abgespeichert"
+                err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
+                                vbLf & "und können daher nicht von der DB gelesen werden"
 
             End If
 
@@ -1628,7 +1629,7 @@ Public Class Request
 
         End Try
 
-        retrieveCustomfieldsFromDB = result
+        retrieveCustomFieldsFromDB = result
     End Function
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
 
