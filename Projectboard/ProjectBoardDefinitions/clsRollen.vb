@@ -989,7 +989,7 @@ Public Class clsRollen
             Dim found As Boolean = False
             If IsNothing(name) Then
                 ' found bleibt auf false
-            Else
+            ElseIf name <> "" Then
                 found = _allNames.ContainsKey(name)
 
                 ' tk geändert 29.5.18

@@ -2672,6 +2672,13 @@
                     If RoleDefinitions.containsName(CStr(roleID)) Then
                         roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
                         roleName = CStr(roleID)
+                    Else
+                        ' es kann auch die form roleID;TeamID haben
+                        Dim tmpTeamID As Integer = -1
+                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), tmpTeamID)
+                        If roleUID > 0 Then
+                            roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+                        End If
                     End If
                 End If
 
@@ -3490,6 +3497,14 @@
                     If RoleDefinitions.containsName(CStr(roleID)) Then
                         roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
                         roleName = CStr(roleID)
+                    Else
+                        ' es kann auch die form roleID;TeamID haben
+                        Dim tmpTeamID As Integer = -1
+                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), tmpTeamID)
+                        If roleUID > 0 Then
+                            roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+                        End If
+
                     End If
                 End If
 
