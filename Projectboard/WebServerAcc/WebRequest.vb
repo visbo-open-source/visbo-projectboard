@@ -1983,22 +1983,28 @@ Public Class Request
 
             setting = New List(Of clsVCSettingCustomroles)
             setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
-            anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
+            If Not IsNothing(setting) Then
 
-            If anzSetting > 0 Then
+                anzSetting = CType(setting, List(Of clsVCSettingCustomroles)).Count
 
-                settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
-                webCustomUserRoles = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0).value
-                webCustomUserRoles.copyTo(result)
+                If anzSetting > 0 Then
 
+                    settingID = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0)._id
+                    webCustomUserRoles = CType(setting, List(Of clsVCSettingCustomroles)).ElementAt(0).value
+                    webCustomUserRoles.copyTo(result)
+
+
+                Else
+                    result = Nothing
+                    'If err.errorCode = 403 Then
+                    '    Call MsgBox(err.errorMsg)
+                    'End If
+                    settingID = ""
+                End If
 
             Else
-                If err.errorCode = 403 Then
-                    Call MsgBox(err.errorMsg)
-                End If
-                settingID = ""
+                result = Nothing
             End If
-
 
 
         Catch ex As Exception

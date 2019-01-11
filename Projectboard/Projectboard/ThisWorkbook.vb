@@ -131,6 +131,9 @@ Public Class ThisWorkbook
                 awinSettings.userNamePWD = ""
             End If
 
+            ' Refresh von Projekte im Cache  in Minuten
+            cacheUpdateDelay = 10
+
             'appInstance.EnableEvents = False
             Call awinsetTypen("ProjectBoard")
             'appInstance.EnableEvents = True

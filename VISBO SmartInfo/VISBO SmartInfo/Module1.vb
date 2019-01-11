@@ -434,15 +434,29 @@ Module Module1
             Else
                 tmpResult = True
 
-                'Dim currentOrga As New clsOrganisation
-                'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisation("", Date.Now, err)
+                ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
+                Dim currentOrga As New clsOrganisation
+                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                '' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                'RoleDefinitions = currentOrga.allRoles
-                'CostDefinitions = currentOrga.allCosts
+                ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                RoleDefinitions = currentOrga.allRoles
+                CostDefinitions = currentOrga.allCosts
 
-                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+                ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
+                ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+
+
+                ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                Try
+                    customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomfieldsFromDB("", Date.Now, err)
+
+                    If IsNothing(customFieldDefinitions) Then
+                        Call MsgBox(err.errorMsg)
+                    End If
+                Catch ex As Exception
+
+                End Try
 
                 ' in allen Slides den Sicht Schutz aufheben 
                 protectionSolved = True
