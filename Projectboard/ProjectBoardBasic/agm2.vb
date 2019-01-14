@@ -12541,8 +12541,9 @@ Public Module agm2
     ''' </summary>
     ''' <param name="von">Start-Monat (showrangeleft)</param>
     ''' <param name="bis">Ende-Monat (showrangeright)</param>
-    ''' <param name="roleCostCollection"></param>
-    Public Sub writeProjektDetailsToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleCostCollection As Collection)
+    ''' <param name="roleNameIDCollection"></param>
+    ''' <param name="costNameCollection"></param>
+    Public Sub writeProjektDetailsToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleNameIDCollection As Collection, ByVal costNameCollection As Collection)
 
         appInstance.EnableEvents = False
 
@@ -12575,37 +12576,22 @@ Public Module agm2
         Dim newWB As Excel.Workbook
 
         Dim considerAll As Boolean = True
+        ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
+        considerAll = ((roleNameIDCollection.Count = 0) And (costNameCollection.Count = 0))
 
-        Dim roleCollection As New Collection
-        Dim costCollection As New Collection
-
-        If Not IsNothing(roleCostCollection) Then
-            For Each itemName As String In roleCostCollection
-                If RoleDefinitions.containsName(itemName) Then
-                    If Not roleCollection.Contains(itemName) Then
-                        roleCollection.Add(itemName, itemName)
-                    End If
-                ElseIf CostDefinitions.containsName(itemName) Then
-                    If Not costCollection.Contains(itemName) Then
-                        costCollection.Add(itemName, itemName)
-                    End If
-                End If
-            Next
-            ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
-            considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
-        End If
 
         Dim fNameExtension As String = ""
         ' den Dateinamen bestimmen ...
-        If roleCollection.Count > 0 Then
-            fNameExtension = roleCollection.Item(1)
-            If roleCollection.Count > 1 Or costCollection.Count > 0 Then
+        If roleNameIDCollection.Count > 0 Then
+            Dim teamID As Integer
+            fNameExtension = RoleDefinitions.getRoleDefByIDKennung(roleNameIDCollection.Item(1), teamID).name
+            If roleNameIDCollection.Count > 1 Or costNameCollection.Count > 0 Then
                 fNameExtension = fNameExtension & " etc"
             End If
 
-            If fNameExtension = "" And costCollection.Count > 0 Then
-                fNameExtension = costCollection.Item(1)
-                If costCollection.Count > 1 Then
+            If fNameExtension = "" And costNameCollection.Count > 0 Then
+                fNameExtension = costNameCollection.Item(1)
+                If costNameCollection.Count > 1 Then
                     fNameExtension = fNameExtension & " etc"
                 End If
             End If
@@ -12720,54 +12706,60 @@ Public Module agm2
 
 
                             Dim role As clsRolle = cphase.getRole(r)
-                            Dim roleName As String = role.name
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(role.uid, role.teamID)
                             Dim relevant As Boolean = False
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
-                            If roleCollection.Count = 0 Then
+                            If roleNameIDCollection.Count = 0 Then
                                 relevant = True
                             Else
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCollection) Then
+                                Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray) Then
                                     relevant = True
                                 End If
                             End If
 
                             ' nur weitermachen, wenn es relevant ist ..
                             If relevant Then
+                                Dim teamID As Integer
+                                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
 
-                                Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
-                                Dim xValues() As Double = role.Xwerte
-                                Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+                                If Not IsNothing(curRole) Then
+                                    Dim roleUID As Integer = role.uid
+                                    Dim xValues() As Double = role.Xwerte
+                                    Dim tagessatz As Double = role.tagessatzIntern
 
-                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                zeilensumme = schnittmenge.Sum
+                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                    zeilensumme = schnittmenge.Sum
 
-                                'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
-                                ReDim zeilenWerte(bis - von)
+                                    'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                                    ReDim zeilenWerte(bis - von)
 
-                                ' Schreiben der Projekt-Informationen 
-                                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
-                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
-                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
-                                    CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
-                                    CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = roleName
-                                    CType(.Cells(zeile, 7), Excel.Range).Value = tagessatz
-                                    CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
+                                    ' Schreiben der Projekt-Informationen 
+                                    With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                                        CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                                        CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                                        CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                                        CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
+                                        CType(.Cells(zeile, 6), Excel.Range).Value = role.name
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = tagessatz
+                                        CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
 
-                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                End With
+                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                    End With
 
-                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
-                                For mis As Integer = 0 To bis - von
-                                    zeilenWerte(mis) = schnittmenge(mis)
-                                Next
+                                    ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                    For mis As Integer = 0 To bis - von
+                                        zeilenWerte(mis) = schnittmenge(mis)
+                                    Next
 
-                                editRange.Value = zeilenWerte
-                                atLeastOne = True
+                                    editRange.Value = zeilenWerte
+                                    atLeastOne = True
 
-                                zeile = zeile + 1
+                                    zeile = zeile + 1
+
+                                End If
 
 
                             End If
@@ -12782,11 +12774,11 @@ Public Module agm2
                             Dim relevant As Boolean = False
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
-                            If costCollection.Count = 0 Then
+                            If costNameCollection.Count = 0 Then
                                 relevant = True
                             Else
                                 ' If CostDefinitions.hasAnyChildParentRelationsship(costName, costCollection) Then
-                                If costCollection.Contains(costName) Then
+                                If costNameCollection.Contains(costName) Then
                                     relevant = True
                                 End If
 
@@ -18143,59 +18135,65 @@ Public Module agm2
                             End If
 
                             tmpStr = CType(c.Value, String)
-
-                            If readingGroups Then
-                                przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 4), Excel.Range), 1.0, 0.0, 1.0)
-                            Else
-                                przSatz = 1.0
-                            End If
-
-                            ' jetzt kommt die Rollen Definition 
-                            hrole = New clsRollenDefinition
-                            Dim cp As Integer
-                            With hrole
-                                .name = tmpStr.Trim
-                                .defaultKapa = CDbl(c.Offset(0, 1).Value)
-
-                                .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
-                                If .tagessatzIntern <= 0 Then
-                                    .tagessatzIntern = defaultTagessatz
+                            If isValidRoleName(tmpStr, errMsg) Then
+                                If readingGroups Then
+                                    przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 4), Excel.Range), 1.0, 0.0, 1.0)
+                                Else
+                                    przSatz = 1.0
                                 End If
 
-                                ' tk 5.12 Aufnahme extern
-                                Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
+                                ' jetzt kommt die Rollen Definition 
+                                hrole = New clsRollenDefinition
+                                Dim cp As Integer
+                                With hrole
+                                    .name = tmpStr.Trim
 
-                                If Not IsNothing(tmpValue) Then
-                                    tmpValue = tmpValue.Trim
-                                    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+                                    .defaultKapa = CDbl(c.Offset(0, 1).Value)
 
-                                    If positiveCriterias.Contains(tmpValue) Then
-                                        .isExternRole = True
+                                    .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+                                    If .tagessatzIntern <= 0 Then
+                                        .tagessatzIntern = defaultTagessatz
                                     End If
+
+                                    ' tk 5.12 Aufnahme extern
+                                    Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
+
+                                    If Not IsNothing(tmpValue) Then
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isExternRole = True
+                                        End If
+                                    End If
+
+
+                                    ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
+                                    For cp = 1 To 240
+
+                                        .kapazitaet(cp) = .defaultKapa
+                                        '.externeKapazitaet(cp) = 0.0
+
+                                    Next
+                                    .farbe = c.Interior.Color
+                                    .UID = roleUID
+                                End With
+
+                                ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
+                                If readingGroups And rollendefinitionen.containsName(hrole.name) Then
+                                    ' nichts tun, alles gut : 
+                                Else
+                                    ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
+                                    If Not rollendefinitionen.containsName(hrole.name) Then
+                                        rollendefinitionen.Add(hrole)
+                                    End If
+
                                 End If
-
-
-                                ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
-                                For cp = 1 To 240
-
-                                    .kapazitaet(cp) = .defaultKapa
-                                    '.externeKapazitaet(cp) = 0.0
-
-                                Next
-                                .farbe = c.Interior.Color
-                                .UID = roleUID
-                            End With
-
-                            ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
-                            If readingGroups And rollendefinitionen.containsName(hrole.name) Then
-                                ' nichts tun, alles gut : 
                             Else
-                                ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
-                                If Not rollendefinitionen.containsName(hrole.name) Then
-                                    rollendefinitionen.Add(hrole)
-                                End If
-
+                                meldungen.Add(errMsg)
                             End If
+
+
 
                             'hrole = Nothing
 

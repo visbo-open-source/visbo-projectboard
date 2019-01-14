@@ -1819,98 +1819,29 @@ Public Module testModule
                             Case "TableBudgetCostAPVCV"
 
                                 Try
-                                    ' wenn es im Qualifier angegebene Rollen und Kostenarten gibt, dann haben die Prio vor der interaktiven Auswahl 
+                                    ' es können hier keine interaktiven Qualifier angegeben werden 
                                     ' 
-                                    Dim sRoles As Collection = Nothing
-                                    Dim sCosts As Collection = Nothing
-
-                                    Dim todoCollection As Collection = Nothing
                                     Dim q1 As String = "0"
                                     Dim q2 As String = "0"
 
                                     ' es werden drei Fälle unterschieden
                                     ' 1. qualifier2 = "" ->  die Budget, PK, SK, Ergebnis Übersicht  :todoCollection leer, q1= 0 , q2=0
                                     ' 2. qualifier2 = %used% -> es wird die gemeinsame Liste ermittelt ; todoCollection leer oder mit Inhalt, q1=-1, q2= -1
-                                    ' 3. qualifier2 = Liste von Namen, todoCollection <> leer, q1 die Zahl der Rollen, q2 die Zahl der Kostenarten
 
-                                    Dim alreadyDone As Boolean = False
-                                    sRoles = translateToRoleNames(selectedRoles)
-                                    sCosts = selectedCosts
-                                    todoCollection = New Collection
 
                                     If Not IsNothing(qualifier2) Then
-                                        If qualifier2.Length > 0 Then
-                                            If qualifier2.Trim = "%used%" Then
-                                                'Dim anzR As Integer, anzC As Integer
-                                                ' kann man sich hier sparen, weil die todoCollection ja im zeichneTableBudgetCostAPVCV erstellt wird
-                                                ' wichtig ist es, die q1, q2 auf -1 zu setzen 
-                                                'todoCollection = getCommonListOfRCNames(hproj, lproj, bproj, anzR, anzC)
-                                                q1 = "-1"
-                                                q2 = "-1"
-                                                alreadyDone = True
 
-                                            Else
-
-                                                sRoles = New Collection
-                                                sCosts = New Collection
-                                                Dim tmpStr() As String = qualifier2.Split(New Char() {vbLf, vbCr})
-
-                                                For Each tmpRcName As String In tmpStr
-                                                    ' es darf einen Namen nur entweder als Rolle oder als Kostenart geben ..
-                                                    tmpRcName = tmpRcName.Trim
-                                                    If RoleDefinitions.containsName(tmpRcName) Then
-
-                                                        sRoles.Add(tmpRcName)
-
-                                                    ElseIf CostDefinitions.containsName(tmpRcName) Then
-
-                                                        sCosts.Add(tmpRcName)
-
-                                                    End If
-                                                Next
-
-                                            End If
-
-
+                                        If qualifier2.Trim = "%used%" Then
+                                            q1 = "-1"
+                                            q2 = "-1"
                                         End If
-
-                                    End If
-
-                                    If Not alreadyDone Then
-                                        ' in Fall 1, 3
-                                        ' jetzt kommt die Vorbereitung der  todoCollection .
-                                        If IsNothing(sRoles) Then
-                                            sRoles = New Collection
-                                        End If
-
-                                        If IsNothing(sCosts) Then
-                                            sCosts = New Collection
-                                        End If
-
-
-                                        If sRoles.Count + sCosts.Count = 0 Then
-                                            ' nichts tun, todoCollection ist schon leere Collection 
-                                        Else
-                                            ' jetzt wird die toDoCollection aufgebaut , es solle eine Liste aufgebaut werden, die die Reihenfolge beibehält 
-                                            For Each tmpName As String In sRoles
-                                                todoCollection.Add(tmpName)
-                                            Next
-
-                                            For Each tmpName As String In sCosts
-                                                todoCollection.Add(tmpName)
-                                            Next
-                                        End If
-
-                                        ' in Q1 steht die Anzahl der Detail Rollen , in q2 steht die Anzahl der 
-                                        q1 = sRoles.Count.ToString
-                                        q2 = sCosts.Count.ToString
 
                                     End If
 
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
                                     ' tk 24.6.18 damit man unabhängig von selectedMilestones in der PPT-Vorlage feste Werte / Identifier angeben kann 
-                                    Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, todoCollection, q1, q2)
+                                    Call zeichneTableBudgetCostAPVCV(pptShape, hproj, bproj, lproj, q1, q2)
 
 
                                 Catch ex As Exception
@@ -2087,9 +2018,7 @@ Public Module testModule
                                             compID = PTprdk.PersonalPie
                                         Else
 
-                                            If qualifier2 <> "" Then
-                                                qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                            End If
+                                            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                             Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                                                            roleName:=qualifier2,
@@ -2138,10 +2067,7 @@ Public Module testModule
                                             compID = PTprdk.PersonalPie
                                         Else
 
-                                            If qualifier2 <> "" Then
-                                                qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                            End If
-
+                                            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                             Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                                                            roleName:=qualifier2,
@@ -2191,9 +2117,7 @@ Public Module testModule
                                             compID = PTprdk.PersonalPie
                                         Else
 
-                                            If qualifier2 <> "" Then
-                                                qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                            End If
+                                            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                             Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                                                            roleName:=qualifier2,
@@ -2242,9 +2166,8 @@ Public Module testModule
                                             Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                             compID = PTprdk.PersonalPie
                                         Else
-                                            If qualifier2 <> "" Then
-                                                qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                            End If
+
+                                            qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                             Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                                                            roleName:=qualifier2,
@@ -2400,6 +2323,7 @@ Public Module testModule
 
                                             appInstance.ScreenUpdating = formerEE
                                             notYetDone = False
+                                            bigType = ptReportBigTypes.charts
 
                                         End If
 
@@ -2786,9 +2710,7 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    If qualifier2 <> "" Then
-                                        qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                    End If
+                                    qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                     Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
@@ -2810,9 +2732,7 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    If qualifier2 <> "" Then
-                                        qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                    End If
+                                    qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                     Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
 
@@ -3038,9 +2958,7 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    If qualifier2 <> "" Then
-                                        qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                    End If
+                                    qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 4, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
@@ -3061,9 +2979,7 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    If qualifier2 <> "" Then
-                                        qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
-                                    End If
+                                    qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
                                     reportObj = Nothing
                                     Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 4, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
@@ -3500,6 +3416,7 @@ Public Module testModule
     ''' <param name="selectedCosts"></param>
     ''' <returns></returns>
     Private Function bestimmeCostQ2(ByVal qualifier2 As String, ByVal selectedCosts As Collection) As String
+
         If qualifier2 <> "" Then
             If qualifier2 = "%1" And selectedCosts.Count > 0 Then
                 qualifier2 = selectedCosts.Item(1)
@@ -3511,9 +3428,9 @@ Public Module testModule
                 Call MsgBox("Kostenart existiert nicht: " & qualifier2)
                 qualifier2 = ""
             End If
-
-            bestimmeCostQ2 = qualifier2
         End If
+
+        bestimmeCostQ2 = qualifier2
     End Function
 
     ''' <summary>
@@ -3524,8 +3441,16 @@ Public Module testModule
     ''' <returns></returns>
     Private Function bestimmeRoleQ2(ByVal qualifier2 As String, ByVal selectedRoles As Collection) As String
 
-        If qualifier2 <> "" Then
-            If qualifier2 = "%1" And selectedRoles.Count > 0 Then
+
+        If qualifier2 = "" Then
+
+            If selectedRoles.Count = 0 Then
+                ' die myCustomUserRole ist entscheidend 
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    qualifier2 = myCustomUserRole.specifics
+                End If
+            Else
+                ' nimm die erste und stell sie dar
                 Dim tmpTeamID As Integer = -1
                 Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(1), tmpTeamID)
                 If RoleDefinitions.containsUid(tmpRoleID) Then
@@ -3534,12 +3459,35 @@ Public Module testModule
                     qualifier2 = ""
                 End If
             End If
-            If RoleDefinitions.containsName(qualifier2) Then
-                ' alles ok
-            ElseIf qualifier2 <> "" Then
-                Call MsgBox("Rolle existiert nicht: " & qualifier2)
-                qualifier2 = ""
+
+        Else
+            If qualifier2.StartsWith("%") Then
+                If IsNumeric(qualifier2.Substring(1)) Then
+                    Dim ix As Integer = CInt(qualifier2.Substring(1))
+                    Dim tmpTeamID As Integer = -1
+                    If selectedRoles.Count >= ix Then
+                        Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(ix), tmpTeamID)
+                        If RoleDefinitions.containsUid(tmpRoleID) Then
+                            qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
+                        Else
+                            qualifier2 = ""
+                        End If
+                    End If
+
+                End If
+            Else
+                If RoleDefinitions.containsName(qualifier2) Then
+                    ' darf der das ?  
+                    If myCustomUserRole.isAllowedToSee(qualifier2) Then
+                        ' alles in Ordnung 
+                    Else
+                        qualifier2 = ""
+                    End If
+                Else
+                    qualifier2 = ""
+                End If
             End If
+
         End If
 
         bestimmeRoleQ2 = qualifier2

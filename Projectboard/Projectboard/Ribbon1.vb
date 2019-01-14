@@ -6581,22 +6581,31 @@ Imports System.Web
             enableOnUpdate = False
 
 
-            Dim myCollection As New Collection
+            Dim myCollectionR As New Collection
+            Dim myCollectionC As New Collection
 
             ' erstmal werden hier nur die 
             For Each element As String In frmMERoleCost.rolesToAdd
-
-                Dim teamID As Integer = -1
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
-                If Not IsNothing(tmpRole) Then
-                    myCollection.Add(tmpRole.name)
+                Dim teamID As Integer
+                Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(element, teamID)
+                If roleUID > 0 Then
+                    ' es ist eine Rolle 
+                    If Not myCollectionR.Contains(element) Then
+                        myCollectionR.Add(element, element)
+                    End If
+                ElseIf CostDefinitions.containsName(element) Then
+                    If Not myCollectionC.Contains(element) Then
+                        myCollectionC.Add(element, element)
+                    End If
                 End If
+
+                'End If
 
             Next
 
 
             Try
-                Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollection)
+                Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollectionR, myCollectionC)
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
@@ -11775,6 +11784,23 @@ Imports System.Web
                 Next
             End If
 
+            Dim usedRollen3 As Collection = hproj.getRoleNameIDs
+            Dim usedRollen4 As Collection = hproj.rcLists.getRoleNameIDs
+
+            ' Test auf Identität der beiden usedRollen1,2
+
+            If usedRollen3.Count <> usedRollen4.Count Then
+                atleastOne = True
+            Else
+                For ix As Integer = 1 To usedRollen3.Count
+                    If Not usedRollen4.Contains(CStr(usedRollen3.Item(ix))) Then
+                        Dim name1 As String = CStr(usedRollen4.Item(ix))
+                        Dim name2 As String = CStr(usedRollen3.Item(ix))
+                        atleastOne = True
+                    End If
+                Next
+            End If
+
 
             Dim usedCost1 As Collection = hproj.getCostNames
             Dim usedCost2 As Collection = hproj.rcLists.getCostNames
@@ -11812,23 +11838,23 @@ Imports System.Web
 
             For iter As Integer = 1 To 1
 
-                For ix As Integer = 1 To RoleDefinitions.Count
-                    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
+                'For ix As Integer = 1 To RoleDefinitions.Count
+                '    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
 
-                    Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
-                    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
+                '    Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
+                '    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
 
-                    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
-                        atleastOne = True
-                    End If
+                '    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
+                '        atleastOne = True
+                '    End If
 
-                Next
+                'Next
 
-                If atleastOne Then
-                    Call MsgBox("Rollen-Summen nicht alles ok ...")
-                Else
-                    Call MsgBox("Rollen-Summen alles ok ..")
-                End If
+                'If atleastOne Then
+                '    Call MsgBox("Rollen-Summen nicht alles ok ...")
+                'Else
+                '    Call MsgBox("Rollen-Summen alles ok ..")
+                'End If
                 atleastOne = False
 
                 For ix As Integer = 1 To CostDefinitions.Count

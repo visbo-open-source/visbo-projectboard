@@ -1825,7 +1825,7 @@ Public Module awinGeneralModules
         Dim testProjekte As New clsProjekte
 
         If Not IsNothing(uProj) Then
-            Dim uRoles As Collection = uProj.getRoleNames
+            Dim uRoles As Collection = uProj.getRoleNameIDs
             Dim GPRoles As Collection = Nothing
 
             Dim listOfProjectNames As SortedList(Of String, String) = current1program.getProjectNames(considerShowAttribute:=True, showAttribute:=True, fullNameKeys:=True)
@@ -1835,14 +1835,14 @@ Public Module awinGeneralModules
             For Each fullName As KeyValuePair(Of String, String) In listOfProjectNames
                 Dim hproj As clsProjekt = projektliste.getProject(fullName.Key)
                 If IsNothing(GPRoles) Then
-                    GPRoles = hproj.getRoleNames
+                    GPRoles = hproj.getRoleNameIDs
                 Else
-                    Dim tmpRoles As Collection = hproj.getRoleNames
-                    For Each tmpRoleName As String In tmpRoles
-                        If GPRoles.Contains(tmpRoleName) Then
+                    Dim tmpRoleNameIDs As Collection = hproj.getRoleNameIDs
+                    For Each tmpRoleNameID As String In tmpRoleNameIDs
+                        If GPRoles.Contains(tmpRoleNameID) Then
                             ' alles ok, schon drin 
                         Else
-                            GPRoles.Add(tmpRoleName, tmpRoleName)
+                            GPRoles.Add(tmpRoleNameID, tmpRoleNameID)
                         End If
                     Next
 
@@ -1863,10 +1863,10 @@ Public Module awinGeneralModules
                 showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
                 showRangeRight = getColumnOfDate(CDate("31.12.2019"))
 
-                For Each tmpRole As String In uRoles
-                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRole)
+                For Each tmpRoleNameID As String In uRoles
+                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRoleNameID)
                     Dim myCollection As New Collection
-                    myCollection.Add(tmpRole)
+                    myCollection.Add(tmpRoleNameID)
                     Dim uValues() As Double = uProj.getBedarfeInMonths(mycollection:=myCollection, type:=DiagrammTypen(1))
 
                     If arraysAreDifferent(GPvalues, uValues) Then

@@ -70,6 +70,40 @@ Public Class clsCustomUserRole
     End Sub
 
     ''' <summary>
+    ''' bestimmt in Abhängigkeit von der customUSerRole, ob eine bestimmte Person, Orga-Einheit gesehen werden darf ... 
+    ''' roleName darf Name der Rolle oder NameIDstr sein
+    ''' </summary>
+    ''' <param name="nameOrID"></param>
+    ''' <returns></returns>
+    Public Function isAllowedToSee(ByVal nameOrID As String) As Boolean
+        Dim tmpResult As Boolean = False
+        Dim teamID As Integer
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(nameOrID, teamID)
+        Dim curRoleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
+
+        If Not IsNothing(curRoleDef) Then
+
+            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
+
+            If _customUserRole = ptCustomUserRoles.RessourceManager Then
+
+                Dim parentRoleID As Integer = RoleDefinitions.getRoledef(_specifics).UID
+                tmpResult = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID)
+
+            ElseIf _customUserRole = ptCustomUserRoles.PortfolioManager Then
+                tmpResult = _portfolioAggregationRoleIDs.Contains(roleID)
+                If Not tmpResult Then
+                    tmpResult = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, _portfolioAggregationRoleIDs)
+                End If
+
+            End If
+        End If
+
+
+        isAllowedToSee = tmpResult
+    End Function
+
+    ''' <summary>
     ''' gibt an, ob die userRole für die angegebene MenuID berechtigt ist, dass heisst nicht in der nonAllowance aufgeführt ist 
     ''' true
     ''' </summary>

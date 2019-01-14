@@ -1864,9 +1864,13 @@ Public Class clsProjekte
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
             Dim teamID As Integer
-            Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleIDStr, teamID)
+            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleIDStr, teamID)
+
+
+            Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
             Dim considerTeam As Boolean = currentRole.isTeam
 
+            ' jetzt muss dafür gesorgt werden, dass nach der 
             If considerTeam Then
                 teamID = currentRole.UID
             Else
@@ -1877,13 +1881,16 @@ Public Class clsProjekte
             ReDim roleValues(zeitraum)
 
 
-            Dim toDoListe As New SortedList(Of Integer, Double)
+            'Dim toDoListe As New SortedList(Of Integer, Double)
+            Dim toDoListe As New SortedList(Of String, Double)
             ' wenn considerAllSubroles  = true , dann muss 
 
             If considerAllSubRoles Then
-                toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
+                'toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
+                toDoListe = RoleDefinitions.getSubRoleNameIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
             Else
-                toDoListe.Add(currentRole.UID, 1.0)
+                Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(currentRole.UID, teamID)
+                toDoListe.Add(tmpNameID, 1.0)
             End If
 
 
@@ -1911,13 +1918,13 @@ Public Class clsProjekte
 
                 If anzLoops > 0 Then
 
-                    Dim listOfRoles() As Integer = hproj.rcLists.getRoleUIDs
+                    Dim listOfRoles As Collection = hproj.rcLists.getRoleNameIDs
 
                     If Not IsNothing(listOfRoles) Then
                         Try
 
                             ' hier muss die Schleife für alle Items aus toDoListe 
-                            For Each rKvP As KeyValuePair(Of Integer, Double) In toDoListe
+                            For Each rKvP As KeyValuePair(Of String, Double) In toDoListe
 
                                 If listOfRoles.Contains(rKvP.Key) Then
                                     tempArray = hproj.getRessourcenBedarf(rKvP.Key, teamID:=teamID)

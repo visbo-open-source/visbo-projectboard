@@ -3165,18 +3165,21 @@ Public Class clsProjekt
         End If
 
         ' jetzt werden die Role-Values von me übertragen , an dieser stelle gibt es noch keine Rollen im neuen Projekt!
-        Dim tmpRoles As Collection = Me.getRoleNames
+        Dim tmpRoleNameIDs As Collection = Me.getRoleNameIDs()
         Dim newValues() As Double
 
-        For Each tmpRole As String In tmpRoles
+        For Each tmpRoleNameID As String In tmpRoleNameIDs
             ' zurücksetzen 
             ReDim newValues(newLength - 1)
 
-            Dim myValues() As Double = Me.getRessourcenBedarf(tmpRole)
+            Dim myValues() As Double = Me.getRessourcenBedarf(tmpRoleNameID)
             Dim newRole As New clsRolle(newLength - 1)
 
             With newRole
-                .uid = RoleDefinitions.getRoledef(tmpRole).UID
+                Dim teamID As Integer = -1
+                .uid = RoleDefinitions.parseRoleNameID(tmpRoleNameID, teamID)
+                .teamID = teamID
+
                 For ix As Integer = myIndexStart To myIndexStart + myLength - 1
                     newValues(ix) = myValues(ix - myIndexStart)
                 Next
@@ -3210,22 +3213,24 @@ Public Class clsProjekt
         Next
 
         ' jetzt werden die Role-Values von otherProj übertragen , an dieser stelle gibt es evtl bereits diese Rolle im neuen Projekt!
-        tmpRoles = otherProj.getRoleNames
+        tmpRoleNameIDs = otherProj.getRoleNameIDs
 
-        For Each tmpRole As String In tmpRoles
+        For Each tmpRoleNameID As String In tmpRoleNameIDs
             ' zurücksetzen 
-            Dim newRole As clsRolle = newProj.getPhase(1).getRole(tmpRole)
+            Dim newRole As clsRolle = newProj.getPhase(1).getRoleByRoleNameID(tmpRoleNameID)
             Dim roleDidExist As Boolean = True
 
             If IsNothing(newRole) Then
                 roleDidExist = False
                 newRole = New clsRolle(newLength - 1)
-                newRole.uid = RoleDefinitions.getRoledef(tmpRole).UID
+                Dim teamID As Integer = -1
+                newRole.uid = RoleDefinitions.parseRoleNameID(tmpRoleNameID, teamID)
+                newRole.teamID = teamID
             End If
 
             newValues = newRole.Xwerte
 
-            Dim otherValues() As Double = otherProj.getRessourcenBedarf(tmpRole)
+            Dim otherValues() As Double = otherProj.getRessourcenBedarf(tmpRoleNameID)
 
 
             With newRole
@@ -3295,7 +3300,8 @@ Public Class clsProjekt
 
             For Each rvkvp As KeyValuePair(Of String, Double()) In actualValues
 
-                Dim hroleDef As clsRollenDefinition = RoleDefinitions.getRoledef(rvkvp.Key)
+                Dim teamID As Integer = -1
+                Dim hroleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rvkvp.Key, teamID)
                 ReDim roleXwerte(dimension)
 
                 ' nur wenn die Rolle existiert und ausserdem Werte von größer Null hat, soll sie angelegt werden ..
@@ -3311,6 +3317,7 @@ Public Class clsProjekt
 
                     With curRole
                         .uid = hroleDef.UID
+                        .teamID = teamID
                         .Xwerte = roleXwerte
                     End With
                     ' wenn es schon existiert, werden die Werte addiert ...
