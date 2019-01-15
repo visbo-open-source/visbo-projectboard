@@ -2638,7 +2638,7 @@
     ''' <param name="roleID"></param>
     ''' <param name="inclSubRoles"></param>
     ''' <returns></returns>
-    Public ReadOnly Property getRessourcenBedarfNew(ByVal roleID As Object,
+    Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
                                                     Optional ByVal inclSubRoles As Boolean = False,
                                                     Optional ByVal outPutInEuro As Boolean = False) As Double()
         Get
@@ -2677,7 +2677,7 @@
                         roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                     Else
                         ReDim roleValues(0)
-                        getRessourcenBedarfNew = roleValues
+                        getRessourcenBedarf = roleValues
                         Exit Property
                     End If
 
@@ -2761,153 +2761,153 @@
 
                 Next ' Loop über for each srkvp
 
-                getRessourcenBedarfNew = roleValues
-
-            Else
-                ReDim roleValues(0)
-                getRessourcenBedarfNew = roleValues
-            End If
-
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' es wird aufgerufen über den RoleName oder aber die RoleUID ! 
-    ''' </summary>
-    ''' <param name="roleID"></param>
-    ''' <param name="inclSubRoles"></param>
-    ''' <param name="teamID"></param>
-    ''' <returns></returns>
-    Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
-                                                    Optional ByVal inclSubRoles As Boolean = False,
-                                                    Optional ByVal teamID As Integer = -1) As Double()
-
-        Get
-            Dim roleValues() As Double
-            Dim anzRollen As Integer
-            Dim anzPhasen As Integer
-
-            Dim i As Integer, p As Integer, r As Integer
-            Dim phase As clsPhase
-            Dim role As clsRolle
-            Dim lookforIndex As Boolean
-            Dim phasenStart As Integer
-            Dim tempArray As Double()
-
-
-            Dim roleUID As Integer
-            Dim roleName As String = ""
-
-            Dim roleIDs As New SortedList(Of Integer, Double)
-
-
-            If _Dauer > 0 Then
-
-                lookforIndex = IsNumeric(roleID)
-
-                If IsNumeric(roleID) Then
-                    roleUID = CInt(roleID)
-                    roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                Else
-                    If RoleDefinitions.containsName(CStr(roleID)) Then
-                        roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
-                        roleName = CStr(roleID)
-                    Else
-                        ' es kann auch die form roleID;TeamID haben
-                        Dim tmpTeamID As Integer = -1
-                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), tmpTeamID)
-                        If roleUID > 0 Then
-                            roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                            teamID = tmpTeamID
-                        End If
-                    End If
-                End If
-
-                ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
-                ' ein Team kann nicht zu sich selber gehören ...
-                If roleUID = teamID Then
-                    teamID = -1
-                End If
-                Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
-
-
-                ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
-                If inclSubRoles Then
-                    roleIDs = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
-                Else
-                    roleIDs.Add(roleUID, 1.0)
-                End If
-
-
-                ReDim roleValues(_Dauer - 1)
-
-                For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
-                    roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
-
-                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
-                    anzPhasen = listOfPhases.Count
-
-                    For p = 1 To anzPhasen
-                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
-
-                        With phase
-                            ' Off1
-                            anzRollen = .countRoles
-                            phasenStart = .relStart - 1
-
-                            ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
-                            ' es können Unschärfen auftreten 
-                            'phasenEnde = .relEnde - 1
-
-                            Dim found As Boolean = False
-
-                            For r = 1 To anzRollen
-                                role = .getRole(r)
-
-                                With role
-
-                                    If .uid = srkvp.Key Then
-
-                                        If considerTeam Then
-                                            found = teamID = role.teamID
-                                        Else
-                                            found = True
-                                        End If
-
-                                        If found Then
-                                            Dim dimension As Integer
-
-                                            dimension = .getDimension
-                                            ReDim tempArray(dimension)
-                                            tempArray = .Xwerte
-
-                                            For i = phasenStart To phasenStart + dimension
-                                                roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
-                                            Next i
-                                        End If
-
-
-                                    End If
-
-                                End With ' role
-                            Next r
-
-                        End With ' phase
-
-
-                    Next p ' Loop über alle Phasen
-
-                Next ' Loop über for each srkvp
-
                 getRessourcenBedarf = roleValues
 
             Else
                 ReDim roleValues(0)
                 getRessourcenBedarf = roleValues
             End If
-        End Get
 
+        End Get
     End Property
+
+    '''' <summary>
+    '''' es wird aufgerufen über den RoleName oder aber die RoleUID ! 
+    '''' </summary>
+    '''' <param name="roleID"></param>
+    '''' <param name="inclSubRoles"></param>
+    '''' <param name="teamID"></param>
+    '''' <returns></returns>
+    'Public ReadOnly Property getRessourcenBedarf_Old(ByVal roleID As Object,
+    '                                                Optional ByVal inclSubRoles As Boolean = False,
+    '                                                Optional ByVal teamID As Integer = -1) As Double()
+
+    '    Get
+    '        Dim roleValues() As Double
+    '        Dim anzRollen As Integer
+    '        Dim anzPhasen As Integer
+
+    '        Dim i As Integer, p As Integer, r As Integer
+    '        Dim phase As clsPhase
+    '        Dim role As clsRolle
+    '        Dim lookforIndex As Boolean
+    '        Dim phasenStart As Integer
+    '        Dim tempArray As Double()
+
+
+    '        Dim roleUID As Integer
+    '        Dim roleName As String = ""
+
+    '        Dim roleIDs As New SortedList(Of Integer, Double)
+
+
+    '        If _Dauer > 0 Then
+
+    '            lookforIndex = IsNumeric(roleID)
+
+    '            If IsNumeric(roleID) Then
+    '                roleUID = CInt(roleID)
+    '                roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+    '            Else
+    '                If RoleDefinitions.containsName(CStr(roleID)) Then
+    '                    roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
+    '                    roleName = CStr(roleID)
+    '                Else
+    '                    ' es kann auch die form roleID;TeamID haben
+    '                    Dim tmpTeamID As Integer = -1
+    '                    roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), tmpTeamID)
+    '                    If roleUID > 0 Then
+    '                        roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+    '                        teamID = tmpTeamID
+    '                    End If
+    '                End If
+    '            End If
+
+    '            ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
+    '            ' ein Team kann nicht zu sich selber gehören ...
+    '            If roleUID = teamID Then
+    '                teamID = -1
+    '            End If
+    '            Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
+
+
+    '            ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
+    '            If inclSubRoles Then
+    '                roleIDs = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
+    '            Else
+    '                roleIDs.Add(roleUID, 1.0)
+    '            End If
+
+
+    '            ReDim roleValues(_Dauer - 1)
+
+    '            For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
+    '                roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
+
+    '                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
+    '                anzPhasen = listOfPhases.Count
+
+    '                For p = 1 To anzPhasen
+    '                    phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
+
+    '                    With phase
+    '                        ' Off1
+    '                        anzRollen = .countRoles
+    '                        phasenStart = .relStart - 1
+
+    '                        ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
+    '                        ' es können Unschärfen auftreten 
+    '                        'phasenEnde = .relEnde - 1
+
+    '                        Dim found As Boolean = False
+
+    '                        For r = 1 To anzRollen
+    '                            role = .getRole(r)
+
+    '                            With role
+
+    '                                If .uid = srkvp.Key Then
+
+    '                                    If considerTeam Then
+    '                                        found = teamID = role.teamID
+    '                                    Else
+    '                                        found = True
+    '                                    End If
+
+    '                                    If found Then
+    '                                        Dim dimension As Integer
+
+    '                                        dimension = .getDimension
+    '                                        ReDim tempArray(dimension)
+    '                                        tempArray = .Xwerte
+
+    '                                        For i = phasenStart To phasenStart + dimension
+    '                                            roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
+    '                                        Next i
+    '                                    End If
+
+
+    '                                End If
+
+    '                            End With ' role
+    '                        Next r
+
+    '                    End With ' phase
+
+
+    '                Next p ' Loop über alle Phasen
+
+    '            Next ' Loop über for each srkvp
+
+    '            getRessourcenBedarf = roleValues
+
+    '        Else
+    '            ReDim roleValues(0)
+    '            getRessourcenBedarf = roleValues
+    '        End If
+    '    End Get
+
+    'End Property
 
 
     ''' <summary>

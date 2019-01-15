@@ -1928,7 +1928,7 @@ Public Class clsProjekte
 
                                 If listOfRoles.Contains(rKvP.Key) Then
 
-                                    tempArray = hproj.getRessourcenBedarfNew(rKvP.Key, inclSubRoles:=False)
+                                    tempArray = hproj.getRessourcenBedarf(rKvP.Key, inclSubRoles:=False)
 
                                     For i = 0 To anzLoops - 1
                                         roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)

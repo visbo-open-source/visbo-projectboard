@@ -5303,16 +5303,16 @@ Public Module Module1
 
                         If isRole Then
 
-                            curValue = hproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                            curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
 
                             If considerLapr Then
-                                laprValue = lproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                             Else
                                 laprValue = 0.0
                             End If
 
                             If considerFapr Then
-                                faprValue = bproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                             Else
                                 faprValue = 0.0
                             End If
@@ -5366,16 +5366,16 @@ Public Module Module1
 
                             If isRole Then
 
-                                curValue = hproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
 
                                 If considerLapr Then
-                                    laprValue = lproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                    laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = bproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                    faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                                 Else
                                     faprValue = 0.0
                                 End If

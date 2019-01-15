@@ -5851,14 +5851,14 @@ Public Module Projekte
                     If roleName = "" Then
                         tdatenreihe = hproj.getAlleRessourcen
                     Else
-                        tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(roleName, True)
                     End If
 
                 Else
                     If roleName = "" Then
                         tdatenreihe = hproj.getAllPersonalKosten
                     Else
-                        tdatenreihe = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True, outPutInEuro:=True)
+                        tdatenreihe = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
 
                     End If
 
@@ -5921,14 +5921,14 @@ Public Module Projekte
                             vdatenreihe = vglproj.getAlleRessourcen
                         Else
                             'vdatenreihe = vglproj.getRessourcenBedarf(roleName, True)
-                            vdatenreihe = vglproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True)
+                            vdatenreihe = vglproj.getRessourcenBedarf(roleName, inclSubRoles:=True)
                         End If
                     Else
                         If roleName = "" Then
                             vdatenreihe = vglproj.getAllPersonalKosten
                         Else
                             'vdatenreihe = vglproj.getPersonalKosten(roleName, True)
-                            vdatenreihe = vglproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True, outPutInEuro:=True)
+                            vdatenreihe = vglproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
                         End If
                     End If
 
@@ -6645,14 +6645,14 @@ Public Module Projekte
                 If roleName = "" Then
                     tdatenreihe = hproj.getAlleRessourcen
                 Else
-                    tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
+                    tdatenreihe = hproj.getRessourcenBedarf(roleName, True)
                 End If
 
             Else
                 If roleName = "" Then
                     tdatenreihe = hproj.getAllPersonalKosten
                 Else
-                    tdatenreihe = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True, outPutInEuro:=True)
+                    tdatenreihe = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
 
                 End If
 
@@ -6717,13 +6717,13 @@ Public Module Projekte
                     If roleName = "" Then
                         vdatenreihe = vglProj.getAlleRessourcen
                     Else
-                        vdatenreihe = vglProj.getRessourcenBedarfNew(roleName, True)
+                        vdatenreihe = vglProj.getRessourcenBedarf(roleName, True)
                     End If
                 Else
                     If roleName = "" Then
                         vdatenreihe = vglProj.getAllPersonalKosten
                     Else
-                        vdatenreihe = vglProj.getRessourcenBedarfNew(roleName, inclSubRoles:=True, outPutInEuro:=True)
+                        vdatenreihe = vglProj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
                     End If
                 End If
 

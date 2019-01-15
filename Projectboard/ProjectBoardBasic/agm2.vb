@@ -8939,7 +8939,7 @@ Public Module agm2
 
                                     Dim tmpCollection As New Collection
                                     tmpCollection.Add(tmpRollenName)
-                                    Dim istBedarf As Double = hproj.getRessourcenBedarfNew(tmpRollenName, inclSubRoles:=True).Sum
+                                    Dim istBedarf As Double = hproj.getRessourcenBedarf(tmpRollenName, inclSubRoles:=True).Sum
 
                                     If Math.Abs(sollBedarf - istBedarf) > 0.001 Then
                                         outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
