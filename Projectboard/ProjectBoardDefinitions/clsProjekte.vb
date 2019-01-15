@@ -1928,6 +1928,10 @@ Public Class clsProjekte
 
                                 If listOfRoles.Contains(rKvP.Key) Then
                                     tempArray = hproj.getRessourcenBedarf(rKvP.Key, teamID:=teamID)
+                                    Dim tempArray2() As Double = hproj.getRessourcenBedarfNew(rKvP.Key)
+                                    If arraysAreDifferent(tempArray, tempArray2) Then
+                                        Call MsgBox("Unterschied ...")
+                                    End If
 
                                     For i = 0 To anzLoops - 1
                                         roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)

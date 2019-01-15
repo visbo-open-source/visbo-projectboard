@@ -5303,28 +5303,22 @@ Public Module Module1
 
                         If isRole Then
 
-                            'curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                            curValue = hproj.getPersonalKosten(curItem, True).Sum
+                            curValue = hproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
 
                             If considerLapr Then
-                                'laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                laprValue = lproj.getPersonalKosten(curItem, True).Sum
+                                laprValue = lproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                             Else
                                 laprValue = 0.0
                             End If
 
                             If considerFapr Then
-                                'faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                faprValue = bproj.getPersonalKosten(curItem, True).Sum
+                                faprValue = bproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                             Else
                                 faprValue = 0.0
                             End If
 
                             Dim zeilenItem As String = curItem
-                            'If anzRoles > 0 And anzCosts > 0 Then
-                            '    ' dann muss unterhalb Personalkosten und Sonstige Kosten eingerückt werden ... 
-                            '    zeilenItem = "  " & curItem
-                            'End If
+
 
                             Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
                                                       considerFapr, considerLapr)
@@ -5372,28 +5366,22 @@ Public Module Module1
 
                             If isRole Then
 
-                                'curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                curValue = hproj.getPersonalKosten(curItem, True).Sum
+                                curValue = hproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
 
                                 If considerLapr Then
-                                    'laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                    laprValue = lproj.getPersonalKosten(curItem, True).Sum
+                                    laprValue = lproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    'faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                    faprValue = bproj.getPersonalKosten(curItem, True).Sum
+                                    faprValue = bproj.getRessourcenBedarfNew(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
                                 Else
                                     faprValue = 0.0
                                 End If
 
                                 Dim zeilenItem As String = curItem
-                                'If anzRoles > 0 And anzCosts > 0 Then
-                                '    ' dann muss unterhalb Personalkosten und Sonstige Kosten eingerückt werden ... 
-                                '    zeilenItem = "  " & curItem
-                                'End If
+
 
                                 Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
                                                           considerFapr, considerLapr)

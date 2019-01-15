@@ -5851,7 +5851,6 @@ Public Module Projekte
                     If roleName = "" Then
                         tdatenreihe = hproj.getAlleRessourcen
                     Else
-                        'tdatenreihe = hproj.getRessourcenBedarf(roleName, True)
                         tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
                     End If
 
@@ -5859,8 +5858,8 @@ Public Module Projekte
                     If roleName = "" Then
                         tdatenreihe = hproj.getAllPersonalKosten
                     Else
-                        'tdatenreihe = hproj.getPersonalKosten(roleName, True)
                         tdatenreihe = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True, outPutInEuro:=True)
+
                     End If
 
                 End If
@@ -6646,17 +6645,20 @@ Public Module Projekte
                 If roleName = "" Then
                     tdatenreihe = hproj.getAlleRessourcen
                 Else
-                    tdatenreihe = hproj.getRessourcenBedarf(roleName, True)
+                    tdatenreihe = hproj.getRessourcenBedarfNew(roleName, True)
                 End If
 
             Else
                 If roleName = "" Then
                     tdatenreihe = hproj.getAllPersonalKosten
                 Else
-                    tdatenreihe = hproj.getPersonalKosten(roleName, True)
+                    tdatenreihe = hproj.getRessourcenBedarfNew(roleName, inclSubRoles:=True, outPutInEuro:=True)
+
                 End If
+
             End If
             gesamt_Summe = tdatenreihe.Sum
+
 
             ' die Betrachtung der Ist-Daten versus Prognose Daten ...
             ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
@@ -6715,13 +6717,13 @@ Public Module Projekte
                     If roleName = "" Then
                         vdatenreihe = vglProj.getAlleRessourcen
                     Else
-                        vdatenreihe = vglProj.getRessourcenBedarf(roleName, True)
+                        vdatenreihe = vglProj.getRessourcenBedarfNew(roleName, True)
                     End If
                 Else
                     If roleName = "" Then
                         vdatenreihe = vglProj.getAllPersonalKosten
                     Else
-                        vdatenreihe = vglProj.getPersonalKosten(roleName, True)
+                        vdatenreihe = vglProj.getRessourcenBedarfNew(roleName, inclSubRoles:=True, outPutInEuro:=True)
                     End If
                 End If
 

@@ -2734,7 +2734,7 @@
                                 Dim chckID As String = RoleDefinitions.bestimmeRoleNameID(role.uid, role.teamID)
 
                                 With role
-                                    If matchingRoleNameIDs.ContainsKey(chckID) Then
+                                    If chckID = mrkvp.Key Then
                                         Dim dimension As Integer
                                         Dim tagessatz As Double = 1.0
                                         If outPutInEuro Then
