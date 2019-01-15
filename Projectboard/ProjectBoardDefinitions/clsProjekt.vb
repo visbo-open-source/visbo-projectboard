@@ -3172,7 +3172,7 @@ Public Class clsProjekt
             ' zurücksetzen 
             ReDim newValues(newLength - 1)
 
-            Dim myValues() As Double = Me.getRessourcenBedarf(tmpRoleNameID)
+            Dim myValues() As Double = Me.getRessourcenBedarfNew(tmpRoleNameID)
             Dim newRole As New clsRolle(newLength - 1)
 
             With newRole
@@ -3230,7 +3230,7 @@ Public Class clsProjekt
 
             newValues = newRole.Xwerte
 
-            Dim otherValues() As Double = otherProj.getRessourcenBedarf(tmpRoleNameID)
+            Dim otherValues() As Double = otherProj.getRessourcenBedarfNew(tmpRoleNameID)
 
 
             With newRole
@@ -3607,11 +3607,11 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getRessourcenBedarf(itemName, inclSubRoles)
+                            valueArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles:=inclSubRoles)
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getRessourcenBedarf(itemName, inclSubRoles)
+                                tempArray = Me.getRessourcenBedarfNew(itemName, inclSubRoles:=inclSubRoles)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next

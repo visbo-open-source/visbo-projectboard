@@ -1865,17 +1865,17 @@ Public Class clsProjekte
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
             Dim teamID As Integer
             Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleIDStr, teamID)
-
+            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleID, teamID)
 
             Dim currentRole As clsRollenDefinition = RoleDefinitions.getRoleDefByID(roleID)
-            Dim considerTeam As Boolean = currentRole.isTeam
+            'Dim considerTeam As Boolean = currentRole.isTeam
 
-            ' jetzt muss dafür gesorgt werden, dass nach der 
-            If considerTeam Then
-                teamID = currentRole.UID
-            Else
-                teamID = -1
-            End If
+            '' jetzt muss dafür gesorgt werden, dass nach der 
+            'If considerTeam Then
+            '    teamID = currentRole.UID
+            'Else
+            '    teamID = -1
+            'End If
 
             zeitraum = showRangeRight - showRangeLeft
             ReDim roleValues(zeitraum)
@@ -1887,7 +1887,7 @@ Public Class clsProjekte
 
             If considerAllSubRoles Then
                 'toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
-                toDoListe = RoleDefinitions.getSubRoleNameIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
+                toDoListe = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames)
             Else
                 Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(currentRole.UID, teamID)
                 toDoListe.Add(tmpNameID, 1.0)
@@ -1927,11 +1927,8 @@ Public Class clsProjekte
                             For Each rKvP As KeyValuePair(Of String, Double) In toDoListe
 
                                 If listOfRoles.Contains(rKvP.Key) Then
-                                    tempArray = hproj.getRessourcenBedarf(rKvP.Key, teamID:=teamID)
-                                    Dim tempArray2() As Double = hproj.getRessourcenBedarfNew(rKvP.Key)
-                                    If arraysAreDifferent(tempArray, tempArray2) Then
-                                        Call MsgBox("Unterschied ...")
-                                    End If
+
+                                    tempArray = hproj.getRessourcenBedarfNew(rKvP.Key, inclSubRoles:=False)
 
                                     For i = 0 To anzLoops - 1
                                         roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)

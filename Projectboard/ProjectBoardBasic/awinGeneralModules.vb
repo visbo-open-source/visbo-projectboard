@@ -1864,10 +1864,12 @@ Public Module awinGeneralModules
                 showRangeRight = getColumnOfDate(CDate("31.12.2019"))
 
                 For Each tmpRoleNameID As String In uRoles
-                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRoleNameID)
+
                     Dim myCollection As New Collection
                     myCollection.Add(tmpRoleNameID)
                     Dim uValues() As Double = uProj.getBedarfeInMonths(mycollection:=myCollection, type:=DiagrammTypen(1))
+
+                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRoleNameID)
 
                     If arraysAreDifferent(GPvalues, uValues) Then
                         tmpResult = False

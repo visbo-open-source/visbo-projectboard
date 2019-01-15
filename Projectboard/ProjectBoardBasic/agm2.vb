@@ -8692,6 +8692,9 @@ Public Module agm2
                                             ' test
                                             Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                                             If Not everythingOK Then
+                                                outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                                                outputCollection.Add(outPutLine)
+
                                                 ReDim logmsg(1)
                                                 logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                                                 logmsg(1) = current1program.constellationName
@@ -8936,7 +8939,7 @@ Public Module agm2
 
                                     Dim tmpCollection As New Collection
                                     tmpCollection.Add(tmpRollenName)
-                                    Dim istBedarf As Double = hproj.getRessourcenBedarf(tmpRollenName, inclSubRoles:=True).Sum
+                                    Dim istBedarf As Double = hproj.getRessourcenBedarfNew(tmpRollenName, inclSubRoles:=True).Sum
 
                                     If Math.Abs(sollBedarf - istBedarf) > 0.001 Then
                                         outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
@@ -9045,6 +9048,9 @@ Public Module agm2
                         ' test
                         Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                         If Not everythingOK Then
+
+                            outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                            outputCollection.Add(outPutLine)
 
                             ReDim logmsg(1)
                             logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
