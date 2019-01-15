@@ -640,10 +640,11 @@ Public Class clsRollen
         If _allRollen.ContainsKey(roleUID) Then
             Dim nodeName As String = roleUID.ToString
 
+            ' stellt sicher dass in einer sortierten Liste mit roleNameIDs alle Rollen mit der gleichen roleUID beieinander stehen  
             If isTeamMember Then
                 nodeName = roleUID.ToString & ";" & teamID.ToString
             Else
-                nodeName = roleUID.ToString
+                nodeName = roleUID.ToString & ";"
             End If
 
             tmpResult = nodeName

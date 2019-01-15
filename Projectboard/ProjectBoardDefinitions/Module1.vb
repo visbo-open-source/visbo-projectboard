@@ -7302,6 +7302,109 @@ Public Module Module1
 
     End Function
 
+    ''' <summary>
+    ''' gibt für eine sortierte String-Collection und eine sortierte Liste of string, Double die matching list als sortedList of String, double raus 
+    ''' </summary>
+    ''' <param name="existing"></param>
+    ''' <param name="lookingFor"></param>
+    ''' <returns></returns>
+    Public Function intersectNameIDLists(ByVal existing As Collection,
+                                   ByVal lookingFor As SortedList(Of String, Double)) As SortedList(Of String, Double)
+
+        Dim ergebnisListe As New SortedList(Of String, Double)
+        Dim teamID As Integer
+        Dim roleID As Integer
+
+        If existing.Count <= lookingFor.Count Then
+
+            For Each key As String In existing
+
+                If lookingFor.ContainsKey(key) Then
+                    ergebnisListe.Add(key, lookingFor.Item(key))
+                End If
+
+
+                roleID = RoleDefinitions.parseRoleNameID(key, teamID)
+                If teamID = -1 Then
+                    ' fertig 
+                Else
+                    ' es muss noch die Anfrage nach nur roleID gestellt werden 
+                    Dim key2 As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
+                    If lookingFor.ContainsKey(key2) Then
+                        ergebnisListe.Add(key, lookingFor.Item(key2))
+                    End If
+                End If
+            Next
+
+        Else
+            ' Vorbereitung , mit der indexliste kann in existing schnell nach allen RoleIDs gesucht werden, die vorkommen
+            Dim indexListe As New SortedList(Of Integer, Integer())
+
+            Dim oldRoleID As Integer = -1
+
+
+            For ix As Integer = 1 To existing.Count
+                Dim nameID As String = CStr(existing.Item(ix))
+                roleID = RoleDefinitions.parseRoleNameID(nameID, teamID)
+                If roleID > 0 Then
+
+                    If roleID <> oldRoleID Then
+                        If oldRoleID = -1 Then
+                            ' ein neuer start ist entdeckt 
+                            Dim wertePaar() As Integer
+                            ReDim wertePaar(1)
+                            wertePaar(0) = ix
+                            wertePaar(1) = ix
+                            oldRoleID = roleID
+                            indexListe.Add(roleID, wertePaar)
+
+                        Else
+                            ' ein neues Ende .. und ein neuer Start ist entdeckt 
+                            indexListe.Item(oldRoleID)(1) = ix - 1
+                            Dim wertePaar() As Integer
+                            ReDim wertePaar(1)
+                            wertePaar(0) = ix
+                            wertePaar(1) = ix
+                            oldRoleID = roleID
+                            indexListe.Add(roleID, wertePaar)
+                        End If
+
+                    End If
+
+                End If
+                ix = ix + 1
+            Next
+
+            For Each kvp As KeyValuePair(Of String, Double) In lookingFor
+
+                roleID = RoleDefinitions.parseRoleNameID(kvp.Key, teamID)
+
+                If teamID = -1 Then
+                    ' aus existing alle bekommen, die mit roleID beginnen
+                    If indexListe.ContainsKey(roleID) Then
+                        For ix As Integer = indexListe.Item(roleID)(0) To indexListe.Item(roleID)(1)
+                            Dim nameID As String = CStr(existing.Item(ix))
+                            If Not ergebnisListe.ContainsKey(nameID) Then
+                                ergebnisListe.Add(nameID, 1.0)
+                            End If
+                        Next
+                    End If
+                Else
+                    ' es ist ein Team angegeben , also will man das exakte haben 
+                    If existing.Contains(kvp.Key) Then
+                        ergebnisListe.Add(kvp.Key, kvp.Value)
+                    End If
+                End If
+
+            Next
+
+        End If
+
+
+        intersectNameIDLists = ergebnisListe
+    End Function
+
+
 
 
 

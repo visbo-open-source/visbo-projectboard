@@ -2637,11 +2637,9 @@
     ''' </summary>
     ''' <param name="roleID"></param>
     ''' <param name="inclSubRoles"></param>
-    ''' <param name="teamID"></param>
     ''' <returns></returns>
     Public ReadOnly Property getRessourcenBedarfNew(ByVal roleID As Object,
                                                     Optional ByVal inclSubRoles As Boolean = False,
-                                                    Optional ByVal teamID As Integer = -1,
                                                     Optional ByVal outPutInEuro As Boolean = False) As Double()
         Get
             Dim roleValues() As Double
@@ -2658,10 +2656,11 @@
 
 
             Dim roleUID As Integer
+            Dim teamID As Integer = -1
             Dim roleName As String = ""
             Dim roleNameID As String = ""
 
-            Dim roleNameIDs As New SortedList(Of String, Double)
+
 
 
             If _Dauer > 0 Then
@@ -2679,12 +2678,12 @@
                         roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
                     Else
                         ' es kann auch die form roleID;TeamID haben
-                        Dim tmpTeamID As Integer = -1
-                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), tmpTeamID)
+
+                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), teamID)
+
                         If roleUID > 0 Then
                             roleName = RoleDefinitions.getRoleDefByID(roleUID).name
                             roleNameID = CStr(roleID)
-                            teamID = tmpTeamID
                         End If
                     End If
                 End If
@@ -2698,21 +2697,24 @@
 
                 Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
 
+                Dim lookingForRoleNameIDs As New SortedList(Of String, Double)
 
                 ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
                 If inclSubRoles Then
-                    roleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleName, type:=PTcbr.all)
+                    lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleName, type:=PTcbr.all)
                 Else
-                    roleNameIDs.Add(roleNameID, 1.0)
+                    lookingForRoleNameIDs.Add(roleNameID, 1.0)
                 End If
 
+                Dim existingRoleNameIds As Collection = getRoleNameIDs
+                Dim matchingRoleNameIDs As SortedList(Of String, Double) = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
 
                 ReDim roleValues(_Dauer - 1)
 
-                For Each srkvp As KeyValuePair(Of String, Double) In roleNameIDs
+                For Each mrkvp As KeyValuePair(Of String, Double) In matchingRoleNameIDs
 
                     Dim tmpTeamID As Integer
-                    Dim curRoleName = RoleDefinitions.getRoleDefByIDKennung(srkvp.Key, tmpTeamID).name
+                    Dim curRoleName = RoleDefinitions.getRoleDefByIDKennung(mrkvp.Key, tmpTeamID).name
 
                     Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(curRoleName)
                     anzPhasen = listOfPhases.Count
@@ -2725,10 +2727,6 @@
                             anzRollen = .countRoles
                             phasenStart = .relStart - 1
 
-                            ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
-                            ' es können Unschärfen auftreten 
-                            'phasenEnde = .relEnde - 1
-
                             Dim found As Boolean = False
 
                             For r = 1 To anzRollen
@@ -2736,31 +2734,29 @@
                                 Dim chckID As String = RoleDefinitions.bestimmeRoleNameID(role.uid, role.teamID)
 
                                 With role
-
-                                    If chckID = srkvp.Key Then
-
-                                        If considerTeam Then
-                                            found = teamID = role.teamID
-                                        Else
-                                            found = True
+                                    If matchingRoleNameIDs.ContainsKey(chckID) Then
+                                        Dim dimension As Integer
+                                        Dim tagessatz As Double = 1.0
+                                        If outPutInEuro Then
+                                            tagessatz = role.tagessatzIntern
                                         End If
 
-                                        If found Then
-                                            Dim dimension As Integer
+                                        dimension = .getDimension
+                                        ReDim tempArray(dimension)
+                                        tempArray = .Xwerte
 
-                                            dimension = .getDimension
-                                            ReDim tempArray(dimension)
-                                            tempArray = .Xwerte
-
-                                            For i = phasenStart To phasenStart + dimension
+                                        For i = phasenStart To phasenStart + dimension
+                                            If outPutInEuro Then
+                                                roleValues(i) = roleValues(i) + tempArray(i - phasenStart) * tagessatz / 1000
+                                            Else
                                                 roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
-                                            Next i
-                                        End If
+                                            End If
 
-
+                                        Next i
                                     End If
+                                End With
 
-                                End With ' role
+
                             Next r
 
                         End With ' phase
