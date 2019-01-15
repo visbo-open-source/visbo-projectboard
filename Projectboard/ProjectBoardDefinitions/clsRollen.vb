@@ -716,6 +716,11 @@ Public Class clsRollen
             Dim initialRole As clsRollenDefinition = getRoleDefByIDKennung(roleNameID, teamID)
 
 
+            ' die roleNameID kann auf vielfältige Art und Weise übergeben , deswegen muss das hier 'normiert' werden 
+            ' die folgende parse-Methode kann ID(string), ID; ID;TeamID und Name behandeln, deswegen diese retwas komisch amutende 'Round-Trip'
+            Dim roleID As Integer = parseRoleNameID(roleNameID, teamID)
+            roleNameID = bestimmeRoleNameID(roleID, teamID)
+
             If Not IsNothing(initialRole) Then
 
 

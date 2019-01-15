@@ -2650,14 +2650,14 @@
             Dim i As Integer, p As Integer, r As Integer
             Dim phase As clsPhase
             Dim role As clsRolle
-            Dim lookforIndex As Boolean
+
             Dim phasenStart As Integer
             Dim tempArray As Double()
 
 
             Dim roleUID As Integer
             Dim teamID As Integer = -1
-            Dim roleName As String = ""
+            Dim roleName As String = "" ' kann eigentlich raus; ist nur drin, weil dann leichter debuggable ...
             Dim roleNameID As String = ""
 
 
@@ -2665,27 +2665,22 @@
 
             If _Dauer > 0 Then
 
-                lookforIndex = IsNumeric(roleID)
-
                 If IsNumeric(roleID) Then
                     roleUID = CInt(roleID)
                     roleName = RoleDefinitions.getRoleDefByID(roleUID).name
                     roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
                 Else
-                    If RoleDefinitions.containsName(CStr(roleID)) Then
-                        roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
-                        roleName = CStr(roleID)
-                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
+
+                    roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), teamID)
+                    If roleUID > 0 Then
+                        roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                     Else
-                        ' es kann auch die form roleID;TeamID haben
-
-                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), teamID)
-
-                        If roleUID > 0 Then
-                            roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                            roleNameID = CStr(roleID)
-                        End If
+                        ReDim roleValues(0)
+                        getRessourcenBedarfNew = roleValues
+                        Exit Property
                     End If
+
                 End If
 
                 ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
@@ -2701,7 +2696,7 @@
 
                 ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
                 If inclSubRoles Then
-                    lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleName, type:=PTcbr.all)
+                    lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
                 Else
                     lookingForRoleNameIDs.Add(roleNameID, 1.0)
                 End If

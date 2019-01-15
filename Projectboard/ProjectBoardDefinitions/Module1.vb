@@ -7330,7 +7330,8 @@ Public Module Module1
 
             Dim oldRoleID As Integer = -1
 
-
+            ' mit indexListe wird eine Hilfs-Struktur aufgebaut, die den Umstand nutzt, dass die NAmeIDs alle sortiert sind und 
+            ' deshalb Rollen mit gleicher RoleID beieinander stehen; deswegen muss auch eine Rolle ohne team mit';' enden 
             For ix As Integer = 1 To existing.Count
                 Dim nameID As String = CStr(existing.Item(ix))
                 roleID = RoleDefinitions.parseRoleNameID(nameID, teamID)
@@ -7360,7 +7361,7 @@ Public Module Module1
                     End If
 
                 End If
-                ix = ix + 1
+
             Next
 
             For Each kvp As KeyValuePair(Of String, Double) In lookingFor
