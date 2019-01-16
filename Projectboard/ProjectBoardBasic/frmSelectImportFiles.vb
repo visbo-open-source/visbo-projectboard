@@ -54,6 +54,11 @@ Public Class frmSelectImportFiles
                                 ListImportFiles.Items.Add(dateiName)
                             End If
 
+                        ElseIf menueAswhl = PTImpExp.offlineData Then
+                            If dateiName.Contains("ffline") Then
+                                ListImportFiles.Items.Add(dateiName)
+                            End If
+
                         Else
                             ListImportFiles.Items.Add(dateiName)
                         End If
@@ -238,6 +243,17 @@ Public Class frmSelectImportFiles
 
             Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
             Me.alleButton.Visible = True
+
+        ElseIf menueAswhl = PTImpExp.offlineData Then
+            dirName = importOrdnerNames(PTImpExp.offlineData)
+            If awinSettings.englishLanguage Then
+                Me.Text = "select a offline-resource-assignment file"
+            Else
+                Me.Text = "Offline Ressourcen Zuordnungs-Datei auswählen"
+            End If
+
+            Me.ListImportFiles.SelectionMode = System.Windows.Forms.SelectionMode.One
+            Me.alleButton.Visible = False
         End If
 
 
@@ -290,13 +306,16 @@ Public Class frmSelectImportFiles
         ElseIf menueAswhl = PTImpExp.actualData Then
             dirName = importOrdnerNames(PTImpExp.scenariodefs)
 
+        ElseIf menueAswhl = PTImpExp.offlineData Then
+            dirName = importOrdnerNames(PTImpExp.offlineData)
+
         End If
 
 
 
         For i = 1 To Me.ListImportFiles.Items.Count
             element = Me.ListImportFiles.Items.Item(i - 1)
-            element = dirName & "\" & element
+            element = My.Computer.FileSystem.CombinePath(dirName, element)
 
             If selImportFiles.Contains(element) Then
                 ' nichts tun 
@@ -359,12 +378,15 @@ Public Class frmSelectImportFiles
 
         ElseIf menueAswhl = PTImpExp.actualData Then
             dirName = importOrdnerNames(PTImpExp.scenariodefs)
+
+        ElseIf menueAswhl = PTImpExp.offlineData Then
+            dirName = importOrdnerNames(PTImpExp.offlineData)
         End If
 
 
         For i = 1 To Me.ListImportFiles.SelectedItems.Count
             element = Me.ListImportFiles.SelectedItems.Item(i - 1)
-            element = dirName & "\" & element
+            element = My.Computer.FileSystem.CombinePath(dirName, element)
 
             If selImportFiles.Contains(element) Then
                 ' nichts tun 

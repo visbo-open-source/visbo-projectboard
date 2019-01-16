@@ -279,9 +279,9 @@ Public Class clsRollen
 
                     For sr As Integer = 1 To tmpCollection.Count
                         Dim tmpRole As clsRollenDefinition = Me.getRoledef(CStr(tmpCollection.Item(sr)))
-                        Dim subRoleNames As SortedList(Of Integer, Double) = Me.getSubRoleIDsOf(tmpRole.name, PTcbr.all)
+                        Dim subRoleIDs As SortedList(Of Integer, Double) = Me.getSubRoleIDsOf(tmpRole.name, PTcbr.all)
 
-                        If Not subRoleNames.ContainsKey(initialRole.UID) Then
+                        If Not subRoleIDs.ContainsKey(initialRole.UID) Then
                             removeList.Add(tmpRole.name, tmpRole.name)
                         End If
                     Next
@@ -297,6 +297,28 @@ Public Class clsRollen
 
             getSummaryRoles = tmpCollection
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn es Kinder gibt, die Teams sind
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property isParentOfTeams(ByVal roleName As String) As Boolean
+        Get
+            Dim teamFound As Boolean = False
+            Dim ausschluss As Collection = getTopLevelNodeNames
+
+            Dim childNameIds As SortedList(Of String, Double) = getSubRoleNameIDsOf(roleName)
+
+            Dim ix As Integer = 0
+            Do While ix <= childNameIds.Count - 1 And Not teamFound
+                teamFound = childNameIds.ElementAt(ix).Key.Contains(";")
+                ix = ix + 1
+            Loop
+
+            isParentOfTeams = teamFound
         End Get
     End Property
 
@@ -342,6 +364,127 @@ Public Class clsRollen
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt zu dem übergebenen String, der RoleNames in der Form D-BOSV-KB1; D-BOSV-KB2; etc enthält 
+    ''' die gültigen Namen in Form eines Id-Arrays zurück 
+    ''' </summary>
+    ''' <param name="aufzaehlung"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getIDArray(ByVal aufzaehlung As String) As Integer()
+        Get
+            Dim tmpResult() As Integer = Nothing
+            Dim realAnzahl As Integer = 0
+
+            Dim tmpStr() As String = aufzaehlung.Split(New Char() {CChar(";")})
+            For Each tmpName As String In tmpStr
+                If RoleDefinitions.containsName(tmpName) Then
+                    realAnzahl = realAnzahl + 1
+                End If
+            Next
+
+            If realAnzahl > 0 Then
+                ReDim tmpResult(realAnzahl - 1)
+                Dim ix As Integer = 0
+                For Each tmpName As String In tmpStr
+                    If RoleDefinitions.containsName(tmpName) Then
+                        tmpResult(ix) = RoleDefinitions.getRoledef(tmpName).UID
+                        ix = ix + 1
+                    End If
+                Next
+            End If
+
+            getIDArray = tmpResult
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu der angegebenen Menge von Namen bzw. nameIDs die zugehörigen roleIDs als Array zurück 
+    ''' </summary>
+    ''' <param name="nameCollection"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getIDArray(ByVal nameCollection As Collection) As Integer()
+        Get
+            Dim tmpResult() As Integer = Nothing
+
+            Dim tmpCollection As New Collection
+
+            For Each nameID As String In nameCollection
+                Dim teamID As Integer = -1
+                Dim roleID As Integer = parseRoleNameID(nameID, teamID)
+                If roleID > 0 Then
+                    tmpCollection.Add(roleID)
+                End If
+            Next
+
+            If tmpCollection.Count > 0 Then
+                ReDim tmpResult(tmpCollection.Count - 1)
+                Dim ix As Integer = 0
+                For Each roleID As Integer In tmpCollection
+                    tmpResult(ix) = roleID
+                    ix = ix + 1
+                Next
+            End If
+
+            getIDArray = tmpResult
+        End Get
+    End Property
+
+    Public Function chooseParentFromList(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As String
+        Dim tmpResult As String = ""
+
+        Dim teamID As Integer = -1
+
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+        If summaryRoleIDs.Contains(roleID) Then
+            tmpResult = RoleDefinitions.getRoleDefByID(roleID).name
+
+        Else
+            For Each summaryRoleID As Integer In summaryRoleIDs
+                Dim chckRelation As Boolean = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
+                If chckRelation = True Then
+                    tmpResult = RoleDefinitions.getRoleDefByID(summaryRoleID).name
+                    Exit For
+                End If
+            Next
+
+        End If
+
+        chooseParentFromList = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' überprüft, ob die angegebene roleNameID in der Form roleID;teamID bzw roleId Kind einer der angegebenen Sammelrollen ist
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="summaryRoleIDs"></param>
+    ''' <returns></returns>
+    Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleIDs() As Integer) As Boolean
+
+        Dim tmpResult As Boolean = False
+        Dim teamID As Integer = -1
+
+        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+        If summaryRoleIDs.Contains(roleID) Then
+            tmpResult = True
+
+        Else
+            For Each summaryRoleID As Integer In summaryRoleIDs
+                tmpResult = hasAnyChildParentRelationsship(roleNameID, summaryRoleID)
+                If tmpResult = True Then
+                    Exit For
+                End If
+            Next
+
+        End If
+        hasAnyChildParentRelationsship = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="roleNameID"></param>
+    ''' <param name="summaryRoleID"></param>
+    ''' <returns></returns>
     Public Function hasAnyChildParentRelationsship(ByVal roleNameID As String, ByVal summaryRoleID As Integer) As Boolean
         Dim tmpResult As Boolean = False
         Dim teamID As Integer = -1
@@ -420,13 +563,13 @@ Public Class clsRollen
     ''' gibt true zurück, wenn die angegebene Rolle / Kostenart ein Kind oder Kindeskind eines der Elemente ist
     ''' oder das Element selber ist 
     ''' </summary>
-    ''' <param name="roleCostName"></param>
+    ''' <param name="roleName"></param>
     ''' <param name="roleCostCollection"></param>
     ''' <returns></returns>
-    Public Function hasAnyChildParentRelationsship(ByVal roleCostName As String, ByVal roleCostCollection As Collection) As Boolean
+    Public Function hasAnyChildParentRelationsship(ByVal roleName As String, ByVal roleCostCollection As Collection) As Boolean
 
-        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleCostName)
-        Dim isRole As Boolean = RoleDefinitions.containsName(roleCostName)
+        Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoledef(roleName)
+        Dim isRole As Boolean = RoleDefinitions.containsName(roleName)
 
         Dim iscost As Boolean = False
         Dim found As Boolean = False
@@ -437,14 +580,14 @@ Public Class clsRollen
 
             ' ist es eine Gruppe ...
             If tmpRole.isTeam Then
-                myIDs = Me.getSubRoleIDsOf(roleCostName)
+                myIDs = Me.getSubRoleIDsOf(roleName)
             Else
                 myIDs = New SortedList(Of Integer, Double)
-                Dim myUID As Integer = RoleDefinitions.getRoledef(roleCostName).UID
+                Dim myUID As Integer = RoleDefinitions.getRoledef(roleName).UID
                 myIDs.Add(myUID, 1.0)
             End If
 
-            If roleCostCollection.Contains(roleCostName) Then
+            If roleCostCollection.Contains(roleName) Then
                 found = True
             Else
                 Do While Not found And ix <= roleCostCollection.Count
@@ -452,7 +595,7 @@ Public Class clsRollen
                     Dim parentName As String = CStr(roleCostCollection.Item(ix))
 
                     If RoleDefinitions.containsName(parentName) Then
-                        Dim myUID As Integer = RoleDefinitions.getRoledef(roleCostName).UID
+                        Dim myUID As Integer = RoleDefinitions.getRoledef(roleName).UID
                         Dim childIDs As SortedList(Of Integer, Double) = Me.getSubRoleIDsOf(parentName)
                         Dim myIX As Integer = 0
                         Do While Not found And myIX <= myIDs.Count - 1
@@ -488,20 +631,20 @@ Public Class clsRollen
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
         Dim tmpResult As String = ""
-        Dim ok As Boolean = True
         Dim isTeamMember As Boolean = (teamID > 0)
 
-        If teamID > 0 Then
-            ok = _allRollen.ContainsKey(teamID)
+        If isTeamMember Then
+            isTeamMember = _allRollen.ContainsKey(teamID)
         End If
 
-        If _allRollen.ContainsKey(roleUID) And ok Then
+        If _allRollen.ContainsKey(roleUID) Then
             Dim nodeName As String = roleUID.ToString
 
+            ' stellt sicher dass in einer sortierten Liste mit roleNameIDs alle Rollen mit der gleichen roleUID beieinander stehen  
             If isTeamMember Then
                 nodeName = roleUID.ToString & ";" & teamID.ToString
             Else
-                nodeName = roleUID.ToString
+                nodeName = roleUID.ToString & ";"
             End If
 
             tmpResult = nodeName
@@ -572,6 +715,11 @@ Public Class clsRollen
             Dim teamID As Integer = -1
             Dim initialRole As clsRollenDefinition = getRoleDefByIDKennung(roleNameID, teamID)
 
+
+            ' die roleNameID kann auf vielfältige Art und Weise übergeben , deswegen muss das hier 'normiert' werden 
+            ' die folgende parse-Methode kann ID(string), ID; ID;TeamID und Name behandeln, deswegen diese retwas komisch amutende 'Round-Trip'
+            Dim roleID As Integer = parseRoleNameID(roleNameID, teamID)
+            roleNameID = bestimmeRoleNameID(roleID, teamID)
 
             If Not IsNothing(initialRole) Then
 
@@ -900,7 +1048,7 @@ Public Class clsRollen
             Dim found As Boolean = False
             If IsNothing(name) Then
                 ' found bleibt auf false
-            Else
+            ElseIf name <> "" Then
                 found = _allNames.ContainsKey(name)
 
                 ' tk geändert 29.5.18
@@ -918,22 +1066,38 @@ Public Class clsRollen
         End Get
     End Property
 
-    Public ReadOnly Property containsNameID(nameID As String) As Boolean
+    ''' <summary>
+    ''' gibt true zurück, wenn es sich bei dem NameID-String roleUID;teamID um eine valide Kombination handelt
+    ''' Strongtest=true: gibt nur true zurück, wenn roleUID, TeamUID existieren und RoleUId auch Kind von TeamID ist 
+    ''' strongTest=false: gibt true zurück, wenn RoleUID und TeamID existieren  
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property containsNameID(ByVal nameID As String, Optional ByVal strongTest As Boolean = True) As Boolean
         Get
             Dim tmpResult As Boolean = False
             Dim teamID As Integer = -1
             Dim roleUID As Integer = parseRoleNameID(nameID, teamID)
 
-            If nameID.Contains(";") And teamID = -1 Then
-                ' nicht ok 
-            ElseIf roleUID = -1 Then
-                ' nicht ok 
-            ElseIf roleUID > 0 And teamID = -1 Then
-                ' alles ok 
-                tmpResult = True
-            ElseIf roleUID > 0 And teamID > 0 Then
-                ' alles ok 
-                tmpResult = True
+            If _allRollen.ContainsKey(roleUID) Then
+                ' ist ein Team angegeben ? 
+                If teamID <> -1 Then
+                    If _allRollen.ContainsKey(teamID) Then
+                        If Not strongTest Then
+                            tmpResult = True
+                        Else
+                            ' ist die RoleUID auch Kind des Teams ? 
+                            If getRoleDefByID(teamID).getSubRoleIDs.ContainsKey(roleUID) Then
+                                tmpResult = True
+                            End If
+                        End If
+
+                    End If
+                Else
+                    tmpResult = True
+                End If
+            Else
+                tmpResult = False
             End If
 
             containsNameID = tmpResult
@@ -1015,6 +1179,26 @@ Public Class clsRollen
 
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' gibt den Bezeichner zurück
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <returns></returns>
+    Public ReadOnly Property getBezeichner(ByVal nameID As String) As String
+        Get
+            Dim tmpResult As String = ""
+            Dim teamID As Integer
+            Dim roleID As Integer = parseRoleNameID(nameID, teamID)
+            If teamID <> -1 Then
+                tmpResult = _allRollen.Item(roleID).name & " (" & _allRollen.Item(teamID).name & ")"
+            Else
+                tmpResult = _allRollen.Item(roleID).name
+            End If
+
+            getBezeichner = tmpResult
+        End Get
     End Property
 
     ''' <summary>

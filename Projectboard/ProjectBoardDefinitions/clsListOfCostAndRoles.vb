@@ -238,11 +238,53 @@ Public Class clsListOfCostAndRoles
     'End Property
 
     ''' <summary>
-    ''' liefert eine sortierte Collection mit allen vorkommenden Role-Names zurück
+    ''' liefert eine sortierte Collection mit allen vorkommenden Role-NameIDs zurück
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
+    Public ReadOnly Property getRoleNameIDs As Collection
+        Get
+            Dim tmpCollection As New Collection
+            Dim aufnehmen As Boolean = False
+
+            For Each kvp As KeyValuePair(Of Integer, SortedList(Of Integer, Collection)) In _listOfRoles
+
+                aufnehmen = False
+                If RoleDefinitions.containsUid(kvp.Key) Then
+
+                    For Each tkvp As KeyValuePair(Of Integer, Collection) In kvp.Value
+
+                        Dim tmpRoleNameID As String = ""
+                        If tkvp.Key = -1 Then
+                            aufnehmen = True
+                        ElseIf RoleDefinitions.containsUid(tkvp.Key) Then
+                            aufnehmen = True
+                        End If
+
+                        If aufnehmen Then
+
+                            tmpRoleNameID = RoleDefinitions.bestimmeRoleNameID(kvp.Key, tkvp.Key)
+
+                            If Not tmpCollection.Contains(tmpRoleNameID) Then
+                                tmpCollection.Add(tmpRoleNameID, tmpRoleNameID)
+                            End If
+
+
+                        End If
+
+                    Next
+
+
+                End If
+
+            Next
+
+            getRoleNameIDs = tmpCollection
+
+        End Get
+    End Property
+
     Public ReadOnly Property getRoleNames As Collection
         Get
             Dim tmpCollection As New Collection

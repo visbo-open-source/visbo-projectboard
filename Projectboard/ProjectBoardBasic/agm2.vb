@@ -8692,6 +8692,9 @@ Public Module agm2
                                             ' test
                                             Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                                             If Not everythingOK Then
+                                                outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                                                outputCollection.Add(outPutLine)
+
                                                 ReDim logmsg(1)
                                                 logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                                                 logmsg(1) = current1program.constellationName
@@ -9046,6 +9049,9 @@ Public Module agm2
                         Dim everythingOK As Boolean = testUProjandSingleProjs(current1program)
                         If Not everythingOK Then
 
+                            outPutLine = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben: " & current1program.constellationName
+                            outputCollection.Add(outPutLine)
+
                             ReDim logmsg(1)
                             logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
                             logmsg(1) = current1program.constellationName
@@ -9087,6 +9093,365 @@ Public Module agm2
 
     End Sub
 
+    ''' <summary>
+    ''' gibt den Wert einer Excel Zelle als String zurück
+    ''' wenn Nothing in der Excel Zelle ist, wir dder leere String zurückgegeben
+    ''' </summary>
+    ''' <param name="excelCell">ist die Zelle, um die es geht</param>
+    ''' <returns></returns>
+    Public Function getStringFromExcelCell(ByVal excelCell As Excel.Range) As String
+
+        Dim tmpResult As String = ""
+        Try
+            If excelCell.Cells.Count = 1 Then
+                tmpResult = CStr(excelCell.Value).Trim
+                If IsNothing(tmpResult) Then
+                    tmpResult = ""
+                End If
+            End If
+
+        Catch ex As Exception
+
+        End Try
+
+
+        getStringFromExcelCell = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' gibt den Wert einer Excel-Zelle als Double-Wert zurück; wenn Nothing oder keine Zahl wird 0.0 zurückgegeben
+    ''' </summary>
+    ''' <param name="excelCell"></param>
+    ''' <returns></returns>
+    Public Function getDoubleFromExcelCell(ByVal excelCell As Excel.Range) As Double
+
+        Dim tmpTest As Object = CDbl(excelCell.Value)
+        Dim tmpResult As Double = 0.0
+
+        If IsNothing(tmpTest) Then
+            ' nichts tun 
+        Else
+            If IsNumeric(tmpTest) Then
+                tmpResult = CDbl(tmpTest)
+            End If
+        End If
+
+        getDoubleFromExcelCell = tmpResult
+    End Function
+
+    ''' <summary>
+    ''' importiert die Offline Ressourcen Dateien 
+    ''' </summary>
+    ''' <param name="wb"></param>
+    ''' <param name="outputCollection"></param>
+    Public Sub ImportOfflineData(ByVal wb As String, ByRef outputCollection As Collection)
+
+        Dim tfZeile As Integer = 2
+
+        Dim pName As String = ""
+        Dim variantName As String = ""
+
+
+        Dim upDatedProjects As Integer = 0
+        Dim errorProjects As Integer = 0
+
+        Dim firstRow As Integer = 0
+        Dim lastRow As Integer = 0
+        Dim lastColumn As Integer = 0
+
+        Dim ok As Boolean = False
+
+        ' die Projekte
+
+        Dim hproj As clsProjekt = Nothing
+        Dim newProj As clsProjekt = Nothing
+        Dim projektKundenNummer As String = ""
+
+
+        ' welche Rollen sollen gelöscht werden; die werden dann danach gesetzt, ob es sich um einen Ressource-Manager handelt, 
+        ' der nur einen Teil importieren kann oder um den Portfolio Manager, der eine neue komplette Vorgabe macht 
+        Dim deleteRoles As New Collection
+
+
+        '' new approach 
+        Dim currentWS As Excel.Worksheet = Nothing
+        Try
+            currentWS = CType(CType(appInstance.Workbooks.Item(wb), Excel.Workbook).Worksheets.Item("VISBO"), Excel.Worksheet)
+        Catch ex As Exception
+            logmessage = "Sheet VISBO nicht gefunden ... Abbruch"
+            outputCollection.Add(logmessage)
+            Exit Sub
+        End Try
+
+        Dim dataRange As Excel.Range = currentWS.UsedRange
+
+
+        ' bestimme, wo PName, VariantName, Kunden-Nummer, PhaseName, RoleName, Value(PT), Value(T€) steht
+        Dim colPName As Integer = 1
+        Dim colVName As Integer = 2
+        Dim colKdNr As Integer = 3
+        Dim colType As Integer = 4
+        Dim colPhaseName As Integer = 5
+        Dim colRoleName As Integer = 6
+        Dim colSumPT As Double = 7
+        Dim colSumTe As Double = 8
+
+        ' für logfile 
+        Dim tmpanz As Long = 0
+
+        ' bestimme die maximale Anzahl Zeilen
+        'Dim lastRow As Integer = 0
+
+        With dataRange
+            firstRow = CType(.Rows.Item(2), Excel.Range).Row
+            lastRow = CType(.Rows.Item(.Rows.Count), Excel.Range).Row
+            lastColumn = CType(.Columns.Item(.Columns.Count), Excel.Range).Column
+        End With
+
+
+        ' überprüfe bzw. stelle sicher, dass die Datei sortiert nach Pname, VariantName, PhaseName, RoleName ist
+        ' in einer ersten Version wird dies manuell sichergestellt ... 
+        Dim firstRowOfProject As Integer = firstRow
+        Dim lastRowOFProject As Integer = 1
+        Dim currentZeile As Integer = 2
+        ' ------------------------------------------------
+        '
+        ' was passiert hier alles ? 
+        ' 
+        ' für jedes Projekt 
+
+        '    lade das Projekt bzw. die Projekt-Variante
+        '    erzeuge eine temporäre Variante 
+        '    bestimme die Anzahl Phasen in dem Projekt  
+        '    bestimme die rolePhaseValues 
+        '    bestimme die deleteRoles aus den "Eltern" der in rolePhaseValues auftretenden Rollen
+        '    lösche die deleteRoles+Kinder+Kindeskinder aus jeder Phase des Projektes 
+        '    für jede Rolle: 
+        '       trage sie In den auftretenden Phasen ein; wenn sie Istdaten enthält, verteile die Summe entsprechend bzw gib eine Fehlermeldung aus 
+        '    wenn alles gut gegangen ist, dann mach daraus die ursprüngliche Variante 
+
+
+        Do While currentZeile <= lastRow
+
+            ' bestimme first- and lastRowOfProject 
+            firstRowOfProject = lastRowOFProject + 1
+            Dim currentPName As String = getStringFromExcelCell(currentWS.Cells(firstRowOfProject, colPName))
+            Dim currentVName As String = getStringFromExcelCell(currentWS.Cells(firstRowOfProject, colVName))
+            Dim currentKdNummer As String = getStringFromExcelCell(currentWS.Cells(firstRowOfProject, colKdNr))
+
+            Dim tmpZeile As Integer = firstRowOfProject + 1
+            Dim tmpPName As String = getStringFromExcelCell(currentWS.Cells(tmpZeile, colPName))
+            Dim tmpVname As String = getStringFromExcelCell(currentWS.Cells(tmpZeile, colVName))
+
+            Dim newPNameFound As Boolean = (tmpPName <> currentPName) Or (tmpVname <> currentVName)
+
+            Do While tmpZeile < lastRow And Not newPNameFound
+                ' bestimme die neue lastRowOfProject 
+                tmpZeile = tmpZeile + 1
+                tmpPName = getStringFromExcelCell(currentWS.Cells(tmpZeile, colPName))
+                tmpVname = getStringFromExcelCell(currentWS.Cells(tmpZeile, colVName))
+                newPNameFound = (tmpPName <> currentPName) Or (tmpVname <> currentVName)
+            Loop
+
+            If newPNameFound Then
+                lastRowOFProject = tmpZeile - 1
+            Else
+                lastRowOFProject = tmpZeile
+            End If
+
+            ' lade die Projekt-Variante 
+            hproj = getProjektFromSessionOrDB(currentPName, currentVName, AlleProjekte, Date.Now, currentKdNummer)
+
+            If IsNothing(hproj) Then
+                logmessage = "Projekt " & currentPName & " existiert nicht ..."
+                outputCollection.Add(logmessage)
+
+                Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+            Else
+                If hproj.hasActualValues Then
+                    ' noch nicht erlaubt ...
+
+                Else
+                    Dim anzPhasen As Integer = hproj.CountPhases
+
+                    ' enthält die eingeplanten PT für die einzelnen Releases  
+                    Dim phValues() As Double
+                    ' enthält die Phasen Namen
+                    Dim phNameIDs() As String
+
+                    ReDim phValues(anzPhasen - 1)
+                    ReDim phNameIDs(anzPhasen - 1)
+
+                    For ip As Integer = 1 To hproj.CountPhases
+                        Dim cPhase As clsPhase = hproj.getPhase(ip)
+                        phNameIDs(ip - 1) = cPhase.nameID
+                    Next
+
+                    ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
+                    Dim rolePhaseValues As New SortedList(Of String, Double())
+
+
+                    For iz As Integer = firstRowOfProject To lastRowOFProject
+
+                        Dim currentCell As Excel.Range = CType(currentWS.Cells(iz, colRoleName), Excel.Range)
+                        Dim roleNameID As String = getRCNameIDfromExcelCell(currentCell)
+
+                        currentCell = CType(currentWS.Cells(iz, colPhaseName), Excel.Range)
+                        Dim phaseNameID As String = getPhaseNameIDfromExcelCell(currentCell)
+                        Dim ix As Integer = 0
+
+                        ' nur weitermachen, wenn valide Angaben 
+                        If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameID(roleNameID) Then
+                            Dim curDelRole As String = ""
+                            Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
+                            curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList)
+                            If curDelRole.Length > 0 Then
+                                If Not deleteRoles.Contains(curDelRole) Then
+                                    deleteRoles.Add(curDelRole, curDelRole)
+                                End If
+                            End If
+
+
+                            ' bestimme jetzt den Index 
+                            Dim found As Boolean = False
+                            Do While ix <= phNameIDs.Length - 1 And Not found
+                                If phNameIDs(ix) = phaseNameID Then
+                                    found = True
+                                Else
+                                    ix = ix + 1
+                                End If
+                            Loop
+
+                            Dim sumPT As Double = getDoubleFromExcelCell(currentWS.Cells(iz, colSumPT))
+                            Dim sumTE As Double = getDoubleFromExcelCell(currentWS.Cells(iz, colSumTe))
+                            Dim weiterMachen As Boolean = False
+                            If sumPT > 0 And sumTE = 0 Then
+                                ' Angabe in PT, der Wert passt schon 
+                                weiterMachen = True
+                            ElseIf colSumPT = 0 And colSumTe > 0 Then
+                                ' Angabe in T€
+                                ' der Wert muss in PT umgerechnet werden 
+                                Dim teamID As Integer = -1
+                                Dim tagessatz As Double = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID).tagessatzIntern
+                                If tagessatz <= 0 Then
+                                    weiterMachen = False
+                                Else
+                                    sumPT = sumTE / tagessatz
+                                    weiterMachen = True
+                                End If
+
+                            Else
+                                ' nichts tun...
+                                weiterMachen = False
+                            End If
+
+                            If weiterMachen Then
+                                If rolePhaseValues.ContainsKey(roleNameID) Then
+                                    phValues = rolePhaseValues.Item(roleNameID)
+                                    phValues(ix) = phValues(ix) + sumPT
+                                Else
+                                    ReDim phValues(anzPhasen - 1)
+                                    phValues(ix) = sumPT
+                                    rolePhaseValues.Add(roleNameID, phValues)
+                                End If
+
+                            End If
+
+
+
+                        Else
+                            ' nichts tun
+
+                        End If
+
+
+                    Next
+
+                    ' jetzt muss das Projekt verändert werden 
+                    ' 1. die deleteRoles alle löschen 
+
+                    ' 2. die roleValues ergänzen
+
+                    ' jetzt wird der Merge auf das Projekt gemacht 
+                    ' dabei wird die updateSummaryRole und alle dazu gehörenden SubRoles gelöscht 
+                    ' es müssen aber auch die Gruppe gelöscht werden ... 
+
+                    ' test tk 
+                    Dim formerLeft As Integer = showRangeLeft
+                    Dim formerRight As Integer = showRangeRight
+                    showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
+                    showRangeRight = getColumnOfDate(CDate("31.12.2019"))
+
+                    Dim testprojekte As New clsProjekte
+                    testprojekte.Add(hproj)
+
+                    Dim gesamtVorher As Double = hproj.getAlleRessourcen().Sum
+                    Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonth("Orga", considerAllSubRoles:=True).Sum
+
+                    ' tk test ...
+                    If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
+                        logmessage = hproj.name & " Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString
+                        outputCollection.Add(logmessage)
+                    End If
+                    ' tk test ...
+
+                    ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
+                    newProj = hproj.deleteRolesAndCosts(deleteRoles, Nothing, True)
+                    Dim gesamtNachher As Double = newProj.getAlleRessourcen().Sum
+
+                    ' tk test ...
+                    For Each tmpRoleName As String In deleteRoles
+                        Dim roleSumNachher As Double = newProj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
+
+                        If Not roleSumNachher = 0 Then
+                            logmessage = "Rolle " & tmpRoleName & " wurde nicht gelöscht ... Fehler bei" & newProj.name
+                            outputCollection.Add(logmessage)
+                        End If
+                    Next
+                    ' tk test ...
+
+
+                    ' jetzt alle Rollen / Phasen Werte hinzufügen 
+
+                    newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
+
+                    ' tk test 
+                    For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+                        Dim teilErgebnis As Double = newProj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False).Sum
+                        If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
+                            logmessage = "TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
+                            outputCollection.Add(logmessage)
+                        End If
+
+                    Next
+
+
+                    ' jetzt in die Import-Projekte eintragen 
+                    upDatedProjects = upDatedProjects + 1
+                    ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+
+                    ' wegen test 
+                    showRangeLeft = formerLeft
+                    showRangeRight = formerRight
+
+
+                End If
+
+            End If
+
+            currentZeile = lastRowOFProject + 1
+
+        Loop
+
+        If outputCollection.Count > 0 Then
+            Call showOutPut(outputCollection, "Import Offline Ressourcen Zuordnungen", "")
+        End If
+
+        Call MsgBox("Zeilen gelesen: " & (lastRow - firstRow + 1).ToString & vbLf &
+                    "Projekte aktualisiert: " & upDatedProjects)
+
+
+    End Sub
 
     ''' <summary>
     ''' aktualisiert Projekte mit den für BOSV-KB angegebenen Werten 
@@ -12182,8 +12547,9 @@ Public Module agm2
     ''' </summary>
     ''' <param name="von">Start-Monat (showrangeleft)</param>
     ''' <param name="bis">Ende-Monat (showrangeright)</param>
-    ''' <param name="roleCostCollection"></param>
-    Public Sub writeProjektDetailsToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleCostCollection As Collection)
+    ''' <param name="roleNameIDCollection"></param>
+    ''' <param name="costNameCollection"></param>
+    Public Sub writeProjektDetailsToExcel(ByVal von As Integer, ByVal bis As Integer, ByVal roleNameIDCollection As Collection, ByVal costNameCollection As Collection)
 
         appInstance.EnableEvents = False
 
@@ -12216,37 +12582,22 @@ Public Module agm2
         Dim newWB As Excel.Workbook
 
         Dim considerAll As Boolean = True
+        ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
+        considerAll = ((roleNameIDCollection.Count = 0) And (costNameCollection.Count = 0))
 
-        Dim roleCollection As New Collection
-        Dim costCollection As New Collection
-
-        If Not IsNothing(roleCostCollection) Then
-            For Each itemName As String In roleCostCollection
-                If RoleDefinitions.containsName(itemName) Then
-                    If Not roleCollection.Contains(itemName) Then
-                        roleCollection.Add(itemName, itemName)
-                    End If
-                ElseIf CostDefinitions.containsName(itemName) Then
-                    If Not costCollection.Contains(itemName) Then
-                        costCollection.Add(itemName, itemName)
-                    End If
-                End If
-            Next
-            ' nur dann considerAll, wenn auch irgendwelche Rollen oder Kosten auch tatsächlich bekannt sind .. 
-            considerAll = ((roleCollection.Count = 0) And (costCollection.Count = 0))
-        End If
 
         Dim fNameExtension As String = ""
         ' den Dateinamen bestimmen ...
-        If roleCollection.Count > 0 Then
-            fNameExtension = roleCollection.Item(1)
-            If roleCollection.Count > 1 Or costCollection.Count > 0 Then
+        If roleNameIDCollection.Count > 0 Then
+            Dim teamID As Integer
+            fNameExtension = RoleDefinitions.getRoleDefByIDKennung(roleNameIDCollection.Item(1), teamID).name
+            If roleNameIDCollection.Count > 1 Or costNameCollection.Count > 0 Then
                 fNameExtension = fNameExtension & " etc"
             End If
 
-            If fNameExtension = "" And costCollection.Count > 0 Then
-                fNameExtension = costCollection.Item(1)
-                If costCollection.Count > 1 Then
+            If fNameExtension = "" And costNameCollection.Count > 0 Then
+                fNameExtension = costNameCollection.Item(1)
+                If costNameCollection.Count > 1 Then
                     fNameExtension = fNameExtension & " etc"
                 End If
             End If
@@ -12361,54 +12712,60 @@ Public Module agm2
 
 
                             Dim role As clsRolle = cphase.getRole(r)
-                            Dim roleName As String = role.name
+                            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(role.uid, role.teamID)
                             Dim relevant As Boolean = False
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
-                            If roleCollection.Count = 0 Then
+                            If roleNameIDCollection.Count = 0 Then
                                 relevant = True
                             Else
-                                If RoleDefinitions.hasAnyChildParentRelationsship(roleName, roleCollection) Then
+                                Dim parentArray() As Integer = RoleDefinitions.getIDArray(roleNameIDCollection)
+                                If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentArray) Then
                                     relevant = True
                                 End If
                             End If
 
                             ' nur weitermachen, wenn es relevant ist ..
                             If relevant Then
+                                Dim teamID As Integer
+                                Dim curRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID)
 
-                                Dim roleUID As Integer = RoleDefinitions.getRoledef(roleName).UID
-                                Dim xValues() As Double = role.Xwerte
-                                Dim tagessatz As Double = RoleDefinitions.getRoledef(roleName).tagessatzIntern
+                                If Not IsNothing(curRole) Then
+                                    Dim roleUID As Integer = role.uid
+                                    Dim xValues() As Double = role.Xwerte
+                                    Dim tagessatz As Double = role.tagessatzIntern
 
-                                schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
-                                zeilensumme = schnittmenge.Sum
+                                    schnittmenge = calcArrayIntersection(von, bis, pStart + cphase.relStart - 1, pStart + cphase.relEnde - 1, xValues)
+                                    zeilensumme = schnittmenge.Sum
 
-                                'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
-                                ReDim zeilenWerte(bis - von)
+                                    'ReDim zeilenWerte(2 * (bis - von + 1) - 1)
+                                    ReDim zeilenWerte(bis - von)
 
-                                ' Schreiben der Projekt-Informationen 
-                                With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
-                                    CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
-                                    CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
-                                    CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
-                                    CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
-                                    CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
-                                    CType(.Cells(zeile, 6), Excel.Range).Value = roleName
-                                    CType(.Cells(zeile, 7), Excel.Range).Value = tagessatz
-                                    CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
+                                    ' Schreiben der Projekt-Informationen 
+                                    With CType(newWB.Worksheets("VISBO"), Excel.Worksheet)
+                                        CType(.Cells(zeile, 1), Excel.Range).Value = hproj.name
+                                        CType(.Cells(zeile, 2), Excel.Range).Value = hproj.variantName
+                                        CType(.Cells(zeile, 3), Excel.Range).Value = hproj.kundenNummer
+                                        CType(.Cells(zeile, 4), Excel.Range).Value = hproj.leadPerson
+                                        CType(.Cells(zeile, 5), Excel.Range).Value = cphase.name
+                                        CType(.Cells(zeile, 6), Excel.Range).Value = role.name
+                                        CType(.Cells(zeile, 7), Excel.Range).Value = tagessatz
+                                        CType(.Cells(zeile, 8), Excel.Range).Value = zeilensumme
 
-                                    editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
-                                End With
+                                        editRange = CType(.Range(.Cells(zeile, startSpalteDaten), .Cells(zeile, startSpalteDaten + bis - von)), Excel.Range)
+                                    End With
 
-                                ' zusammenmischen von Schnittmenge und Prozentual-Werte 
-                                For mis As Integer = 0 To bis - von
-                                    zeilenWerte(mis) = schnittmenge(mis)
-                                Next
+                                    ' zusammenmischen von Schnittmenge und Prozentual-Werte 
+                                    For mis As Integer = 0 To bis - von
+                                        zeilenWerte(mis) = schnittmenge(mis)
+                                    Next
 
-                                editRange.Value = zeilenWerte
-                                atLeastOne = True
+                                    editRange.Value = zeilenWerte
+                                    atLeastOne = True
 
-                                zeile = zeile + 1
+                                    zeile = zeile + 1
+
+                                End If
 
 
                             End If
@@ -12423,11 +12780,11 @@ Public Module agm2
                             Dim relevant As Boolean = False
 
                             ' Prüfung: muss die Rolle überhaupt ausgegeben werden ? 
-                            If costCollection.Count = 0 Then
+                            If costNameCollection.Count = 0 Then
                                 relevant = True
                             Else
                                 ' If CostDefinitions.hasAnyChildParentRelationsship(costName, costCollection) Then
-                                If costCollection.Contains(costName) Then
+                                If costNameCollection.Contains(costName) Then
                                     relevant = True
                                 End If
 
@@ -13643,11 +14000,11 @@ Public Module agm2
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
 
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
-                Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, 4), Excel.Range))
+                Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, 4), Excel.Range))
 
 
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
 
                 Dim isRole As Boolean = RoleDefinitions.containsName(rcName)
 
@@ -13827,21 +14184,34 @@ Public Module agm2
         Dim ws As Excel.Worksheet = CType(appInstance.ActiveSheet, Excel.Worksheet)
         Dim currentRow As Excel.Range
         Dim currentRowPlus1 As Excel.Range
-
+        Dim insertRow As Boolean = True
+        Dim newZeile As Integer
         appInstance.EnableEvents = False
 
         Try
 
             currentRow = CType(ws.Rows(zeile), Excel.Range)
+            Dim columnRC As Integer = visboZustaende.meColRC
+
+            Dim currentValue As String = getStringFromExcelCell(ws.Cells(zeile, columnRC))
+            insertRow = (currentValue <> "" Or rcNameID = "")
+
 
             Dim columnEndData As Integer = visboZustaende.meColED
             Dim columnStartData As Integer = visboZustaende.meColSD
 
-            Dim columnRC As Integer = visboZustaende.meColRC
+
 
             Dim hoehe As Double = CDbl(currentRow.Height)
-            currentRowPlus1 = CType(ws.Cells(currentRow.Row + 1, currentRow.Column), Excel.Range)
-            currentRowPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+
+            If insertRow Then
+                currentRowPlus1 = CType(ws.Cells(currentRow.Row + 1, currentRow.Column), Excel.Range)
+                currentRowPlus1.EntireRow.Insert(Shift:=Excel.XlInsertShiftDirection.xlShiftDown)
+                newZeile = zeile + 1
+            Else
+                newZeile = zeile
+            End If
+
 
             ' Blattschutz aufheben ... 
             If Not awinSettings.meEnableSorting Then
@@ -13854,12 +14224,15 @@ Public Module agm2
 
             With CType(appInstance.ActiveSheet, Excel.Worksheet)
 
-                Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
-                Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
 
-                copySource.Copy(Destination:=copyDestination)
+                If insertRow Then
+                    Dim copySource As Excel.Range = CType(.Range(.Cells(zeile, 1), .Cells(zeile, 1).offset(0, columnStartData - 3)), Excel.Range)
+                    Dim copyDestination As Excel.Range = CType(.Range(.Cells(zeile + 1, 1), .Cells(zeile + 1, 1).offset(0, columnStartData - 3)), Excel.Range)
 
-                CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
+                    copySource.Copy(Destination:=copyDestination)
+
+                    CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Rows(zeile + 1), Excel.Range).RowHeight = hoehe
+                End If
 
                 ' hier wird jetzt der Rollen- bzw Kostenart-NAme eingetragen 
                 Dim rcName As String = rcNameID
@@ -13874,10 +14247,10 @@ Public Module agm2
                     End If
                 End If
 
-                Call writeMECellWithRoleNameID(CType(.Cells(zeile + 1, 5), Excel.Range), islocked, rcName, rcNameID, isRole)
+                Call writeMECellWithRoleNameID(CType(.Cells(newZeile, columnRC), Excel.Range), islocked, rcName, rcNameID, isRole)
 
                 For c As Integer = columnStartData - 1 To columnEndData
-                    With CType(.Cells(zeile + 1, c), Excel.Range)
+                    With CType(.Cells(newZeile, c), Excel.Range)
                         .Value = Nothing
                         If c = columnStartData - 2 Or c = columnStartData - 1 Then
                             .ClearComments()
@@ -13889,9 +14262,9 @@ Public Module agm2
             End With
 
             ' jetzt wird auf die Ressourcen-/Kosten-Spalte positioniert 
-            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range).Select()
+            CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(newZeile, columnRC), Excel.Range).Select()
 
-            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(zeile + 1, columnRC), Excel.Range)
+            With CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Cells(newZeile, columnRC), Excel.Range)
 
                 ' wenn eine neue Zeile eingefügt ist  müssen die jetzt wieder auf frei gesetzt werden 
                 .Locked = False
@@ -13913,7 +14286,7 @@ Public Module agm2
                 'If CStr(CType(appInstance.ActiveCell, Excel.Range).Value) <> "" Then
                 '    Call MsgBox("Fehler 099 in PTzeileEinfügen")
                 'End If
-                .oldRow = zeile + 1
+                .oldRow = newZeile
                 .oldValue = rcNameID
                 .meMaxZeile = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).UsedRange, Excel.Range).Rows.Count
             End With
@@ -14255,7 +14628,7 @@ Public Module agm2
                                 Dim roleUID As Integer = role.uid
                                 Dim teamID As Integer = role.teamID
 
-
+                                Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
                                 Dim validRole As Boolean = True
 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
@@ -14263,7 +14636,7 @@ Public Module agm2
                                         If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
                                             Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(myCustomUserRole.specifics)
 
-                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleUID, restrictedTopRole.UID) Then
+                                            If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
                                                 validRole = True
                                             Else
                                                 validRole = False
@@ -14276,8 +14649,6 @@ Public Module agm2
                                 If validRole Then
                                     Dim xValues() As Double = role.Xwerte
 
-                                    ' neu 12.12.18 
-                                    Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(role.uid, role.teamID)
                                     ' hier muss bestimmt werden, ob das Projekt in dieser Phase mit dieser Rolle schon actualdata hat ...
                                     Dim hasActualData As Boolean = hproj.getPhaseRCActualValues(phaseNameID, roleNameID, True, False).Sum > 0
 
@@ -15658,8 +16029,10 @@ Public Module agm2
 
             Dim xlsCustomization As Excel.Workbook = Nothing
 
-            ReDim importOrdnerNames(8)
-            ReDim exportOrdnerNames(8)
+
+            Dim anzIEOrdner As Integer = [Enum].GetNames(GetType(PTImpExp)).Length
+            ReDim importOrdnerNames(anzIEOrdner - 1)
+            ReDim exportOrdnerNames(anzIEOrdner - 1)
 
 
             ' Auslesen des Window Namens 
@@ -15774,7 +16147,11 @@ Public Module agm2
             importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
             importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
             importOrdnerNames(PTImpExp.massenEdit) = awinPath & "Import\massEdit"
+            importOrdnerNames(PTImpExp.offlineData) = awinPath & "Import\massEdit"
             importOrdnerNames(PTImpExp.scenariodefs) = awinPath & "Import\Scenario Definitions"
+            importOrdnerNames(PTImpExp.Orga) = awinPath & "requirements"
+            importOrdnerNames(PTImpExp.customUserRoles) = awinPath & "requirements"
+            importOrdnerNames(PTImpExp.actualData) = awinPath & "Import\einfache Szenarien"
 
             exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
             exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -15896,7 +16273,7 @@ Public Module agm2
 
                 Call setWindowParameters()
 
-                Call logfileOpen()
+                Call logfileOpen(clear:=True)
 
                 Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
@@ -17764,59 +18141,65 @@ Public Module agm2
                             End If
 
                             tmpStr = CType(c.Value, String)
-
-                            If readingGroups Then
-                                przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 4), Excel.Range), 1.0, 0.0, 1.0)
-                            Else
-                                przSatz = 1.0
-                            End If
-
-                            ' jetzt kommt die Rollen Definition 
-                            hrole = New clsRollenDefinition
-                            Dim cp As Integer
-                            With hrole
-                                .name = tmpStr.Trim
-                                .defaultKapa = CDbl(c.Offset(0, 1).Value)
-
-                                .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
-                                If .tagessatzIntern <= 0 Then
-                                    .tagessatzIntern = defaultTagessatz
+                            If isValidRoleName(tmpStr, errMsg) Then
+                                If readingGroups Then
+                                    przSatz = getNumericValueFromExcelCell(CType(c.Offset(0, 4), Excel.Range), 1.0, 0.0, 1.0)
+                                Else
+                                    przSatz = 1.0
                                 End If
 
-                                ' tk 5.12 Aufnahme extern
-                                Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
+                                ' jetzt kommt die Rollen Definition 
+                                hrole = New clsRollenDefinition
+                                Dim cp As Integer
+                                With hrole
+                                    .name = tmpStr.Trim
 
-                                If Not IsNothing(tmpValue) Then
-                                    tmpValue = tmpValue.Trim
-                                    Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+                                    .defaultKapa = CDbl(c.Offset(0, 1).Value)
 
-                                    If positiveCriterias.Contains(tmpValue) Then
-                                        .isExternRole = True
+                                    .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+                                    If .tagessatzIntern <= 0 Then
+                                        .tagessatzIntern = defaultTagessatz
                                     End If
+
+                                    ' tk 5.12 Aufnahme extern
+                                    Dim tmpValue As String = CStr(c.Offset(0, 3).Value)
+
+                                    If Not IsNothing(tmpValue) Then
+                                        tmpValue = tmpValue.Trim
+                                        Dim positiveCriterias() As String = {"J", "j", "ja", "Ja", "Y", "y", "yes", "Yes", "1"}
+
+                                        If positiveCriterias.Contains(tmpValue) Then
+                                            .isExternRole = True
+                                        End If
+                                    End If
+
+
+                                    ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
+                                    For cp = 1 To 240
+
+                                        .kapazitaet(cp) = .defaultKapa
+                                        '.externeKapazitaet(cp) = 0.0
+
+                                    Next
+                                    .farbe = c.Interior.Color
+                                    .UID = roleUID
+                                End With
+
+                                ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
+                                If readingGroups And rollendefinitionen.containsName(hrole.name) Then
+                                    ' nichts tun, alles gut : 
+                                Else
+                                    ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
+                                    If Not rollendefinitionen.containsName(hrole.name) Then
+                                        rollendefinitionen.Add(hrole)
+                                    End If
+
                                 End If
-
-
-                                ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
-                                For cp = 1 To 240
-
-                                    .kapazitaet(cp) = .defaultKapa
-                                    '.externeKapazitaet(cp) = 0.0
-
-                                Next
-                                .farbe = c.Interior.Color
-                                .UID = roleUID
-                            End With
-
-                            ' wenn readingGroups, dann kann die Rolle bereits enthalten sein 
-                            If readingGroups And rollendefinitionen.containsName(hrole.name) Then
-                                ' nichts tun, alles gut : 
                             Else
-                                ' im anderen Fall soll die Rolle aufgenommen werden; wenn readinggroups = false und Rolle existiert schon, dann gibt es Fehler 
-                                If Not rollendefinitionen.containsName(hrole.name) Then
-                                    rollendefinitionen.Add(hrole)
-                                End If
-
+                                meldungen.Add(errMsg)
                             End If
+
+
 
                             'hrole = Nothing
 

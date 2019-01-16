@@ -819,6 +819,7 @@ Public Module Module1
         Kapas = 10
         customUserRoles = 11
         actualData = 12
+        offlineData = 13
     End Enum
 
     ' SoftwareKomponenten für die Lizensierung
@@ -5132,30 +5133,26 @@ Public Module Module1
 
     ''' <summary>
     ''' zeichnet bzw. aktualisiert die Powerpoint Table Kosten-Übersicht 
-    ''' wenn todoCollection leer, dann wird die Gesamt-Übersicht Budget, Personal-Kosten, sonstige Kosten, Ergebnis gezeichnet 
+    ''' wenn q1=0 und q2=0 , dann wird die Gesamt-Übersicht Budget, Personal-Kosten, sonstige Kosten, Ergebnis gezeichnet
+    ''' wenn q1=-1, q2=-1 , dann wird %used" gezeichnet 
     ''' </summary>
     ''' <param name="pptShape"></param>
     ''' <param name="hproj"></param>
     ''' <param name="bproj"></param>
     ''' <param name="lproj"></param>
-    ''' <param name="todoCollection">enthält die NAmen der Rollen und Kostenarten</param>
     ''' <param name="q1">gibt an, wieviele Rollen, die ersten q1 in der todoCollection sind Rollen</param>
     ''' <param name="q2">gibt an wieviele Kosten</param>
     Public Sub zeichneTableBudgetCostAPVCV(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt,
-                                    ByVal todoCollection As Collection, ByVal q1 As String, ByVal q2 As String)
+                                    ByVal q1 As String, ByVal q2 As String)
 
 
         Dim repmsg() As String
+        Dim toDoCollectionR As New Collection
+        Dim toDoCollectionC As New Collection
 
         repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
         'repmsg(1) = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
 
-        ' solange die repMessages nicht in Datenbank sind, geht das nicht 
-        'txtPKI(0) = repMessages.getmsg(49) ' Budget
-        'txtPKI(1) = repMessages.getmsg(51) ' Personalkosten
-        'txtPKI(2) = repMessages.getmsg(52) ' Sonstige Kosten
-        ''txtPKI(3) = repMessages.getmsg(50) ' Risiko-Kosten
-        'txtPKI(3) = repMessages.getmsg(53) ' Ergebnis-Prognose
 
         Dim txtPKI(3) As String
 
@@ -5163,6 +5160,10 @@ Public Module Module1
         txtPKI(1) = repmsg(1) ' Personalkosten
         txtPKI(2) = repmsg(2) ' Sonstige Kosten
         txtPKI(3) = repmsg(3) ' Ergebnis-Prognose
+
+        Dim curValue As Double = -1.0 ' not defined
+        Dim faprValue As Double = -1.0 ' first approved version 
+        Dim laprValue As Double = -1.0 ' last approved version
 
 
 
@@ -5189,6 +5190,17 @@ Public Module Module1
         Dim anzRoles As Integer = 0
         Dim anzCosts As Integer = 0
 
+
+        ' jetzt wird SmartTableInfo gesetzt 
+        ' jetzt wird die SmartTableInfo gesetzt 
+        Dim emptyCollection As New Collection
+        Call addSmartPPTTableInfo(pptShape,
+                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  q1, q2, bigType, compID,
+                                  emptyCollection)
+
+        ' jetzt werden die einzelnen Zeilen geschrieben 
+
         ' in q1, q2 sind dei Anzahl Rollen bzw Kosten drin, sofern in toDoCollection was angegeben ist 
         Try
             anzRoles = CInt(q1)
@@ -5196,22 +5208,14 @@ Public Module Module1
 
             If anzRoles = -1 And anzCosts = -1 Then
                 ' das ist das signal, dass erst die gemeinsame Liste bestimmt werden soll 
-                todoCollection = getCommonListOfRCNames(hproj, lproj, bproj, anzRoles, anzCosts)
+                toDoCollectionR = getCommonListOfRoleNameIDs(hproj, lproj, bproj, anzRoles)
+                toDoCollectionC = getCommonListOfCostNames(hproj, lproj, bproj, anzCosts)
             End If
         Catch ex As Exception
 
         End Try
 
-        Dim showOverviewOnly As Boolean = (todoCollection.Count = 0)
-
-        ' jetzt wird SmartTableInfo gesetzt 
-        ' jetzt wird die SmartTableInfo gesetzt 
-        Call addSmartPPTTableInfo(pptShape,
-                                  ptPRPFType.project, hproj.name, hproj.variantName,
-                                  q1, q2, bigType, compID,
-                                  todoCollection)
-
-        ' jetzt werden die einzelnen Zeilen geschrieben 
+        Dim showOverviewOnly As Boolean = (toDoCollectionR.Count = 0)
 
         Try
             tabelle = pptShape.Table
@@ -5258,94 +5262,11 @@ Public Module Module1
 
                 Dim tabellenzeile As Integer = 2
                 Try
+                    ' erstmal in Abhängigkeit von der Rolle den Überblick zeichnen  
+                    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Or
+                            myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung Then
 
-                    If Not showOverviewOnly Then
-
-                        einrueckung = 1
-
-                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
-                        Dim firstCost As Boolean = True
-
-                        Dim curValue As Double = -1.0 ' not defined
-                        Dim faprValue As Double = -1.0 ' first approved version 
-                        Dim laprValue As Double = -1.0 ' last approved version
-
-                        ' keine zusätzliche Zeile schreiben ... macht das ganze nur unübersichtlicher  
-                        'If anzRoles > 0 And anzCosts > 0 Then
-                        '    ' 
-                        '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
-                        '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
-                        '    tabelle.Rows.Add()
-                        '    tabellenzeile = tabellenzeile + 1
-                        'End If
-
-                        For m As Integer = 1 To todoCollection.Count
-
-                            ' wegen Einrückung in Details ...
-                            Dim curItem As String = CStr(todoCollection.Item(m))
-                            Dim isRole As Boolean = RoleDefinitions.containsName(curItem)
-                            Dim isCost As Boolean = False
-                            If Not isRole Then
-                                isCost = CostDefinitions.containsName(curItem)
-                            End If
-
-                            If isRole Then
-
-                                'curValue = System.Math.Round(hproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                curValue = hproj.getPersonalKosten(curItem, True).Sum
-
-                                If considerLapr Then
-                                    'laprValue = System.Math.Round(lproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                    laprValue = lproj.getPersonalKosten(curItem, True).Sum
-                                End If
-
-                                If considerFapr Then
-                                    'faprValue = System.Math.Round(bproj.getPersonalKosten(curItem, True).Sum, mode:=MidpointRounding.ToEven)
-                                    faprValue = bproj.getPersonalKosten(curItem, True).Sum
-                                End If
-
-
-                            ElseIf isCost Then
-
-                                'If firstCost Then
-                                '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(52)
-                                '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(2)
-                                '    tabelle.Rows.Add()
-                                '    tabellenzeile = tabellenzeile + 1
-                                '    firstCost = False
-                                'End If
-
-                                'curValue = System.Math.Round(hproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
-                                curValue = hproj.getKostenBedarfNew(curItem).Sum
-
-                                If considerLapr Then
-                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
-                                    'laprValue = System.Math.Round(lproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
-                                End If
-
-                                If considerFapr Then
-                                    'faprValue = System.Math.Round(bproj.getKostenBedarfNew(curItem).Sum, mode:=MidpointRounding.ToEven)
-                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
-                                End If
-
-                            End If
-
-                            Dim zeilenItem As String = curItem
-                            'If anzRoles > 0 And anzCosts > 0 Then
-                            '    ' dann muss unterhalb Personalkosten und Sonstige Kosten eingerückt werden ... 
-                            '    zeilenItem = "  " & curItem
-                            'End If
-
-                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
-                                                          considerFapr, considerLapr)
-                            tabelle.Rows.Add()
-                            tabellenzeile = tabellenzeile + 1
-
-                        Next
-
-
-                    Else
-
+                        ' Überblick zeichnen ... 
                         Dim curPKI() As Double = {-1, -1, -1, -1}
                         Dim faprPKI() As Double = {-1, -1, -1, -1}
                         Dim laprPKI() As Double = {-1, -1, -1, -1}
@@ -5370,6 +5291,140 @@ Public Module Module1
                                                           considerFapr, considerLapr)
                             tabelle.Rows.Add()
                             tabellenzeile = tabellenzeile + 1
+                        Next
+
+                        tabelle.Rows.Add()
+                        tabellenzeile = tabellenzeile + 1
+
+                    ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+
+                        Dim curItem As String = myCustomUserRole.specifics
+                        Dim isRole As Boolean = RoleDefinitions.containsNameID(curItem)
+
+                        If isRole Then
+
+                            curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+
+                            If considerLapr Then
+                                laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                            Else
+                                laprValue = 0.0
+                            End If
+
+                            If considerFapr Then
+                                faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                            Else
+                                faprValue = 0.0
+                            End If
+
+                            Dim zeilenItem As String = curItem
+
+
+                            Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
+                                                      considerFapr, considerLapr)
+                            tabelle.Rows.Add()
+                            tabelle.Rows.Add()
+                            tabellenzeile = tabellenzeile + 2
+
+                        End If
+
+                    End If
+
+                    ' ---------------------------------------------------------------------
+                    ' wenn dann noch Details gezeigt werden sollen ... 
+                    ' 
+                    If Not showOverviewOnly Then
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                            ' den im Überblick gezeigten specifics nicht noch mal zeigen, falls der aufgeführt ist ... 
+                            Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(myCustomUserRole.specifics, "")
+                            If toDoCollectionR.Contains(tmpNameID) Then
+                                toDoCollectionR.Remove(tmpNameID)
+                            End If
+                        End If
+
+                        einrueckung = 1
+
+                        ' dient dazu , zu bestimmen, wann die Kostenarten kommen um vorher eine Neue Zeile  einzufügen ...
+                        Dim firstCost As Boolean = True
+
+
+                        ' keine zusätzliche Zeile schreiben ... macht das ganze nur unübersichtlicher  
+                        'If anzRoles > 0 And anzCosts > 0 Then
+                        '    ' 
+                        '    'tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(51)
+                        '    tabelle.Cell(tabellenzeile, 1).Shape.TextFrame2.TextRange.Text = repmsg(1)
+                        '    tabelle.Rows.Add()
+                        '    tabellenzeile = tabellenzeile + 1
+                        'End If
+
+                        For m As Integer = 1 To toDoCollectionR.Count
+
+                            ' wegen Einrückung in Details ...
+                            Dim curItem As String = CStr(toDoCollectionR.Item(m))
+                            Dim isRole As Boolean = RoleDefinitions.containsNameID(curItem)
+
+                            If isRole Then
+
+                                curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+
+                                If considerLapr Then
+                                    laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                Else
+                                    laprValue = 0.0
+                                End If
+
+                                If considerFapr Then
+                                    faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                Else
+                                    faprValue = 0.0
+                                End If
+
+                                Dim zeilenItem As String = curItem
+
+
+                                Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+                                tabelle.Rows.Add()
+                                tabellenzeile = tabellenzeile + 1
+
+                            End If
+
+                        Next
+
+                        For m As Integer = 1 To toDoCollectionC.Count
+
+                            ' wegen Einrückung in Details ...
+                            Dim curItem As String = CStr(toDoCollectionC.Item(m))
+                            Dim isCost As Boolean = CostDefinitions.containsName(curItem)
+
+
+                            If isCost Then
+
+                                curValue = hproj.getKostenBedarfNew(curItem).Sum
+
+                                If considerLapr Then
+                                    laprValue = lproj.getKostenBedarfNew(curItem).Sum
+                                Else
+                                    laprValue = 0.0
+                                End If
+
+                                If considerFapr Then
+                                    faprValue = bproj.getKostenBedarfNew(curItem).Sum
+                                Else
+                                    faprValue = 0.0
+                                End If
+
+                                Dim zeilenItem As String = curItem
+
+                                Call schreibeBudgetCostAPVCVZeile(tabelle, tabellenzeile, zeilenItem, faprValue, laprValue, curValue,
+                                                          considerFapr, considerLapr)
+                                tabelle.Rows.Add()
+                                tabellenzeile = tabellenzeile + 1
+
+                            End If
+
+
                         Next
 
 
@@ -5461,12 +5516,12 @@ Public Module Module1
     ''' </summary>
     ''' <param name="table"></param>
     ''' <param name="zeile"></param>
-    ''' <param name="itemName"></param>
+    ''' <param name="itemNameID"></param>
     ''' <param name="faprValue"></param>
     ''' <param name="laprValue"></param>
     ''' <param name="curValue"></param>
     Private Sub schreibeBudgetCostAPVCVZeile(ByRef table As pptNS.Table, ByVal zeile As Integer,
-                                             ByVal itemName As String, ByVal faprValue As Double, ByVal laprValue As Double, ByVal curValue As Double,
+                                             ByVal itemNameID As String, ByVal faprValue As Double, ByVal laprValue As Double, ByVal curValue As Double,
                                              ByVal considerFapr As Boolean, ByVal considerLapr As Boolean)
 
         Dim deltaFMC As String = "-" ' niummt das Delta auf zwischen Fapr und Current: First minsu Current 
@@ -5478,8 +5533,17 @@ Public Module Module1
 
         ' notwendig, solange keine repMessages in der Datenbank sind 
         Dim repmsg() As String
-        'repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Gewinn/Verlust"}
         repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
+
+        Dim roleBezeichner As String = ""
+
+        If repmsg.Contains(itemNameID) Then
+            roleBezeichner = itemNameID
+        Else
+            roleBezeichner = RoleDefinitions.getBezeichner(itemNameID)
+        End If
+
+
         If considerFapr Then
             deltaFMC = (curValue - faprValue).ToString(dblFormat)
         Else
@@ -5498,7 +5562,7 @@ Public Module Module1
             Dim tmpValue As String = "-"
 
             ' Label schreiben
-            CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = itemName
+            CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = roleBezeichner
 
 
             ' wird benötigt, um die Schriftfarbe im Delta-Feld wieder auf Normal setzen zu können 
@@ -5527,7 +5591,7 @@ Public Module Module1
 
             ElseIf considerLapr Then
 
-                If itemName = repmsg(0) Or itemName = repmsg(3) Then
+                If roleBezeichner = repmsg(0) Or roleBezeichner = repmsg(3) Then
                     isPositiv = (curValue > laprValue + 0.5)
                 Else
                     isPositiv = (laprValue > curValue + 0.5)
@@ -5563,7 +5627,7 @@ Public Module Module1
 
             ElseIf considerFapr Then
                 ' If itemName = repMessages.getmsg(49) Or itemName = repMessages.getmsg(53) Then
-                If itemName = repmsg(0) Or itemName = repmsg(3) Then
+                If roleBezeichner = repmsg(0) Or roleBezeichner = repmsg(3) Then
                     isPositiv = (curValue > faprValue)
                 Else
                     isPositiv = (faprValue > curValue)
@@ -6020,7 +6084,7 @@ Public Module Module1
     ''' öffnet das LogFile
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub logfileOpen()
+    Public Sub logfileOpen(ByVal Optional clear As Boolean = False)
 
         appInstance.ScreenUpdating = False
 
@@ -6047,6 +6111,10 @@ Public Module Module1
             xlsLogfile.SaveAs(awinPath & logFileName)
             myLogfile = xlsLogfile.Name
 
+        End If
+
+        If clear Then
+            CType(xlsLogfile.ActiveSheet, Excel.Worksheet).UsedRange.Clear()
         End If
 
         ' Workbook, das vor dem öffnen des Logfiles aktiv war, wieder aktivieren
@@ -6205,6 +6273,10 @@ Public Module Module1
             Case PTwindows.mpt
                 Dim outputmsg As String = ""
                 Dim roleName As String = myCustomUserRole.customUserRole.ToString
+
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                    roleName = roleName & " " & myCustomUserRole.specifics
+                End If
 
                 If currentConstellationName = "" Then
                     outputmsg = " : " & ShowProjekte.Count & " "
@@ -6783,12 +6855,12 @@ Public Module Module1
     ''' </summary>
     ''' <param name="currentCell"></param>
     ''' <returns></returns>
-    Public Function getRCNameIDfromMeRcCell(ByVal currentCell As Excel.Range) As String
+    Public Function getRCNameIDfromExcelCell(ByVal currentCell As Excel.Range) As String
 
         Dim tmpResult As String = ""
         Try
             If Not IsNothing(currentCell.Value) Then
-                Dim tmpRCname As String = CStr(currentCell.Value)
+                Dim tmpRCname As String = CStr(currentCell.Value).Trim
 
                 If RoleDefinitions.containsName(tmpRCname) Then
                     Dim tmpComment As Excel.Comment = currentCell.Comment
@@ -6810,7 +6882,7 @@ Public Module Module1
             tmpResult = ""
         End Try
 
-        getRCNameIDfromMeRcCell = tmpResult
+        getRCNameIDfromExcelCell = tmpResult
 
     End Function
 
@@ -6931,20 +7003,20 @@ Public Module Module1
 
 
     ''' <summary>
-    ''' ermittelt in einem MassEdit RoleCost Fenster die PhaseNameID  
+    ''' ermittelt in einem Excel Zelle die PhaseNameID  
     ''' </summary>
     ''' <param name="currentCell"></param>
     ''' <returns></returns>
-    Public Function getPhaseNameIDfromMeRcCell(ByVal currentCell As Excel.Range) As String
+    Public Function getPhaseNameIDfromExcelCell(ByVal currentCell As Excel.Range) As String
         Dim tmpResult As String = ""
 
         Try
-            Dim phaseName As String = CStr(currentCell.Value)
+            Dim phaseName As String = CStr(currentCell.Value).Trim
             Dim phaseNameID As String = calcHryElemKey(phaseName, False)
             Dim curComment As Excel.Comment = currentCell.Comment
 
             If Not IsNothing(curComment) Then
-                phaseNameID = curComment.Text
+                phaseNameID = curComment.Text.Trim
             End If
 
             tmpResult = phaseNameID
@@ -6953,7 +7025,7 @@ Public Module Module1
         End Try
 
 
-        getPhaseNameIDfromMeRcCell = tmpResult
+        getPhaseNameIDfromExcelCell = tmpResult
     End Function
 
 
@@ -6990,7 +7062,7 @@ Public Module Module1
             chckName = CStr(meWS.Cells(curZeile, 2).value)
 
             'Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
-            chckPhNameID = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
+            chckPhNameID = getPhaseNameIDfromExcelCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
 
             'chckPhNameID = calcHryElemKey(phaseName, False)
             'Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
@@ -7000,7 +7072,7 @@ Public Module Module1
             If Not isRole Then
                 chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
             Else
-                chckRCNameID = getRCNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                chckRCNameID = getRCNameIDfromExcelCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
             End If
 
 
@@ -7030,7 +7102,7 @@ Public Module Module1
 
                     'Dim phaseName As String = CStr(meWS.Cells(curZeile, 4).value)
                     'chckPhNameID = calcHryElemKey(phaseName, False)
-                    chckPhNameID = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
+                    chckPhNameID = getPhaseNameIDfromExcelCell(CType(meWS.Cells(curZeile, 4), Excel.Range))
                     'Dim curComment As Excel.Comment = CType(meWS.Cells(curZeile, 4), Excel.Range).Comment
                     'If Not IsNothing(curComment) Then
                     '    chckPhNameID = curComment.Text
@@ -7040,7 +7112,7 @@ Public Module Module1
                     If Not isRole Then
                         chckRCNameID = CStr(meWS.Cells(curZeile, 5).value)
                     Else
-                        chckRCNameID = getRCNameIDfromMeRcCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
+                        chckRCNameID = getRCNameIDfromExcelCell(CType(meWS.Cells(curZeile, 5), Excel.Range))
                     End If
 
 
@@ -7093,6 +7165,26 @@ Public Module Module1
 
 
     End Sub
+
+    ''' <summary>
+    ''' prüft, ob es sich bei dem übergebenen Rollen-Namen um einen validen Rollen-Namen handelt
+    ''' </summary>
+    ''' <param name="roleName"></param>
+    ''' <param name="errMsg"></param>
+    ''' <returns></returns>
+    Public Function isValidRoleName(ByVal roleName As String, ByRef errMsg As String) As Boolean
+        Dim isvalid As Boolean = False
+        errMsg = ""
+
+        If roleName.Contains(";") Then
+            isvalid = False
+            errMsg = "Rollen-Namen dürfen keine ';' enthalten : " & roleName
+        Else
+            isvalid = True
+        End If
+
+        isValidRoleName = isvalid
+    End Function
 
     ''' <summary>
     ''' liefert true, wenn diese URL erreichbar ist, false andernfalls
@@ -7197,6 +7289,110 @@ Public Module Module1
         bestimmeRollenDiagrammTitel = tmpResult
 
     End Function
+
+    ''' <summary>
+    ''' gibt für eine sortierte String-Collection und eine sortierte Liste of string, Double die matching list als sortedList of String, double raus 
+    ''' </summary>
+    ''' <param name="existing"></param>
+    ''' <param name="lookingFor"></param>
+    ''' <returns></returns>
+    Public Function intersectNameIDLists(ByVal existing As Collection,
+                                   ByVal lookingFor As SortedList(Of String, Double)) As SortedList(Of String, Double)
+
+        Dim ergebnisListe As New SortedList(Of String, Double)
+        Dim teamID As Integer
+        Dim roleID As Integer
+
+        If existing.Count <= lookingFor.Count Then
+
+            For Each key As String In existing
+
+                If lookingFor.ContainsKey(key) Then
+                    ergebnisListe.Add(key, lookingFor.Item(key))
+                End If
+
+
+                roleID = RoleDefinitions.parseRoleNameID(key, teamID)
+                If teamID = -1 Then
+                    ' fertig 
+                Else
+                    ' es muss noch die Anfrage nach nur roleID gestellt werden 
+                    Dim key2 As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
+                    If lookingFor.ContainsKey(key2) Then
+                        ergebnisListe.Add(key, lookingFor.Item(key2))
+                    End If
+                End If
+            Next
+
+        Else
+            ' Vorbereitung , mit der indexliste kann in existing schnell nach allen RoleIDs gesucht werden, die vorkommen
+            Dim indexListe As New SortedList(Of Integer, Integer())
+
+            Dim oldRoleID As Integer = -1
+
+            ' mit indexListe wird eine Hilfs-Struktur aufgebaut, die den Umstand nutzt, dass die NAmeIDs alle sortiert sind und 
+            ' deshalb Rollen mit gleicher RoleID beieinander stehen; deswegen muss auch eine Rolle ohne team mit';' enden 
+            For ix As Integer = 1 To existing.Count
+                Dim nameID As String = CStr(existing.Item(ix))
+                roleID = RoleDefinitions.parseRoleNameID(nameID, teamID)
+                If roleID > 0 Then
+
+                    If roleID <> oldRoleID Then
+                        If oldRoleID = -1 Then
+                            ' ein neuer start ist entdeckt 
+                            Dim wertePaar() As Integer
+                            ReDim wertePaar(1)
+                            wertePaar(0) = ix
+                            wertePaar(1) = ix
+                            oldRoleID = roleID
+                            indexListe.Add(roleID, wertePaar)
+
+                        Else
+                            ' ein neues Ende .. und ein neuer Start ist entdeckt 
+                            indexListe.Item(oldRoleID)(1) = ix - 1
+                            Dim wertePaar() As Integer
+                            ReDim wertePaar(1)
+                            wertePaar(0) = ix
+                            wertePaar(1) = ix
+                            oldRoleID = roleID
+                            indexListe.Add(roleID, wertePaar)
+                        End If
+
+                    End If
+
+                End If
+
+            Next
+
+            For Each kvp As KeyValuePair(Of String, Double) In lookingFor
+
+                roleID = RoleDefinitions.parseRoleNameID(kvp.Key, teamID)
+
+                If teamID = -1 Then
+                    ' aus existing alle bekommen, die mit roleID beginnen
+                    If indexListe.ContainsKey(roleID) Then
+                        For ix As Integer = indexListe.Item(roleID)(0) To indexListe.Item(roleID)(1)
+                            Dim nameID As String = CStr(existing.Item(ix))
+                            If Not ergebnisListe.ContainsKey(nameID) Then
+                                ergebnisListe.Add(nameID, 1.0)
+                            End If
+                        Next
+                    End If
+                Else
+                    ' es ist ein Team angegeben , also will man das exakte haben 
+                    If existing.Contains(kvp.Key) Then
+                        ergebnisListe.Add(kvp.Key, kvp.Value)
+                    End If
+                End If
+
+            Next
+
+        End If
+
+
+        intersectNameIDLists = ergebnisListe
+    End Function
+
 
 
 
