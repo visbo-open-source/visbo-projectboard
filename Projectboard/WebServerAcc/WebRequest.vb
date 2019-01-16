@@ -2135,15 +2135,48 @@ Public Class Request
     Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
         'Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
 
+        'Dim myWebrequest As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+        'Dim myProxy As IWebProxy = myWebrequest.Proxy
+
+        ''Dim registeredModules As IEnumerator = AuthenticationManager.RegisteredModules
+        ''Call MsgBox("The following authentication modules are now registered with the system:")
+        ''While registeredModules.MoveNext
+        ''    Dim currentAuthenticationModule As IAuthenticationModule = registeredModules.Current
+        ''    Call MsgBox("AuthenticateType: " & currentAuthenticationModule.AuthenticationType & vbLf &
+        ''                "CanPreAuthenticate : " & currentAuthenticationModule.CanPreAuthenticate.ToString)
+        ''End While
+
+        Dim netcred As New NetworkCredential With {
+            .UserName = "Ute",
+            .Password = "test"
+        }
+
+
+        'myProxy.Credentials = netcred
+
+        'Dim sysproxy As IWebProxy = HttpWebRequest.GetSystemWebProxy
+        'Dim defaultProxy As IWebProxy = HttpWebRequest.DefaultWebProxy
+
         Dim response As HttpWebResponse = Nothing
 
         Try
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+            Dim myProxy As IWebProxy = request.Proxy
 
             request.Method = method
+
+            If Not IsNothing(request.Proxy) Then
+                If IsNothing(request.Proxy.Credentials) Then
+                    request.Proxy.Credentials = netcred
+                End If
+            End If
+
             request.ContentType = "application/json"
             request.Headers.Add("access-key", token)
-            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+
+
 
             request.ContentLength = data.Length
 
