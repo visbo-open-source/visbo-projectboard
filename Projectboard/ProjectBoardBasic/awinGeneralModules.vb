@@ -1825,7 +1825,7 @@ Public Module awinGeneralModules
         Dim testProjekte As New clsProjekte
 
         If Not IsNothing(uProj) Then
-            Dim uRoles As Collection = uProj.getRoleNames
+            Dim uRoles As Collection = uProj.getRoleNameIDs
             Dim GPRoles As Collection = Nothing
 
             Dim listOfProjectNames As SortedList(Of String, String) = current1program.getProjectNames(considerShowAttribute:=True, showAttribute:=True, fullNameKeys:=True)
@@ -1835,14 +1835,14 @@ Public Module awinGeneralModules
             For Each fullName As KeyValuePair(Of String, String) In listOfProjectNames
                 Dim hproj As clsProjekt = projektliste.getProject(fullName.Key)
                 If IsNothing(GPRoles) Then
-                    GPRoles = hproj.getRoleNames
+                    GPRoles = hproj.getRoleNameIDs
                 Else
-                    Dim tmpRoles As Collection = hproj.getRoleNames
-                    For Each tmpRoleName As String In tmpRoles
-                        If GPRoles.Contains(tmpRoleName) Then
+                    Dim tmpRoleNameIDs As Collection = hproj.getRoleNameIDs
+                    For Each tmpRoleNameID As String In tmpRoleNameIDs
+                        If GPRoles.Contains(tmpRoleNameID) Then
                             ' alles ok, schon drin 
                         Else
-                            GPRoles.Add(tmpRoleName, tmpRoleName)
+                            GPRoles.Add(tmpRoleNameID, tmpRoleNameID)
                         End If
                     Next
 
@@ -1863,11 +1863,13 @@ Public Module awinGeneralModules
                 showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
                 showRangeRight = getColumnOfDate(CDate("31.12.2019"))
 
-                For Each tmpRole As String In uRoles
-                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRole)
+                For Each tmpRoleNameID As String In uRoles
+
                     Dim myCollection As New Collection
-                    myCollection.Add(tmpRole)
+                    myCollection.Add(tmpRoleNameID)
                     Dim uValues() As Double = uProj.getBedarfeInMonths(mycollection:=myCollection, type:=DiagrammTypen(1))
+
+                    Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRoleNameID)
 
                     If arraysAreDifferent(GPvalues, uValues) Then
                         tmpResult = False
@@ -2890,7 +2892,8 @@ Public Module awinGeneralModules
     ''' <param name="projektliste"></param>
     ''' <param name="storedAt"></param>
     ''' <returns></returns>
-    Public Function getProjektFromSessionOrDB(ByVal pName As String, ByVal vName As String, ByVal projektliste As clsProjekteAlle, ByVal storedAt As Date) As clsProjekt
+    Public Function getProjektFromSessionOrDB(ByVal pName As String, ByVal vName As String, ByVal projektliste As clsProjekteAlle, ByVal storedAt As Date,
+                                              ByVal Optional kdNr As String = "") As clsProjekt
 
         Dim err As New clsErrorCodeMsg
 
@@ -2904,6 +2907,15 @@ Public Module awinGeneralModules
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, vName, storedAt, err) Then
                     hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, storedAt, err)
+                Else
+                    ' jetzt soll versucht werden, das Projekt über die Kunden-Nummer zu bestimmen, sofern die Kunden-Nummer angegeben wurde 
+                    If kdNr <> "" Then
+                        Dim nameCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveProjectNamesByPNRFromDB(kdNr, err)
+                        If nameCollection.Count > 0 Then
+                            Dim newPname As String = CStr(nameCollection.Item(1))
+                            hproj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(newPname, vName, storedAt, err)
+                        End If
+                    End If
                 End If
             End If
         Catch ex As Exception
@@ -6041,8 +6053,8 @@ Public Module awinGeneralModules
         Dim found As Boolean = False
 
         Dim vglPname As String = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-        Dim vglRcNameID As String = getRCNameIDfromMeRcCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
-        Dim vglPhaseNameID As String = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
+        Dim vglRcNameID As String = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+        Dim vglPhaseNameID As String = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
 
 
         Do While zeile <= visboZustaende.meMaxZeile And Not found
@@ -6061,8 +6073,8 @@ Public Module awinGeneralModules
             If Not found Then
                 zeile = zeile + 1
                 vglPname = CStr(CType(ws.Cells(zeile, colPName), Excel.Range).Value)
-                vglRcNameID = getRCNameIDfromMeRcCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
-                vglPhaseNameID = getPhaseNameIDfromMeRcCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
+                vglRcNameID = getRCNameIDfromExcelCell(CType(ws.Cells(zeile, colRcName), Excel.Range))
+                vglPhaseNameID = getPhaseNameIDfromExcelCell(CType(ws.Cells(zeile, colPhaseName), Excel.Range))
             End If
 
         Loop

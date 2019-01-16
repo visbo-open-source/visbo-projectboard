@@ -378,8 +378,8 @@ Public Class Tabelle2
                     Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                     ' jetzt wird 
                     Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                    Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
-                    Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
+                    Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                    Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
                     'Dim phaseNameID As String = calcHryElemKey(phaseName, False)
 
@@ -405,7 +405,7 @@ Public Class Tabelle2
                         frmMERoleCost.vName = vName
                         frmMERoleCost.phaseName = phaseName
                         frmMERoleCost.rcName = rcName
-                        frmMERoleCost.rcNameID = getRCNameIDfromMeRcCell(Target)
+                        frmMERoleCost.rcNameID = getRCNameIDfromExcelCell(Target)
                         frmMERoleCost.phaseNameID = phaseNameID
                         frmMERoleCost.hproj = hproj
 
@@ -570,7 +570,7 @@ Public Class Tabelle2
 
 
                             With meWS
-                                    .Protect(Password:="x", UserInterfaceOnly:=True,
+                                .Protect(Password:="x", UserInterfaceOnly:=True,
                                         AllowFormattingCells:=True,
                                         AllowFormattingColumns:=True,
                                         AllowInsertingColumns:=False,
@@ -579,13 +579,13 @@ Public Class Tabelle2
                                         AllowDeletingRows:=True,
                                         AllowSorting:=True,
                                         AllowFiltering:=True)
-                                    .EnableSelection = XlEnableSelection.xlUnlockedCells
-                                    .EnableAutoFilter = True
-                                End With
-                                Cancel = True
-                            End If
-
+                                .EnableSelection = XlEnableSelection.xlUnlockedCells
+                                .EnableAutoFilter = True
+                            End With
+                            Cancel = True
                         End If
+
+                    End If
 
                 Else
                     Call MsgBox("bitte nur eine Zelle selektieren ...")
@@ -656,8 +656,8 @@ Public Class Tabelle2
                 Dim vName As String = CStr(meWS.Cells(zeile, 3).value)
                 Dim phaseName As String = CStr(meWS.Cells(zeile, 4).value)
                 Dim rcName As String = CStr(meWS.Cells(zeile, columnRC).value)
-                Dim rcNameID As String = getRCNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
-                Dim phaseNameID As String = getPhaseNameIDfromMeRcCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
+                Dim rcNameID As String = getRCNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC), Excel.Range))
+                Dim phaseNameID As String = getPhaseNameIDfromExcelCell(CType(meWS.Cells(zeile, columnRC - 1), Excel.Range))
 
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
                 Dim cphase As clsPhase = Nothing
@@ -1984,7 +1984,9 @@ Public Class Tabelle2
     End Sub
 
     ''' <summary>
-    ''' prüft, ob neuer und alter Wert derselben Kategorie angehören; es darf nur von Kostenart zu Kostenart und von Rolle zu Rolle gewechselt werden 
+    ''' prüft, ob der eingegebene Wert zulässig ist ..
+    ''' ein Ressourcen-Manager darf nur Werte seiner Abteilung eingeben
+    ''' ein Portfolio Manager darf niemanden unterhalb der customerrole.specifics auswählen 
     ''' </summary>
     ''' <param name="newValue"></param>
     ''' <param name="oldValue"></param>
@@ -1993,27 +1995,53 @@ Public Class Tabelle2
     Private Function isValidRCChange(ByVal newValue As String, ByVal oldValue As String) As Boolean
 
         Dim tmpValue As Boolean = False
+        Dim weiterMachen As Boolean = False
 
-        If oldValue.Trim.Length = 0 Then
-            ' ist erlaubt, wenn der Wert in einer der Definitions vorkommt 
-            tmpValue = RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue)
+        ' erstmal prüfen, ob es sich um einen Ressourcen-Manager oder Portfolio Manager handelt; denn dann können nicht alle Werte eingegeben werden 
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            Dim parentCollection As New Collection
+            parentCollection.Add(myCustomUserRole.specifics)
+
+            If RoleDefinitions.hasAnyChildParentRelationsship(newValue, parentCollection) Then
+                weiterMachen = True
+            End If
+
+        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            Dim idArray() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+            Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(newValue, "")
+            Dim teamID As Integer = -1
+            Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
+
+            If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray) Or
+                idArray.Contains(roleID) Then
+                weiterMachen = True
+            End If
         Else
-            ' es war vorher was drin 
-            If RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue) Then
+            weiterMachen = True
+        End If
 
-                If RoleDefinitions.containsName(newValue) = RoleDefinitions.containsName(oldValue) Then
-                    ' ist erlaubt 
-                    tmpValue = True
-                ElseIf CostDefinitions.containsName(newValue) = missingCostDefinitions.containsName(oldValue) Then
-                    ' ist erlaubt
-                    tmpValue = True
-                Else
-                    ' ist nicht erlaubt
-                    tmpValue = True
+        If weiterMachen Then
+            If oldValue.Trim.Length = 0 Then
+                ' ist erlaubt, wenn der Wert in einer der Definitions vorkommt 
+                tmpValue = RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue)
+            Else
+                ' es war vorher was drin 
+                If RoleDefinitions.containsName(newValue) Or CostDefinitions.containsName(newValue) Then
+
+                    If RoleDefinitions.containsName(newValue) = RoleDefinitions.containsName(oldValue) Then
+                        ' ist erlaubt 
+                        tmpValue = True
+                    ElseIf CostDefinitions.containsName(newValue) = missingCostDefinitions.containsName(oldValue) Then
+                        ' ist erlaubt
+                        tmpValue = True
+                    Else
+                        ' ist nicht erlaubt
+                        tmpValue = True
+                    End If
+
                 End If
 
             End If
-
         End If
 
 

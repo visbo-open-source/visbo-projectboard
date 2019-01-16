@@ -5858,7 +5858,8 @@ Public Module Projekte
                     If roleName = "" Then
                         tdatenreihe = hproj.getAllPersonalKosten
                     Else
-                        tdatenreihe = hproj.getPersonalKosten(roleName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
+
                     End If
 
                 End If
@@ -5919,13 +5920,15 @@ Public Module Projekte
                         If roleName = "" Then
                             vdatenreihe = vglproj.getAlleRessourcen
                         Else
-                            vdatenreihe = vglproj.getRessourcenBedarf(roleName, True)
+                            'vdatenreihe = vglproj.getRessourcenBedarf(roleName, True)
+                            vdatenreihe = vglproj.getRessourcenBedarf(roleName, inclSubRoles:=True)
                         End If
                     Else
                         If roleName = "" Then
                             vdatenreihe = vglproj.getAllPersonalKosten
                         Else
-                            vdatenreihe = vglproj.getPersonalKosten(roleName, True)
+                            'vdatenreihe = vglproj.getPersonalKosten(roleName, True)
+                            vdatenreihe = vglproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
                         End If
                     End If
 
@@ -6649,10 +6652,13 @@ Public Module Projekte
                 If roleName = "" Then
                     tdatenreihe = hproj.getAllPersonalKosten
                 Else
-                    tdatenreihe = hproj.getPersonalKosten(roleName, True)
+                    tdatenreihe = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
+
                 End If
+
             End If
             gesamt_Summe = tdatenreihe.Sum
+
 
             ' die Betrachtung der Ist-Daten versus Prognose Daten ...
             ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
@@ -6717,7 +6723,7 @@ Public Module Projekte
                     If roleName = "" Then
                         vdatenreihe = vglProj.getAllPersonalKosten
                     Else
-                        vdatenreihe = vglProj.getPersonalKosten(roleName, True)
+                        vdatenreihe = vglProj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True)
                     End If
                 End If
 
@@ -16463,10 +16469,9 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="constellationName">Name der Konstellation</param>
     ''' <param name="addProjects">gibt an, ob Projekte hinzugefügt werden sollen oder ob komplett neu gezeichnet werden soll</param>
-    ''' <param name="storeLast">gibt an, ob die aktuelle Konstellation gespeichert werden soll</param>
     ''' <param name="updateProjektTafel">gibt an, ob die Projekt-Tafel neu gezeichnet werden soll oder ob die Konstellation nur im Showprojekte geladen werden soll</param> 
     ''' <remarks></remarks>
-    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean, ByVal storeLast As Boolean,
+    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean,
                                         ByVal updateProjektTafel As Boolean)
 
         Dim activeConstellation As New clsConstellation
@@ -16834,7 +16839,7 @@ Public Module Projekte
 
         If anzOptimierungen > 0 Then
             ' wieder den alten Zustand herstellen 
-            Call loadSessionConstellation(autoSzenarioNamen(0), False, False, True)
+            Call loadSessionConstellation(autoSzenarioNamen(0), False, True)
         Else
             ' es hat sich eh nichts geändert ... 
             'Call loadSessionConstellation(autoSzenarioNamen(0), False, False)
@@ -27671,52 +27676,128 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' gibt Menge aller auftretenden Rollen und Kosten-Namen in hproj, lproj, bproj zurück 
+    ''' gibt Menge aller auftretenden Rollen NameIDs der Form roleID;teamID oder roleID in hproj, lproj, bproj zurück 
     ''' wird unter anderem für die TableBudgetCostAPVCV benötigt
+    ''' dabei wird auch berücksichtigt, ob es sich um eine Rolle 'RessourceManager'> handelt; denn der darf nur die eigenen Leute sehen
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <param name="lproj"></param>
     ''' <param name="bproj"></param>
     ''' <returns></returns>
-    Public Function getCommonListOfRCNames(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt,
-                                           ByRef anzRoles As Integer, ByRef anzCosts As Integer) As Collection
+    Public Function getCommonListOfRoleNameIDs(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt,
+                                           ByRef anzRoles As Integer) As Collection
+        Dim resultCollection As New Collection
+
+        ' bestimme die Menge an vorkommenden Role-NameIDs in hproj, lproj, bproj
+        ' tmpRListe nimmt jetzt roleNameIDs der Form roleID;teamID auf 
+        Dim tmpRListe As New SortedList(Of Integer, String)
+
+        'Dim onlyConsiderTeamMembers As Boolean = False
+        'If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+        '    onlyConsiderTeamMembers = RoleDefinitions.isParentOfTeams(myCustomUserRole.specifics)
+        'End If
+
+        Dim sRoles As New Collection
+
+        For i As Integer = 1 To 3
+            If i = 1 Then
+                sRoles = hproj.getRoleNameIDs
+            ElseIf i = 2 Then
+                If Not IsNothing(lproj) Then
+                    sRoles = lproj.getRoleNameIDs
+                Else
+                    sRoles = New Collection
+                End If
+            Else
+                If Not IsNothing(bproj) Then
+                    sRoles = bproj.getRoleNameIDs
+                Else
+                    sRoles = New Collection
+                End If
+            End If
+
+            For Each tmpRNameID As String In sRoles
+
+                Dim tmpTeamID As Integer = -1
+                Dim tmpUiD As Integer = RoleDefinitions.parseRoleNameID(tmpRNameID, tmpTeamID)
+
+                'If onlyConsiderTeamMembers Then
+                '    ' prüfe, ob es sich bei specifics um eine Gruppen-Organisation handelt 
+                '    If tmpTeamID <> -1 Then
+                '        If Not tmpRListe.ContainsKey(tmpRNameID) Then
+                '            tmpRListe.Add(tmpRNameID, tmpRNameID)
+                '        End If
+                '    End If
+                'Else
+                ' hier muss geprüft werden, ob meine Rolle das überhaupt sehen darf ..
+                If myCustomUserRole.isAllowedToSee(tmpRNameID) Then
+                    If Not tmpRListe.ContainsKey(tmpUiD) Then
+                        tmpRListe.Add(tmpUiD, tmpRNameID)
+                    End If
+                End If
+
+                'End If
+
+
+            Next
+
+
+        Next
+
+
+        For Each kvp As KeyValuePair(Of Integer, String) In tmpRListe
+
+            If Not resultCollection.Contains(kvp.Value) Then
+                resultCollection.Add(kvp.Value, kvp.Value)
+            End If
+
+
+        Next
+
+
+        anzRoles = tmpRListe.Count
+
+        getCommonListOfRoleNameIDs = resultCollection
+
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <param name="anzCosts"></param>
+    ''' <returns></returns>
+    Public Function getCommonListOfCostNames(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt,
+                                             ByRef anzCosts As Integer) As Collection
+
         Dim resultCollection As New Collection
 
         ' bestimme die Menge an vorkommenden Namen in hproj, lproj, bproj
-        Dim tmpRListe As New SortedList(Of Integer, String)
+        ' tmpCListe nimmt jetzt die Kostenarten der Form Name of Kostenart 
+
         Dim tmpCListe As New SortedList(Of Integer, String)
 
-        Dim sRoles As New Collection
         Dim sCosts As New Collection
 
         For i As Integer = 1 To 3
             If i = 1 Then
-                sRoles = hproj.getRoleNames
                 sCosts = hproj.getCostNames
             ElseIf i = 2 Then
                 If Not IsNothing(lproj) Then
-                    sRoles = lproj.getRoleNames
                     sCosts = lproj.getCostNames
                 Else
-                    sRoles = New Collection
                     sCosts = New Collection
                 End If
             Else
                 If Not IsNothing(bproj) Then
-                    sRoles = bproj.getRoleNames
                     sCosts = bproj.getCostNames
                 Else
-                    sRoles = New Collection
                     sCosts = New Collection
                 End If
             End If
 
-            For Each tmpRName As String In sRoles
-                Dim tmpUiD As Integer = RoleDefinitions.getRoledef(tmpRName).UID
-                If Not tmpRListe.ContainsKey(tmpUiD) Then
-                    tmpRListe.Add(tmpUiD, tmpRName)
-                End If
-            Next
 
             For Each tmpCName As String In sCosts
                 Dim tmpUiD As Integer = CostDefinitions.getCostdef(tmpCName).UID
@@ -27727,24 +27808,19 @@ Public Module Projekte
 
         Next
 
-
-        For Each kvp As KeyValuePair(Of Integer, String) In tmpRListe
-
-            resultCollection.Add(kvp.Value)
-
-        Next
-
         For Each kvp As KeyValuePair(Of Integer, String) In tmpCListe
 
-            resultCollection.Add(kvp.Value)
+            If Not resultCollection.Contains(kvp.Value) Then
+                resultCollection.Add(kvp.Value, kvp.Value)
+            End If
 
         Next
 
-        anzRoles = tmpRListe.Count
         anzCosts = tmpCListe.Count
 
 
-        getCommonListOfRCNames = resultCollection
+        getCommonListOfCostNames = resultCollection
+
 
     End Function
 
