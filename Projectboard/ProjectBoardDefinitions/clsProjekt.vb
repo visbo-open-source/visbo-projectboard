@@ -76,11 +76,18 @@ Public Class clsProjekt
         End Get
         Set(value As Date)
             If Not IsNothing(value) Then
-                ' 13.12. mit dem folgenden wird sichergestellt, dass actualdatauntil nie größer sein kann als das Ende date. 
-                If endeDate < value Then
-                    value = endeDate
+                If value > StartofCalendar Then
+                    'stellt sicher dass es sich um dem letzten Tag, da aber um den Tagesbeginn handelt 
+                    value = value.AddDays(-1 * value.Day).AddMonths(1).Date
+                    ' 13.12. mit dem folgenden wird sichergestellt, dass actualdatauntil nie größer sein kann als das Ende date. 
+                    If DateDiff(DateInterval.Month, endeDate, value) > 0 Then
+                        value = endeDate.AddDays(-1 * endeDate.Day).AddMonths(1).Date
+                    End If
+                    _actualDataUntil = value
+                Else
+                    _actualDataUntil = Date.MinValue
                 End If
-                _actualDataUntil = value
+
             Else
                 _actualDataUntil = Date.MinValue
             End If
@@ -2760,72 +2767,72 @@ Public Class clsProjekt
 
     End Function
 
-    ''' <summary>
-    ''' gibt ein Projekt zurück, das um die Ressourcen und Kostenbedarfe des otherproj reduziert wurde 
-    ''' das otherproj darf nicht vor dem Me-Projekt starten od er enden. Ein Fehler wird mit Exception beendet  
-    ''' </summary>
-    ''' <param name="otherproj"></param>
-    ''' <returns></returns>
-    Public Function subtractProject(ByVal otherproj As clsProjekt) As clsProjekt
+    '''' <summary>
+    '''' gibt ein Projekt zurück, das um die Ressourcen und Kostenbedarfe des otherproj reduziert wurde 
+    '''' das otherproj darf nicht vor dem Me-Projekt starten od er enden. Ein Fehler wird mit Exception beendet  
+    '''' </summary>
+    '''' <param name="otherproj"></param>
+    '''' <returns></returns>
+    'Public Function subtractProject(ByVal otherproj As clsProjekt) As clsProjekt
 
-        Dim ok As Boolean = True
-        Dim myLength As Integer = Me.anzahlRasterElemente
-        Dim otherLength As Integer = otherproj.anzahlRasterElemente
+    '    Dim ok As Boolean = True
+    '    Dim myLength As Integer = Me.anzahlRasterElemente
+    '    Dim otherLength As Integer = otherproj.anzahlRasterElemente
 
-        Dim myStartColumn As Integer = getColumnOfDate(Me.startDate)
-        Dim otherStartColumn As Integer = getColumnOfDate(otherproj.startDate)
-        Dim otherIndexStart As Integer = 0
+    '    Dim myStartColumn As Integer = getColumnOfDate(Me.startDate)
+    '    Dim otherStartColumn As Integer = getColumnOfDate(otherproj.startDate)
+    '    Dim otherIndexStart As Integer = 0
 
-        ' ist es überhaupt zulässig ? 
+    '    ' ist es überhaupt zulässig ? 
 
-        Dim newProj As clsProjekt = Me.createVariant("$Subtract$", "")
+    '    Dim newProj As clsProjekt = Me.createVariant("$Subtract$", "")
 
-        If myStartColumn <= otherStartColumn Then
-            otherIndexStart = otherStartColumn - myStartColumn
-        Else
-            ok = False
-        End If
+    '    If myStartColumn <= otherStartColumn Then
+    '        otherIndexStart = otherStartColumn - myStartColumn
+    '    Else
+    '        ok = False
+    '    End If
 
-        If myStartColumn + myLength < otherStartColumn + otherLength Then
-            ok = False
-        End If
+    '    If myStartColumn + myLength < otherStartColumn + otherLength Then
+    '        ok = False
+    '    End If
 
-        If Not ok Then
-            Throw New ArgumentException("hier kann keine Subtraktion vorgenommen werden ...")
-        Else
-            ' jetzt kann die Subtraktion beginnen ..
+    '    If Not ok Then
+    '        Throw New ArgumentException("hier kann keine Subtraktion vorgenommen werden ...")
+    '    Else
+    '        ' jetzt kann die Subtraktion beginnen ..
 
-            ' es wird nur in der cphase(1) abgezogen
-            Dim mycPhase As clsPhase = newProj.getPhase(1)
-            If IsNothing(mycPhase) Then
-                Throw New ArgumentException("es gibt keine Projekt-Phase im Projekt ...")
-            Else
-                Dim myRoleNames As Collection = newProj.getRoleNames
-                Dim otherRoleNames As Collection = otherproj.getRoleNames
+    '        ' es wird nur in der cphase(1) abgezogen
+    '        Dim mycPhase As clsPhase = newProj.getPhase(1)
+    '        If IsNothing(mycPhase) Then
+    '            Throw New ArgumentException("es gibt keine Projekt-Phase im Projekt ...")
+    '        Else
+    '            Dim myRoleNames As Collection = newProj.getRoleNames
+    '            Dim otherRoleNames As Collection = otherproj.getRoleNames
 
-                For Each tmpRoleName As String In otherRoleNames
-                    If myRoleNames.Contains(tmpRoleName) Then
-                        Dim myTmpRole As clsRolle = mycPhase.getRole(tmpRoleName)
-                        Dim myValues() As Double = myTmpRole.Xwerte
-                        Dim tmpValues() As Double = otherproj.getRessourcenBedarf(tmpRoleName)
-                        For i As Integer = otherStartColumn To otherLength - 1
-                            myValues(otherStartColumn) = myValues(otherStartColumn) - tmpValues(i - otherStartColumn)
-                        Next
-                    Else
-                        Throw New ArgumentException("Rolle existiert nicht : " & tmpRoleName)
-                    End If
+    '            For Each tmpRoleName As String In otherRoleNames
+    '                If myRoleNames.Contains(tmpRoleName) Then
+    '                    Dim myTmpRole As clsRolle = mycPhase.getRole(tmpRoleName)
+    '                    Dim myValues() As Double = myTmpRole.Xwerte
+    '                    Dim tmpValues() As Double = otherproj.getRessourcenBedarf(tmpRoleName)
+    '                    For i As Integer = otherStartColumn To otherLength - 1
+    '                        myValues(otherStartColumn) = myValues(otherStartColumn) - tmpValues(i - otherStartColumn)
+    '                    Next
+    '                Else
+    '                    Throw New ArgumentException("Rolle existiert nicht : " & tmpRoleName)
+    '                End If
 
-                Next
+    '            Next
 
-            End If
+    '        End If
 
-        End If
+    '    End If
 
-        ' jetzt wieder den Me-Variant-Name einstellen 
-        newProj.variantName = Me.variantName
-        subtractProject = newProj
+    '    ' jetzt wieder den Me-Variant-Name einstellen 
+    '    newProj.variantName = Me.variantName
+    '    subtractProject = newProj
 
-    End Function
+    'End Function
 
     ''' <summary>
     ''' macht für den Portfolio Manager aus einem Projekt mit Detail-Ressourcen-Zuordnungen  ein Projekt mit den aggregierten Werten für die 
@@ -3158,18 +3165,21 @@ Public Class clsProjekt
         End If
 
         ' jetzt werden die Role-Values von me übertragen , an dieser stelle gibt es noch keine Rollen im neuen Projekt!
-        Dim tmpRoles As Collection = Me.getRoleNames
+        Dim tmpRoleNameIDs As Collection = Me.getRoleNameIDs()
         Dim newValues() As Double
 
-        For Each tmpRole As String In tmpRoles
+        For Each tmpRoleNameID As String In tmpRoleNameIDs
             ' zurücksetzen 
             ReDim newValues(newLength - 1)
 
-            Dim myValues() As Double = Me.getRessourcenBedarf(tmpRole)
+            Dim myValues() As Double = Me.getRessourcenBedarf(tmpRoleNameID)
             Dim newRole As New clsRolle(newLength - 1)
 
             With newRole
-                .uid = RoleDefinitions.getRoledef(tmpRole).UID
+                Dim teamID As Integer = -1
+                .uid = RoleDefinitions.parseRoleNameID(tmpRoleNameID, teamID)
+                .teamID = teamID
+
                 For ix As Integer = myIndexStart To myIndexStart + myLength - 1
                     newValues(ix) = myValues(ix - myIndexStart)
                 Next
@@ -3203,22 +3213,24 @@ Public Class clsProjekt
         Next
 
         ' jetzt werden die Role-Values von otherProj übertragen , an dieser stelle gibt es evtl bereits diese Rolle im neuen Projekt!
-        tmpRoles = otherProj.getRoleNames
+        tmpRoleNameIDs = otherProj.getRoleNameIDs
 
-        For Each tmpRole As String In tmpRoles
+        For Each tmpRoleNameID As String In tmpRoleNameIDs
             ' zurücksetzen 
-            Dim newRole As clsRolle = newProj.getPhase(1).getRole(tmpRole)
+            Dim newRole As clsRolle = newProj.getPhase(1).getRoleByRoleNameID(tmpRoleNameID)
             Dim roleDidExist As Boolean = True
 
             If IsNothing(newRole) Then
                 roleDidExist = False
                 newRole = New clsRolle(newLength - 1)
-                newRole.uid = RoleDefinitions.getRoledef(tmpRole).UID
+                Dim teamID As Integer = -1
+                newRole.uid = RoleDefinitions.parseRoleNameID(tmpRoleNameID, teamID)
+                newRole.teamID = teamID
             End If
 
             newValues = newRole.Xwerte
 
-            Dim otherValues() As Double = otherProj.getRessourcenBedarf(tmpRole)
+            Dim otherValues() As Double = otherProj.getRessourcenBedarf(tmpRoleNameID)
 
 
             With newRole
@@ -3288,7 +3300,8 @@ Public Class clsProjekt
 
             For Each rvkvp As KeyValuePair(Of String, Double()) In actualValues
 
-                Dim hroleDef As clsRollenDefinition = RoleDefinitions.getRoledef(rvkvp.Key)
+                Dim teamID As Integer = -1
+                Dim hroleDef As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(rvkvp.Key, teamID)
                 ReDim roleXwerte(dimension)
 
                 ' nur wenn die Rolle existiert und ausserdem Werte von größer Null hat, soll sie angelegt werden ..
@@ -3304,6 +3317,7 @@ Public Class clsProjekt
 
                     With curRole
                         .uid = hroleDef.UID
+                        .teamID = teamID
                         .Xwerte = roleXwerte
                     End With
                     ' wenn es schon existiert, werden die Werte addiert ...
@@ -3420,16 +3434,16 @@ Public Class clsProjekt
 
 
             If pstart > actualIX Then
-                    ' es kann noch keine Ist-Daten geben 
-                    ReDim tmpResult(0)
-                    tmpResult(0) = 0
+                ' es kann noch keine Ist-Daten geben 
+                ReDim tmpResult(0)
+                tmpResult(0) = 0
 
-                ElseIf pstart <= actualIX Then
-                    ReDim tmpResult(actualIX - pstart)
-                    If isRole Then
-                        ' enthält diese Phase überhaupt diese Rolle ?
-                        Dim teamID As Integer = -1
-                        Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
+            ElseIf pstart <= actualIX Then
+                ReDim tmpResult(actualIX - pstart)
+                If isRole Then
+                    ' enthält diese Phase überhaupt diese Rolle ?
+                    Dim teamID As Integer = -1
+                    Dim roleID As Integer = RoleDefinitions.parseRoleNameID(rcNameID, teamID)
                     If rcLists.phaseContainsRoleID(phaseNameID, roleID, teamID) Then
 
                         cphase = getPhaseByID(phaseNameID)
@@ -3444,47 +3458,47 @@ Public Class clsProjekt
                         End If
                     Else
                         ReDim tmpResult(0)
-                            tmpResult(0) = 0
-                            notYetDone = False
-                        End If
-                    Else
-                        Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
-                        If rcLists.phaseContainsCost(phaseNameID, costID) Then
+                        tmpResult(0) = 0
+                        notYetDone = False
+                    End If
+                Else
+                    Dim costID As Integer = CostDefinitions.getCostdef(rcNameID).UID
+                    If rcLists.phaseContainsCost(phaseNameID, costID) Then
 
-                            cphase = getPhaseByID(phaseNameID)
-                            Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
-                            If Not IsNothing(tmpCost) Then
-                                xWerte = tmpCost.Xwerte
-                            Else
-                                ReDim tmpResult(0)
-                                tmpResult(0) = 0
-                                notYetDone = False
-                            End If
+                        cphase = getPhaseByID(phaseNameID)
+                        Dim tmpCost As clsKostenart = cphase.getCost(rcNameID)
+                        If Not IsNothing(tmpCost) Then
+                            xWerte = tmpCost.Xwerte
                         Else
                             ReDim tmpResult(0)
                             tmpResult(0) = 0
                             notYetDone = False
                         End If
+                    Else
+                        ReDim tmpResult(0)
+                        tmpResult(0) = 0
+                        notYetDone = False
                     End If
+                End If
 
-                    If notYetDone Then
+                If notYetDone Then
 
-                        For i As Integer = 0 To actualIX - pstart
-                            If isRole And outputInEuro Then
-                                ' mit Tagessatz multiplizieren 
-                                tmpResult(i) = xWerte(i) * tagessatz
-                            Else
-                                tmpResult(i) = xWerte(i)
-                            End If
+                    For i As Integer = 0 To actualIX - pstart
+                        If isRole And outputInEuro Then
+                            ' mit Tagessatz multiplizieren 
+                            tmpResult(i) = xWerte(i) * tagessatz
+                        Else
+                            tmpResult(i) = xWerte(i)
+                        End If
 
-                        Next
-                    End If
-
+                    Next
                 End If
 
             End If
 
-            getPhaseRCActualValues = tmpResult
+        End If
+
+        getPhaseRCActualValues = tmpResult
 
     End Function
 
@@ -3593,11 +3607,11 @@ Public Class clsProjekt
 
                             itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
-                            valueArray = Me.getRessourcenBedarf(itemName, inclSubRoles)
+                            valueArray = Me.getRessourcenBedarf(itemName, inclSubRoles:=inclSubRoles)
 
                             For i = 2 To mycollection.Count
                                 itemName = CStr(mycollection.Item(i))
-                                tempArray = Me.getRessourcenBedarf(itemName, inclSubRoles)
+                                tempArray = Me.getRessourcenBedarf(itemName, inclSubRoles:=inclSubRoles)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
                                 Next
@@ -3805,7 +3819,7 @@ Public Class clsProjekt
 
                             If monatsIndex >= 0 And monatsIndex <= Me.anzahlRasterElemente - 1 Then
 
-                                ResultValues(monatsIndex) = ResultValues(monatsIndex) & vbLf & result.name & _
+                                ResultValues(monatsIndex) = ResultValues(monatsIndex) & vbLf & result.name &
                                                         " (" & result.getDate.ToShortDateString & ")"
 
                             End If
@@ -3938,6 +3952,12 @@ Public Class clsProjekt
 
             hasDifferentRoleNeeds = Not istIdentisch
 
+        End Get
+    End Property
+
+    Public ReadOnly Property hasActualValues As Boolean
+        Get
+            hasActualValues = startDate < actualDataUntil
         End Get
     End Property
 
@@ -4083,7 +4103,7 @@ Public Class clsProjekt
     End Sub
 
 
-    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date, _
+    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date,
                                       Optional ByVal zielRenditenVorgabe As Double = -99999.0)
         Dim p As Integer
         Dim newphase As clsPhase
@@ -4121,7 +4141,7 @@ Public Class clsProjekt
 
         End Try
 
-        
+
 
 
     End Sub
@@ -4735,7 +4755,7 @@ Public Class clsProjekt
 
 
         If phaseNr > Me.CountPhases Then
-            Throw New ArgumentException("es gibt diese Phasen-Numer nicht: " & phaseNr & vbLf & _
+            Throw New ArgumentException("es gibt diese Phasen-Numer nicht: " & phaseNr & vbLf &
                                          "Projekt: " & Me.name & ", Anzahl Phasen: " & Me.CountPhases)
         End If
 
@@ -4819,7 +4839,7 @@ Public Class clsProjekt
 
     'End Sub
 
-    Public Sub calculateMilestoneCoord(ByVal resultDate As Date, ByVal zeilenOffset As Integer, ByVal b2h As Double, _
+    Public Sub calculateMilestoneCoord(ByVal resultDate As Date, ByVal zeilenOffset As Integer, ByVal b2h As Double,
                                     ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
 
@@ -4864,7 +4884,7 @@ Public Class clsProjekt
 
     End Sub
 
-    Public Sub calculateRoundedKPI(ByRef budget As Double, ByRef personalKosten As Double, ByRef sonstKosten As Double, ByRef risikoKosten As Double, ByRef ergebnis As Double, _
+    Public Sub calculateRoundedKPI(ByRef budget As Double, ByRef personalKosten As Double, ByRef sonstKosten As Double, ByRef risikoKosten As Double, ByRef ergebnis As Double,
                                    Optional roundIT As Boolean = True)
 
         With Me
@@ -5088,8 +5108,8 @@ Public Class clsProjekt
                                 Dim pvName As String = ""
                                 Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb, type, pvName)
 
-                                If type = -1 Or _
-                                    (type = PTProjektType.projekt And pvName = Me.name) Or _
+                                If type = -1 Or
+                                    (type = PTProjektType.projekt And pvName = Me.name) Or
                                     (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                                     If cphase.name = selPhaseName Then
@@ -5105,7 +5125,7 @@ Public Class clsProjekt
                                     Catch ex As Exception
 
                                     End Try
-                                    
+
                                 End If
 
                                 j = j + 1
@@ -5114,7 +5134,7 @@ Public Class clsProjekt
                             If found Then           ' cphase ist eine der selektierten Phasen
 
                                 If Not considerTimespace _
-                                    Or _
+                                    Or
                                     (considerTimespace And phaseWithinTimeFrame(Me.Start, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight)) Then
 
                                     With cphase
@@ -5219,10 +5239,10 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property calcNeededLinesSwl(ByVal swimlaneID As String, _
-                                                ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection, _
+    Public ReadOnly Property calcNeededLinesSwl(ByVal swimlaneID As String,
+                                                ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection,
                                                 ByVal extended As Boolean, ByVal considerTimespace As Boolean,
-                                                ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer, _
+                                                ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer,
                                                 ByVal considerAll As Boolean) As Integer
         Get
 
@@ -5430,7 +5450,7 @@ Public Class clsProjekt
     ''' <param name="startNr"></param>
     ''' <param name="endNr"></param>
     ''' <remarks></remarks>
-    Public Sub calcStartEndChildNrs(ByVal phaseID As String, _
+    Public Sub calcStartEndChildNrs(ByVal phaseID As String,
                                          ByRef startNr As Integer, ByRef endNr As Integer)
 
         ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
@@ -5512,8 +5532,8 @@ Public Class clsProjekt
             Dim type As Integer = -1
             Dim pvName As String = ""
             Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
-            If type = -1 Or _
-                (type = PTProjektType.projekt And Me.name = pvName) Or _
+            If type = -1 Or
+                (type = PTProjektType.projekt And Me.name = pvName) Or
                 (type = PTProjektType.vorlage And Me.VorlagenName = pvName) Then
 
                 If strict Then
@@ -5554,8 +5574,8 @@ Public Class clsProjekt
             Dim pvName As String = ""
             Call splitHryFullnameTo2(fullName, elemName, breadcrumb, type, pvName)
 
-            If type = -1 Or _
-                (type = PTProjektType.projekt And Me.name = pvName) Or _
+            If type = -1 Or
+                (type = PTProjektType.projekt And Me.name = pvName) Or
                 (type = PTProjektType.vorlage And Me.VorlagenName = pvName) Then
 
                 If strict Then
@@ -5607,8 +5627,8 @@ Public Class clsProjekt
                     ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
                     Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
 
-                    If type = -1 Or _
-                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                    If type = -1 Or
+                        (type = PTProjektType.projekt And pvName = Me.name) Or
                         (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                         Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
@@ -5669,8 +5689,8 @@ Public Class clsProjekt
                     ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
                     Call splitHryFullnameTo2(fullName, curPhName, breadcrumb, type, pvName)
 
-                    If type = -1 Or _
-                        (type = PTProjektType.projekt And pvName = Me.name) Or _
+                    If type = -1 Or
+                        (type = PTProjektType.projekt And pvName = Me.name) Or
                         (type = PTProjektType.vorlage And pvName = Me.VorlagenName) Then
 
                         Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(curPhName, breadcrumb)
@@ -5902,7 +5922,7 @@ Public Class clsProjekt
     ''' <param name="anzLines"></param>
     ''' <param name="drawMStoPhaseListe"></param>
     ''' <remarks></remarks>
-    Public Sub selMilestonesToselPhase(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal considerTimespace As Boolean, _
+    Public Sub selMilestonesToselPhase(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal considerTimespace As Boolean,
                                        ByRef anzLines As Integer, ByRef drawMStoPhaseListe As SortedList(Of String, SortedList))
 
 
@@ -5927,8 +5947,8 @@ Public Class clsProjekt
                 Dim pvname As String = ""
                 Call splitHryFullnameTo2(CStr(selectedMilestones(mx)), selMSName, breadcrumb, mstype, pvname)
 
-                If mstype = -1 Or _
-                    (mstype = PTProjektType.projekt And pvname = Me.name) Or _
+                If mstype = -1 Or
+                    (mstype = PTProjektType.projekt And pvname = Me.name) Or
                     (mstype = PTProjektType.vorlage And pvname = Me.VorlagenName) Then
 
                     Dim msNameIndices() As Integer
@@ -5962,8 +5982,8 @@ Public Class clsProjekt
                                     pvname = ""
                                     Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
 
-                                    If phtype = -1 Or _
-                                        (phtype = PTProjektType.projekt And pvname = Me.name) Or _
+                                    If phtype = -1 Or
+                                        (phtype = PTProjektType.projekt And pvname = Me.name) Or
                                         (phtype = PTProjektType.vorlage And pvname = Me.VorlagenName) Then
 
                                         Dim phNameIndices() As Integer
@@ -6038,8 +6058,8 @@ Public Class clsProjekt
                                 pvname = ""
                                 Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb, phtype, pvname)
 
-                                If phtype = -1 Or _
-                                    (phtype = PTProjektType.projekt And pvname = Me.name) Or _
+                                If phtype = -1 Or
+                                    (phtype = PTProjektType.projekt And pvname = Me.name) Or
                                     (phtype = PTProjektType.vorlage And pvname = Me.VorlagenName) Then
 
                                     Dim phNameIndices() As Integer

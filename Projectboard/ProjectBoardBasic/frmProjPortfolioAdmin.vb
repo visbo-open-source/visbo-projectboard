@@ -505,7 +505,7 @@ Public Class frmProjPortfolioAdmin
                 backToInit.Visible = False
 
                 storeToDBasWell.Visible = False
-                chkbxPermanent.Visible = True
+                chkbxPermanent.Visible = False
 
 
             End If
@@ -4683,11 +4683,6 @@ Public Class frmProjPortfolioAdmin
         End If
 
     End Sub
-
-    Private Sub settingsBtn_Click(sender As Object, e As EventArgs)
-
-    End Sub
-
 
 
 End Class

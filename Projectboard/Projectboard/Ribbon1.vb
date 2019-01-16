@@ -1774,6 +1774,13 @@ Imports System.Web
                     tmpLabel = "Capacities"
                 End If
 
+            Case "PT4G1B14"
+                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                    tmpLabel = "Offline Ressourcen Zuweisung"
+                Else
+                    tmpLabel = "Offline Resource Assignments"
+                End If
+
             Case "PT4G1B8"
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
                     tmpLabel = "Organisation"
@@ -4808,7 +4815,7 @@ Imports System.Web
                         End If
 
                         projectConstellations.Add(sessionConstellation)
-                        Call loadSessionConstellation(scenarioName, False, False, True)
+                        Call loadSessionConstellation(scenarioName, False, True)
                     Else
                         Call MsgBox("keine Projekte importiert ...")
                     End If
@@ -4995,7 +5002,7 @@ Imports System.Web
                                 projectConstellations.Add(sessionConstellationS)
                                 ' jetzt auf Projekt-Tafel anzeigen 
 
-                                Call loadSessionConstellation(scenarioNameS, False, False, True)
+                                Call loadSessionConstellation(scenarioNameS, False, True)
 
                             Else
                                 Call MsgBox("keine Programmlinien importiert ...")
@@ -5009,7 +5016,7 @@ Imports System.Web
 
                                 projectConstellations.Add(sessionConstellationP)
                                 ' jetzt auf Projekt-Tafel anzeigen 
-                                Call loadSessionConstellation(scenarioNameP, False, False, True)
+                                Call loadSessionConstellation(scenarioNameP, False, True)
 
                             Else
                                 Call MsgBox("keine Projekte importiert ...")
@@ -5670,6 +5677,124 @@ Imports System.Web
     End Sub
 
     ''' <summary>
+    ''' ordnet existierenden Projekten pro Phase eine Ressourcen-Summe zu. 
+    ''' wenn bereits Istdaten existieren, so werden die angegebenen Summen so verteilt, dass 
+    ''' die Formel Istdaten+Prognose = Summe 
+    ''' </summary>
+    ''' <param name="control"></param>
+    Public Sub PTImportOfflineData(control As IRibbonControl)
+
+
+        Dim dirname As String = My.Computer.FileSystem.CombinePath(awinPath, importOrdnerNames(PTImpExp.offlineData))
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname, FileIO.SearchOption.SearchTopLevelOnly, "*ffline*.xls*")
+        Dim anzFiles As Integer = listOfImportfiles.Count
+
+        Dim dateiname As String = ""
+
+        Dim weiterMachen As Boolean = False
+
+        'Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        Dim getOrgaFile As New frmSelectImportFiles
+
+        If anzFiles > 0 Then
+
+            getOrgaFile.menueAswhl = PTImpExp.offlineData
+            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                weiterMachen = True
+            End If
+        Else
+            Call MsgBox("keine Offline-Daten vorhanden ...")
+            weiterMachen = False
+        End If
+
+        If weiterMachen Then
+
+            ' öffnen des LogFiles
+            Call logfileOpen()
+
+            For Each selectedWB As String In getOrgaFile.selImportFiles
+
+                dateiname = My.Computer.FileSystem.CombinePath(dirname, selectedWB)
+
+                Try
+                    ' hier wird jetzt der Import gemacht 
+                    Call logfileSchreiben("Beginn Import Offline-Daten", selectedWB, -1)
+
+                    ' Öffnen des Offline Data -Files
+                    appInstance.Workbooks.Open(dateiname)
+                    Dim offlineName As String = appInstance.ActiveWorkbook.Name
+
+                    Dim outputCollection As New Collection
+
+                    ' jetzt wird die Aktion durchgeführt ...
+                    Call ImportOfflineData(offlineName, outputCollection)
+
+                    ' Schliessen des CustomUser Role-Files
+                    appInstance.Workbooks(offlineName).Close(SaveChanges:=True)
+
+                    ' -----------------------------------------------------------------------------
+                    ' Start Verarbeitung Import-Projekte verarbeitet 
+                    'sessionConstellationP enthält alle Projekte aus dem Import 
+                    Dim importScenarioName As String = "offline Data"
+                    Dim importConstellation As clsConstellation = verarbeiteImportProjekte(importScenarioName, noComparison:=False, considerSummaryProjects:=False)
+
+
+                    If importConstellation.count > 0 Then
+
+                        If projectConstellations.Contains(importScenarioName) Then
+                            projectConstellations.Remove(importScenarioName)
+                        End If
+
+                        projectConstellations.Add(importConstellation)
+                        ' jetzt auf Projekt-Tafel anzeigen 
+                        Call loadSessionConstellation(importScenarioName, False, True)
+
+                    Else
+                        logmessage = "keine Projekte importiert ..."
+                        outputCollection.Add(logmessage)
+                    End If
+
+                    If ImportProjekte.Count > 0 Then
+                        ImportProjekte.Clear(False)
+                    End If
+
+
+                    ' Ende Verarbeitung Import-Projekte
+                    ' -----------------------------------------------------------------------------
+                    If outputCollection.Count > 0 Then
+                        Call showOutPut(outputCollection, "Import Offline Data " & offlineName, "")
+                        outputCollection.Clear()
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+            Next
+
+
+
+            ' Schließen des LogFiles
+            Call logfileSchliessen()
+
+        End If
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+
+    ''' <summary>
     ''' importiert und speichert die Istdaten; darf nur Orga-Admin
     ''' </summary>
     ''' <param name="control"></param>
@@ -5761,7 +5886,7 @@ Imports System.Web
 
                     projectConstellations.Add(sessionConstellationP)
                     ' jetzt auf Projekt-Tafel anzeigen 
-                    Call loadSessionConstellation(scenarioNameP, False, False, True)
+                    Call loadSessionConstellation(scenarioNameP, False, True)
 
                 Else
                     Call MsgBox("keine Projekte importiert ...")
@@ -6456,22 +6581,31 @@ Imports System.Web
             enableOnUpdate = False
 
 
-            Dim myCollection As New Collection
+            Dim myCollectionR As New Collection
+            Dim myCollectionC As New Collection
 
             ' erstmal werden hier nur die 
             For Each element As String In frmMERoleCost.rolesToAdd
-
-                Dim teamID As Integer = -1
-                Dim tmpRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(element, teamID)
-                If Not IsNothing(tmpRole) Then
-                    myCollection.Add(tmpRole.name)
+                Dim teamID As Integer
+                Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(element, teamID)
+                If roleUID > 0 Then
+                    ' es ist eine Rolle 
+                    If Not myCollectionR.Contains(element) Then
+                        myCollectionR.Add(element, element)
+                    End If
+                ElseIf CostDefinitions.containsName(element) Then
+                    If Not myCollectionC.Contains(element) Then
+                        myCollectionC.Add(element, element)
+                    End If
                 End If
+
+                'End If
 
             Next
 
 
             Try
-                Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollection)
+                Call writeProjektDetailsToExcel(showRangeLeft, showRangeRight, myCollectionR, myCollectionC)
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
@@ -11650,6 +11784,23 @@ Imports System.Web
                 Next
             End If
 
+            Dim usedRollen3 As Collection = hproj.getRoleNameIDs
+            Dim usedRollen4 As Collection = hproj.rcLists.getRoleNameIDs
+
+            ' Test auf Identität der beiden usedRollen1,2
+
+            If usedRollen3.Count <> usedRollen4.Count Then
+                atleastOne = True
+            Else
+                For ix As Integer = 1 To usedRollen3.Count
+                    If Not usedRollen4.Contains(CStr(usedRollen3.Item(ix))) Then
+                        Dim name1 As String = CStr(usedRollen4.Item(ix))
+                        Dim name2 As String = CStr(usedRollen3.Item(ix))
+                        atleastOne = True
+                    End If
+                Next
+            End If
+
 
             Dim usedCost1 As Collection = hproj.getCostNames
             Dim usedCost2 As Collection = hproj.rcLists.getCostNames
@@ -11687,23 +11838,23 @@ Imports System.Web
 
             For iter As Integer = 1 To 1
 
-                For ix As Integer = 1 To RoleDefinitions.Count
-                    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
+                'For ix As Integer = 1 To RoleDefinitions.Count
+                '    Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(ix)
 
-                    Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
-                    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
+                '    Dim zeitraumBedarf() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
+                '    Dim zeitraumBedarf2() As Double = ShowProjekte.getRoleValuesInMonth(role.UID.ToString, True)
 
-                    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
-                        atleastOne = True
-                    End If
+                '    If arraysAreDifferent(zeitraumBedarf, zeitraumBedarf2) Then
+                '        atleastOne = True
+                '    End If
 
-                Next
+                'Next
 
-                If atleastOne Then
-                    Call MsgBox("Rollen-Summen nicht alles ok ...")
-                Else
-                    Call MsgBox("Rollen-Summen alles ok ..")
-                End If
+                'If atleastOne Then
+                '    Call MsgBox("Rollen-Summen nicht alles ok ...")
+                'Else
+                '    Call MsgBox("Rollen-Summen alles ok ..")
+                'End If
                 atleastOne = False
 
                 For ix As Integer = 1 To CostDefinitions.Count
