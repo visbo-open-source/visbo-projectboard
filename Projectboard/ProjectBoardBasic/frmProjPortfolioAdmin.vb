@@ -2996,7 +2996,23 @@ Public Class frmProjPortfolioAdmin
             Call bestimmeNodeAppearance(tmpNode, aKtionskennung, treeNodeType, pName, vName)
             setNodeWriteProtections = True
         Else
-            ' der Schutz/die Veränderung ist schiefgegangen, also nichts machen ...
+            Select Case err.errorCode
+                Case 409
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("project is protected by another user")
+                    Else
+                        Call MsgBox("Projekt ist bereits von einem anderen User geschützt ")
+                    End If
+
+                Case Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error : Protection doesn't work")
+                    Else
+                        Call MsgBox("Fehler : der Schutz/die Veränderung ist schiefgegangen")
+                    End If
+
+            End Select
+
             setNodeWriteProtections = False
         End If
     End Function

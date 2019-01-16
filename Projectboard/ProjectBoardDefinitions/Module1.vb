@@ -28,6 +28,9 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
     Public noDB As Boolean = True
 
+    'Cache - Infos
+    Public cacheUpdateDelay As Long
+
     ' tk 4.12.18 
     Public dbUserID As String = ""
     ' hier sind für den eingeloggten Nutzer  aktuell gewählte  alle 
