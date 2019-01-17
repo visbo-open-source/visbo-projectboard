@@ -224,10 +224,11 @@ Public Class clsResultWeb
         Get
 
             Try
-                getBewertung = bewertungen.Item(index)
+                getBewertung = bewertungen.Item(index - 1)
             Catch ex As Exception
                 getBewertung = Nothing
                 Throw New ArgumentException(ex.Message)
+                Call MsgBox("Fehler in .getBewertung")
             End Try
 
 

@@ -16820,7 +16820,7 @@ Public Module agm2
 
     End Sub
 
-    Private Sub setUserRoles(ByRef meldungen As Collection)
+    Public Sub setUserRoles(ByRef meldungen As Collection)
 
         Dim err As New clsErrorCodeMsg
 
