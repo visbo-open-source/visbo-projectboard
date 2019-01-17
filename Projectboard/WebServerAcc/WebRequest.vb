@@ -40,6 +40,7 @@ Public Class Request
 
 
     Private aktUser As clsUserReg = Nothing
+    Private netcred As NetworkCredential
 
     'Private webVCs As clsWebVC = Nothing
 
@@ -70,7 +71,7 @@ Public Class Request
         'Dim typeRequest As String = "/token/user/signup"
         Dim serverUri As New Uri(ServerURL & typeRequest)
         Dim loginOK As Boolean = False
-        Dim errcode As Integer
+        Dim errcode As Integer = 0
         Dim errmsg As String = ""
         Dim httpresp_sav As HttpWebResponse
 
@@ -86,14 +87,14 @@ Public Class Request
             data = serverInputDataJson(user, typeRequest)
 
 
-            Dim loginAntwort As clsWebTokenUserLoginSignup
+            Dim loginAntwort As New clsWebTokenUserLoginSignup
             Dim Antwort As String
             Using httpresp As HttpWebResponse = GetRestServerResponse(serverUri, data, "POST")
                 Antwort = ReadResponseContent(httpresp)
                 httpresp_sav = httpresp     ' sichern der Server-Antwort
                 errcode = CType(httpresp.StatusCode, Integer)
                 errmsg = "( " & errcode.ToString & ") : " & httpresp.StatusDescription
-                loginAntwort = JsonConvert.DeserializeObject(Of clsWebTokenUserLoginSignup)(Antwort)
+
             End Using
 
             If awinSettings.visboDebug Then
@@ -101,6 +102,8 @@ Public Class Request
             End If
 
             If errcode = 200 Then
+
+                loginAntwort = JsonConvert.DeserializeObject(Of clsWebTokenUserLoginSignup)(Antwort)
 
                 loginOK = True
                 token = loginAntwort.token
@@ -129,10 +132,10 @@ Public Class Request
                 End If
 
                 err.errorCode = errcode
-                err.errorMsg = "POSTOneVP" & " : " & errmsg & " : " & loginAntwort.message
+                err.errorMsg = "Login" & " : " & errmsg & " : " & loginAntwort.message
 
                 ' Fehlerbehandlung je nach errcode
-                Dim statError As Boolean = errorHandling_withBreak("POSTOneVP", errcode, errmsg & " : " & loginAntwort.message)
+                Dim statError As Boolean = errorHandling_withBreak("Login", errcode, errmsg & " : " & loginAntwort.message)
 
             End If
 
@@ -2133,7 +2136,11 @@ Public Class Request
     ''' <param name="data">Daten für die Aufrufe von POST/PUT</param>
     ''' <param name="method">Typ des Rest-Request  GET/POST/PUT/DELETE</param>
     Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
-        'Private Function GetRestServerResponse(ByVal uri As Uri, ByVal data As Byte(), ByVal method As String) As HttpWebResponse
+
+
+        Dim response As HttpWebResponse = Nothing
+
+        Dim hresp As HttpWebResponse = Nothing
 
         'Dim myWebrequest As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
         'Dim myProxy As IWebProxy = myWebrequest.Proxy
@@ -2146,30 +2153,35 @@ Public Class Request
         ''                "CanPreAuthenticate : " & currentAuthenticationModule.CanPreAuthenticate.ToString)
         ''End While
 
-        Dim netcred As New NetworkCredential With {
-            .UserName = "Ute",
-            .Password = "test"
-        }
+
+
 
 
         'myProxy.Credentials = netcred
 
         'Dim sysproxy As IWebProxy = HttpWebRequest.GetSystemWebProxy
-        'Dim defaultProxy As IWebProxy = HttpWebRequest.DefaultWebProxy
+        Dim defaultProxy As IWebProxy = HttpWebRequest.DefaultWebProxy
+        Dim proxyStr As String = defaultProxy.ToString
+        'If awinSettings.visboDebug Then
+        Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri("https://staging.visbo.de"))
+            Call MsgBox("defaultProxy: " & proxyUri.ToString)
+        'End If
 
-        Dim response As HttpWebResponse = Nothing
+
 
         Try
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+            request.Proxy = defaultProxy
+            request.UseDefaultCredentials = True
+
+            Dim cc As New CookieContainer
+            request.CookieContainer = cc
+
             Dim myProxy As IWebProxy = request.Proxy
 
             request.Method = method
 
-            If Not IsNothing(request.Proxy) Then
-                If IsNothing(request.Proxy.Credentials) Then
-                    request.Proxy.Credentials = netcred
-                End If
-            End If
+
 
             request.ContentType = "application/json"
             request.Headers.Add("access-key", token)
@@ -2188,19 +2200,50 @@ Public Class Request
                         requestStream.Close()
                         requestStream.Dispose()
                     End Using
-                Catch ex As Exception
-                    'Call MsgBox("Fehler bei GetRequestStream:  " & ex.Message)
-                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+
+                Catch ex As WebException
+
+                    If ex.Status = WebExceptionStatus.ProtocolError Then
+                        hresp = ex.Response
+                        If hresp.StatusCode = HttpStatusCode.ProxyAuthenticationRequired Then
+                            ' Abfragen der Proxy-Authentifizierung erforderlich
+                            Call MsgBox("Abfragen der Proxy-Authentifizierung erforderlich")
+
+                            'ur:  für wingate - Proxy
+                            netcred = New NetworkCredential
+                            With netcred
+                                .UserName = "Ute"
+                                .Password = "test"
+                            End With
+
+                            ' ur: für wingate-Proxy
+                            If Not IsNothing(request.Proxy) Then
+                                If IsNothing(request.Proxy.Credentials) Then
+                                    request.Proxy.Credentials = netcred
+                                End If
+                            End If
+                        Else
+                            Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+                        End If
+                    End If
+
                 End Try
+
             End If
 
-            Try
-                response = request.GetResponse()
+            If IsNothing(hresp) Then  ' hresp ist nur nicht nothing, wenn der request.GetRequestStream() schief ging
+                Try
+                    response = request.GetResponse()
 
-            Catch ex As WebException
+                Catch ex As WebException
 
-                response = ex.Response
-            End Try
+                    response = ex.Response
+                End Try
+            Else
+                response = hresp
+
+            End If
+
 
         Catch ex1 As Exception
             Call MsgBox(ex1.Message)

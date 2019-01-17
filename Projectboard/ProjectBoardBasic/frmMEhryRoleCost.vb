@@ -546,7 +546,7 @@ Public Class frmMEhryRoleCost
                 Dim nodelist As New SortedList(Of Integer, Double)
                 Try
                     Dim teamID As Integer
-                    nodelist = RoleDefinitions.getRoleDefByIDKennung(CInt(node.Name), teamID).getSubRoleIDs
+                    nodelist = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID).getSubRoleIDs
                     anzChilds = nodelist.Count
                 Catch ex As Exception
                     anzChilds = 0
