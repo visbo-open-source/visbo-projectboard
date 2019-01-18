@@ -2,6 +2,7 @@
 Imports System.Globalization
 Imports System.Collections.Generic
 Imports System.Math
+Imports System.Windows.Forms
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
@@ -7399,6 +7400,28 @@ Public Module Module1
     End Function
 
 
+    ''' <summary>
+    ''' ruft das Formular auf, um die Proxy-Authentifizierung zu erfragen
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub askProxyAuthentication(ByRef usr As String, ByRef pwd As String, ByRef domain As String)
+        Dim proxyAuth As New frmProxyAuth
+        Dim returnValue As DialogResult
+
+        With proxyAuth
+
+            returnValue = .ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                usr = .user
+                pwd = .pwd
+            Else
+
+            End If
+
+        End With
+
+    End Sub
 
 
 
