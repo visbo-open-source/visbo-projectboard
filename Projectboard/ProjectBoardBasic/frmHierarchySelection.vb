@@ -5271,11 +5271,13 @@ Public Class frmHierarchySelection
         ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
 
             nrTag = New clsNodeRoleTag
+            Dim teamID As Integer
+            Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
             With nrTag
                 .isTeam = False
                 .isTeamMember = True
-                .membershipID = CInt(parentNode.Name)
-                .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), currentRoleUid)
+                .membershipID = parentID
+                .membershipPrz = RoleDefinitions.getMembershipPrz(parentID, currentRoleUid)
             End With
         End If
 

@@ -551,8 +551,9 @@ Public Class Request
             ' aber nur, wenn er nicht schon einen Varianten-Namen vergeben hat; 
             ' also jedes Speichern der Basis-Variante eines Portfolio Managers hat den entsprechenden Varianten-Namen
 
+
             ' prüfen auf Rolle 
-            Call projekt.setVariantNameAccordingUserRole()
+            Call changeVariantNameAccordingUserRole(projekt)
 
 
             If usedWebServer Then

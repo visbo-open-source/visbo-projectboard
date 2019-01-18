@@ -2540,7 +2540,6 @@ Module Module1
                                         'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
                                         lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
-                                        'ur:16.1.2019: Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
                                         Dim q1 As String = pptShape.Tags.Item("Q1")
                                         Dim q2 As String = pptShape.Tags.Item("Q2")
@@ -2548,8 +2547,8 @@ Module Module1
 
                                         'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
                                         '                                 toDoCollection, q1, q2)
-                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
-                                                                          q1, q2)
+                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1.q2)
+
 
                                     Catch ex As Exception
                                         Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")
