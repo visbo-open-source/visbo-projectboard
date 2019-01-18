@@ -2971,12 +2971,24 @@ Public Module awinGeneralModules
                 ' jetzt mit allen anderen aufsummieren ..
                 Dim isFirstProj As Boolean = True
                 Dim maxActualDate As Date = Date.MinValue
+                Dim unionVariantName As String = ""
 
                 For Each kvp As KeyValuePair(Of String, String) In listOfProjectNames
 
-                    Dim hproj As clsProjekt = getProjektFromSessionOrDB(getPnameFromKey(kvp.Key),
-                                                                        getVariantnameFromKey(kvp.Key),
-                                                                        projektListe, storedAtOrBefore)
+                    Dim hproj As clsProjekt = Nothing
+
+                    If awinSettings.loadPFV Then
+                        unionVariantName = ptVariantFixNames.pfv.ToString
+                        hproj = getProjektFromSessionOrDB(getPnameFromKey(kvp.Key),
+                                                          unionVariantName,
+                                                          projektListe, storedAtOrBefore)
+
+                    Else
+                        hproj = getProjektFromSessionOrDB(getPnameFromKey(kvp.Key),
+                                                          getVariantnameFromKey(kvp.Key),
+                                                          projektListe, storedAtOrBefore)
+                    End If
+
 
 
                     If Not IsNothing(hproj) Then
@@ -3003,7 +3015,8 @@ Public Module awinGeneralModules
                             End If
                         End If
 
-                        unionProj.variantName = ""
+
+                        unionProj.variantName = unionVariantName
                         unionProj = unionProj.unionizeWith(hproj)
 
                     End If
@@ -3249,7 +3262,7 @@ Public Module awinGeneralModules
             Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
 
             ' prüfen auf Rolle 
-            Call hproj.setVariantNameAccordingUserRole()
+            Call changeVariantNameAccordingUserRole(hproj)
 
             If Not IsNothing(hproj) Then
                 If hproj.projectType = ptPRPFType.portfolio Then
@@ -4186,6 +4199,13 @@ Public Module awinGeneralModules
             Else
                 Dim pvName As String = calcProjektKey(pname, variantName)
                 atleastOneReference = atleastOneReference Or kvp.Value.contains(pvName, False)
+
+                ' wenn es sich um den variantenNAme pfv handelt, dann noch checken, ob die Basis Variante enthalten ist
+                ' eine pfv Vorgabe darf nicht gelöscht werden, solange die Basis Variante noch Teil eines Portfolios ist .. 
+                If variantName = ptVariantFixNames.pfv.ToString Then
+                    pvName = calcProjektKey(pname, "")
+                    atleastOneReference = atleastOneReference Or kvp.Value.contains(pvName, False)
+                End If
             End If
 
 
@@ -7127,7 +7147,7 @@ Public Module awinGeneralModules
                         ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
                         ' es handelt sich bereits um die pfv Variante 
                         ' prüfen auf Rolle 
-                        Call kvp.Value.setVariantNameAccordingUserRole()
+                        Call changeVariantNameAccordingUserRole(kvp.Value)
 
                         Dim pvName As String = calcProjektKey(kvp.Value.name, kvp.Value.variantName)
                         If Not writeProtections.isProtected(pvName, dbUsername) Then
@@ -7543,7 +7563,7 @@ Public Module awinGeneralModules
                             ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
                             ' es handelt sich bereits um die pfv Variante 
                             ' prüfen auf Rolle 
-                            Call hproj.setVariantNameAccordingUserRole()
+                            Call changeVariantNameAccordingUserRole(hproj)
 
                             ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
