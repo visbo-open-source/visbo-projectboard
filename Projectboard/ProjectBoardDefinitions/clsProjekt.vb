@@ -2756,7 +2756,8 @@ Public Class clsProjekt
 
         With newproj
             .name = Me.name
-            .timeStamp = Date.Now
+            ' tk das muss der gleiche Timestamp sein ... nicht das heutige Datum ...
+            .timeStamp = Me.timeStamp
             .shpUID = Me.shpUID
             .tfZeile = Me.tfZeile
             .variantName = variantName
@@ -2841,6 +2842,7 @@ Public Class clsProjekt
     ''' <param name="summaryRoleIDs"></param>
     ''' <returns></returns>
     Public Function aggregateForPortfolioMgr(ByVal summaryRoleIDs() As Integer) As clsProjekt
+
 
         Dim newProj As clsProjekt = Me.createVariant("$aggregate$", "")
 

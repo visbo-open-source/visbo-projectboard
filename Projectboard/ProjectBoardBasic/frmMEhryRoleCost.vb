@@ -387,11 +387,13 @@ Public Class frmMEhryRoleCost
         ElseIf currentRole.getTeamIDs.Count > 0 And CType(parentNode.Tag, clsNodeRoleTag).isTeam Then
 
             nrTag = New clsNodeRoleTag
+            Dim teamID As Integer
+            Dim parentID As Integer = RoleDefinitions.parseRoleNameID(parentNode.Name, teamID)
             With nrTag
                 .isTeam = False
                 .isTeamMember = True
-                .membershipID = CInt(parentNode.Name)
-                .membershipPrz = RoleDefinitions.getMembershipPrz(CInt(parentNode.Name), currentRoleUid)
+                .membershipID = parentID
+                .membershipPrz = RoleDefinitions.getMembershipPrz(parentID, currentRoleUid)
             End With
         End If
 
@@ -546,7 +548,7 @@ Public Class frmMEhryRoleCost
                 Dim nodelist As New SortedList(Of Integer, Double)
                 Try
                     Dim teamID As Integer
-                    nodelist = RoleDefinitions.getRoleDefByIDKennung(CInt(node.Name), teamID).getSubRoleIDs
+                    nodelist = RoleDefinitions.getRoleDefByIDKennung(node.Name, teamID).getSubRoleIDs
                     anzChilds = nodelist.Count
                 Catch ex As Exception
                     anzChilds = 0

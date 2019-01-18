@@ -29,7 +29,8 @@ Public Class frmProjPortfolioAdmin
     Private lastLevelChecked As Integer = -1
 
     Private earliestDate As Date
-    Private projektHistorien As New clsProjektDBInfos
+    ' tk 17.1.19 verbrät viel zu viel Speicherplatz 
+    'Private projektHistorien As New clsProjektDBInfos
     Private stopRecursion As Boolean = False
     Private constellationName As String = ""
 
@@ -80,7 +81,7 @@ Public Class frmProjPortfolioAdmin
 
         frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
-        projektHistorien.clear()
+        'projektHistorien.clear()
 
 
         If aKtionskennung = PTTvActions.chgInSession Then
@@ -1214,9 +1215,8 @@ Public Class frmProjPortfolioAdmin
         Dim childNode As TreeNode
         Dim parentNode As TreeNode
 
-        If actionCode = PTTvActions.delFromDB Or _
-            actionCode = PTTvActions.delAllExceptFromDB Or _
-            actionCode = PTTvActions.loadPV Then
+        If actionCode = PTTvActions.delFromDB Or
+            actionCode = PTTvActions.delAllExceptFromDB Then
 
 
             Select Case TreeLevel
@@ -1284,7 +1284,7 @@ Public Class frmProjPortfolioAdmin
 
 
 
-        ElseIf actionCode = PTTvActions.delFromSession Or _
+        ElseIf actionCode = PTTvActions.delFromSession Or
               actionCode = PTTvActions.deleteV Then
 
 
@@ -1473,6 +1473,72 @@ Public Class frmProjPortfolioAdmin
                 ' zurücknehmen
                 node.Checked = Not node.Checked
             End If
+
+        ElseIf actionCode = PTTvActions.loadPV Then
+
+            Select Case TreeLevel
+                Case 0 ' Project Node was checked / unchecked 
+                    Dim projektNode As TreeNode = node
+
+                    If projektNode.Checked = True Then
+                        ' eine muss gechecked werden
+                        Dim variantNameLookingFor As String = ""
+
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                            variantNameLookingFor = ptVariantFixNames.pfv.ToString
+                        Else
+                            variantNameLookingFor = ""
+                        End If
+
+                        Dim found As Boolean = False
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            If getVariantNameOfTreeNode(projektNode.Nodes.Item(i).Text) = variantNameLookingFor Then
+                                projektNode.Nodes.Item(i).Checked = True
+                                found = True
+                            Else
+                                projektNode.Nodes.Item(i).Checked = False
+                            End If
+                        Next
+
+                        If Not found Then
+                            ' einfach die erste Variante auf checked setzen 
+                            If projektNode.Nodes.Count > 0 Then
+                                projektNode.Nodes.Item(0).Checked = True
+                            End If
+
+                        End If
+
+                    Else
+                        ' alle Varianten müssen unchecked werden 
+                        ' alle anderen Varianten auf Unchecked setzen 
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            projektNode.Nodes.Item(i).Checked = False
+                        Next
+                    End If
+
+                Case 1 ' Variant Node was checked / unchecked 
+                    Dim projektNode As TreeNode = node.Parent
+                    Dim variantNode As TreeNode = node
+
+                    If variantNode.Checked = True Then
+                        If projektNode.Checked = False Then
+                            projektNode.Checked = True
+                        End If
+                    Else
+                        ' wenn es die letzte Variante war, die unchecked wurde 
+                        Dim anzVariantsChecked As Integer = 0
+                        For i = 0 To projektNode.Nodes.Count - 1
+                            If projektNode.Nodes.Item(i).Checked = True Then
+                                anzVariantsChecked = anzVariantsChecked + 1
+                            End If
+                        Next
+                        If anzVariantsChecked = 0 Then
+                            ' den Projekt-Knoten auch wieder zurücksetzen
+                            projektNode.Checked = False
+                        End If
+                    End If
+
+            End Select
 
         ElseIf actionCode = PTTvActions.activateV Then
 
@@ -1936,7 +2002,7 @@ Public Class frmProjPortfolioAdmin
         Dim nodeTimeStamp As New TreeNode
         Dim projName As String = ""
         Dim variantName As String = ""
-        Dim hliste As SortedList(Of Date, String)
+        'Dim hliste As SortedList(Of Date, String)
         Dim nodeLevel As Integer
         Dim variantListe As Collection
         Dim hproj As New clsProjekt
@@ -1984,6 +2050,15 @@ Public Class frmProjPortfolioAdmin
                 ' Löschen von Platzhalter
                 selectedNode.Nodes.Clear()
 
+                ' wird nur im Fall loadPV benötigt ... wird baer hier besetzt, weil das sonst in der Schleife ständig neu ausgerechnet wird 
+                ' es wird entweder by default die Basis Variante geladen, oder die pfv-Variante, sofern das so gesetzt ist und die customUserRole = PMGR
+                Dim variantNameLookedFor As String = ""
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV = True Then
+                    variantNameLookedFor = ptVariantFixNames.pfv.ToString
+                Else
+                    variantNameLookedFor = ""
+                End If
+
                 ' Eintragen der zum Projekt gehörenden Varianten
                 For Each variantName In variantListe
                     variantNode = selectedNode.Nodes.Add(CType(variantName, String))
@@ -2000,17 +2075,23 @@ Public Class frmProjPortfolioAdmin
                         stopRecursion = False
 
                     ElseIf aKtionskennung = PTTvActions.loadPV Then
-                        ' es können alle Elemente selektiert werden ...
+                        ' es wird by default nur eine Projekt-Variante selektiert ...
 
                         key = calcProjektKey(pName:=projName, variantName:=variantName)
 
                         stopRecursion = True
-                        ' soll gesetzt sein, wenn es entweder bereits geladen ist oder aber sowieso alle geladen werden sollen
-                        If AlleProjekte.Containskey(key) Or selectedNode.Checked = True Then
-                            variantNode.Checked = True
+
+                        ' es wird nur gecheckt, wenn selectedNode.checked 
+                        If selectedNode.Checked = True Then
+                            ' entscheiden, welche Variante gecheckt wird 
+                            If variantName = variantNameLookedFor Then
+                                variantNode.Checked = True
+                            End If
                         Else
+                            ' auf jeden Fall nicht checken ..
                             variantNode.Checked = False
                         End If
+
                         stopRecursion = False
 
                     ElseIf aKtionskennung = PTTvActions.delAllExceptFromDB Then
@@ -2097,72 +2178,73 @@ Public Class frmProjPortfolioAdmin
                 projName = getProjectNameOfTreeNode(selectedNode.Parent.Text)
                 variantName = getVariantNameOfTreeNode(selectedNode.Text)
 
-                hliste = projektHistorien.getTimeStamps(calcProjektKey(projName, variantName))
+                'hliste = projektHistorien.getTimeStamps(calcProjektKey(projName, variantName))
 
-                If hliste.Count = 0 Then
+                'If hliste.Count = 0 Then
 
-                    If Not noDB Then
+                If Not noDB Then
 
-                        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-                        If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                    'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+                    If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
+                    Else
+                        Dim msgText As String
+                        If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                            msgText = "Datenbank-Verbindung ist unterbrochen!"
                         Else
-                            Dim msgText As String
-                            If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                                msgText = "Datenbank-Verbindung ist unterbrochen!"
-                            Else
-                                msgText = "no connection to Database!"
-                            End If
-                            Call MsgBox(msgText)
+                            msgText = "no connection to Database!"
+                        End If
+                        Call MsgBox(msgText)
+                    End If
+
+                    ' Lesen der TimeStamp Snapshots für ProjNAme, variantName 
+                    Try
+                        If Not projekthistorie Is Nothing Then
+                            projekthistorie.clear()
+                        Else
+                            projekthistorie = New clsProjektHistorie
                         End If
 
-                        ' Lesen der TimeStamp Snapshots für ProjNAme, variantName 
-                        Try
-                            If Not projekthistorie Is Nothing Then
-                                projekthistorie.clear()
-                            Else
-                                projekthistorie = New clsProjektHistorie
-                            End If
+                        projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName,
+                                                                            storedEarliest:=Date.MinValue, storedLatest:=requiredDate.Value, err:=err)
 
-                            projekthistorie = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName,
-                                                                             storedEarliest:=Date.MinValue, storedLatest:=Date.Now, err:=err)
-
-                        Catch ex As Exception
-                            projekthistorie.clear()
-                        End Try
+                    Catch ex As Exception
+                        projekthistorie.clear()
+                    End Try
 
                     End If
 
                     If projekthistorie.Count > 0 Then
 
-                        projektHistorien.Remove(projName & "#" & variantName, Date.MinValue) 'Platzhalter wieder entfernen
-                        selectedNode.Nodes.Clear()  ' Löschen von Platzhalter
+                    'projektHistorien.Remove(projName & "#" & variantName, Date.MinValue) 'Platzhalter wieder entfernen
+                    selectedNode.Nodes.Clear()  ' Löschen von Platzhalter
 
-                        ' Aufbau der Listen 
-                        projektHistorien.Add(projekthistorie)
+                    ' Aufbau der Listen 
+                    'projektHistorien.Add(projekthistorie)
 
-                        stopRecursion = True
-                        ' Eintragen der zur Projekt-Variante gehörenden TimeStamps
-                        For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                            nodeTimeStamp = selectedNode.Nodes.Add(CType(kvp1.Value.timeStamp, String))
-                            nodeTimeStamp.Checked = selectedNode.Checked
-                        Next kvp1
-                        stopRecursion = False
+                    stopRecursion = True
+                    ' Eintragen der zur Projekt-Variante gehörenden TimeStamps
+                    ' aber nur dann, wenn Sie nicht nach dem required date liegen 
+                    For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
+                        nodeTimeStamp = selectedNode.Nodes.Add(CType(kvp1.Value.timeStamp, String))
+                        nodeTimeStamp.Checked = selectedNode.Checked
+                    Next kvp1
+                    stopRecursion = False
 
                     Else
 
                         If projekthistorie.Count = 0 Then
-                            ' keine ProjektHistorie vorhanden
-                            projektHistorien.Remove(projName & "#" & variantName, Date.MinValue) 'Platzhalter wieder entfernen
-                            selectedNode.Nodes.Clear()  ' Löschen von Platzhalter
+                        ' keine ProjektHistorie vorhanden
+                        'projektHistorien.Remove(projName & "#" & variantName, Date.MinValue) 'Platzhalter wieder entfernen
+                        selectedNode.Nodes.Clear()  ' Löschen von Platzhalter
                         End If
                     End If
 
 
 
 
-                End If
+                    'End If
 
-            End If
+                End If
 
 
         End If
@@ -2396,50 +2478,128 @@ Public Class frmProjPortfolioAdmin
                             currentBrowserConstellation.sortCriteria = ptSortCriteria.customTF
                             currentSessionConstellation.sortCriteria = ptSortCriteria.customTF
 
+
+                            Dim variantNameLookingFor As String = ""
+                            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                                variantNameLookingFor = ptVariantFixNames.pfv.ToString
+                            End If
+
+                            ' jetzt muss geprüft werden, welcher Name tatsächlich ins Show gesteckt werden soll 
+                            Dim nameOfFirstChecked As String = ""
+                            Dim firstTime As Boolean = True
+                            Dim found As Boolean = False
+
+
+                            For i As Integer = 0 To anzahlVarianten - 1
+
+                                If projektNode.Nodes.Count > 0 Then
+                                    If projektNode.Nodes.Item(i).Checked = True Then
+
+                                        Dim curVariantName As String = getVariantNameOfTreeNode(projektNode.Nodes.Item(i).Text)
+
+                                        If firstTime Then
+                                            nameOfFirstChecked = curVariantName
+                                            firstTime = False
+                                        End If
+
+                                        If curVariantName = variantNameLookingFor Then
+                                            found = True
+                                        End If
+
+                                    End If
+                                Else
+                                    Dim curVariantName As String = getVariantNameOfTreeNode(CStr(variantListe.Item(i + 1)))
+
+                                    If firstTime Then
+                                        nameOfFirstChecked = curVariantName
+                                        firstTime = False
+                                    End If
+
+                                    If curVariantName = variantNameLookingFor Then
+                                        found = True
+                                    End If
+                                End If
+
+                            Next
+
+                            Dim showVariantName As String
+                            If found Then
+                                showVariantName = variantNameLookingFor
+                            Else
+                                showVariantName = nameOfFirstChecked
+                            End If
+
+
                             For v = 1 To anzahlVarianten
 
-                                'variantNode = projektNode.Nodes.Item(v - 1)
-                                'variantName = getVariantNameOf(variantNode.Text)
                                 variantName = getVariantNameOfTreeNode(CStr(variantListe.Item(v)))
 
-                                Dim showAttribute As Boolean
-                                If IsNothing(hproj) Then
-                                    If v = 1 Then
-                                        showAttribute = True
-                                    Else
-                                        showAttribute = False
-                                    End If
-                                Else
-                                    If variantName = hproj.variantName Then
-                                        showAttribute = True
-                                    Else
-                                        showAttribute = False
-                                    End If
+                                variantNode = Nothing
+                                If projektNode.Nodes.Count > 0 Then
+                                    variantNode = projektNode.Nodes.Item(v - 1)
                                 End If
 
 
-                                Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
+                                'Dim weiterMachen As Boolean = True
 
 
+                                ' wenn es sich um einen Portfolio Manager handelt und nur die Vorlagen geholt werden sollen ..
 
-                                If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
-                                    ' nichts tun , ist schon drin 
-                                    currentBrowserConstellation.getItem(calcProjektKey(pname, variantName)).show = showAttribute
+                                'If variantNode.Checked = True Then
+                                '    weiterMachen = True
+                                'Else
+                                '    ' nur weitermachen wenn es sich um die Variante handelt, die geladen werden soll 
+                                '    ' beim Portfolio MGR ggf die pfv-Variante sonst immer die ""-Variante
+                                '    If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                                '        weiterMachen = (variantName = ptVariantFixNames.pfv.ToString)
+                                '    Else
+                                '        weiterMachen = (variantName = "")
+                                '    End If
+                                'End If
+
+                                Dim weitermachen As Boolean = False
+
+                                If Not IsNothing(variantNode) Then
+                                    weitermachen = variantNode.Checked
                                 Else
-                                    Dim cItem As New clsConstellationItem
-                                    ' tk 28.12.18 , um nachher das Attribut setzen zu können
-                                    Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(pname, variantName, AlleProjekte, Date.Now)
+                                    weitermachen = True
+                                End If
 
-                                    With cItem
-                                        .projectName = pname
-                                        .variantName = variantName
-                                        .show = showAttribute
-                                        If Not IsNothing(tmpProj) Then
-                                            .projectTyp = CType(tmpProj.projectType, ptPRPFType).ToString
+                                If weitermachen Then
+                                    Dim showAttribute As Boolean
+                                    If IsNothing(hproj) Then
+                                        showAttribute = (variantName = showVariantName)
+                                    Else
+                                        If variantName = hproj.variantName Then
+                                            showAttribute = True
+                                        Else
+                                            showAttribute = False
                                         End If
-                                    End With
-                                    currentBrowserConstellation.add(cItem)
+                                    End If
+
+                                    ' laden der Projekt-Variante 
+                                    Call loadProjectfromDB(outPutCollection, pname, variantName, showAttribute, storedAtOrBefore)
+
+                                    If currentBrowserConstellation.contains(calcProjektKey(pname, variantName), False) Then
+                                        ' nichts tun , ist schon drin 
+                                        currentBrowserConstellation.getItem(calcProjektKey(pname, variantName)).show = showAttribute
+                                    Else
+                                        Dim cItem As New clsConstellationItem
+                                        ' tk 28.12.18 , um nachher das Attribut setzen zu können
+                                        Dim tmpProj As clsProjekt = getProjektFromSessionOrDB(pname, variantName, AlleProjekte, Date.Now)
+
+                                        With cItem
+                                            .projectName = pname
+                                            .variantName = variantName
+                                            .show = showAttribute
+                                            If Not IsNothing(tmpProj) Then
+                                                .projectTyp = CType(tmpProj.projectType, ptPRPFType).ToString
+                                            End If
+                                        End With
+                                        currentBrowserConstellation.add(cItem)
+                                    End If
                                 End If
+
 
 
                             Next
