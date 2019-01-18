@@ -54,6 +54,19 @@ Public Class Request
                     dburl = URL
                     uname = username
                     pwd = dbPasswort
+                Else
+                    If err.errorCode = 407 Then   ' Proxy-Authentifizierung required
+                        ' try is once more
+                        loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort, err:=err)
+                        If loginOK Then
+                            DBAcc = access
+                            dbname = databaseName
+                            dburl = URL
+                            uname = username
+                            pwd = dbPasswort
+                        End If
+                    End If
+
                 End If
 
             Else  'es wird eine MongoDB direkt adressiert

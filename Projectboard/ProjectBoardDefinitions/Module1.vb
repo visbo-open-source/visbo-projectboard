@@ -6107,6 +6107,8 @@ Public Module Module1
                 CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).Value = Date.Now
                 CType(.Cells(1, anzSpaltenText + anzSpaltenValues + 1), Excel.Range).NumberFormat = "m/d/yyyy h:mm"
             End With
+
+
         Catch ex As Exception
 
         End Try
