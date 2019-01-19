@@ -18,7 +18,7 @@ Public Class clsCache
         _VPvs = New SortedList(Of String, SortedList(Of String, clsVarTs))
         _VCrole = New SortedList(Of String, clsVCrole)
         _VCcost = New SortedList(Of String, clsVCcost)
-        _updateDelay = 60
+        _updateDelay = cacheUpdateDelay
     End Sub
 
 

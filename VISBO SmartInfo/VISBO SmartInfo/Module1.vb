@@ -434,15 +434,38 @@ Module Module1
             Else
                 tmpResult = True
 
-                'Dim currentOrga As New clsOrganisation
-                'currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisation("", Date.Now, err)
+                ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
+                Dim currentOrga As New clsOrganisation
+                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                '' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                'RoleDefinitions = currentOrga.allRoles
-                'CostDefinitions = currentOrga.allCosts
+                ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                RoleDefinitions = currentOrga.allRoles
+                CostDefinitions = currentOrga.allCosts
 
-                RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+                ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
+                ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+
+                Dim meldungen As New Collection
+
+                ' jetzt werden die Rollen besetzt 
+                Call setUserRoles(meldungen)
+
+                If meldungen.Count > 0 Then
+                    Call showOutPut(meldungen, "Error: setUserRoles", "")
+                End If
+
+
+                ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                Try
+                    customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomfieldsFromDB("", Date.Now, err)
+
+                    If IsNothing(customFieldDefinitions) Then
+                        Call MsgBox(err.errorMsg)
+                    End If
+                Catch ex As Exception
+
+                End Try
 
                 ' in allen Slides den Sicht Schutz aufheben 
                 protectionSolved = True
@@ -668,10 +691,16 @@ Module Module1
 
             Else
                 ' es wird jetzt gleich aus der Presi ausgelesen 
+                ' trotzdem muss eine Slide zur CurrentSlide gemacht werden
+                If anzSlides > 0 Then
+                    currentSlide = Pres.Slides.Item(1)
+                    currentSlide.Select()
+                End If
+
+
             End If
-
-
         End If
+
 
 
 
@@ -2511,14 +2540,15 @@ Module Module1
                                         'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
                                         lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
 
-                                        Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
                                         Dim q1 As String = pptShape.Tags.Item("Q1")
                                         Dim q2 As String = pptShape.Tags.Item("Q2")
-                                        Dim nids As String = pptShape.Tags.Item("NIDS")
+                                        'Dim nids As String = pptShape.Tags.Item("NIDS")
 
-                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
-                                                                         toDoCollection, q1, q2)
+                                        'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
+                                        '                                 toDoCollection, q1, q2)
+                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1.q2)
+
 
                                     Catch ex As Exception
                                         Call MsgBox("Budget/Kosten Tabelle konnte nicht aktualisiert werden ...")

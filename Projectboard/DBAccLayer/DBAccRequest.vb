@@ -54,6 +54,19 @@ Public Class Request
                     dburl = URL
                     uname = username
                     pwd = dbPasswort
+                Else
+                    If err.errorCode = 407 Then   ' Proxy-Authentifizierung required
+                        ' try is once more
+                        loginOK = access.login(ServerURL:=URL, databaseName:=databaseName, username:=username, dbPasswort:=dbPasswort, err:=err)
+                        If loginOK Then
+                            DBAcc = access
+                            dbname = databaseName
+                            dburl = URL
+                            uname = username
+                            pwd = dbPasswort
+                        End If
+                    End If
+
                 End If
 
             Else  'es wird eine MongoDB direkt adressiert
@@ -539,9 +552,8 @@ Public Class Request
             ' also jedes Speichern der Basis-Variante eines Portfolio Managers hat den entsprechenden Varianten-Namen
 
 
-            ' prüfen auf Rolle 
-            Call changeVariantNameAccordingUserRole(projekt)
-
+            ' prüfen auf Rolle darf hier nicht passieren, das muss an den aufrufenden Stellen gemacht werden ... 
+            'Call changeVariantNameAccordingUserRole(projekt)
 
             If usedWebServer Then
                 Try
@@ -1598,7 +1610,7 @@ Public Class Request
     End Function
 
 
-    Public Function retrieveCustomfieldsFromDB(ByVal name As String,
+    Public Function retrieveCustomFieldsFromDB(ByVal name As String,
                                           ByVal timestamp As Date,
                                           ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
 
@@ -1621,7 +1633,8 @@ Public Class Request
                 ' to do for direct MongoAccess
                 result = Nothing
                 err.errorCode = 403
-                err.errorMsg = "Fehler: CustomFields sind nicht in der DB abgespeichert"
+                err.errorMsg = "Fehler: CustomFields sind im Customization-File gespeichert " &
+                                vbLf & "und können daher nicht von der DB gelesen werden"
 
             End If
 
@@ -1629,7 +1642,7 @@ Public Class Request
 
         End Try
 
-        retrieveCustomfieldsFromDB = result
+        retrieveCustomFieldsFromDB = result
     End Function
     Public Function retrieveUserIDFromName(ByVal username As String, ByRef err As clsErrorCodeMsg) As String
 

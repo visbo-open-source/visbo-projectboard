@@ -6935,23 +6935,6 @@ Public Module agm2
         isValidCustomUserRole = stillOk
     End Function
 
-    Public Function bestimmeUserIDFromName(ByVal userName As String) As String
-
-        Dim err As New clsErrorCodeMsg
-        Dim tmpResult As String = ""
-        Try
-
-            ' hole vom Rest-Server die UserID des angegebenen Users
-            ' weise den UserID Wert dann tmpResult zu
-            tmpResult = CType(databaseAcc, DBAccLayer.Request).retrieveUserIDFromName(userName, err)
-
-        Catch ex As Exception
-
-        End Try
-
-        bestimmeUserIDFromName = tmpResult
-
-    End Function
 
     ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
@@ -16552,7 +16535,7 @@ Public Module agm2
 
                     ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                     Try
-                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomfieldsFromDB("", Date.Now, err)
+                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
 
                         If IsNothing(customFieldDefinitions) Then
                             Call MsgBox(err.errorMsg)
@@ -16763,10 +16746,15 @@ Public Module agm2
 
                     End If
 
+                    meldungen = New Collection
 
                     ' jetzt werden die Rollen besetzt 
-                    Call setUserRoles()
+                    Call setUserRoles(meldungen)
 
+                    If meldungen.Count > 0 Then
+                        Call showOutPut(meldungen, "Error: setUserRoles", "")
+                        Call logfileSchreiben(meldungen)
+                    End If
 
                     ' Logfile wird geschlossen
                     Call logfileSchliessen()
@@ -16832,51 +16820,54 @@ Public Module agm2
 
     End Sub
 
-    Private Sub setUserRoles()
+    Public Sub setUserRoles(ByRef meldungen As Collection)
 
         Dim err As New clsErrorCodeMsg
 
-        ' Test tk 23.12.18
-
-        ' tk 23.12.18 hier werden die Test Custom User Roles besetzt 
-        ''Dim allCustomUserRoles As clsCustomUserRoles = awinImportCustomUserRoles()
         Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
 
-        ' Ende Test 
+        If Not IsNothing(allCustomUserRoles) Then
 
-        ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
-        Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
+            ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
+            Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
 
-        If allMyCustomUserRoles.Count > 1 Then
-            Dim chooseUserRole As New frmChooseCustomUserRole
+            If allMyCustomUserRoles.Count > 1 Then
+                Dim chooseUserRole As New frmChooseCustomUserRole
 
-            With chooseUserRole
-                .myUserRoles = allMyCustomUserRoles
-            End With
-            ' Formular zur Auswahl der User Rolle anzeigen 
-            Dim returnResult As DialogResult = chooseUserRole.ShowDialog()
+                With chooseUserRole
+                    .myUserRoles = allMyCustomUserRoles
+                End With
+                ' Formular zur Auswahl der User Rolle anzeigen 
+                Dim returnResult As DialogResult = chooseUserRole.ShowDialog()
 
-            If returnResult = DialogResult.OK Then
-                myCustomUserRole = allMyCustomUserRoles.Item(chooseUserRole.selectedIndex)
-            Else
+                If returnResult = DialogResult.OK Then
+                    myCustomUserRole = allMyCustomUserRoles.Item(chooseUserRole.selectedIndex)
+                Else
+                    myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+                End If
+
+            ElseIf allMyCustomUserRoles.Count = 1 Then
                 myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+
+            Else
+                myCustomUserRole = New clsCustomUserRole
+                With myCustomUserRole
+                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                    .specifics = ""
+                    .userName = dbUsername
+                End With
             End If
 
-        ElseIf allMyCustomUserRoles.Count = 1 Then
-            myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+            ' jetzt gibt es eine currentUserRole: myCustomUserRole
+            Call myCustomUserRole.setNonAllowances()
+
 
         Else
-            myCustomUserRole = New clsCustomUserRole
-            With myCustomUserRole
-                .customUserRole = ptCustomUserRoles.OrgaAdmin
-                .specifics = ""
-                .userName = dbUsername
-            End With
+            ' muss ins logfile
+            meldungen.Add(err.errorMsg)
+            Call MsgBox(err.errorMsg)
         End If
-
-        ' jetzt gibt es eine currentUserRole: myCustomUserRole
-        Call myCustomUserRole.setNonAllowances()
 
     End Sub
 

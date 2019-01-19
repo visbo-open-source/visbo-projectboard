@@ -2864,11 +2864,20 @@ Imports System.Web
                 End If
 
             Case "Pt5G2B3" ' Projekt/e
-                If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Projekt/e"
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And awinSettings.loadPFV Then
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        tmpLabel = "Vorgabe(n"
+                    Else
+                        tmpLabel = "Approval(s"
+                    End If
                 Else
-                    tmpLabel = "Project/s"
+                    If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
+                        tmpLabel = "Projekt/e"
+                    Else
+                        tmpLabel = "Project/s"
+                    End If
                 End If
+
 
             Case "Pt5G2B4" ' Organisations-Daten
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
@@ -12041,6 +12050,8 @@ Imports System.Web
         returnValue = frmVisboEinst.ShowDialog
 
         enableOnUpdate = True
+
+        Me.ribbon.Invalidate()
 
 
     End Sub

@@ -113,6 +113,38 @@
     End Property
 
     ''' <summary>
+    ''' gibt die Summe der Einzelbudgets der einzelnen angezeigten (Summary-)Projekte aus der Constellation wieder
+    ''' Vorausetzung: sie müssen bereits in AlleProjekte vorhanden sein 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getBudgetOfShownProjects() As Double
+        Get
+            Dim tmpResult As Double = 0.0
+            Dim tmpVariantName As String = ""
+
+            If awinSettings.loadPFV Then
+                tmpVariantName = ptVariantFixNames.pfv.ToString
+            End If
+
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In _allItems
+
+                If kvp.Value.show = True Then
+                    Dim hproj As clsProjekt = AlleProjekte.getProject(kvp.Key)
+                    If Not IsNothing(hproj) Then
+                        tmpResult = tmpResult + hproj.budgetWerte.Sum
+                    Else
+
+                    End If
+                End If
+
+            Next
+
+            getBudgetOfShownProjects = tmpResult
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' gibt die Zeile zurück, auf der dieses Projekt gezeichnet werden soll 
     ''' im Fall customTF gibt die Tahl im Key die Zeile wieder ...
     ''' </summary>

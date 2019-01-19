@@ -2801,9 +2801,17 @@ Public Class frmProjPortfolioAdmin
                             budget = -1
                         End If
 
-                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, "", AlleProjekte, Date.Now)
+                        Dim tmpVariantName As String = ""
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            tmpVariantName = ptVariantFixNames.pfv.ToString
+                        End If
+
+                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
+
                         If Not IsNothing(oldSummaryP) Then
                             budget = oldSummaryP.budgetWerte.Sum
+                        Else
+                            budget = toStoreConstellation.getBudgetOfShownProjects
                         End If
 
                         Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)
@@ -3156,7 +3164,23 @@ Public Class frmProjPortfolioAdmin
             Call bestimmeNodeAppearance(tmpNode, aKtionskennung, treeNodeType, pName, vName)
             setNodeWriteProtections = True
         Else
-            ' der Schutz/die Veränderung ist schiefgegangen, also nichts machen ...
+            Select Case err.errorCode
+                Case 409
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("project is protected by another user")
+                    Else
+                        Call MsgBox("Projekt ist bereits von einem anderen User geschützt ")
+                    End If
+
+                Case Else
+                    If awinSettings.englishLanguage Then
+                        Call MsgBox("Error : Protection doesn't work")
+                    Else
+                        Call MsgBox("Fehler : der Schutz/die Veränderung ist schiefgegangen")
+                    End If
+
+            End Select
+
             setNodeWriteProtections = False
         End If
     End Function
