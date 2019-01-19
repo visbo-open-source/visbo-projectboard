@@ -2801,9 +2801,17 @@ Public Class frmProjPortfolioAdmin
                             budget = -1
                         End If
 
-                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, "", AlleProjekte, Date.Now)
+                        Dim tmpVariantName As String = ""
+                        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            tmpVariantName = ptVariantFixNames.pfv.ToString
+                        End If
+
+                        Dim oldSummaryP As clsProjekt = getProjektFromSessionOrDB(toStoreConstellation.constellationName, tmpVariantName, AlleProjekte, Date.Now)
+
                         If Not IsNothing(oldSummaryP) Then
                             budget = oldSummaryP.budgetWerte.Sum
+                        Else
+                            budget = toStoreConstellation.getBudgetOfShownProjects
                         End If
 
                         Dim sproj As clsProjekt = calcUnionProject(toStoreConstellation, False, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=budget)

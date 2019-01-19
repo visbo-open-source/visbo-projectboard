@@ -377,8 +377,9 @@ Public Module testModule
                         'End If
 
                         bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
-                        Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=lDate, err:=err)
+                        ' tk 19.1.19 das darf hier nicht mehr gemacht werden. Eine letzte Vorgabe kann später gemacht sein als der Planungsstand ... 
+                        'Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
+                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=Date.Now, err:=err)
 
 
 
