@@ -2547,7 +2547,8 @@ Module Module1
 
                                         'ur:16.01.2019: Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj,
                                         '                                 toDoCollection, q1, q2)
-                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1.q2)
+                                        Call zeichneTableBudgetCostAPVCV(pptShape, tsProj, bProj, lProj, q1, q2)
+
 
 
                                     Catch ex As Exception
