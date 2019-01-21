@@ -53,5 +53,8 @@
     <Setting Name="VISBODebug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="proxyServerURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://versicherung.proxy.allianz:8080</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -211,6 +211,15 @@ Partial Public NotInheritable Class MySettings
             Return CType(Me("VISBODebug"),Boolean)
         End Get
     End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("https://versicherung.proxy.allianz:8080")>  _
+    Public ReadOnly Property proxyServerURL() As String
+        Get
+            Return CType(Me("proxyServerURL"),String)
+        End Get
+    End Property
 End Class
 
 Namespace My

@@ -97,6 +97,7 @@ Public Class ThisWorkbook
                 awinSettings.databaseURL = My.Settings.mongoDBURL
                 awinSettings.databaseName = My.Settings.mongoDBname
                 awinSettings.DBWithSSL = My.Settings.mongoDBWithSSL
+                awinSettings.proxyURL = My.Settings.proxyServerURL
                 awinSettings.globalPath = My.Settings.globalPath
                 awinSettings.awinPath = My.Settings.awinPath
                 awinSettings.visboTaskClass = My.Settings.TaskClass
@@ -111,7 +112,6 @@ Public Class ThisWorkbook
                 awinSettings.visboServer = My.Settings.VISBOServer
                 awinSettings.userNamePWD = My.Settings.userNamePWD
                 awinSettings.rememberUserPwd = My.Settings.rememberUserPWD
-
 
             End If
 
