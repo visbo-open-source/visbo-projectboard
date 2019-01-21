@@ -2316,20 +2316,13 @@ Public Class Request
 
                                                 request.UseDefaultCredentials = True
                                                 request.Credentials = CredentialCache.DefaultCredentials
-                                            'request.Credentials = CredentialCache.DefaultNetworkCredentials
+
 
                                             Case 2
                                                 ' Abfragen der Proxy-Authentifizierung erforderlich
 
                                                 netcred = New NetworkCredential
                                                 credentialsErfragt = askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
-
-                                                ''ur:  für wingate - Proxy
-                                                'netcred = New NetworkCredential
-                                                'With netcred
-                                                '    .UserName = "Ute"
-                                                '    .Password = "test"
-                                                'End With
 
                                                 ' ur: für wingate-Proxy
                                                 If Not IsNothing(request.Proxy) Then
