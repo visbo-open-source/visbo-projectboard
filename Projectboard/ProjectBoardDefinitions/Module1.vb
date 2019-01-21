@@ -7434,7 +7434,7 @@ Public Module Module1
     ''' ruft das Formular auf, um die Proxy-Authentifizierung zu erfragen
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub askProxyAuthentication(ByRef usr As String, ByRef pwd As String, ByRef domain As String)
+    Public Function askProxyAuthentication(ByRef usr As String, ByRef pwd As String, ByRef domain As String) As Boolean
         Dim proxyAuth As New frmProxyAuth
         Dim returnValue As DialogResult
 
@@ -7451,7 +7451,9 @@ Public Module Module1
 
         End With
 
-    End Sub
+        Return returnValue = DialogResult.OK
+
+    End Function
 
 
 

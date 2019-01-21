@@ -48,6 +48,8 @@ Public Class clsawinSettings
 
     Public Property databaseName As String
     Public Property databaseURL As String
+    Public Property proxyURL As String
+
     Public Property userNamePWD As String
     Public Property rememberUserPwd As Boolean
     Public Property DBWithSSL As Boolean

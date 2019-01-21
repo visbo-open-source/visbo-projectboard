@@ -4,6 +4,7 @@ Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Public Class frmProxyAuth
 
+    Public domain As String
     Public user As String
     Public pwd As String
     Private Sub benutzer_TextChanged(sender As Object, e As EventArgs) Handles benutzer.TextChanged
@@ -15,7 +16,7 @@ Public Class frmProxyAuth
 
         If e.KeyCode = Keys.Enter Or e.KeyCode = Keys.Tab Then
 
-
+            domain = domainBox.Text
             user = benutzer.Text
             pwd = maskedPwd.Text
 
@@ -72,20 +73,37 @@ Public Class frmProxyAuth
     End Sub
 
     Private Sub frmProxyAuth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        domainBox.Text = domain
         benutzer.Text = user
         maskedPwd.Text = pwd
     End Sub
 
     Private Sub frmProxyAuth_FormClosed(sender As Object, e As EventArgs) Handles MyBase.FormClosed
-
+        'domain = ""
+        'user = ""
+        'pwd = ""
     End Sub
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
-
+        domain = ""
+        user = ""
+        pwd = ""
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
+        domain = domainBox.Text
         user = benutzer.Text
         pwd = maskedPwd.Text
+        If user = "" Or pwd = "" Then
+            messageBox.Text = "Username/Passwort für Proxy eingeben!"
+        End If
+    End Sub
+
+    Private Sub messageBox_TextChanged(sender As Object, e As EventArgs) Handles messageBox.TextChanged
+
+    End Sub
+
+    Private Sub Domain_TextChanged(sender As Object, e As EventArgs) Handles domainBox.TextChanged
+
     End Sub
 End Class

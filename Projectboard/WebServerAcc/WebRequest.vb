@@ -2139,11 +2139,11 @@ Public Class Request
 
 
         Dim response As HttpWebResponse = Nothing
-
         Dim hresp As HttpWebResponse = Nothing
 
-        'Dim myWebrequest As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-        'Dim myProxy As IWebProxy = myWebrequest.Proxy
+
+        Dim proxyAuth As New frmProxyAuth   ' Formular zum erfragen der Proxy-Authentifizierung
+
 
         ''Dim registeredModules As IEnumerator = AuthenticationManager.RegisteredModules
         ''Call MsgBox("The following authentication modules are now registered with the system:")
@@ -2153,47 +2153,52 @@ Public Class Request
         ''                "CanPreAuthenticate : " & currentAuthenticationModule.CanPreAuthenticate.ToString)
         ''End While
 
-
-
-
-
-        'myProxy.Credentials = netcred
-
-        'Dim sysproxy As IWebProxy = HttpWebRequest.GetSystemWebProxy
         Dim defaultProxy As IWebProxy = HttpWebRequest.DefaultWebProxy
-        Dim proxyStr As String = defaultProxy.ToString
+
 
         If awinSettings.visboDebug Then
             Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri("https://staging.visbo.de"))
             Call MsgBox("defaultProxy: " & proxyUri.ToString)
         End If
 
-        Dim proxyAuth As New frmProxyAuth   ' Formular zum erfragen der Proxy-Authentifizierung
+        Dim myProxy As New System.Net.WebProxy
+        'prox.Address = New Uri("http://versicherung.proxy.allianz:8080")
+        myProxy.Address = New Uri(awinSettings.proxyURL)
 
+        Dim credentials As ICredentials = CredentialCache.DefaultNetworkCredentials
+
+        '' Get the username And password from the credentials
+        If Not IsNothing(netcred) Then
+            If Not (netcred.UserName = "" Or netcred.Password = "") Then
+                myProxy.Credentials = netcred
+            Else
+                Dim MyCreds As NetworkCredential = credentials.GetCredential(myProxy.Address, "Basic")
+                myProxy.Credentials = MyCreds
+            End If
+
+        Else
+            Dim MyCreds As NetworkCredential = credentials.GetCredential(myProxy.Address, "Basic")
+            myProxy.Credentials = MyCreds
+        End If
+
+
+        Dim credentialsErfragt As Boolean = False
 
         Try
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-            request.Proxy = defaultProxy
+            request.Proxy = myProxy
 
             request.UseDefaultCredentials = True
             'request.Credentials = CredentialCache.DefaultCredentials
             request.Credentials = CredentialCache.DefaultNetworkCredentials
 
-            'defaultProxy.Credentials = CredentialCache.DefaultCredentials
-            defaultProxy.Credentials = CredentialCache.DefaultNetworkCredentials
 
             Dim cc As New CookieContainer
             request.CookieContainer = cc
 
-            Dim myProxy As IWebProxy = request.Proxy
-
             request.Method = method
-
-
-
             request.ContentType = "application/json"
             request.Headers.Add("access-key", token)
-
             request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
                 & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
 
@@ -2203,13 +2208,11 @@ Public Class Request
 
             request.ContentLength = data.Length
 
-
-
             If request.ContentLength > 0 Then
 
                 toDo = True
 
-                While toDo And anzError < 4
+                While toDo And anzError < 3
                     Try
                         Using requestStream As Stream = request.GetRequestStream()
                             ' Send the data.
@@ -2228,6 +2231,8 @@ Public Class Request
                         If ex.Status = WebExceptionStatus.ProtocolError Then
 
                             hresp = ex.Response
+
+
                             If hresp.StatusCode = HttpStatusCode.ProxyAuthenticationRequired Then
 
                                 request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
@@ -2237,48 +2242,36 @@ Public Class Request
                                 request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
                                                     & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
 
+                                If credentialsErfragt And anzError = 2 Then
+                                    Call MsgBox(hresp.Headers.ToString)
+                                    Throw New ArgumentException("Fehler bei GetRequestStream:  " & vbCrLf & hresp.Headers.ToString & vbCrLf & ex.Message)
+                                End If
+
                                 Select Case anzError
 
                                     Case 1
 
                                         ' DefaultCredentials versuchen
 
-                                        request.Proxy = defaultProxy
+                                        request.Proxy = myProxy
 
                                         request.UseDefaultCredentials = True
                                         request.Credentials = CredentialCache.DefaultCredentials
                                         'request.Credentials = CredentialCache.DefaultNetworkCredentials
 
-
                                     Case 2
-                                        ' Network-Credentials versuchen
-
-                                        'defaultProxy.Credentials = CredentialCache.DefaultCredentials
-                                        defaultProxy.Credentials = CredentialCache.DefaultNetworkCredentials
-
-                                        ' DefaultCredentials versuchen
-                                        request.Proxy = defaultProxy
-
-                                        request.CookieContainer = cc
-
-                                    Case 3
                                         ' Abfragen der Proxy-Authentifizierung erforderlich
-                                        'Call MsgBox("Abfragen der Proxy-Authentifizierung erforderlich")
 
                                         netcred = New NetworkCredential
-                                        Call askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
+                                        credentialsErfragt = askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
 
-                                        '' 'ur:  für wingate - Proxy
-                                        ''netcred = New NetworkCredential
-                                        ''With netcred
-                                        ''    .UserName = "Ute"
-                                        ''    .Password = "test"
-                                        ''End With
-
-                                        ' ur: für wingate-Proxy
+                                        ' abgefragte Credentials beim Proxy eintragen
                                         If Not IsNothing(request.Proxy) Then
                                             request.Proxy.Credentials = netcred
                                         End If
+
+                                        'credentialsErfragt = True 'zum Erkennen, ob Credentials für Proxy schon mal abgefragt wurden
+                                        anzError = 1            ' wieder zurückgesetzt
                                 End Select
 
                             Else
@@ -2301,7 +2294,7 @@ Public Class Request
                     anzError = 0
                     toDo = True
 
-                    While toDo And anzError < 4
+                    While toDo And anzError < 3
                         Try
                             response = request.GetResponse()
                             toDo = False
@@ -2321,31 +2314,15 @@ Public Class Request
 
                                             Case 1
 
-                                                ' DefaultCredentials versuchen
-
-                                                request.Proxy = defaultProxy
-
                                                 request.UseDefaultCredentials = True
                                                 request.Credentials = CredentialCache.DefaultCredentials
                                             'request.Credentials = CredentialCache.DefaultNetworkCredentials
 
-
                                             Case 2
-                                                ' Network-Credentials versuchen
-
-                                                'defaultProxy.Credentials = CredentialCache.DefaultCredentials
-                                                defaultProxy.Credentials = CredentialCache.DefaultNetworkCredentials
-
-                                                ' DefaultCredentials versuchen
-                                                request.Proxy = defaultProxy
-
-                                                request.CookieContainer = cc
-
-                                            Case 3
                                                 ' Abfragen der Proxy-Authentifizierung erforderlich
 
                                                 netcred = New NetworkCredential
-                                                Call askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
+                                                credentialsErfragt = askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
 
                                                 ''ur:  für wingate - Proxy
                                                 'netcred = New NetworkCredential
@@ -2378,7 +2355,7 @@ Public Class Request
 
             End If
 
-            If anzError >= 4 Then
+            If anzError >= 3 Then
                 response = hresp
             End If
 

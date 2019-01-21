@@ -30,6 +30,9 @@ Partial Class frmProxyAuth
         Me.Panel1 = New System.Windows.Forms.Panel()
         Me.AbbrButton = New System.Windows.Forms.Button()
         Me.OKButton = New System.Windows.Forms.Button()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.domainBox = New System.Windows.Forms.TextBox()
+        Me.messageBox = New System.Windows.Forms.TextBox()
         Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -37,11 +40,11 @@ Partial Class frmProxyAuth
         '
         Me.maskedPwd.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.maskedPwd.BackColor = System.Drawing.Color.White
-        Me.maskedPwd.Location = New System.Drawing.Point(112, 55)
+        Me.maskedPwd.Location = New System.Drawing.Point(112, 70)
         Me.maskedPwd.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.maskedPwd.Name = "maskedPwd"
         Me.maskedPwd.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
-        Me.maskedPwd.Size = New System.Drawing.Size(277, 22)
+        Me.maskedPwd.Size = New System.Drawing.Size(279, 22)
         Me.maskedPwd.TabIndex = 9
         '
         'benutzer
@@ -50,17 +53,17 @@ Partial Class frmProxyAuth
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.benutzer.BackColor = System.Drawing.Color.White
-        Me.benutzer.Location = New System.Drawing.Point(112, 16)
+        Me.benutzer.Location = New System.Drawing.Point(112, 42)
         Me.benutzer.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.benutzer.Name = "benutzer"
-        Me.benutzer.Size = New System.Drawing.Size(278, 22)
+        Me.benutzer.Size = New System.Drawing.Size(279, 22)
         Me.benutzer.TabIndex = 8
         '
         'Label3
         '
         Me.Label3.Anchor = System.Windows.Forms.AnchorStyles.Left
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(16, 60)
+        Me.Label3.Location = New System.Drawing.Point(16, 73)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(65, 17)
         Me.Label3.TabIndex = 7
@@ -69,7 +72,7 @@ Partial Class frmProxyAuth
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(16, 19)
+        Me.Label2.Location = New System.Drawing.Point(16, 45)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(73, 17)
         Me.Label2.TabIndex = 6
@@ -80,6 +83,9 @@ Partial Class frmProxyAuth
         Me.Panel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.messageBox)
+        Me.Panel1.Controls.Add(Me.domainBox)
+        Me.Panel1.Controls.Add(Me.Label1)
         Me.Panel1.Controls.Add(Me.AbbrButton)
         Me.Panel1.Controls.Add(Me.OKButton)
         Me.Panel1.Controls.Add(Me.Label3)
@@ -88,15 +94,15 @@ Partial Class frmProxyAuth
         Me.Panel1.Controls.Add(Me.maskedPwd)
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(411, 130)
+        Me.Panel1.Size = New System.Drawing.Size(411, 162)
         Me.Panel1.TabIndex = 10
         '
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(254, 104)
+        Me.AbbrButton.Location = New System.Drawing.Point(256, 104)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(135, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(135, 28)
         Me.AbbrButton.TabIndex = 11
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
@@ -106,17 +112,51 @@ Partial Class frmProxyAuth
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.OKButton.Location = New System.Drawing.Point(19, 104)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(124, 23)
+        Me.OKButton.Size = New System.Drawing.Size(124, 28)
         Me.OKButton.TabIndex = 10
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(16, 18)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(56, 17)
+        Me.Label1.TabIndex = 12
+        Me.Label1.Text = "Domain"
+        '
+        'Domain
+        '
+        Me.domainBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.domainBox.BackColor = System.Drawing.Color.White
+        Me.domainBox.Location = New System.Drawing.Point(112, 15)
+        Me.domainBox.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.domainBox.Name = "Domain"
+        Me.domainBox.Size = New System.Drawing.Size(278, 22)
+        Me.domainBox.TabIndex = 13
+        '
+        'messageBox
+        '
+        Me.messageBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.messageBox.BackColor = System.Drawing.Color.White
+        Me.messageBox.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.messageBox.Location = New System.Drawing.Point(19, 139)
+        Me.messageBox.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.messageBox.Name = "messageBox"
+        Me.messageBox.Size = New System.Drawing.Size(370, 15)
+        Me.messageBox.TabIndex = 14
         '
         'frmProxyAuth
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.ClientSize = New System.Drawing.Size(415, 131)
+        Me.ClientSize = New System.Drawing.Size(415, 163)
         Me.Controls.Add(Me.Panel1)
         Me.ForeColor = System.Drawing.SystemColors.ControlText
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
@@ -136,4 +176,7 @@ Partial Class frmProxyAuth
     Friend WithEvents Panel1 As Windows.Forms.Panel
     Friend WithEvents AbbrButton As Windows.Forms.Button
     Friend WithEvents OKButton As Windows.Forms.Button
+    Public WithEvents messageBox As Windows.Forms.TextBox
+    Public WithEvents domainBox As Windows.Forms.TextBox
+    Friend WithEvents Label1 As Windows.Forms.Label
 End Class
