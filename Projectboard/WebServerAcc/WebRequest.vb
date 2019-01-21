@@ -731,13 +731,22 @@ Public Class Request
                 End If
 
 
-                ' hier wird der Fall behandelt : Anlegen einer Basis-Variante-Version, wenn der aktuelle varianteNAme <> "" ist
+                ' hier wird der Fall behandelt : Anlegen einer Basis-Variante-Version, baer nur wenn der aktuelle varianteName <> "" ist
 
                 '--------------------------------------------------------
-                '     Basis-Variante erzeugen aus gegebener Variante
+                '     Basis-Variante erzeugen aus gegebener Variante, aber nur wenn aktuelle variantName ungleich der standardvariantName ist 
                 '--------------------------------------------------------
-                projekt.variantName = standardVariante ' STANDARD-Variante
-                Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
+                If projekt.variantName <> standardVariante Then
+                    ' es wurde nur eine vpv geschrieben mit variantName <> ""
+                    Dim oldVariantNAme As String = projekt.variantName
+                    projekt.variantName = standardVariante ' STANDARD-Variante
+
+                    ' schreiben der Basis Variante 
+                    Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
+
+                    projekt.variantName = oldVariantNAme
+                End If
+
 
             Else
                 Try
@@ -2162,10 +2171,10 @@ Public Class Request
         'Dim sysproxy As IWebProxy = HttpWebRequest.GetSystemWebProxy
         Dim defaultProxy As IWebProxy = HttpWebRequest.DefaultWebProxy
         Dim proxyStr As String = defaultProxy.ToString
-        'If awinSettings.visboDebug Then
-        Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri("https://staging.visbo.de"))
+        If awinSettings.visboDebug Then
+            Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri("https://staging.visbo.de"))
             Call MsgBox("defaultProxy: " & proxyUri.ToString)
-        'End If
+        End If
 
 
 

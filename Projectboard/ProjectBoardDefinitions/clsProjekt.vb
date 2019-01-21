@@ -2938,11 +2938,11 @@ Public Class clsProjekt
 
         If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
             If variantName = "" Then
-                variantName = ptVariantFixNames.pfv.ToString
+                variantName = getDefaultVariantNameAccordingUserRole()
             End If
         ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
             If variantName = ptVariantFixNames.pfv.ToString Then
-                variantName = ""
+                variantName = getDefaultVariantNameAccordingUserRole()
             End If
         End If
 
