@@ -363,14 +363,21 @@ Public Class clsListOfCostAndRoles
 
         If _listOfRoles.ContainsKey(roleUID) Then
             Dim memberlist As SortedList(Of Integer, Collection) = _listOfRoles.Item(roleUID)
+            If memberlist.ContainsKey(teamID) Then
+                Dim listOfPhases As Collection = memberlist.Item(teamID)
 
-            Dim listOfPhases As Collection = memberlist.Item(teamID)
-
-            If Not listOfPhases.Contains(phaseNameID) Then
-                listOfPhases.Add(phaseNameID, phaseNameID)
+                If Not listOfPhases.Contains(phaseNameID) Then
+                    listOfPhases.Add(phaseNameID, phaseNameID)
+                Else
+                    ' nichts tun , Phase ist schon drin ...
+                End If
             Else
-                ' nichts tun , Phase ist schon drin ...
+                Dim listOfPhases = New Collection
+                listOfPhases.Add(phaseNameID, phaseNameID)
+                memberlist.Add(teamID, listOfPhases)
             End If
+
+
         Else
             Dim memberlist As New SortedList(Of Integer, Collection)
             Dim listOfPhases = New Collection

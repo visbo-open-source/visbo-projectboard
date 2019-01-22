@@ -7357,91 +7357,108 @@ Public Module Module1
         Dim teamID As Integer
         Dim roleID As Integer
 
-        If existing.Count <= lookingFor.Count Then
 
-            For Each key As String In existing
+        Try
+            If existing.Count <= lookingFor.Count Then
 
-                If lookingFor.ContainsKey(key) Then
-                    ergebnisListe.Add(key, lookingFor.Item(key))
-                End If
+                For Each key As String In existing
 
-
-                roleID = RoleDefinitions.parseRoleNameID(key, teamID)
-                If teamID = -1 Then
-                    ' fertig 
-                Else
-                    ' es muss noch die Anfrage nach nur roleID gestellt werden 
-                    Dim key2 As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
-                    If lookingFor.ContainsKey(key2) Then
-                        ergebnisListe.Add(key, lookingFor.Item(key2))
+                    If lookingFor.ContainsKey(key) Then
+                        ergebnisListe.Add(key, lookingFor.Item(key))
                     End If
-                End If
-            Next
 
-        Else
-            ' Vorbereitung , mit der indexliste kann in existing schnell nach allen RoleIDs gesucht werden, die vorkommen
-            Dim indexListe As New SortedList(Of Integer, Integer())
 
-            Dim oldRoleID As Integer = -1
+                    roleID = RoleDefinitions.parseRoleNameID(key, teamID)
+                    If teamID = -1 Then
+                        ' fertig 
+                    Else
+                        ' es muss noch die Anfrage nach nur roleID gestellt werden 
+                        Dim key2 As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
+                        If lookingFor.ContainsKey(key2) Then
+                            ergebnisListe.Add(key, lookingFor.Item(key2))
+                        End If
+                    End If
+                Next
 
-            ' mit indexListe wird eine Hilfs-Struktur aufgebaut, die den Umstand nutzt, dass die NAmeIDs alle sortiert sind und 
-            ' deshalb Rollen mit gleicher RoleID beieinander stehen; deswegen muss auch eine Rolle ohne team mit';' enden 
-            For ix As Integer = 1 To existing.Count
-                Dim nameID As String = CStr(existing.Item(ix))
-                roleID = RoleDefinitions.parseRoleNameID(nameID, teamID)
-                If roleID > 0 Then
+            Else
+                ' Vorbereitung , mit der indexliste kann in existing schnell nach allen RoleIDs gesucht werden, die vorkommen
+                Dim indexListe As New SortedList(Of Integer, Integer())
 
-                    If roleID <> oldRoleID Then
-                        If oldRoleID = -1 Then
-                            ' ein neuer start ist entdeckt 
-                            Dim wertePaar() As Integer
-                            ReDim wertePaar(1)
-                            wertePaar(0) = ix
-                            wertePaar(1) = ix
-                            oldRoleID = roleID
-                            indexListe.Add(roleID, wertePaar)
+                ' das muss gemacht werden, weil man sonst nicht auf eine sortierte liste auch über den index zugreifen kann 
+                Dim existingSortList As New SortedList(Of String, Double)
 
-                        Else
-                            ' ein neues Ende .. und ein neuer Start ist entdeckt 
-                            indexListe.Item(oldRoleID)(1) = ix - 1
-                            Dim wertePaar() As Integer
-                            ReDim wertePaar(1)
-                            wertePaar(0) = ix
-                            wertePaar(1) = ix
-                            oldRoleID = roleID
-                            indexListe.Add(roleID, wertePaar)
+                For Each nameID As String In existing
+                    If Not existingSortList.ContainsKey(nameID) Then
+                        existingSortList.Add(nameID, 1.0)
+                    End If
+                Next
+
+                Dim oldRoleID As Integer = -1
+
+                ' mit indexListe wird eine Hilfs-Struktur aufgebaut, die den Umstand nutzt, dass die NAmeIDs alle sortiert sind und 
+                ' deshalb Rollen mit gleicher RoleID beieinander stehen; deswegen muss auch eine Rolle ohne team mit';' enden 
+                For ix As Integer = 0 To existingSortList.Count - 1
+                    Dim nameID As String = existingSortList.ElementAt(ix).Key
+                    roleID = RoleDefinitions.parseRoleNameID(nameID, teamID)
+
+                    If roleID > 0 Then
+
+                        If roleID <> oldRoleID Then
+                            If oldRoleID = -1 Then
+                                ' ein neuer start ist entdeckt 
+                                Dim wertePaar() As Integer
+                                ReDim wertePaar(1)
+                                wertePaar(0) = ix
+                                wertePaar(1) = ix
+                                oldRoleID = roleID
+                                indexListe.Add(roleID, wertePaar)
+
+                            Else
+                                ' ein neues Ende .. und ein neuer Start ist entdeckt 
+                                indexListe.Item(oldRoleID)(1) = ix - 1
+                                Dim wertePaar() As Integer
+                                ReDim wertePaar(1)
+                                wertePaar(0) = ix
+                                wertePaar(1) = ix
+                                oldRoleID = roleID
+                                indexListe.Add(roleID, wertePaar)
+                            End If
+
                         End If
 
                     End If
 
-                End If
+                Next
 
-            Next
+                For Each kvp As KeyValuePair(Of String, Double) In lookingFor
 
-            For Each kvp As KeyValuePair(Of String, Double) In lookingFor
+                    roleID = RoleDefinitions.parseRoleNameID(kvp.Key, teamID)
 
-                roleID = RoleDefinitions.parseRoleNameID(kvp.Key, teamID)
 
-                If teamID = -1 Then
-                    ' aus existing alle bekommen, die mit roleID beginnen
-                    If indexListe.ContainsKey(roleID) Then
-                        For ix As Integer = indexListe.Item(roleID)(0) To indexListe.Item(roleID)(1)
-                            Dim nameID As String = CStr(existing.Item(ix))
-                            If Not ergebnisListe.ContainsKey(nameID) Then
-                                ergebnisListe.Add(nameID, 1.0)
-                            End If
-                        Next
+                    If teamID = -1 Then
+                        ' aus existing alle bekommen, die mit roleID beginnen
+                        If indexListe.ContainsKey(roleID) Then
+                            For ix As Integer = indexListe.Item(roleID)(0) To indexListe.Item(roleID)(1)
+                                Dim nameID As String = existingSortList.ElementAt(ix).Key
+                                If Not ergebnisListe.ContainsKey(nameID) Then
+                                    ergebnisListe.Add(nameID, 1.0)
+                                End If
+                            Next
+                        End If
+                    Else
+                        ' es ist ein Team angegeben , also will man das exakte haben 
+                        If existingSortList.ContainsKey(kvp.Key) Then
+                            ergebnisListe.Add(kvp.Key, kvp.Value)
+                        End If
                     End If
-                Else
-                    ' es ist ein Team angegeben , also will man das exakte haben 
-                    If existing.Contains(kvp.Key) Then
-                        ergebnisListe.Add(kvp.Key, kvp.Value)
-                    End If
-                End If
 
-            Next
+                Next
 
-        End If
+            End If
+        Catch ex As Exception
+            Call MsgBox("Fehler in intersectNAmeIDs")
+        End Try
+
 
 
         intersectNameIDLists = ergebnisListe

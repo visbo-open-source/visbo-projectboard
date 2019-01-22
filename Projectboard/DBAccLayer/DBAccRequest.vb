@@ -546,14 +546,6 @@ Public Class Request
 
         Dim result As Boolean = False
         Try
-            ' tk 28.12.18
-            ' wenn es sich bei der aktuellen Rolle um den Portfolio Manager handelt, dann soll immer mit entsprechendem Varianten-Name gespeichert werden 
-            ' aber nur, wenn er nicht schon einen Varianten-Namen vergeben hat; 
-            ' also jedes Speichern der Basis-Variante eines Portfolio Managers hat den entsprechenden Varianten-Namen
-
-
-            ' prüfen auf Rolle darf hier nicht passieren, das muss an den aufrufenden Stellen gemacht werden ... 
-            'Call changeVariantNameAccordingUserRole(projekt)
 
             If usedWebServer Then
                 Try

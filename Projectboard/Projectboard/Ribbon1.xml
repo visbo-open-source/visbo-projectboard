@@ -48,7 +48,7 @@
                 <button id="Pt5G2B1" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PTStoreKonstellationsToDB" supertip ="die ausgewählten Portfolios werden in der Datenbank gespeichert; alle darin referenzierten Projekte, die noch nicht in der Datenbank gespeichert sind bzw. die sich geändert haben werden ebenfalls gespeichert"/>
                 <!--label="Projekt/e"-->
                 <button id="Pt5G2B3" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreProjects" supertip ="wenn kein Projekt ausgewählt ist, können alle Projekte, die sich verändert haben und nicht von anderen Personen geschützt sind, gespeichert werden. Jedes Projekt wird mit Zeitstempel in der Datenbank gespeichert."/>
-                <!--label="Organisations-Daten" Image war ursprünglich SaveAll-->
+                <!--label="SaveAll-->
                 <button id="Pt5G2B4" getVisible="chckVisibility" getLabel ="bestimmeLabel" onAction="PT5StoreEverything" supertip ="die Organisations-Struktur inkl. der Tagessätze und Defualt Kapazitäten wird gespeichert"/>
               </menu>
             </splitButton>

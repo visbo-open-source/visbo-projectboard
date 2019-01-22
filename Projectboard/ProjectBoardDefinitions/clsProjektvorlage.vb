@@ -2663,6 +2663,7 @@
 
 
 
+
             If _Dauer > 0 Then
 
                 If IsNumeric(roleID) Then
@@ -2690,19 +2691,29 @@
                 End If
 
 
-                Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
+                Dim lookingForRoleNameIDs As SortedList(Of String, Double) = Nothing
+                Dim existingRoleNameIds As Collection = Nothing
+                Dim matchingRoleNameIDs As SortedList(Of String, Double) = Nothing
 
-                Dim lookingForRoleNameIDs As New SortedList(Of String, Double)
+                If Not inclSubRoles Then
+                    matchingRoleNameIDs = New SortedList(Of String, Double)
+                    ' einfach die RoleNameID übernehmen 
+                    matchingRoleNameIDs.Add(roleNameID, 1.0)
 
-                ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
-                If inclSubRoles Then
-                    lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
                 Else
-                    lookingForRoleNameIDs.Add(roleNameID, 1.0)
+                    existingRoleNameIds = getRoleNameIDs
+                    lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
+                    '' jetzt prüfen, ob es inkl aller SubRoles sein soll 
+                    'If inclSubRoles Then
+                    '    lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
+                    'Else
+                    '    lookingForRoleNameIDs.Add(roleNameID, 1.0)
+                    'End If
+
+                    matchingRoleNameIDs = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
+
                 End If
 
-                Dim existingRoleNameIds As Collection = getRoleNameIDs
-                Dim matchingRoleNameIDs As SortedList(Of String, Double) = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
 
                 ReDim roleValues(_Dauer - 1)
 

@@ -7185,6 +7185,8 @@ Public Module awinGeneralModules
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
                 Dim anzahlStores As Integer = 0
 
+
+                ' jetzt werden alle Projekte gespeichert, alle Varianten 
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                     Try
@@ -7366,49 +7368,35 @@ Public Module awinGeneralModules
 
 
                     ' jetzt werden alle Abhängigkeiten weggeschrieben  
+                    ' tk 21.1.19 wird bis auf weiteres nicht mehr gemacht 
 
-                    For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+                    ''For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
 
-                        Try
-                            If CType(databaseAcc, DBAccLayer.Request).storeDependencyofPToDB(kvp.Value) Then
-                                ' nichts schreiben ...
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    outputline = "!! Error when writing dependency " & kvp.Key
-                                    outPutCollection.Add(outputline)
-                                Else
-                                    outputline = "!! Fehler in Schreiben Dependency " & kvp.Key
-                                    outPutCollection.Add(outputline)
-                                End If
+                    ''    Try
+                    ''        If CType(databaseAcc, DBAccLayer.Request).storeDependencyofPToDB(kvp.Value) Then
+                    ''            ' nichts schreiben ...
+                    ''        Else
+                    ''            If awinSettings.englishLanguage Then
+                    ''                outputline = "!! Error when writing dependency " & kvp.Key
+                    ''                outPutCollection.Add(outputline)
+                    ''            Else
+                    ''                outputline = "!! Fehler in Schreiben Dependency " & kvp.Key
+                    ''                outPutCollection.Add(outputline)
+                    ''            End If
 
-                            End If
-                        Catch ex As Exception
-                            If awinSettings.englishLanguage Then
-                                outputline = "Error when writing dependency " & kvp.Key
-                            Else
-                                outputline = "Fehler in Schreiben Dependency " & kvp.Key
-                            End If
-                            Throw New ArgumentException(outputline)
-                        End Try
+                    ''        End If
+                    ''    Catch ex As Exception
+                    ''        If awinSettings.englishLanguage Then
+                    ''            outputline = "Error when writing dependency " & kvp.Key
+                    ''        Else
+                    ''            outputline = "Fehler in Schreiben Dependency " & kvp.Key
+                    ''        End If
+                    ''        Throw New ArgumentException(outputline)
+                    ''    End Try
 
 
-                    Next
+                    ''Next
 
-                    ' jetzt werden die Rollen weggeschrieben 
-                    Dim storedRoles As Integer = 0
-                    For i As Integer = 1 To RoleDefinitions.Count
-                        Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-                        If CType(databaseAcc, DBAccLayer.Request).storeRoleDefinitionToDB(role, False, Date.Now, err) Then
-                            Dim success As String = role.name
-                        End If
-                    Next
-
-                    For i As Integer = 1 To CostDefinitions.Count
-                        Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
-                        If CType(databaseAcc, DBAccLayer.Request).storeCostDefinitionToDB(cost, False, Date.Now, err) Then
-                            Dim success As String = cost.name
-                        End If
-                    Next
 
                 End If
 
@@ -7495,7 +7483,7 @@ Public Module awinGeneralModules
                     Dim msgH As String, msgE As String
                     If awinSettings.englishLanguage Then
                         If everythingElse Then
-                            msgH = "Save Everything (Projects, Portfolios, Dependencies, ..)"
+                            msgH = "Save Everything (Projects, Portfolios)"
                         Else
                             msgH = "Save Projects"
                         End If
@@ -7503,7 +7491,7 @@ Public Module awinGeneralModules
                         msgE = "following results:"
                     Else
                         If everythingElse Then
-                            msgH = "Alles speichern (Projekte, Portfolios, Abhängigkeiten, ..)"
+                            msgH = "Alles speichern (Projekte, Portfolios)"
                         Else
                             msgH = "Projekte speichern"
                         End If
