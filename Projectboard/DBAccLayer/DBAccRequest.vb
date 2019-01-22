@@ -552,9 +552,8 @@ Public Class Request
             ' also jedes Speichern der Basis-Variante eines Portfolio Managers hat den entsprechenden Varianten-Namen
 
 
-            ' prüfen auf Rolle 
-            Call changeVariantNameAccordingUserRole(projekt)
-
+            ' prüfen auf Rolle darf hier nicht passieren, das muss an den aufrufenden Stellen gemacht werden ... 
+            'Call changeVariantNameAccordingUserRole(projekt)
 
             If usedWebServer Then
                 Try

@@ -2324,6 +2324,23 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Summe der Einzelbudgets der einzelnen angezeigten (Summary-)Projekte aus 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getBudgetOfShownProjects() As Double
+        Get
+            Dim tmpResult As Double = 0.0
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                tmpResult = tmpResult + kvp.Value.budgetWerte.Sum
+            Next
+
+            getBudgetOfShownProjects = tmpResult
+        End Get
+    End Property
+
+
 
     ''' <summary>
     ''' gibt über alle betrachteten Projekte die anteiligen Budget Werte zurück 

@@ -28,7 +28,11 @@
             tmpResult = False
         End If
         ' was ist mit dem entsprechenden Summary Projekt ... 
-        Dim skey As String = calcProjektKey(portfolioName, "")
+        Dim tmpVariantName As String = ""
+        If awinSettings.loadPFV Then
+            tmpVariantName = ptVariantFixNames.pfv.ToString
+        End If
+        Dim skey As String = calcProjektKey(portfolioName, tmpVariantName)
 
         Dim hproj As clsProjekt = AlleProjekte.getProject(key:=skey)
         If Not IsNothing(hproj) Then
@@ -50,14 +54,15 @@
     End Sub
 
     ''' <summary>
-    ''' gibt das anteilige Gesamt Budget des Zeitraums im Gesamt-Portfolio zurück 
+    ''' gibt das Gesamt Budget des Zeitraums im Gesamt-Portfolio zurück 
     ''' </summary>
     ''' <returns></returns>
     Public ReadOnly Property getBudgetOfLoadedPortfolios() As Double
         Get
             Dim tmpResult As Double = 0.0
             For Each pfKvP As KeyValuePair(Of String, Boolean) In _listOfLoadedSessionPortfolios
-                Dim key As String = calcProjektKey(pfKvP.Key, "")
+
+                Dim key As String = calcProjektKey(pfKvP.Key, ptVariantFixNames.pfv.ToString)
                 Dim hproj As clsProjekt = AlleProjekte.getProject(key)
 
                 ' wenn ein Portfolio nicht über Platzhalter geladen wird, dann werden die Summary Projekte in AlleProjektSummaries platziert ..

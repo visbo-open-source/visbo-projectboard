@@ -1572,6 +1572,23 @@ Public Module Module1
     End Sub
 
     ''' <summary>
+    ''' gibt denb Default Varianten-NAmen für die angegebene Rolle zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function getDefaultVariantNameAccordingUserRole() As String
+        Dim tmpResult As String = ""
+
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            tmpResult = ptVariantFixNames.pfv.ToString
+        ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+            tmpResult = ""
+        End If
+
+        getDefaultVariantNameAccordingUserRole = tmpResult
+    End Function
+
+
+    ''' <summary>
     ''' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
     ''' </summary>
     ''' <param name="chtobj"></param>
@@ -6312,6 +6329,8 @@ Public Module Module1
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     roleName = roleName & " " & myCustomUserRole.specifics
+                ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+
                 End If
 
                 If currentConstellationName = "" Then

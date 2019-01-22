@@ -1266,6 +1266,7 @@ Public Module PBBModules
     ''' <remarks></remarks>
     Sub PBBChangeCurrentPortfolio()
 
+        ' verhindert, dass das mehrmals aufgerufen wird, da das Formular im nicht-modalen Modus aufgerufen wird 
         If Not awinSettings.isChangePortfolioFrmActive Then
 
             Call activateProjectBoard()
@@ -1292,24 +1293,6 @@ Public Module PBBModules
 
                     ' diese Variable zeigt an, dass das Formular zu Bearbeiten des Portfolios bereits aktiv ist
                     awinSettings.isChangePortfolioFrmActive = True
-
-
-                    'returnValue = changePortfolio.ShowDialog
-
-                    '' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
-
-                    'If returnValue = DialogResult.OK Then
-                    '    ' das aktuelle Portfolio speichern 
-
-                    '    ' dann die Projekt-Tafel neu zeichnen 
-
-                    'Else
-                    '    ' das last-Portfolio wiederherstellen 
-                    '    Call loadSessionConstellation("Last", False, False, False)
-
-                    '    ' gezeichnet werden muss nix ... 
-
-                    'End If
 
                 Catch ex As Exception
 
