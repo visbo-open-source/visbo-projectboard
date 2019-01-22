@@ -199,6 +199,12 @@
     <Compile Include="frmProjectInfo1.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmProxyAuth.Designer.vb">
+      <DependentUpon>frmProxyAuth.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProxyAuth.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmRemConst+DBFilter.Designer.vb">
       <DependentUpon>frmRemConst+DBFilter.vb</DependentUpon>
     </Compile>
@@ -320,6 +326,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjectInfo1.resx">
       <DependentUpon>frmProjectInfo1.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmProxyAuth.resx">
+      <DependentUpon>frmProxyAuth.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmRemConst+DBFilter.resx">
       <DependentUpon>frmRemConst+DBFilter.vb</DependentUpon>
