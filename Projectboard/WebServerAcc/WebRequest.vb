@@ -736,17 +736,13 @@ Public Class Request
                 '--------------------------------------------------------
                 '     Basis-Variante erzeugen aus gegebener Variante, aber nur wenn aktuelle variantName ungleich der standardvariantName ist 
                 '--------------------------------------------------------
-                If projekt.variantName <> standardVariante Then
-                    ' es wurde nur eine vpv geschrieben mit variantName <> ""
-                    Dim oldVariantNAme As String = projekt.variantName
-                    projekt.variantName = standardVariante ' STANDARD-Variante
 
-                    ' schreiben der Basis Variante 
-                    Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
+                projekt.variantName = standardVariante ' STANDARD-Variante
 
-                    projekt.variantName = oldVariantNAme
-                End If
+                ' schreiben der Basis Variante 
+                Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
 
+                projekt.variantName = vname
 
             Else
                 Try

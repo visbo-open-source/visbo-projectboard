@@ -2771,9 +2771,9 @@ Module Module1
                             vdatenreihe = vglProj.getAllPersonalKosten
                         End If
                     Else
-                        tdatenreihe = hproj.getPersonalKosten(rcName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(rcName, inclSubRoles:=True, outPutInEuro:=True)
                         If Not IsNothing(vglProj) Then
-                            vdatenreihe = vglProj.getPersonalKosten(rcName, True)
+                            vdatenreihe = vglProj.getRessourcenBedarf(rcName, inclSubRoles:=True, outPutInEuro:=True)
                         End If
                     End If
 

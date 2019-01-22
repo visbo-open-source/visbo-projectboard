@@ -3662,36 +3662,6 @@ Public Class clsProjekte
                     costValues(ix) = costValues(ix) +
                                              roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
 
-                    'If istSammelRolle Then
-
-                    '    If alleRoleValues(ix) > alleKapaValues(ix) And includesOverloadCost Then
-                    '        ' Overtime Kosten fallen an 
-                    '        ' bei der Sammelrolle ist der Beitrag der Überlast auf die Höhe des Platzhalter-Wertes beschränkt 
-                    '        Dim diff As Double = alleRoleValues(ix) - alleKapaValues(ix)
-                    '        If diff > roleValues(ix) Then
-                    '            diff = roleValues(ix)
-                    '        End If
-                    '        'costValues(ix) = costValues(ix) + _
-                    '        '                 alleKapaValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                    '        'costValues(ix) = costValues(ix) +
-                    '        '                 diff * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                    '        costValues(ix) = costValues(ix) +
-                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                    '    Else
-                    '        ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
-                    '        costValues(ix) = costValues(ix) +
-                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-
-                    '    End If
-
-                    'Else
-                    '    ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
-                    '    costValues(ix) = costValues(ix) +
-                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-
-
-                    'End If
-
                 Next ix
 
             Next i

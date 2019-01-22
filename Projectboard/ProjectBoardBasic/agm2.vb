@@ -13571,8 +13571,8 @@ Public Module agm2
 
                     If Not IsNothing(vorgabeProj) Then
                         For Each itemName As String In roleCollection
-                            budget = budget + vorgabeProj.getPersonalKosten(itemName, True).Sum
-                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                            budget = budget + vorgabeProj.getRessourcenBedarf(itemName, inclSubRoles:=True, outPutInEuro:=True).Sum
+                            pk = pk + kvp.Value.getRessourcenBedarf(itemName, inclSubRoles:=True, outPutInEuro:=True).Sum
                         Next
 
                         For Each itemName As String In costCollection
@@ -13589,7 +13589,7 @@ Public Module agm2
                         standVom = "n.a"
 
                         For Each itemName As String In roleCollection
-                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                            pk = pk + kvp.Value.getRessourcenBedarf(itemName, inclSubRoles:=True, outPutInEuro:=True).Sum
                         Next
 
                         For Each itemName As String In costCollection
