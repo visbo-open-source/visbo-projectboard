@@ -16045,12 +16045,26 @@ Public Module agm2
 
             End If
 
-
-            ' awinPath kann relativ oder absolut angegeben sein, beides möglich
-
+            ' tk 12.12.18 damit wird sichergestellt, dass bei einer Installation die Demo Daten einfach im selben Directory liegen können
+            ' im ProjectBoardConfig kann demnach entweder der leere String stehen oder aber ein relativer Pfad, der vom User/Home Directory ausgeht ... 
+            Dim locationOfProjectBoard = My.Computer.FileSystem.GetParentPath(appInstance.ActiveWorkbook.FullName)
             Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
 
-            awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+            Dim stdDemoDataName As String = "VISBO Demo-Daten"
+
+            If awinSettings.awinPath = "" Then
+                awinPath = My.Computer.FileSystem.CombinePath(locationOfProjectBoard, stdDemoDataName)
+                If My.Computer.FileSystem.DirectoryExists(awinPath) Then
+                    ' alles ok
+                Else
+                    awinPath = My.Computer.FileSystem.CombinePath(curUserDir, stdDemoDataName)
+                    If My.Computer.FileSystem.DirectoryExists(awinPath) Then
+                        ' alles ok 
+                    End If
+                End If
+            Else
+                awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+            End If
 
 
             If Not awinPath.EndsWith("\") Then
