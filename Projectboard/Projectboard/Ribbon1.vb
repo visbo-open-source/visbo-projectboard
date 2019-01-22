@@ -3808,6 +3808,7 @@ Imports System.Web
                 projectboardWindows(PTwindows.mptpr) = Nothing
             End Try
         Catch ex As Exception
+
             enableOnUpdate = True
             appInstance.EnableEvents = True
             appInstance.ScreenUpdating = True
