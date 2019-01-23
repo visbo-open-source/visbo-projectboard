@@ -54,7 +54,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="proxyServerURL" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://versicherung.proxy.allianz:8080</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

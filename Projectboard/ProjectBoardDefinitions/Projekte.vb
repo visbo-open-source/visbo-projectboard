@@ -2675,13 +2675,13 @@ Public Module Projekte
                 Case 4
                     ' Rollen mit Qualifier
                     With projekthistorie.ElementAt(0)
-                        minValue = .getPersonalKosten(qualifier).Sum
-                        maxValue = .getPersonalKosten(qualifier).Sum
+                        minValue = .getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True).Sum
+                        maxValue = minValue
                     End With
 
                     For s = 1 To anzSnapshots - 1
                         With projekthistorie.ElementAt(s)
-                            tmpValue = .getPersonalKosten(qualifier).Sum
+                            tmpValue = .getRessourcenBedarf(qualifier, outPutInEuro:=True).Sum
                             If tmpValue < minValue Then
                                 minIndex = s
                                 minValue = tmpValue
@@ -3453,13 +3453,13 @@ Public Module Projekte
                 Case 4
                     ' Rollen mit Qualifier
                     With projekthistorie.ElementAt(0)
-                        minValue = .getPersonalKosten(qualifier).Sum
-                        maxValue = .getPersonalKosten(qualifier).Sum
+                        minValue = .getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True).Sum
+                        maxValue = minValue
                     End With
 
                     For s = 1 To anzSnapshots - 1
                         With projekthistorie.ElementAt(s)
-                            tmpValue = .getPersonalKosten(qualifier).Sum
+                            tmpValue = .getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True).Sum
                             If tmpValue < minValue Then
                                 minIndex = s
                                 minValue = tmpValue
@@ -4061,199 +4061,6 @@ Public Module Projekte
             currentSheetName = arrWsNames(ptTables.meCharts)
         End If
 
-        ' tk 26.6.18 rausgenommen, weil jetzt bproj in der Parameter - Leiste übergeben wird
-        ''If hproj.Status <> ProjektStatus(PTProjektStati.geplant) Then
-        ''    ' Soll-Ist Vergleich
-        ''    vglBaseline = projekthistorie.Count > 1
-        ''    isMinMax = False
-
-        ''    Try
-        ''        beauftragung = projekthistorie.beauftragung
-        ''        If IsNothing(beauftragung) Then
-        ''            If projekthistorie.Count >= 1 Then
-        ''                beauftragung = projekthistorie.First
-        ''            Else
-        ''                'Throw New ArgumentException("es gibt keine Beauftragung")
-        ''                Throw New ArgumentException(repMessages.getmsg(184))
-        ''            End If
-        ''        End If
-        ''    Catch ex As Exception
-        ''        'Throw New ArgumentException("es gibt keine Beauftragung")
-        ''        Throw New ArgumentException(repMessages.getmsg(184))
-        ''    End Try
-
-        ''    abbruch = False
-        ''    Dim index As Integer = 0
-
-
-
-        ''    ' finde in der Projekt-Historie das Projekt, das direkt vor hproj gespeichert wurde
-
-        ''    Dim vgl As Date = hproj.timeStamp.AddMinutes(-1)
-
-        ''    lastPlan = projekthistorie.ElementAtorBefore(vgl)
-
-        ''    If IsNothing(lastPlan) Then
-        ''        If projekthistorie.Count >= 1 Then
-        ''            lastPlan = projekthistorie.Last
-        ''        End If
-        ''        If IsNothing(lastPlan) Then
-        ''            Throw New ArgumentException(repMessages.getmsg(185))
-        ''        End If
-
-        ''    End If
-
-
-        ''Else
-        ''    ' tk 31.1.18
-        ''    ' nur wenn Projekt bereits beauftragt ist und mind ein Element in der Datenbank ist 
-        ''    isMinMax = False
-        ''    vglBaseline = False
-
-        ''    Dim minIndex As Integer = 0
-        ''    Dim maxIndex As Integer = 0
-        ''    Dim minValue As Double, maxValue As Double
-        ''    Dim tmpValue As Double
-        ''    Select Case auswahl
-        ''        Case 1
-        ''            ' Personalkosten
-        ''            With projekthistorie.ElementAt(0)
-        ''                minValue = .getAllPersonalKosten.Sum
-        ''                maxValue = .getAllPersonalKosten.Sum
-        ''            End With
-
-        ''            For s = 1 To anzSnapshots - 1
-        ''                With projekthistorie.ElementAt(s)
-        ''                    tmpValue = .getAllPersonalKosten.Sum
-        ''                    If tmpValue < minValue Then
-        ''                        minIndex = s
-        ''                        minValue = tmpValue
-        ''                    End If
-        ''                    If tmpValue > maxValue Then
-        ''                        maxIndex = s
-        ''                        maxValue = tmpValue
-        ''                    End If
-        ''                End With
-        ''            Next
-
-
-        ''        Case 2
-        ''            ' Sonstige Kosten
-        ''            With projekthistorie.ElementAt(0)
-        ''                minValue = .getGesamtAndereKosten.Sum
-        ''                maxValue = .getGesamtAndereKosten.Sum
-        ''            End With
-
-        ''            For s = 1 To anzSnapshots - 1
-        ''                With projekthistorie.ElementAt(s)
-        ''                    tmpValue = .getGesamtAndereKosten.Sum
-        ''                    If tmpValue < minValue Then
-        ''                        minIndex = s
-        ''                        minValue = tmpValue
-        ''                    End If
-        ''                    If tmpValue > maxValue Then
-        ''                        maxIndex = s
-        ''                        maxValue = tmpValue
-        ''                    End If
-        ''                End With
-        ''            Next
-        ''        Case 3
-        ''            ' Gesamtkosten
-        ''            With projekthistorie.ElementAt(0)
-        ''                minValue = .getGesamtKostenBedarf.Sum
-        ''                maxValue = .getGesamtKostenBedarf.Sum
-        ''            End With
-
-        ''            For s = 1 To anzSnapshots - 1
-        ''                With projekthistorie.ElementAt(s)
-        ''                    tmpValue = .getGesamtKostenBedarf.Sum
-        ''                    If tmpValue < minValue Then
-        ''                        minIndex = s
-        ''                        minValue = tmpValue
-        ''                    End If
-        ''                    If tmpValue > maxValue Then
-        ''                        maxIndex = s
-        ''                        maxValue = tmpValue
-        ''                    End If
-        ''                End With
-        ''            Next
-        ''        Case 4
-        ''            ' Rollen mit Qualifier
-        ''            With projekthistorie.ElementAt(0)
-        ''                minValue = .getPersonalKosten(qualifier).Sum
-        ''                maxValue = .getPersonalKosten(qualifier).Sum
-        ''            End With
-
-        ''            For s = 1 To anzSnapshots - 1
-        ''                With projekthistorie.ElementAt(s)
-        ''                    tmpValue = .getPersonalKosten(qualifier).Sum
-        ''                    If tmpValue < minValue Then
-        ''                        minIndex = s
-        ''                        minValue = tmpValue
-        ''                    End If
-        ''                    If tmpValue > maxValue Then
-        ''                        maxIndex = s
-        ''                        maxValue = tmpValue
-        ''                    End If
-        ''                End With
-        ''            Next
-
-
-        ''        Case 5
-        ''            ' Kostenart mit Qualifier
-        ''            With projekthistorie.ElementAt(0)
-        ''                minValue = .getKostenBedarf(qualifier).Sum
-        ''                maxValue = .getKostenBedarf(qualifier).Sum
-        ''            End With
-
-        ''            For s = 1 To anzSnapshots - 1
-        ''                With projekthistorie.ElementAt(s)
-        ''                    tmpValue = .getKostenBedarf(qualifier).Sum
-        ''                    If tmpValue < minValue Then
-        ''                        minIndex = s
-        ''                        minValue = tmpValue
-        ''                    End If
-        ''                    If tmpValue > maxValue Then
-        ''                        maxIndex = s
-        ''                        maxValue = tmpValue
-        ''                    End If
-        ''                End With
-        ''            Next
-
-        ''        Case Else
-        ''            ' Gesamtkosten
-        ''            With projekthistorie.ElementAt(0)
-        ''                minValue = .getGesamtKostenBedarf.Sum
-        ''                maxValue = .getGesamtKostenBedarf.Sum
-        ''            End With
-
-        ''            For s = 1 To anzSnapshots - 1
-        ''                With projekthistorie.ElementAt(s)
-        ''                    tmpValue = .getGesamtKostenBedarf.Sum
-        ''                    If tmpValue < minValue Then
-        ''                        minIndex = s
-        ''                        minValue = tmpValue
-        ''                    End If
-        ''                    If tmpValue > maxValue Then
-        ''                        maxIndex = s
-        ''                        maxValue = tmpValue
-        ''                    End If
-        ''                End With
-        ''            Next
-        ''    End Select
-
-        ''    Try
-        ''        beauftragung = projekthistorie.ElementAt(minIndex)
-        ''        lastPlan = projekthistorie.ElementAt(maxIndex)
-        ''    Catch ex As Exception
-        ''        'Throw New ArgumentException("Fehler in Min-/Max Bestimmung " & ex.Message)
-        ''        Throw New ArgumentException(repMessages.getmsg(186) & ex.Message)
-        ''    End Try
-
-        ''End If
-
-        ' beauftragung und lastplan auf bproj setzen 
-        ' die vorherige zurücksetzen 
         beauftragung = bproj
         lastPlan = bproj
 
@@ -4320,13 +4127,19 @@ Public Module Projekte
                 kennung = calcChartKennung("pr", PTprdk.SollIstPersonalkostenC, tmpCollection)
                 'kennung = "Soll/Ist Kurve Personalkosten"
                 If qualifier = "" Then
-                    werteB = beauftragung.getAllPersonalKosten
-                    werteL = lastPlan.getAllPersonalKosten
-                    werteC = hproj.getAllPersonalKosten
+                    'werteB = beauftragung.getAllPersonalKosten
+                    werteB = beauftragung.getRessourcenBedarf("", outPutInEuro:=True)
+                    'werteL = lastPlan.getAllPersonalKosten
+                    werteL = lastPlan.getRessourcenBedarf("", outPutInEuro:=True)
+                    'werteC = hproj.getAllPersonalKosten
+                    werteC = hproj.getRessourcenBedarf("", outPutInEuro:=True)
                 Else
-                    werteB = beauftragung.getPersonalKosten(qualifier, True)
-                    werteL = lastPlan.getPersonalKosten(qualifier, True)
-                    werteC = hproj.getPersonalKosten(qualifier, True)
+                    'werteB = beauftragung.getPersonalKosten(qualifier, True)
+                    werteB = beauftragung.getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True)
+                    'werteL = lastPlan.getPersonalKosten(qualifier, True)
+                    werteL = lastPlan.getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True)
+                    'werteC = hproj.getPersonalKosten(qualifier, True)
+                    werteC = hproj.getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True)
                 End If
 
             Case 2
@@ -4378,9 +4191,9 @@ Public Module Projekte
                 'kennung = "Rolle " & qualifier
                 kennung = calcChartKennung("pr", PTprdk.SollIstRolleC, tmpCollection)
                 Try
-                    werteB = beauftragung.getRessourcenBedarf(qualifier, True)
-                    werteL = lastPlan.getRessourcenBedarf(qualifier, True)
-                    werteC = hproj.getRessourcenBedarf(qualifier, True)
+                    werteB = beauftragung.getRessourcenBedarf(qualifier, inclSubRoles:=True)
+                    werteL = lastPlan.getRessourcenBedarf(qualifier, inclSubRoles:=True)
+                    werteC = hproj.getRessourcenBedarf(qualifier, inclSubRoles:=True)
                 Catch ex As Exception
                     'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
                     Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
@@ -4851,8 +4664,8 @@ Public Module Projekte
                         werteB = vProj.getAllPersonalKosten
                         werteC = hproj.getAllPersonalKosten
                     Else
-                        werteB = vProj.getPersonalKosten(qualifier, True)
-                        werteC = hproj.getPersonalKosten(qualifier, True)
+                        werteB = vProj.getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True)
+                        werteC = hproj.getRessourcenBedarf(qualifier, inclSubRoles:=True, outPutInEuro:=True)
                     End If
 
                 End If
@@ -6265,9 +6078,9 @@ Public Module Projekte
                             vdatenreihe = vglProj.getAllPersonalKosten
                         End If
                     Else
-                        tdatenreihe = hproj.getPersonalKosten(rcName, True)
+                        tdatenreihe = hproj.getRessourcenBedarf(rcName, inclSubRoles:=True, outPutInEuro:=True)
                         If Not IsNothing(vglProj) Then
-                            vdatenreihe = vglProj.getPersonalKosten(rcName, True)
+                            vdatenreihe = vglProj.getRessourcenBedarf(rcName, inclSubRoles:=True, outPutInEuro:=True)
                         End If
                     End If
 
@@ -7279,6 +7092,14 @@ Public Module Projekte
         Call addSmartPPTShapeInfo2(newPPTChart, hproj, ptPRPFType.project, qualifier, qualifier2,
                                                                bigtype, DID)
 
+
+    End Sub
+
+    Public Sub createBalkenChartInPPT(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                              ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
+                                              ByVal chartTyp As Integer,
+                                              ByVal auswahl As Integer, ByVal chartContainer As PowerPoint.Shape,
+                                              ByVal DID As Integer, ByVal qualifier As String, ByVal qualifier2 As String)
 
     End Sub
 
@@ -9325,7 +9146,7 @@ Public Module Projekte
             If auswahl = 1 Then
                 tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True).Sum
             Else
-                tdatenreihe(r) = hproj.getPersonalKosten(roleName, inclSubRoles:=True).Sum
+                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True).Sum
             End If
 
         Next r
@@ -9563,7 +9384,7 @@ Public Module Projekte
             If auswahl = 1 Then
                 tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True).Sum
             Else
-                tdatenreihe(r) = hproj.getPersonalKosten(roleName).Sum
+                tdatenreihe(r) = hproj.getRessourcenBedarf(roleName, inclSubRoles:=True, outPutInEuro:=True).Sum
             End If
 
         Next r
@@ -16089,7 +15910,7 @@ Public Module Projekte
                         If auswahl = 1 Then
                             tdatenreihe = hproj.getRessourcenBedarf(roleName)
                         Else
-                            tdatenreihe = hproj.getPersonalKosten(roleName)
+                            tdatenreihe = hproj.getRessourcenBedarf(roleName, outPutInEuro:=True)
                         End If
                         hsum(r - 1) = 0
                         For i = 0 To plen - 1

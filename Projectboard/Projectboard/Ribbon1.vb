@@ -2879,11 +2879,11 @@ Imports System.Web
                 End If
 
 
-            Case "Pt5G2B4" ' Organisations-Daten
+            Case "Pt5G2B4" ' Alles speichern
                 If menuCult.Name = ReportLang(PTSprache.deutsch).Name Then
-                    tmpLabel = "Organisations-Daten"
+                    tmpLabel = "Alles speichern (Projekte & Programme)"
                 Else
-                    tmpLabel = "Organisation-Data"
+                    tmpLabel = "Store Everything (projects & programs)"
                 End If
 
             Case "PT5G3" ' Löschen

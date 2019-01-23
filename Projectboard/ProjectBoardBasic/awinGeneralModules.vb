@@ -7185,32 +7185,36 @@ Public Module awinGeneralModules
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
                 Dim anzahlStores As Integer = 0
 
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+                Dim pvNameListe As Collection = AlleProjekte.getPvNameListe
+
+                ' jetzt werden alle Projekte gespeichert, alle Varianten 
+                For Each curPVName As String In pvNameListe
 
                     Try
+                        Dim hproj As clsProjekt = AlleProjekte.getProject(curPVName)
                         ' wenn es sich jetzt um einen Portfolio Manager handelt 
                         ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
                         ' es handelt sich bereits um die pfv Variante 
                         ' prüfen auf Rolle 
-                        Call changeVariantNameAccordingUserRole(kvp.Value)
+                        Call changeVariantNameAccordingUserRole(hproj)
 
-                        Dim pvName As String = calcProjektKey(kvp.Value.name, kvp.Value.variantName)
+                        Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
                         If Not writeProtections.isProtected(pvName, dbUsername) Then
                             ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
                             If demoModusHistory Then
-                                kvp.Value.timeStamp = historicDate
+                                hproj.timeStamp = historicDate
                             Else
-                                kvp.Value.timeStamp = jetzt
+                                hproj.timeStamp = jetzt
                             End If
 
                             Dim storeNeeded As Boolean
-                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(kvp.Value.name, kvp.Value.variantName, jetzt, err) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(kvp.Value.name, kvp.Value.variantName, jetzt, err)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
-                                    storeNeeded = Not kvp.Value.isIdenticalTo(standInDB)
+                                    storeNeeded = Not hproj.isIdenticalTo(standInDB)
                                 Else
                                     ' existiert nicht in der DB, also speichern; eigentlich darf dieser Zweig nie betreten werden !? 
                                     storeNeeded = True
@@ -7220,20 +7224,20 @@ Public Module awinGeneralModules
                             End If
 
                             If storeNeeded Then
-                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(kvp.Value, dbUsername, err) Then
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
 
                                     If awinSettings.englishLanguage Then
-                                        outputline = "saved : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outputline = "saved : " & hproj.name & ", " & hproj.variantName
                                         outPutCollection.Add(outputline)
                                     Else
-                                        outputline = "gespeichert : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                        outputline = "gespeichert : " & hproj.name & ", " & hproj.variantName
                                         outPutCollection.Add(outputline)
                                     End If
 
                                     anzahlStores = anzahlStores + 1
                                     ' jetzt die writeProtections aktualisieren 
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, err)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                                     writeProtections.upsert(wpItem)
 
                                 Else
@@ -7241,19 +7245,19 @@ Public Module awinGeneralModules
                                         Select Case err.errorCode
                                             Case 403  'No Permission to Create Visbo Project Version
                                                 If awinSettings.englishLanguage Then
-                                                    outputline = "!!  No permission to store : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outputline = "!!  No permission to store : " & hproj.name & ", " & hproj.variantName
                                                     outPutCollection.Add(outputline)
                                                 Else
-                                                    outputline = "!!  Keine Erlaubnis zu speichern : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outputline = "!!  Keine Erlaubnis zu speichern : " & hproj.name & ", " & hproj.variantName
                                                     outPutCollection.Add(outputline)
                                                 End If
 
                                             Case 409 ' VisboProjectVersion was already updated in between
                                                 If awinSettings.englishLanguage Then
-                                                    outputline = "!! Projekt was already updated in between : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outputline = "!! Projekt was already updated in between : " & hproj.name & ", " & hproj.variantName
                                                     outPutCollection.Add(outputline)
                                                 Else
-                                                    outputline = "!!  Projekt wurde inzwischen verändert : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outputline = "!!  Projekt wurde inzwischen verändert : " & hproj.name & ", " & hproj.variantName
                                                     outPutCollection.Add(outputline)
                                                 End If
 
@@ -7264,26 +7268,26 @@ Public Module awinGeneralModules
 
                                             Case 423 ' Visbo Project (Portfolio) is locked by another user
                                                 If awinSettings.englishLanguage Then
-                                                    outputline = err.errorMsg & ": " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outputline = err.errorMsg & ": " & hproj.name & ", " & hproj.variantName
                                                     outPutCollection.Add(outputline)
                                                 Else
-                                                    outputline = "geschüztes Projekt : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                                    outputline = "geschüztes Projekt : " & hproj.name & ", " & hproj.variantName
                                                     outPutCollection.Add(outputline)
                                                 End If
 
                                         End Select
                                     Else
                                         If awinSettings.englishLanguage Then
-                                            outputline = "protected project : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                            outputline = "protected project : " & hproj.name & ", " & hproj.variantName
                                             outPutCollection.Add(outputline)
                                         Else
-                                            outputline = "geschütztes Projekt : " & kvp.Value.name & ", " & kvp.Value.variantName
+                                            outputline = "geschütztes Projekt : " & hproj.name & ", " & hproj.variantName
                                             outPutCollection.Add(outputline)
                                         End If
                                     End If
 
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(kvp.Value.name, kvp.Value.variantName, err)
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
                                     writeProtections.upsert(wpItem)
 
                                 End If
@@ -7366,49 +7370,35 @@ Public Module awinGeneralModules
 
 
                     ' jetzt werden alle Abhängigkeiten weggeschrieben  
+                    ' tk 21.1.19 wird bis auf weiteres nicht mehr gemacht 
 
-                    For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+                    ''For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
 
-                        Try
-                            If CType(databaseAcc, DBAccLayer.Request).storeDependencyofPToDB(kvp.Value) Then
-                                ' nichts schreiben ...
-                            Else
-                                If awinSettings.englishLanguage Then
-                                    outputline = "!! Error when writing dependency " & kvp.Key
-                                    outPutCollection.Add(outputline)
-                                Else
-                                    outputline = "!! Fehler in Schreiben Dependency " & kvp.Key
-                                    outPutCollection.Add(outputline)
-                                End If
+                    ''    Try
+                    ''        If CType(databaseAcc, DBAccLayer.Request).storeDependencyofPToDB(kvp.Value) Then
+                    ''            ' nichts schreiben ...
+                    ''        Else
+                    ''            If awinSettings.englishLanguage Then
+                    ''                outputline = "!! Error when writing dependency " & kvp.Key
+                    ''                outPutCollection.Add(outputline)
+                    ''            Else
+                    ''                outputline = "!! Fehler in Schreiben Dependency " & kvp.Key
+                    ''                outPutCollection.Add(outputline)
+                    ''            End If
 
-                            End If
-                        Catch ex As Exception
-                            If awinSettings.englishLanguage Then
-                                outputline = "Error when writing dependency " & kvp.Key
-                            Else
-                                outputline = "Fehler in Schreiben Dependency " & kvp.Key
-                            End If
-                            Throw New ArgumentException(outputline)
-                        End Try
+                    ''        End If
+                    ''    Catch ex As Exception
+                    ''        If awinSettings.englishLanguage Then
+                    ''            outputline = "Error when writing dependency " & kvp.Key
+                    ''        Else
+                    ''            outputline = "Fehler in Schreiben Dependency " & kvp.Key
+                    ''        End If
+                    ''        Throw New ArgumentException(outputline)
+                    ''    End Try
 
 
-                    Next
+                    ''Next
 
-                    ' jetzt werden die Rollen weggeschrieben 
-                    Dim storedRoles As Integer = 0
-                    For i As Integer = 1 To RoleDefinitions.Count
-                        Dim role As clsRollenDefinition = RoleDefinitions.getRoledef(i)
-                        If CType(databaseAcc, DBAccLayer.Request).storeRoleDefinitionToDB(role, False, Date.Now, err) Then
-                            Dim success As String = role.name
-                        End If
-                    Next
-
-                    For i As Integer = 1 To CostDefinitions.Count
-                        Dim cost As clsKostenartDefinition = CostDefinitions.getCostdef(i)
-                        If CType(databaseAcc, DBAccLayer.Request).storeCostDefinitionToDB(cost, False, Date.Now, err) Then
-                            Dim success As String = cost.name
-                        End If
-                    Next
 
                 End If
 
@@ -7495,7 +7485,7 @@ Public Module awinGeneralModules
                     Dim msgH As String, msgE As String
                     If awinSettings.englishLanguage Then
                         If everythingElse Then
-                            msgH = "Save Everything (Projects, Portfolios, Dependencies, ..)"
+                            msgH = "Save Everything (Projects, Portfolios)"
                         Else
                             msgH = "Save Projects"
                         End If
@@ -7503,7 +7493,7 @@ Public Module awinGeneralModules
                         msgE = "following results:"
                     Else
                         If everythingElse Then
-                            msgH = "Alles speichern (Projekte, Portfolios, Abhängigkeiten, ..)"
+                            msgH = "Alles speichern (Projekte, Portfolios)"
                         Else
                             msgH = "Projekte speichern"
                         End If
