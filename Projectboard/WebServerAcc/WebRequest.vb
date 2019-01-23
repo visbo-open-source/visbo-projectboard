@@ -1998,7 +1998,7 @@ Public Class Request
 
 
                 Else
-                    result = Nothing
+                    result = New clsCustomUserRoles
                     'If err.errorCode = 403 Then
                     '    Call MsgBox(err.errorMsg)
                     'End If
