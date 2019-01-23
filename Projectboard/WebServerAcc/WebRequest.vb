@@ -2162,28 +2162,35 @@ Public Class Request
 
 
         If awinSettings.visboDebug Then
-            Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri("https://staging.visbo.de"))
-            Call MsgBox("defaultProxy: " & proxyUri.ToString)
+            Dim proxyUri As Uri = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL))
+            Call MsgBox("ProxyURL zu " & awinSettings.databaseURL & " : " & proxyUri.ToString)
         End If
 
+
         Dim myProxy As New System.Net.WebProxy
-        'prox.Address = New Uri("http://versicherung.proxy.allianz:8080")
-        myProxy.Address = New Uri(awinSettings.proxyURL)
 
-        Dim credentials As ICredentials = CredentialCache.DefaultNetworkCredentials
+        If awinSettings.proxyURL <> "" Then
 
-        '' Get the username And password from the credentials
-        If Not IsNothing(netcred) Then
-            If Not (netcred.UserName = "" Or netcred.Password = "") Then
-                myProxy.Credentials = netcred
+            'prox.Address = New Uri("http://versicherung.proxy.allianz:8080")
+            myProxy.Address = New Uri(awinSettings.proxyURL)
+
+            Dim credentials As ICredentials = CredentialCache.DefaultNetworkCredentials
+
+            '' Get the username And password from the credentials
+            If Not IsNothing(netcred) Then
+                If Not (netcred.UserName = "" Or netcred.Password = "") Then
+                    myProxy.Credentials = netcred
+                Else
+                    Dim MyCreds As NetworkCredential = credentials.GetCredential(myProxy.Address, "Basic")
+                    myProxy.Credentials = MyCreds
+                End If
+
             Else
                 Dim MyCreds As NetworkCredential = credentials.GetCredential(myProxy.Address, "Basic")
                 myProxy.Credentials = MyCreds
             End If
-
         Else
-            Dim MyCreds As NetworkCredential = credentials.GetCredential(myProxy.Address, "Basic")
-            myProxy.Credentials = MyCreds
+            myProxy.Address = Nothing
         End If
 
 
@@ -2191,7 +2198,13 @@ Public Class Request
 
         Try
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
-            request.Proxy = myProxy
+
+            If myProxy.Address = Nothing Then
+                request.Proxy = defaultProxy
+            Else
+                request.Proxy = myProxy
+            End If
+
 
             request.UseDefaultCredentials = True
             'request.Credentials = CredentialCache.DefaultCredentials
@@ -2258,7 +2271,11 @@ Public Class Request
 
                                         ' DefaultCredentials versuchen
 
-                                        request.Proxy = myProxy
+                                        If myProxy.Address = Nothing Then
+                                            request.Proxy = defaultProxy
+                                        Else
+                                            request.Proxy = myProxy
+                                        End If
 
                                         request.UseDefaultCredentials = True
                                         request.Credentials = CredentialCache.DefaultCredentials
@@ -2315,9 +2332,22 @@ Public Class Request
 
                                     Case HttpStatusCode.ProxyAuthenticationRequired
 
+                                        request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+                                        request.Method = method
+                                        request.ContentType = "application/json"
+                                        request.Headers.Add("access-key", token)
+                                        request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+
                                         Select Case anzError
 
                                             Case 1
+
+                                                If myProxy.Address = Nothing Then
+                                                    request.Proxy = defaultProxy
+                                                Else
+                                                    request.Proxy = myProxy
+                                                End If
 
                                                 request.UseDefaultCredentials = True
                                                 request.Credentials = CredentialCache.DefaultCredentials
