@@ -1882,15 +1882,15 @@ Public Class clsProjekte
 
 
             'Dim toDoListe As New SortedList(Of Integer, Double)
-            Dim toDoListe As New SortedList(Of String, Double)
+            Dim lookingForRoleNameIDs As New SortedList(Of String, Double)
             ' wenn considerAllSubroles  = true , dann muss 
 
             If considerAllSubRoles Then
                 'toDoListe = RoleDefinitions.getSubRoleIDsOf(currentRole.name, type:=type, excludedNames:=excludedNames)
-                toDoListe = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames)
+                lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=type, excludedNames:=excludedNames)
             Else
                 Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(currentRole.UID, teamID)
-                toDoListe.Add(tmpNameID, 1.0)
+                lookingForRoleNameIDs.Add(tmpNameID, 1.0)
             End If
 
 
@@ -1918,23 +1918,21 @@ Public Class clsProjekte
 
                 If anzLoops > 0 Then
 
-                    Dim listOfRoles As Collection = hproj.rcLists.getRoleNameIDs
+                    Dim existingRoleNameIDs As Collection = hproj.rcLists.getRoleNameIDs
+                    Dim matchingRoleNameIDs As SortedList(Of String, Double) = intersectNameIDLists(existingRoleNameIDs, lookingForRoleNameIDs)
 
-                    If Not IsNothing(listOfRoles) Then
+
+                    If matchingRoleNameIDs.Count > 0 Then
                         Try
 
                             ' hier muss die Schleife für alle Items aus toDoListe 
-                            For Each rKvP As KeyValuePair(Of String, Double) In toDoListe
+                            For Each rKvP As KeyValuePair(Of String, Double) In matchingRoleNameIDs
 
-                                If listOfRoles.Contains(rKvP.Key) Then
+                                tempArray = hproj.getRessourcenBedarf(rKvP.Key, inclSubRoles:=False)
 
-                                    tempArray = hproj.getRessourcenBedarf(rKvP.Key, inclSubRoles:=False)
-
-                                    For i = 0 To anzLoops - 1
-                                        roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
-                                    Next i
-                                End If
-
+                                For i = 0 To anzLoops - 1
+                                    roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
+                                Next i
 
                             Next
 
@@ -3663,36 +3661,6 @@ Public Class clsProjekte
                     ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
                     costValues(ix) = costValues(ix) +
                                              roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-
-                    'If istSammelRolle Then
-
-                    '    If alleRoleValues(ix) > alleKapaValues(ix) And includesOverloadCost Then
-                    '        ' Overtime Kosten fallen an 
-                    '        ' bei der Sammelrolle ist der Beitrag der Überlast auf die Höhe des Platzhalter-Wertes beschränkt 
-                    '        Dim diff As Double = alleRoleValues(ix) - alleKapaValues(ix)
-                    '        If diff > roleValues(ix) Then
-                    '            diff = roleValues(ix)
-                    '        End If
-                    '        'costValues(ix) = costValues(ix) + _
-                    '        '                 alleKapaValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                    '        'costValues(ix) = costValues(ix) +
-                    '        '                 diff * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                    '        costValues(ix) = costValues(ix) +
-                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-                    '    Else
-                    '        ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
-                    '        costValues(ix) = costValues(ix) +
-                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-
-                    '    End If
-
-                    'Else
-                    '    ' die internen Ressourcen reichen aus oder die Kosten durch Überlast sollen nicht berücksichtigt werden 
-                    '    costValues(ix) = costValues(ix) +
-                    '                         roleValues(ix) * RoleDefinitions.getRoledef(roleName).tagessatzIntern * faktor / 1000
-
-
-                    'End If
 
                 Next ix
 
