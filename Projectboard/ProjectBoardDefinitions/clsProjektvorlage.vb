@@ -2633,6 +2633,7 @@
 
     ''' <summary>
     ''' berechnet den monatlichen Ressourcenbedarf , ggf in Euro 
+    ''' wenn "" für die Rolle angegeben ist: dann berechnet er einfach den gesamten Personalbedarf  
     ''' roleID kann in der Form roleID (integer), roleName (string), roleNameID (String) übergeben werden 
     ''' </summary>
     ''' <param name="roleID"></param>
@@ -2660,49 +2661,80 @@
             Dim roleName As String = "" ' kann eigentlich raus; ist nur drin, weil dann leichter debuggable ...
             Dim roleNameID As String = ""
 
+            ' wenn roleID mit Nothing oder "" aufgerufen wird, dann sollen alle Personalkosten berechnet werden ... 
+            Dim calculateAll As Boolean = False
+
+            If IsNothing(roleID) Then
+                calculateAll = True
+            Else
+                If CStr(roleID) = "" Then
+                    calculateAll = True
+                End If
+            End If
+
 
 
 
             If _Dauer > 0 Then
 
-                If IsNumeric(roleID) Then
-                    roleUID = CInt(roleID)
-                    roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                    roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
+                Dim lookingForRoleNameIDs As SortedList(Of String, Double) = Nothing
+                Dim existingRoleNameIds As Collection = Nothing
+                Dim matchingRoleNameIDs As SortedList(Of String, Double) = Nothing
+
+
+                If calculateAll Then
+
+                    existingRoleNameIds = getRoleNameIDs
+                    ' umkopieren ...
+                    For Each existingRoleNameID As String In existingRoleNameIds
+                        If Not matchingRoleNameIDs.ContainsKey(existingRoleNameID) Then
+                            matchingRoleNameIDs.Add(existingRoleNameID, 1.0)
+                        End If
+                    Next
+
                 Else
 
-                    roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), teamID)
-                    If roleUID > 0 Then
+                    If IsNumeric(roleID) Then
+                        roleUID = CInt(roleID)
                         roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+                        roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, -1)
                     Else
-                        ReDim roleValues(0)
-                        getRessourcenBedarf = roleValues
-                        Exit Property
+
+                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), teamID)
+                        If roleUID > 0 Then
+                            roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+                            roleNameID = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+                        Else
+                            ReDim roleValues(0)
+                            getRessourcenBedarf = roleValues
+                            Exit Property
+                        End If
+
                     End If
 
+                    ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
+                    ' ein Team kann nicht zu sich selber gehören ...
+                    If roleUID = teamID Then
+                        teamID = -1
+                    End If
+
+
+                    If Not inclSubRoles Then
+                        matchingRoleNameIDs = New SortedList(Of String, Double)
+                        ' einfach die RoleNameID übernehmen 
+                        matchingRoleNameIDs.Add(roleNameID, 1.0)
+
+                    Else
+                        existingRoleNameIds = getRoleNameIDs
+                        lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
+
+                        matchingRoleNameIDs = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
+
+                    End If
+
+
                 End If
 
-                ' jetzt prüfen, ob teamID = roleUID: dann muss in diesem Fall teamID auf -1 gesetzt werden 
-                ' ein Team kann nicht zu sich selber gehören ...
-                If roleUID = teamID Then
-                    teamID = -1
-                End If
-
-
-                Dim considerTeam As Boolean = RoleDefinitions.containsUid(teamID)
-
-                Dim lookingForRoleNameIDs As New SortedList(Of String, Double)
-
-                ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
-                If inclSubRoles Then
-                    lookingForRoleNameIDs = RoleDefinitions.getSubRoleNameIDsOf(roleNameID, type:=PTcbr.all)
-                Else
-                    lookingForRoleNameIDs.Add(roleNameID, 1.0)
-                End If
-
-                Dim existingRoleNameIds As Collection = getRoleNameIDs
-                Dim matchingRoleNameIDs As SortedList(Of String, Double) = intersectNameIDLists(existingRoleNameIds, lookingForRoleNameIDs)
 
                 ReDim roleValues(_Dauer - 1)
 
@@ -3655,124 +3687,124 @@
 
     '
     ' übergibt in getPersonalKosten die Personal Kosten der Rolle <roleid> über den Projektzeitraum
-    '
-    Public ReadOnly Property getPersonalKosten(roleID As Object, Optional ByVal inclSubRoles As Boolean = False) As Double()
-        Get
-            Dim costValues() As Double
-            Dim anzRollen As Integer
-            Dim anzPhasen As Integer
+    ' 20.1.19 wurde ersetzt durch getRessourcenbedarf(.., outputinEuro:=true)
+    'Public ReadOnly Property getPersonalKosten(roleID As Object, Optional ByVal inclSubRoles As Boolean = False) As Double()
+    '    Get
+    '        Dim costValues() As Double
+    '        Dim anzRollen As Integer
+    '        Dim anzPhasen As Integer
 
-            Dim i As Integer, p As Integer, r As Integer
-            Dim phase As clsPhase
-            Dim role As clsRolle
-            Dim lookforIndex As Boolean
-            Dim phasenStart As Integer
-            Dim tempArray() As Double
-            Dim tagessatz As Double
-            Dim faktor As Double = 1
-            Dim dimension As Integer
-            Dim roleUID As Integer
-            Dim roleName As String = ""
+    '        Dim i As Integer, p As Integer, r As Integer
+    '        Dim phase As clsPhase
+    '        Dim role As clsRolle
+    '        Dim lookforIndex As Boolean
+    '        Dim phasenStart As Integer
+    '        Dim tempArray() As Double
+    '        Dim tagessatz As Double
+    '        Dim faktor As Double = 1
+    '        Dim dimension As Integer
+    '        Dim roleUID As Integer
+    '        Dim roleName As String = ""
 
-            Dim roleIDs As New SortedList(Of Integer, Double)
-
-
-            If awinSettings.kapaEinheit = "PM" Then
-                faktor = nrOfDaysMonth
-            ElseIf awinSettings.kapaEinheit = "PW" Then
-                faktor = 5
-            ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
-                faktor = 1
-            Else
-                faktor = 1
-            End If
+    '        Dim roleIDs As New SortedList(Of Integer, Double)
 
 
-            If _Dauer > 0 Then
-                lookforIndex = IsNumeric(roleID)
-
-                If IsNumeric(roleID) Then
-                    roleUID = CInt(roleID)
-                    roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-                Else
-                    If RoleDefinitions.containsName(CStr(roleID)) Then
-                        roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
-                        roleName = CStr(roleID)
-                    Else
-                        ' es kann auch die form roleID;TeamID haben
-                        Dim tmpTeamID As Integer = -1
-                        roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), tmpTeamID)
-                        If roleUID > 0 Then
-                            roleName = RoleDefinitions.getRoleDefByID(roleUID).name
-
-                        End If
-
-                    End If
-                End If
+    '        If awinSettings.kapaEinheit = "PM" Then
+    '            faktor = nrOfDaysMonth
+    '        ElseIf awinSettings.kapaEinheit = "PW" Then
+    '            faktor = 5
+    '        ElseIf awinSettings.kapaEinheit = "PT" Or awinSettings.kapaEinheit = "PD" Then
+    '            faktor = 1
+    '        Else
+    '            faktor = 1
+    '        End If
 
 
-                ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
-                If inclSubRoles Then
-                    roleIDs = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
-                Else
-                    roleIDs.Add(roleUID, 1.0)
-                End If
+    '        If _Dauer > 0 Then
+    '            lookforIndex = IsNumeric(roleID)
 
-                ReDim costValues(_Dauer - 1)
+    '            If IsNumeric(roleID) Then
+    '                roleUID = CInt(roleID)
+    '                roleName = RoleDefinitions.getRoleDefByID(roleUID).name
+    '            Else
+    '                If RoleDefinitions.containsName(CStr(roleID)) Then
+    '                    roleUID = RoleDefinitions.getRoledef(CStr(roleID)).UID
+    '                    roleName = CStr(roleID)
+    '                Else
+    '                    ' es kann auch die form roleID;TeamID haben
+    '                    Dim tmpTeamID As Integer = -1
+    '                    roleUID = RoleDefinitions.parseRoleNameID(CStr(roleID), tmpTeamID)
+    '                    If roleUID > 0 Then
+    '                        roleName = RoleDefinitions.getRoleDefByID(roleUID).name
 
+    '                    End If
 
-                For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
-                    roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
-
-                    Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
-                    anzPhasen = listOfPhases.Count
-
-                    For p = 1 To anzPhasen
-                        phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
-
-                        With phase
-                            ' Off1
-                            anzRollen = .countRoles
-                            phasenStart = .relStart - 1
-                            'phasenEnde = .relEnde - 1
+    '                End If
+    '            End If
 
 
-                            For r = 1 To anzRollen
-                                role = .getRole(r)
+    '            ' jetzt prüfen, ob es inkl aller SubRoles sein soll 
+    '            If inclSubRoles Then
+    '                roleIDs = RoleDefinitions.getSubRoleIDsOf(roleName, type:=PTcbr.all)
+    '            Else
+    '                roleIDs.Add(roleUID, 1.0)
+    '            End If
 
-                                With role
+    '            ReDim costValues(_Dauer - 1)
 
-                                    If .uid = srkvp.Key Then
 
-                                        tagessatz = .tagessatzIntern
-                                        dimension = .getDimension
-                                        ReDim tempArray(dimension)
-                                        tempArray = .Xwerte
+    '            For Each srkvp As KeyValuePair(Of Integer, Double) In roleIDs
+    '                roleName = RoleDefinitions.getRoleDefByID(srkvp.Key).name
 
-                                        For i = phasenStart To phasenStart + dimension
-                                            costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
-                                        Next i
+    '                Dim listOfPhases As Collection = Me.rcLists.getPhasesWithRole(roleName)
+    '                anzPhasen = listOfPhases.Count
 
-                                    End If
+    '                For p = 1 To anzPhasen
+    '                    phase = Me.getPhaseByID(CStr(listOfPhases.Item(p)))
 
-                                End With ' role
+    '                    With phase
+    '                        ' Off1
+    '                        anzRollen = .countRoles
+    '                        phasenStart = .relStart - 1
+    '                        'phasenEnde = .relEnde - 1
 
-                            Next r
 
-                        End With ' phase
+    '                        For r = 1 To anzRollen
+    '                            role = .getRole(r)
 
-                    Next
-                Next
+    '                            With role
 
-            Else
-                ReDim costValues(0)
-                costValues(0) = 0
-            End If
+    '                                If .uid = srkvp.Key Then
 
-            getPersonalKosten = costValues
+    '                                    tagessatz = .tagessatzIntern
+    '                                    dimension = .getDimension
+    '                                    ReDim tempArray(dimension)
+    '                                    tempArray = .Xwerte
 
-        End Get
-    End Property
+    '                                    For i = phasenStart To phasenStart + dimension
+    '                                        costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
+    '                                    Next i
+
+    '                                End If
+
+    '                            End With ' role
+
+    '                        Next r
+
+    '                    End With ' phase
+
+    '                Next
+    '            Next
+
+    '        Else
+    '            ReDim costValues(0)
+    '            costValues(0) = 0
+    '        End If
+
+    '        getPersonalKosten = costValues
+
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' gibt den anteiligen Wert der Rolle/Kostenart in der betreffenden Phase an den Gesamtkosten zurück;
@@ -3858,7 +3890,7 @@
 
                 If isPersCost Then
                     ' costvalues = AllPersonalKosten
-                    costValues = Me.getAllPersonalKosten
+                    costValues = Me.getRessourcenBedarf("", outPutInEuro:=True)
                 Else
 
                     anzPhasen = AllPhases.Count
@@ -4200,7 +4232,7 @@
 
             If _Dauer > 0 Then
 
-                costValues = Me.getAllPersonalKosten
+                costValues = Me.getRessourcenBedarf("", outPutInEuro:=True)
                 '
                 ' jetzt sind in costValues die Personalkosten drin ....
                 '

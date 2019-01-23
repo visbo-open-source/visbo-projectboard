@@ -736,8 +736,13 @@ Public Class Request
                 '--------------------------------------------------------
                 '     Basis-Variante erzeugen aus gegebener Variante
                 '--------------------------------------------------------
+
                 projekt.variantName = standardVariante ' STANDARD-Variante
+
+                ' schreiben der Basis Variante 
                 Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
+
+                projekt.variantName = vname
 
             Else
                 Try

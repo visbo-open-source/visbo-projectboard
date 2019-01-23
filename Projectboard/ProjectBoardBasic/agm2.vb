@@ -8922,7 +8922,8 @@ Public Module agm2
 
                                     Dim tmpCollection As New Collection
                                     tmpCollection.Add(tmpRollenName)
-                                    Dim istBedarf As Double = hproj.getRessourcenBedarf(tmpRollenName, inclSubRoles:=True).Sum
+                                    Dim istBedarf As Double = hproj.getRessourcenBedarf(tmpRollenName,
+                                                                                        inclSubRoles:=True).Sum
 
                                     If Math.Abs(sollBedarf - istBedarf) > 0.001 Then
                                         outPutLine = "Differenz bei " & pName & ", " & tmpRollenName & ": " & Math.Abs(sollBedarf - istBedarf).ToString("#0.##")
@@ -9384,7 +9385,8 @@ Public Module agm2
 
                     ' tk test ...
                     For Each tmpRoleName As String In deleteRoles
-                        Dim roleSumNachher As Double = newProj.getRessourcenBedarf(tmpRoleName, inclSubRoles:=True).Sum
+                        Dim roleSumNachher As Double = newProj.getRessourcenBedarf(tmpRoleName,
+                                                                                   inclSubRoles:=True).Sum
 
                         If Not roleSumNachher = 0 Then
                             logmessage = "Rolle " & tmpRoleName & " wurde nicht gelöscht ... Fehler bei" & newProj.name
@@ -13569,8 +13571,8 @@ Public Module agm2
 
                     If Not IsNothing(vorgabeProj) Then
                         For Each itemName As String In roleCollection
-                            budget = budget + vorgabeProj.getPersonalKosten(itemName, True).Sum
-                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                            budget = budget + vorgabeProj.getRessourcenBedarf(itemName, inclSubRoles:=True, outPutInEuro:=True).Sum
+                            pk = pk + kvp.Value.getRessourcenBedarf(itemName, inclSubRoles:=True, outPutInEuro:=True).Sum
                         Next
 
                         For Each itemName As String In costCollection
@@ -13587,7 +13589,7 @@ Public Module agm2
                         standVom = "n.a"
 
                         For Each itemName As String In roleCollection
-                            pk = pk + kvp.Value.getPersonalKosten(itemName, True).Sum
+                            pk = pk + kvp.Value.getRessourcenBedarf(itemName, inclSubRoles:=True, outPutInEuro:=True).Sum
                         Next
 
                         For Each itemName As String In costCollection
