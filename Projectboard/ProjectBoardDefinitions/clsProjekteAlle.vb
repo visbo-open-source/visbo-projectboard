@@ -370,6 +370,22 @@ Public Class clsProjekteAlle
 
     End Sub
 
+    ''' <summary>
+    ''' gibt die Liste der pvNames in der Klassen-Instanz zurück 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property getPvNameListe() As Collection
+        Get
+            Dim tmpResult As New Collection
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In _allProjects
+                If Not tmpResult.Contains(kvp.Key) Then
+                    tmpResult.Add(kvp.Key, kvp.Key)
+                End If
+            Next
+
+            getPvNameListe = tmpResult
+        End Get
+    End Property
 
     ''' <summary>
     ''' gets or sets the sortedlist of (string, clsprojekt)

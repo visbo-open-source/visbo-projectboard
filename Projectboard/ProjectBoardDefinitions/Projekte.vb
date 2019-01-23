@@ -7095,6 +7095,14 @@ Public Module Projekte
 
     End Sub
 
+    Public Sub createBalkenChartInPPT(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                              ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
+                                              ByVal chartTyp As Integer,
+                                              ByVal auswahl As Integer, ByVal chartContainer As PowerPoint.Shape,
+                                              ByVal DID As Integer, ByVal qualifier As String, ByVal qualifier2 As String)
+
+    End Sub
+
     Public Sub createCostBalkenOfProjectInPPT2(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
                                               ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
                                               ByVal auswahl As Integer, ByVal chartContainer As PowerPoint.Shape,
