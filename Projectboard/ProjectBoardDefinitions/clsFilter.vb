@@ -426,9 +426,9 @@
                             ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
                             Call splitHryFullnameTo2(fullName, curMsName, breadcrumb, type, pvName)
 
-                            If type = -1 Or _
-                                (type = PTProjektType.projekt And pvName = hproj.name) Or _
-                                (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
+                            If type = -1 Or
+                                (type = PTItemType.projekt And pvName = hproj.name) Or
+                                (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
 
                                 Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
                                 ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
@@ -456,7 +456,7 @@
 
 
                                 Next
-                            ElseIf type = PTProjektType.categoryList Then
+                            ElseIf type = PTItemType.categoryList Then
 
                                 Dim idCollection As Collection = hproj.getMilestoneIDsWithCat(pvName)
                                 For mx As Integer = 1 To idCollection.Count
@@ -511,9 +511,9 @@
                                 ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
                                 Call splitHryFullnameTo2(fullName, pName, breadcrumb, type, pvName)
 
-                                If type = -1 Or _
-                                (type = PTProjektType.projekt And pvName = hproj.name) Or _
-                                (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
+                                If type = -1 Or
+                                (type = PTItemType.projekt And pvName = hproj.name) Or
+                                (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
 
                                     Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(pName, breadcrumb)
 
@@ -534,7 +534,7 @@
                                                 Dim tmpPhStart As Date = tmpPhase.getStartDate
                                                 Dim tmpPhEnde As Date = tmpPhase.getEndDate
 
-                                                If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
+                                                If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or
                                                     DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
 
                                                 Else
@@ -554,7 +554,7 @@
 
                                     Next
 
-                                ElseIf type = PTProjektType.categoryList Then
+                                ElseIf type = PTItemType.categoryList Then
 
                                     Dim idCollection As Collection = hproj.getPhaseIDsWithCat(pvName)
                                     For px As Integer = 1 To idCollection.Count
