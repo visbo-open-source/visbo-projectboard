@@ -487,6 +487,7 @@ Public Class clsProjekt
                         Me.variantDescription = .variantDescription And
                         Me.description = .description And
                         Me.projectType = .projectType And
+                        DateDiff(DateInterval.Month, Me.actualDataUntil, .actualDataUntil) = 0 And
                         Me.kundenNummer = .kundenNummer Then
 
                         If Me.startDate.Date = .startDate.Date And
@@ -510,20 +511,20 @@ Public Class clsProjekt
                                         Me.volume = .volume And
                                         Me.leadPerson = .leadPerson Then
 
-                                            stillOK = True
+                                        stillOK = True
 
-                                            ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
-                                            'Me.earliestStartDate = .earliestStartDate And _
-                                            'Me.latestStartDate = .latestStartDate And _
-
-                                        End If
-
+                                        ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
+                                        'Me.earliestStartDate = .earliestStartDate And _
+                                        'Me.latestStartDate = .latestStartDate And _
 
                                     End If
+
 
                                 End If
 
                             End If
+
+                        End If
 
                     End If
 
