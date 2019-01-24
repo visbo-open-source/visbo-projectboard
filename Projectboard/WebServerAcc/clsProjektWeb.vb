@@ -188,10 +188,10 @@ Public Class clsProjektWeb
     End Sub
 
     ''' <summary>
-    ''' kopiert den Inhalt eines Projektes (clsProjektWeb) in clsProjekt
+    ''' kopiert den Inhalt eines Projektes (clsProjektWeb) und Teile von clsVP in clsProjekt
     ''' </summary>
     ''' <param name="projekt"></param>
-    Public Sub copyto(ByRef projekt As clsProjekt)
+    Public Sub copyto(ByRef projekt As clsProjekt, ByVal vp As clsVP)
         Dim i As Integer
         Dim tmpstr(5) As String
 
@@ -330,6 +330,12 @@ Public Class clsProjektWeb
                 End If
             End If
 
+            'ur:24.01.2019: Infos aus clsVP in clsProjekt benötigt
+
+            If Not IsNothing(vp) Then
+                .projectType = vp.vpType
+                .kundenNummer = vp.kundennummer
+            End If
 
             ' ur:04.12.2018: ergänzt
             .updatedAt = Me.updatedAt

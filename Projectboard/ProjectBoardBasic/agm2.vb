@@ -16501,41 +16501,55 @@ Public Module agm2
 
                     currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
 
-                    CostDefinitions = currentOrga.allCosts
-                    RoleDefinitions = currentOrga.allRoles
-
+                    If Not IsNothing(currentOrga) Then
+                        CostDefinitions = currentOrga.allCosts
+                        RoleDefinitions = currentOrga.allRoles
+                    Else
+                        If awinSettings.englishLanguage Then
+                            Call MsgBox("You don't have any organization in your system!")
+                        Else
+                            Call MsgBox("Es existiert keine Organisation im System!")
+                        End If
+                    End If
 
                     'RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
                     'CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
 
                 End If
 
-                validOrganisations.addOrga(currentOrga)
+                If Not IsNothing(currentOrga) Then
 
-                ' Auslesen der Orga, die vor der currentOrga gültig war
-                ' also mit validFrom aus currentOrga lesen - 1 Tag
+                    validOrganisations.addOrga(currentOrga)
 
-                Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
-                Dim beforeOrga As clsOrganisation =
+                    ' Auslesen der Orga, die vor der currentOrga gültig war
+                    ' also mit validFrom aus currentOrga lesen - 1 Tag
+
+                    Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+
+                    Dim beforeOrga As clsOrganisation =
                     CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
 
-                If Not IsNothing(beforeOrga) Then
-                    validOrganisations.addOrga(beforeOrga)
-                End If
+                    If Not IsNothing(beforeOrga) Then
+                        validOrganisations.addOrga(beforeOrga)
+                    End If
 
-                ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
-                ' also mit validFrom aus currentOrga lesen +  1 Tag
 
-                Dim validNext As Date = currentOrga.validFrom.AddDays(1)
-                Dim nextOrga As clsOrganisation =
+                    ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
+                    ' also mit validFrom aus currentOrga lesen +  1 Tag
+
+                    Dim validNext As Date = currentOrga.validFrom.AddDays(1)
+
+                    Dim nextOrga As clsOrganisation =
                     CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
 
-                If Not IsNothing(nextOrga) Then
-                    validOrganisations.addOrga(nextOrga)
-                End If
+                    If Not IsNothing(nextOrga) Then
+                        validOrganisations.addOrga(nextOrga)
+                    End If
 
-                If awinSettings.visboDebug Then
-                    Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
+                    If awinSettings.visboDebug Then
+                        Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
+                    End If
+
                 End If
 
                 ' Lesen der Custom Field Definitions
