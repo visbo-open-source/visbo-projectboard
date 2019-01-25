@@ -456,16 +456,22 @@ Public Class Request
                                     webProj.timestamp <= storedLatest) Then
 
                                 hproj = New clsProjekt
+                                Dim vp As clsVP = Nothing
 
-                                ' vp zum webProj aus dem Cache holen
-                                Dim vp As clsVP = VRScache.VPsN(webProj.name)
+                                If VRScache.VPsN.ContainsKey(webProj.name) Then
 
-                                webProj.copyto(hproj, vp)
+                                    ' vp zum webProj aus dem Cache holen (keine Portfolios im Cache)
+                                    vp = VRScache.VPsN(webProj.name)
+                                    webProj.copyto(hproj, vp)
 
-                                Dim a As Integer = hproj.dauerInDays
-                                Dim key As String = Projekte.calcProjektKey(hproj)
-                                If Not result.ContainsKey(key) Then
-                                    result.Add(key, hproj)
+                                    Dim a As Integer = hproj.dauerInDays
+                                    Dim key As String = Projekte.calcProjektKey(hproj)
+                                    If Not result.ContainsKey(key) Then
+                                        result.Add(key, hproj)
+                                    End If
+                                Else
+                                    ' webProj war ein Portfolio-Projekt
+                                    ' und wird übergangen
                                 End If
 
                             End If
