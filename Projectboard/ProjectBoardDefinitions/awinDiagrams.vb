@@ -6159,4 +6159,562 @@ Public Module awinDiagrams
     'End Sub
 
 
+    ''' <summary>
+    ''' erstellt Balken und Curve Projekt-Diagramme , Soll-Ist 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="vglProj"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="vergleichsArt"></param>
+    ''' <param name="vergleichsTyp"></param>
+    ''' <param name="vglDatum"></param>
+    ''' <param name="einheit"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <param name="qualifier2"></param>
+    ''' <param name="pptAppl"></param>
+    ''' <param name="presentationName"></param>
+    ''' <param name="currentSlideName"></param>
+    ''' <param name="chartContainer"></param>
+    ''' <param name="BIT"></param>
+    ''' <param name="DID"></param>
+    Public Sub createProjektChartInPPT(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                      ByVal chartTyp As PTChartTypen, ByVal vergleichsArt As PTVergleichsArt, ByVal vergleichsTyp As PTVergleichsTyp, ByVal vglDatum As Date,
+                                      ByVal einheit As PTEinheiten, ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String,
+                                      ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
+                                      ByVal chartContainer As PowerPoint.Shape,
+                                      ByVal BIT As Integer, ByVal DID As Integer)
+
+        ' Festlegen der Titel Schriftgrösse
+        Dim titleFontSize As Single = 14
+        If chartContainer.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+            titleFontSize = chartContainer.TextFrame2.TextRange.Font.Size
+        End If
+
+        ' Parameter Definitionen
+        Dim top As Single = chartContainer.Top
+        Dim left As Single = chartContainer.Left
+        Dim height As Single = chartContainer.Height
+        Dim width As Single = chartContainer.Width
+
+        Dim currentPresentation As PowerPoint.Presentation = pptAppl.Presentations.Item(presentationName)
+        Dim currentSlide As PowerPoint.Slide = currentPresentation.Slides.Item(currentSlideName)
+
+        Dim diagramTitle As String = " "
+        Dim IstCharttype As Microsoft.Office.Core.XlChartType
+        Dim PlanChartType As Microsoft.Office.Core.XlChartType
+        Dim vglChartType As Microsoft.Office.Core.XlChartType
+
+        If chartTyp = PTChartTypen.Curve Then
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlLine
+            PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        Else
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        End If
+
+        Dim plen As Integer
+
+        Dim Xdatenreihe() As String = Nothing
+        Dim tdatenreihe() As Double = Nothing
+        Dim istDatenReihe() As Double = Nothing
+        Dim prognoseDatenReihe() As Double = Nothing
+        Dim vdatenreihe() As Double = Nothing
+        Dim vDatensumme As Double = 0.0
+        Dim tDatenSumme As Double
+
+
+        Dim pkIndex As Integer = CostDefinitions.Count
+        Dim pstart As Integer
+
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+        Dim tmpcollection As New Collection
+
+        Dim found As Boolean = False
+
+        Dim pname As String = hproj.name
+
+        '
+        ' hole die Projektdauer
+        '
+        With hproj
+            plen = .anzahlRasterElemente
+            pstart = .Start
+        End With
+
+        If Not IsNothing(vglProj) Then
+            If plen < vglProj.anzahlRasterElemente Then
+                plen = vglProj.anzahlRasterElemente
+            End If
+        End If
+
+
+
+        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimme
+        Dim errMsg As String = ""
+        Call bestimmeXtipvDatenreihen(pstart, plen, hproj, vglProj, prcTyp, qualifier2, einheit,
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+
+        If errMsg <> "" Then
+            ' es ist ein Fehler aufgetreten
+            If chartContainer.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                chartContainer.TextFrame2.TextRange.Text = errMsg
+            End If
+            Exit Sub
+        End If
+
+
+        Dim vProjDoesExist As Boolean = Not IsNothing(vglProj)
+        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+
+        tDatenSumme = tdatenreihe.Sum
+        vDatensumme = vdatenreihe.Sum
+
+        Dim startRed As Integer = 0
+        Dim lengthRed As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(chartTyp, prcTyp, qualifier2, vProjDoesExist, einheit, tDatenSumme, vDatensumme, startRed, lengthRed)
+
+        ' jetzt wird das Diagramm in Powerpoint erzeugt ...
+        Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
+                                                                   Width:=width, Height:=height)
+        ' 
+        ' jetzt werden die Collections in dem Chart aufgebaut ...
+        With newPPTChart.Chart
+
+            ' jetzt kommt der Neu-Aufbau der Series-Collections
+            If considerIstDaten Then
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = bestimmeLegendNameIPB("I")
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = IstCharttype
+                End With
+
+            End If
+
+            ' Planung / Forecast
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                .Name = bestimmeLegendNameIPB("P") & hproj.timeStamp.ToShortDateString
+                .Interior.Color = visboFarbeBlau
+                .Values = prognoseDatenReihe
+                .XValues = Xdatenreihe
+                .ChartType = IstCharttype
+            End With
+
+            ' Beauftragung bzw. Vergleichsdaten
+            If Not IsNothing(vglProj) Then
+
+                'series
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .Name = bestimmeLegendNameIPB("B") & vglProj.timeStamp.ToShortDateString
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
+                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+                    .ChartType = vglChartType
+
+                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                            .ForeColor.RGB = visboFarbeOrange
+                            .Weight = 4
+                        End With
+                    Else
+                        ' ggf noch was definieren ..
+                    End If
+
+                End With
+
+            End If
+
+        End With
+
+        ' ---- ab hier Achsen und Überschrift setzen 
+
+        With CType(newPPTChart.Chart, PowerPoint.Chart)
+            '
+            .HasAxis(PowerPoint.XlAxisType.xlCategory) = True
+            .HasAxis(PowerPoint.XlAxisType.xlValue) = True
+
+            .SetElement(Microsoft.Office.Core.MsoChartElementType.msoElementPrimaryValueAxisShow)
+
+            Try
+                With CType(.Axes(PowerPoint.XlAxisType.xlCategory), PowerPoint.Axis)
+
+                    .HasTitle = False
+
+                    If titleFontSize - 4 >= 6 Then
+                        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
+                    Else
+                        .Format.TextFrame2.TextRange.Font.Size = 6
+                    End If
+
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+
+                    .HasTitle = False
+                    .MinimumScale = 0
+
+                    If titleFontSize - 4 >= 6 Then
+                        .Format.TextFrame2.TextRange.Font.Size = titleFontSize - 4
+                    Else
+                        .Format.TextFrame2.TextRange.Font.Size = 6
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .HasLegend = True
+                With .Legend
+                    .Position = PowerPoint.XlLegendPosition.xlLegendPositionTop
+
+                    If titleFontSize - 4 >= 6 Then
+                        .Font.Size = titleFontSize - 4
+                    Else
+                        .Font.Size = 6
+                    End If
+
+                End With
+            Catch ex As Exception
+
+            End Try
+
+            .HasTitle = True
+            .ChartTitle.Text = " " ' Platzhalter 
+
+        End With
+
+        ' 
+        ' ---- hier dann final den Titel setzen 
+        With newPPTChart.Chart
+            .HasTitle = True
+            .ChartTitle.Text = diagramTitle
+            .ChartTitle.Font.Size = titleFontSize
+            .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = XlRgbColor.rgbBlack
+
+            If startRed > 0 And lengthRed > 0 Then
+                ' die aktuelle Summe muss rot eingefärbt werden 
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
+                    lengthRed).Font.Fill.ForeColor.RGB = XlRgbColor.rgbRed
+            End If
+
+        End With
+
+        newPPTChart.Chart.Refresh()
+
+        '
+        ' jetzt werden die Smart-Infos an das Chart angehängt ...
+
+        Call addSmartPPTChartInfo(newPPTChart, hproj, ptPRPFType.project, chartTyp, vergleichsArt, vergleichsTyp, vglDatum, einheit, prcTyp,
+                                    qualifier2, BIT, DID)
+
+
+    End Sub
+
+    Public Sub bestimmeXtipvDatenreihen(ByVal pstart As Integer, ByVal plen As Integer, ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
+                                        ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String, ByVal einheit As PTEinheiten,
+                                        ByRef Xdatenreihe() As String, ByRef tdatenreihe() As Double, ByRef vdatenreihe() As Double,
+                                        ByRef istDatenReihe() As Double, ByRef prognoseDatenReihe() As Double,
+                                        ByRef errMsg As String)
+
+        ReDim Xdatenreihe(plen - 1)
+        ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
+        ReDim vdatenreihe(plen - 1)
+
+
+        For i As Integer = 1 To plen
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
+        Next i
+
+        errMsg = ""
+
+        ' 
+        ' jetzt muss die tDatenreihe und - soweit angegeben - die vdatenreihe bestimmt werden 
+        '
+        Select Case prcTyp
+            ' phases, milestones, ergebnis, portfolio, mta not yet implemented 
+
+            Case ptElementTypen.roles
+
+                If qualifier2 = "" Then
+                    ' es ist alles gemeint ... 
+                    If myCustomUserRole.isAllowedToSee("") Then
+
+                        tdatenreihe = hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+
+                        If Not IsNothing(vglProj) Then
+                            vdatenreihe = vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                        End If
+
+                    Else
+                        errMsg = "no rights to see all roles aggregated ... "
+                        Exit Sub
+                    End If
+
+
+                Else
+                    Dim teamID As Integer
+                    Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(qualifier2, teamID)
+
+                    If RoleDefinitions.containsUid(roleUID) Then
+
+                        ' egal, was übergeben wurde - jetzt hat man die roleNameID 
+                        Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(roleUID, teamID)
+
+                        If myCustomUserRole.isAllowedToSee(roleNameID) Then
+
+                            tdatenreihe = hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+
+                            If Not IsNothing(vglProj) Then
+                                vdatenreihe = vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                            End If
+
+                        Else
+                            errMsg = "no rights to see role: " & qualifier2
+                            Exit Sub
+                        End If
+
+                    Else
+                        errMsg = "unknown role / person: " & qualifier2
+                        Exit Sub
+                    End If
+                End If
+
+
+            Case ptElementTypen.costs
+
+                If qualifier2 = "" Then
+                    ' es ist alles gemeint ...
+                    If myCustomUserRole.isAllowedToSee("") Then
+                        tdatenreihe = hproj.getGesamtAndereKosten
+                        If Not IsNothing(vglProj) Then
+                            vdatenreihe = vglProj.getGesamtAndereKosten
+                        End If
+                    Else
+                        errMsg = "no rights to see all costs aggregated ... "
+                        Exit Sub
+                    End If
+
+                Else
+                    If CostDefinitions.containsName(qualifier2) Then
+
+                        Dim weitermachen As Boolean
+                        If (qualifier2 = "Personalkosten") Then
+                            If myCustomUserRole.isAllowedToSee("") Then
+                                weitermachen = True
+                            Else
+                                errMsg = "no rights to see all personell cost ... "
+                                Exit Sub
+                            End If
+                        Else
+                            weitermachen = True
+                        End If
+
+
+                        If weitermachen Then
+                            tdatenreihe = hproj.getKostenBedarfNew(qualifier2)
+
+                            If Not IsNothing(vglProj) Then
+                                vdatenreihe = vglProj.getKostenBedarfNew(qualifier2)
+                            End If
+                        End If
+
+
+                    Else
+                        errMsg = "unknown cost definition: " & qualifier2
+                        Exit Sub
+                    End If
+                End If
+
+            Case ptElementTypen.rolesAndCost
+
+                ' der Wert von qualifier2 ist hier schnuppe , das kann nur die GesamtSumme sein
+
+                If myCustomUserRole.isAllowedToSee("") Then
+                    tdatenreihe = hproj.getGesamtKostenBedarf
+                    If Not IsNothing(vglProj) Then
+                        vdatenreihe = vglProj.getGesamtKostenBedarf
+                    End If
+                Else
+                    errMsg = "no rights to see all total costs ... "
+                    Exit Sub
+                End If
+
+            Case Else
+                errMsg = "not yet implemented: " & prcTyp.ToString
+                Exit Sub
+
+        End Select
+        ' 
+        ' Ende tDatenreihe Bestimmung
+
+        '
+        ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
+        Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
+
+        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+        Dim actualdataIndex As Integer = -1
+
+        If considerIstDaten Then
+
+            Call tdatenreihe.CopyTo(istDatenReihe, 0)
+
+            actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+            ' die Prognose Daten bereinigen
+            For ix As Integer = 0 To actualdataIndex
+                prognoseDatenReihe(ix) = 0
+            Next
+
+            For ix = actualdataIndex + 1 To plen - 1
+                istDatenReihe(ix) = 0
+            Next
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt den Namen der Ist-, Planungs bzw Beauftragungs-Series
+    ''' </summary>
+    ''' <param name="kennz"></param>
+    ''' <returns></returns>
+    Public Function bestimmeLegendNameIPB(ByVal kennz As String) As String
+        Dim tmpResult As String = ""
+
+        Select Case kennz
+            Case "I"
+                'Ist Werte 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Actuals"
+                Else
+                    tmpResult = "Ist-Werte"
+                End If
+
+            Case "P"
+                ' Planung 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Forecast"
+                Else
+                    tmpResult = "Planung"
+                End If
+
+            Case "B"
+                ' Beauftragung 
+                If awinSettings.englishLanguage Then
+                    tmpResult = "Approval"
+                Else
+                    tmpResult = "Beauftragung"
+                End If
+
+            Case Else
+
+                tmpResult = kennz
+
+        End Select
+
+        bestimmeLegendNameIPB = tmpResult & " "
+    End Function
+
+    ''' <summary>
+    ''' bestimmt den Diagramm-Titel in Abhängigkeit von prcTyp, qualifier und einheit
+    ''' </summary>
+    ''' <param name="prcTyp"></param>
+    ''' <param name="qualifier2"></param>
+    ''' <param name="vProjDoesExist"></param>
+    ''' <param name="einheit"></param>
+    ''' <param name="tsum"></param>
+    ''' <param name="vsum"></param>
+    ''' <param name="startRed">gibt an, ab welcher -Nullbasierten- Stelle der String rot eingefärbt werdne muss </param>
+    ''' <param name="lengthRed">gibt an , wieviele Zeichen rot eingefärbt werden müssen</param>
+    ''' <returns></returns>
+    Public Function bestimmeChartDiagramTitle(ByVal charttyp As PTChartTypen, ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String, ByVal vProjDoesExist As Boolean,
+                                               ByVal einheit As PTEinheiten, ByVal tsum As Double, vsum As Double,
+                                              ByRef startRed As Integer, ByRef lengthRed As Integer) As String
+
+        Dim tmpResult As String = ""
+        Dim bezeichner As String = ""
+        Dim zaehlEinheit = "PT"
+        Dim leadingAddOn As String = ""
+        Dim repmsg() As String = {"Gesamtkosten ", "Personalkosten ", "Sonstige Kosten ", "Personalbedarf "}
+
+        If awinSettings.englishLanguage Then
+            zaehlEinheit = " PD "
+            repmsg = {"Total Cost ", "Personnel Cost ", "Other Cost ", "Personnel Requirements "}
+        End If
+
+
+        If charttyp = PTChartTypen.Curve Then
+            leadingAddOn = "kumul. "
+            If awinSettings.englishLanguage Then
+                leadingAddOn = "cumul. "
+            End If
+        End If
+
+        If einheit = PTEinheiten.personentage Then
+            ' ist bereits richtig gesetzt 
+        Else
+            zaehlEinheit = " T€ "
+        End If
+
+        ' jetzt muss ggf der Qualifier2 noch ersetzt werden 
+
+        Select Case prcTyp
+            Case ptElementTypen.roles
+                If qualifier2 = "" Then
+                    If einheit = PTEinheiten.personentage Then
+                        qualifier2 = repmsg(3)
+                    Else
+                        qualifier2 = repmsg(1)
+                    End If
+                End If
+
+            Case ptElementTypen.costs
+                If qualifier2 = "" Then
+                    qualifier2 = repmsg(2)
+                    If einheit = PTEinheiten.personentage Then
+                        qualifier2 = repmsg(3)
+                    Else
+                        qualifier2 = repmsg(1)
+                    End If
+                End If
+
+            Case ptElementTypen.rolesAndCost
+                ' hier ist es egal, was qualifier2 ist 
+                qualifier2 = repmsg(0)
+
+            Case Else
+                tmpResult = "noch nicht implementiert: " & prcTyp.ToString
+        End Select
+
+        qualifier2 = leadingAddOn & qualifier2
+
+        startRed = 0
+        lengthRed = 0
+
+        If vProjDoesExist And tsum > vsum Then
+            startRed = qualifier2.Length + 2
+            lengthRed = tsum.ToString("##,##0.").Length
+        End If
+
+        bestimmeChartDiagramTitle = qualifier2 & " (" & tsum.ToString("##,##0.") & " / " & vsum.ToString("##,##0.") & zaehlEinheit & ")"
+
+    End Function
+
+
 End Module

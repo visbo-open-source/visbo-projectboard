@@ -776,37 +776,37 @@ Public Class frmHierarchySelection
 
                 ' ur: 11.09.2017: beginnt mit ProjektStruktur
                 'auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
-                auswahl = PTProjektType.projekt
+                auswahl = PTItemType.projekt
 
                 Select Case auswahl
-                    Case PTProjektType.nameList
+                    Case PTItemType.nameList
 
                         Me.rdbNameList.Checked = True
                         Me.rdbPhases.Checked = True
 
                         If awinSettings.considerCategories Then
-                            Call buildHryTreeViewNew(PTProjektType.categoryList)
+                            Call buildHryTreeViewNew(PTItemType.categoryList)
                         Else
-                            Call buildHryTreeViewNew(PTProjektType.nameList)
+                            Call buildHryTreeViewNew(PTItemType.nameList)
                         End If
 
 
 
-                    Case PTProjektType.vorlage
+                    Case PTItemType.vorlage
 
                         Me.rdbProjStruktTyp.Checked = True
 
-                        Call buildHryTreeViewNew(PTProjektType.vorlage)
+                        Call buildHryTreeViewNew(PTItemType.vorlage)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                         '    hryTreeView.ExpandAll()
                         'End If
 
-                    Case PTProjektType.projekt
+                    Case PTItemType.projekt
 
                         Me.rdbProjStruktProj.Checked = True
 
-                        Call buildHryTreeViewNew(PTProjektType.projekt)
+                        Call buildHryTreeViewNew(PTItemType.projekt)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                         '    hryTreeView.ExpandAll()
@@ -824,9 +824,9 @@ Public Class frmHierarchySelection
                         Me.rdbPhases.Checked = True
 
                         If awinSettings.considerCategories Then
-                            Call buildHryTreeViewNew(PTProjektType.categoryList)
+                            Call buildHryTreeViewNew(PTItemType.categoryList)
                         Else
-                            Call buildHryTreeViewNew(PTProjektType.nameList)
+                            Call buildHryTreeViewNew(PTItemType.nameList)
                         End If
 
                 End Select
@@ -848,21 +848,21 @@ Public Class frmHierarchySelection
                     End If
                 End If
 
-                auswahl = PTProjektType.projekt
+                auswahl = PTItemType.projekt
                 auswahl = selectionTyp(selectedPhases, selectedMilestones)
 
                 Select Case auswahl
-                    Case PTProjektType.nameList
+                    Case PTItemType.nameList
 
 
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
+                        Call buildHryTreeViewNew(PTItemType.nameList)
 
                         Me.rdbNameList.Checked = True
                         Me.rdbPhases.Checked = True
 
-                    Case PTProjektType.vorlage
+                    Case PTItemType.vorlage
 
-                        Call buildHryTreeViewNew(PTProjektType.vorlage)
+                        Call buildHryTreeViewNew(PTItemType.vorlage)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                         '    hryTreeView.ExpandAll()
@@ -870,9 +870,9 @@ Public Class frmHierarchySelection
 
                         Me.rdbProjStruktTyp.Checked = True
 
-                    Case PTProjektType.projekt
+                    Case PTItemType.projekt
 
-                        Call buildHryTreeViewNew(PTProjektType.projekt)
+                        Call buildHryTreeViewNew(PTItemType.projekt)
                         '' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         'If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
                         '    hryTreeView.ExpandAll()
@@ -891,7 +891,7 @@ Public Class frmHierarchySelection
                         Me.rdbNameList.Checked = True
                         Me.rdbPhases.Checked = True
 
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
+                        Call buildHryTreeViewNew(PTItemType.nameList)
 
                 End Select
 
@@ -1569,7 +1569,7 @@ Public Class frmHierarchySelection
         Dim pvName As String = getPVnameFromNode(node)
         Dim type As Integer = getTypeFromNode(node)
 
-        If type = PTProjektType.vorlage Then
+        If type = PTItemType.vorlage Then
 
             If Projektvorlagen.Contains(pvName) Then
                 tmpResult = Projektvorlagen.getProject(pvName).hierarchy
@@ -1631,9 +1631,9 @@ Public Class frmHierarchySelection
         Loop
 
         If curNode.Name.StartsWith("V:") Then
-            tmpResult = PTProjektType.vorlage
+            tmpResult = PTItemType.vorlage
         ElseIf curNode.Name.StartsWith("P:") Then
-            tmpResult = PTProjektType.projekt
+            tmpResult = PTItemType.projekt
         End If
 
 
@@ -1854,7 +1854,7 @@ Public Class frmHierarchySelection
 
         Else
             ' es kann sich hier um die PRojekt- und die Vorlagen Struktur handeln, diese Struktur soll hier exoandiert werden 
-            If type = PTProjektType.vorlage Then
+            If type = PTItemType.vorlage Then
                 curHry = Projektvorlagen.getProject(PVname).hierarchy
             Else
                 curHry = ShowProjekte.getProject(PVname).hierarchy
@@ -2036,7 +2036,7 @@ Public Class frmHierarchySelection
             .CheckBoxes = True
 
 
-            If auswahl = PTProjektType.vorlage Then
+            If auswahl = PTItemType.vorlage Then
 
                 ' alle Templates zeigen 
                 kennung = "V:"
@@ -2103,7 +2103,7 @@ Public Class frmHierarchySelection
                     End If
 
                 Next
-            ElseIf auswahl = PTProjektType.projekt Then
+            ElseIf auswahl = PTItemType.projekt Then
 
                 ' alle selektierten Projekte zeigen 
                 kennung = "P:"
@@ -2159,7 +2159,7 @@ Public Class frmHierarchySelection
 
                 Next
 
-            ElseIf auswahl = PTProjektType.nameList Then
+            ElseIf auswahl = PTItemType.nameList Then
 
                 'alle Phasen der selektierten Projekte zeigen, je nach menuOption
 
@@ -2344,7 +2344,7 @@ Public Class frmHierarchySelection
                     ' kann eigentlich nicht mehr sein ..
                 End If
 
-            ElseIf auswahl = PTProjektType.categoryList Then
+            ElseIf auswahl = PTItemType.categoryList Then
                 'alle Phasen der selektierten Projekte zeigen, je nach menuOption
                 kennung = "C:"
 
@@ -3577,13 +3577,13 @@ Public Class frmHierarchySelection
 
                 'missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
-                If auswahl = PTProjektType.nameList Or auswahl = PTProjektType.categoryList Then
+                If auswahl = PTItemType.nameList Or auswahl = PTItemType.categoryList Then
                     Me.rdbNameList.Checked = True
 
-                ElseIf auswahl = PTProjektType.projekt Then
+                ElseIf auswahl = PTItemType.projekt Then
                     Me.rdbProjStruktProj.Checked = True
 
-                ElseIf auswahl = PTProjektType.vorlage Then
+                ElseIf auswahl = PTItemType.vorlage Then
                     Me.rdbProjStruktTyp.Checked = True
                 Else
                     Me.rdbProjStruktProj.Checked = True
@@ -3591,7 +3591,7 @@ Public Class frmHierarchySelection
 
                 Call buildHryTreeViewNew(auswahl)
 
-                If auswahl = PTProjektType.projekt Or auswahl = PTProjektType.vorlage Then
+                If auswahl = PTItemType.projekt Or auswahl = PTItemType.vorlage Then
 
                     ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                     If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
@@ -3643,13 +3643,13 @@ Public Class frmHierarchySelection
                     'missingProjCollection = checkFilter(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
                     '                                    selectedRoles, selectedCosts)
 
-                    If auswahl = PTProjektType.nameList Or auswahl = PTProjektType.categoryList Then
+                    If auswahl = PTItemType.nameList Or auswahl = PTItemType.categoryList Then
                         Me.rdbNameList.Checked = True
 
-                    ElseIf auswahl = PTProjektType.projekt Then
+                    ElseIf auswahl = PTItemType.projekt Then
                         Me.rdbProjStruktProj.Checked = True
 
-                    ElseIf auswahl = PTProjektType.vorlage Then
+                    ElseIf auswahl = PTItemType.vorlage Then
                         Me.rdbProjStruktTyp.Checked = True
                     Else
                         Me.rdbProjStruktProj.Checked = True
@@ -3657,7 +3657,7 @@ Public Class frmHierarchySelection
 
                     Call buildHryTreeViewNew(auswahl)
 
-                    If auswahl = PTProjektType.projekt Or auswahl = PTProjektType.vorlage Then
+                    If auswahl = PTItemType.projekt Or auswahl = PTItemType.vorlage Then
 
                         ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
                         If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
@@ -3906,9 +3906,9 @@ Public Class frmHierarchySelection
             If selectedPhases.Count = 0 And
                selectedMilestones.Count = 0 Then
                 If awinSettings.considerCategories Then
-                    auswahl = PTProjektType.categoryList
+                    auswahl = PTItemType.categoryList
                 Else
-                    auswahl = PTProjektType.nameList
+                    auswahl = PTItemType.nameList
                 End If
 
             Else
@@ -3917,7 +3917,7 @@ Public Class frmHierarchySelection
 
             Select Case auswahl
 
-                Case PTProjektType.nameList
+                Case PTItemType.nameList
 
                     Me.rdbMilestones.Visible = True
                     Me.rdbPhases.Visible = True
@@ -3931,7 +3931,7 @@ Public Class frmHierarchySelection
 
                     Call buildHryTreeViewNew(auswahl)
 
-                Case PTProjektType.categoryList
+                Case PTItemType.categoryList
 
                     Me.rdbMilestones.Visible = True
                     Me.rdbPhases.Visible = True
@@ -3946,7 +3946,7 @@ Public Class frmHierarchySelection
                     Call buildHryTreeViewNew(auswahl)
 
 
-                Case PTProjektType.vorlage
+                Case PTItemType.vorlage
 
                     Me.rdbMilestones.Visible = False
                     Me.rdbPhases.Visible = False
@@ -3982,10 +3982,10 @@ Public Class frmHierarchySelection
                         Me.picturePhaseMilest.Visible = False
                         Me.rdbNameList.Checked = True
 
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
+                        Call buildHryTreeViewNew(PTItemType.nameList)
 
                     Else
-                        Call buildHryTreeViewNew(PTProjektType.vorlage)
+                        Call buildHryTreeViewNew(PTItemType.vorlage)
                         Me.rdbProjStruktTyp.Checked = True
 
                         'If awinSettings.englishLanguage Then
@@ -3997,7 +3997,7 @@ Public Class frmHierarchySelection
 
 
 
-                Case PTProjektType.projekt
+                Case PTItemType.projekt
 
                     Me.rdbMilestones.Visible = False
                     Me.rdbPhases.Visible = False
@@ -4022,7 +4022,7 @@ Public Class frmHierarchySelection
 
                         selectedPhases.Clear()
                         selectedMilestones.Clear()
-                        Call buildHryTreeViewNew(PTProjektType.nameList)
+                        Call buildHryTreeViewNew(PTItemType.nameList)
 
                         Me.rdbMilestones.Visible = True
                         Me.rdbPhases.Visible = True
@@ -4035,7 +4035,7 @@ Public Class frmHierarchySelection
                         Me.picturePhaseMilest.Visible = False
                         Me.rdbNameList.Checked = True
                     Else
-                        Call buildHryTreeViewNew(PTProjektType.projekt)
+                        Call buildHryTreeViewNew(PTItemType.projekt)
                         Me.rdbProjStruktProj.Checked = True
 
                         If awinSettings.englishLanguage Then
@@ -4058,7 +4058,7 @@ Public Class frmHierarchySelection
                     Me.rdbNameList.Checked = True
                     Me.rdbPhases.Checked = True
 
-                    Call buildHryTreeViewNew(PTProjektType.nameList)
+                    Call buildHryTreeViewNew(PTItemType.nameList)
 
             End Select
 
@@ -4072,7 +4072,7 @@ Public Class frmHierarchySelection
 
             auswahl = selectionTyp(selectedPhases, selectedMilestones)
 
-            If auswahl = PTProjektType.nameList Or auswahl = PTProjektType.categoryList Then
+            If auswahl = PTItemType.nameList Or auswahl = PTItemType.categoryList Then
 
                 If rdbPhases.Checked Then
 
@@ -4177,7 +4177,7 @@ Public Class frmHierarchySelection
                         Dim type As Integer = -1
                         Dim pvName As String = ""
                         Call splitHryFullnameTo2(element, eleName, bc, type, pvName)
-                        If type = PTProjektType.categoryList Then
+                        If type = PTItemType.categoryList Then
                             ' die Kategorie steht in pvname, wie der Projektname bei P: , wie der Vorlagen-NAme bei V: 
                             If tmpNode.Name = pvName Then
                                 tmpNode.Checked = True
@@ -4232,27 +4232,27 @@ Public Class frmHierarchySelection
             If selectedPhases.Count = 0 And
                 selectedMilestones.Count = 0 Then
 
-                auswahl = PTProjektType.projekt
+                auswahl = PTItemType.projekt
             Else
                 auswahl = selectionTyp(selectedPhases, selectedMilestones)
             End If
 
             Select Case auswahl
-                Case PTProjektType.nameList
+                Case PTItemType.nameList
 
-                    Call buildHryTreeViewNew(PTProjektType.projekt)
+                    Call buildHryTreeViewNew(PTItemType.projekt)
 
-                Case PTProjektType.categoryList
+                Case PTItemType.categoryList
 
-                    Call buildHryTreeViewNew(PTProjektType.projekt)
+                    Call buildHryTreeViewNew(PTItemType.projekt)
 
-                Case PTProjektType.vorlage
+                Case PTItemType.vorlage
 
-                    Call buildHryTreeViewNew(PTProjektType.projekt)
+                    Call buildHryTreeViewNew(PTItemType.projekt)
 
-                Case PTProjektType.projekt
+                Case PTItemType.projekt
 
-                    Call buildHryTreeViewNew(PTProjektType.projekt)
+                    Call buildHryTreeViewNew(PTItemType.projekt)
 
                 Case Else
                     selectedPhases.Clear()
@@ -4262,7 +4262,7 @@ Public Class frmHierarchySelection
                     selectedRoles.Clear()
                     selectedCosts.Clear()
 
-                    Call buildHryTreeViewNew(PTProjektType.projekt)
+                    Call buildHryTreeViewNew(PTItemType.projekt)
 
             End Select
 
@@ -4306,26 +4306,26 @@ Public Class frmHierarchySelection
 
             If selectedPhases.Count = 0 And
                  selectedMilestones.Count = 0 Then
-                auswahl = PTProjektType.vorlage
+                auswahl = PTItemType.vorlage
             Else
                 auswahl = selectionTyp(selectedPhases, selectedMilestones)
             End If
 
             Select Case auswahl
-                Case PTProjektType.nameList
+                Case PTItemType.nameList
 
-                    Call buildHryTreeViewNew(PTProjektType.vorlage)
+                    Call buildHryTreeViewNew(PTItemType.vorlage)
 
-                Case PTProjektType.categoryList
+                Case PTItemType.categoryList
 
-                    Call buildHryTreeViewNew(PTProjektType.vorlage)
+                    Call buildHryTreeViewNew(PTItemType.vorlage)
 
-                Case PTProjektType.vorlage
+                Case PTItemType.vorlage
 
                     Call buildHryTreeViewNew(auswahl)
 
 
-                Case PTProjektType.projekt
+                Case PTItemType.projekt
 
                     Me.rdbProjStruktProj.Checked = True
 
@@ -4342,12 +4342,12 @@ Public Class frmHierarchySelection
                         selectedPhases.Clear()
                         selectedMilestones.Clear()
 
-                        Call buildHryTreeViewNew(PTProjektType.vorlage)
+                        Call buildHryTreeViewNew(PTItemType.vorlage)
 
                         Me.rdbProjStruktTyp.Checked = True
 
                     Else
-                        Call buildHryTreeViewNew(PTProjektType.projekt)
+                        Call buildHryTreeViewNew(PTItemType.projekt)
                     End If
 
                     'If awinSettings.englishLanguage Then
@@ -4368,7 +4368,7 @@ Public Class frmHierarchySelection
                     selectedCosts.Clear()
 
 
-                    Call buildHryTreeViewNew(PTProjektType.vorlage)
+                    Call buildHryTreeViewNew(PTItemType.vorlage)
 
             End Select
 
@@ -5024,7 +5024,7 @@ Public Class frmHierarchySelection
 
                 End With
 
-                Call buildHryTreeViewNew(PTProjektType.nameList)
+                Call buildHryTreeViewNew(PTItemType.nameList)
 
 
             Else
@@ -5083,7 +5083,7 @@ Public Class frmHierarchySelection
 
                 End With
 
-                Call buildHryTreeViewNew(PTProjektType.nameList)
+                Call buildHryTreeViewNew(PTItemType.nameList)
 
 
 
@@ -5145,9 +5145,9 @@ Public Class frmHierarchySelection
                 ''ur: 20170905: nicht erforderlich
                 ''auswahl = selectionTyp(selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
                 If Me.rdbProjStruktProj.Checked Then
-                    Call buildHryTreeViewNew(PTProjektType.projekt)
+                    Call buildHryTreeViewNew(PTItemType.projekt)
                 ElseIf Me.rdbProjStruktTyp.Checked Then
-                    Call buildHryTreeViewNew(PTProjektType.vorlage)
+                    Call buildHryTreeViewNew(PTItemType.vorlage)
                 Else
                     Me.rdbProjStruktProj.Checked = True
                     'Call buildHryTreeViewNew(PTProjektType.projekt)

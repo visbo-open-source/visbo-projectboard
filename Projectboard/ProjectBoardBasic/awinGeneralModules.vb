@@ -2248,8 +2248,8 @@ Public Module awinGeneralModules
                         Call splitHryFullnameTo2(.referenceName, phaseName, breadCrumb, type, pvName)
 
                         If type = -1 Or
-                            (type = PTProjektType.projekt And pvName = hproj.name) Or
-                            (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
+                            (type = PTItemType.projekt And pvName = hproj.name) Or
+                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
 
                             currentPH = hproj.getPhase(name:=phaseName, breadcrumb:=breadCrumb, lfdNr:=1)
 
@@ -2287,8 +2287,8 @@ Public Module awinGeneralModules
                         Call splitHryFullnameTo2(.referenceName, milestoneName, breadCrumb, type, pvName)
 
                         If type = -1 Or
-                            (type = PTProjektType.projekt And pvName = hproj.name) Or
-                            (type = PTProjektType.vorlage And pvName = hproj.VorlagenName) Then
+                            (type = PTItemType.projekt And pvName = hproj.name) Or
+                            (type = PTItemType.vorlage And pvName = hproj.VorlagenName) Then
 
                             currentMS = hproj.getMilestone(milestoneName, breadCrumb, 1)
 
