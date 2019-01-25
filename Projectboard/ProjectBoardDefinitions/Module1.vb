@@ -393,6 +393,7 @@ Public Module Module1
         ergebnis = 4
         milestones = 5
         mta = 6
+        rolesAndCost = 7
     End Enum
 
 
@@ -487,6 +488,35 @@ Public Module Module1
         laufend = 0
         lfundab = 1
         abgeschlossen = 2
+    End Enum
+
+
+    ''' <summary>
+    ''' eine Auflistung der Charttypen (Balken, Curve, Pie, etc
+    ''' </summary>
+    Public Enum PTChartTypen
+        Balken = 0
+        ZweiBalken = 1
+        Curve = 2
+        Pie = 3
+        Bubble = 4
+        Waterfall = 5
+    End Enum
+
+    Public Enum PTVergleichsArt
+        beauftragung = 0
+        planungsstand = 1
+    End Enum
+
+    Public Enum PTVergleichsTyp
+        erster = 0
+        letzter = 1
+        standVom = 2
+    End Enum
+
+    Public Enum PTEinheiten
+        personentage = 0
+        euro = 1
     End Enum
 
     ' Enumeration Portfolio Diagramm Kennung 
@@ -705,7 +735,7 @@ Public Module Module1
         pptAddIn = 2
     End Enum
 
-    Public Enum PTProjektType
+    Public Enum PTItemType
         vorlage = 0
         projekt = 1
         nameList = 2
@@ -1451,7 +1481,7 @@ Public Module Module1
         For Each kvp As KeyValuePair(Of Date, clsProjekt) In pHist.liste
 
             Dim newProj As clsProjekt = prepProjectForRoles(kvp.Value)
-            tmpResult.add(kvp.Key, newProj)
+            tmpResult.Add(kvp.Key, newProj)
 
         Next
 
@@ -3321,11 +3351,11 @@ Public Module Module1
         If fullname.StartsWith("[P:") Or fullname.StartsWith("[V:") Or
             fullname.StartsWith("[C:") Then
             If fullname.StartsWith("[P:") Then
-                type = PTProjektType.projekt
+                type = PTItemType.projekt
             ElseIf fullname.StartsWith("[V:") Then
-                type = PTProjektType.vorlage
+                type = PTItemType.vorlage
             Else
-                type = PTProjektType.categoryList
+                type = PTItemType.categoryList
             End If
 
             Dim startPos As Integer = 3
@@ -3375,7 +3405,7 @@ Public Module Module1
 
         Call splitHryFullnameTo2(fullname, elemName, breadCrumb, type, pvName)
 
-        If type = PTProjektType.categoryList Then
+        If type = PTItemType.categoryList Then
             ' hier steht im pvName der Name der Kategorie ...
             tmpResult = pvName
         Else
@@ -3901,11 +3931,11 @@ Public Module Module1
     Public Function selectionTyp(ByVal selPh As Collection, ByVal selMs As Collection) As Integer
 
         Dim element As String = ""
-        Dim tmpresult As Integer = PTProjektType.nameList
+        Dim tmpresult As Integer = PTItemType.nameList
         Dim i As Integer = 1
 
         ' Check ob selectedPhases P:, V: oder C: enthält
-        Do While tmpresult <> PTProjektType.projekt And i <= selPh.Count
+        Do While tmpresult <> PTItemType.projekt And i <= selPh.Count
 
             element = selPh.Item(i).ToString
 
@@ -3915,9 +3945,9 @@ Public Module Module1
             Dim pvcName As String = ""
             Call splitHryFullnameTo2(element, elemName, bc, tmpType, pvcName)
 
-            If tmpType = PTProjektType.vorlage Or tmpType = PTProjektType.projekt Then
+            If tmpType = PTItemType.vorlage Or tmpType = PTItemType.projekt Then
                 tmpresult = tmpType
-            ElseIf tmpresult = PTProjektType.nameList And tmpType = PTProjektType.categoryList Then
+            ElseIf tmpresult = PTItemType.nameList And tmpType = PTItemType.categoryList Then
                 tmpresult = tmpType
             End If
 
@@ -3927,7 +3957,7 @@ Public Module Module1
 
         ' Schleife ist nur solange notwendig, solange tmpResult nicht gleich Projekt-Typ ist 
         i = 1
-        Do While tmpresult <> PTProjektType.projekt And i <= selMs.Count
+        Do While tmpresult <> PTItemType.projekt And i <= selMs.Count
 
             element = selMs.Item(i).ToString
 
@@ -3937,9 +3967,9 @@ Public Module Module1
             Dim pvcName As String = ""
             Call splitHryFullnameTo2(element, elemName, bc, tmpType, pvcName)
 
-            If tmpType = PTProjektType.vorlage Or tmpType = PTProjektType.projekt Then
+            If tmpType = PTItemType.vorlage Or tmpType = PTItemType.projekt Then
                 tmpresult = tmpType
-            ElseIf tmpresult = PTProjektType.nameList And tmpType = PTProjektType.categoryList Then
+            ElseIf tmpresult = PTItemType.nameList And tmpType = PTItemType.categoryList Then
                 tmpresult = tmpType
             End If
 
@@ -4492,8 +4522,144 @@ Public Module Module1
     End Sub
 
     ''' <summary>
-    ''' fügt Projekt-Charts und Reporting Komponenten die entsprechenden Smart-Infos hinzu, so dass 
-    ''' der Powerpoint Add-In das Chart selbstständig aktualisieren kann 
+    ''' ergänzt Chart Tags für ein Projekt wie Portfolio Chart 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="prpf"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="vergleichsArt"></param>
+    ''' <param name="vergleichsTyp"></param>
+    ''' <param name="vglDatum"></param>
+    ''' <param name="einheit"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <param name="qualifier2"></param>
+    ''' <param name="bigType"></param>
+    ''' <param name="detailID"></param>
+    Public Sub addSmartPPTChartInfo(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt,
+                                    ByVal prpf As Integer, ByVal chartTyp As PTChartTypen,
+                                    ByVal vergleichsArt As PTVergleichsArt, ByVal vergleichsTyp As PTVergleichsTyp, ByVal vglDatum As Date,
+                                    ByVal einheit As PTEinheiten, ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String,
+                                    ByVal bigType As Integer, ByVal detailID As Integer)
+
+        If IsNothing(hproj) Then
+            Exit Sub
+        End If
+
+        Dim pName As String = hproj.name
+        Dim vName As String = hproj.variantName
+        Dim chtObjName As String = ""
+        Try
+
+            If Not IsNothing(pptShape) Then
+
+                If pptShape.HasChart = MsoTriState.msoTrue Then
+                    Dim pptChart As PowerPoint.Chart = pptShape.Chart
+                    chtObjName = pptChart.Name
+
+                    With pptShape
+
+                        If Not IsNothing(chtObjName) Then
+                            If .Tags.Item("CHON").Length > 0 Then
+                                .Tags.Delete("CHON")
+                            End If
+                            .Tags.Add("CHON", chtObjName)
+                        End If
+
+                        If Not IsNothing(chartTyp) Then
+                            If .Tags.Item("CHT").Length > 0 Then
+                                .Tags.Delete("CHT")
+                            End If
+                            .Tags.Add("CHT", CStr(CInt(chartTyp)))
+                        End If
+
+                        If Not IsNothing(einheit) Then
+                            If .Tags.Item("ASW").Length > 0 Then
+                                .Tags.Delete("ASW")
+                            End If
+                            .Tags.Add("ASW", CStr(CInt(einheit)))
+                        End If
+
+                        If .Tags.Item("VGLA").Length > 0 Then
+                            .Tags.Delete("VGLA")
+                        End If
+                        .Tags.Add("VGLA", CStr(CInt(vergleichsArt)))
+
+                        If .Tags.Item("VGLT").Length > 0 Then
+                            .Tags.Delete("VGLT")
+                        End If
+                        .Tags.Add("VGLT", CStr(CInt(vergleichsTyp)))
+
+                        If .Tags.Item("VGLD").Length > 0 Then
+                            .Tags.Delete("VGLD")
+                        End If
+                        .Tags.Add("VGLD", vglDatum.ToString)
+
+                        If Not IsNothing(prpf) Then
+                            If .Tags.Item("PRPF").Length > 0 Then
+                                .Tags.Delete("PRPF")
+                            End If
+                            .Tags.Add("PRPF", prpf.ToString)
+                        End If
+
+                        If Not IsNothing(pName) Then
+                            If .Tags.Item("PNM").Length > 0 Then
+                                .Tags.Delete("PNM")
+                            End If
+                            .Tags.Add("PNM", pName)
+                        End If
+
+                        If Not IsNothing(vName) Then
+                            If .Tags.Item("VNM").Length > 0 Then
+                                .Tags.Delete("VNM")
+                            End If
+                            .Tags.Add("VNM", vName)
+                        End If
+
+                        If Not IsNothing(prcTyp) Then
+                            If .Tags.Item("Q1").Length > 0 Then
+                                .Tags.Delete("Q1")
+                            End If
+                            .Tags.Add("Q1", CStr(CInt(prcTyp)))
+                        End If
+
+                        If Not IsNothing(qualifier2) Then
+                            If .Tags.Item("Q2").Length > 0 Then
+                                .Tags.Delete("Q2")
+                            End If
+                            .Tags.Add("Q2", qualifier2)
+                        End If
+
+                        If Not IsNothing(bigType) Then
+                            If .Tags.Item("BID").Length > 0 Then
+                                .Tags.Delete("BID")
+                            End If
+                            .Tags.Add("BID", bigType.ToString)
+                        End If
+
+                        If Not IsNothing(detailID) Then
+                            If .Tags.Item("DID").Length > 0 Then
+                                .Tags.Delete("DID")
+                            End If
+                            .Tags.Add("DID", detailID.ToString)
+                        End If
+
+                    End With
+
+                End If
+
+            End If
+
+        Catch ex As Exception
+            Dim a As Integer = 1
+        End Try
+
+
+    End Sub
+
+    ''' <summary>
+    ''' fügt für  Reporting Komponenten die entsprechenden Smart-Infos hinzu, so dass 
+    ''' der Powerpoint Add-In die Komponente selbstständig aktualisieren kann 
     ''' </summary>
     ''' <param name="pptShape"></param>
     ''' <param name="prpf"></param>
@@ -4569,69 +4735,7 @@ Public Module Module1
 
                 End With
                 ' jetzt kommen noch die Ergänzungen, die je nach Typ notwendig sind ...
-                If bigType = ptReportBigTypes.charts Then
-
-                    If pptShape.HasChart = MsoTriState.msoTrue Then
-                        Dim pptChart As PowerPoint.Chart = pptShape.Chart
-                        chtObjName = pptChart.Name
-
-                        Dim auswahl As Integer = -1
-                        Dim prpfTyp As Integer = -1
-                        Dim chartTyp As Integer = -1
-                        Dim prcTyp As Integer = -1
-
-
-                        ' der Chart-ObjectName enthält sehr viel ..
-                        'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
-                        Dim pNameChk As String = "", vNameChk As String = ""
-                        Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pNameChk, vNameChk, chartTyp, auswahl)
-                        'If pName <> pNameChk Or vName <> vNameChk Then
-                        '    Call MsgBox("PName , vName in hproj bzw. chtobjname unterschiedlich ! ")
-                        'End If
-
-                        With pptShape
-
-
-                            If Not IsNothing(chtObjName) Then
-                                If .Tags.Item("CHON").Length > 0 Then
-                                    .Tags.Delete("CHON")
-                                End If
-                                .Tags.Add("CHON", chtObjName)
-                            End If
-
-                            ' ist schon gesetzt ...
-                            'If Not IsNothing(prpfTyp) Then
-                            '    If .Tags.Item("PRPF").Length > 0 Then
-                            '        .Tags.Delete("PRPF")
-                            '    End If
-                            '    .Tags.Add("PRPF", CStr(prpfTyp))
-                            'End If
-
-                            If Not IsNothing(chartTyp) Then
-                                If .Tags.Item("CHT").Length > 0 Then
-                                    .Tags.Delete("CHT")
-                                End If
-                                .Tags.Add("CHT", CStr(chartTyp))
-                            End If
-
-                            If Not IsNothing(auswahl) Then
-                                If .Tags.Item("ASW").Length > 0 Then
-                                    .Tags.Delete("ASW")
-                                End If
-                                .Tags.Add("ASW", CStr(auswahl))
-                            End If
-
-
-                            If .Tags.Item("COL").Length > 0 Then
-                                .Tags.Delete("COL")
-                            End If
-                            .Tags.Add("COL", CStr(auswahl))
-
-
-                        End With
-                    End If
-
-                ElseIf bigType = ptReportBigTypes.tables Then
+                If bigType = ptReportBigTypes.tables Then
                     ' sonst keine weiteren Dinge ... das wird in der eigenen Methode addSmartPPTTableInfo gemacht 
 
                 ElseIf bigType = ptReportBigTypes.components Then
