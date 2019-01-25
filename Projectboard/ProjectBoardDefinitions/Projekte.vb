@@ -6699,7 +6699,7 @@ Public Module Projekte
         Dim vdatenreihe() As Double
         Dim vSum As Double = 0.0
         Dim gesamt_summe As Double
-        Dim anzKostenarten As Integer
+        'Dim anzKostenarten As Integer
 
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
@@ -6712,7 +6712,7 @@ Public Module Projekte
         Dim found As Boolean = False
 
 
-        Dim ErgebnisListeK As Collection
+        'Dim ErgebnisListeK As Collection
 
 
         Dim pname As String = hproj.name
@@ -6739,8 +6739,8 @@ Public Module Projekte
         '
         ' hole die Anzahl Kostenarten, die in diesem Projekt vorkommen
         '
-        ErgebnisListeK = hproj.getCostNames
-        anzKostenarten = ErgebnisListeK.Count
+        'ErgebnisListeK = hproj.getCostNames
+        'anzKostenarten = ErgebnisListeK.Count
 
 
         ReDim Xdatenreihe(plen - 1)
@@ -7095,13 +7095,7 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub createBalkenChartInPPT(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
-                                              ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
-                                              ByVal chartTyp As Integer,
-                                              ByVal auswahl As Integer, ByVal chartContainer As PowerPoint.Shape,
-                                              ByVal DID As Integer, ByVal qualifier As String, ByVal qualifier2 As String)
 
-    End Sub
 
     Public Sub createCostBalkenOfProjectInPPT2(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
                                               ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
@@ -17016,13 +17010,13 @@ Public Module Projekte
                     Dim weiter As Boolean = True
                     Call splitHryFullnameTo2(fullname, elemName, breadcrumb, type, pvName)
 
-                    If type = PTProjektType.projekt Then
+                    If type = PTItemType.projekt Then
 
                         If pvName <> kvp.Value.name Then
                             weiter = False
                         End If
 
-                    ElseIf type = PTProjektType.vorlage Then
+                    ElseIf type = PTItemType.vorlage Then
 
                         If pvName <> kvp.Value.VorlagenName Then
                             weiter = False
@@ -17084,13 +17078,13 @@ Public Module Projekte
                         curProj = ShowProjekte.getProject(CStr(toDoListe.Item(i)))
                         Dim weiter As Boolean = True
 
-                        If type = PTProjektType.projekt Then
+                        If type = PTItemType.projekt Then
 
                             If pvName <> curProj.name Then
                                 weiter = False
                             End If
 
-                        ElseIf type = PTProjektType.vorlage Then
+                        ElseIf type = PTItemType.vorlage Then
 
                             If pvName <> curProj.VorlagenName Then
                                 weiter = False
