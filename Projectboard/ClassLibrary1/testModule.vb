@@ -3462,32 +3462,38 @@ Public Module testModule
             End If
 
         Else
-            If qualifier2.StartsWith("%") Then
-                If IsNumeric(qualifier2.Substring(1)) Then
-                    Dim ix As Integer = CInt(qualifier2.Substring(1))
-                    Dim tmpTeamID As Integer = -1
-                    If selectedRoles.Count >= ix Then
-                        Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(ix), tmpTeamID)
-                        If RoleDefinitions.containsUid(tmpRoleID) Then
-                            qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
+            If qualifier2 = "%used%" Then
+                qualifier2 = bestimmeRoleQ2("", selectedRoles)
+            Else
+                If qualifier2.StartsWith("%") Then
+                    If IsNumeric(qualifier2.Substring(1)) Then
+                        Dim ix As Integer = CInt(qualifier2.Substring(1))
+                        Dim tmpTeamID As Integer = -1
+                        If selectedRoles.Count >= ix Then
+                            Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(ix), tmpTeamID)
+                            If RoleDefinitions.containsUid(tmpRoleID) Then
+                                qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
+                            Else
+                                qualifier2 = ""
+                            End If
+                        End If
+
+                    End If
+                Else
+                    If RoleDefinitions.containsName(qualifier2) Then
+                        ' darf der das ?  
+                        If myCustomUserRole.isAllowedToSee(qualifier2) Then
+                            ' alles in Ordnung 
                         Else
                             qualifier2 = ""
                         End If
-                    End If
-
-                End If
-            Else
-                If RoleDefinitions.containsName(qualifier2) Then
-                    ' darf der das ?  
-                    If myCustomUserRole.isAllowedToSee(qualifier2) Then
-                        ' alles in Ordnung 
                     Else
                         qualifier2 = ""
                     End If
-                Else
-                    qualifier2 = ""
                 End If
             End If
+
+
 
         End If
 

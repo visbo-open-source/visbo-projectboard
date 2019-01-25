@@ -27501,11 +27501,12 @@ Public Module Projekte
     ''' <returns></returns>
     Public Function getCommonListOfRoleNameIDs(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt,
                                            ByRef anzRoles As Integer) As Collection
-        Dim resultCollection As New Collection
 
         ' bestimme die Menge an vorkommenden Role-NameIDs in hproj, lproj, bproj
         ' tmpRListe nimmt jetzt roleNameIDs der Form roleID;teamID auf 
-        Dim tmpRListe As New SortedList(Of Integer, String)
+        Dim resultCollection As New Collection
+        Dim tmpRListe As New SortedList(Of String, String)
+
 
         'Dim onlyConsiderTeamMembers As Boolean = False
         'If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
@@ -27533,21 +27534,9 @@ Public Module Projekte
 
             For Each tmpRNameID As String In sRoles
 
-                Dim tmpTeamID As Integer = -1
-                Dim tmpUiD As Integer = RoleDefinitions.parseRoleNameID(tmpRNameID, tmpTeamID)
-
-                'If onlyConsiderTeamMembers Then
-                '    ' prüfe, ob es sich bei specifics um eine Gruppen-Organisation handelt 
-                '    If tmpTeamID <> -1 Then
-                '        If Not tmpRListe.ContainsKey(tmpRNameID) Then
-                '            tmpRListe.Add(tmpRNameID, tmpRNameID)
-                '        End If
-                '    End If
-                'Else
-                ' hier muss geprüft werden, ob meine Rolle das überhaupt sehen darf ..
                 If myCustomUserRole.isAllowedToSee(tmpRNameID) Then
-                    If Not tmpRListe.ContainsKey(tmpUiD) Then
-                        tmpRListe.Add(tmpUiD, tmpRNameID)
+                    If Not tmpRListe.ContainsKey(tmpRNameID) Then
+                        tmpRListe.Add(tmpRNameID, tmpRNameID)
                     End If
                 End If
 
@@ -27559,18 +27548,14 @@ Public Module Projekte
 
         Next
 
+        ' jetzt muss umkopiert werden - das war alles notwendig, um die Sortierung in der Collection zu behalten 
+        For Each kvp As KeyValuePair(Of String, String) In tmpRListe
 
-        For Each kvp As KeyValuePair(Of Integer, String) In tmpRListe
-
-            If Not resultCollection.Contains(kvp.Value) Then
-                resultCollection.Add(kvp.Value, kvp.Value)
+            If Not resultCollection.Contains(kvp.Key) Then
+                resultCollection.Add(kvp.Key, kvp.Key)
             End If
 
-
         Next
-
-
-        anzRoles = tmpRListe.Count
 
         getCommonListOfRoleNameIDs = resultCollection
 
