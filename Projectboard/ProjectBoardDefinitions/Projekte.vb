@@ -27499,8 +27499,7 @@ Public Module Projekte
     ''' <param name="lproj"></param>
     ''' <param name="bproj"></param>
     ''' <returns></returns>
-    Public Function getCommonListOfRoleNameIDs(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt,
-                                           ByRef anzRoles As Integer) As Collection
+    Public Function getCommonListOfRoleNameIDs(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt) As Collection
 
         ' bestimme die Menge an vorkommenden Role-NameIDs in hproj, lproj, bproj
         ' tmpRListe nimmt jetzt roleNameIDs der Form roleID;teamID auf 
@@ -27567,10 +27566,8 @@ Public Module Projekte
     ''' <param name="hproj"></param>
     ''' <param name="lproj"></param>
     ''' <param name="bproj"></param>
-    ''' <param name="anzCosts"></param>
     ''' <returns></returns>
-    Public Function getCommonListOfCostNames(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt,
-                                             ByRef anzCosts As Integer) As Collection
+    Public Function getCommonListOfCostNames(ByVal hproj As clsProjekt, ByVal lproj As clsProjekt, ByVal bproj As clsProjekt) As Collection
 
         Dim resultCollection As New Collection
 
@@ -27615,9 +27612,6 @@ Public Module Projekte
             End If
 
         Next
-
-        anzCosts = tmpCListe.Count
-
 
         getCommonListOfCostNames = resultCollection
 

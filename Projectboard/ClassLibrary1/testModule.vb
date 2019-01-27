@@ -1822,8 +1822,8 @@ Public Module testModule
                                 Try
                                     ' es können hier keine interaktiven Qualifier angegeben werden 
                                     ' 
-                                    Dim q1 As String = "0"
-                                    Dim q2 As String = "0"
+                                    Dim q1 As String = qualifier ' gibt ggf an, ob PT ausgegeben werden soll 
+                                    Dim q2 As String = qualifier2
 
                                     ' es werden drei Fälle unterschieden
                                     ' 1. qualifier2 = "" ->  die Budget, PK, SK, Ergebnis Übersicht  :todoCollection leer, q1= 0 , q2=0
@@ -1833,7 +1833,6 @@ Public Module testModule
                                     If Not IsNothing(qualifier2) Then
 
                                         If qualifier2.Trim = "%used%" Then
-                                            q1 = "-1"
                                             q2 = "-1"
                                         End If
 
@@ -2021,9 +2020,14 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                                                           roleName:=qualifier2,
-                                                                           vglTyp:=PTprdk.PersonalBalken)
+                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.personentage, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.PersonalBalken)
+
+                                            'Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                            '                               roleName:=qualifier2,
+                                            '                               vglTyp:=PTprdk.PersonalBalken)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -2043,7 +2047,7 @@ Public Module testModule
 
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = False
                                     bigType = ptReportBigTypes.charts
 
 
@@ -2070,9 +2074,14 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                                                           roleName:=qualifier2,
-                                                                           vglTyp:=PTprdk.PersonalBalken2)
+                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.personentage, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.PersonalBalken)
+
+                                            'Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                            '                               roleName:=qualifier2,
+                                            '                               vglTyp:=PTprdk.PersonalBalken2)
                                             compID = PTprdk.PersonalBalken2
                                         End If
                                     Else
@@ -2092,7 +2101,7 @@ Public Module testModule
 
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = false
                                     bigType = ptReportBigTypes.charts
 
 
