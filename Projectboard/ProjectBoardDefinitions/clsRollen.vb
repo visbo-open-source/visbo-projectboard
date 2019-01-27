@@ -700,7 +700,7 @@ Public Class clsRollen
     ''' <param name="excludedNames">jeder Eintrag muss in der Form uid;teamID sein</param>
     ''' <returns></returns>
     Public ReadOnly Property getSubRoleNameIDsOf(ByVal roleNameID As String,
-                                               Optional ByVal type As Integer = PTcbr.all,
+                                               Optional ByVal type As PTcbr = PTcbr.all,
                                                Optional ByVal excludedNames As Collection = Nothing) As SortedList(Of String, Double)
         Get
 
@@ -763,7 +763,7 @@ Public Class clsRollen
                                             If Not realCollection.ContainsKey(tmpKey) And Not addToRealCollection.ContainsKey(tmpKey) Then
                                                 addToRealCollection.Add(tmpKey, srkvp.Value)
 
-                                            ElseIf addToRealCollection.ContainsKey(tmpkey) Then
+                                            ElseIf addToRealCollection.ContainsKey(tmpKey) Then
                                                 ' addieren, aber Gesamt-Summe darf nie größer 1 sein
                                                 Dim newValue As Double = addToRealCollection(tmpKey) + srkvp.Value
                                                 If newValue > 1.0 Then

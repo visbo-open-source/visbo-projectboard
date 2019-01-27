@@ -1846,7 +1846,7 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property getRoleValuesInMonth(ByVal roleIDStr As String,
                                                   Optional ByVal considerAllSubRoles As Boolean = False,
-                                                  Optional ByVal type As Integer = PTcbr.all,
+                                                  Optional ByVal type As PTcbr = PTcbr.all,
                                                   Optional ByVal excludedNames As Collection = Nothing) As Double()
 
         Get
