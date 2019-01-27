@@ -178,6 +178,8 @@ Module testMethoden
 
         enableOnUpdate = True
 
+        testRoleNames = outputCollection
+
     End Function
 
     ''' <summary>
@@ -186,6 +188,7 @@ Module testMethoden
     ''' </summary>
     ''' <returns></returns>
     Public Function TestAggregateMethod() As Collection
+
         Dim outputCollection As New Collection
         Dim found As Boolean = False
         Dim testRoleIDs() As Integer = Nothing
@@ -198,6 +201,7 @@ Module testMethoden
 
         If Not showRangeLeft > 0 And showRangeRight > showRangeLeft Then
             Call MsgBox("zuerst Showrange belegen ...")
+            TestAggregateMethod = outputCollection
             Exit Function
         End If
 
@@ -271,10 +275,10 @@ Module testMethoden
 
         End If
 
+        TestAggregateMethod = Nothing
 
 
-
-        TestAggregateMethod = outputCollection
     End Function
+
 
 End Module

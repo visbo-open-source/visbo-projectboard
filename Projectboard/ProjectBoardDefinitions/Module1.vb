@@ -578,6 +578,7 @@ Public Module Module1
         SollIstGesamtkostenC2 = 33
         SollIstRolleC2 = 34
         SollIstKostenartC2 = 35
+        ProjektbedarfsChart = 36
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 

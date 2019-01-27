@@ -2687,6 +2687,8 @@
 
                     existingRoleNameIds = getRoleNameIDs
                     ' umkopieren ...
+                    matchingRoleNameIDs = New SortedList(Of String, Double)
+
                     For Each existingRoleNameID As String In existingRoleNameIds
                         If Not matchingRoleNameIDs.ContainsKey(existingRoleNameID) Then
                             matchingRoleNameIDs.Add(existingRoleNameID, 1.0)

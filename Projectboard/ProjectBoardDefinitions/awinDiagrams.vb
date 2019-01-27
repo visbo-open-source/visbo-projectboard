@@ -6204,9 +6204,17 @@ Public Module awinDiagrams
         Dim PlanChartType As Microsoft.Office.Core.XlChartType
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
+        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+
         If chartTyp = PTChartTypen.CurveCumul Then
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlLine
-            PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+
+            If considerIstDaten Then
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+            Else
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
+            End If
+
             vglChartType = Microsoft.Office.Core.XlChartType.xlLine
         Else
             IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
@@ -6252,7 +6260,7 @@ Public Module awinDiagrams
             pStartV = vglProj.Start
 
             pstart = Min(pStartH, pStartV)
-            plen = Max(pStartH + plenH, pStartV + plenV) - pstart + 1
+            plen = Max(pStartH + plenH, pStartV + plenV) - pstart
         Else
             plen = plenH
             pstart = pStartH
@@ -6275,18 +6283,24 @@ Public Module awinDiagrams
 
 
         Dim vProjDoesExist As Boolean = Not IsNothing(vglProj)
-        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
 
-        tDatenSumme = tdatenreihe.Sum
-        vDatensumme = vdatenreihe.Sum
+        If chartTyp = PTChartTypen.CurveCumul Then
+            tDatenSumme = tdatenreihe(tdatenreihe.Length - 1)
+            vDatensumme = vdatenreihe(vdatenreihe.Length - 1)
+        Else
+            tDatenSumme = tdatenreihe.Sum
+            vDatensumme = vdatenreihe.Sum
+
+        End If
 
         Dim startRed As Integer = 0
         Dim lengthRed As Integer = 0
         diagramTitle = bestimmeChartDiagramTitle(chartTyp, prcTyp, qualifier2, vProjDoesExist, einheit, tDatenSumme, vDatensumme, startRed, lengthRed)
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
-        Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
-                                                                   Width:=width, Height:=height)
+        Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
+        'Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
+        '                                                           Width:=width, Height:=height)
         ' 
 
         ' jetzt kommt das Löschen der alten SeriesCollections . . 
@@ -6305,20 +6319,6 @@ Public Module awinDiagrams
         ' jetzt werden die Collections in dem Chart aufgebaut ...
         With newPPTChart.Chart
 
-            ' jetzt kommt der Neu-Aufbau der Series-Collections
-            If considerIstDaten Then
-
-                ' jetzt die Istdaten zeichnen 
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
-                    .Name = bestimmeLegendNameIPB("I")
-                    .Interior.Color = awinSettings.SollIstFarbeArea
-                    .Values = istDatenReihe
-                    .XValues = Xdatenreihe
-                    .ChartType = IstCharttype
-                End With
-
-            End If
 
             ' Planung / Forecast
             With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
@@ -6327,7 +6327,15 @@ Public Module awinDiagrams
                 .Interior.Color = visboFarbeBlau
                 .Values = prognoseDatenReihe
                 .XValues = Xdatenreihe
-                .ChartType = IstCharttype
+                .ChartType = PlanChartType
+
+                If chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                    ' es handelt sich um eine Line
+                    .Format.Line.Weight = 4
+                    .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                End If
+
             End With
 
             ' Beauftragung bzw. Vergleichsdaten
@@ -6338,7 +6346,7 @@ Public Module awinDiagrams
                     .Name = bestimmeLegendNameIPB("B") & vglProj.timeStamp.ToShortDateString
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
-                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
+
                     .ChartType = vglChartType
 
                     If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
@@ -6354,6 +6362,22 @@ Public Module awinDiagrams
                 End With
 
             End If
+
+            ' jetzt kommt der Neu-Aufbau der Series-Collections
+            If considerIstDaten Then
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = bestimmeLegendNameIPB("I")
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = IstCharttype
+                End With
+
+            End If
+
 
         End With
 
@@ -6444,6 +6468,38 @@ Public Module awinDiagrams
         Call addSmartPPTChartInfo(newPPTChart, hproj, ptPRPFType.project, chartTyp, vergleichsArt, vergleichsTyp, vglDatum, einheit, prcTyp,
                                     qualifier2, BIT, DID)
 
+
+    End Sub
+
+    ''' <summary>
+    ''' extrahiert aus dem Eingabe Parameter die Angaben zu charttyp, vglArt, vglTyp, einheit, elementTyp
+    ''' </summary>
+    ''' <param name="q1"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="vergleichsArt"></param>
+    ''' <param name="vergleichstyp"></param>
+    ''' <param name="einheit"></param>
+    ''' <param name="elementTyp"></param>
+    Public Sub getChartParametersFromQ1(ByVal q1 As String,
+                                        ByRef chartTyp As PTChartTypen,
+                                        ByRef vergleichsArt As PTVergleichsArt,
+                                        ByRef vergleichstyp As PTVergleichsTyp,
+                                        ByRef einheit As PTEinheiten,
+                                        ByRef elementTyp As ptElementTypen)
+
+        Dim tmpStr() As String = q1.Split(New Char() {CChar(";")})
+        If tmpStr.Length = 5 Then
+
+            chartTyp = CType(tmpStr(0), PTChartTypen)
+            vergleichsArt = CType(tmpStr(1), PTVergleichsArt)
+            vergleichstyp = CType(tmpStr(2), PTVergleichsTyp)
+            einheit = CType(tmpStr(3), PTEinheiten)
+            elementTyp = CType(tmpStr(4), ptElementTypen)
+
+        Else
+            Throw New ArgumentException("Angabe nicht erkannt: " & q1 & vbLf &
+                                        " es müssen 5 Integer Zahlen getrennt durch ';' sein")
+        End If
 
     End Sub
 
