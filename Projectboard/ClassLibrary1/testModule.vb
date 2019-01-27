@@ -2002,6 +2002,8 @@ Public Module testModule
                                 Dim einheit As PTEinheiten
                                 Dim elementTyp As ptElementTypen
 
+                                ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                .TextFrame2.TextRange.Text = ""
 
                                 Try
                                     If chartTyp = PTChartTypen.Pie Then
@@ -2019,7 +2021,16 @@ Public Module testModule
 
                                         bigType = ptReportBigTypes.charts
                                         compID = PTprdk.ProjektbedarfsChart
-                                        Call createProjektChartInPPT(hproj, bproj, chartTyp, vergleichsArt,
+
+                                        ' muss mit dem ersten oder letzten verglichen werden ? 
+                                        Dim vglProj As clsProjekt = Nothing
+                                        If vergleichstyp = PTVergleichsTyp.erster Then
+                                            vglProj = bproj
+                                        ElseIf vergleichstyp = PTVergleichsTyp.letzter Then
+                                            vglProj = lproj
+                                        End If
+
+                                        Call createProjektChartInPPT(hproj, vglProj, chartTyp, vergleichsArt,
                                                                      vergleichstyp, Date.MinValue, einheit, elementTyp,
                                                                      qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
                                                                      bigType, compID)
