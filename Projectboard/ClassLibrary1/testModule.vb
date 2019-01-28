@@ -760,6 +760,7 @@ Public Module testModule
                         kennzeichnung = "Strategie/Risiko" Or
                         kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or
                         kennzeichnung = "Projektphasen" Or
+                        kennzeichnung = "ProjektBedarfsChart" Or
                         kennzeichnung = "Personalbedarf" Or
                         kennzeichnung = "Personalbedarf2" Or
                         kennzeichnung = "Personalkosten" Or
@@ -1822,22 +1823,13 @@ Public Module testModule
                                 Try
                                     ' es können hier keine interaktiven Qualifier angegeben werden 
                                     ' 
-                                    Dim q1 As String = "0"
-                                    Dim q2 As String = "0"
+                                    Dim q1 As String = qualifier ' gibt ggf an, ob PT ausgegeben werden soll 
+                                    Dim q2 As String = qualifier2
 
                                     ' es werden drei Fälle unterschieden
                                     ' 1. qualifier2 = "" ->  die Budget, PK, SK, Ergebnis Übersicht  :todoCollection leer, q1= 0 , q2=0
                                     ' 2. qualifier2 = %used% -> es wird die gemeinsame Liste ermittelt ; todoCollection leer oder mit Inhalt, q1=-1, q2= -1
 
-
-                                    If Not IsNothing(qualifier2) Then
-
-                                        If qualifier2.Trim = "%used%" Then
-                                            q1 = "-1"
-                                            q2 = "-1"
-                                        End If
-
-                                    End If
 
 
                                     ' die smart Powerpoint Table Info wird in dieser MEthode gesetzt ...
@@ -2002,9 +1994,58 @@ Public Module testModule
 
                                 End Try
 
+                            Case "ProjektBedarfsChart"
+                                ' new
+                                Dim chartTyp As PTChartTypen
+                                Dim vergleichsArt As PTVergleichsArt
+                                Dim vergleichstyp As PTVergleichsTyp
+                                Dim einheit As PTEinheiten
+                                Dim elementTyp As ptElementTypen
+
+                                ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                .TextFrame2.TextRange.Text = ""
+
+                                Try
+                                    If chartTyp = PTChartTypen.Pie Then
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        bigType = ptReportBigTypes.charts
+                                        compID = PTprdk.PersonalPie
+                                        boxName = obj.Chart.ChartTitle.Text
+                                        reportObj = obj
+                                        notYetDone = True
+
+                                    Else
+                                        Call getChartParametersFromQ1(qualifier, chartTyp, vergleichsArt, vergleichstyp, einheit, elementTyp)
+
+                                        qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
+
+                                        bigType = ptReportBigTypes.charts
+                                        compID = PTprdk.ProjektbedarfsChart
+
+                                        ' muss mit dem ersten oder letzten verglichen werden ? 
+                                        Dim vglProj As clsProjekt = Nothing
+                                        If vergleichstyp = PTVergleichsTyp.erster Then
+                                            vglProj = bproj
+                                        ElseIf vergleichstyp = PTVergleichsTyp.letzter Then
+                                            vglProj = lproj
+                                        End If
+
+                                        Call createProjektChartInPPT(hproj, vglProj, chartTyp, vergleichsArt,
+                                                                     vergleichstyp, Date.MinValue, einheit, elementTyp,
+                                                                     qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                     bigType, compID)
+
+                                        boxName = ""
+                                        notYetDone = False
+                                    End If
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                End Try
+
+
 
                             Case "Personalbedarf"
-
+                                ' old
                                 If boxName = kennzeichnung Then
                                     boxName = repMessages.getmsg(159)
                                 End If
@@ -2021,9 +2062,14 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                                                           roleName:=qualifier2,
-                                                                           vglTyp:=PTprdk.PersonalBalken)
+                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.personentage, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.PersonalBalken)
+
+                                            'Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                            '                               roleName:=qualifier2,
+                                            '                               vglTyp:=PTprdk.PersonalBalken)
                                             compID = PTprdk.PersonalBalken
                                         End If
                                     Else
@@ -2043,7 +2089,7 @@ Public Module testModule
 
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = False
                                     bigType = ptReportBigTypes.charts
 
 
@@ -2070,9 +2116,14 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                                                           roleName:=qualifier2,
-                                                                           vglTyp:=PTprdk.PersonalBalken2)
+                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.personentage, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.PersonalBalken)
+
+                                            'Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                            '                               roleName:=qualifier2,
+                                            '                               vglTyp:=PTprdk.PersonalBalken2)
                                             compID = PTprdk.PersonalBalken2
                                         End If
                                     Else
@@ -2092,7 +2143,7 @@ Public Module testModule
 
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = false
                                     bigType = ptReportBigTypes.charts
 
 
@@ -2120,9 +2171,14 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                                                           roleName:=qualifier2,
-                                                                           vglTyp:=PTprdk.PersonalBalken)
+                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+
+                                            'Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                            '                               roleName:=qualifier2,
+                                            '                               vglTyp:=PTprdk.PersonalBalken)
                                             compID = PTprdk.PersonalBalken
                                         End If
 
@@ -2142,7 +2198,7 @@ Public Module testModule
 
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = False
                                     bigType = ptReportBigTypes.charts
 
 
@@ -2170,9 +2226,14 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
-                                                                           roleName:=qualifier2,
-                                                                           vglTyp:=PTprdk.PersonalBalken2)
+                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+
+                                            'Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
+                                            '                               roleName:=qualifier2,
+                                            '                               vglTyp:=PTprdk.PersonalBalken2)
                                             compID = PTprdk.PersonalBalken2
                                         End If
 
@@ -2192,7 +2253,7 @@ Public Module testModule
 
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = False
                                     bigType = ptReportBigTypes.charts
 
 
@@ -2217,7 +2278,12 @@ Public Module testModule
                                             compID = PTprdk.KostenPie
                                         Else
                                             compID = PTprdk.KostenBalken
-                                            Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
+
+                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+                                            'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
 
                                         End If
 
@@ -2234,7 +2300,7 @@ Public Module testModule
                                     End If
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = False
 
                                     bigType = ptReportBigTypes.charts
 
@@ -2261,7 +2327,12 @@ Public Module testModule
                                             compID = PTprdk.KostenPie
                                         Else
                                             compID = PTprdk.KostenBalken2
-                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
+
+                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+                                            'Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
 
                                         End If
 
@@ -2278,7 +2349,7 @@ Public Module testModule
                                     End If
 
                                     reportObj = obj
-                                    notYetDone = True
+                                    notYetDone = False
 
                                     bigType = ptReportBigTypes.charts
 
@@ -2320,7 +2391,13 @@ Public Module testModule
                                             appInstance.ScreenUpdating = False
 
                                             compID = PTprdk.KostenBalken
-                                            Call createCostBalkenOfProjectInPPT2(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
+
+                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+
+                                            'Call createCostBalkenOfProjectInPPT2(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
 
                                             appInstance.ScreenUpdating = formerEE
                                             notYetDone = False
@@ -2332,7 +2409,7 @@ Public Module testModule
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         compID = PTprdk.KostenPie
                                         reportObj = obj
-                                        notYetDone = True
+                                        notYetDone = False
                                         bigType = ptReportBigTypes.charts
                                     End If
 
@@ -2372,14 +2449,27 @@ Public Module testModule
 
                                         If qualifier.Trim <> "Balken" Then
                                             Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                            bigType = ptReportBigTypes.charts
                                             compID = PTprdk.KostenPie
+                                            notYetDone = True
                                         Else
+                                            bigType = ptReportBigTypes.charts
                                             compID = PTprdk.KostenBalken2
-                                            Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
+
+
+                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+                                            notYetDone = False
+                                            'Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
                                         End If
 
                                     Else
+                                        bigType = ptReportBigTypes.charts
+                                        compID = PTprdk.KostenPie
                                         Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
+                                        notYetDone = True
                                     End If
 
                                     If obj.Chart.HasTitle Then
@@ -2390,7 +2480,7 @@ Public Module testModule
                                     End If
 
                                     reportObj = obj
-                                    notYetDone = True
+
                                     bigType = ptReportBigTypes.charts
 
                                 Catch ex As Exception
@@ -2668,40 +2758,6 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(171)
                                 End If
 
-                            Case "Soll-Ist1 Personalkosten"
-
-                                Try
-                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                    Dim vglBaseline As Boolean = True
-
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
-
-                                    'boxName = "Personalkosten" & ke
-                                    boxName = repMessages.getmsg(164) & ke
-                                    notYetDone = True
-                                Catch ex As Exception
-                                    '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(181)
-                                End Try
-
-
-                            Case "Soll-Ist2 Personalkosten"
-
-
-                                Try
-                                    ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                    Dim vglBaseline As Boolean = False
-
-
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
-
-                                    'boxName = "Personalkosten" & ke
-                                    boxName = repMessages.getmsg(164) & ke
-                                    notYetDone = True
-                                Catch ex As Exception
-                                    '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(181)
-                                End Try
 
 
 
@@ -2713,13 +2769,17 @@ Public Module testModule
 
                                     qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
-
-                                    'boxName = "Personalkosten" & ke
-                                    boxName = repMessages.getmsg(164) & ke
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstPersonalkostenC
-                                    notYetDone = True
+                                    Call createProjektChartInPPT(hproj, bproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, compID)
+
+                                    boxName = ""
+
+
+                                    notYetDone = False
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(181)
@@ -2735,54 +2795,21 @@ Public Module testModule
 
                                     qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 1, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
-
-                                    'boxName = "Personalkosten" & ke
-                                    boxName = repMessages.getmsg(164) & ke
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstPersonalkostenC2
-                                    notYetDone = True
+                                    Call createProjektChartInPPT(hproj, lproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, compID)
+
+                                    boxName = ""
+                                    notYetDone = False
+
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(181)
                                 End Try
 
-
-
-                            Case "Soll-Ist1 Sonstige Kosten"
-
-                                Try
-                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                    Dim vglBaseline As Boolean = True
-
-                                    reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
-
-                                    'boxName = "Sonstige Kosten" & ke
-                                    boxName = repMessages.getmsg(165) & ke
-                                    notYetDone = True
-                                Catch ex As Exception
-                                    '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(182)
-                                End Try
-
-
-                            Case "Soll-Ist2 Sonstige Kosten"
-
-                                Try
-                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                    Dim vglBaseline As Boolean = False
-
-                                    reportObj = Nothing
-                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth, True)
-
-                                    'boxName = "Sonstige Kosten" & ke
-                                    boxName = repMessages.getmsg(165) & ke
-                                    notYetDone = True
-                                Catch ex As Exception
-                                    '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
-                                    .TextFrame2.TextRange.Text = repMessages.getmsg(182)
-                                End Try
 
 
                             Case "Soll-Ist1C Sonstige Kosten"
@@ -2791,20 +2818,20 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    If qualifier2 <> "" Then
-                                        If qualifier2 <> "" Then
-                                            qualifier2 = bestimmeCostQ2(qualifier2, selectedCosts)
-                                        End If
-                                    End If
+
+                                    qualifier2 = bestimmeCostQ2(qualifier2, selectedCosts)
 
                                     reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 2, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
-
-                                    'boxName = "Sonstige Kosten" & ke
-                                    boxName = repMessages.getmsg(165) & ke
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstSonstKostenC
-                                    notYetDone = True
+                                    Call createProjektChartInPPT(hproj, bproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, compID)
+
+                                    boxName = ""
+                                    notYetDone = False
+
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(182)
@@ -2818,20 +2845,25 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    If qualifier2 <> "" Then
-                                        If qualifier2 <> "" Then
-                                            qualifier2 = bestimmeCostQ2(qualifier2, selectedCosts)
-                                        End If
-                                    End If
 
-                                    reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 2, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
+                                    qualifier2 = bestimmeCostQ2(qualifier2, selectedCosts)
 
-                                    'boxName = "Sonstige Kosten" & ke
-                                    boxName = repMessages.getmsg(165) & ke
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstSonstKostenC2
-                                    notYetDone = True
+                                    Call createProjektChartInPPT(hproj, lproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, compID)
+
+
+                                    reportObj = Nothing
+                                    'Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 2, qualifier2, vglBaseline, htop, hleft, hheight, hwidth)
+
+                                    'boxName = "Sonstige Kosten" & ke
+                                    boxName = ""
+
+
+                                    notYetDone = False
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(182)
@@ -2881,14 +2913,22 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    qualifier2 = bestimmeCostQ2(qualifier2, selectedCosts)
 
-                                    'boxName = "Gesamtkosten" & ke
-                                    boxName = repMessages.getmsg(166) & ke
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstGesamtkostenC
-                                    notYetDone = True
+                                    Call createProjektChartInPPT(hproj, bproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, compID)
+
+
+                                    reportObj = Nothing
+                                    'Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+
+                                    boxName = ""
+                                    notYetDone = False
+
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(183)
@@ -2901,14 +2941,31 @@ Public Module testModule
                                     ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
                                     Dim vglBaseline As Boolean = True
 
-                                    reportObj = Nothing
-                                    Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    'boxName = "Gesamtkosten" & ke
-                                    boxName = repMessages.getmsg(166) & ke
+                                    qualifier2 = bestimmeCostQ2(qualifier2, selectedCosts)
+
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstGesamtkostenC2
-                                    notYetDone = True
+                                    Call createProjektChartInPPT(hproj, lproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
+                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
+                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
+                                                                         ptReportBigTypes.charts, compID)
+
+
+                                    reportObj = Nothing
+                                    'Call createSollIstCurveOfProject(hproj, bproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+
+                                    boxName = ""
+                                    notYetDone = False
+                                    ' old 25.1.19
+                                    ''reportObj = Nothing
+                                    ''Call createSollIstCurveOfProject(hproj, lproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+
+                                    ''boxName = "Gesamtkosten" & ke
+                                    ''boxName = repMessages.getmsg(166) & ke
+                                    ''bigType = ptReportBigTypes.charts
+                                    ''compID = PTprdk.SollIstGesamtkostenC2
+                                    ''notYetDone = True
                                 Catch ex As Exception
                                     '.TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
                                     .TextFrame2.TextRange.Text = repMessages.getmsg(183)
@@ -3462,32 +3519,38 @@ Public Module testModule
             End If
 
         Else
-            If qualifier2.StartsWith("%") Then
-                If IsNumeric(qualifier2.Substring(1)) Then
-                    Dim ix As Integer = CInt(qualifier2.Substring(1))
-                    Dim tmpTeamID As Integer = -1
-                    If selectedRoles.Count >= ix Then
-                        Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(ix), tmpTeamID)
-                        If RoleDefinitions.containsUid(tmpRoleID) Then
-                            qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
+            If qualifier2 = "%used%" Then
+                qualifier2 = bestimmeRoleQ2("", selectedRoles)
+            Else
+                If qualifier2.StartsWith("%") Then
+                    If IsNumeric(qualifier2.Substring(1)) Then
+                        Dim ix As Integer = CInt(qualifier2.Substring(1))
+                        Dim tmpTeamID As Integer = -1
+                        If selectedRoles.Count >= ix Then
+                            Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(selectedRoles.Item(ix), tmpTeamID)
+                            If RoleDefinitions.containsUid(tmpRoleID) Then
+                                qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleID).name
+                            Else
+                                qualifier2 = ""
+                            End If
+                        End If
+
+                    End If
+                Else
+                    If RoleDefinitions.containsName(qualifier2) Then
+                        ' darf der das ?  
+                        If myCustomUserRole.isAllowedToSee(qualifier2) Then
+                            ' alles in Ordnung 
                         Else
                             qualifier2 = ""
                         End If
-                    End If
-
-                End If
-            Else
-                If RoleDefinitions.containsName(qualifier2) Then
-                    ' darf der das ?  
-                    If myCustomUserRole.isAllowedToSee(qualifier2) Then
-                        ' alles in Ordnung 
                     Else
                         qualifier2 = ""
                     End If
-                Else
-                    qualifier2 = ""
                 End If
             End If
+
+
 
         End If
 

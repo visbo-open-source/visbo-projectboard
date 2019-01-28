@@ -76,11 +76,11 @@ Public Class clsCustomUserRole
     ''' <param name="nameOrID"></param>
     ''' <returns></returns>
     Public Function isAllowedToSee(ByVal nameOrID As String) As Boolean
-        Dim tmpResult As Boolean = False
+        Dim isAllowed As Boolean = False
 
         If nameOrID = "" Then
 
-            tmpResult = (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager) Or
+            isAllowed = (myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.ProjektLeitung) Or
                         (myCustomUserRole.customUserRole = ptCustomUserRoles.Alles)
         Else
@@ -95,12 +95,19 @@ Public Class clsCustomUserRole
                 If _customUserRole = ptCustomUserRoles.RessourceManager Then
 
                     Dim parentRoleID As Integer = RoleDefinitions.getRoledef(_specifics).UID
-                    tmpResult = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID)
+                    isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, parentRoleID)
+
+                    ' mit dem Folgenden wird sichergestellt, dass ein Ressourcen-Manager , z.B KB1, auch eine Person von KB1 in seiner Eigenschaft als Team-Member sehen kann  
+                    If Not isAllowed And teamID > 0 Then
+                        Dim roleNameIDBasic As String = RoleDefinitions.bestimmeRoleNameID(roleID, -1)
+                        isAllowed = RoleDefinitions.hasAnyChildParentRelationsship(roleNameIDBasic, parentRoleID)
+                    End If
+
 
                 ElseIf _customUserRole = ptCustomUserRoles.PortfolioManager Then
-                    tmpResult = _portfolioAggregationRoleIDs.Contains(roleID)
-                    If Not tmpResult Then
-                        tmpResult = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, _portfolioAggregationRoleIDs)
+                    isAllowed = _portfolioAggregationRoleIDs.Contains(roleID)
+                    If Not isAllowed Then
+                        isAllowed = Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, _portfolioAggregationRoleIDs)
                     End If
 
                 End If
@@ -109,7 +116,7 @@ Public Class clsCustomUserRole
 
 
 
-        isAllowedToSee = tmpResult
+        isAllowedToSee = isAllowed
     End Function
 
     ''' <summary>

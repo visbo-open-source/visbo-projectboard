@@ -6204,9 +6204,17 @@ Public Module awinDiagrams
         Dim PlanChartType As Microsoft.Office.Core.XlChartType
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
-        If chartTyp = PTChartTypen.Curve Then
-            IstCharttype = Microsoft.Office.Core.XlChartType.xlLine
-            PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+
+        If chartTyp = PTChartTypen.CurveCumul Then
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+
+            If considerIstDaten Then
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+            Else
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
+            End If
+
             vglChartType = Microsoft.Office.Core.XlChartType.xlLine
         Else
             IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
@@ -6215,6 +6223,8 @@ Public Module awinDiagrams
         End If
 
         Dim plen As Integer
+        Dim plenH As Integer, plenV As Integer
+        Dim pstart As Integer, pStartH As Integer, pStartV As Integer
 
         Dim Xdatenreihe() As String = Nothing
         Dim tdatenreihe() As Double = Nothing
@@ -6226,7 +6236,7 @@ Public Module awinDiagrams
 
 
         Dim pkIndex As Integer = CostDefinitions.Count
-        Dim pstart As Integer
+
 
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
@@ -6237,24 +6247,30 @@ Public Module awinDiagrams
         Dim pname As String = hproj.name
 
         '
-        ' hole die Projektdauer
+        ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
+        ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
         '
         With hproj
-            plen = .anzahlRasterElemente
-            pstart = .Start
+            plenH = .anzahlRasterElemente
+            pStartH = .Start
         End With
 
         If Not IsNothing(vglProj) Then
-            If plen < vglProj.anzahlRasterElemente Then
-                plen = vglProj.anzahlRasterElemente
-            End If
+            plenV = vglProj.anzahlRasterElemente
+            pStartV = vglProj.Start
+
+            pstart = Min(pStartH, pStartV)
+            plen = Max(pStartH + plenH, pStartV + plenV) - pstart
+        Else
+            plen = plenH
+            pstart = pStartH
         End If
 
 
 
-        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimme
+        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
-        Call bestimmeXtipvDatenreihen(pstart, plen, hproj, vglProj, prcTyp, qualifier2, einheit,
+        Call bestimmeXtipvDatenreihen(pstart, plen, hproj, vglProj, prcTyp, qualifier2, einheit, chartTyp,
                                        Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
 
         If errMsg <> "" Then
@@ -6267,21 +6283,85 @@ Public Module awinDiagrams
 
 
         Dim vProjDoesExist As Boolean = Not IsNothing(vglProj)
-        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
 
-        tDatenSumme = tdatenreihe.Sum
-        vDatensumme = vdatenreihe.Sum
+        If chartTyp = PTChartTypen.CurveCumul Then
+            tDatenSumme = tdatenreihe(tdatenreihe.Length - 1)
+            vDatensumme = vdatenreihe(vdatenreihe.Length - 1)
+        Else
+            tDatenSumme = tdatenreihe.Sum
+            vDatensumme = vdatenreihe.Sum
+
+        End If
 
         Dim startRed As Integer = 0
         Dim lengthRed As Integer = 0
         diagramTitle = bestimmeChartDiagramTitle(chartTyp, prcTyp, qualifier2, vProjDoesExist, einheit, tDatenSumme, vDatensumme, startRed, lengthRed)
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
-        Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
-                                                                   Width:=width, Height:=height)
+        Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
+        'Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Type:=Microsoft.Office.Core.XlChartType.xlColumnStacked, Left:=left, Top:=top,
+        '                                                           Width:=width, Height:=height)
         ' 
+
+        ' jetzt kommt das Löschen der alten SeriesCollections . . 
+        With newPPTChart.Chart
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+        End With
+
         ' jetzt werden die Collections in dem Chart aufgebaut ...
         With newPPTChart.Chart
+
+
+            ' Planung / Forecast
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                .Name = bestimmeLegendNameIPB("P") & hproj.timeStamp.ToShortDateString
+                .Interior.Color = visboFarbeBlau
+                .Values = prognoseDatenReihe
+                .XValues = Xdatenreihe
+                .ChartType = PlanChartType
+
+                If chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                    ' es handelt sich um eine Line
+                    .Format.Line.Weight = 4
+                    .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                End If
+
+            End With
+
+            ' Beauftragung bzw. Vergleichsdaten
+            If Not IsNothing(vglProj) Then
+
+                'series
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .Name = bestimmeLegendNameIPB("B") & vglProj.timeStamp.ToShortDateString
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
+
+                    .ChartType = vglChartType
+
+                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                            .ForeColor.RGB = visboFarbeOrange
+                            .Weight = 4
+                        End With
+                    Else
+                        ' ggf noch was definieren ..
+                    End If
+
+                End With
+
+            End If
 
             ' jetzt kommt der Neu-Aufbau der Series-Collections
             If considerIstDaten Then
@@ -6298,40 +6378,6 @@ Public Module awinDiagrams
 
             End If
 
-            ' Planung / Forecast
-            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-
-                .Name = bestimmeLegendNameIPB("P") & hproj.timeStamp.ToShortDateString
-                .Interior.Color = visboFarbeBlau
-                .Values = prognoseDatenReihe
-                .XValues = Xdatenreihe
-                .ChartType = IstCharttype
-            End With
-
-            ' Beauftragung bzw. Vergleichsdaten
-            If Not IsNothing(vglProj) Then
-
-                'series
-                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    .Name = bestimmeLegendNameIPB("B") & vglProj.timeStamp.ToShortDateString
-                    .Values = vdatenreihe
-                    .XValues = Xdatenreihe
-                    .ChartType = Microsoft.Office.Core.XlChartType.xlLine
-                    .ChartType = vglChartType
-
-                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
-                        With .Format.Line
-                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
-                            .ForeColor.RGB = visboFarbeOrange
-                            .Weight = 4
-                        End With
-                    Else
-                        ' ggf noch was definieren ..
-                    End If
-
-                End With
-
-            End If
 
         End With
 
@@ -6425,18 +6471,80 @@ Public Module awinDiagrams
 
     End Sub
 
+    ''' <summary>
+    ''' extrahiert aus dem Eingabe Parameter die Angaben zu charttyp, vglArt, vglTyp, einheit, elementTyp
+    ''' </summary>
+    ''' <param name="q1"></param>
+    ''' <param name="chartTyp"></param>
+    ''' <param name="vergleichsArt"></param>
+    ''' <param name="vergleichstyp"></param>
+    ''' <param name="einheit"></param>
+    ''' <param name="elementTyp"></param>
+    Public Sub getChartParametersFromQ1(ByVal q1 As String,
+                                        ByRef chartTyp As PTChartTypen,
+                                        ByRef vergleichsArt As PTVergleichsArt,
+                                        ByRef vergleichstyp As PTVergleichsTyp,
+                                        ByRef einheit As PTEinheiten,
+                                        ByRef elementTyp As ptElementTypen)
+
+        Dim tmpStr() As String = q1.Split(New Char() {CChar(";")})
+        If tmpStr.Length = 5 Then
+
+            chartTyp = CType(tmpStr(0), PTChartTypen)
+            vergleichsArt = CType(tmpStr(1), PTVergleichsArt)
+            vergleichstyp = CType(tmpStr(2), PTVergleichsTyp)
+            einheit = CType(tmpStr(3), PTEinheiten)
+            elementTyp = CType(tmpStr(4), ptElementTypen)
+
+        Else
+            Throw New ArgumentException("Angabe nicht erkannt: " & q1 & vbLf &
+                                        " es müssen 5 Integer Zahlen getrennt durch ';' sein")
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt die Datenreihen für Balken- und Curve-Charts 
+    ''' </summary>
+    ''' <param name="pstart"></param>
+    ''' <param name="plen"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="vglProj"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <param name="qualifier2"></param>
+    ''' <param name="einheit"></param>
+    ''' <param name="Xdatenreihe"></param>
+    ''' <param name="tdatenreihe"></param>
+    ''' <param name="vdatenreihe"></param>
+    ''' <param name="istDatenReihe"></param>
+    ''' <param name="prognoseDatenReihe"></param>
+    ''' <param name="errMsg"></param>
     Public Sub bestimmeXtipvDatenreihen(ByVal pstart As Integer, ByVal plen As Integer, ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
-                                        ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String, ByVal einheit As PTEinheiten,
+                                        ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String, ByVal einheit As PTEinheiten, ByVal chartTyp As PTChartTypen,
                                         ByRef Xdatenreihe() As String, ByRef tdatenreihe() As Double, ByRef vdatenreihe() As Double,
                                         ByRef istDatenReihe() As Double, ByRef prognoseDatenReihe() As Double,
                                         ByRef errMsg As String)
 
+
+
         ReDim Xdatenreihe(plen - 1)
-        ReDim tdatenreihe(plen - 1)
         ReDim istDatenReihe(plen - 1)
         ReDim prognoseDatenReihe(plen - 1)
+
+        ReDim tdatenreihe(plen - 1)
         ReDim vdatenreihe(plen - 1)
 
+
+
+        ' über das pstart und plen ist bereits sichergesteltl, dass beide PRojekte in den Array-Bereich passen
+        ' es muss nur jeweils sichergestellt werden, dass die , falls eines der Projekte kürzer ist, beim richtigen Index loslegen ..
+        Dim tmpTdatenreihe() As Double
+        ReDim tmpTdatenreihe(0)
+        Dim tmpVdatenreihe() As Double
+        ReDim tmpVdatenreihe(0)
+
+        Dim hprojOffset As Integer = hproj.Start - pstart
+        Dim vprojOffset As Integer = vglProj.Start - pstart
 
         For i As Integer = 1 To plen
             Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
@@ -6452,14 +6560,16 @@ Public Module awinDiagrams
 
             Case ptElementTypen.roles
 
+
+
                 If qualifier2 = "" Then
                     ' es ist alles gemeint ... 
                     If myCustomUserRole.isAllowedToSee("") Then
 
-                        tdatenreihe = hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                        tmpTdatenreihe = hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
 
                         If Not IsNothing(vglProj) Then
-                            vdatenreihe = vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                            tmpVdatenreihe = vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
                         End If
 
                     Else
@@ -6479,10 +6589,10 @@ Public Module awinDiagrams
 
                         If myCustomUserRole.isAllowedToSee(roleNameID) Then
 
-                            tdatenreihe = hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                            tmpTdatenreihe = hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
 
                             If Not IsNothing(vglProj) Then
-                                vdatenreihe = vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                                tmpVdatenreihe = vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
                             End If
 
                         Else
@@ -6496,15 +6606,18 @@ Public Module awinDiagrams
                     End If
                 End If
 
+                ' jetzt muss umkopiert werden 
+
+
 
             Case ptElementTypen.costs
 
                 If qualifier2 = "" Then
                     ' es ist alles gemeint ...
                     If myCustomUserRole.isAllowedToSee("") Then
-                        tdatenreihe = hproj.getGesamtAndereKosten
+                        tmpTdatenreihe = hproj.getGesamtAndereKosten
                         If Not IsNothing(vglProj) Then
-                            vdatenreihe = vglProj.getGesamtAndereKosten
+                            tmpVdatenreihe = vglProj.getGesamtAndereKosten
                         End If
                     Else
                         errMsg = "no rights to see all costs aggregated ... "
@@ -6528,10 +6641,10 @@ Public Module awinDiagrams
 
 
                         If weitermachen Then
-                            tdatenreihe = hproj.getKostenBedarfNew(qualifier2)
+                            tmpTdatenreihe = hproj.getKostenBedarfNew(qualifier2)
 
                             If Not IsNothing(vglProj) Then
-                                vdatenreihe = vglProj.getKostenBedarfNew(qualifier2)
+                                tmpVdatenreihe = vglProj.getKostenBedarfNew(qualifier2)
                             End If
                         End If
 
@@ -6547,9 +6660,9 @@ Public Module awinDiagrams
                 ' der Wert von qualifier2 ist hier schnuppe , das kann nur die GesamtSumme sein
 
                 If myCustomUserRole.isAllowedToSee("") Then
-                    tdatenreihe = hproj.getGesamtKostenBedarf
+                    tmpTdatenreihe = hproj.getGesamtKostenBedarf
                     If Not IsNothing(vglProj) Then
-                        vdatenreihe = vglProj.getGesamtKostenBedarf
+                        tmpVdatenreihe = vglProj.getGesamtKostenBedarf
                     End If
                 Else
                     errMsg = "no rights to see all total costs ... "
@@ -6563,6 +6676,45 @@ Public Module awinDiagrams
         End Select
         ' 
         ' Ende tDatenreihe Bestimmung
+
+        ' jetzt muss in tdatenreihe bzw. vdatenreihe umkopiert werden
+
+        For ix As Integer = 0 + hprojOffset To tmpTdatenreihe.Length - 1 + hprojOffset
+            tdatenreihe(ix) = tmpTdatenreihe(ix - hprojOffset)
+        Next
+
+        If Not IsNothing(vglProj) Then
+            For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
+                vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
+            Next
+        End If
+
+        ' wenn kumuliert werden soll, dann wird es jetzt hier gemacht ... 
+        If chartTyp = PTChartTypen.CurveCumul Then
+            ReDim tmpTdatenreihe(plen - 1)
+            ReDim tmpVdatenreihe(plen - 1)
+
+            Dim cumulatedValue As Double = 0.0
+            For ix As Integer = 0 To plen - 1
+                cumulatedValue = cumulatedValue + tdatenreihe(ix)
+                tmpTdatenreihe(ix) = cumulatedValue
+            Next
+
+            tdatenreihe = tmpTdatenreihe
+
+            ' die Vorgabe Werte 
+            If Not IsNothing(vglProj) Then
+                cumulatedValue = 0.0
+                For ix As Integer = 0 To plen - 1
+                    cumulatedValue = cumulatedValue + vdatenreihe(ix)
+                    tmpVdatenreihe(ix) = cumulatedValue
+                Next
+
+                vdatenreihe = tmpVdatenreihe
+            End If
+
+
+        End If
 
         '
         ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
@@ -6649,17 +6801,17 @@ Public Module awinDiagrams
 
         Dim tmpResult As String = ""
         Dim bezeichner As String = ""
-        Dim zaehlEinheit = "PT"
+        Dim zaehlEinheit = " PT"
         Dim leadingAddOn As String = ""
-        Dim repmsg() As String = {"Gesamtkosten ", "Personalkosten ", "Sonstige Kosten ", "Personalbedarf "}
+        Dim repmsg() As String = {"Gesamtkosten", "Personalkosten", "Sonstige Kosten", "Personalbedarf"}
 
         If awinSettings.englishLanguage Then
             zaehlEinheit = " PD "
-            repmsg = {"Total Cost ", "Personnel Cost ", "Other Cost ", "Personnel Requirements "}
+            repmsg = {"Total Cost", "Personnel Cost", "Other Cost", "Personnel Requirements"}
         End If
 
 
-        If charttyp = PTChartTypen.Curve Then
+        If charttyp = PTChartTypen.CurveCumul Then
             leadingAddOn = "kumul. "
             If awinSettings.englishLanguage Then
                 leadingAddOn = "cumul. "
@@ -6669,7 +6821,7 @@ Public Module awinDiagrams
         If einheit = PTEinheiten.personentage Then
             ' ist bereits richtig gesetzt 
         Else
-            zaehlEinheit = " T€ "
+            zaehlEinheit = " T€"
         End If
 
         ' jetzt muss ggf der Qualifier2 noch ersetzt werden 
@@ -6708,7 +6860,7 @@ Public Module awinDiagrams
         lengthRed = 0
 
         If vProjDoesExist And tsum > vsum Then
-            startRed = qualifier2.Length + 2
+            startRed = qualifier2.Length + 3
             lengthRed = tsum.ToString("##,##0.").Length
         End If
 

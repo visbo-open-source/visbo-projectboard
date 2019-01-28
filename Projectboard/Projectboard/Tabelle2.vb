@@ -698,7 +698,7 @@ Public Class Tabelle2
                                                     Dim cRole As clsRolle = cphase.getRole(visboZustaende.oldValue)
                                                     If IsNothing(cRole) Then
                                                     Else
-                                                        hproj.rcLists.removeRP(cRole.uid, cphase.nameID, teamID)
+                                                        hproj.rcLists.removeRP(cRole.uid, cphase.nameID, teamID, False)
                                                         cRole.uid = newRoleID
                                                         hproj.rcLists.addRP(newRoleID, cphase.nameID, teamID)
                                                     End If

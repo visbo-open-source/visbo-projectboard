@@ -416,7 +416,7 @@ Public Class clsListOfCostAndRoles
     ''' <param name="roleUID"></param>
     ''' <param name="phaseNameID"></param>
     ''' <remarks></remarks>
-    Public Sub removeRP(ByVal roleUID As Integer, ByVal phaseNameID As String, ByVal Optional teamID As Integer = -1, ByVal Optional deleteAll As Boolean = True)
+    Public Sub removeRP(ByVal roleUID As Integer, ByVal phaseNameID As String, ByVal Optional teamID As Integer = -1, ByVal Optional deleteAll As Boolean = False)
 
         If _listOfRoles.ContainsKey(roleUID) Then
 
