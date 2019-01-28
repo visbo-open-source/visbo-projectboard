@@ -5662,6 +5662,22 @@ Imports System.Web
                                                                                     err)
 
                     If result = True Then
+                        ' importierte Organisation in die Liste der validOrganisations aufnehmen
+                        validOrganisations.addOrga(importedOrga)
+                        Dim currentOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
+
+                        ' Roledefinitions und Costdefinitions neu setzen
+                        If Not IsNothing(currentOrga) Then
+                            RoleDefinitions = currentOrga.allRoles
+                            CostDefinitions = currentOrga.allCosts
+                        Else
+                            If awinSettings.englishLanguage Then
+                                Call MsgBox("You don't have any valid (time now) Organisation in the system!")
+                            Else
+                                Call MsgBox("Es existiert keine heute gültige Organisation im System!")
+                            End If
+                        End If
+
                         Call MsgBox("ok, Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...")
                         Call logfileSchreiben("Organisation, valid from " & importedOrga.validFrom.ToString & " stored ...", selectedWB, -1)
                     Else
