@@ -2316,182 +2316,7 @@ Module Module1
                         If pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue Then
                             Dim pptChart As PowerPoint.Chart = pptShape.Chart
 
-                            chtObjName = pptChart.Name
-
-                            Dim auswahl As Integer = -1
-                            Dim prpfTyp As Integer = -1
-                            Dim pName As String = ""
-                            Dim vName As String = ""
-                            Dim chartTyp As Integer = -1
-                            Dim prcTyp As Integer = ptElementTypen.roles
-
-                            ' der Chart-ObjectName enthält sehr viel ..
-                            'pr#ptprdk#projekt-Name/Varianten-Name#Auswahl 
-                            Call bestimmeChartInfosFromName(chtObjName, prpfTyp, prcTyp, pName, vName, chartTyp, auswahl)
-
-                            ' bestimme den Vname aus den Tags ...
-                            ' das ist insbesondere wichtig, um bei Summary-Projekten oder Projekt-Varianten die früheren / späteren Versionen holen zu können ...
-                            If pptShape.Tags.Item("VNM").Length > 0 Then
-                                vName = pptShape.Tags.Item("VNM")
-                            End If
-
-                            If pName <> "" Then
-
-                                Dim pvName As String = calcProjektKey(pName, vName)
-
-                                ' damit auch eine andere Variante gezeigt werden kann ... 
-                                If showOtherVariant Then
-                                    Dim tmpPName As String = getPnameFromKey(pvName)
-                                    pvName = calcProjektKey(tmpPName, currentVariantname)
-                                    vName = currentVariantname
-                                End If
-
-                                ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                                Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, curTimeStamp)
-                                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
-                                If Not IsNothing(tsProj) Then
-
-                                    '' '' jetzt muss , falls nicht schon geschehen, Excel versteckt in einer neuen Instanz geöffnet werden und das Chart dorthin kopiert werden und wieder 
-                                    '' '' zurückgeholt werden; damit wird der Link aufgebrochen 
-
-                                    ' das neue Chart ..
-                                    Dim newchtobj As xlNS.ChartObject = Nothing
-
-                                    ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-
-                                    Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
-
-
-
-                                    Dim qualifier1 As String = pptShape.Tags.Item("Q1")
-                                    Dim qualifier2 As String = pptShape.Tags.Item("Q2")
-
-
-
-                                    Try
-
-                                        'If Not smartChartsAreEditable Then
-                                        '    Call createNewHiddenExcel()
-                                        'End If
-
-
-
-                                        ' jetzt muss das chtobj aktualisiert werden ... 
-                                        Try
-                                            Dim a As Integer = tsProj.dauerInDays
-
-                                            If prpfTyp = ptPRPFType.project Then
-
-                                                If chartTyp = PTprdk.PersonalBalken Or chartTyp = PTprdk.KostenBalken Then
-
-                                                    Try
-
-                                                        bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-
-                                                    Catch ex As Exception
-                                                        bProj = Nothing
-
-                                                    End Try
-
-
-                                                    Call updatePPTBalkenOfProjectInPPT(tsProj, bProj, pptShape, prcTyp, auswahl, qualifier2)
-                                                    pptAPP.Activate()
-
-
-                                                ElseIf chartTyp = PTprdk.PersonalBalken2 Or chartTyp = PTprdk.KostenBalken2 Then
-
-
-                                                    ' jetzt das lProj (Beauftragung) holen
-                                                    Try
-                                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                                        lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                                    Catch ex As Exception
-                                                        lProj = Nothing
-                                                    End Try
-
-                                                    Call updatePPTBalkenOfProjectInPPT(tsProj, lProj, pptShape, prcTyp, auswahl, qualifier2)
-                                                    pptAPP.Activate()
-
-
-
-                                                ElseIf chartTyp = PTprdk.PersonalPie Or chartTyp = PTprdk.KostenPie Then
-                                                    ' Aktualisieren der Personal- bzw. Kosten-Pies ...
-
-                                                ElseIf chartTyp = PTprdk.Ergebnis Then
-                                                    ' Aktualisieren des Ergebnis Charts 
-                                                    Call updatePPTProjektErgebnis(tsProj, newchtobj)
-
-
-                                                ElseIf chartTyp = PTprdk.StrategieRisiko Or
-                                                            chartTyp = PTprdk.ZeitRisiko Or
-                                                            chartTyp = PTprdk.FitRisikoVol Or
-                                                            chartTyp = PTprdk.ComplexRisiko Then
-                                                    ' Aktualisieren der Strategie-Charts
-
-                                                    Call updatePPTProjectPfDiagram(tsProj, newchtobj, chartTyp, 0)
-
-
-                                                ElseIf chartTyp = PTprdk.SollIstGesamtkostenC Or
-                                                            chartTyp = PTprdk.SollIstPersonalkostenC Or
-                                                            chartTyp = PTprdk.SollIstSonstKostenC Or
-                                                            chartTyp = PTprdk.SollIstRolleC Or
-                                                            chartTyp = PTprdk.SollIstKostenartC Then
-
-
-                                                    ' jetzt das bProj (Beauftragung) holen
-                                                    Try
-                                                        'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                                        bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
-                                                    Catch ex As Exception
-                                                        bProj = Nothing
-                                                    End Try
-
-                                                    ' Aktualisieren der Strategie-Charts
-                                                    Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, bProj, auswahl, qualifier2, True)
-
-
-                                                ElseIf chartTyp = PTprdk.SollIstGesamtkostenC2 Or
-                                                            chartTyp = PTprdk.SollIstPersonalkostenC2 Or
-                                                            chartTyp = PTprdk.SollIstSonstKostenC2 Or
-                                                            chartTyp = PTprdk.SollIstRolleC2 Or
-                                                            chartTyp = PTprdk.SollIstKostenartC2 Then
-
-
-                                                    ' jetzt das lProj (Beauftragung) holen
-                                                    Try
-                                                        'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                                        lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
-                                                    Catch ex As Exception
-                                                        lProj = Nothing
-                                                    End Try
-                                                    ' Aktualisieren der Strategie-Charts
-                                                    Call updatePPTSollIstCurveOfProject(newchtobj, tsProj, lProj, auswahl, qualifier2, True)
-
-
-
-
-                                                ElseIf prpfTyp = ptPRPFType.portfolio Then
-
-                                                End If
-
-                                            ElseIf prpfTyp = ptPRPFType.portfolio Then
-
-                                            End If
-
-
-                                        Catch ex As Exception
-                                            Call MsgBox(ex.Message)
-                                        End Try
-
-
-
-                                    Catch ex As Exception
-                                        Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
-                                    End Try
-
-                                End If
-
-                            End If
+                            Call updateVisboChart(pptShape, curTimeStamp, prevTimeStamp, showOtherVariant)
 
                         End If
 
@@ -2597,6 +2422,485 @@ Module Module1
             Dim a As Integer = 1
         End Try
     End Sub
+
+
+
+    ''' <summary>
+    ''' neue Methode, um Charts zu aktualisieren
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="curTimeStamp"></param>
+    ''' <param name="prevTimeStamp"></param>
+    ''' <param name="showOtherVariant"></param>
+    Public Sub updateVisboChart(ByRef pptShape As PowerPoint.Shape,
+                                ByVal curTimeStamp As Date, ByVal prevTimeStamp As Date,
+                                    Optional ByVal showOtherVariant As Boolean = False)
+
+        Dim chtObjName As String
+
+        If pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue Then
+            Dim pptChart As PowerPoint.Chart = pptShape.Chart
+
+            chtObjName = pptChart.Name
+
+            Dim scInfo As New clsSmartPPTChartInfo
+            Call scInfo.getValuesFromPPTShape(pptShape)
+
+            If scInfo.pName <> "" Then
+
+                Dim pvName As String = calcProjektKey(scInfo.pName, scInfo.vName)
+
+                ' damit auch eine andere Variante gezeigt werden kann ... 
+                If showOtherVariant Then
+                    Dim tmpPName As String = getPnameFromKey(pvName)
+                    pvName = calcProjektKey(tmpPName, currentVariantname)
+                    scInfo.vName = currentVariantname
+                End If
+
+                ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
+                scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
+
+                ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
+                If Not IsNothing(scInfo.hproj) Then
+
+
+
+                    Try
+
+                        Call createNewHiddenExcel()
+
+                        ' jetzt muss das chtobj aktualisiert werden ... 
+                        Try
+                            Dim a As Integer = scInfo.hproj.dauerInDays
+
+                            If (scInfo.chartTyp = PTChartTypen.Balken) Or
+                                (scInfo.chartTyp = PTChartTypen.CurveCumul) Then
+
+                                Try
+
+                                    If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
+                                        scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                    ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
+                                        scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                    End If
+
+
+                                Catch ex As Exception
+
+                                    scInfo.vglProj = Nothing
+
+                                End Try
+
+                                Call updateProjectChartInPPT(scInfo, pptShape)
+                                'Call updatePPTBalkenOfProjectInPPT(tsProj, bproj, pptShape, prcTyp, auswahl, qualifier2)
+                                pptAPP.Activate()
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
+
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.Pie Then
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.Waterfall Then
+
+
+                            ElseIf scInfo.chartTyp = PTChartTypen.ZweiBalken Then
+
+                            Else
+
+                            End If
+
+
+
+
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+
+                    Catch ex As Exception
+                        Call MsgBox("CreateNewHiddenExcel und chartCopypptPaste:" & ex.Message)
+                    End Try
+
+                End If
+
+            End If
+
+        End If
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' neue Aktualisierungs Methode von Balken und Curce-cumulated Charts 
+    ''' </summary>
+    ''' <param name="scInfo"></param>
+    ''' <param name="pptShape"></param>
+    Public Sub updateProjectChartInPPT(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
+
+        Dim curWS As Excel.Worksheet = Nothing
+
+
+        Dim pptChart As PowerPoint.Chart = Nothing
+
+        If Not pptShape.HasChart Then
+            Exit Sub
+        End If
+
+        pptChart = pptShape.Chart
+
+        Dim diagramTitle As String = " "
+        Dim plen As Integer
+        Dim i As Integer
+        Dim Xdatenreihe() As String
+        Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
+        Dim vdatenreihe() As Double
+        Dim vSum As Double = 0.0
+        Dim tSum As Double
+
+
+        Dim pkIndex As Integer = CostDefinitions.Count
+        Dim pstart As Integer
+
+        Dim zE As String = awinSettings.kapaEinheit
+
+        Dim tmpCollection As New Collection
+        Dim maxlenTitle1 As Integer = 20
+
+        Dim curmaxScale As Double
+
+        Dim IstCharttype As Microsoft.Office.Core.XlChartType
+        Dim PlanChartType As Microsoft.Office.Core.XlChartType
+        Dim vglChartType As Microsoft.Office.Core.XlChartType
+
+        Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+
+            If considerIstDaten Then
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+            Else
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
+            End If
+
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        Else
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        End If
+
+
+        ' die ganzen Vor-Klärungen machen ...
+        With pptChart
+
+            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+                    curmaxScale = .MaximumScale
+                    .MaximumScaleIsAuto = False
+                End With
+
+            End If
+
+        End With
+
+
+        'Dim pname As String = scInfo.hproj.name
+
+        '
+        ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
+        ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
+        '
+
+        Call bestimmePstartPlen(scInfo.hproj, scInfo.vglProj, pstart, plen)
+
+
+
+
+        ReDim Xdatenreihe(plen - 1)
+        ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
+        ReDim vdatenreihe(plen - 1)
+
+
+        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
+        Dim errMsg As String = ""
+        Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+
+        If errMsg <> "" Then
+            ' es ist ein Fehler aufgetreten
+            If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                pptShape.TextFrame2.TextRange.Text = errMsg
+            End If
+            Exit Sub
+        End If
+
+
+        Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
+
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+            tSum = tdatenreihe(tdatenreihe.Length - 1)
+            vSum = vdatenreihe(vdatenreihe.Length - 1)
+        Else
+            tSum = tdatenreihe.Sum
+            vSum = vdatenreihe.Sum
+
+        End If
+
+        Dim startRed As Integer = 0
+        Dim lengthRed As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+
+
+
+        With CType(pptChart, PowerPoint.Chart)
+
+            ' remove old series
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+        End With
+
+
+        ' jetzt werden die Collections in dem Chart aufgebaut ...
+        With CType(pptChart, PowerPoint.Chart)
+
+
+            ' Planung / Forecast
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                .Interior.Color = visboFarbeBlau
+                .Values = prognoseDatenReihe
+                .XValues = Xdatenreihe
+                .ChartType = PlanChartType
+
+                If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                    ' es handelt sich um eine Line
+                    .Format.Line.Weight = 4
+                    .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                End If
+
+            End With
+
+            ' Beauftragung bzw. Vergleichsdaten
+            If Not IsNothing(scInfo.vglProj) Then
+
+                'series
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
+
+                    .ChartType = vglChartType
+
+                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                            .ForeColor.RGB = visboFarbeOrange
+                            .Weight = 4
+                        End With
+                    Else
+                        ' ggf noch was definieren ..
+                    End If
+
+                End With
+
+            End If
+
+            ' jetzt kommt der Neu-Aufbau der Series-Collections
+            If considerIstDaten Then
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = bestimmeLegendNameIPB("I")
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = IstCharttype
+                End With
+
+            End If
+
+
+        End With
+
+
+
+        ' Skalierung etc anpassen 
+        With CType(pptChart, PowerPoint.Chart)
+
+            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+
+                    If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+                        .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+                    End If
+
+
+                End With
+
+            End If
+
+            ' nur wenn es auch einen Titel gibt ... 
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+            End If
+
+
+        End With
+
+        ' -----------------------------------------------
+        ' 1. Variante : seriesCollections verändern 
+        ' 2. Variante : curWS aus HiddenExcel beziehen 
+        ' 3. Variante : as-is curWS aus 
+        ' die Frage ist: braucht man das hier wirklich 
+        ' tk 21.10.18
+        ' jetzt wird myRange gesetzt und setSourceData gesetzt 
+        'Dim fZeile As Integer = usedRange.Rows.Count + 1
+
+        'Dim fzeile As Integer = 1
+        'Dim anzSpalten As Integer = plen + 1
+        'Dim anzRows As Integer = 0
+
+
+        'With pptShape.Chart.ChartData
+        '    '.Activate()
+        '    '.ActivateChartDataWindow()
+
+        '    xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
+
+
+        '    Try
+        '        With xlApp
+        '            If Not .ActiveWindow.Caption = "VISBO Smart Diagram" Then
+        '                .DisplayFormulaBar = False
+        '                With .ActiveWindow
+
+        '                    .Caption = "VISBO Smart Diagram"
+        '                    .DisplayHeadings = False
+        '                    .DisplayWorkbookTabs = False
+
+        '                    .Width = 500
+        '                    .Height = 150
+        '                    .Top = 100
+        '                    .Left = -1200
+
+        '                End With
+        '            End If
+        '        End With
+        '    Catch ex As Exception
+
+        '    End Try
+
+        '    curWS = CType(.Workbook, Excel.Workbook).Worksheets.Item(1)
+        '    curWS.UsedRange.Clear()
+
+        '    If Not smartChartsAreEditable Then
+        '        With xlApp
+        '            .Visible = False
+        '            .ActiveWindow.Visible = False
+        '        End With
+        '    End If
+
+
+        'End With
+
+
+
+        '' für das SetSourceData 
+        'Dim myRange As Excel.Range = Nothing
+        ''Dim usedRange As Excel.Range = curWS.UsedRange
+        '' Ende setsource Vorbereitungen 
+
+        'With curWS
+
+        '    ' neu 
+
+        '    .Cells(fzeile, 1).value = ""
+        '    .Range(.Cells(fzeile, 2), .Cells(fzeile, anzSpalten)).Value = Xdatenreihe
+
+        '    If considerIstDaten Then
+
+        '        anzRows = 3
+
+        '        .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("I")
+        '        .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = istDatenReihe
+
+        '        .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+        '        .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = prognoseDatenReihe
+
+        '        If Not IsNothing(scInfo.vglProj) Then
+
+        '            anzRows = 4
+        '            .Cells(fzeile + 3, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+        '            .Range(.Cells(fzeile + 3, 2), .Cells(fzeile + 3, anzSpalten)).Value = vdatenreihe
+
+        '        End If
+
+        '    Else
+
+        '        anzRows = 2
+
+        '        .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+        '        .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = prognoseDatenReihe
+
+        '        If Not IsNothing(scInfo.vglProj) Then
+        '            anzRows = 3
+
+        '            .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+        '            .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = vdatenreihe
+
+        '        End If
+
+        '    End If
+
+        '    myRange = curWS.Range(.Cells(fzeile, 1), .Cells(fzeile + anzRows - 1, anzSpalten))
+
+        '    ' Ende neu 
+
+        'End With
+
+
+
+        'Try
+        '    ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
+        '    Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
+        '    pptShape.Chart.SetSourceData(Source:=rangeString)
+
+        'Catch ex As Exception
+
+        'End Try
+
+        pptShape.Chart.Refresh()
+
+
+
+    End Sub
+
 
     ''' <summary>
     ''' aktualisiert das übergebene ppt-Chart direkt in PPT
@@ -4101,8 +4405,7 @@ Module Module1
 
     ''' <summary>    ''' 
     ''' im AddIn-Shutdown beendet ...
-    ''' erzeugt eine verborgene Excel-Instanz, die verwendet werden kann, um PPT charts hin und her zu kopieren und damit die Referenz zu löschen, 
-    ''' die verhindert, dass ein PPT Chart geupdated werden kann;
+    ''' danach ist xlAPP gesetzt und es gibt das updateWorkbook 
     ''' wenn das HiddenExcel bereits existiert wird nichts gemacht ... 
     ''' </summary>
     ''' <remarks></remarks>
@@ -4125,27 +4428,15 @@ Module Module1
 
         If Not IsNothing(xlApp) Then
 
-            If xlApp.Workbooks.Count > 0 Then
-
-                Try
-                    updWS = xlApp.Worksheets.Item(1)
-                    If IsNothing(updWS) Then
-                        creationNeeded = True
-                    Else
-                        creationNeeded = False
-                        updateWorkbook = CType(updWS.Parent, Excel.Workbook)
-                    End If
-
-                Catch ex As Exception
-                    creationNeeded = True
-                End Try
-
+            If IsNothing(updateWorkbook) Then
+                If xlApp.Workbooks.Count > 0 Then
+                    ' fertig  - es gibt bereits ein Workbook 
+                    updateWorkbook = xlApp.Workbooks.Item(1)
+                Else
+                    updateWorkbook = xlApp.Workbooks.Add().item()
+                End If
             Else
-                creationNeeded = True
-            End If
-
-            If creationNeeded Then
-                updateWorkbook = xlApp.Workbooks.Add()
+                ' andernfalsl gibt es das ja schon 
             End If
 
         Else
@@ -4163,17 +4454,7 @@ Module Module1
                 Exit Sub
             End Try
 
-            'Dim fullPathName As String = My.Computer.FileSystem.CombinePath(My.Computer.FileSystem.SpecialDirectories.MyDocuments, "visboupdate.xlsx")
-            'If My.Computer.FileSystem.FileExists(fullPathName) Then
-            '    ' öffnen
-            '    xlApp.Workbooks.Open(fullPathName)
-            'Else
-            '    xlApp.Workbooks.Add()
-            '    xlApp.ActiveWorkbook.SaveAs(fullPathName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-            'End If
         End If
-
-
 
     End Sub
     ''' <summary>
