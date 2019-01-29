@@ -31,7 +31,7 @@ Module Module1
     Friend Const changeColor As Integer = Excel.XlRgbColor.rgbSteelBlue
     Friend currentSlide As PowerPoint.Slide
     ' Wasserzeichen für eingefrorene Slide
-    Friend waterSign = "\\KOYTEK-NAS\backup\Entwicklung\Icons\x_collection_png\16x16\plain\snowflake.png"
+    Friend waterSign As String = "\\KOYTEK-NAS\backup\Entwicklung\Icons\x_collection_png\16x16\plain\snowflake.png"
     Friend VisboProtected As Boolean = False
     Friend protectionSolved As Boolean = False
 
@@ -323,7 +323,7 @@ Module Module1
                                 .OffsetX = 0
                                 .OffsetY = 0
                                 .Transparency = 0
-                                .ForeColor.RGB = trafficLightColors(ampelColor)
+                                .ForeColor.RGB = CInt(trafficLightColors(ampelColor))
                             End With
                         Else
                             With shapesToBeColored.Shadow
@@ -336,7 +336,7 @@ Module Module1
                                 .OffsetX = 3
                                 .OffsetY = -3
                                 .Transparency = 0
-                                .ForeColor.RGB = trafficLightColors(ampelColor)
+                                .ForeColor.RGB = CInt(trafficLightColors(ampelColor))
                             End With
                         End If
                     Next
@@ -383,12 +383,12 @@ Module Module1
                         .OffsetX = 0
                         .OffsetY = 0
                         .Transparency = 0
-                        .ForeColor.RGB = trafficLightColors(ampelColor)
+                        .ForeColor.RGB = CInt(trafficLightColors(ampelColor))
                     End With
                 Else
                     ' Schatten wieder wegnehmen 
                     With tmpShape.Shadow
-                        .ForeColor.RGB = trafficLightColors(ampelColor)
+                        .ForeColor.RGB = CInt(trafficLightColors(ampelColor))
                         .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                     End With
                 End If
@@ -469,7 +469,7 @@ Module Module1
 
                 ' in allen Slides den Sicht Schutz aufheben 
                 protectionSolved = True
-                Call makeVisboShapesVisible(True)
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
             End If
 
         Else
@@ -578,7 +578,7 @@ Module Module1
 
     End Function
 
-    Private Function userHasValidLicence()
+    Private Function userHasValidLicence() As Boolean
         userHasValidLicence = True
     End Function
 
@@ -746,7 +746,7 @@ Module Module1
             End If
 
             If VisboProtected Then
-                Call makeVisboShapesVisible(False)
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
             End If
 
         End If
@@ -758,7 +758,7 @@ Module Module1
         ' wenn VisboProtected, dann müssen jetzt alle relevanten Shapes auf invisible gesetzt werden ...
 
         If VisboProtected Then
-            Call makeVisboShapesVisible(False)
+            Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
         End If
 
     End Sub
@@ -1063,7 +1063,7 @@ Module Module1
                     If tmpShape.Tags.Item("BID").Length > 0 And tmpShape.Tags.Item("DID").Length > 0 Then
 
                         ' handelt es sich um das Version Field Shape? 
-                        If tmpShape.Tags.Item("BID") = ptReportBigTypes.components And (tmpShape.Tags.Item("DID") = ptReportComponents.prStand Or tmpShape.Tags.Item("DID") = ptReportComponents.pfStand) Then
+                        If tmpShape.Tags.Item("BID") = CStr(CInt(ptReportBigTypes.components)) And (tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.prStand)) Or tmpShape.Tags.Item("DID") = CStr(CInt(ptReportComponents.pfStand))) Then
                             importantShapes(ptImportantShapes.version) = tmpShape
                         End If
 
@@ -1105,15 +1105,15 @@ Module Module1
                             Call aktualisiereSortedLists(tmpShape)
 
                             If Not isPcardInvisible Then
-                                If protectionSolved And tmpShape.Visible = False Then
-                                    tmpShape.Visible = True
+                                If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
+                                    tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                                 End If
                             End If
 
 
                         ElseIf isVISBOChartElement(tmpShape) Then
-                            If protectionSolved And tmpShape.Visible = False Then
-                                tmpShape.Visible = True
+                            If protectionSolved And tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse Then
+                                tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                             End If
                         End If
                     End If
@@ -1307,7 +1307,7 @@ Module Module1
 
             ' wenn geschützt, dann unsichtbar machen der relecanten Shapes 
             If VisboProtected Then
-                Call makeVisboShapesVisible(False)
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
             End If
         Else
             ' auf false setzen, weil das in der nächsten Activate Routine bestimmt wird ... 
@@ -1621,8 +1621,8 @@ Module Module1
         If IsNothing(selectedShapes) Then
             ' nichts tun 
         Else
-            Dim selectionLeft As Single = slideCoordInfo.drawingAreaRight + 1000
-            Dim selectionTop As Single = slideCoordInfo.drawingAreaBottom + 1000
+            Dim selectionLeft As Single = CSng(slideCoordInfo.drawingAreaRight + 1000)
+            Dim selectionTop As Single = CSng(slideCoordInfo.drawingAreaBottom + 1000)
             Dim selectionBottom As Single = 0.0
             Dim selectionRight As Single = 0.0
             Dim markerTol As Double = markerHeight + 5
@@ -1640,7 +1640,7 @@ Module Module1
             Next
 
             ' jetzt sicherstellen, dass der Marker auch immer zu sehen  ist ... 
-            selectionTop = selectionTop - markerTol
+            selectionTop = CSng(selectionTop - markerTol)
             selectionWidth = selectionRight - selectionLeft
             selectionHeight = selectionBottom - selectionTop
 
@@ -1842,7 +1842,7 @@ Module Module1
                 Try
                     Dim tmpName2 As String = tmpShape.Tags.Item("PD")
                     Dim finishDate As Date = CDate(tmpName)
-                    Dim anzTageOVD As Integer = DateDiff(DateInterval.Day, finishDate, currentTimestamp)
+                    Dim anzTageOVD As Integer = CInt(DateDiff(DateInterval.Day, finishDate, currentTimestamp))
                     If anzTageOVD > 0 Then
                         ' ist abgeschlossen, sollte also auf 100% sein
 
@@ -2547,7 +2547,7 @@ Module Module1
 
         Dim pptChart As PowerPoint.Chart = Nothing
 
-        If Not pptShape.HasChart Then
+        If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
             Exit Sub
         End If
 
@@ -2555,7 +2555,7 @@ Module Module1
 
         Dim diagramTitle As String = " "
         Dim plen As Integer
-        Dim i As Integer
+
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
         Dim istDatenReihe() As Double
@@ -2922,7 +2922,7 @@ Module Module1
 
         Dim pptChart As PowerPoint.Chart = Nothing
 
-        If Not pptShape.HasChart Then
+        If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
             Exit Sub
         End If
 
@@ -3280,28 +3280,28 @@ Module Module1
 
 
             Try
-                With xlApp
-                    If Not .ActiveWindow.Caption = "VISBO Smart Diagram" Then
-                        .DisplayFormulaBar = False
-                        With .ActiveWindow
 
-                            .Caption = "VISBO Smart Diagram"
-                            .DisplayHeadings = False
-                            .DisplayWorkbookTabs = False
+                If Not CStr(CType(xlApp.ActiveWindow, Excel.Window).Caption) = "VISBO Smart Diagram" Then
+                        xlApp.DisplayFormulaBar = False
+                    With xlApp.ActiveWindow
 
-                            .Width = 500
-                            .Height = 150
-                            .Top = 100
-                            .Left = -1200
+                        .Caption = "VISBO Smart Diagram"
+                        .DisplayHeadings = False
+                        .DisplayWorkbookTabs = False
 
-                        End With
-                    End If
-                End With
+                        .Width = 500
+                        .Height = 150
+                        .Top = 100
+                        .Left = -1200
+
+                    End With
+                End If
+
             Catch ex As Exception
 
             End Try
 
-            curWS = CType(.Workbook, Excel.Workbook).Worksheets.Item(1)
+            curWS = CType(CType(.Workbook, Excel.Workbook).Worksheets.Item(1), Excel.Worksheet)
             curWS.UsedRange.Clear()
 
             If Not smartChartsAreEditable Then
@@ -4433,7 +4433,7 @@ Module Module1
                     ' fertig  - es gibt bereits ein Workbook 
                     updateWorkbook = xlApp.Workbooks.Item(1)
                 Else
-                    updateWorkbook = xlApp.Workbooks.Add().item()
+                    updateWorkbook = xlApp.Workbooks.Add()
                 End If
             Else
                 ' andernfalsl gibt es das ja schon 
@@ -4443,7 +4443,7 @@ Module Module1
 
             Try
 
-                xlApp = CreateObject("Excel.Application")
+                xlApp = CType(CreateObject("Excel.Application"), Excel.Application)
                 xlApp.Visible = False
 
                 updateWorkbook = xlApp.Workbooks.Add()
@@ -4527,10 +4527,10 @@ Module Module1
 
                                     Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
                                     If IsNothing(ms) Then
-                                        cmtShape.Visible = False
+                                        cmtShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                                     Else
-                                        If Not cmtShape.Visible Then
-                                            cmtShape.Visible = True
+                                        If Not cmtShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                                            cmtShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                                         End If
 
                                         If cmtType = pptAnnotationType.ampelText Then
@@ -4561,10 +4561,10 @@ Module Module1
 
                                     Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                                     If IsNothing(ph) Then
-                                        cmtShape.Visible = False
+                                        cmtShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                                     Else
-                                        If Not cmtShape.Visible Then
-                                            cmtShape.Visible = True
+                                        If Not cmtShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                                            cmtShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                                         End If
                                         If cmtType = pptAnnotationType.ampelText Then
                                             ' Text und Farbe bestimmen 
@@ -4589,7 +4589,7 @@ Module Module1
                                     If newCmtColor < 1 Or newCmtColor > 4 Then
                                         .Shadow.ForeColor.RGB = Excel.XlRgbColor.rgbGrey
                                     Else
-                                        .Shadow.ForeColor.RGB = trafficLightColors(newCmtColor)
+                                        .Shadow.ForeColor.RGB = CInt(trafficLightColors(newCmtColor))
                                     End If
                                 End With
                             End If
@@ -4741,7 +4741,7 @@ Module Module1
 
                     If isAnnotationShape(tmpShape) Then
                         ' hier müssen alle Annotations entsprechend verschoben werden, wie ihr Meilenstein / Phase verschoben wurde 
-                        If tmpShape.Name.Substring(tmpShape.Name.Length - 1, 1) = pptAnnotationType.text Then
+                        If tmpShape.Name.Substring(tmpShape.Name.Length - 1, 1) = CStr(CInt(pptAnnotationType.text)) Then
 
                             namesToBeRenamed.Add(tmpShape.Name)
                             ' es handelt sich um den Text, also nur verschieben 
@@ -4750,12 +4750,12 @@ Module Module1
                             If diffMvList.ContainsKey(refName) Then
                                 Dim diff As Double = diffMvList.Item(refName)
                                 With tmpShape
-                                    .Left = .Left + diff
+                                    .Left = CSng(.Left + diff)
                                 End With
                             End If
 
 
-                        ElseIf tmpShape.Name.Substring(tmpShape.Name.Length - 1, 1) = pptAnnotationType.datum Then
+                        ElseIf tmpShape.Name.Substring(tmpShape.Name.Length - 1, 1) = CStr(CInt(pptAnnotationType.datum)) Then
 
                             namesToBeRenamed.Add(tmpShape.Name)
                             ' es handelt sich um das Datum, also verschieben und Text ändern 
@@ -4769,7 +4769,7 @@ Module Module1
                             If diffMvList.ContainsKey(refName) Then
                                 Dim diff As Double = diffMvList.Item(refName)
                                 With tmpShape
-                                    .Left = .Left + diff
+                                    .Left = CSng(.Left + diff)
                                     .TextFrame2.TextRange.Text = descriptionText
                                 End With
                             End If
@@ -4889,11 +4889,11 @@ Module Module1
                         '
                         Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                         If IsNothing(ph) Then
-                            tmpShape.Visible = False
+                            tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                         Else
 
-                            If Not tmpShape.Visible Then
-                                tmpShape.Visible = True
+                            If Not tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                                tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                             End If
 
                             Dim bsn As String = tmpShape.Tags.Item("BSN")
@@ -4916,11 +4916,11 @@ Module Module1
                             Dim ms As clsMeilenstein = tsProj.getMilestone(msName:=elemName, breadcrumb:=elemBC)
                             If IsNothing(ms) Then
                                 ' wenn es diesen Meilenstein in der Varianten oder TimeStamp Version gar nicht gibt, wird er auf invisible gesetzt 
-                                tmpShape.Visible = False
+                                tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                             Else
                                 ' falls der in einer anderen TimeStamp- / Varianten Versin existierte, wird er wieder auf visible gesetzt 
-                                If Not tmpShape.Visible Then
-                                    tmpShape.Visible = True
+                                If Not tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                                    tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                                 End If
 
                                 Dim mvDiff As Double = mvMilestoneToTimestampPosition(tmpShape, ms.getDate, showOtherVariant, changeliste)
@@ -4946,10 +4946,10 @@ Module Module1
 
                             Dim ph As clsPhase = tsProj.getPhase(name:=elemName, breadcrumb:=elemBC)
                             If IsNothing(ph) Then
-                                tmpShape.Visible = False
+                                tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                             Else
-                                If Not tmpShape.Visible Then
-                                    tmpShape.Visible = True
+                                If Not tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                                    tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                                 End If
 
                                 Dim mvDiff As Double = mvPhaseToTimestampPosition(tmpShape, ph.getStartDate, ph.getEndDate, showOtherVariant, changeliste)
@@ -4972,7 +4972,7 @@ Module Module1
                     End If
                 Else
                     ' es hat zu diesem Zeitpunkt noch nicht existiert und muss unsichtbar gemacht werden 
-                    tmpShape.Visible = False
+                    tmpShape.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
                 End If
 
             End If
@@ -5027,8 +5027,8 @@ Module Module1
                     .TextFrame2.TextRange.Text = currentTimestamp.Date.ToShortDateString
                 End If
 
-                .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse + 6)
-                .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = trafficLightColors(3)
+                .TextFrame2.TextRange.Font.Size = CSng(schriftGroesse + 6)
+                .TextFrame2.TextRange.Font.Fill.ForeColor.RGB = CInt(trafficLightColors(3))
                 .TextFrame2.TextRange.Font.Bold = Microsoft.Office.Core.MsoTriState.msoTrue
                 .TextFrame2.MarginBottom = 0
                 .TextFrame2.MarginLeft = 0
@@ -5083,7 +5083,7 @@ Module Module1
                         ' andernfalls bleibt das auf der Höhe wo der User es hingeschoben  hat 
                     End If
 
-                    .Left = todayLineShape.Left - 0.5 * tsMsgBox.Width
+                    .Left = CSng(todayLineShape.Left - 0.5 * tsMsgBox.Width)
                 End With
             End If
 
@@ -5157,8 +5157,8 @@ Module Module1
                 oldLeft = .Left
                 oldWidth = .Width
 
-                .Left = x1Pos
-                .Width = x2Pos - x1Pos
+                .Left = CSng(x1Pos)
+                .Width = CSng(x2Pos - x1Pos)
 
             End With
 
@@ -5225,8 +5225,8 @@ Module Module1
                 oldLeft = .Left
                 oldWidth = .Width
 
-                .Left = x1Pos
-                .Width = x2Pos - x1Pos
+                .Left = CSng(x1Pos)
+                .Width = CSng(x2Pos - x1Pos)
 
                 Dim expPvName As String = getPVnameFromShpName(tmpShape.Name)
                 Dim newShapeName As String = tmpShape.Name
@@ -5307,9 +5307,9 @@ Module Module1
 
             ' jetzt die Shape-Info 
             With tmpShape
-                .Left = x1Pos - tmpShape.Width / 2
+                .Left = CSng(x1Pos - tmpShape.Width / 2)
                 diff = .Left - oldLeft
-                diffInDays = DateDiff(DateInterval.Day, oldDate, msDate)
+                diffInDays = CInt(DateDiff(DateInterval.Day, oldDate, msDate))
                 If previousTimeStamp > currentTimestamp Then
                     diffInDays = -1 * diffInDays
                 End If
@@ -5360,7 +5360,7 @@ Module Module1
         Dim tmpResult As Boolean = False
         ' es muss festgelegt werden, ob es eine KW_in_milestone gibt 
         Try
-            If tmpShape.TextFrame2.HasText Then
+            If (tmpShape.TextFrame2.HasText = Microsoft.Office.Core.MsoTriState.msoTrue) Then
                 Dim refKW As Integer = calcKW(CDate(tmpShape.Tags.Item("ED")))
                 Dim vglKWinMs As Integer = CInt(tmpShape.TextFrame.TextRange.Text)
                 If refKW = vglKWinMs Then
@@ -5443,9 +5443,9 @@ Module Module1
 
             ' jetzt die Shape-Info 
             With tmpShape
-                .Left = x1Pos - tmpShape.Width / 2
+                .Left = CSng(x1Pos - tmpShape.Width / 2)
                 diff = .Left - oldLeft
-                diffInDays = DateDiff(DateInterval.Day, oldDate, msDate)
+                diffInDays = CInt(DateDiff(DateInterval.Day, oldDate, msDate))
                 If previousTimeStamp > currentTimestamp Then
                     diffInDays = -1 * diffInDays
                 End If
@@ -5727,8 +5727,8 @@ Module Module1
                     With tmpShape
                         newHeight = CSng(markerHeight)
                         newWidth = CSng(markerWidth)
-                        newLeft = .Left + 0.5 * (tmpShape.Width - newWidth)
-                        newTop = .Top - (newHeight + 2)
+                        newLeft = CSng(.Left + 0.5 * (tmpShape.Width - newWidth))
+                        newTop = CSng(.Top - (newHeight + 2))
                     End With
 
                     Dim markerShape As PowerPoint.Shape =
@@ -6491,7 +6491,7 @@ Module Module1
                     tstDate = CDate(curShape.Tags.Item("ED"))
                 End If
 
-                Dim diffDays As Integer = DateDiff(DateInterval.Day, msDate, tstDate)
+                Dim diffDays As Integer = CInt(DateDiff(DateInterval.Day, msDate, tstDate))
 
                 If diffDays <> 0 Then
                     tmpResult = True
@@ -6544,8 +6544,8 @@ Module Module1
                     planEDate = pptEndOfCalendar
                 End If
 
-                Dim diffSD As Integer = DateDiff(DateInterval.Day, pptSDate, planSDate)
-                Dim diffED As Integer = DateDiff(DateInterval.Day, pptEDate, planEDate)
+                Dim diffSD As Long = DateDiff(DateInterval.Day, pptSDate, planSDate)
+                Dim diffED As Long = DateDiff(DateInterval.Day, pptEDate, planEDate)
 
 
                 If diffSD <> 0 Or diffED <> 0 Then
@@ -6956,10 +6956,10 @@ Module Module1
                                   ByVal descriptionType As Integer, ByVal positionIndex As Integer)
 
         Dim newShape As PowerPoint.Shape
-        Dim txtShpLeft As Double = selectedPlanShape.Left - 4
-        Dim txtShpTop As Double = selectedPlanShape.Top - 5
-        Dim txtShpWidth As Double = 5
-        Dim txtShpHeight As Double = 5
+        Dim txtShpLeft As Single = selectedPlanShape.Left - 4
+        Dim txtShpTop As Single = selectedPlanShape.Top - 5
+        Dim txtShpWidth As Single = 5
+        Dim txtShpHeight As Single = 5
         Dim normalFarbe As Integer = RGB(10, 10, 10)
         Dim ampelFarbe As Integer = 0
 
@@ -7000,7 +7000,7 @@ Module Module1
                 descriptionText = bestimmeElemALuTvText(selectedPlanShape, pptInfoType.aExpl, False)
             End If
 
-            txtShpLeft = selectedPlanShape.Left + 1.5 * selectedPlanShape.Width + 5
+            txtShpLeft = CSng(selectedPlanShape.Left + 1.5 * selectedPlanShape.Width + 5)
             txtShpTop = selectedPlanShape.Top - 75
             txtShpWidth = 70
             txtShpHeight = 70
@@ -7095,7 +7095,7 @@ Module Module1
                                       txtShpLeft, txtShpTop, 50, txtShpHeight)
                 With newShape
                     .TextFrame2.TextRange.Text = descriptionText
-                    .TextFrame2.TextRange.Font.Size = CDbl(schriftGroesse)
+                    .TextFrame2.TextRange.Font.Size = CSng(schriftGroesse)
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.MarginLeft = 0
                     .TextFrame2.MarginRight = 0
@@ -7133,12 +7133,12 @@ Module Module1
                         newShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB =
                             selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
                     End If
-                    txtShpLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
-                    txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
+                    txtShpLeft = CSng(selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width))
+                    txtShpTop = CSng(selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height))
 
                 Case pptPositionType.aboveCenter
 
-                    txtShpLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                    txtShpLeft = CSng(selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width))
                     txtShpTop = selectedPlanShape.Top - newShape.Height
 
                 Case pptPositionType.aboveRight
@@ -7170,7 +7170,7 @@ Module Module1
 
                     'End If
 
-                    txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
+                    txtShpTop = CSng(selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height))
 
                 Case pptPositionType.belowRight
 
@@ -7187,7 +7187,7 @@ Module Module1
                     txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
 
                 Case pptPositionType.belowCenter
-                    txtShpLeft = selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width)
+                    txtShpLeft = CSng(selectedPlanShape.Left + 0.5 * (selectedPlanShape.Width - newShape.Width))
                     txtShpTop = selectedPlanShape.Top + selectedPlanShape.Height
 
                 Case pptPositionType.belowLeft
@@ -7215,7 +7215,7 @@ Module Module1
                     '        selectedPlanShape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB
                     '    End If
                     'End If
-                    txtShpTop = selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height)
+                    txtShpTop = CSng(selectedPlanShape.Top + 0.5 * (selectedPlanShape.Height - newShape.Height))
 
                 Case pptPositionType.aboveLeft
                     If newShape.Width > selectedPlanShape.Width Then
@@ -7367,7 +7367,7 @@ Module Module1
     ''' </summary>
     ''' <param name="visible"></param>
     ''' <remarks></remarks>
-    Public Sub makeVisboShapesVisible(ByVal visible As Boolean)
+    Public Sub makeVisboShapesVisible(ByVal visible As Microsoft.Office.Core.MsoTriState)
 
         For Each pptSlide As PowerPoint.Slide In pptAPP.ActivePresentation.Slides
 
@@ -7828,13 +7828,13 @@ Module Module1
                     With vTextShadowShape
                         .Left = shadowShape.Left - (.Width + 3)
                         .Top = shadowShape.Top - (.Height - shadowShape.Height) / 2
-                        .Visible = True
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                     End With
 
                     With vTextOrigShape
                         .Left = origShape.Left + origShape.Width + 3
                         .Top = origShape.Top - (.Height - origShape.Height) / 2
-                        .Visible = True
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                     End With
 
                 Else
@@ -7842,13 +7842,13 @@ Module Module1
                     With vTextOrigShape
                         .Left = origShape.Left - (.Width + 3)
                         .Top = origShape.Top
-                        .Visible = True
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                     End With
 
                     With vTextShadowShape
                         .Left = shadowShape.Left + shadowShape.Width + 3
                         .Top = shadowShape.Top
-                        .Visible = True
+                        .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                     End With
                 End If
             Else
@@ -7858,13 +7858,13 @@ Module Module1
                 With vTextShadowShape
                     .Left = shadowShape.Left - (.Width - shadowShape.Width) / 2
                     .Top = shadowShape.Top - (.Height + 3)
-                    .Visible = True
+                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                 End With
 
                 With vTextOrigShape
                     .Left = origShape.Left - (.Width - origShape.Width) / 2
                     .Top = origShape.Top + (origShape.Height + 3)
-                    .Visible = True
+                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                 End With
             End If
 
@@ -8830,7 +8830,7 @@ Module Module1
         '' Versuch den Undo-Stack zu löschen
         'pptAPP.StartNewUndoEntry()
 
-        Dim ddiff As Integer = DateDiff(DateInterval.Second, newdate, currentTimestamp)
+        Dim ddiff As Long = DateDiff(DateInterval.Second, newdate, currentTimestamp)
 
         If ddiff <> 0 Then
 

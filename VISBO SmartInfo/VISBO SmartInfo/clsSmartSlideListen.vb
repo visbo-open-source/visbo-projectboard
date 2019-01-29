@@ -461,7 +461,7 @@ Public Class clsSmartSlideListen
     ''' diese Methode setzt die History Einträge mit den Timestamps zurück; muss gemacht werden, wenn eine Variante geladen wird ... 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub resetHistory(ByVal pName)
+    Public Sub resetHistory(ByVal pName As String)
 
         If _projectTimeStamps.Count > 0 Then
             _projectTimeStamps.Clear()

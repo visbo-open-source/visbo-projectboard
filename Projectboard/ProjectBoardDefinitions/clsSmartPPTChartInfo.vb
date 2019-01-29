@@ -26,7 +26,7 @@
             If Not IsNothing(_hproj) Then
                 pName = _hproj.name
             Else
-                pName = ""
+                pName = _pName
             End If
         End Get
         Set(value As String)
@@ -45,7 +45,7 @@
             If Not IsNothing(_hproj) Then
                 vName = _hproj.variantName
             Else
-                vName = ""
+                vName = _vName
             End If
         End Get
         Set(value As String)
@@ -62,12 +62,12 @@
             If Not IsNothing(_hproj) Then
                 prPF = CType(hproj.projectType, ptPRPFType)
             Else
-                prPF = ptPRPFType.project
+                prPF = _prPF
             End If
         End Get
         Set(value As ptPRPFType)
             If IsNothing(_hproj) Then
-                _prPF = ptPRPFType.project
+                _prPF = value
             End If
         End Set
     End Property
