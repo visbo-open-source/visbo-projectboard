@@ -1523,22 +1523,27 @@ Public Class Request
 
             cVPf = clsConst2clsVPf(c)
 
-            cVPf.vpid = cVP._id
+            If Not IsNothing(cVPf) Then
+                cVPf.vpid = cVP._id
 
-            ' timestamp setzen
+                ' timestamp setzen
 
-            cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
+                cVPf.timestamp = DateTimeToISODate(Date.UtcNow)
 
 
-            If cVP._id <> "" Then
+                If cVP._id <> "" Then
 
-                newVPf = POSTOneVPf(cVPf, err)
+                    newVPf = POSTOneVPf(cVPf, err)
 
-                If newVPf.Count > 0 Then
-                    result = True
+                    If newVPf.Count > 0 Then
+                        result = True
+                    End If
+
                 End If
+            Else
 
             End If
+
         Catch ex As Exception
             'Call MsgBox(ex.Message)
             Throw New ArgumentException(ex.Message)
@@ -4983,7 +4988,7 @@ Public Class Request
     End Function
 
     ''' <summary>
-    ''' Kopieren des Portfolio c in das Portfolio des ReST-Servers vom Tyü clsVPf
+    ''' Kopieren des Portfolio c in das Portfolio des ReST-Servers vom Typ clsVPf
     ''' </summary>
     ''' <param name="c"></param>
     ''' <returns></returns>
@@ -5010,20 +5015,31 @@ Public Class Request
                 ' .sortlist aufbauen aus c.sortlist
                 For Each kvp As KeyValuePair(Of String, String) In c.sortListe(result.sortType)
                     hvpid = GETvpid(kvp.Value, err)._id
-                    If Not .sortList.Contains(hvpid) Then
-                        .sortList.Add(hvpid)
+
+                    If hvpid = "" Then
+                        result = Nothing   ' Signalisieren, dass ein Fehler aufgetaucht ist
+                        Call MsgBox("Projekt '" & kvp.Value & "' bitte zuerst in DB speichern")
+                        Throw New ArgumentException("Projekt '" & kvp.Value & "' bitte zuerst in DB speichern")
+                    Else
+                        If Not .sortList.Contains(hvpid) Then
+                            .sortList.Add(hvpid)
+                        End If
                     End If
+
                 Next
-                ' .allitems liste aufbauen aus c.allitems
-                For Each kvp As KeyValuePair(Of String, clsConstellationItem) In c.Liste
-                    vpfItem = clsConstItem2clsVPfItem(kvp.Value)
-                    If Not result.allItems.Contains(vpfItem) Then
-                        result.allItems.Add(vpfItem)
-                    End If
-                Next
+                If Not IsNothing(result) Then
+                    ' .allitems liste aufbauen aus c.allitems
+                    For Each kvp As KeyValuePair(Of String, clsConstellationItem) In c.Liste
+                        vpfItem = clsConstItem2clsVPfItem(kvp.Value)
+                        If Not result.allItems.Contains(vpfItem) Then
+                            result.allItems.Add(vpfItem)
+                        End If
+                    Next
+                End If
+
             End With
         Catch ex As Exception
-
+            Throw New ArgumentException(ex.Message)
         End Try
 
         clsConst2clsVPf = result

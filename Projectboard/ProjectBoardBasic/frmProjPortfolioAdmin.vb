@@ -718,6 +718,7 @@ Public Class frmProjPortfolioAdmin
     Private Function reduceRawListTo(ByVal completeList As SortedList(Of String, String), ByVal showPFV As Boolean) As SortedList(Of String, String)
         Dim tmpResult As New SortedList(Of String, String)
         Dim ausschluss As String = ""
+
         If showPFV Then
             ausschluss = ""
         Else
@@ -3806,7 +3807,10 @@ Public Class frmProjPortfolioAdmin
         End If
 
         If quickList Then
-            pvNamesList = buildPvNamesList(storedAtOrBefore)
+
+            ' hier wird jetzt die Raw-List geholt, d.h die enthält neben allen anderen Varianten auch die Basis- und Vorgabe-(PFV)Variante 
+            pvNamesListRaw = buildPvNamesList(storedAtOrBefore)
+            pvNamesList = reduceRawListTo(pvNamesListRaw, awinSettings.loadPFV)
 
             stopRecursion = True
             Call updateTreeview(currentBrowserConstellation, pvNamesList, aKtionskennung, quickList)
@@ -4270,8 +4274,6 @@ Public Class frmProjPortfolioAdmin
         With TreeViewProjekte
             .Nodes.Clear()
         End With
-
-
 
         If Not IsNothing(constellation) Or pvNamesList.Count >= 1 Then
 

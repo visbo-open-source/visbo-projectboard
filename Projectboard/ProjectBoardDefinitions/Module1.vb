@@ -497,7 +497,7 @@ Public Module Module1
     Public Enum PTChartTypen
         Balken = 0
         ZweiBalken = 1
-        Curve = 2
+        CurveCumul = 2
         Pie = 3
         Bubble = 4
         Waterfall = 5
@@ -578,6 +578,7 @@ Public Module Module1
         SollIstGesamtkostenC2 = 33
         SollIstRolleC2 = 34
         SollIstKostenartC2 = 35
+        ProjektbedarfsChart = 36
     End Enum
 
     ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
@@ -5304,6 +5305,11 @@ Public Module Module1
         Dim repmsg() As String
         Dim toDoCollectionR As New Collection
         Dim toDoCollectionC As New Collection
+        Dim showEuro As Boolean = True
+
+        If q1 = "PT" Then
+            showEuro = False
+        End If
 
         repmsg = {"Budget", "Personalkosten", "Sonstige Kosten", "Ergebnis-Prognose"}
         'repmsg(1) = {"Budget", "Personnel Costs", "Other Costs", "Profit/Loss"}
@@ -5342,8 +5348,7 @@ Public Module Module1
         Dim considerFapr As Boolean = Not IsNothing(bproj)
         Dim considerLapr As Boolean = Not IsNothing(lproj)
 
-        Dim anzRoles As Integer = 0
-        Dim anzCosts As Integer = 0
+
 
 
         ' jetzt wird SmartTableInfo gesetzt 
@@ -5357,20 +5362,27 @@ Public Module Module1
         ' jetzt werden die einzelnen Zeilen geschrieben 
 
         ' in q1, q2 sind dei Anzahl Rollen bzw Kosten drin, sofern in toDoCollection was angegeben ist 
-        Try
-            anzRoles = CInt(q1)
-            anzCosts = CInt(q2)
+        ' die folgende Variable wird nur gebraucht, um im Falle  Auftreten Person-ID; und Person-ID; TeamID jedes Auftreten separat auszuwerten und 
+        ' nicht bei Person-'ID die Summe aus allem aufzuschlüsseln 
 
-            If anzRoles = -1 And anzCosts = -1 Then
+        Dim takeITAsIs As Boolean = False
+        Try
+
+            If q2 = "-1" Or q2 = "%used%" Then
+                takeITAsIs = True
                 ' das ist das signal, dass erst die gemeinsame Liste bestimmt werden soll 
-                toDoCollectionR = getCommonListOfRoleNameIDs(hproj, lproj, bproj, anzRoles)
-                toDoCollectionC = getCommonListOfCostNames(hproj, lproj, bproj, anzCosts)
+                toDoCollectionR = getCommonListOfRoleNameIDs(hproj, lproj, bproj)
+                toDoCollectionC = getCommonListOfCostNames(hproj, lproj, bproj)
+            Else
+                ' es sind im q2 eine durch vblf bzw vbcr getrennte Rollen und Kosten angegeben
+
             End If
         Catch ex As Exception
 
         End Try
 
         Dim showOverviewOnly As Boolean = (toDoCollectionR.Count = 0)
+
 
         Try
             tabelle = pptShape.Table
@@ -5458,16 +5470,16 @@ Public Module Module1
 
                         If isRole Then
 
-                            curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                            curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
 
                             If considerLapr Then
-                                laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
                             Else
                                 laprValue = 0.0
                             End If
 
                             If considerFapr Then
-                                faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=showEuro).Sum
                             Else
                                 faprValue = 0.0
                             End If
@@ -5521,16 +5533,19 @@ Public Module Module1
 
                             If isRole Then
 
-                                curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                curValue = hproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                     outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
 
                                 If considerLapr Then
-                                    laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                    laprValue = lproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                          outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
                                 Else
                                     laprValue = 0.0
                                 End If
 
                                 If considerFapr Then
-                                    faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True, outPutInEuro:=True).Sum
+                                    faprValue = bproj.getRessourcenBedarf(curItem, inclSubRoles:=True,
+                                                                          outPutInEuro:=showEuro, takeITAsIs:=takeITAsIs).Sum
                                 Else
                                     faprValue = 0.0
                                 End If

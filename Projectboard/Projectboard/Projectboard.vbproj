@@ -211,6 +211,7 @@
     <Compile Include="Tabelle8.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <Compile Include="testMethoden.vb" />
     <Compile Include="ThisWorkbook.Designer.vb">
       <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
     </Compile>

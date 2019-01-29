@@ -2641,7 +2641,8 @@
     ''' <returns></returns>
     Public ReadOnly Property getRessourcenBedarf(ByVal roleID As Object,
                                                     Optional ByVal inclSubRoles As Boolean = False,
-                                                    Optional ByVal outPutInEuro As Boolean = False) As Double()
+                                                    Optional ByVal outPutInEuro As Boolean = False,
+                                                    Optional takeITAsIs As Boolean = False) As Double()
         Get
             Dim roleValues() As Double
 
@@ -2686,6 +2687,8 @@
 
                     existingRoleNameIds = getRoleNameIDs
                     ' umkopieren ...
+                    matchingRoleNameIDs = New SortedList(Of String, Double)
+
                     For Each existingRoleNameID As String In existingRoleNameIds
                         If Not matchingRoleNameIDs.ContainsKey(existingRoleNameID) Then
                             matchingRoleNameIDs.Add(existingRoleNameID, 1.0)
@@ -2718,8 +2721,8 @@
                         teamID = -1
                     End If
 
-
-                    If Not inclSubRoles Then
+                    ' takeItAs wird in Bericht APVCV gebraucht , um die einzelnen 
+                    If (Not inclSubRoles) Or (takeITAsIs) Then
                         matchingRoleNameIDs = New SortedList(Of String, Double)
                         ' einfach die RoleNameID übernehmen 
                         matchingRoleNameIDs.Add(roleNameID, 1.0)
