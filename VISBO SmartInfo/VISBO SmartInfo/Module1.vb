@@ -2774,7 +2774,7 @@ Module Module1
         End With
 
         ' -----------------------------------------------
-        ' 1. Variante : seriesCollections verändern 
+        ' 1. Variante : seriesCollections verändern : funktioniert nicht ! Chart wird aktualisiert, aber erst mit interaktiv Bearbeiten-Daten sieht man das auch 
         ' 2. Variante : curWS aus HiddenExcel beziehen 
         ' 3. Variante : as-is curWS aus 
         ' die Frage ist: braucht man das hier wirklich 
@@ -2786,6 +2786,9 @@ Module Module1
         'Dim anzSpalten As Integer = plen + 1
         'Dim anzRows As Integer = 0
 
+        With pptShape.Chart.ChartData
+            .ActivateChartDataWindow()
+        End With
 
         'With pptShape.Chart.ChartData
         '    '.Activate()

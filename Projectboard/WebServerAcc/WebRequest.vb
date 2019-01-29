@@ -374,7 +374,7 @@ Public Class Request
                 If err.errorCode = 200 Then
                     Dim hresultLast As New List(Of clsProjektWebShort)
 
-                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err, refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
+                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err, refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now)
 
                     If hresultLast.Count >= 0 Then
                         ergebnisCollection.Add(hresultLast.Item(0).timestamp)
@@ -1101,13 +1101,15 @@ Public Class Request
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
 
                 For Each vpv In allVPv
-                    'If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest And vpv.variantName = ptVariantFixNames.pfv.ToString Then
-                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
-                        'zwischenResult.Add(vpv.timestamp, vpv)
-                        Dim hproj As New clsProjekt
-                        vpv.copyto(hproj, vp)
-                        result.AddPfv(hproj)
-                    End If
+                    ' die Vorgaben dürfen nicht an storedEarliest bzw storedlatest gebunden werden 
+                    ' denn die können vor oder auch nach einem Planungs-Stand gespeichert worden sein 
+                    'If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
+
+                    Dim hproj As New clsProjekt
+                    vpv.copyto(hproj, vp)
+                    result.AddPfv(hproj)
+
+                    'End If
                 Next
 
             End If
