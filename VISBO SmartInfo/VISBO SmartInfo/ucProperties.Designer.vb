@@ -214,7 +214,7 @@ Partial Class ucProperties
         '
         'dreiDlnk
         '
-        Me.dreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources._3d
+        Me.dreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.dreiD
         Me.dreiDlnk.Location = New System.Drawing.Point(226, 21)
         Me.dreiDlnk.Name = "dreiDlnk"
         Me.dreiDlnk.Size = New System.Drawing.Size(26, 27)
@@ -263,7 +263,7 @@ Partial Class ucProperties
         '
         'mydreiDlnk
         '
-        Me.mydreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources._3d_plus
+        Me.mydreiDlnk.Image = Global.VISBO_SmartInfo.My.Resources.Resources.Dreid_plus
         Me.mydreiDlnk.Location = New System.Drawing.Point(226, 20)
         Me.mydreiDlnk.Name = "mydreiDlnk"
         Me.mydreiDlnk.Size = New System.Drawing.Size(26, 27)

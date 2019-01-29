@@ -6162,27 +6162,14 @@ Public Module awinDiagrams
     ''' <summary>
     ''' erstellt Balken und Curve Projekt-Diagramme , Soll-Ist 
     ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <param name="vglProj"></param>
-    ''' <param name="chartTyp"></param>
-    ''' <param name="vergleichsArt"></param>
-    ''' <param name="vergleichsTyp"></param>
-    ''' <param name="vglDatum"></param>
-    ''' <param name="einheit"></param>
-    ''' <param name="prcTyp"></param>
-    ''' <param name="qualifier2"></param>
+    ''' <param name="sCInfo"></param>
     ''' <param name="pptAppl"></param>
     ''' <param name="presentationName"></param>
     ''' <param name="currentSlideName"></param>
     ''' <param name="chartContainer"></param>
-    ''' <param name="BIT"></param>
-    ''' <param name="DID"></param>
-    Public Sub createProjektChartInPPT(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
-                                      ByVal chartTyp As PTChartTypen, ByVal vergleichsArt As PTVergleichsArt, ByVal vergleichsTyp As PTVergleichsTyp, ByVal vglDatum As Date,
-                                      ByVal einheit As PTEinheiten, ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String,
+    Public Sub createProjektChartInPPT(ByVal sCInfo As clsSmartPPTChartInfo,
                                       ByVal pptAppl As PowerPoint.Application, ByVal presentationName As String, ByVal currentSlideName As String,
-                                      ByVal chartContainer As PowerPoint.Shape,
-                                      ByVal BIT As Integer, ByVal DID As Integer)
+                                      ByVal chartContainer As PowerPoint.Shape)
 
         ' Festlegen der Titel Schriftgrösse
         Dim titleFontSize As Single = 14
@@ -6204,9 +6191,9 @@ Public Module awinDiagrams
         Dim PlanChartType As Microsoft.Office.Core.XlChartType
         Dim vglChartType As Microsoft.Office.Core.XlChartType
 
-        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+        Dim considerIstDaten As Boolean = sCInfo.hproj.actualDataUntil > sCInfo.hproj.startDate
 
-        If chartTyp = PTChartTypen.CurveCumul Then
+        If sCInfo.chartTyp = PTChartTypen.CurveCumul Then
             IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
 
             If considerIstDaten Then
@@ -6223,8 +6210,7 @@ Public Module awinDiagrams
         End If
 
         Dim plen As Integer
-        Dim plenH As Integer, plenV As Integer
-        Dim pstart As Integer, pStartH As Integer, pStartV As Integer
+        Dim pstart As Integer
 
         Dim Xdatenreihe() As String = Nothing
         Dim tdatenreihe() As Double = Nothing
@@ -6244,33 +6230,19 @@ Public Module awinDiagrams
 
         Dim found As Boolean = False
 
-        Dim pname As String = hproj.name
+        Dim pname As String = sCInfo.hproj.name
 
         '
         ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
         ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
         '
-        With hproj
-            plenH = .anzahlRasterElemente
-            pStartH = .Start
-        End With
 
-        If Not IsNothing(vglProj) Then
-            plenV = vglProj.anzahlRasterElemente
-            pStartV = vglProj.Start
-
-            pstart = Min(pStartH, pStartV)
-            plen = Max(pStartH + plenH, pStartV + plenV) - pstart
-        Else
-            plen = plenH
-            pstart = pStartH
-        End If
-
+        Call bestimmePstartPlen(sCInfo.hproj, sCInfo.vglProj, pstart, plen)
 
 
         ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
         Dim errMsg As String = ""
-        Call bestimmeXtipvDatenreihen(pstart, plen, hproj, vglProj, prcTyp, qualifier2, einheit, chartTyp,
+        Call bestimmeXtipvDatenreihen(pstart, plen, sCInfo,
                                        Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
 
         If errMsg <> "" Then
@@ -6282,9 +6254,9 @@ Public Module awinDiagrams
         End If
 
 
-        Dim vProjDoesExist As Boolean = Not IsNothing(vglProj)
+        Dim vProjDoesExist As Boolean = Not IsNothing(sCInfo.vglProj)
 
-        If chartTyp = PTChartTypen.CurveCumul Then
+        If sCInfo.chartTyp = PTChartTypen.CurveCumul Then
             tDatenSumme = tdatenreihe(tdatenreihe.Length - 1)
             vDatensumme = vdatenreihe(vdatenreihe.Length - 1)
         Else
@@ -6295,7 +6267,7 @@ Public Module awinDiagrams
 
         Dim startRed As Integer = 0
         Dim lengthRed As Integer = 0
-        diagramTitle = bestimmeChartDiagramTitle(chartTyp, prcTyp, qualifier2, vProjDoesExist, einheit, tDatenSumme, vDatensumme, startRed, lengthRed)
+        diagramTitle = bestimmeChartDiagramTitle(sCInfo, tDatenSumme, vDatensumme, startRed, lengthRed)
 
         ' jetzt wird das Diagramm in Powerpoint erzeugt ...
         Dim newPPTChart As PowerPoint.Shape = currentSlide.Shapes.AddChart(Left:=left, Top:=top, Width:=width, Height:=height)
@@ -6323,13 +6295,13 @@ Public Module awinDiagrams
             ' Planung / Forecast
             With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
 
-                .Name = bestimmeLegendNameIPB("P") & hproj.timeStamp.ToShortDateString
+                .Name = bestimmeLegendNameIPB("P") & sCInfo.hproj.timeStamp.ToShortDateString
                 .Interior.Color = visboFarbeBlau
                 .Values = prognoseDatenReihe
                 .XValues = Xdatenreihe
                 .ChartType = PlanChartType
 
-                If chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                If sCInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
                     ' es handelt sich um eine Line
                     .Format.Line.Weight = 4
                     .Format.Line.ForeColor.RGB = visboFarbeBlau
@@ -6339,11 +6311,11 @@ Public Module awinDiagrams
             End With
 
             ' Beauftragung bzw. Vergleichsdaten
-            If Not IsNothing(vglProj) Then
+            If Not IsNothing(sCInfo.vglProj) Then
 
                 'series
                 With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
-                    .Name = bestimmeLegendNameIPB("B") & vglProj.timeStamp.ToShortDateString
+                    .Name = bestimmeLegendNameIPB("B") & sCInfo.vglProj.timeStamp.ToShortDateString
                     .Values = vdatenreihe
                     .XValues = Xdatenreihe
 
@@ -6465,62 +6437,82 @@ Public Module awinDiagrams
         '
         ' jetzt werden die Smart-Infos an das Chart angehängt ...
 
-        Call addSmartPPTChartInfo(newPPTChart, hproj, ptPRPFType.project, chartTyp, vergleichsArt, vergleichsTyp, vglDatum, einheit, prcTyp,
-                                    qualifier2, BIT, DID)
+        Call addSmartPPTChartInfo(newPPTChart, sCInfo)
 
 
     End Sub
 
     ''' <summary>
-    ''' extrahiert aus dem Eingabe Parameter die Angaben zu charttyp, vglArt, vglTyp, einheit, elementTyp
+    ''' bestimmt die Werte von pStart und Plen in Abhgängigkeit von hproj und vglProj; 
+    ''' es wird dabei auch berücksichtigt, dass die unterschiedlich starten können und unterschiedlich lang sind
+    ''' Das Ergebnis ist ein Zeitraum, definiert durch pstart als Anfang und die Länge plen , der garantiert beide Projekte umfasst 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="vglProj"></param>
+    ''' <param name="pstart"></param>
+    ''' <param name="plen"></param>
+    Public Sub bestimmePstartPlen(ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt, ByRef pstart As Integer, ByRef plen As Integer)
+
+        Dim plenH As Integer, plenV As Integer
+        Dim pStartH As Integer, pStartV As Integer
+
+        With hproj
+            plenH = .anzahlRasterElemente
+            pStartH = .Start
+        End With
+
+        If Not IsNothing(vglProj) Then
+            plenV = vglProj.anzahlRasterElemente
+            pStartV = vglProj.Start
+
+            pstart = Min(pStartH, pStartV)
+            plen = Max(pStartH + plenH, pStartV + plenV) - pstart
+        Else
+            plen = plenH
+            pstart = pStartH
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' extrahiert aus dem Eingabe Parameter die Angaben zu charttyp, vglArt, vglTyp, einheit, elementTyp und gibt ihn als clsSmartPPTchartInfo zurück
     ''' </summary>
     ''' <param name="q1"></param>
-    ''' <param name="chartTyp"></param>
-    ''' <param name="vergleichsArt"></param>
-    ''' <param name="vergleichstyp"></param>
-    ''' <param name="einheit"></param>
-    ''' <param name="elementTyp"></param>
-    Public Sub getChartParametersFromQ1(ByVal q1 As String,
-                                        ByRef chartTyp As PTChartTypen,
-                                        ByRef vergleichsArt As PTVergleichsArt,
-                                        ByRef vergleichstyp As PTVergleichsTyp,
-                                        ByRef einheit As PTEinheiten,
-                                        ByRef elementTyp As ptElementTypen)
+    Public Function getChartParametersFromQ1(ByVal q1 As String) As clsSmartPPTChartInfo
+
+        Dim smartChartInfo As New clsSmartPPTChartInfo
 
         Dim tmpStr() As String = q1.Split(New Char() {CChar(";")})
         If tmpStr.Length = 5 Then
 
-            chartTyp = CType(tmpStr(0), PTChartTypen)
-            vergleichsArt = CType(tmpStr(1), PTVergleichsArt)
-            vergleichstyp = CType(tmpStr(2), PTVergleichsTyp)
-            einheit = CType(tmpStr(3), PTEinheiten)
-            elementTyp = CType(tmpStr(4), ptElementTypen)
+            With smartChartInfo
+                .chartTyp = CType(tmpStr(0), PTChartTypen)
+                .vergleichsArt = CType(tmpStr(1), PTVergleichsArt)
+                .vergleichsTyp = CType(tmpStr(2), PTVergleichsTyp)
+                .einheit = CType(tmpStr(3), PTEinheiten)
+                .elementTyp = CType(tmpStr(4), ptElementTypen)
+            End With
+
 
         Else
             Throw New ArgumentException("Angabe nicht erkannt: " & q1 & vbLf &
                                         " es müssen 5 Integer Zahlen getrennt durch ';' sein")
         End If
-
-    End Sub
+        getChartParametersFromQ1 = smartChartInfo
+    End Function
 
     ''' <summary>
     ''' bestimmt die Datenreihen für Balken- und Curve-Charts 
     ''' </summary>
     ''' <param name="pstart"></param>
     ''' <param name="plen"></param>
-    ''' <param name="hproj"></param>
-    ''' <param name="vglProj"></param>
-    ''' <param name="prcTyp"></param>
-    ''' <param name="qualifier2"></param>
-    ''' <param name="einheit"></param>
     ''' <param name="Xdatenreihe"></param>
     ''' <param name="tdatenreihe"></param>
     ''' <param name="vdatenreihe"></param>
     ''' <param name="istDatenReihe"></param>
     ''' <param name="prognoseDatenReihe"></param>
     ''' <param name="errMsg"></param>
-    Public Sub bestimmeXtipvDatenreihen(ByVal pstart As Integer, ByVal plen As Integer, ByVal hproj As clsProjekt, ByVal vglProj As clsProjekt,
-                                        ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String, ByVal einheit As PTEinheiten, ByVal chartTyp As PTChartTypen,
+    Public Sub bestimmeXtipvDatenreihen(ByVal pstart As Integer, ByVal plen As Integer, ByVal scInfo As clsSmartPPTChartInfo,
                                         ByRef Xdatenreihe() As String, ByRef tdatenreihe() As Double, ByRef vdatenreihe() As Double,
                                         ByRef istDatenReihe() As Double, ByRef prognoseDatenReihe() As Double,
                                         ByRef errMsg As String)
@@ -6543,8 +6535,8 @@ Public Module awinDiagrams
         Dim tmpVdatenreihe() As Double
         ReDim tmpVdatenreihe(0)
 
-        Dim hprojOffset As Integer = hproj.Start - pstart
-        Dim vprojOffset As Integer = vglProj.Start - pstart
+        Dim hprojOffset As Integer = scInfo.hproj.Start - pstart
+        Dim vprojOffset As Integer = scInfo.vglProj.Start - pstart
 
         For i As Integer = 1 To plen
             Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
@@ -6555,21 +6547,21 @@ Public Module awinDiagrams
         ' 
         ' jetzt muss die tDatenreihe und - soweit angegeben - die vdatenreihe bestimmt werden 
         '
-        Select Case prcTyp
+        Select Case scInfo.elementTyp
             ' phases, milestones, ergebnis, portfolio, mta not yet implemented 
 
             Case ptElementTypen.roles
 
 
 
-                If qualifier2 = "" Then
+                If scInfo.q2 = "" Then
                     ' es ist alles gemeint ... 
                     If myCustomUserRole.isAllowedToSee("") Then
 
-                        tmpTdatenreihe = hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                        tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
 
-                        If Not IsNothing(vglProj) Then
-                            tmpVdatenreihe = vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                        If Not IsNothing(scInfo.vglProj) Then
+                            tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf("", inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
                         End If
 
                     Else
@@ -6580,7 +6572,7 @@ Public Module awinDiagrams
 
                 Else
                     Dim teamID As Integer
-                    Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(qualifier2, teamID)
+                    Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(scInfo.q2, teamID)
 
                     If RoleDefinitions.containsUid(roleUID) Then
 
@@ -6589,19 +6581,19 @@ Public Module awinDiagrams
 
                         If myCustomUserRole.isAllowedToSee(roleNameID) Then
 
-                            tmpTdatenreihe = hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                            tmpTdatenreihe = scInfo.hproj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
 
-                            If Not IsNothing(vglProj) Then
-                                tmpVdatenreihe = vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (einheit = PTEinheiten.personentage))
+                            If Not IsNothing(scInfo.vglProj) Then
+                                tmpVdatenreihe = scInfo.vglProj.getRessourcenBedarf(roleNameID, inclSubRoles:=True, outPutInEuro:=Not (scInfo.einheit = PTEinheiten.personentage))
                             End If
 
                         Else
-                            errMsg = "no rights to see role: " & qualifier2
+                            errMsg = "no rights to see role: " & scInfo.q2Bezeichner
                             Exit Sub
                         End If
 
                     Else
-                        errMsg = "unknown role / person: " & qualifier2
+                        errMsg = "unknown role / person: " & scInfo.q2Bezeichner
                         Exit Sub
                     End If
                 End If
@@ -6612,12 +6604,12 @@ Public Module awinDiagrams
 
             Case ptElementTypen.costs
 
-                If qualifier2 = "" Then
+                If scInfo.q2 = "" Then
                     ' es ist alles gemeint ...
                     If myCustomUserRole.isAllowedToSee("") Then
-                        tmpTdatenreihe = hproj.getGesamtAndereKosten
-                        If Not IsNothing(vglProj) Then
-                            tmpVdatenreihe = vglProj.getGesamtAndereKosten
+                        tmpTdatenreihe = scInfo.hproj.getGesamtAndereKosten
+                        If Not IsNothing(scInfo.vglProj) Then
+                            tmpVdatenreihe = scInfo.vglProj.getGesamtAndereKosten
                         End If
                     Else
                         errMsg = "no rights to see all costs aggregated ... "
@@ -6625,10 +6617,10 @@ Public Module awinDiagrams
                     End If
 
                 Else
-                    If CostDefinitions.containsName(qualifier2) Then
+                    If CostDefinitions.containsName(scInfo.q2) Then
 
                         Dim weitermachen As Boolean
-                        If (qualifier2 = "Personalkosten") Then
+                        If (scInfo.q2 = "Personalkosten") Then
                             If myCustomUserRole.isAllowedToSee("") Then
                                 weitermachen = True
                             Else
@@ -6641,16 +6633,16 @@ Public Module awinDiagrams
 
 
                         If weitermachen Then
-                            tmpTdatenreihe = hproj.getKostenBedarfNew(qualifier2)
+                            tmpTdatenreihe = scInfo.hproj.getKostenBedarfNew(scInfo.q2)
 
-                            If Not IsNothing(vglProj) Then
-                                tmpVdatenreihe = vglProj.getKostenBedarfNew(qualifier2)
+                            If Not IsNothing(scInfo.vglProj) Then
+                                tmpVdatenreihe = scInfo.vglProj.getKostenBedarfNew(scInfo.q2)
                             End If
                         End If
 
 
                     Else
-                        errMsg = "unknown cost definition: " & qualifier2
+                        errMsg = "unknown cost definition: " & scInfo.q2
                         Exit Sub
                     End If
                 End If
@@ -6660,9 +6652,9 @@ Public Module awinDiagrams
                 ' der Wert von qualifier2 ist hier schnuppe , das kann nur die GesamtSumme sein
 
                 If myCustomUserRole.isAllowedToSee("") Then
-                    tmpTdatenreihe = hproj.getGesamtKostenBedarf
-                    If Not IsNothing(vglProj) Then
-                        tmpVdatenreihe = vglProj.getGesamtKostenBedarf
+                    tmpTdatenreihe = scInfo.hproj.getGesamtKostenBedarf
+                    If Not IsNothing(scInfo.vglProj) Then
+                        tmpVdatenreihe = scInfo.vglProj.getGesamtKostenBedarf
                     End If
                 Else
                     errMsg = "no rights to see all total costs ... "
@@ -6670,7 +6662,7 @@ Public Module awinDiagrams
                 End If
 
             Case Else
-                errMsg = "not yet implemented: " & prcTyp.ToString
+                errMsg = "not yet implemented: " & scInfo.elementTyp.ToString
                 Exit Sub
 
         End Select
@@ -6683,14 +6675,14 @@ Public Module awinDiagrams
             tdatenreihe(ix) = tmpTdatenreihe(ix - hprojOffset)
         Next
 
-        If Not IsNothing(vglProj) Then
+        If Not IsNothing(scInfo.vglProj) Then
             For ix As Integer = 0 + vprojOffset To tmpVdatenreihe.Length - 1 + vprojOffset
                 vdatenreihe(ix) = tmpVdatenreihe(ix - vprojOffset)
             Next
         End If
 
         ' wenn kumuliert werden soll, dann wird es jetzt hier gemacht ... 
-        If chartTyp = PTChartTypen.CurveCumul Then
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
             ReDim tmpTdatenreihe(plen - 1)
             ReDim tmpVdatenreihe(plen - 1)
 
@@ -6703,7 +6695,7 @@ Public Module awinDiagrams
             tdatenreihe = tmpTdatenreihe
 
             ' die Vorgabe Werte 
-            If Not IsNothing(vglProj) Then
+            If Not IsNothing(scInfo.vglProj) Then
                 cumulatedValue = 0.0
                 For ix As Integer = 0 To plen - 1
                     cumulatedValue = cumulatedValue + vdatenreihe(ix)
@@ -6720,14 +6712,14 @@ Public Module awinDiagrams
         ' jetzt müssen ggf die IstDaten und PrognoseDaten aufgebaut werden
         Call tdatenreihe.CopyTo(prognoseDatenReihe, 0)
 
-        Dim considerIstDaten As Boolean = hproj.actualDataUntil > hproj.startDate
+        Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
         Dim actualdataIndex As Integer = -1
 
         If considerIstDaten Then
 
             Call tdatenreihe.CopyTo(istDatenReihe, 0)
 
-            actualdataIndex = getColumnOfDate(hproj.actualDataUntil) - getColumnOfDate(hproj.startDate)
+            actualdataIndex = getColumnOfDate(scInfo.hproj.actualDataUntil) - getColumnOfDate(scInfo.hproj.startDate)
             ' die Prognose Daten bereinigen
             For ix As Integer = 0 To actualdataIndex
                 prognoseDatenReihe(ix) = 0
@@ -6786,17 +6778,12 @@ Public Module awinDiagrams
     ''' <summary>
     ''' bestimmt den Diagramm-Titel in Abhängigkeit von prcTyp, qualifier und einheit
     ''' </summary>
-    ''' <param name="prcTyp"></param>
-    ''' <param name="qualifier2"></param>
-    ''' <param name="vProjDoesExist"></param>
-    ''' <param name="einheit"></param>
     ''' <param name="tsum"></param>
     ''' <param name="vsum"></param>
     ''' <param name="startRed">gibt an, ab welcher -Nullbasierten- Stelle der String rot eingefärbt werdne muss </param>
     ''' <param name="lengthRed">gibt an , wieviele Zeichen rot eingefärbt werden müssen</param>
     ''' <returns></returns>
-    Public Function bestimmeChartDiagramTitle(ByVal charttyp As PTChartTypen, ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String, ByVal vProjDoesExist As Boolean,
-                                               ByVal einheit As PTEinheiten, ByVal tsum As Double, vsum As Double,
+    Public Function bestimmeChartDiagramTitle(ByVal scInfo As clsSmartPPTChartInfo, ByVal tsum As Double, vsum As Double,
                                               ByRef startRed As Integer, ByRef lengthRed As Integer) As String
 
         Dim tmpResult As String = ""
@@ -6805,20 +6792,24 @@ Public Module awinDiagrams
         Dim leadingAddOn As String = ""
         Dim repmsg() As String = {"Gesamtkosten", "Personalkosten", "Sonstige Kosten", "Personalbedarf"}
 
+        Dim vProjDoesExist = (Not IsNothing(scInfo.vglProj))
+
+        Dim qualifier2 As String = scInfo.q2
+
         If awinSettings.englishLanguage Then
             zaehlEinheit = " PD "
             repmsg = {"Total Cost", "Personnel Cost", "Other Cost", "Personnel Requirements"}
         End If
 
 
-        If charttyp = PTChartTypen.CurveCumul Then
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
             leadingAddOn = "kumul. "
             If awinSettings.englishLanguage Then
                 leadingAddOn = "cumul. "
             End If
         End If
 
-        If einheit = PTEinheiten.personentage Then
+        If scInfo.einheit = PTEinheiten.personentage Then
             ' ist bereits richtig gesetzt 
         Else
             zaehlEinheit = " T€"
@@ -6826,20 +6817,28 @@ Public Module awinDiagrams
 
         ' jetzt muss ggf der Qualifier2 noch ersetzt werden 
 
-        Select Case prcTyp
+        Select Case scInfo.elementTyp
             Case ptElementTypen.roles
                 If qualifier2 = "" Then
-                    If einheit = PTEinheiten.personentage Then
+                    If scInfo.einheit = PTEinheiten.personentage Then
                         qualifier2 = repmsg(3)
                     Else
                         qualifier2 = repmsg(1)
+                    End If
+                Else
+                    Dim tmpTeamID As Integer = -1
+                    Dim tmpRoleId As Integer = RoleDefinitions.parseRoleNameID(qualifier2, tmpTeamID)
+                    If tmpRoleId > 0 Then
+                        qualifier2 = RoleDefinitions.getRoleDefByID(tmpRoleId).name
+                    Else
+                        qualifier2 = " ??? "
                     End If
                 End If
 
             Case ptElementTypen.costs
                 If qualifier2 = "" Then
                     qualifier2 = repmsg(2)
-                    If einheit = PTEinheiten.personentage Then
+                    If scInfo.einheit = PTEinheiten.personentage Then
                         qualifier2 = repmsg(3)
                     Else
                         qualifier2 = repmsg(1)
@@ -6851,7 +6850,7 @@ Public Module awinDiagrams
                 qualifier2 = repmsg(0)
 
             Case Else
-                tmpResult = "noch nicht implementiert: " & prcTyp.ToString
+                tmpResult = "noch nicht implementiert: " & scInfo.elementTyp.ToString
         End Select
 
         qualifier2 = leadingAddOn & qualifier2
