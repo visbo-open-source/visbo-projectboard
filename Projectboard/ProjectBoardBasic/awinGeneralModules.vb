@@ -3612,12 +3612,12 @@ Public Module awinGeneralModules
                 ''End If
 
                 Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
-                If AlleProjekte.Containskey(skey) Then
-                    AlleProjekte.Remove(skey)
+                If AlleProjektSummaries.Containskey(skey) Then
+                    AlleProjektSummaries.Remove(skey, False)
                 End If
 
-                If Not AlleProjekte.Containskey(skey) Then
-                    AlleProjekte.Add(sproj)
+                If Not AlleProjektSummaries.Containskey(skey) Then
+                    AlleProjektSummaries.Add(sproj, False)
                 End If
 
             End If
@@ -3648,7 +3648,7 @@ Public Module awinGeneralModules
             Else
                 outputLine = "Fehler beim Schreiben Szenario - Datenbank läuft?"
             End If
-            Throw New ArgumentException(outputLine)
+            Throw New ArgumentException(outputLine & vbCrLf & ex.Message)
         End Try
 
 

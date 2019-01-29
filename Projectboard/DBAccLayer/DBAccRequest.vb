@@ -176,8 +176,7 @@ Public Class Request
                 Catch ex As Exception
 
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                             ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich And err.errorCode = 200 Then
                             result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore, err)
@@ -266,8 +265,7 @@ Public Class Request
 
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
@@ -316,8 +314,7 @@ Public Class Request
 
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName, err)
@@ -373,8 +370,7 @@ Public Class Request
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
@@ -415,8 +411,7 @@ Public Class Request
                 Catch ex As Exception
 
                     'Call MsgBox(ex.Message)
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
@@ -462,8 +457,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
@@ -508,8 +502,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName, err)
@@ -552,8 +545,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
@@ -593,8 +585,7 @@ Public Class Request
                     resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
@@ -642,8 +633,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err)
@@ -688,8 +678,7 @@ Public Class Request
                                                                                              storedEarliest, storedLatest, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
@@ -733,8 +722,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName, err)
@@ -783,8 +771,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
@@ -831,8 +818,9 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    'Dim hstr() As String = Split(ex.Message, ":")
+                    'If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore, err)
@@ -884,8 +872,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, err, type)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, err, type)
@@ -931,8 +918,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, err, type)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, err, type)
@@ -975,8 +961,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem, err)
@@ -1017,8 +1002,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(err)
@@ -1058,8 +1042,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c, err)
@@ -1098,8 +1081,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c, err)
@@ -1194,8 +1176,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
@@ -1235,8 +1216,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
@@ -1325,8 +1305,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
@@ -1365,8 +1344,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore, err)
@@ -1409,8 +1387,7 @@ Public Class Request
 
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
@@ -1449,8 +1426,7 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
                 Catch ex As Exception
 
-                    Dim hstr() As String = Split(ex.Message, ":")
-                    If CInt(hstr(0)) = 401 Then                    ' Token is expired
+                    If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
                             result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
