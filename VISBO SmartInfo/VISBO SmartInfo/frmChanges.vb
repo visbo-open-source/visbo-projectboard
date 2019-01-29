@@ -191,7 +191,7 @@ Public Class frmChanges
 
         For i As Integer = 1 To changeListTable.SelectedRows.Count
 
-            Dim tmpShpName As String = changeListTable.SelectedRows.Item(i - 1).Tag
+            Dim tmpShpName As String = CStr(changeListTable.SelectedRows.Item(i - 1).Tag)
             If Not IsNothing(tmpShpName) Then
                 If tmpShpName <> "" Then
                     If Not tmpCollection.Contains(tmpShpName) Then

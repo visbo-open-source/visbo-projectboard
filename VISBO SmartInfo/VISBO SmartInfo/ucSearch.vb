@@ -153,7 +153,7 @@ Public Class ucSearch
             ''
             If englishLanguage Then
 
-                Select Case cathegoryList.SelectedItem
+                Select Case CStr(cathegoryList.SelectedItem)
                     Case "Name"
                         catCode = pptInfoType.cName
                     Case "Responsibilities"
@@ -179,7 +179,7 @@ Public Class ucSearch
                 End Select
 
             Else
-                Select Case cathegoryList.SelectedItem
+                Select Case CStr(cathegoryList.SelectedItem)
                     Case "Name"
                         catCode = pptInfoType.cName
                     Case "Verantwortlich"
@@ -386,7 +386,7 @@ Public Class ucSearch
         Dim catCode As Integer
 
         If englishLanguage Then
-            Select Case cathegoryList.SelectedItem
+            Select Case CStr(cathegoryList.SelectedItem)
                 Case "Name"
                     catCode = pptInfoType.cName
                 Case "Responsibilities"
@@ -411,7 +411,7 @@ Public Class ucSearch
                     catCode = pptInfoType.cName
             End Select
         Else
-            Select Case cathegoryList.SelectedItem
+            Select Case CStr(cathegoryList.SelectedItem)
                 Case "Name"
                     catCode = pptInfoType.cName
                 Case "Verantwortlich"
@@ -528,7 +528,7 @@ Public Class ucSearch
                 Dim selListboxEle As String = ""
 
                 'neue Elemente aus Selection in Liste bringen
-                For Each selEleShpName In tmpCollection
+                For Each selEleShpName As String In tmpCollection
 
                     Dim curShape As PowerPoint.Shape = currentSlide.Shapes(selEleShpName)
 
@@ -536,7 +536,7 @@ Public Class ucSearch
                     Dim bln As String = bestimmeElemText(curShape, False, False, showBestName)
                     Dim pname As String = ""
                     If isProjectCard(curShape) Then
-                        pname = getPVnameFromTags(selEleShpName)
+                        pname = getPVnameFromTags(curShape)
                     Else
                         pname = getPVnameFromShpName(selEleShpName)
                     End If
@@ -574,7 +574,7 @@ Public Class ucSearch
 
     Private Sub cathegoryList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cathegoryList.SelectedIndexChanged
 
-        Dim newCathegory As String = cathegoryList.SelectedItem
+        Dim newCathegory As String = cathegoryList.SelectedItem.ToString
         Dim oldFilterText As String = filterText.Text
 
         filterText.Text = ""
@@ -603,7 +603,7 @@ Public Class ucSearch
 
             ReDim nameArrayO(anzSelected - 1)
 
-            ShpName = CStr(shpNameSav.Item(selListboxNames.SelectedItem))
+            ShpName = CStr(shpNameSav.Item(selListboxNames.SelectedItem.ToString))
             nameArrayO(0) = ShpName
            
             Try
