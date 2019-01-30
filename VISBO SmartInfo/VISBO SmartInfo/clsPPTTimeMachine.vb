@@ -3,7 +3,7 @@
     Private _timeStamps As SortedList(Of Date, Boolean)
     ' tk 28.10.18 wird nicht mehr gebraucht ... 
     'Private _timeStampsIndex As Integer
-    Private _anzahlShapesOnSlide As Integer
+    'Private _anzahlShapesOnSlide As Integer
 
     Public Property timeStamps As SortedList(Of Date, Boolean)
         Get
