@@ -1996,17 +1996,14 @@ Public Module testModule
 
                             Case "ProjektBedarfsChart"
                                 ' new
-                                Dim chartTyp As PTChartTypen
-                                Dim vergleichsArt As PTVergleichsArt
-                                Dim vergleichstyp As PTVergleichsTyp
-                                Dim einheit As PTEinheiten
-                                Dim elementTyp As ptElementTypen
+
+                                Dim smartChartInfo As clsSmartPPTChartInfo = getChartParametersFromQ1(qualifier)
 
                                 ' Text im ShapeContainer / Platzhalter zurücksetzen 
                                 .TextFrame2.TextRange.Text = ""
 
                                 Try
-                                    If chartTyp = PTChartTypen.Pie Then
+                                    If smartChartInfo.chartTyp = PTChartTypen.Pie Then
                                         Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         bigType = ptReportBigTypes.charts
                                         compID = PTprdk.PersonalPie
@@ -2015,25 +2012,27 @@ Public Module testModule
                                         notYetDone = True
 
                                     Else
-                                        Call getChartParametersFromQ1(qualifier, chartTyp, vergleichsArt, vergleichstyp, einheit, elementTyp)
 
-                                        qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
+                                        With smartChartInfo
+                                            .q2 = bestimmeRoleQ2(qualifier2, selectedRoles)
+                                            .bigType = ptReportBigTypes.charts
 
-                                        bigType = ptReportBigTypes.charts
-                                        compID = PTprdk.ProjektbedarfsChart
+                                            ' muss mit dem ersten oder letzten verglichen werden ? 
+                                            .hproj = hproj
+                                            If .vergleichsTyp = PTVergleichsTyp.erster Then
+                                                .vglProj = bproj
+                                            ElseIf .vergleichsTyp = PTVergleichsTyp.letzter Then
+                                                .vglProj = lproj
+                                            End If
 
-                                        ' muss mit dem ersten oder letzten verglichen werden ? 
-                                        Dim vglProj As clsProjekt = Nothing
-                                        If vergleichstyp = PTVergleichsTyp.erster Then
-                                            vglProj = bproj
-                                        ElseIf vergleichstyp = PTVergleichsTyp.letzter Then
-                                            vglProj = lproj
-                                        End If
+                                        End With
 
-                                        Call createProjektChartInPPT(hproj, vglProj, chartTyp, vergleichsArt,
-                                                                     vergleichstyp, Date.MinValue, einheit, elementTyp,
-                                                                     qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                     bigType, compID)
+                                        Dim formerSU As Boolean = appInstance.ScreenUpdating
+                                        appInstance.ScreenUpdating = False
+
+                                        Call createProjektChartInPPT(smartChartInfo, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape)
+
+                                        appInstance.ScreenUpdating = formerSU
 
                                         boxName = ""
                                         notYetDone = False
@@ -2062,10 +2061,7 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.personentage, ptElementTypen.roles,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.PersonalBalken)
+
 
                                             'Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                             '                               roleName:=qualifier2,
@@ -2116,10 +2112,6 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.personentage, ptElementTypen.roles,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.PersonalBalken)
 
                                             'Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                             '                               roleName:=qualifier2,
@@ -2143,7 +2135,7 @@ Public Module testModule
 
 
                                     reportObj = obj
-                                    notYetDone = false
+                                    notYetDone = False
                                     bigType = ptReportBigTypes.charts
 
 
@@ -2171,10 +2163,6 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
 
                                             'Call createRessBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                             '                               roleName:=qualifier2,
@@ -2226,10 +2214,6 @@ Public Module testModule
 
                                             qualifier2 = bestimmeRoleQ2(qualifier2, selectedRoles)
 
-                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
 
                                             'Call createRessBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True,
                                             '                               roleName:=qualifier2,
@@ -2279,10 +2263,7 @@ Public Module testModule
                                         Else
                                             compID = PTprdk.KostenBalken
 
-                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+
                                             'Call createCostBalkenOfProject(hproj, bproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
 
                                         End If
@@ -2328,10 +2309,7 @@ Public Module testModule
                                         Else
                                             compID = PTprdk.KostenBalken2
 
-                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
+
                                             'Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
 
                                         End If
@@ -2392,10 +2370,6 @@ Public Module testModule
 
                                             compID = PTprdk.KostenBalken
 
-                                            Call createProjektChartInPPT(hproj, bproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
 
                                             'Call createCostBalkenOfProjectInPPT2(hproj, bproj, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, auswahl, pptShape, compID, qualifier, qualifier2)
 
@@ -2457,10 +2431,6 @@ Public Module testModule
                                             compID = PTprdk.KostenBalken2
 
 
-                                            Call createProjektChartInPPT(hproj, lproj, PTChartTypen.Balken, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, PTprdk.KostenBalken)
                                             notYetDone = False
                                             'Call createCostBalkenOfProject(hproj, lproj, obj, auswahl, htop, hleft, hheight, hwidth, True, compID)
                                         End If
@@ -2771,10 +2741,6 @@ Public Module testModule
 
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstPersonalkostenC
-                                    Call createProjektChartInPPT(hproj, bproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, compID)
 
                                     boxName = ""
 
@@ -2797,10 +2763,6 @@ Public Module testModule
 
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstPersonalkostenC2
-                                    Call createProjektChartInPPT(hproj, lproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.roles,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, compID)
 
                                     boxName = ""
                                     notYetDone = False
@@ -2824,10 +2786,7 @@ Public Module testModule
                                     reportObj = Nothing
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstSonstKostenC
-                                    Call createProjektChartInPPT(hproj, bproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, compID)
+
 
                                     boxName = ""
                                     notYetDone = False
@@ -2850,10 +2809,7 @@ Public Module testModule
 
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstSonstKostenC2
-                                    Call createProjektChartInPPT(hproj, lproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.letzter, Date.MinValue, PTEinheiten.euro, ptElementTypen.costs,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, compID)
+
 
 
                                     reportObj = Nothing
@@ -2917,10 +2873,7 @@ Public Module testModule
 
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstGesamtkostenC
-                                    Call createProjektChartInPPT(hproj, bproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, compID)
+
 
 
                                     reportObj = Nothing
@@ -2946,10 +2899,6 @@ Public Module testModule
 
                                     bigType = ptReportBigTypes.charts
                                     compID = PTprdk.SollIstGesamtkostenC2
-                                    Call createProjektChartInPPT(hproj, lproj, PTChartTypen.CurveCumul, PTVergleichsArt.beauftragung,
-                                                                         PTVergleichsTyp.erster, Date.MinValue, PTEinheiten.euro, ptElementTypen.rolesAndCost,
-                                                                         qualifier2, pptAppfromX, pptCurrentPresentation.Name, pptSlide.Name, pptShape,
-                                                                         ptReportBigTypes.charts, compID)
 
 
                                     reportObj = Nothing
@@ -3493,6 +3442,7 @@ Public Module testModule
 
     ''' <summary>
     ''' wird in createSlidesFromProject immer wieder gebraucht; bestimmt den qualifier2 role, auch wenn er als RoleID;nameID angegeben ist
+    ''' gibt eine RoleNameID zurück 
     ''' </summary>
     ''' <param name="qualifier2"></param>
     ''' <param name="selectedRoles"></param>
@@ -3552,6 +3502,12 @@ Public Module testModule
 
 
 
+        End If
+        ' jetzt ist in q2 entweder der leere String oder eine gültiger Name
+        If qualifier2 <> "" Then
+            Dim tmpteamID As Integer = -1
+            Dim tmpRoleID As Integer = RoleDefinitions.parseRoleNameID(qualifier2, tmpteamID)
+            qualifier2 = RoleDefinitions.bestimmeRoleNameID(tmpRoleID, -1)
         End If
 
         bestimmeRoleQ2 = qualifier2

@@ -7,10 +7,10 @@
             If CDbl(fontSize.Text) > 3 Then
                 ' alles ok 
             Else
-                fontSize.Text = schriftGroesse
+                fontSize.Text = CStr(schriftGroesse)
             End If
         Else
-            fontSize.Text = schriftGroesse
+            fontSize.Text = CStr(schriftGroesse)
         End If
 
     End Sub

@@ -63,26 +63,6 @@ Namespace My.Resources
         '''<summary>
         '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         '''</summary>
-        Friend ReadOnly Property _3d() As System.Drawing.Bitmap
-            Get
-                Dim obj As Object = ResourceManager.GetObject("3d", resourceCulture)
-                Return CType(obj,System.Drawing.Bitmap)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        '''</summary>
-        Friend ReadOnly Property _3d_plus() As System.Drawing.Bitmap
-            Get
-                Dim obj As Object = ResourceManager.GetObject("3d-plus", resourceCulture)
-                Return CType(obj,System.Drawing.Bitmap)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        '''</summary>
         Friend ReadOnly Property about() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("about", resourceCulture)
@@ -125,7 +105,7 @@ Namespace My.Resources
         '''</summary>
         Friend ReadOnly Property camera_plus() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("camera-plus", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("camera_plus", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -145,7 +125,27 @@ Namespace My.Resources
         '''</summary>
         Friend ReadOnly Property documents_plus() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("documents-plus", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("documents_plus", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property dreiD() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("dreiD", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property Dreid_plus() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("Dreid_plus", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -495,7 +495,7 @@ Namespace My.Resources
         '''</summary>
         Friend ReadOnly Property surveillance_camera_plus() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("surveillance_camera-plus", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("surveillance_camera_plus", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property

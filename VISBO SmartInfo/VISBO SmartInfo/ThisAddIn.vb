@@ -8,7 +8,7 @@ Public Class ThisAddIn
 
     Private Sub ThisAddIn_Disposed(sender As Object, e As EventArgs) Handles Me.Disposed
         If VisboProtected Then
-            Call makeVisboShapesVisible(False)
+            Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
         End If
     End Sub
 
@@ -52,7 +52,7 @@ Public Class ThisAddIn
 
         Try
             If VisboProtected Then
-                Call makeVisboShapesVisible(False)
+                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoFalse)
             End If
         Catch ex As Exception
 

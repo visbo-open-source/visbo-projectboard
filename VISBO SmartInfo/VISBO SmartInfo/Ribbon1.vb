@@ -122,16 +122,17 @@ Public Class Ribbon1
                 Dim csWidth As Single = currentSlide.CustomLayout.Width
                 Dim csHeigth As Single = currentSlide.CustomLayout.Height
                 Dim freezeShape As PowerPoint.Shape
-                freezeShape = currentSlide.Shapes.AddShape(MsoAutoShapeType.msoShapeRectangle,
-                                                          Left:=csWidth * 0.75,
+                    freezeShape = currentSlide.Shapes.AddShape(MsoAutoShapeType.msoShapeRectangle,
+                                                          Left:=CSng(csWidth * 0.75),
                                                           Top:=8,
                                                           Width:=32,
                                                           Height:=32)
                     With freezeShape
                         .LockAspectRatio = MsoTriState.msoTrue
                         .Name = "FreezeShape"
-                        .Line.Visible = False
-                        .Fill.Visible = True
+                        .Line.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+
+                        .Fill.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
                         .Fill.UserPicture(waterSign)
                         .Fill.TextureTile = MsoTriState.msoFalse
                         .Fill.RotateWithObject = MsoTriState.msoTrue

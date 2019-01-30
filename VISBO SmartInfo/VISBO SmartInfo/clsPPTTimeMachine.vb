@@ -56,9 +56,9 @@
                 ' wenn eines davon zutrifft, wird es aufgenommen. 
                 ' Damit wird sichergestellt, dass die TimeStamps Liste zwar nicht alle Timestamps enthält, aber die Min, Max Werte korrekt gesetzt sind 
 
-                If DateDiff(DateInterval.Minute, tmpDate, _timeStamps.First) > 0 Then
+                If DateDiff(DateInterval.Minute, tmpDate, _timeStamps.First.Key) > 0 Then
                     _timeStamps.Add(tmpDate, False)
-                ElseIf DateDiff(DateInterval.Minute, _timeStamps.Last, tmpDate) > 0 Then
+                ElseIf DateDiff(DateInterval.Minute, _timeStamps.Last.key, tmpDate) > 0 Then
                     _timeStamps.Add(tmpDate, False)
                 End If
             End If

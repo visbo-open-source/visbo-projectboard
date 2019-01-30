@@ -19,7 +19,7 @@ Public Class ucProperties
     ' nimmt auf , um welches Shape es sich aktuell handelt 
     Private _currentShape As PowerPoint.Shape
 
-    Private _rememberYValueofEleAmpeltext As Integer = 0.0
+    Private _rememberYValueofEleAmpeltext As Integer = 0
 
     Public Sub New()
 
@@ -399,19 +399,19 @@ Public Class ucProperties
                     ' die Prüfung , ob es sich um eine valide URL handelt erfolgt vor diesem Aufruf ! 
                     If value <> "" Then
                         _my3DLink = value
-                        mydreiDlnk.Image = My.Resources._3d
+                        mydreiDlnk.Image = My.Resources.dreiD
                     Else
                         _my3DLink = ""
-                        mydreiDlnk.Image = My.Resources._3d_plus
+                        mydreiDlnk.Image = My.Resources.Dreid_plus
                     End If
                 Else
                     _my3DLink = ""
-                    mydreiDlnk.Image = My.Resources._3d_plus
+                    mydreiDlnk.Image = My.Resources.Dreid_plus
                 End If
 
             Catch ex As Exception
                 _my3DLink = value
-                mydreiDlnk.Image = My.Resources._3d_plus
+                mydreiDlnk.Image = My.Resources.Dreid_plus
             End Try
 
         End Set

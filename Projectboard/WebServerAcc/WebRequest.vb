@@ -364,20 +364,20 @@ Public Class Request
 
                 Dim hresultFirst As New List(Of clsProjektWebShort)
 
-                hresultFirst = GETallVPvShort(vpid, err, vpvid:="", status:="", refNext:=True, variantName:=variantName, storedAtorBefore:=Nothing)
+                hresultFirst = GETallVPvShort(vpid:=vpid, err:=err, vpvid:="", status:="", refNext:=True, variantName:=variantName, storedAtorBefore:=Nothing)
 
                 Dim anzResult As Integer = hresultFirst.Count
                 If anzResult >= 0 Then
-                    ergebnisCollection.Add(hresultFirst.Item(anzResult - 1).timestamp)
+                    ergebnisCollection.Add(hresultFirst.Item(anzResult - 1).timestamp.ToLocalTime)
                 End If
 
                 If err.errorCode = 200 Then
                     Dim hresultLast As New List(Of clsProjektWebShort)
 
-                    hresultLast = GETallVPvShort(vpid, err, , , refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
+                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err, refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
 
                     If hresultLast.Count >= 0 Then
-                        ergebnisCollection.Add(hresultLast.Item(0).timestamp)
+                        ergebnisCollection.Add(hresultLast.Item(0).timestamp.ToLocalTime)
                     End If
                 End If
 
@@ -443,7 +443,8 @@ Public Class Request
                     If err.errorCode = 200 Then    ' Cache wurde erfolgreich gefüllt
 
                         Dim VisboPv_all As New List(Of clsProjektWebLong)
-                        VisboPv_all = GETallVPvLong("", err, , , , variantName, aktDate)
+                        'VisboPv_all = GETallVPvLong("", err, , , , variantName, aktDate)
+                        VisboPv_all = GETallVPvLong(vpid:="", err:=err, variantName:=variantName, storedAtorBefore:=aktDate)
 
                         diffRC = DateDiff(DateInterval.Second, diffRCBeginn, Date.Now)
 
@@ -603,7 +604,8 @@ Public Class Request
             If vpid <> "" Then
                 ' gewünschte Variante vom Server anfordern
                 Dim allVPv As New List(Of clsProjektWebLong)
-                allVPv = GETallVPvLong(vpid, err, , , , variantname, storedAtOrBefore)
+                'allVPv = GETallVPvLong(vpid, err, , , , variantname, storedAtOrBefore)
+                allVPv = GETallVPvLong(vpid:=vpid, err:=err, variantName:=variantname, storedAtorBefore:=storedAtOrBefore)
                 If allVPv.Count > 0 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
                     webProj.copyto(hproj, vp)
@@ -1074,11 +1076,16 @@ Public Class Request
 
                 Dim allVPv As New List(Of clsProjektWebLong)
                 ' erst alle mit dem angegebenen Varianten-NAmen holen 
-                allVPv = GETallVPvLong(vpid, err, , , , variantName)
+                ' tk : ich habe das ausgeschrieben, das kann ich dann besser lesen - ausserdem passiert sonst leicht ein Fehler beim 'Abzählen' der optionalen Parameter
+                ' allVPv = GETallVPvLong(vpid, err, , , , variantName)
+                allVPv = GETallVPvLong(vpid:=vpid,
+                                       err:=err,
+                                       variantName:=variantName)
 
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
                 For Each vpv In allVPv
-                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest And vpv.variantName = variantName Then
+                    'If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest And vpv.variantName = variantName Then
+                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
                         'zwischenResult.Add(vpv.timestamp, vpv)
                         Dim hproj As New clsProjekt
                         vpv.copyto(hproj, vp)
@@ -1087,15 +1094,22 @@ Public Class Request
                 Next
 
                 ' jetzt alle Vorgaben holen, das sind die Versionen mit Varianten-NAme = "pfv" 
-                allVPv = GETallVPvLong(vpid, err, , , , ptVariantFixNames.pfv.ToString)
+                'allVPv = GETallVPvLong(vpid, err, , , , ptVariantFixNames.pfv.ToString)
+                allVPv = GETallVPvLong(vpid:=vpid,
+                                       err:=err,
+                                       variantName:=ptVariantFixNames.pfv.ToString)
                 ' einschränken auf alle versionen in dem angegebenen Zeitraum
+
                 For Each vpv In allVPv
-                    If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest And vpv.variantName = variantName Then
-                        'zwischenResult.Add(vpv.timestamp, vpv)
-                        Dim hproj As New clsProjekt
-                        vpv.copyto(hproj, vp)
-                        result.AddPfv(hproj)
-                    End If
+                    ' die Vorgaben dürfen nicht an storedEarliest bzw storedlatest gebunden werden 
+                    ' denn die können vor oder auch nach einem Planungs-Stand gespeichert worden sein 
+                    'If storedEarliest <= vpv.timestamp And vpv.timestamp <= storedLatest Then
+
+                    Dim hproj As New clsProjekt
+                    vpv.copyto(hproj, vp)
+                    result.AddPfv(hproj)
+
+                    'End If
                 Next
 
             End If
@@ -1666,7 +1680,7 @@ Public Class Request
                 If kvp.Value.lock.Count > 0 Then
 
                     ' holt zu der vpid die Varianten aus vpv Collection
-                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id, err, , "", False,  , Date.Now)
+                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id, err, , "", False,  , Date.Now.ToUniversalTime)
 
                     ' Lock löschen für jede Variante des Projektes mit vpid
                     For Each vTp As clsProjektWebShort In variantToProj

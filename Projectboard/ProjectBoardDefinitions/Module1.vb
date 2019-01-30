@@ -4526,30 +4526,18 @@ Public Module Module1
     ''' ergänzt Chart Tags für ein Projekt wie Portfolio Chart 
     ''' </summary>
     ''' <param name="pptShape"></param>
-    ''' <param name="hproj"></param>
-    ''' <param name="prpf"></param>
-    ''' <param name="chartTyp"></param>
-    ''' <param name="vergleichsArt"></param>
-    ''' <param name="vergleichsTyp"></param>
-    ''' <param name="vglDatum"></param>
-    ''' <param name="einheit"></param>
-    ''' <param name="prcTyp"></param>
-    ''' <param name="qualifier2"></param>
-    ''' <param name="bigType"></param>
-    ''' <param name="detailID"></param>
-    Public Sub addSmartPPTChartInfo(ByRef pptShape As PowerPoint.Shape, ByVal hproj As clsProjekt,
-                                    ByVal prpf As Integer, ByVal chartTyp As PTChartTypen,
-                                    ByVal vergleichsArt As PTVergleichsArt, ByVal vergleichsTyp As PTVergleichsTyp, ByVal vglDatum As Date,
-                                    ByVal einheit As PTEinheiten, ByVal prcTyp As ptElementTypen, ByVal qualifier2 As String,
-                                    ByVal bigType As Integer, ByVal detailID As Integer)
+    ''' <param name="scInfo"></param>
+    Public Sub addSmartPPTChartInfo(ByRef pptShape As PowerPoint.Shape, ByVal scinfo As clsSmartPPTChartInfo)
 
-        If IsNothing(hproj) Then
+        If IsNothing(scinfo.hproj) Then
             Exit Sub
         End If
 
-        Dim pName As String = hproj.name
-        Dim vName As String = hproj.variantName
+        Dim pName As String = scinfo.hproj.name
+        Dim vName As String = scinfo.hproj.variantName
         Dim chtObjName As String = ""
+
+        'Dim encryptedUR As String = encryptmyCustomUserRole
         Try
 
             If Not IsNothing(pptShape) Then
@@ -4567,41 +4555,41 @@ Public Module Module1
                             .Tags.Add("CHON", chtObjName)
                         End If
 
-                        If Not IsNothing(chartTyp) Then
+                        If Not IsNothing(scinfo.chartTyp) Then
                             If .Tags.Item("CHT").Length > 0 Then
                                 .Tags.Delete("CHT")
                             End If
-                            .Tags.Add("CHT", CStr(CInt(chartTyp)))
+                            .Tags.Add("CHT", CStr(CInt(scinfo.chartTyp)))
                         End If
 
-                        If Not IsNothing(einheit) Then
+                        If Not IsNothing(scinfo.einheit) Then
                             If .Tags.Item("ASW").Length > 0 Then
                                 .Tags.Delete("ASW")
                             End If
-                            .Tags.Add("ASW", CStr(CInt(einheit)))
+                            .Tags.Add("ASW", CStr(CInt(scinfo.einheit)))
                         End If
 
                         If .Tags.Item("VGLA").Length > 0 Then
                             .Tags.Delete("VGLA")
                         End If
-                        .Tags.Add("VGLA", CStr(CInt(vergleichsArt)))
+                        .Tags.Add("VGLA", CStr(CInt(scinfo.vergleichsArt)))
 
                         If .Tags.Item("VGLT").Length > 0 Then
                             .Tags.Delete("VGLT")
                         End If
-                        .Tags.Add("VGLT", CStr(CInt(vergleichsTyp)))
+                        .Tags.Add("VGLT", CStr(CInt(scinfo.vergleichsTyp)))
 
                         If .Tags.Item("VGLD").Length > 0 Then
                             .Tags.Delete("VGLD")
                         End If
-                        .Tags.Add("VGLD", vglDatum.ToString)
+                        .Tags.Add("VGLD", scinfo.vergleichsDatum.ToString)
 
-                        If Not IsNothing(prpf) Then
-                            If .Tags.Item("PRPF").Length > 0 Then
-                                .Tags.Delete("PRPF")
-                            End If
-                            .Tags.Add("PRPF", prpf.ToString)
+
+                        If .Tags.Item("PRPF").Length > 0 Then
+                            .Tags.Delete("PRPF")
                         End If
+                        .Tags.Add("PRPF", CStr(scinfo.hproj.projectType))
+
 
                         If Not IsNothing(pName) Then
                             If .Tags.Item("PNM").Length > 0 Then
@@ -4617,33 +4605,30 @@ Public Module Module1
                             .Tags.Add("VNM", vName)
                         End If
 
-                        If Not IsNothing(prcTyp) Then
-                            If .Tags.Item("Q1").Length > 0 Then
-                                .Tags.Delete("Q1")
-                            End If
-                            .Tags.Add("Q1", CStr(CInt(prcTyp)))
-                        End If
 
-                        If Not IsNothing(qualifier2) Then
-                            If .Tags.Item("Q2").Length > 0 Then
-                                .Tags.Delete("Q2")
-                            End If
-                            .Tags.Add("Q2", qualifier2)
+                        If .Tags.Item("Q1").Length > 0 Then
+                            .Tags.Delete("Q1")
                         End If
+                        .Tags.Add("Q1", CStr(CInt(scinfo.elementTyp)))
 
-                        If Not IsNothing(bigType) Then
-                            If .Tags.Item("BID").Length > 0 Then
-                                .Tags.Delete("BID")
-                            End If
-                            .Tags.Add("BID", bigType.ToString)
-                        End If
 
-                        If Not IsNothing(detailID) Then
-                            If .Tags.Item("DID").Length > 0 Then
-                                .Tags.Delete("DID")
-                            End If
-                            .Tags.Add("DID", detailID.ToString)
+
+                        If .Tags.Item("Q2").Length > 0 Then
+                            .Tags.Delete("Q2")
                         End If
+                        .Tags.Add("Q2", scinfo.q2)
+
+
+                        If .Tags.Item("BID").Length > 0 Then
+                            .Tags.Delete("BID")
+                        End If
+                        .Tags.Add("BID", CStr(CInt(scinfo.bigType)))
+
+                        If .Tags.Item("DID").Length > 0 Then
+                            .Tags.Delete("DID")
+                        End If
+                        .Tags.Add("DID", CStr(CInt(scinfo.detailID)))
+
 
                     End With
 
@@ -4657,6 +4642,7 @@ Public Module Module1
 
 
     End Sub
+
 
     ''' <summary>
     ''' fügt für  Reporting Komponenten die entsprechenden Smart-Infos hinzu, so dass 
