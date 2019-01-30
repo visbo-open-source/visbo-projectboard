@@ -239,61 +239,6 @@ Public Class Ribbon1
             Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
 
 
-            'Dim msg As String = ""
-
-            '' Prüfen, ob Login noch passt ...
-            'If userIsEntitled(msg) Then
-            '    Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
-            'Else
-            '    Call MsgBox(msg)
-            'End If
-
-
-
-            ' tk 18.10.18 durch obigen Aufruf ersetzt 
-            'Dim pres As PowerPoint.Presentation = pptAPP.ActivePresentation
-            'Dim formerSlide As PowerPoint.Slide = currentSlide
-            'Dim newestVersion As Boolean = False
-            'Dim newdate As Date
-            'Dim formerCurrentTimestamp As Date
-
-            'For i As Integer = 1 To pres.Slides.Count
-            '    Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
-            '    newdate = Nothing
-            '    If Not IsNothing(sld) Then
-
-            '        If Not (sld.Tags.Item("FROZEN").Length > 0) _
-            '            And (sld.Tags.Item("SMART") = "visbo") Then
-
-            '            Call pptAPP_UpdateOneSlide(sld)
-            '            formerCurrentTimestamp = currentTimestamp
-            '            Call visboUpdate(ptNavigationButtons.letzter, newdate, False)
-            '            If formerCurrentTimestamp = newdate Then
-            '                newestVersion = True
-            '            End If
-            '        End If
-            '    End If
-            'Next
-
-            'If newestVersion Then
-            '    If englishLanguage Then
-            '        Call MsgBox("Report is already up-to-date: (" & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & ") ")
-            '    Else
-            '        Call MsgBox("Report hat den aktuellen Stand: (" & newdate.ToLongDateString & " " & newdate.TimeOfDay.ToString & ")")
-            '    End If
-            'End If
-
-            'currentSlide = formerSlide
-            '' smartSlideLists für die aktuelle currentslide wieder aufbauen
-            '' tk 22.8.18
-            'Call pptAPP_UpdateOneSlide(currentSlide)
-            ''Call buildSmartSlideLists()
-
-            '' das Formular ggf, also wenn aktiv,  updaten 
-            'If Not IsNothing(changeFrm) Then
-            '    changeFrm.neuAufbau()
-            'End If
-
         Catch ex As Exception
 
         End Try
