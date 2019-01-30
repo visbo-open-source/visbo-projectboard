@@ -8499,7 +8499,7 @@ Module Module1
                         'tmpIndex = 0
                         tmpDate = tmpTM.timeStamps.First.Key
 
-                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                        'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                     End If
 
                 Case ptNavigationButtons.letzter
@@ -8508,7 +8508,7 @@ Module Module1
                         'tmpIndex = tmpTM.timeStamps.Count - 1
                         tmpDate = tmpTM.timeStamps.Last.Key
 
-                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
+                        'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
                     End If
 
                 Case ptNavigationButtons.update

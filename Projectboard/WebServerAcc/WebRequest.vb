@@ -368,16 +368,16 @@ Public Class Request
 
                 Dim anzResult As Integer = hresultFirst.Count
                 If anzResult >= 0 Then
-                    ergebnisCollection.Add(hresultFirst.Item(anzResult - 1).timestamp)
+                    ergebnisCollection.Add(hresultFirst.Item(anzResult - 1).timestamp.ToLocalTime)
                 End If
 
                 If err.errorCode = 200 Then
                     Dim hresultLast As New List(Of clsProjektWebShort)
 
-                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err, refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now)
+                    hresultLast = GETallVPvShort(vpid:=vpid, err:=err, refNext:=False, variantName:=variantName, storedAtorBefore:=Date.Now.ToUniversalTime)
 
                     If hresultLast.Count >= 0 Then
-                        ergebnisCollection.Add(hresultLast.Item(0).timestamp)
+                        ergebnisCollection.Add(hresultLast.Item(0).timestamp.ToLocalTime)
                     End If
                 End If
 
@@ -1680,7 +1680,7 @@ Public Class Request
                 If kvp.Value.lock.Count > 0 Then
 
                     ' holt zu der vpid die Varianten aus vpv Collection
-                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id, err, , "", False,  , Date.Now)
+                    Dim variantToProj As List(Of clsProjektWebShort) = GETallVPvShort(kvp.Value._id, err, , "", False,  , Date.Now.ToUniversalTime)
 
                     ' Lock löschen für jede Variante des Projektes mit vpid
                     For Each vTp As clsProjektWebShort In variantToProj
