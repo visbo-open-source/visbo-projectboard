@@ -166,7 +166,7 @@
   <data name="layout_southeast" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\layout_southeast.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="camera-plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="camera_plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\camera-plus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="navigate_beginning" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -223,10 +223,10 @@
   <data name="navigate_beginning1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\navigate_beginning1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="documents-plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="documents_plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\documents-plus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="surveillance_camera-plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="surveillance_camera_plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\surveillance_camera-plus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="view" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -241,7 +241,7 @@
   <data name="navigate_end1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\navigate_end1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="3d" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="dreiD" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\3d.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="navigate_right1" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -262,7 +262,7 @@
   <data name="camera" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\camera.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="3d-plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="Dreid_plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\3d-plus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

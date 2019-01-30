@@ -7576,7 +7576,7 @@ Imports System.Web
         If ok And Not IsNothing(hproj) Then
 
             ' bei Projekten, egal ob standard Projekt oder Portfolio Projekt wird immer mit der Vorgaben-Variante verglichen
-            Dim tmpVariantName As String = ptVariantFixNames.pfv.ToString
+            Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
             ' tk 28.12.18 deprecated
             'If hproj.projectType = ptPRPFType.portfolio Then
             '    tmpVariantName = portfolioVName
@@ -7613,10 +7613,10 @@ Imports System.Web
                 Try
 
                     If compareWithLast Then
-                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, tmpVariantName, Date.Now, err)
+                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, Date.Now, err)
                         compareTyp = PTprdk.PersonalBalken2
                     Else
-                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                        vglProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
                         compareTyp = PTprdk.PersonalBalken
                     End If
 
@@ -8471,14 +8471,14 @@ Imports System.Web
                 ''Dim nrSnapshots As Integer = projekthistorie.Count
 
                 ' bei normalen Projekten wird immer mit der Basis-Variante verglichen, bei Portfolio Projekten mit dem Portfolio Name
-                Dim tmpVariantName As String = ""
+                Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
                 ' tk 28.12.18 deprecated
                 'If hproj.projectType = ptPRPFType.portfolio Then
                 '    tmpVariantName = portfolioVName
                 'End If
 
                 ' das bproj bestimmen 
-                bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, tmpVariantName, err)
+                bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
 
 
 

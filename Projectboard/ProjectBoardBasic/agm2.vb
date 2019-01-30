@@ -13561,7 +13561,8 @@ Public Module agm2
                     Call kvp.Value.calculateRoundedKPI(budget, pk, ok, rk, pl)
                 Else
                     ' jetzt müssen budget, pk, ok, rk, pl anhand der Rollen-/Kosten-Vorgaben bestimmt werden 
-                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(kvp.Value.name, kvp.Value.variantName, err)
+                    Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
+                    vorgabeProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(kvp.Value.name, vorgabeVariantName, err)
 
                     ' Berechnung budget/Vorgabe 
                     budget = 0.0

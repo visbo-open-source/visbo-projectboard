@@ -4,7 +4,7 @@
         eleAmpelText.MaximumSize = New Drawing.Size(TableLayoutPanel1.Width - eleAmpelText.Margin.Left - eleAmpelText.Margin.Right, 0)
 
         ' textbox resize
-        eleDeliverables.Height = eleDeliverables.CreateGraphics().MeasureString(eleDeliverables.Text, eleDeliverables.Font, eleDeliverables.Width).Height
+        eleDeliverables.Height = CInt(eleDeliverables.CreateGraphics().MeasureString(eleDeliverables.Text, eleDeliverables.Font, eleDeliverables.Width).Height)
     End Sub
 
 
