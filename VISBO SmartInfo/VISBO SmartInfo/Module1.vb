@@ -2467,7 +2467,7 @@ Module Module1
 
                     Try
 
-                        Call createNewHiddenExcel()
+                        'Call createNewHiddenExcel()
 
                         ' jetzt muss das chtobj aktualisiert werden ... 
                         Try
@@ -2492,8 +2492,9 @@ Module Module1
                                 End Try
 
                                 Call updateProjectChartInPPT(scInfo, pptShape)
-                                'Call updatePPTBalkenOfProjectInPPT(tsProj, bproj, pptShape, prcTyp, auswahl, qualifier2)
                                 pptAPP.Activate()
+
+                                ' Variante 2: seriesCollection - kein pptShape.Chart.Refresh()
 
 
                             ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
@@ -2782,121 +2783,117 @@ Module Module1
         ' jetzt wird myRange gesetzt und setSourceData gesetzt 
         'Dim fZeile As Integer = usedRange.Rows.Count + 1
 
-        'Dim fzeile As Integer = 1
-        'Dim anzSpalten As Integer = plen + 1
-        'Dim anzRows As Integer = 0
+        Dim fzeile As Integer = 1
+        Dim anzSpalten As Integer = plen + 1
+        Dim anzRows As Integer = 0
+
 
         With pptShape.Chart.ChartData
-            .ActivateChartDataWindow()
+            .Activate()
+            '.ActivateChartDataWindow()
+
+            xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
+
+
+            Try
+
+                If Not CStr(CType(xlApp.ActiveWindow, Excel.Window).Caption) = "VISBO Smart Diagram" Then
+                    xlApp.DisplayFormulaBar = False
+                    With xlApp.ActiveWindow
+
+                        .Caption = "VISBO Smart Diagram"
+                        .DisplayHeadings = False
+                        .DisplayWorkbookTabs = False
+
+                        .Width = 500
+                        .Height = 150
+                        .Top = 100
+                        .Left = -1200
+
+                    End With
+                End If
+
+            Catch ex As Exception
+
+            End Try
+
+            curWS = CType(CType(.Workbook, Excel.Workbook).Worksheets.Item(1), Excel.Worksheet)
+            curWS.UsedRange.Clear()
+
+            If Not smartChartsAreEditable Then
+                With xlApp
+                    '.Visible = False
+                    '.ActiveWindow.Visible = False
+                End With
+            End If
+
         End With
 
-        'With pptShape.Chart.ChartData
-        '    '.Activate()
-        '    '.ActivateChartDataWindow()
-
-        '    xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
 
 
-        '    Try
-        '        With xlApp
-        '            If Not .ActiveWindow.Caption = "VISBO Smart Diagram" Then
-        '                .DisplayFormulaBar = False
-        '                With .ActiveWindow
+        ' für das SetSourceData 
+        Dim myRange As Excel.Range = Nothing
+        'Dim usedRange As Excel.Range = curWS.UsedRange
+        ' Ende setsource Vorbereitungen 
 
-        '                    .Caption = "VISBO Smart Diagram"
-        '                    .DisplayHeadings = False
-        '                    .DisplayWorkbookTabs = False
+        With curWS
 
-        '                    .Width = 500
-        '                    .Height = 150
-        '                    .Top = 100
-        '                    .Left = -1200
+            ' neu 
 
-        '                End With
-        '            End If
-        '        End With
-        '    Catch ex As Exception
+            .Cells(fzeile, 1).value = ""
+            .Range(.Cells(fzeile, 2), .Cells(fzeile, anzSpalten)).Value = Xdatenreihe
 
-        '    End Try
+            If considerIstDaten Then
 
-        '    curWS = CType(.Workbook, Excel.Workbook).Worksheets.Item(1)
-        '    curWS.UsedRange.Clear()
+                anzRows = 3
 
-        '    If Not smartChartsAreEditable Then
-        '        With xlApp
-        '            .Visible = False
-        '            .ActiveWindow.Visible = False
-        '        End With
-        '    End If
+                .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("I")
+                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = istDatenReihe
 
+                .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = prognoseDatenReihe
 
-        'End With
+                If Not IsNothing(scInfo.vglProj) Then
 
+                    anzRows = 4
+                    .Cells(fzeile + 3, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                    .Range(.Cells(fzeile + 3, 2), .Cells(fzeile + 3, anzSpalten)).Value = vdatenreihe
 
+                End If
 
-        '' für das SetSourceData 
-        'Dim myRange As Excel.Range = Nothing
-        ''Dim usedRange As Excel.Range = curWS.UsedRange
-        '' Ende setsource Vorbereitungen 
+            Else
 
-        'With curWS
+                anzRows = 2
 
-        '    ' neu 
+                .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = prognoseDatenReihe
 
-        '    .Cells(fzeile, 1).value = ""
-        '    .Range(.Cells(fzeile, 2), .Cells(fzeile, anzSpalten)).Value = Xdatenreihe
+                If Not IsNothing(scInfo.vglProj) Then
+                    anzRows = 3
 
-        '    If considerIstDaten Then
+                    .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                    .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = vdatenreihe
 
-        '        anzRows = 3
+                End If
 
-        '        .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("I")
-        '        .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = istDatenReihe
+            End If
 
-        '        .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-        '        .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = prognoseDatenReihe
+            myRange = curWS.Range(.Cells(fzeile, 1), .Cells(fzeile + anzRows - 1, anzSpalten))
 
-        '        If Not IsNothing(scInfo.vglProj) Then
+            ' Ende neu 
 
-        '            anzRows = 4
-        '            .Cells(fzeile + 3, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-        '            .Range(.Cells(fzeile + 3, 2), .Cells(fzeile + 3, anzSpalten)).Value = vdatenreihe
-
-        '        End If
-
-        '    Else
-
-        '        anzRows = 2
-
-        '        .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
-        '        .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = prognoseDatenReihe
-
-        '        If Not IsNothing(scInfo.vglProj) Then
-        '            anzRows = 3
-
-        '            .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
-        '            .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = vdatenreihe
-
-        '        End If
-
-        '    End If
-
-        '    myRange = curWS.Range(.Cells(fzeile, 1), .Cells(fzeile + anzRows - 1, anzSpalten))
-
-        '    ' Ende neu 
-
-        'End With
+        End With
 
 
 
-        'Try
-        '    ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
-        '    Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
-        '    pptShape.Chart.SetSourceData(Source:=rangeString)
+        Try
+            ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
+            Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
+            pptShape.Chart.SetSourceData(Source:=rangeString)
 
-        'Catch ex As Exception
+        Catch ex As Exception
 
-        'End Try
+        End Try
 
         pptShape.Chart.Refresh()
 
@@ -8783,6 +8780,7 @@ Module Module1
     Public Sub btnUpdateAction(ByVal ptNavType As Integer, ByVal specDate As Date)
 
         Try
+            'Dim ticsStart As Integer = My.Computer.Clock.TickCount
 
             Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
             Dim formerSlide As PowerPoint.Slide = currentSlide
@@ -8815,6 +8813,9 @@ Module Module1
                 changeFrm.neuAufbau()
             End If
 
+            'Dim ticsEnd As Integer = My.Computer.Clock.TickCount
+            'Call MsgBox("zeit benötigt: " & CStr(ticsEnd - ticsStart))
+
         Catch ex As Exception
 
         End Try
@@ -8837,9 +8838,11 @@ Module Module1
 
         If ddiff <> 0 Then
 
+
             previousVariantName = currentVariantname
             previousTimeStamp = currentTimestamp
             currentTimestamp = newdate
+
 
             Call moveAllShapes()
 
