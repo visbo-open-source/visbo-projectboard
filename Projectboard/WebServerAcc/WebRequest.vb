@@ -270,7 +270,7 @@ Public Class Request
 
             For i As Integer = sl.Count - 1 To 0 Step -1
                 Dim kvp As KeyValuePair(Of DateTime, DateTime) = sl.ElementAt(i)
-                resultCollection.Add(kvp.Value.ToUniversalTime())
+                resultCollection.Add(kvp.Value.ToLocalTime())
             Next i
 
         Catch ex As Exception
@@ -335,7 +335,7 @@ Public Class Request
 
     End Function
     ''' <summary>
-    ''' bringt für die angegebene Projekt-Variante alle Zeitstempel in absteigender Sortierung zurück 
+    ''' bringt für die angegebene Projekt-Variante den ersten und den letzten Zeitstempel  zurück 
     ''' </summary>
     ''' <param name="pvName"></param>
     ''' <returns>Collection, absteigend sortiert</returns>
@@ -446,9 +446,10 @@ Public Class Request
                         'VisboPv_all = GETallVPvLong("", err, , , , variantName, aktDate)
                         VisboPv_all = GETallVPvLong(vpid:="", err:=err, variantName:=variantName, storedAtorBefore:=aktDate)
 
-                        diffRC = DateDiff(DateInterval.Second, diffRCBeginn, Date.Now)
+                        'ur: nur zu testzwecken eingefügt
+                        'diffRC = DateDiff(DateInterval.Second, diffRCBeginn, Date.Now)
 
-                        Dim copyBeginn As Date = Date.Now
+                        'Dim copyBeginn As Date = Date.Now
 
                         For Each webProj As clsProjektWebLong In VisboPv_all
 
@@ -479,7 +480,8 @@ Public Class Request
 
                         Next
 
-                        diffCopy = DateDiff(DateInterval.Second, copyBeginn, Date.Now)
+                        'ur: nur zu testzwecken eingefügt
+                        'diffCopy = DateDiff(DateInterval.Second, copyBeginn, Date.Now)
 
                         '' ur: 2018.11.14: das Holen aller Projekte und Varianten einzeln verursacht zu lange Antwortzeit
                         ''
@@ -605,11 +607,17 @@ Public Class Request
                 ' gewünschte Variante vom Server anfordern
                 Dim allVPv As New List(Of clsProjektWebLong)
                 'allVPv = GETallVPvLong(vpid, err, , , , variantname, storedAtOrBefore)
-                allVPv = GETallVPvLong(vpid:=vpid, err:=err, variantName:=variantname, storedAtorBefore:=storedAtOrBefore)
+                allVPv = GETallVPvLong(vpid:=vpid,
+                                       err:=err,
+                                       vpvid:="",
+                                       status:="",
+                                       refNext:=False,
+                                       variantName:=variantname,
+                                       storedAtorBefore:=storedAtOrBefore)
+
                 If allVPv.Count > 0 Then
                     Dim webProj As clsProjektWebLong = allVPv.ElementAt(0)
                     webProj.copyto(hproj, vp)
-
 
                     result = hproj
                 End If
@@ -959,33 +967,6 @@ Public Class Request
                 End If
             Next
 
-            'End If
-
-            '    If kvp.Value.Variant.Count > 0 Then
-
-            '        For Each var As clsVPvariant In kvp.Value.Variant
-
-            '            ' holt alle Projekte/Variante/versionen mit ReferenzDatum storedatOrBefore
-            '            Dim vpvListe As New List(Of clsProjektWebShort)
-            '            vpvListe = GETallVPvShort(vpid, var.variantName, storedAtOrBefore)
-
-            '            For Each vpv As clsProjektWebShort In vpvListe
-
-            '                If vpv.startDate <= zeitraumEnde And
-            '                   vpv.endDate >= zeitraumStart Then
-
-            '                    Dim pName As String = GETpName(vpv.vpid)
-            '                    Dim pvname As String = calcProjektKey(pName, vpv.variantName)
-            '                    If Not result.ContainsKey(pvname) Then
-            '                        result.Add(pvname, pvname)
-            '                    End If
-
-            '                End If
-            '            Next
-            '        Next
-            '    End If
-
-            'Next 'von intermediate-Schleife
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -996,7 +977,7 @@ Public Class Request
     End Function
 
     ''' <summary>
-    ''' holt Projekt-Namen über Angabe der Projekt-Nummer beim Kunden; 
+    ''' holt Projekt-Namen über Angabe der Projekt-Nummer/Kundennummer beim Kunden; 
     ''' kann Null, ein oder mehrere Ergebnis-Einträge enthalten; Liste kommt sortiert nach Projekt-Namen zurück
     ''' </summary>
     ''' <param name="pNRatKD"></param>
@@ -1010,6 +991,7 @@ Public Class Request
 
             Dim vpid As String = ""
             Dim anzLoop As Integer = 0
+
             'Dim allVP As New List(Of clsVP)
             While (result.Count <= 0 And anzLoop < 2)
 
@@ -1139,6 +1121,7 @@ Public Class Request
         If aktUser.email = userName Then
 
             stored = stored.ToUniversalTime
+
             Try
                 Dim vpid As String = ""
 
@@ -1441,7 +1424,7 @@ Public Class Request
         Try
 
             Dim intermediate As New SortedList(Of String, clsVP)
-            Dim timestamp As Date = Date.Now
+            Dim timestamp As Date = Date.Now.ToUniversalTime
             Dim c As New clsConstellation
 
             intermediate = GETallVP(aktVCid, err, ptPRPFType.portfolio)
@@ -1587,7 +1570,7 @@ Public Class Request
             'cVP = GETvpid(c.constellationName, vpType:=2)
             cVP = GETvpid(c.constellationName, err, ptPRPFType.portfolio)
 
-            newVPf = GETallVPf(cVP._id, Date.Now, err)
+            newVPf = GETallVPf(cVP._id, Date.Now.ToUniversalTime, err)
 
             'aktuell müssen zum löschen eines Portfolios alle PortfolioVersionen gelöscht werden
             If newVPf.Count > 0 Then
@@ -1926,6 +1909,8 @@ Public Class Request
             Dim timestamp As String = ""
             If ts > Date.MinValue Then
                 timestamp = DateTimeToISODate(ts.ToUniversalTime())
+            Else
+                timestamp = DateTime.Now.ToUniversalTime()
             End If
 
 
@@ -2093,6 +2078,8 @@ Public Class Request
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.organisation)
 
+        validfrom = validfrom.ToUniversalTime
+
         Dim webOrganisation As New clsOrganisationWeb
         Try
 
@@ -2141,6 +2128,8 @@ Public Class Request
         Dim settingID As String = ""
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.customfields)
+
+        ts = ts.ToUniversalTime
 
         Dim webCustomFields As New clsCustomFieldDefinitionsWeb
         Try
@@ -3152,7 +3141,7 @@ Public Class Request
                                    Optional vpvid As String = "",
                                    Optional status As String = "",
                                    Optional refNext As Boolean = False,
-                                   Optional ByVal variantName As String = "Nothing",
+                                   Optional ByVal variantName As String = noVariantName,
                                    Optional ByVal storedAtorBefore As Date = Nothing) As List(Of clsProjektWebLong)
 
         Dim result As New List(Of clsProjektWebLong)
