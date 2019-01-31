@@ -9952,7 +9952,7 @@ Public Module testModule
 
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
-                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName,
                                   q1, q2, bigType, compID,
                                   todoCollection)
 
