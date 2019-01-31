@@ -5105,7 +5105,7 @@ Public Module Module1
         ' jetzt wird SmartTableInfo gesetzt 
         ' jetzt wird die SmartTableInfo gesetzt 
         Call addSmartPPTTableInfo(pptShape,
-                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  hproj.projectType, hproj.name, hproj.variantName,
                                   q1, q2, bigType, compID,
                                   toDoCollection)
 
@@ -5341,7 +5341,7 @@ Public Module Module1
         ' jetzt wird die SmartTableInfo gesetzt 
         Dim emptyCollection As New Collection
         Call addSmartPPTTableInfo(pptShape,
-                                  ptPRPFType.project, hproj.name, hproj.variantName,
+                                  hproj.projecttype, hproj.name, hproj.variantName,
                                   q1, q2, bigType, compID,
                                   emptyCollection)
 
