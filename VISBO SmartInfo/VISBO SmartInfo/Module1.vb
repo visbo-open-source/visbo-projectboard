@@ -41,6 +41,8 @@ Module Module1
     ' wird in Activate_Window gesetzt bzw. in After_presentation
     Friend currentPresHasVISBOElements As Boolean = False
 
+    ' die VISBO TimeMachine nimmt alle PRojekte und Timestamps auf 
+    Friend timeMachine As New clsPPTTimeMachine
 
     ' in der Liste werden für jede Präsentation die beiden Timestamps Previous und current gemerkt 
     ' 0 = previous, 1 = current
@@ -177,8 +179,9 @@ Module Module1
     ' wird verwendet, um zu jeder Presentation die eindeutige ID und damit die zugehörigen currentTimestamps, variantNames, varPPTTM, chgelst 's zu finden   
     Friend listOfPresentations As New SortedList(Of String, Integer)
 
-    ' muss bei jedem SlideSelection Change auf Nothing gesetzt werden ...
-    Friend varPPTTM As New SortedList(Of String, clsPPTTimeMachine)
+    ' nicht mehr notwendig ... 
+    '' muss bei jedem SlideSelection Change auf Nothing gesetzt werden ...
+    'Friend varPPTTM As New SortedList(Of String, clsPPTTimeMachine)
 
     Friend Enum ptNavigationButtons
         letzter = 0
@@ -623,12 +626,12 @@ Module Module1
 
             ' jetzt muss die Time Machine für diese Presentation mit leer angelegt werden 
 
-            Dim tmpTM As clsPPTTimeMachine = Nothing
-            If Not varPPTTM.ContainsKey(key) Then
-                varPPTTM.Add(key, tmpTM)
-            Else
-                varPPTTM.Item(key) = tmpTM
-            End If
+            'Dim tmpTM As clsPPTTimeMachine = Nothing
+            'If Not varPPTTM.ContainsKey(key) Then
+            '    varPPTTM.Add(key, tmpTM)
+            'Else
+            '    varPPTTM.Item(key) = tmpTM
+            'End If
 
             ' Anlegen einer leeren changeliste für jede Slide in der activePresentation
             ' key ist die SlideID in der besagten Presentation, clsChangeListe die Liste der Veränderungen zu dieser Seite 
@@ -715,10 +718,10 @@ Module Module1
             Dim key As String = Pres.Name
             Dim hwinid As Integer = pptAPP.ActiveWindow.HWND
 
-            ' die Time Machine Settings löschen 
-            If varPPTTM.ContainsKey(key) Then
-                varPPTTM.Remove(key)
-            End If
+            '' die Time Machine Settings löschen 
+            'If varPPTTM.ContainsKey(key) Then
+            '    varPPTTM.Remove(key)
+            'End If
 
             ' die chgeliste aktualisieren , das heisst die 
             If chgeLstListe.ContainsKey(key) Then
@@ -829,12 +832,12 @@ Module Module1
                     If beforeSlideKennung <> afterSlideKennung Or smartSlideLists.countProjects = 0 Then
                         Call pptAPP_AufbauSmartSlideLists(SldRange.Item(1))
 
-                        If varPPTTM.ContainsKey(key) Then
-                            ' fertig ... 
-                        Else
-                            Dim tmpTM As clsPPTTimeMachine = Nothing
-                            varPPTTM.Add(key, tmpTM)
-                        End If
+                        'If varPPTTM.ContainsKey(key) Then
+                        '    ' fertig ... 
+                        'Else
+                        '    Dim tmpTM As clsPPTTimeMachine = Nothing
+                        '    varPPTTM.Add(key, tmpTM)
+                        'End If
 
                     End If
 
@@ -976,7 +979,7 @@ Module Module1
     ''' erstellt die SmartSlideListen neu ... 
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub buildSmartSlideLists(Optional tsCollExists As Boolean = False)
+    Friend Sub buildSmartSlideLists()
 
         Dim err As New clsErrorCodeMsg
 
@@ -987,11 +990,12 @@ Module Module1
         ' zurücksetzen der SmartSlideLists
         smartSlideLists = New clsSmartSlideListen
 
-        ' wenn bereits die tsCollection existiert, müssen ListOfTS und ListOfProjektHistorien gesichert werden
-        If tsCollExists Then
-            smartSlideLists.ListOfProjektHistorien = former_smartSlideLists.ListOfProjektHistorien
-            smartSlideLists.ListOfTS = former_smartSlideLists.ListOfTS
-        End If
+        ' das ist jetzt nicht mehr notwendig - die Projekte und Timestamps werden in der visboTimeMachine Variablen gehalten 
+        '' wenn bereits die tsCollection existiert, müssen ListOfTS und ListOfProjektHistorien gesichert werden
+        'If tsCollExists Then
+        '    smartSlideLists.ListOfProjektHistorien = former_smartSlideLists.ListOfProjektHistorien
+        '    smartSlideLists.ListOfTS = former_smartSlideLists.ListOfTS
+        'End If
 
         bekannteIDs = New SortedList(Of Integer, String)
 
@@ -1127,21 +1131,19 @@ Module Module1
 
         If Not noDBAccessInPPT Then
 
-            If Not tsCollExists Then
+            ' hier müssen jetzt die Timestamps noch aufgebaut werden 
+            For i As Integer = 1 To smartSlideLists.countProjects
+                Dim pvName As String = smartSlideLists.getPVName(i)
 
-                ' hier müssen jetzt die Timestamps noch aufgebaut werden 
-                For i As Integer = 1 To smartSlideLists.countProjects
-                    Dim tmpName As String = smartSlideLists.getPVName(i)
-                    Dim pName As String = getPnameFromKey(tmpName)
-                    Dim vName As String = getVariantnameFromKey(tmpName)
-                    Dim pvName As String = calcProjektKeyDB(pName, vName)
+                If Not timeMachine.containsProject(pvName) Then
+                    timeMachine.addProject(pvName)
+                End If
 
-                    Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
-                    smartSlideLists.addToListOfTS(tsCollection)
+                'Dim tsCollection As Collection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
+                'smartSlideLists.addToListOfTS(tsCollection)
 
-                Next
+            Next
 
-            End If
 
             For Each tmpShpName As String In bigToDoList
                 Try
@@ -1943,7 +1945,8 @@ Module Module1
                 Dim pvName As String = getPVnameFromShpName(tmpShape.Name)
 
                 If pvName <> "" Then
-                    Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                    'Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                    Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp)
                     Dim phNameID As String = getElemIDFromShpName(tmpShape.Name)
                     Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
                     Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
@@ -2342,7 +2345,7 @@ Module Module1
                         Dim pvName As String = calcProjektKey(pName, vName)
 
                         ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                        Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, curTimeStamp)
+                        Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, curTimeStamp)
 
                         If Not IsNothing(tsProj) Then
 
@@ -2361,9 +2364,12 @@ Module Module1
                                 ElseIf detailID = PTpptTableTypes.prBudgetCostAPVCV Then
                                     Try
                                         'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+
                                         'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddMinutes(-1))
-                                        lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                        bProj = timeMachine.getFirstContractedVersion(pvName)
+                                        lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
 
                                         Dim q1 As String = pptShape.Tags.Item("Q1")
@@ -2385,9 +2391,12 @@ Module Module1
                                 ElseIf detailID = PTpptTableTypes.prMilestoneAPVCV Then
                                     Try
                                         'bProj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(tsProj.name, vorgabeVariantName)
-                                        bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                        'bProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
                                         'lProj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(tsProj.name, vorgabeVariantName, curTimeStamp.AddHours(-1))
-                                        lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                        'lProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+
+                                        bProj = timeMachine.getFirstContractedVersion(pvName)
+                                        lProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
 
                                         Dim toDoCollection As Collection = convertNidsToColl(pptShape.Tags.Item("NIDS"))
 
@@ -2458,7 +2467,8 @@ Module Module1
                 End If
 
                 ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
+                'scInfo.hproj = smartSlideLists.getTSProject(pvName, curTimeStamp)
+                scInfo.hproj = timeMachine.getProjectVersion(pvName, curTimeStamp)
 
                 ' kann eigentlich nicht mehr Nothing werden ... die Liste an TimeStamps enthält den größten auftretenden kleinsten datumswert aller Projekte ....
                 If Not IsNothing(scInfo.hproj) Then
@@ -2479,9 +2489,11 @@ Module Module1
                                 Try
 
                                     If scInfo.vergleichsTyp = PTVergleichsTyp.erster Then
-                                        scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                        'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).beauftragung
+                                        scInfo.vglProj = timeMachine.getFirstContractedVersion(pvName)
                                     ElseIf scInfo.vergleichsTyp = PTVergleichsTyp.letzter Then
-                                        scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                        'scInfo.vglProj = smartSlideLists.ListOfProjektHistorien.Item(pvName).lastBeauftragung(curTimeStamp.AddMinutes(-1))
+                                        scInfo.vglProj = timeMachine.getLastContractedVersion(pvName, curTimeStamp)
                                     End If
 
 
@@ -4498,7 +4510,8 @@ Module Module1
 
                     If pvName <> "" Then
                         ' wenn das noch nicht existiert, wird es aus der DB geholt und angelegt  ... 
-                        Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
+                        'Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
+                        Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, timestamp)
 
                         If Not IsNothing(tsProj) Then
 
@@ -4816,7 +4829,7 @@ Module Module1
             Next
         End If
 
-        Call buildSmartSlideLists(True)
+        Call buildSmartSlideLists()
 
         ' soll auf alle Fälle angezeigt werden ...
         'Call faerbeShapes(PTfarbe.none, showTrafficLights(PTfarbe.none))
@@ -4878,7 +4891,8 @@ Module Module1
 
             If pvName <> "" Then
                 ' wenn das Projekt noch nicht geladen wurde, wird es aus der DB geholt und angelegt  ... 
-                Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
+                'Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName, timestamp)
+                Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, timestamp)
                 ' kann dann nothing werden, wenn es zu diesem Zeitpunkt noch nicht existiert hat
                 If Not IsNothing(tsProj) Then
                     Dim elemName As String = tmpShape.Tags.Item("CN")
@@ -6098,7 +6112,8 @@ Module Module1
                     If Not noDBAccessInPPT And pptShapeIsPhase(curShape) Then
                         Try
                             Dim pvName As String = getPVnameFromShpName(curShape.Name)
-                            Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                            'Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                            Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp)
                             Dim phNameID As String = getElemIDFromShpName(curShape.Name)
                             Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
                             Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
@@ -7571,7 +7586,8 @@ Module Module1
             Dim pvName As String = getPVnameFromShpName(nameArrayO(i - 1))
             Dim origShape As PowerPoint.Shape = currentSlide.Shapes(nameArrayO(i - 1))
 
-            Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName:=pvName, tsDate:=previousTimeStamp)
+            'Dim tsProj As clsProjekt = smartSlideLists.getTSProject(pvName:=pvName, tsDate:=previousTimeStamp)
+            Dim tsProj As clsProjekt = timeMachine.getProjectVersion(pvName, previousTimeStamp)
             Dim isMilestone As Boolean = elemIDIstMeilenstein(elemID)
 
             If Not IsNothing(origShape) Then
@@ -8345,7 +8361,8 @@ Module Module1
         If Not noDBAccessInPPT And pptShapeIsPhase(curshape) Then
             Try
                 Dim pvName As String = getPVnameFromShpName(curshape.Name)
-                Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                'Dim hproj As clsProjekt = smartSlideLists.getTSProject(pvName, currentTimestamp)
+                Dim hproj As clsProjekt = timeMachine.getProjectVersion(pvName, currentTimestamp)
                 Dim phNameID As String = getElemIDFromShpName(curshape.Name)
                 Dim cPhase As clsPhase = hproj.getPhaseByID(phNameID)
                 Dim roleInformations As SortedList(Of String, Double) = cPhase.getRoleNamesAndValues
@@ -8426,353 +8443,6 @@ Module Module1
 
 
     ''' <summary>
-    ''' gibt das Datum zurück, das eingestellt wird, wenn der Button gedrückt wird ... 
-    ''' wenn irgendwas schief get 
-    ''' </summary>
-    ''' <param name="kennung"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function getNextNavigationDate(ByVal kennung As Integer,
-                                          ByVal specDate As Date,
-                                          Optional ByVal justForInformation As Boolean = False
-                                          ) As Date
-
-        Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
-        Dim anzahlShapesOnSlide As Integer = currentSlide.Shapes.Count
-
-        Dim tmpDate As Date = Date.Now
-
-        Dim tmpTM As clsPPTTimeMachine = Nothing
-        If varPPTTM.ContainsKey(key) Then
-            tmpTM = varPPTTM.Item(key)
-
-            'Dim tmpIndex As Integer = varPPTTM.Item(key).timeStampsIndex
-
-            Select Case kennung
-                Case ptNavigationButtons.nachher
-
-
-                    If tmpTM.timeStamps.Count > 0 Then
-                        'tmpIndex = tmpIndex + 1
-
-                        'If tmpIndex > tmpTM.timeStamps.Count - 1 Then
-                        '    tmpIndex = tmpTM.timeStamps.Count - 1
-                        'End If
-
-                        If currentTimestamp.AddMonths(1) <= Date.Now Then
-                            tmpDate = currentTimestamp.AddMonths(1)
-                        Else
-                            tmpDate = Date.Now
-                        End If
-
-                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-
-                    End If
-
-                Case ptNavigationButtons.vorher
-
-                    If tmpTM.timeStamps.Count > 0 Then
-                        'tmpIndex = tmpIndex - 1
-
-                        'If tmpIndex < 0 Then
-                        '    tmpIndex = 0
-                        'End If
-
-                        If currentTimestamp.AddMonths(-1) > tmpTM.timeStamps.First.Key Then
-                            tmpDate = currentTimestamp.AddMonths(-1)
-                        Else
-                            tmpDate = tmpTM.timeStamps.First.Key
-                        End If
-
-                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-
-
-                    End If
-
-
-                Case ptNavigationButtons.erster
-
-                    If tmpTM.timeStamps.Count > 0 Then
-                        'tmpIndex = 0
-                        tmpDate = tmpTM.timeStamps.First.Key
-
-                        'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-                    End If
-
-                Case ptNavigationButtons.letzter
-
-                    If tmpTM.timeStamps.Count > 0 Then
-                        'tmpIndex = tmpTM.timeStamps.Count - 1
-                        tmpDate = tmpTM.timeStamps.Last.Key
-
-                        'tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-                    End If
-
-                Case ptNavigationButtons.update
-
-                    If tmpTM.timeStamps.Count > 0 Then
-                        'tmpIndex = tmpTM.timeStamps.Count - 1
-                        tmpDate = Date.Now
-
-                        tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-                    End If
-
-                Case ptNavigationButtons.individual
-
-                    'Dim letzter As Date = tmpTM.timeStamps.Last.Key
-                    'Dim erster As Date = tmpTM.timeStamps.First.Key
-
-                    If tmpTM.timeStamps.Count > 0 Then
-
-                        If specDate > tmpTM.timeStamps.First.Key And specDate < Date.Now Then
-
-                            tmpDate = specDate
-                        Else
-                            If specDate > Date.Now Then
-                                'tmpIndex = varPPTTM.timeStamps.Count - 1
-                                tmpDate = Date.Now
-                            ElseIf specDate < tmpTM.timeStamps.First.Key Then
-                                'tmpIndex = 0
-                                tmpDate = tmpTM.timeStamps.First.Key
-                            End If
-                            tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-                        End If
-
-                    End If
-
-                Case ptNavigationButtons.previous
-
-                    If tmpTM.timeStamps.Count > 0 Then
-                        'tmpIndex = tmpIndex - 1
-
-                        'If tmpIndex < 0 Then
-                        '    tmpIndex = 0
-                        'End If
-
-                        If smartSlideLists.prevDate >= tmpTM.timeStamps.First.Key Then
-                            tmpDate = smartSlideLists.prevDate
-                        Else
-                            tmpDate = tmpTM.timeStamps.First.Key
-                            tmpDate = tmpDate.Date.AddHours(23).AddMinutes(59)
-
-
-                        End If
-
-                    End If
-
-
-            End Select
-
-            'If Not justForInformation Then
-            '    tmpTM.timeStampsIndex = tmpIndex
-            'End If
-
-        Else
-            ' nichts tun ...
-            tmpDate = Date.Now
-        End If
-
-
-
-        getNextNavigationDate = tmpDate
-    End Function
-
-    ''' <summary>
-    ''' Initialisieren der Time-Machine
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub initPPTTimeMachine(ByRef tmpTM As clsPPTTimeMachine, Optional ByVal showMessage As Boolean = True)
-
-        Dim err As New clsErrorCodeMsg
-
-        Dim msg As String = ""
-        Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
-
-        Dim tsCollection As New Collection
-
-        If userIsEntitled(msg) Then
-            ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
-            If smartSlideLists.countProjects > 0 Then
-
-                ' muss noch eingeloggt werden ? 
-                ' das wird ja schon im userISEntitled gemacht 
-                'If noDBAccessInPPT Then
-
-                '    noDBAccessInPPT = Not logInToMongoDB(True)
-
-                '    If noDBAccessInPPT Then
-                '        If englishLanguage Then
-                '            msg = "no database access ... "
-                '        Else
-                '            msg = "kein Datenbank Zugriff ... "
-                '        End If
-                '        Call MsgBox(msg)
-                '    Else
-                '        ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-
-                '        RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now)
-                '        CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now)
-
-                '    End If
-
-                'End If
-
-                If Not noDBAccessInPPT Then
-
-                    If Not smartSlideLists.historiesExist Then
-
-
-                        Dim anzahlProjekte As Integer = smartSlideLists.countProjects
-                        ' größter kleinster Wert 
-                        Dim gkw As Date = Date.MinValue
-
-                        For i As Integer = 1 To anzahlProjekte
-                            Dim tmpName As String = smartSlideLists.getPVName(i)
-                            Dim pName As String = getPnameFromKey(tmpName)
-                            Dim vName As String = getVariantnameFromKey(tmpName)
-                            Dim pvName As String = calcProjektKeyDB(pName, vName)
-
-                            tsCollection = CType(databaseAcc, DBAccLayer.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
-                            ' ermitteln des größten kleinstern Wertes ...
-                            ' stellt sicher, dass , wenn mehrere Projekte dargesteltl sind, nur TimeStamps abgerufen werden, die jedes Projekt hat ... 
-
-                            ' tk 28.10.18 das ist kontraproduktiv ...weil damit Timestamps rausfliegen, die die nicht in jedem Projekt liegen 
-                            'Dim kleinsterWert As Date = Date.Now
-                            'If Not IsNothing(tsCollection) Then
-                            '    If tsCollection.Count > 0 Then
-                            '        ' tsCollection ist absteigend sortiert ... 
-                            '        kleinsterWert = tsCollection.Item(tsCollection.Count)
-                            '    End If
-                            'End If
-                            'If kleinsterWert > gkw Then
-                            '    gkw = kleinsterWert
-                            'End If
-
-                            smartSlideLists.addToListOfTS(tsCollection)
-                        Next
-
-                        ' tk 28.10.18 keine Reduzierung mehr .. 
-                        'If anzahlProjekte > 1 Then
-                        '    ' jetzt werden aus der TimeStampListe alle TimeStamps rausgeworfen, die kleiner als der gkw sind ... 
-                        '    smartSlideLists.adjustListOfTS(gkw)
-                        'End If
-
-                    End If
-
-                    ' jetzt wird die varPPTTM aufgebaut bzw. erweitert - sie darf nicht gelöscht werden
-
-                    If IsNothing(tmpTM) Then
-                        tmpTM = New clsPPTTimeMachine
-                        tmpTM.timeStamps = smartSlideLists.getListOfTS
-                    Else
-                        ' sie so übernehmen wie sie ist ... 
-                        If tsCollection.Count > 0 Then
-                            tmpTM.addNewList(tsCollection)
-                        End If
-                    End If
-
-                    ' tk 28.10.18 nicht mehr nötig ..
-                    ' -------------------------------------------------------------------------------------------------------------------------
-                    ' ab hier war es der Load des Formulars
-                    ' -------------------------------------------------------------------------------------------------------------------------
-
-
-                    ' '' '' jetzt wird das Formular TimeStamps aufgerufen ...
-                    '' ''Dim tmFormular As New frmPPTTimeMachine
-                    '' ''Dim dgRes As Windows.Forms.DialogResult = tmFormular.ShowDialog
-                    ' '' ''tmFormular.Show()
-
-
-
-                    'Dim currentDate As Date = Date.Now
-
-                    '    ' die MArker, falls welche sichtbar sind , wegmachen ... 
-                    '    Call deleteMarkerShapes()
-
-                    '    'currentTSIndex = -1
-                    '    ' gibt es ein Creation Date ?
-                    '    If smartSlideLists.creationDate > Date.MinValue Then
-                    '        currentDate = currentTimestamp
-                    '    Else
-                    '        currentDate = Date.MinValue
-                    '    End If
-
-                    '    If noDBAccessInPPT Then
-                    '        Call MsgBox("no Database Access  ... action cancelled ...")
-                    '        'MyBase.Close()-Do nothing    
-                    '    Else
-                    '        ' gibt es überhaupt TimeStamps ? 
-                    '        Try
-                    '            If tsCollection.Count > 0 Then
-                    '                varPPTTM.addNewList(tsCollection)
-                    '            End If
-                    '        Catch ex As Exception
-
-                    '        End Try
-
-
-
-                    '    If Not IsNothing(varPPTTM.timeStamps) Then
-                    '            If varPPTTM.timeStamps.Count >= 1 Then
-
-                    '                ' bestimme hier aufgrund des Datums den timestampsIndex
-                    '                If varPPTTM.timeStamps.Count > 0 Then
-                    '                    If smartSlideLists.countProjects = 1 Then
-                    '                        ' nimm das Datum, das in der sortierten Liste unmittelbar davor liegt 
-                    '                        Dim ix As Integer = varPPTTM.timeStamps.Count - 1
-                    '                        Dim found As Boolean = False
-                    '                        Do While ix >= 0 And Not found
-                    '                            If currentTimestamp >= varPPTTM.timeStamps.ElementAt(ix).Key Then
-                    '                                found = True
-                    '                            Else
-                    '                                ix = ix - 1
-                    '                            End If
-                    '                        Loop
-
-                    '                        If found Then
-                    '                            varPPTTM.timeStampsIndex = ix
-                    '                        End If
-                    '                    Else
-                    '                        ' ist ja schon gesetzt 
-                    '                    End If
-                    '                End If
-
-
-                    '                'lblMessage.Text = ""
-                    '                'Me.Text = "Time-Machine: " & timeStamps.First.Key.ToShortDateString & " - " & _
-                    '                '    timeStamps.Last.Key.ToShortDateString & " (" & timeStamps.Count.ToString & ")"
-
-                    '            Else
-
-                    '                currentDate = Date.MinValue
-
-                    '                'lblMessage.Text = "keine Einträge in der Datenbank vorhanden !"
-                    '                'Me.Text = "Time-Machine: "
-                    '            End If
-                    '        End If
-
-                    '        '' die beiden Buttons Home und ChangedPosition invisible setzen ..
-                    '        'Call setBtnEnablements()
-
-                End If
-
-
-            Else
-
-                If showMessage Then
-                    Call MsgBox("es gibt auf dieser Seite keine Datenbank-relevanten Informationen ...")
-                End If
-
-            End If
-        Else
-            Call MsgBox(msg)
-        End If
-
-
-
-    End Sub
-
-    ''' <summary>
     ''' führt die Time-Machine Action aus, übergeben wird lediglich die Kennzeichnung um welchen Time-Machine Button es sich handelt 
     ''' wird aufgerufen direkt aus den Buttons des Ribbon1
     ''' </summary>
@@ -8780,44 +8450,53 @@ Module Module1
     Public Sub btnUpdateAction(ByVal ptNavType As Integer, ByVal specDate As Date)
 
         Try
-            'Dim ticsStart As Integer = My.Computer.Clock.TickCount
+            Dim errmsg As String = ""
+            If userIsEntitled(errmsg) Then
 
-            Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
-            Dim formerSlide As PowerPoint.Slide = currentSlide
+                Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
+                Dim formerSlide As PowerPoint.Slide = currentSlide
+                Dim saveCurrentTimeStamp As Date = currentTimestamp
 
-            For i As Integer = 1 To pres.Slides.Count
-                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
-                If Not IsNothing(sld) Then
-                    If Not (sld.Tags.Item("FROZEN").Length > 0) _
+                For i As Integer = 1 To pres.Slides.Count
+                    Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
+                    If Not IsNothing(sld) Then
+                        If Not (sld.Tags.Item("FROZEN").Length > 0) _
                         And (sld.Tags.Item("SMART") = "visbo") Then
 
-                        Call pptAPP_AufbauSmartSlideLists(sld)
-                        Call visboUpdate(ptNavType, specDate, False)
+                            currentTimestamp = saveCurrentTimeStamp
+                            Call pptAPP_AufbauSmartSlideLists(sld)
+                            Call visboUpdate(ptNavType, specDate, False)
 
+                        End If
                     End If
+                Next
+
+                If currentSlide.SlideID <> formerSlide.SlideID Then
+
+                    currentSlide = formerSlide
+                    ' smartSlideLists für die aktuelle currentslide wieder aufbauen
+                    ' tk 22.8.18
+                    Call pptAPP_AufbauSmartSlideLists(currentSlide)
+                    'Call buildSmartSlideLists()
+
                 End If
-            Next
 
-            If currentSlide.SlideID <> formerSlide.SlideID Then
+                ' das Formular ggf, also wenn aktiv,  updaten 
+                If Not IsNothing(changeFrm) Then
+                    changeFrm.neuAufbau()
+                End If
 
-                currentSlide = formerSlide
-                ' smartSlideLists für die aktuelle currentslide wieder aufbauen
-                ' tk 22.8.18
-                Call pptAPP_AufbauSmartSlideLists(currentSlide)
-                'Call buildSmartSlideLists()
+                'Dim ticsEnd As Integer = My.Computer.Clock.TickCount
+                'Call MsgBox("zeit benötigt: " & CStr(ticsEnd - ticsStart))
 
+            Else
+                Call MsgBox(errmsg)
             End If
 
-            ' das Formular ggf, also wenn aktiv,  updaten 
-            If Not IsNothing(changeFrm) Then
-                changeFrm.neuAufbau()
-            End If
 
-            'Dim ticsEnd As Integer = My.Computer.Clock.TickCount
-            'Call MsgBox("zeit benötigt: " & CStr(ticsEnd - ticsStart))
 
         Catch ex As Exception
-
+            Call MsgBox(ex.Message)
         End Try
 
     End Sub
@@ -9029,58 +8708,23 @@ Module Module1
 
         Dim newDate As Date
 
-        Dim key As String = CType(currentSlide.Parent, PowerPoint.Presentation).Name
-        Dim tmpTM As clsPPTTimeMachine = Nothing
 
-        If varPPTTM.ContainsKey(key) Then
-            tmpTM = varPPTTM.Item(key)
-        Else
-            ' erst mal nichts tun 
-        End If
+        ' jetzt kann das newDate errechnet werden 
+        '
+        If updateModus = ptNavigationButtons.previous Then
 
-
-
-
-        If IsNothing(tmpTM) Then
-            Call initPPTTimeMachine(tmpTM, showMessage)
-        End If
-
-        If Not IsNothing(tmpTM) Then
-            If Not IsNothing(tmpTM.timeStamps) Then
-
-                If tmpTM.timeStamps.Count > 0 Then
-                    '
-                    ' das muss passieren, bevor das newDate errechnet wird 
-                    If varPPTTM.ContainsKey(key) Then
-                        Call varPPTTM.Remove(key)
-                    End If
-
-                    varPPTTM.Add(key, tmpTM)
-                    '
-                    ' jetzt kann das newDate errechnet werden 
-                    '
-                    If updateModus = ptNavigationButtons.previous Then
-
-                        If currentSlide.Tags.Item("PREV").Length > 0 Then
-                            'smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
-                            newDate = CDate(currentSlide.Tags.Item("PREV"))
-                        End If
-
-
-                    Else
-
-                        newDate = getNextNavigationDate(updateModus, specDate)
-
-                    End If
-
-                    Call performBtnAction(newDate)
-
-                End If
-
+            If currentSlide.Tags.Item("PREV").Length > 0 Then
+                'smartSlideLists.prevDate = CDate(currentSlide.Tags.Item("PREV"))
+                newDate = CDate(currentSlide.Tags.Item("PREV"))
             End If
-        Else
 
+
+        Else
+            newDate = timeMachine.getNextNavigationDate(updateModus, specDate)
         End If
+
+        Call performBtnAction(newDate)
+
 
         If updateModus = ptNavigationButtons.letzter Then
             specDate = newDate
