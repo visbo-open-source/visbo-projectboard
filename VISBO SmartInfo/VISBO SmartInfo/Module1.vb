@@ -2501,7 +2501,10 @@ Module Module1
 
                     Try
 
+                        ' -----------------------------
+                        ' Alternative 2: ja, tun
                         'Call createNewHiddenExcel()
+                        ' -----------------------------
 
                         ' jetzt muss das chtobj aktualisiert werden ... 
                         Try
@@ -2527,10 +2530,16 @@ Module Module1
 
                                 End Try
 
+                                ' Alternative 1
                                 Call updateProjectChartInPPT(scInfo, pptShape)
                                 pptAPP.Activate()
 
-                                ' Variante 2: seriesCollection - kein pptShape.Chart.Refresh()
+                                ' -----------------------------------------
+                                ' Alternative 2 - funktioniert nicht 
+                                'Call updateProjektChartinPPT2(scInfo, pptShape)
+                                'pptAPP.Activate()
+                                'pptShape.Chart.Refresh()
+                                ' --------------------------------------------
 
 
                             ElseIf scInfo.chartTyp = PTChartTypen.Bubble Then
@@ -2567,6 +2576,378 @@ Module Module1
             End If
 
         End If
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' Breaklink - dann Aufbau der Daten im updateWorkbook - setsourceData - 
+    ''' in der übergeordneten Methode ppt.activate, dann refresh chart  
+    ''' </summary>
+    ''' <param name="scInfo"></param>
+    ''' <param name="pptShape"></param>
+    Public Sub updateProjektChartinPPT2(ByVal scInfo As clsSmartPPTChartInfo, ByRef pptShape As PowerPoint.Shape)
+
+        Dim pptChart As PowerPoint.Chart = Nothing
+
+        If Not (pptShape.HasChart = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+            Exit Sub
+        End If
+
+        pptChart = pptShape.Chart
+        ' ------ Alternative 2 -------
+        ' jetzt den Breaklink machen 
+        pptChart.ChartData.BreakLink()
+
+        Dim curWS As Excel.Worksheet = CType(updateWorkbook.Worksheets.Item(1), Excel.Worksheet)
+        curWS.UsedRange.Clear()
+        curWS.Name = "VISBO-Chart"
+        ' ----------------------------
+
+        Dim diagramTitle As String = " "
+        Dim plen As Integer
+
+        Dim Xdatenreihe() As String
+        Dim tdatenreihe() As Double
+        Dim istDatenReihe() As Double
+        Dim prognoseDatenReihe() As Double
+        Dim vdatenreihe() As Double
+        Dim vSum As Double = 0.0
+        Dim tSum As Double
+
+
+        Dim pkIndex As Integer = CostDefinitions.Count
+        Dim pstart As Integer
+
+        Dim zE As String = awinSettings.kapaEinheit
+
+        Dim tmpCollection As New Collection
+        Dim maxlenTitle1 As Integer = 20
+
+        Dim curmaxScale As Double
+
+        Dim IstCharttype As Microsoft.Office.Core.XlChartType
+        Dim PlanChartType As Microsoft.Office.Core.XlChartType
+        Dim vglChartType As Microsoft.Office.Core.XlChartType
+
+        Dim considerIstDaten As Boolean = scInfo.hproj.actualDataUntil > scInfo.hproj.startDate
+
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlArea
+
+            If considerIstDaten Then
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlArea
+            Else
+                PlanChartType = Microsoft.Office.Core.XlChartType.xlLine
+            End If
+
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        Else
+            IstCharttype = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            PlanChartType = Microsoft.Office.Core.XlChartType.xlColumnStacked
+            vglChartType = Microsoft.Office.Core.XlChartType.xlLine
+        End If
+
+
+        ' die ganzen Vor-Klärungen machen ...
+        With pptChart
+
+            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+                    curmaxScale = .MaximumScale
+                    .MaximumScaleIsAuto = False
+                End With
+
+            End If
+
+        End With
+
+
+        'Dim pname As String = scInfo.hproj.name
+
+        '
+        ' hole die Projektdauer; berücksichtigen: die können unterschiedlich starten und unterschiedlich lang sein
+        ' deshalb muss die Zeitspanne bestimmt werden, die beides umfasst  
+        '
+
+        Call bestimmePstartPlen(scInfo.hproj, scInfo.vglProj, pstart, plen)
+
+
+
+
+        ReDim Xdatenreihe(plen - 1)
+        ReDim tdatenreihe(plen - 1)
+        ReDim istDatenReihe(plen - 1)
+        ReDim prognoseDatenReihe(plen - 1)
+        ReDim vdatenreihe(plen - 1)
+
+
+        ' hier werden die Istdaten, die Prognosedaten, die Vergleichsdaten sowie die XDaten bestimmt
+        Dim errMsg As String = ""
+        Call bestimmeXtipvDatenreihen(pstart, plen, scInfo,
+                                       Xdatenreihe, tdatenreihe, vdatenreihe, istDatenReihe, prognoseDatenReihe, errMsg)
+
+        If errMsg <> "" Then
+            ' es ist ein Fehler aufgetreten
+            If pptShape.HasTextFrame = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                pptShape.TextFrame2.TextRange.Text = errMsg
+            End If
+            Exit Sub
+        End If
+
+
+        Dim vProjDoesExist As Boolean = Not IsNothing(scInfo.vglProj)
+
+        If scInfo.chartTyp = PTChartTypen.CurveCumul Then
+            tSum = tdatenreihe(tdatenreihe.Length - 1)
+            vSum = vdatenreihe(vdatenreihe.Length - 1)
+        Else
+            tSum = tdatenreihe.Sum
+            vSum = vdatenreihe.Sum
+
+        End If
+
+        Dim startRed As Integer = 0
+        Dim lengthRed As Integer = 0
+        diagramTitle = bestimmeChartDiagramTitle(scInfo, tSum, vSum, startRed, lengthRed)
+
+
+
+        With CType(pptChart, PowerPoint.Chart)
+
+            ' remove old series
+            Try
+                Dim anz As Integer = CInt(CType(.SeriesCollection, PowerPoint.SeriesCollection).Count)
+                Do While anz > 0
+                    .SeriesCollection(1).Delete()
+                    anz = anz - 1
+                Loop
+            Catch ex As Exception
+
+            End Try
+        End With
+
+
+        ' jetzt werden die Collections in dem Chart aufgebaut ...
+        With CType(pptChart, PowerPoint.Chart)
+
+
+            ' Planung / Forecast
+            With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+
+                .Name = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                .Interior.Color = visboFarbeBlau
+                .Values = prognoseDatenReihe
+                .XValues = Xdatenreihe
+                .ChartType = PlanChartType
+
+                If scInfo.chartTyp = PTChartTypen.CurveCumul And Not considerIstDaten Then
+                    ' es handelt sich um eine Line
+                    .Format.Line.Weight = 4
+                    .Format.Line.ForeColor.RGB = visboFarbeBlau
+                    .Format.Line.DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineSolid
+                End If
+
+            End With
+
+            ' Beauftragung bzw. Vergleichsdaten
+            If Not IsNothing(scInfo.vglProj) Then
+
+                'series
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    .Name = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                    .Values = vdatenreihe
+                    .XValues = Xdatenreihe
+
+                    .ChartType = vglChartType
+
+                    If vglChartType = Microsoft.Office.Core.XlChartType.xlLine Then
+                        With .Format.Line
+                            .DashStyle = Microsoft.Office.Core.MsoLineDashStyle.msoLineDash
+                            .ForeColor.RGB = visboFarbeOrange
+                            .Weight = 4
+                        End With
+                    Else
+                        ' ggf noch was definieren ..
+                    End If
+
+                End With
+
+            End If
+
+            ' jetzt kommt der Neu-Aufbau der Series-Collections
+            If considerIstDaten Then
+
+                ' jetzt die Istdaten zeichnen 
+                With CType(CType(.SeriesCollection, PowerPoint.SeriesCollection).NewSeries, PowerPoint.Series)
+                    '.Name = repMessages.getmsg(194) & " " & hproj.timeStamp.ToShortDateString
+                    .Name = bestimmeLegendNameIPB("I")
+                    .Interior.Color = awinSettings.SollIstFarbeArea
+                    .Values = istDatenReihe
+                    .XValues = Xdatenreihe
+                    .ChartType = IstCharttype
+                End With
+
+            End If
+
+
+        End With
+
+
+
+        ' Skalierung etc anpassen 
+        With CType(pptChart, PowerPoint.Chart)
+
+            If CBool(.HasAxis(PowerPoint.XlAxisType.xlValue)) Then
+
+                With CType(.Axes(PowerPoint.XlAxisType.xlValue), PowerPoint.Axis)
+                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                    ' hinausgehende Werte hat 
+
+                    If System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) > .MaximumScale - 3 Then
+                        .MaximumScale = System.Math.Max(tdatenreihe.Max, vdatenreihe.Max) + 3
+                    End If
+
+
+                End With
+
+            End If
+
+            ' nur wenn es auch einen Titel gibt ... 
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+            End If
+
+
+        End With
+
+        ' -----------------------------------------------
+        ' 1. Variante : seriesCollections verändern : funktioniert nicht ! Chart wird aktualisiert, aber erst mit interaktiv Bearbeiten-Daten sieht man das auch 
+        ' 2. Variante : curWS aus HiddenExcel beziehen 
+        ' 3. Variante : as-is curWS aus 
+        ' die Frage ist: braucht man das hier wirklich 
+        ' tk 21.10.18
+        ' jetzt wird myRange gesetzt und setSourceData gesetzt 
+        'Dim fZeile As Integer = usedRange.Rows.Count + 1
+
+
+        ' wird in Alternative 2 nicht gebraucht 
+        'With pptShape.Chart.ChartData
+        '    .Activate()
+        '    '.ActivateChartDataWindow()
+
+        '    xlApp = CType(CType(.Workbook, Excel.Workbook).Application, Excel.Application)
+
+
+        '    Try
+
+        '        If Not CStr(CType(xlApp.ActiveWindow, Excel.Window).Caption) = "VISBO Smart Diagram" Then
+        '            xlApp.DisplayFormulaBar = False
+        '            With xlApp.ActiveWindow
+
+        '                .Caption = "VISBO Smart Diagram"
+        '                .DisplayHeadings = False
+        '                .DisplayWorkbookTabs = False
+
+        '                .Width = 500
+        '                .Height = 150
+        '                .Top = 100
+        '                .Left = -1200
+
+        '            End With
+        '        End If
+
+        '    Catch ex As Exception
+
+        '    End Try
+
+        '    curWS = CType(CType(.Workbook, Excel.Workbook).Worksheets.Item(1), Excel.Worksheet)
+        '    curWS.UsedRange.Clear()
+
+        '    If Not smartChartsAreEditable Then
+        '        With xlApp
+        '            '.Visible = False
+        '            '.ActiveWindow.Visible = False
+        '        End With
+        '    End If
+
+        'End With
+
+        Dim fzeile As Integer = 1
+        Dim anzSpalten As Integer = plen + 1
+        Dim anzRows As Integer = 0
+
+
+        ' für das SetSourceData 
+        Dim myRange As Excel.Range = Nothing
+        'Dim usedRange As Excel.Range = curWS.UsedRange
+        ' Ende setsource Vorbereitungen 
+
+        With curWS
+            ' neu 
+
+            .Cells(fzeile, 1).value = ""
+            .Range(.Cells(fzeile, 2), .Cells(fzeile, anzSpalten)).Value = Xdatenreihe
+
+            If considerIstDaten Then
+
+                anzRows = 3
+
+                .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("I")
+                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = istDatenReihe
+
+                .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = prognoseDatenReihe
+
+                If Not IsNothing(scInfo.vglProj) Then
+
+                    anzRows = 4
+                    .Cells(fzeile + 3, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                    .Range(.Cells(fzeile + 3, 2), .Cells(fzeile + 3, anzSpalten)).Value = vdatenreihe
+
+                End If
+
+            Else
+
+                anzRows = 2
+
+                .Cells(fzeile + 1, 1).value = bestimmeLegendNameIPB("P") & scInfo.hproj.timeStamp.ToShortDateString
+                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = prognoseDatenReihe
+
+                If Not IsNothing(scInfo.vglProj) Then
+                    anzRows = 3
+
+                    .Cells(fzeile + 2, 1).value = bestimmeLegendNameIPB("B") & scInfo.vglProj.timeStamp.ToShortDateString
+                    .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = vdatenreihe
+
+                End If
+
+            End If
+
+            myRange = curWS.Range(.Cells(fzeile, 1), .Cells(fzeile + anzRows - 1, anzSpalten))
+
+            ' Ende neu 
+
+        End With
+
+
+
+        Try
+            ' es ist der Trick, hier die Verbindung zu einem ohnehin bereits non-visible gesetzten Excel herzustellen ...
+            Dim rangeString As String = "= '" & curWS.Name & "'!" & myRange.Address & ""
+            pptShape.Chart.SetSourceData(Source:=rangeString)
+
+            curWS.Activate()
+
+        Catch ex As Exception
+
+        End Try
+
+        pptShape.Chart.Refresh()
 
 
 
@@ -2802,10 +3183,6 @@ Module Module1
 
             End If
 
-            ' nur wenn es auch einen Titel gibt ... 
-            If .HasTitle Then
-                .ChartTitle.Text = diagramTitle
-            End If
 
 
         End With
@@ -2930,6 +3307,21 @@ Module Module1
         Catch ex As Exception
 
         End Try
+
+        ' ---- hier dann final den Titel setzen 
+        With pptShape.Chart
+            If .HasTitle Then
+                .ChartTitle.Text = diagramTitle
+                .ChartTitle.Format.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbBlack
+
+                If startRed > 0 And lengthRed > 0 Then
+                    ' die aktuelle Summe muss rot eingefärbt werden 
+                    .ChartTitle.Format.TextFrame2.TextRange.Characters(startRed,
+                        lengthRed).Font.Fill.ForeColor.RGB = Microsoft.Office.Interop.PowerPoint.XlRgbColor.rgbRed
+                End If
+            End If
+
+        End With
 
         pptShape.Chart.Refresh()
 
