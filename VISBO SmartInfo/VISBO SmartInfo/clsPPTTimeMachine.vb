@@ -36,25 +36,46 @@ Public Class clsPPTTimeMachine
     End Property
 
     ''' <summary>
-    ''' passt den kleinsten und größten vorkommenden TS Wert entsprechend an 
+    ''' passt den kleinsten und größten vorkommenden TS Wert so an wie es den auf der Seite vorhandenen Projekten entspricht
+    ''' die sind in der smartSlideListe enthalten 
     ''' </summary>
-    ''' <param name="pHistory"></param>
-    Private Sub adjustMinMaxTS(ByVal pHistory As clsProjektHistorie)
 
-        If Not IsNothing(pHistory) Then
-            Dim minTS As Date = pHistory.First.timeStamp
-            Dim maxTs As Date = pHistory.Last.timeStamp
+    Private Sub adjustMinMaxToCurrentSlide()
 
-            If _minmaxTimeStamps(0) > minTS Then
-                _minmaxTimeStamps(0) = minTS
-            End If
+        _minmaxTimeStamps(0) = Date.Now
+        _minmaxTimeStamps(1) = Date.MinValue
 
-            If _minmaxTimeStamps(1) < maxTs Then
-                _minmaxTimeStamps(1) = maxTs
-            End If
+        If smartSlideLists.countProjects > 0 Then
+            ' es gibt Projekte , also anpassen 
+
+            For i As Integer = 1 To smartSlideLists.countProjects
+                Dim pvName As String = smartSlideLists.getPVName(i)
+                If _projectTimeStamps.ContainsKey(pvName) Then
+                    Dim phistory As clsProjektHistorie = _projectTimeStamps.Item(pvName)
+
+                    If Not IsNothing(phistory) Then
+                        Dim minTS As Date = phistory.First.timeStamp
+                        Dim maxTs As Date = phistory.Last.timeStamp
+
+                        If _minmaxTimeStamps(0) > minTS Then
+                            _minmaxTimeStamps(0) = minTS
+                        End If
+
+                        If _minmaxTimeStamps(1) < maxTs Then
+                            _minmaxTimeStamps(1) = maxTs
+                        End If
+                    End If
+                End If
+
+            Next
+        Else
+            ' es muss nichts weiter getan werden, minmax Werte sind bereits zurückgesetzt 
         End If
 
+
     End Sub
+
+
 
     ''' <summary>
     ''' fügt ein Projekt incl Nothing-ProjektHistorie als Platzhalter hinzu 
@@ -98,8 +119,6 @@ Public Class clsPPTTimeMachine
                     _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
                     myHistory = _projectTimeStamps.Item(pvName)
 
-                    ' jetzt noch minmax-Timestamps anpassen 
-                    Call adjustMinMaxTS(myHistory)
                 End If
 
                 ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
@@ -129,8 +148,6 @@ Public Class clsPPTTimeMachine
                     _projectTimeStamps.Item(pvname) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
                     myHistory = _projectTimeStamps.Item(pvname)
 
-                    ' jetzt noch minmax-Timestamps anpassen 
-                    Call adjustMinMaxTS(myHistory)
                 End If
 
                 ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
@@ -159,8 +176,6 @@ Public Class clsPPTTimeMachine
                     _projectTimeStamps.Item(pvName) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
                     myHistory = _projectTimeStamps.Item(pvName)
 
-                    ' jetzt noch minmax-Timestamps anpassen 
-                    Call adjustMinMaxTS(myHistory)
                 End If
 
                 ' jetzt sollte spätestens die ProjektHistorie gesetzt sein 
@@ -195,7 +210,8 @@ Public Class clsPPTTimeMachine
         'Dim tmpTM As clsPPTTimeMachine = Nothing
         If _projectTimeStamps.Count > 0 Then
 
-            ' jetzt prüfen, ob es wenigstens schon eine erste Festlegung der minmax-Werte gegeben hat 
+            ' jetzt prüfen, ob es wenigstens schon eine erste Festlegung der minmax-Werte gegeben hat
+            ' der Hinweis, dass noch keine Zuordnung stattgefunden hat, ist wenn minmaxTimestamps(1) = Date.mimvalue ist 
             If _minmaxTimeStamps(1) = Date.MinValue Then
                 ' jetzt für alle Projekte, wo clsProjektHistorie noch Nothing ist die Historie holen 
                 For i As Integer = 0 To _projectTimeStamps.Count - 1
@@ -208,13 +224,14 @@ Public Class clsPPTTimeMachine
                         Dim vName As String = getVariantnameFromKey(key)
 
                         _projectTimeStamps.Item(key) = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, Date.MinValue, Date.Now, err)
-
-                        ' jetzt noch minmax-Timestamps anpassen 
-                        Call adjustMinMaxTS(_projectTimeStamps.Item(key))
                     End If
 
                 Next
             End If
+
+            ' jetzt müssen minmax-Werte an die aktuelle Slide angepasst werden 
+            ' jetzt noch minmax-Timestamps anpassen 
+            Call adjustMinMaxToCurrentSlide()
 
 
             Select Case kennung
