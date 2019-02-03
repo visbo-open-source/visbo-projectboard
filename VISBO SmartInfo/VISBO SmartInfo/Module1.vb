@@ -688,7 +688,7 @@ Module Module1
 
                     If diagResult = Windows.Forms.DialogResult.OK Then
                         Dim tmpDate As Date = Date.MinValue
-                        Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+                        Call updateAllSlides(ptNavigationButtons.update, tmpDate)
                     End If
                 End With
 
@@ -844,7 +844,7 @@ Module Module1
                     ' jetzt die currentTimeStamp setzen 
                     With currentSlide
                         If .Tags.Item("CRD").Length > 0 Then
-                            currentTimestamp = CDate(.Tags.Item("CRD"))
+                            currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
                         End If
                     End With
 
@@ -921,7 +921,7 @@ Module Module1
     ''' <returns></returns>
     Friend Function getCurrentTimestampFromPresentation(ByVal pres As PowerPoint.Presentation) As Date
 
-        Dim tmpresult As Date = Date.Now
+        Dim tmpresult As Date = currentTimestamp
 
         For Each sld As PowerPoint.Slide In pres.Slides
 
@@ -941,6 +941,30 @@ Module Module1
 
         getCurrentTimestampFromPresentation = tmpresult
 
+    End Function
+
+    ''' <summary>
+    ''' liefetr den currentTimestamp der Seite zurück, wenn er existiert
+    ''' wenn die Seite keinen enthält bleibt der Wert unveräändert auf dem bisherigen currentTimestamp
+    ''' </summary>
+    ''' <param name="sld"></param>
+    ''' <returns></returns>
+    Friend Function getCurrentTimeStampFromSlide(ByVal sld As PowerPoint.Slide) As Date
+
+        Dim tmpresult As Date = currentTimestamp
+
+        With sld
+            If .Tags.Item("SMART") = "visbo" Then
+                If .Tags.Item("FROZEN").Length = 0 Then
+                    If .Tags.Item("CRD").Length > 0 Then
+                        tmpresult = CDate(.Tags.Item("CRD"))
+                    End If
+                End If
+
+            End If
+        End With
+
+        getCurrentTimeStampFromSlide = tmpresult
     End Function
 
     ''' <summary>
@@ -3294,7 +3318,7 @@ Module Module1
             Try
 
                 If Not CStr(CType(xlApp.ActiveWindow, Excel.Window).Caption) = "VISBO Smart Diagram" Then
-                        xlApp.DisplayFormulaBar = False
+                    xlApp.DisplayFormulaBar = False
                     With xlApp.ActiveWindow
 
                         .Caption = "VISBO Smart Diagram"
@@ -3337,24 +3361,24 @@ Module Module1
 
             ' neu 
 
-            .Cells(fZeile, 1).value = ""
-            .Range(.Cells(fZeile, 2), .Cells(fZeile, anzSpalten)).Value = Xdatenreihe
+            .Cells(fzeile, 1).value = ""
+            .Range(.Cells(fzeile, 2), .Cells(fzeile, anzSpalten)).Value = Xdatenreihe
 
             If considerIstDaten Then
 
                 anzRows = 3
 
-                .Cells(fZeile + 1, 1).value = repmsg(6)
-                .Range(.Cells(fZeile + 1, 2), .Cells(fZeile + 1, anzSpalten)).Value = istDatenReihe
+                .Cells(fzeile + 1, 1).value = repmsg(6)
+                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = istDatenReihe
 
-                .Cells(fZeile + 2, 1).value = series1Name
-                .Range(.Cells(fZeile + 2, 2), .Cells(fZeile + 2, anzSpalten)).Value = prognoseDatenReihe
+                .Cells(fzeile + 2, 1).value = series1Name
+                .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = prognoseDatenReihe
 
                 If Not IsNothing(vglProj) Then
 
                     anzRows = 4
-                    .Cells(fZeile + 3, 1).value = series2Name
-                    .Range(.Cells(fZeile + 3, 2), .Cells(fZeile + 3, anzSpalten)).Value = vdatenreihe
+                    .Cells(fzeile + 3, 1).value = series2Name
+                    .Range(.Cells(fzeile + 3, 2), .Cells(fzeile + 3, anzSpalten)).Value = vdatenreihe
 
                 End If
 
@@ -3362,20 +3386,20 @@ Module Module1
 
                 anzRows = 2
 
-                .Cells(fZeile + 1, 1).value = series1Name
-                .Range(.Cells(fZeile + 1, 2), .Cells(fZeile + 1, anzSpalten)).Value = prognoseDatenReihe
+                .Cells(fzeile + 1, 1).value = series1Name
+                .Range(.Cells(fzeile + 1, 2), .Cells(fzeile + 1, anzSpalten)).Value = prognoseDatenReihe
 
                 If Not IsNothing(vglProj) Then
                     anzRows = 3
 
-                    .Cells(fZeile + 2, 1).value = series2Name
-                    .Range(.Cells(fZeile + 2, 2), .Cells(fZeile + 2, anzSpalten)).Value = vdatenreihe
+                    .Cells(fzeile + 2, 1).value = series2Name
+                    .Range(.Cells(fzeile + 2, 2), .Cells(fzeile + 2, anzSpalten)).Value = vdatenreihe
 
                 End If
 
             End If
 
-            myRange = curWS.Range(.Cells(fZeile, 1), .Cells(fZeile + anzRows - 1, anzSpalten))
+            myRange = curWS.Range(.Cells(fzeile, 1), .Cells(fzeile + anzRows - 1, anzSpalten))
 
             ' Ende neu 
 
@@ -6703,10 +6727,10 @@ Module Module1
         isSymbolShape = ((bigType = CStr(ptReportBigTypes.components)) And
                          (detailID = CStr(ptReportComponents.prSymDescription) Or
                           detailID = CStr(ptReportComponents.prSymRisks) Or
-                          detailID = CStr(ptReportComponents.prSymTrafficLight) Or 
-                          detailID = CStr(ptReportComponents.prSymFinance) Or 
-                          detailID = CStr(ptReportComponents.prSymProject) Or 
-                          detailID = CStr(ptReportComponents.prSymSchedules) Or 
+                          detailID = CStr(ptReportComponents.prSymTrafficLight) Or
+                          detailID = CStr(ptReportComponents.prSymFinance) Or
+                          detailID = CStr(ptReportComponents.prSymProject) Or
+                          detailID = CStr(ptReportComponents.prSymSchedules) Or
                           detailID = CStr(ptReportComponents.prSymTeam)))
 
     End Function
@@ -8447,7 +8471,7 @@ Module Module1
     ''' wird aufgerufen direkt aus den Buttons des Ribbon1
     ''' </summary>
     ''' <param name="ptNavType"></param>
-    Public Sub btnUpdateAction(ByVal ptNavType As Integer, ByVal specDate As Date)
+    Public Sub updateAllSlides(ByVal ptNavType As Integer, ByVal specDate As Date)
 
         Try
             Dim errmsg As String = ""
@@ -8455,7 +8479,7 @@ Module Module1
 
                 Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
                 Dim formerSlide As PowerPoint.Slide = currentSlide
-                Dim saveCurrentTimeStamp As Date = currentTimestamp
+                'Dim saveCurrentTimeStamp As Date = currentTimestamp
 
                 For i As Integer = 1 To pres.Slides.Count
                     Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
@@ -8463,9 +8487,10 @@ Module Module1
                         If Not (sld.Tags.Item("FROZEN").Length > 0) _
                         And (sld.Tags.Item("SMART") = "visbo") Then
 
-                            currentTimestamp = saveCurrentTimeStamp
+                            'currentTimestamp = saveCurrentTimeStamp
+                            currentTimestamp = getCurrentTimeStampFromSlide(sld)
                             Call pptAPP_AufbauSmartSlideLists(sld)
-                            Call visboUpdate(ptNavType, specDate, False)
+                            Call prepareAndPerformBtnAction(ptNavType, specDate, False)
 
                         End If
                     End If
@@ -8474,6 +8499,7 @@ Module Module1
                 If currentSlide.SlideID <> formerSlide.SlideID Then
 
                     currentSlide = formerSlide
+                    currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
                     ' smartSlideLists für die aktuelle currentslide wieder aufbauen
                     ' tk 22.8.18
                     Call pptAPP_AufbauSmartSlideLists(currentSlide)
@@ -8503,7 +8529,7 @@ Module Module1
 
 
     ''' <summary>
-    ''' führt die Button Action der Time-Machine aus 
+    ''' führt die Button Action der Time-Machine aus in der currentSlide aus; setzt in der Slide den previousTimestamp und den currentTimestamp
     ''' </summary>
     ''' <param name="newdate"></param>
     ''' <remarks></remarks>
@@ -8702,7 +8728,7 @@ Module Module1
     ''' führt den Code gehe-zum-letzten bzw Visbo-Update aus 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub visboUpdate(ByVal updateModus As Integer,
+    Public Sub prepareAndPerformBtnAction(ByVal updateModus As Integer,
                            ByRef specDate As Date,
                            Optional ByVal showMessage As Boolean = True)
 

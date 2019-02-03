@@ -236,7 +236,7 @@ Public Class Ribbon1
         Try
 
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            Call updateAllSlides(ptNavigationButtons.update, tmpDate)
 
 
         Catch ex As Exception
@@ -256,7 +256,7 @@ Public Class Ribbon1
 
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.nachher, tmpDate)
+            Call updateAllSlides(ptNavigationButtons.nachher, tmpDate)
 
             'Dim msg As String = ""
 
@@ -312,7 +312,7 @@ Public Class Ribbon1
     Private Sub btnFastBack_Click(sender As Object, e As RibbonControlEventArgs) Handles btnFastBack.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.vorher, tmpDate)
+            Call updateAllSlides(ptNavigationButtons.vorher, tmpDate)
 
             'Dim msg As String = ""
 
@@ -365,7 +365,7 @@ Public Class Ribbon1
         Try
             Dim tmpDate As Date = Date.MinValue
 
-            Call btnUpdateAction(ptNavigationButtons.erster, tmpDate)
+            Call updateAllSlides(ptNavigationButtons.erster, tmpDate)
 
             'Dim msg As String = ""
 
@@ -410,7 +410,7 @@ Public Class Ribbon1
     Private Sub btnUpdate_Click(sender As Object, e As RibbonControlEventArgs) Handles btnUpdate.Click
         Try
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.update, tmpDate)
+            Call updateAllSlides(ptNavigationButtons.update, tmpDate)
 
             'Dim msg As String = ""
 
@@ -549,7 +549,7 @@ Public Class Ribbon1
 
             If userResult = Windows.Forms.DialogResult.OK Then
                 Dim specDate As Date = calendarFrm.DateTimePicker1.Value
-                Call btnUpdateAction(ptNavigationButtons.individual, specDate)
+                Call updateAllSlides(ptNavigationButtons.individual, specDate)
 
                 'Dim msg As String = ""
 
@@ -615,7 +615,7 @@ Public Class Ribbon1
 
 
             Dim tmpDate As Date = Date.MinValue
-            Call btnUpdateAction(ptNavigationButtons.previous, tmpDate)
+            Call updateAllSlides(ptNavigationButtons.previous, tmpDate)
 
             'Dim msg As String = ""
 
