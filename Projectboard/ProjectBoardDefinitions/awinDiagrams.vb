@@ -6536,7 +6536,11 @@ Public Module awinDiagrams
         ReDim tmpVdatenreihe(0)
 
         Dim hprojOffset As Integer = scInfo.hproj.Start - pstart
-        Dim vprojOffset As Integer = scInfo.vglProj.Start - pstart
+        Dim vprojOffset As Integer = 0
+
+        If Not IsNothing(scInfo.vglProj) Then
+            vprojOffset = scInfo.vglProj.Start - pstart
+        End If
 
         For i As Integer = 1 To plen
             Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
