@@ -539,6 +539,10 @@ Public Class Request
 
         Dim result As Boolean = False
         Try
+            ' tk 5.2.19 automatisch setzen des actualdatauntil, wenn denn der Modus AutoSet gesetzt ist 
+            If awinSettings.autoSetActualDataDate Then
+                projekt.actualDataUntil = projekt.timeStamp.AddDays(-1 * (projekt.timeStamp.Day + 1)).Date.AddHours(12)
+            End If
 
             If usedWebServer Then
                 Try

@@ -1498,9 +1498,9 @@
 
         newproject.hierarchy = New clsHierarchy
 
-        For ix = 1 To Me.hierarchy.count
-            curNode = Me.hierarchy.nodeItem(ix)
-            key = Me.hierarchy.getIDAtIndex(ix)
+        For ix = 1 To hierarchy.count
+            curNode = hierarchy.nodeItem(ix)
+            key = hierarchy.getIDAtIndex(ix)
             copiedNode = New clsHierarchyNode
             With copiedNode
                 .elemName = curNode.elemName
