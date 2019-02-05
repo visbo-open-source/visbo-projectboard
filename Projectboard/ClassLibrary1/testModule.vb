@@ -1995,14 +1995,13 @@ Public Module testModule
                                 End Try
 
                             Case "ProjektBedarfsChart"
-                                ' new
-
-                                Dim smartChartInfo As clsSmartPPTChartInfo = getChartParametersFromQ1(qualifier)
-
-                                ' Text im ShapeContainer / Platzhalter zurücksetzen 
-                                .TextFrame2.TextRange.Text = ""
 
                                 Try
+                                    Dim smartChartInfo As clsSmartPPTChartInfo = getChartParametersFromQ1(qualifier)
+
+                                    ' Text im ShapeContainer / Platzhalter zurücksetzen 
+                                    .TextFrame2.TextRange.Text = ""
+
                                     If smartChartInfo.chartTyp = PTChartTypen.Pie Then
                                         Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth, True)
                                         bigType = ptReportBigTypes.charts
@@ -3323,7 +3322,7 @@ Public Module testModule
 
                 Catch ex As Exception
 
-                    'tmpShape.TextFrame2.TextRange.Text = tmpShape.Title & ": Fehler ..."
+                    tmpShape.TextFrame2.TextRange.Text = ex.Message & vbLf & tmpShape.Title & ": Fehler ..."
 
                 End Try
 

@@ -313,24 +313,14 @@ Public Class clsProjektWeb
             End If
 
 
-            ' ergänzt am 17.10.18: 
-            ' ur: 04.01.2019: muss am Ende stehen, da beim Setzen von actualDataUntil die DauerinDays und damit die Phasen
-            ' des aktuellen Projektes und nicht der Vorlage benötigt werden.
-            If awinSettings.autoSetActualDataDate Then
-
-                If Me.timestamp.AddMonths(-1) > Me.startDate Then
-                    .actualDataUntil = Me.timestamp.AddMonths(-1)
-                End If
-
+            If IsNothing(Me.actualDataUntil) Then
+                .actualDataUntil = Date.MinValue
             Else
-                If IsNothing(Me.actualDataUntil) Then
-                    .actualDataUntil = Date.MinValue
-                Else
-                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
-                End If
+                .actualDataUntil = Me.actualDataUntil.ToLocalTime
             End If
 
-            'ur:24.01.2019: Infos aus clsVP in clsProjekt benötigt
+
+            ''ur:24.01.2019: Infos aus clsVP in clsProjekt benötigt
 
             If Not IsNothing(vp) Then
                 .projectType = vp.vpType

@@ -1179,6 +1179,12 @@ Public Module awinGeneralModules
 
                 End If
 
+                ' jetzt muss in Abhäbgigeit von autoSetActualDate das actualData Until gesetzt werden 
+                If awinSettings.autoSetActualDataDate = True Then
+                    ' das müssten den vorletzten Tag des Vormontas abgeben 
+                    hproj.actualDataUntil = importDate.AddDays(-1 * (importDate.Day + 2))
+                End If
+
 
             Catch ex As Exception
 
@@ -1872,7 +1878,10 @@ Public Module awinGeneralModules
                     Dim GPvalues() As Double = testProjekte.getRoleValuesInMonth(tmpRoleNameID)
 
                     If arraysAreDifferent(GPvalues, uValues) Then
-                        tmpResult = False
+                        If System.Math.Abs(GPvalues.Sum - uValues.Sum) > 0.00001 Then
+                            tmpResult = False
+                        End If
+
                     End If
                 Next
 
@@ -1993,7 +2002,10 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Function isValidProjectName(ByVal pName As String) As Boolean
         Dim ergebnis As Boolean = False
-        If pName.Contains("#") Or
+
+        ' wenn beides enthalten ist ...
+        If (pName.Contains("<") And pName.Contains(">")) Or
+            pName.Contains("#") Or
             pName.Contains("(") Or
             pName.Contains(")") Or
             pName.Contains(vbCr) Or
@@ -2014,6 +2026,11 @@ Public Module awinGeneralModules
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function makeValidProjectName(ByVal pName As String) As String
+
+        If (pName.Contains("<") And pName.Contains(">")) Then
+            pName = pName.Replace("<", " ")
+            pName = pName.Replace(">", " ")
+        End If
 
         If pName.Contains("#") Then
             pName = pName.Replace("#", " ")
@@ -3285,6 +3302,7 @@ Public Module awinGeneralModules
                     If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now, err) Then
                         ' speichern des Projektes 
                         hproj.timeStamp = DBtimeStamp
+
                         If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
 
                             If awinSettings.englishLanguage Then
@@ -3357,6 +3375,7 @@ Public Module awinGeneralModules
                         ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
                         If Not hproj.isIdenticalTo(oldProj) Then
                             hproj.timeStamp = DBtimeStamp
+
                             If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
 
                                 If awinSettings.englishLanguage Then
@@ -3465,6 +3484,7 @@ Public Module awinGeneralModules
                 If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now, err) Then
                     ' speichern des Projektes 
                     sproj.timeStamp = DBtimeStamp
+
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, err) Then
 
                         If awinSettings.englishLanguage Then
@@ -3537,6 +3557,7 @@ Public Module awinGeneralModules
                     ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
                     If Not sproj.isIdenticalTo(oldProj) Then
                         sproj.timeStamp = DBtimeStamp
+
                         If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, err) Then
 
                             If awinSettings.englishLanguage Then
@@ -7057,6 +7078,7 @@ Public Module awinGeneralModules
                 End If
 
                 If storeNeeded Then
+
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
 
                         If awinSettings.englishLanguage Then
@@ -7224,6 +7246,7 @@ Public Module awinGeneralModules
                             End If
 
                             If storeNeeded Then
+
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
 
                                     If awinSettings.englishLanguage Then
@@ -7624,6 +7647,7 @@ Public Module awinGeneralModules
                             End If
 
                             If storeNeeded Then
+
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
 
                                     If awinSettings.englishLanguage Then
