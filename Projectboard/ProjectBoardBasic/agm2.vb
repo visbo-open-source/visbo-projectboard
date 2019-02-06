@@ -8031,12 +8031,12 @@ Public Module agm2
         Else
             zeile = 3
             tmpRoleNames = {"D-BOSV-KB0", "D-BOSV-KB1", "D-BOSV-KB2", "D-BOSV-KB3", "D-BOSV-SBF1", "D-BOSV-SBF2", "DRUCK", "D-BOSV-SBP1", "D-BOSV-SBP2", "D-BOSV-SBP3", "AMIS"}
-            tmpColBz = {"CO1", "CP1", "CQ1", "CR1", "CT1", "CU1", "CV1", "CX1", "CY1", "CZ1", "DA1"}
+            tmpColBz = {"CP1", "CQ1", "CR1", "CS1", "CU1", "CV1", "CW1", "CY1", "CZ1", "DA1", "DB1"}
 
             ReDim tmpCols(tmpRoleNames.Length - 1)
 
             tmpTEroleNames = {"D-BOKuV", "D-BOLuA", "D-BOKIS", "D-BOEPM", "D-BO-FMV", "D-IT-BVG", "D-IT-KuV", "D-IT-PSQ", "A-IT04", "D-IT-AS", "AMOS", "KX BO", "KX IT", "D-IT-ISM"}
-            tmpTEcolBZ = {"AM1", "AO1", "AP1", "AQ1", "AR1", "AS1", "AT1", "AU1", "AV1", "AW1", "AX1", "AY1", "AZ1", "BA1"}
+            tmpTEcolBZ = {"AN1", "AP1", "AQ1", "AR1", "AS1", "AT1", "AU1", "AV1", "AW1", "AX1", "AY1", "AZ1", "BA1", "BB1"}
 
             ReDim tmpTECols(tmpTEroleNames.Length - 1)
         End If

@@ -53,6 +53,7 @@ Public Class clsCustomUserRole
                                  "PT2G1B1", "PT2G1B3", "PTfilter", "PTsort", "PTeinst", "PThelp",
                                  "PTWebServer"}
 
+
             Case ptCustomUserRoles.RessourceManager
                 _nonAllowance = {"Pt5G2B4", "PT5G3M",
                                  "PT4G1B8", "PT4G1B12", "PT4G1B11",

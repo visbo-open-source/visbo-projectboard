@@ -29,11 +29,9 @@ Public Class clsSmartSlideListen
     Private _LUList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Elemente, die manuell verschoben wurden, für die also ein Change Request erstellt wurde .. 
     Private _mVList As SortedList(Of Integer, Boolean)
-    ' enthält die Liste an Projekt-Historien 
-    Private _projectTimeStamps As SortedList(Of String, clsProjektHistorie)
-    ' enthält die Liste an TimeStamps, die in der Time-Machine betrachtet werden können 
-    ' der bool'sche Wert kann später dafür sorgen, dass ein Eintrag berücksichtigt / nicht berücksichtigt werden soll 
-    Private _listOfTimeStamps As SortedList(Of Date, Boolean)
+    ' enthält die Liste an Projekten , im Integer ist der Project Type abgelegt  
+    Private _projectList As SortedList(Of String, ptPRPFType)
+
     ' enthält die Liste der Rollen -> ShapiID , Summe ; erfordert Datenbank Access 
     Private _resourceList As SortedList(Of String, SortedList(Of Integer, Boolean))
     ' enthält die Liste der Kosten -> ShapeID, Summe; erfordert Datenbank Access
@@ -133,235 +131,6 @@ Public Class clsSmartSlideListen
     End Property
 
     ''' <summary>
-    ''' liefert das TimeStamp Projekt, entweder aus der  smartslideListe oder aus der Datenbank; 
-    ''' wenn es aus der DB geholt wird, dann wird es in smartSlideList gechacht
-    ''' wenn es auch in de rDatenbank nicht existiert, so wid Nothing zurückgegeben 
-    ''' </summary>
-    ''' <param name="pvName"></param>
-    ''' <param name="tsDate"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getTSProject(ByVal pvName As String, ByVal tsDate As Date) As clsProjekt
-        Get
-            Dim err As New clsErrorCodeMsg
-
-            Dim tmpProject As clsProjekt = Nothing
-
-            'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-            Dim pName As String = getPnameFromKey(pvName)
-            Dim vName As String = getVariantnameFromKey(pvName)
-
-
-            If _projectTimeStamps.ContainsKey(pvName) Then
-                Dim timeStamps As clsProjektHistorie = _projectTimeStamps.Item(pvName)
-                If Not IsNothing(timeStamps) Then
-
-                    tmpProject = timeStamps.ElementAtorBefore(tsDate)
-                    If IsNothing(tmpProject) Then
-                        ' aus Datenbank holen 
-                        tmpProject = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, tsDate, err)
-
-                        If Not IsNothing(tmpProject) Then
-                            timeStamps.Add(tsDate, tmpProject)
-                        End If
-
-
-                    End If
-                Else
-                    timeStamps = New clsProjektHistorie
-                    Dim tmpDateVon As Date = Date.Now.AddMonths(-60)
-                    If Not IsNothing(_listOfTimeStamps) Then
-                        If _listOfTimeStamps.Count > 0 Then
-                            tmpDateVon = _listOfTimeStamps.First.Key
-                        End If
-                    End If
-                    timeStamps = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now, err)
-                    _projectTimeStamps.Item(pvName) = timeStamps
-
-                    tmpProject = timeStamps.ElementAtorBefore(tsDate)
-
-                    ' das folgende ist alt , holte jeweils nur 1 TimeStamp , das ist nicht eindeutig, weil wenn zuerst das jüngste geholt wird, 
-                    '' werden alle anderen imThen Zweig oben nicht mehr geholt ... 
-                    '' jetzt aus Datenbank holen 
-                    ''tmpProject = request.retrieveOneProjectfromDB(pName, vName, tsDate)
-
-                    ''If Not IsNothing(tmpProject) Then
-                    ''    timeStamps.Add(tsDate, tmpProject)
-                    ''End If
-
-
-
-                End If
-
-            End If
-
-            getTSProject = tmpProject
-
-        End Get
-    End Property
-
-    '''' <summary>
-    '''' wenn first = true: gibt das erste beauftragte Projekt zurück
-    '''' wenn first = false: gibt das letzte beauftragte Projekt zurück, hier gilkt dann das RefDate, also das zum Zeitpunt refDate zuletzt beauftragte Projekt
-    '''' </summary>
-    '''' <param name="pvName">Projekt-Varianten Name in der Form pName#vName</param>
-    '''' <param name="first">wenn true: das erste, wenn false : das letzte </param>
-    '''' <param name="tsDate">nur relevant bei first = false: das letzte in Hinblick auf refdate</param>
-    '''' <returns></returns>
-    'Public ReadOnly Property getContractedProject(ByVal pvName As String, ByVal first As Boolean, ByVal tsDate As Date) As clsProjekt
-    '    Get
-    '        Dim tmpProject As clsProjekt = Nothing
-
-    '        'Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-    '        Dim pName As String = getPnameFromKey(pvName)
-    '        Dim vName As String = getVariantnameFromKey(pvName)
-
-
-    '        If _projectTimeStamps.ContainsKey(pvName) Then
-    '            Dim timeStamps As clsProjektHistorie = _projectTimeStamps.Item(pvName)
-
-    '            If Not IsNothing(timeStamps) Then
-
-    '                tmpProject = timeStamps.ElementAtorBefore(tsDate)
-    '                If IsNothing(tmpProject) Then
-    '                    ' aus Datenbank holen 
-    '                    tmpProject = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, vName, tsDate)
-
-    '                    If Not IsNothing(tmpProject) Then
-    '                        timeStamps.Add(tsDate, tmpProject)
-    '                    End If
-
-
-    '                End If
-    '            Else
-    '                timeStamps = New clsProjektHistorie
-    '                Dim tmpDateVon As Date = Date.Now.AddMonths(-60)
-    '                If Not IsNothing(_listOfTimeStamps) Then
-    '                    If _listOfTimeStamps.Count > 0 Then
-    '                        tmpDateVon = _listOfTimeStamps.First.Key
-    '                    End If
-    '                End If
-    '                timeStamps.liste = CType(databaseAcc, DBAccLayer.Request).retrieveProjectHistoryFromDB(pName, vName, tmpDateVon, Date.Now)
-    '                _projectTimeStamps.Item(pvName) = timeStamps
-
-    '                tmpProject = timeStamps.ElementAtorBefore(tsDate)
-
-
-    '            End If
-
-    '        End If
-
-    '        getContractedProject = tmpProject
-    '    End Get
-    'End Property
-    ''' <summary>
-    ''' fügt der Liste an TimeStamps alle Daten, die in einer Collection übergeben werden, hinzu  
-    ''' </summary>
-    ''' <param name="tsCollection"></param>
-    ''' <remarks></remarks>
-    Public Sub addToListOfTS(ByVal tsCollection As Collection)
-
-        If Not IsNothing(tsCollection) Then
-
-            Try
-
-                For Each tmpDate As Date In tsCollection
-                    If Not _listOfTimeStamps.ContainsKey(tmpDate) Then
-                        ' bool'scher Wert hat aktuell keine Bedeutung 
-                        ' könnte später bestimmt werden, ob der TimeStamp bereits aus der DB geholt wurde oder nicht .. 
-                        _listOfTimeStamps.Add(tmpDate, False)
-                    End If
-                Next
-
-            Catch ex As Exception
-                Exit Sub
-            End Try
-
-        End If
-
-    End Sub
-
-    '''' <summary>
-    '''' passt die Liste der Timestamps so an, dass das erste Element größer oder gleich gkw ist ...
-    '''' Damit wird sichergestellt, dass, wenn mehrere Projekte geladen sind, jedes Projekt mit dem kleinsten TimeStamp aus der Liste existiert ... 
-    '''' das darf nicht gemacht werden, denn dann ist der Zeitraum, den man betrachten kann, sehr klein ...
-    '''' </summary>
-    '''' <param name="gkw"></param>
-    '''' <remarks></remarks>
-    'Public Sub adjustListOfTS(ByVal gkw As Date)
-    '    Dim fertig As Boolean = False
-    '    Dim ix As Integer = 0
-    '    Do While ix <= _listOfTimeStamps.Count - 1 And Not fertig
-    '        If _listOfTimeStamps.ElementAt(ix).Key >= gkw Then
-    '            fertig = True
-    '        Else
-    '            ix = ix + 1
-    '        End If
-    '    Loop
-
-    '    If fertig Then
-    '        For i As Integer = 0 To ix - 1
-    '            _listOfTimeStamps.RemoveAt(0)
-    '        Next
-    '    Else
-    '        _listOfTimeStamps.Clear()
-    '    End If
-
-    'End Sub
-
-    Public ReadOnly Property getListOfTS As SortedList(Of Date, Boolean)
-        Get
-            getListOfTS = _listOfTimeStamps
-        End Get
-    End Property
-
-    ''' <summary>
-    ''' zum Sichern von _listOfTimeStamps vor new clsSmartSlideListen erforderlich
-    ''' in buildSmartSlideLists verwendet
-    ''' </summary>
-    ''' <returns></returns>
-    Public Property ListOfTS As SortedList(Of Date, Boolean)
-        Get
-            ListOfTS = _listOfTimeStamps
-        End Get
-        Set(value As SortedList(Of Date, Boolean))
-            _listOfTimeStamps = value
-        End Set
-    End Property
-
-    ''' <summary>
-    ''' gibt die Gesamt-Liste aller TimeStamps für das Time-Machine Formular zurück 
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getArrayOfTS As Date()
-        Get
-            Dim tmpArray() As Date = Nothing
-
-            If Not IsNothing(_listOfTimeStamps) Then
-                If _listOfTimeStamps.Count > 0 Then
-                    tmpArray = _listOfTimeStamps.Keys.ToArray()
-                End If
-            End If
-
-
-            'If listOfTimeStamps.Count > 0 Then
-            '    ReDim tmpArray(listOfTimeStamps.Count - 1)
-            '    Dim index As Integer = 0
-            '    For Each kvp As KeyValuePair(Of Date, Boolean) In listOfTimeStamps
-            '        tmpArray(index) = kvp.Key
-            '    Next
-            'End If
-
-            getArrayOfTS = tmpArray
-
-        End Get
-    End Property
-
-
-    ''' <summary>
     ''' liefert true, wenn das Projekt mit projectVariantName = pName#vName in der Liste der Projekte enthalten ist 
     ''' </summary>
     ''' <param name="pvName"></param>
@@ -370,7 +139,7 @@ Public Class clsSmartSlideListen
     ''' <remarks></remarks>
     Public ReadOnly Property containsProject(ByVal pvName As String) As Boolean
         Get
-            containsProject = _projectTimeStamps.ContainsKey(pvName)
+            containsProject = _projectList.ContainsKey(pvName)
         End Get
     End Property
 
@@ -387,8 +156,8 @@ Public Class clsSmartSlideListen
     Public ReadOnly Property getPVName(ByVal index As Integer) As String
         Get
 
-            If index >= 1 And index <= _projectTimeStamps.Count Then
-                getPVName = _projectTimeStamps.ElementAt(index - 1).Key
+            If index >= 1 And index <= _projectList.Count Then
+                getPVName = _projectList.ElementAt(index - 1).Key
             Else
                 getPVName = Nothing
             End If
@@ -397,100 +166,37 @@ Public Class clsSmartSlideListen
     End Property
 
     ''' <summary>
-    ''' liefert die Anzahl an Projekten, die mit oder ohne TimeStamps aufgeführt sind 
+    ''' liefert die Anzahl an Projekten, die auf der Slide zu finden sind 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property countProjects() As Integer
         Get
-            countProjects = _projectTimeStamps.Count
+            countProjects = _projectList.Count
         End Get
     End Property
 
-    '''' <summary>
-    '''' gibt für das angegebene Projekte die Liste der Time-Stamps zurück
-    '''' Nothing, wenn sie noch nicht aus der Datenbank geladen wurde  
-    '''' </summary>
-    '''' <param name="pvName"></param>
-    '''' <value></value>
-    '''' <returns></returns>
-    '''' <remarks></remarks>
-    'Public ReadOnly Property getTimeStampListe(ByVal pvName As String) As clsProjektHistorie
-    '    Get
-    '        If _projectTimeStamps.ContainsKey(pvName) Then
-    '            getTimeStampListe = _projectTimeStamps.Item(pvName)
-    '        Else
-    '            getTimeStampListe = Nothing
-    '        End If
-    '    End Get
-    'End Property
 
-    ''' <summary>
-    ''' zum Sichern von _projektTimeStamps vor new clsSmartSlideListen erforderlich
-    ''' in buildSmartSlideLists verwendet
-    ''' </summary>
-    ''' <returns></returns>
-    Public Property ListOfProjektHistorien As SortedList(Of String, clsProjektHistorie)
-        Get
-            ListOfProjektHistorien = _projectTimeStamps
-        End Get
-        Set(value As SortedList(Of String, clsProjektHistorie))
-            _projectTimeStamps = value
-        End Set
-    End Property
 
     ''' <summary>
     ''' fügt der Projektliste ein neues Element hinzu; 
     ''' die Project TimeStampListe kann Nothing sein ... 
     ''' </summary>
     ''' <param name="pvName"></param>
-    ''' <param name="pHistory"></param>
+    ''' <param name="pType">gibt an, ob Projekt oder Portfolio Projekt</param>
     ''' <remarks></remarks>
-    Public Sub addProject(ByVal pvName As String, Optional ByVal pHistory As clsProjektHistorie = Nothing)
+    Public Sub addProject(ByVal pvName As String, Optional ByVal pType As ptPRPFType = ptPRPFType.project)
 
-        If _projectTimeStamps.ContainsKey(pvName) Then
-            _projectTimeStamps.Remove(pvName)
+        If _projectList.ContainsKey(pvName) Then
+            _projectList.Remove(pvName)
         End If
 
-        _projectTimeStamps.Add(pvName, pHistory)
+        _projectList.Add(pvName, pType)
 
     End Sub
 
-    ''' <summary>
-    ''' diese Methode setzt die History Einträge mit den Timestamps zurück; muss gemacht werden, wenn eine Variante geladen wird ... 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub resetHistory(ByVal pName As String)
 
-        If _projectTimeStamps.Count > 0 Then
-            _projectTimeStamps.Clear()
-        End If
-    End Sub
-
-    Public ReadOnly Property historiesExist() As Boolean
-        Get
-            Dim tmpResult As Boolean
-
-            If _projectTimeStamps.Count > 0 Then
-
-                tmpResult = True
-                Dim i As Integer = 0
-                Do While i <= _projectTimeStamps.Count - 1 And tmpResult
-                    If IsNothing(_projectTimeStamps.ElementAt(i).Value) Then
-                        tmpResult = False
-                    Else
-                        i = i + 1
-                    End If
-                Loop
-            Else
-                tmpResult = False
-            End If
-
-            historiesExist = tmpResult
-
-        End Get
-    End Property
     Public ReadOnly Property getUID(ByVal shapeName As String) As Integer
         Get
             Dim uid As Integer
@@ -1541,8 +1247,8 @@ Public Class clsSmartSlideListen
 
         _lnkList = New SortedList(Of String, SortedList(Of Integer, Boolean))
 
-        _projectTimeStamps = New SortedList(Of String, clsProjektHistorie)
-        _listOfTimeStamps = New SortedList(Of Date, Boolean)
+        _projectList = New SortedList(Of String, ptPRPFType)
+
         _resourceList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _costList = New SortedList(Of String, SortedList(Of Integer, Boolean))
         _creationDate = Date.MinValue

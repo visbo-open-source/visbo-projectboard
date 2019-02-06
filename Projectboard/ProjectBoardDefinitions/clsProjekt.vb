@@ -78,11 +78,7 @@ Public Class clsProjekt
             If Not IsNothing(value) Then
                 If value > StartofCalendar Then
                     'stellt sicher dass es sich um dem letzten Tag, da aber um den Tagesbeginn handelt 
-                    value = value.AddDays(-1 * value.Day).AddMonths(1).Date
-                    ' 13.12. mit dem folgenden wird sichergestellt, dass actualdatauntil nie größer sein kann als das Ende date. 
-                    If DateDiff(DateInterval.Month, endeDate, value) > 0 Then
-                        value = endeDate.AddDays(-1 * endeDate.Day).AddMonths(1).Date
-                    End If
+                    'value = value.AddDays(-1 * (value.Day + 1)).AddMonths(1).Date
                     _actualDataUntil = value
                 Else
                     _actualDataUntil = Date.MinValue
@@ -2570,20 +2566,20 @@ Public Class clsProjekt
 
         With newproject
 
-            .farbe = Me.farbe
-            .Schrift = Me.Schrift
-            .Schriftfarbe = Me.Schriftfarbe
-            .VorlagenName = Me.VorlagenName
-            .Risiko = Me.Risiko
-            .StrategicFit = Me.StrategicFit
-            .Erloes = Me.Erloes
-            .description = Me.description
-            .variantName = Me.variantName
-            .variantDescription = Me.variantDescription
-            .volume = Me.volume
-            .complexity = Me.complexity
-            .businessUnit = Me.businessUnit
-            .projectType = Me.projectType
+            .farbe = farbe
+            .Schrift = Schrift
+            .Schriftfarbe = Schriftfarbe
+            .VorlagenName = VorlagenName
+            .Risiko = _Risiko
+            .StrategicFit = _StrategicFit
+            .Erloes = _Erloes
+            .description = _description
+            .variantName = _variantName
+            .variantDescription = _variantDescription
+            .volume = _volume
+            .complexity = _complexity
+            .businessUnit = _businessUnit
+            .projectType = _projectType
             .StartOffset = _StartOffset
             .startDate = _startDate
             .earliestStartDate = _earliestStartDate
@@ -2595,8 +2591,9 @@ Public Class clsProjekt
             .extendedView = Me.extendedView
             .actualDataUntil = Me.actualDataUntil
             .kundenNummer = Me.kundenNummer
+
             Try
-                .movable = Me.movable
+                .movable = _movable
             Catch ex As Exception
                 .movable = False
             End Try
@@ -2610,15 +2607,15 @@ Public Class clsProjekt
         ' jetzt werden die CustomFields kopiert, so fern es welche gibt ... 
         Try
             With newproject
-                For Each kvp As KeyValuePair(Of Integer, String) In Me.customStringFields
+                For Each kvp As KeyValuePair(Of Integer, String) In customStringFields
                     .customStringFields.Add(kvp.Key, kvp.Value)
                 Next
 
-                For Each kvp As KeyValuePair(Of Integer, Double) In Me.customDblFields
+                For Each kvp As KeyValuePair(Of Integer, Double) In customDblFields
                     .customDblFields.Add(kvp.Key, kvp.Value)
                 Next
 
-                For Each kvp As KeyValuePair(Of Integer, Boolean) In Me.customBoolFields
+                For Each kvp As KeyValuePair(Of Integer, Boolean) In customBoolFields
                     .customBoolFields.Add(kvp.Key, kvp.Value)
                 Next
 
