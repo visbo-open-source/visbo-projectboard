@@ -535,20 +535,20 @@ Public Class Request
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
     ''' <returns></returns>
-    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef mergedProj As clsProjekt, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Try
 
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
+                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err)
                 Catch ex As Exception
 
                     If err.errorCode = 401 Then                    ' Token is expired
                         loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                         If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
+                            result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err)
                         End If
                     Else
                         Throw New ArgumentException(ex.Message)
@@ -907,7 +907,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function getWriteProtection(ByVal pName As String, ByVal vName As String,
                                        ByRef err As clsErrorCodeMsg,
-                                       Optional type As Integer = 0) As clsWriteProtectionItem
+                                       Optional type As ptPRPFType = ptPRPFType.project) As clsWriteProtectionItem
 
         Dim result As New clsWriteProtectionItem
 
@@ -1058,8 +1058,12 @@ Public Class Request
             End If
 
         Catch ex As Exception
+            If awinSettings.visboDebug Then
+                Throw New ArgumentException("storeConstellationToDB: " & ex.Message)
+            Else
+                Throw New ArgumentException(ex.Message)
+            End If
 
-            Throw New ArgumentException("storeConstellationToDB: " & ex.Message)
         End Try
 
         storeConstellationToDB = result

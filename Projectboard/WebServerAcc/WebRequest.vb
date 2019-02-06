@@ -702,7 +702,7 @@ Public Class Request
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
     ''' <returns></returns>
-    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef mergedProj As clsProjekt, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Dim errmsg As String = ""
@@ -765,7 +765,7 @@ Public Class Request
                     End If
                     If VRScache.VPsId.ContainsKey(vpid) Then
                         VRScache.VPsId.Remove(vpid)
-                        VRScache.VPsN.Add(aktvp.name, aktvp)
+                        VRScache.VPsId.Add(vpid, aktvp)
                     Else
                         VRScache.VPsId.Add(vpid, aktvp)
                     End If
@@ -856,8 +856,11 @@ Public Class Request
                                     If Not IsNothing(newproj) Then
                                         If Not newproj.isIdenticalTo(projekt) Then
                                             ' Merge der geänderten Ressourcen => neues Projekt "mergeProj"
-                                            Dim mergeProj As clsProjekt = newproj.deleteAndMerge(summaryRoleIDs, Nothing, projekt)
-                                            newResult = POSTOneVPv(vpid, mergeProj, userName, err)
+                                            mergedProj = newproj.deleteAndMerge(summaryRoleIDs, Nothing, projekt)
+                                            newResult = POSTOneVPv(vpid, mergedProj, userName, err)
+                                            If Not newResult Then
+                                                mergedProj = Nothing
+                                            End If
                                         End If
                                     Else
                                         err = errNew
@@ -1325,7 +1328,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function getWriteProtection(ByVal pName As String, ByVal vName As String,
                                        ByRef err As clsErrorCodeMsg,
-                                       Optional type As Integer = ptPRPFType.project) As clsWriteProtectionItem
+                                       Optional type As ptPRPFType = ptPRPFType.project) As clsWriteProtectionItem
         Dim result As New clsWriteProtectionItem
         Try
             Dim vp As clsVP = GETvpid(pName, err, type)
@@ -1655,7 +1658,7 @@ Public Class Request
             If VRScache.VPsN.Count > 0 Then
                 vplist = VRScache.VPsN
             Else
-                vplist = GETallVP(aktVCid, err, Nothing)
+                vplist = GETallVP(aktVCid, err, ptPRPFType.all)
             End If
 
             For Each kvp As KeyValuePair(Of String, clsVP) In vplist
@@ -2407,11 +2410,16 @@ Public Class Request
                                                 End If
                                         End Select
                                     Case HttpStatusCode.BadRequest
+                                        Exit While
+                                    Case HttpStatusCode.Unauthorized
+                                        Exit While
                                     Case HttpStatusCode.Forbidden
+                                        Exit While
                                     Case HttpStatusCode.NotFound
-
+                                        Exit While
                                     Case Else
                                         'Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+                                        Exit While
                                 End Select
                             End If
 
@@ -4757,7 +4765,7 @@ Public Class Request
     End Function
 
     Private Function POSTOneVPv(ByVal vpid As String,
-                                ByVal projekt As clsProjekt,
+                                ByRef projekt As clsProjekt,
                                 ByVal username As String, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
@@ -4804,6 +4812,35 @@ Public Class Request
 
                     ' vpv zu Cache hinzufügen
                     VRScache.createVPvLong(storeAntwort.vpv, Date.Now.ToUniversalTime)
+
+
+                    If awinSettings.visboDebug Then
+
+                        ' Rundum-Test
+                        Dim newProjekt As New clsProjekt
+                        Dim newWebProj As clsProjektWebLong = storeAntwort.vpv.ElementAt(0)
+
+                        Dim vp As New clsVP
+                        If VRScache.VPsId.ContainsKey(vpid) Then
+                            vp = VRScache.VPsId(vpid)
+                        End If
+
+                        newWebProj.copyto(newProjekt, vp)
+                        Dim korrekt As Boolean = newProjekt.isIdenticalTo(projekt)
+                        If korrekt Then
+                            Call MsgBox("Projekt nach POSTOneVPv gleich dem Ursprünglichen")
+                        Else
+                            Call MsgBox("FEHLER: Projekt nach POSTOneVPv nicht gleich dem Ursprünglichen")
+                        End If
+
+                    End If
+
+
+                    ' updatedAt - Angabe in projekt speichern
+                    If storeAntwort.vpv.Count >= 1 Then
+                        projekt.updatedAt = storeAntwort.vpv.ElementAt(0).updatedAt
+                    End If
+
 
                 Else
 
@@ -5021,8 +5058,8 @@ Public Class Request
 
                     If hvpid = "" Then
                         result = Nothing   ' Signalisieren, dass ein Fehler aufgetaucht ist
-                        Call MsgBox("Projekt '" & kvp.Value & "' bitte zuerst in DB speichern")
-                        Throw New ArgumentException("Projekt '" & kvp.Value & "' bitte zuerst in DB speichern")
+                        Call MsgBox("neues Projekt '" & kvp.Value & "' bitte zuerst in DB speichern")
+                        Throw New ArgumentException("neues Projekt '" & kvp.Value & "' bitte zuerst in DB speichern")
                     Else
                         If Not .sortList.Contains(hvpid) Then
                             .sortList.Add(hvpid)
@@ -5142,7 +5179,11 @@ Public Class Request
                 Case 401        ' Unauthorized
 
                     token = ""
-                    Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
+
+                    If withBreak Then
+                        Throw New ArgumentException(errcode & ": Fehler in " & restCall & " : " & webAntwortMsg)
+                    End If
+
 
                 Case 402        'Payment Required
 
