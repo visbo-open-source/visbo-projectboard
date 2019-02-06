@@ -464,7 +464,7 @@ Module Module1
                     customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomfieldsFromDB("", Date.Now, err)
 
                     If IsNothing(customFieldDefinitions) Then
-                        Call MsgBox(err.errorMsg)
+                        'Call MsgBox(err.errorMsg)
                     End If
                 Catch ex As Exception
 
