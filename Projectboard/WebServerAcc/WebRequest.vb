@@ -2409,16 +2409,16 @@ Public Class Request
                                                     request.Proxy.Credentials = netcred
                                                 End If
                                         End Select
-                                    Case HttpStatusCode.BadRequest
-                                        Exit While
-                                    Case HttpStatusCode.Unauthorized
-                                        Exit While
-                                    Case HttpStatusCode.Forbidden
-                                        Exit While
-                                    Case HttpStatusCode.NotFound
-                                        Exit While
+                                        'Case HttpStatusCode.BadRequest
+                                        '    Exit While
+                                        'Case HttpStatusCode.Unauthorized
+                                        '    Exit While
+                                        'Case HttpStatusCode.Forbidden
+                                        '    Exit While
+                                        'Case HttpStatusCode.NotFound
+                                        '    Exit While
                                     Case Else
-                                        'Throw New ArgumentException("Fehler bei GetRequestStream:  " & ex.Message)
+                                        response = hresp
                                         Exit While
                                 End Select
                             End If
