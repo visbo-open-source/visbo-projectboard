@@ -2594,6 +2594,7 @@ Public Class clsProjekt
             .Status = _Status
             .extendedView = Me.extendedView
             .actualDataUntil = Me.actualDataUntil
+            .kundenNummer = Me.kundenNummer
             Try
                 .movable = Me.movable
             Catch ex As Exception
@@ -3045,6 +3046,8 @@ Public Class clsProjekt
 
 
         newProj.variantName = Me.variantName
+        newProj.timeStamp = mProj.timeStamp
+
         deleteAndMerge = newProj
     End Function
 

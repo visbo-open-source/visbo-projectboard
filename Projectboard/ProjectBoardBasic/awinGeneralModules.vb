@@ -277,11 +277,12 @@ Public Module awinGeneralModules
 
         ' jetzt werden die temporären Schutz Mechanismen rausgenommen ...
 
-        If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err) Then
-            If awinSettings.visboDebug Then
-                Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
-            End If
-        End If
+        ' ur: 01.02.2019: es werden sonst zuviele Locks versucht zu löschen und Projekte geladen, die nie geladen waren
+        'If CType(databaseAcc, DBAccLayer.Request).cancelWriteProtections(dbUsername, err) Then
+        '    If awinSettings.visboDebug Then
+        '        Call MsgBox("Ihre vorübergehenden Schreibsperren wurden aufgehoben")
+        '    End If
+        'End If
 
 
         ' tk, 10.11.16 allDependencies darf nicht gelöscht werden, weil das sonst nicht mehr vorhanden ist
@@ -3283,9 +3284,13 @@ Public Module awinGeneralModules
 
                     ' jetzt wird das Projekt bzw. Summary Projekt behandelt ... 
                     If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, Date.Now, err) Then
-                        ' speichern des Projektes 
+                        ' speichern des Projektes
+
+                        Dim mProj As clsProjekt = Nothing           ' hier kommt das gemergte Projekt hinein
+
                         hproj.timeStamp = DBtimeStamp
-                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
+
+                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err) Then
 
                             If awinSettings.englishLanguage Then
                                 outputLine = "saved: " & hproj.name & ", " & hproj.variantName
@@ -3297,8 +3302,22 @@ Public Module awinGeneralModules
 
                             anzahlNeue = anzahlNeue + 1
 
-                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                            writeProtections.upsert(wpItem)
+                            If Not IsNothing(mProj) Then
+
+                                'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
+                                Dim mProjKey As String = calcProjektKey(mProj.name, mProj.variantName)
+
+
+                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mProj.name, mProj.variantName, err)
+                                writeProtections.upsert(wpItem)
+
+                                Call replaceProjectVariant(mProj.name, mProj.variantName, False, True, mProj.tfZeile)
+
+
+                            Else
+                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                                writeProtections.upsert(wpItem)
+                            End If
 
                         Else
                             If awinSettings.visboServer Then
@@ -3353,11 +3372,14 @@ Public Module awinGeneralModules
 
                     Else
                         ' ein in dem Szenario enthaltenes Projekt wird gespeichert , wenn es Unterschiede gibt 
+
                         Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, Date.Now, err)
                         ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
                         If Not hproj.isIdenticalTo(oldProj) Then
+
+                            Dim mproj As clsProjekt = Nothing    ' gemergedtes Projekt, oder nothing
                             hproj.timeStamp = DBtimeStamp
-                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
+                            If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
 
                                 If awinSettings.englishLanguage Then
                                     outputLine = "saved: " & hproj.name & ", " & hproj.variantName
@@ -3370,8 +3392,28 @@ Public Module awinGeneralModules
                                 ' alles ok
                                 anzahlChanged = anzahlChanged + 1
 
-                                Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                writeProtections.upsert(wpItem)
+                                If Not IsNothing(mproj) Then
+
+                                    'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
+                                    Dim mProjKey As String = calcProjektKey(mproj.name, mproj.variantName)
+
+                                    'If AlleProjekte.Containskey(mProjKey) Then
+                                    '    AlleProjekte.Remove(mProjKey, False)
+                                    '    ShowProjekte.Remove(mproj.name)
+
+                                    '    AlleProjekte.Add(mproj, False)
+                                    '    ShowProjekte.Add(mproj)
+                                    'Else
+                                    '    AlleProjekte.Add(mproj, False)
+                                    '    ShowProjekte.Add(mproj)
+                                    'End If
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mproj.name, mproj.variantName, err)
+                                    writeProtections.upsert(wpItem)
+
+                                Else
+                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                                    writeProtections.upsert(wpItem)
+                                End If
                             Else
 
                                 If awinSettings.visboServer Then
@@ -3434,11 +3476,40 @@ Public Module awinGeneralModules
 
         End If
 
+
+
+
+
+        ' jetzt wird das Portfolio weggeschrieben 
+        Try
+            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(currentConstellation, err) Then
+                ' alles in Ordnung, Speichern hat geklappt ... 
+            Else
+                If awinSettings.englishLanguage Then
+                    outputLine = "Error when writing scenario: " & currentConstellation.constellationName
+                Else
+                    outputLine = "Fehler beim Schreiben Szenario: " & currentConstellation.constellationName
+                End If
+                outPutCollection.Add(outputLine)
+
+            End If
+        Catch ex As Exception
+            If awinSettings.englishLanguage Then
+                outputLine = "Error when writing scenario" & vbLf & ex.Message
+            Else
+                outputLine = "Fehler beim Schreiben Szenario" & vbLf & ex.Message
+            End If
+            outPutCollection.Add(outputLine)
+            Exit Sub
+        End Try
+
+
+
         ' jetzt muss das Summary Projekt zur Constellation erzeugt und gespeichert werden
         Try
             Dim budget As Double = -1.0
             Dim calculateAndStoreSummaryProjekt As Boolean = False
-
+            Dim mSProj As clsProjekt = Nothing   ' nimmt das gemergte Summary-Projekt aus
 
             Dim tmpVariantName As String = getDefaultVariantNameAccordingUserRole()
 
@@ -3464,8 +3535,9 @@ Public Module awinGeneralModules
 
                 If Not CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(sproj.name, sproj.variantName, Date.Now, err) Then
                     ' speichern des Projektes 
+
                     sproj.timeStamp = DBtimeStamp
-                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, err) Then
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
 
                         If awinSettings.englishLanguage Then
                             outputLine = "saved: " & sproj.name & ", " & sproj.variantName
@@ -3478,7 +3550,8 @@ Public Module awinGeneralModules
                         anzahlNeue = anzahlNeue + 1
 
                         Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                        writeProtections.upsert(wpItem)
+                            writeProtections.upsert(wpItem)
+
 
                     Else
                         ' kann eigentlich gar nicht sein ... wäre nur dann der Fall, wenn ein Projekt komplett gelöscht wurde , aber der Schreibschutz nicht gelöscht wurde 
@@ -3536,8 +3609,9 @@ Public Module awinGeneralModules
                     Dim oldProj As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(sproj.name, sproj.variantName, Date.Now, err)
                     ' Type = 0: Projekt wird mit Variante bzw. anderem zeitlichen Stand verglichen ...
                     If Not sproj.isIdenticalTo(oldProj) Then
+
                         sproj.timeStamp = DBtimeStamp
-                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, err) Then
+                        If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
 
                             If awinSettings.englishLanguage Then
                                 outputLine = "saved: " & sproj.name & ", " & sproj.variantName
@@ -3551,7 +3625,8 @@ Public Module awinGeneralModules
                             anzahlChanged = anzahlChanged + 1
 
                             Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(sproj.name, sproj.variantName, err)
-                            writeProtections.upsert(wpItem)
+                                writeProtections.upsert(wpItem)
+
                         Else
                             If awinSettings.visboServer Then
                                 Select Case err.errorCode
@@ -3610,45 +3685,34 @@ Public Module awinGeneralModules
                 ''Else
                 ''    Dim a As Integer = outPutCollection.Count
                 ''End If
+                If Not IsNothing(mSProj) Then
+                    ' mergte Summary wurde in die Liste aufgenommen
+                    Dim skey As String = calcProjektKey(mSProj.name, mSProj.variantName)
+                    If AlleProjektSummaries.Containskey(skey) Then
+                        AlleProjektSummaries.Remove(skey, False)
+                    End If
 
-                Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
-                If AlleProjektSummaries.Containskey(skey) Then
-                    AlleProjektSummaries.Remove(skey, False)
-                End If
-
-                If Not AlleProjektSummaries.Containskey(skey) Then
-                    AlleProjektSummaries.Add(sproj, False)
-                End If
-
-            End If
-
-
-        Catch ex As Exception
-
-        End Try
-
-
-
-        ' jetzt wird das Portfolio weggeschrieben 
-        Try
-            If CType(databaseAcc, DBAccLayer.Request).storeConstellationToDB(currentConstellation, err) Then
-                ' alles in Ordnung, Speichern hat geklappt ... 
-            Else
-                If awinSettings.englishLanguage Then
-                    outputLine = "Error when writing scenario: " & currentConstellation.constellationName
+                    If Not AlleProjektSummaries.Containskey(skey) Then
+                        AlleProjektSummaries.Add(mSProj, False)
+                    End If
                 Else
-                    outputLine = "Fehler beim Schreiben Szenario: " & currentConstellation.constellationName
+                    ' ungemergtes Summary-Projekt wird in die Liste aufgenommen
+                    Dim skey As String = calcProjektKey(sproj.name, sproj.variantName)
+                    If AlleProjektSummaries.Containskey(skey) Then
+                        AlleProjektSummaries.Remove(skey, False)
+                    End If
+
+                    If Not AlleProjektSummaries.Containskey(skey) Then
+                        AlleProjektSummaries.Add(sproj, False)
+                    End If
                 End If
-                outPutCollection.Add(outputLine)
+
 
             End If
+
+
         Catch ex As Exception
-            If awinSettings.englishLanguage Then
-                outputLine = "Error when writing scenario - Database active?"
-            Else
-                outputLine = "Fehler beim Schreiben Szenario - Datenbank läuft?"
-            End If
-            Throw New ArgumentException(outputLine & vbCrLf & ex.Message)
+
         End Try
 
 
@@ -3687,9 +3751,8 @@ Public Module awinGeneralModules
             End If
 
         End If
+
         outPutCollection.Add(outputLine)
-
-
 
     End Sub
 
@@ -7022,17 +7085,13 @@ Public Module awinGeneralModules
 
             If CType(DatabaseAcc, DBAccLayer.Request).pingMongoDb() And Not noDB Then
 
-                ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                '' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
-                If demoModusHistory Then
-                    hproj.timeStamp = historicDate
-                Else
-                    hproj.timeStamp = jetzt
-                End If
-
-                'Dim storeNeeded As Boolean = True
-
-                ' ur: 20170904: Funktion hproj.isIdenticalTo hat Probleme
+                'If demoModusHistory Then
+                '    hproj.timeStamp = historicDate
+                'Else
+                '    hproj.timeStamp = jetzt
+                'End If
 
                 ' wenn es sich jetzt um einen Portfolio Manager handelt 
                 ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
@@ -7042,9 +7101,9 @@ Public Module awinGeneralModules
 
 
                 Dim storeNeeded As Boolean
-                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt, err) Then
+                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                     ' prüfen, ob es Unterschied gibt 
-                    Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt, err)
+                    Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
                     If Not IsNothing(standInDB) Then
                         ' prüfe, ob es Unterschiede gibt
                         storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -7057,7 +7116,18 @@ Public Module awinGeneralModules
                 End If
 
                 If storeNeeded Then
-                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
+
+                    Dim mProj As clsProjekt = Nothing
+
+                    '' erst hier muss der Wert für hproj.timeStamp = heute gesetzt werden
+
+                    If demoModusHistory Then
+                        hproj.timeStamp = historicDate
+                    Else
+                        hproj.timeStamp = jetzt
+                    End If
+
+                    If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err) Then
 
                         If awinSettings.englishLanguage Then
 
@@ -7069,8 +7139,30 @@ Public Module awinGeneralModules
                             outputCollection.Add(outputline)
                         End If
 
-                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                        writeProtections.upsert(wpItem, False)
+                        If Not IsNothing(mProj) Then
+
+                            'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
+                            Dim hProjKey As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                            If AlleProjekte.Containskey(hProjKey) Then
+                                AlleProjekte.Remove(hProjKey, False)
+                                AlleProjekte.Add(mProj, False)
+                                ShowProjekte.Remove(hproj.name)
+                                ShowProjekte.Add(mProj)
+                            Else
+                                AlleProjekte.Add(mProj, False)
+                                ShowProjekte.Add(mProj)
+                            End If
+
+                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mProj.name, mProj.variantName, err)
+                            writeProtections.upsert(wpItem)
+
+                        Else
+
+                            Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                            writeProtections.upsert(wpItem, False)
+
+                        End If
 
                         tmpResult = True
                         'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
@@ -7200,18 +7292,18 @@ Public Module awinGeneralModules
 
                         Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
                         If Not writeProtections.isProtected(pvName, dbUsername) Then
-                            ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                            'hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
-                            If demoModusHistory Then
-                                hproj.timeStamp = historicDate
-                            Else
-                                hproj.timeStamp = jetzt
-                            End If
+                            'If demoModusHistory Then
+                            '    hproj.timeStamp = historicDate
+                            'Else
+                            '    hproj.timeStamp = jetzt
+                            'End If
 
                             Dim storeNeeded As Boolean
-                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt, err) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt, err)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -7224,7 +7316,17 @@ Public Module awinGeneralModules
                             End If
 
                             If storeNeeded Then
-                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
+
+                                Dim mproj As clsProjekt = Nothing
+
+                                ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
+                                If demoModusHistory Then
+                                    hproj.timeStamp = historicDate
+                                Else
+                                    hproj.timeStamp = jetzt
+                                End If
+
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved : " & hproj.name & ", " & hproj.variantName
@@ -7235,10 +7337,32 @@ Public Module awinGeneralModules
                                     End If
 
                                     anzahlStores = anzahlStores + 1
-                                    ' jetzt die writeProtections aktualisieren 
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                    writeProtections.upsert(wpItem)
+                                    ' jetzt die writeProtections aktualisieren 
+                                    If Not IsNothing(mproj) Then
+
+                                        'mProj statt hproj in AlleProjekte und ShowProjekte eintragen
+                                        Dim hProjKey As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                                        If AlleProjekte.Containskey(hProjKey) Then
+                                            AlleProjekte.Remove(hProjKey, False)
+                                            AlleProjekte.Add(mproj, False)
+                                            ShowProjekte.Remove(hproj.name)
+                                            ShowProjekte.Add(mproj)
+                                        Else
+                                            AlleProjekte.Add(mproj, False)
+                                            ShowProjekte.Add(mproj)
+                                        End If
+
+                                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mproj.name, mproj.variantName, err)
+                                        writeProtections.upsert(wpItem)
+
+                                    Else
+
+                                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                                        writeProtections.upsert(wpItem, False)
+
+                                    End If
 
                                 Else
                                     If awinSettings.visboServer Then
@@ -7600,18 +7724,21 @@ Public Module awinGeneralModules
                             ' prüfen auf Rolle 
                             Call changeVariantNameAccordingUserRole(hproj)
 
-                            ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                            ' ur: 31.1.2019: hier ist es zu früh, den neuen Timestamp zu setzen, 
+                            ' denn es muss evt. das Projekt mit dem alten Timestamp nochmals aus DB geholt werden
 
-                            If demoModusHistory Then
-                                hproj.timeStamp = historicDate
-                            Else
-                                hproj.timeStamp = jetzt
-                            End If
+                            '' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                            ''If demoModusHistory Then
+
+                            ''    hproj.timeStamp = historicDate
+                            ''Else
+                            ''    hproj.timeStamp = jetzt
+                            ''End If
 
                             Dim storeNeeded As Boolean
-                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, jetzt, err) Then
+                            If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
                                 ' prüfen, ob es Unterschied gibt 
-                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, jetzt, err)
+                                Dim standInDB As clsProjekt = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(hproj.name, hproj.variantName, hproj.timeStamp, err)
                                 If Not IsNothing(standInDB) Then
                                     ' prüfe, ob es Unterschiede gibt
                                     storeNeeded = Not hproj.isIdenticalTo(standInDB)
@@ -7624,7 +7751,19 @@ Public Module awinGeneralModules
                             End If
 
                             If storeNeeded Then
-                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, err) Then
+
+                                Dim mproj As clsProjekt = Nothing
+
+                                ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
+                                ' ur:31.1.2019: erst hier muss der neue Timestamp gesetzt sein.
+
+                                If demoModusHistory Then
+                                    hproj.timeStamp = historicDate
+                                Else
+                                    hproj.timeStamp = jetzt
+                                End If
+
+                                If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
 
                                     If awinSettings.englishLanguage Then
                                         outputline = "saved : " & hproj.name & ", " & hproj.variantName
@@ -7636,8 +7775,20 @@ Public Module awinGeneralModules
 
                                     anzStoredProj = anzStoredProj + 1
 
-                                    Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
-                                    writeProtections.upsert(wpItem)
+                                    If Not IsNothing(mproj) Then
+
+                                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(mproj.name, mproj.variantName, err)
+                                        writeProtections.upsert(wpItem)
+
+                                        ' gemergte Projekt nun in AlleProjekte und ShowProjekte ersetzen
+                                        Call replaceProjectVariant(mproj.name, mproj.variantName, False, True, mproj.tfZeile)
+
+                                    Else
+
+                                        Dim wpItem As clsWriteProtectionItem = CType(databaseAcc, DBAccLayer.Request).getWriteProtection(hproj.name, hproj.variantName, err)
+                                        writeProtections.upsert(wpItem, False)
+
+                                    End If
                                     'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
                                 Else
 
