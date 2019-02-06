@@ -276,21 +276,22 @@ Public Class clsProjektDB
                 Next
             End If
 
-            ' ur: 04.01.2019: muss am Ende stehen, da beim Setzen von actualDataUntil die DauerinDays und damit die Phasen
-            ' des aktuellen Projektes und nicht der Vorlage benötigt werden.
-            If awinSettings.autoSetActualDataDate Then
+            ' tk muss raus, es wird jetzt beim Importieren eine actualdata gesetzt, das war es dann 
+            '' ur: 04.01.2019: muss am Ende stehen, da beim Setzen von actualDataUntil die DauerinDays und damit die Phasen
+            '' des aktuellen Projektes und nicht der Vorlage benötigt werden.
+            'If awinSettings.autoSetActualDataDate Then
 
-                If Me.timestamp.AddMonths(-1) > Me.startDate Then
-                    .actualDataUntil = Me.timestamp.AddMonths(-1)
-                End If
+            '    If Me.timestamp.AddMonths(-1) > Me.startDate Then
+            '        .actualDataUntil = Me.timestamp.AddMonths(-1)
+            '    End If
 
-            Else
-                If IsNothing(Me.actualDataUntil) Then
-                    .actualDataUntil = Date.MinValue
-                Else
-                    .actualDataUntil = Me.actualDataUntil.ToLocalTime
-                End If
-            End If
+            'Else
+            '    If IsNothing(Me.actualDataUntil) Then
+            '        .actualDataUntil = Date.MinValue
+            '    Else
+            '        .actualDataUntil = Me.actualDataUntil.ToLocalTime
+            '    End If
+            'End If
 
 
         End With
