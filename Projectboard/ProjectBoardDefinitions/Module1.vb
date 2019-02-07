@@ -153,8 +153,9 @@ Public Module Module1
     ' welche CustomFields gibt es ? 
     Public customFieldDefinitions As New clsCustomFieldDefinitions
 
-    ' was ist meine CustomUser Role ? 
+    ' was ist meine CustomUser Role, die ich für die aktuelle Slide brauche ? 
     Public myCustomUserRole As New clsCustomUserRole
+
 
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
@@ -4082,10 +4083,28 @@ Public Module Module1
                         .Tags.Add("DBNAME", awinSettings.databaseName)
                     End If
 
+                    If awinSettings.proxyURL.Length > 0 Then
+                        If .Tags.Item("PRXYC").Length > 0 Then
+                            .Tags.Delete("PRXYC")
+                        End If
+                        .Tags.Add("PRXYC", awinSettings.proxyURL)
+
+                        If .Tags.Item("PRXYL").Length > 0 Then
+                            .Tags.Delete("PRXYL")
+                        End If
+                        .Tags.Add("PRXYL", awinSettings.proxyURL)
+                    End If
+
                     If .Tags.Item("DBSSL").Length > 0 Then
                         .Tags.Delete("DBSSL")
                     End If
                     .Tags.Add("DBSSL", awinSettings.DBWithSSL.ToString)
+
+                    Dim enryptedUserRole As String = myCustomUserRole.encrypt
+                    If .Tags.Item("CURS").Length > 0 Then
+                        .Tags.Delete("CURS")
+                    End If
+                    .Tags.Add("CURS", enryptedUserRole)
 
                 End If
 

@@ -16853,7 +16853,13 @@ Public Module agm2
 
     End Sub
 
-    Public Sub setUserRoles(ByRef meldungen As Collection)
+    ''' <summary>
+    ''' im Visual Board: Auswahl der vorhandenen User Roles durch den Nutzer, wenn er mehrere hat
+    ''' im SmartInfo: Auswahl über das , was im PPT vorgegeben ist ; wenn der 
+    ''' danach ist die globale Variable myCustomUserRole gesetzt 
+    ''' </summary>
+    ''' <param name="meldungen"></param>
+    Public Sub setUserRoles(ByRef meldungen As Collection, Optional ByVal encryptedUserRole As String = "")
 
         Dim err As New clsErrorCodeMsg
 
@@ -16864,42 +16870,49 @@ Public Module agm2
             ' hier muss jetzt ggf das Formular zur Bestimmung der CustomUser Role aufgeschaltet werden
             Dim allMyCustomUserRoles As Collection = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
-
-            If allMyCustomUserRoles.Count > 1 Then
-                Dim chooseUserRole As New frmChooseCustomUserRole
-
-                With chooseUserRole
-                    .myUserRoles = allMyCustomUserRoles
-                End With
-                ' Formular zur Auswahl der User Rolle anzeigen 
-                Dim returnResult As DialogResult = chooseUserRole.ShowDialog()
-
-                If returnResult = DialogResult.OK Then
-                    myCustomUserRole = allMyCustomUserRoles.Item(chooseUserRole.selectedIndex)
-                Else
-                    myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
-                End If
-
-            ElseIf allMyCustomUserRoles.Count = 1 Then
-                myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+            If encryptedUserRole.Length > 0 Then
+                ' bestimme die UserRole 
+                Dim chkUserRole As New clsCustomUserRole
+                Call chkUserRole.decrypt(encryptedUserRole)
 
             Else
-                myCustomUserRole = New clsCustomUserRole
-                With myCustomUserRole
-                    If awinSettings.readCostRolesFromDB Then
-                        .customUserRole = ptCustomUserRoles.OrgaAdmin
+                If allMyCustomUserRoles.Count > 1 Then
+                    Dim chooseUserRole As New frmChooseCustomUserRole
+
+                    With chooseUserRole
+                        .myUserRoles = allMyCustomUserRoles
+                    End With
+                    ' Formular zur Auswahl der User Rolle anzeigen 
+                    Dim returnResult As DialogResult = chooseUserRole.ShowDialog()
+
+
+                    If returnResult = DialogResult.OK Then
+                        myCustomUserRole = allMyCustomUserRoles.Item(chooseUserRole.selectedIndex)
                     Else
-                        .customUserRole = ptCustomUserRoles.ProjektLeitung
+                        myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
                     End If
 
-                    .specifics = ""
-                    .userName = dbUsername
-                End With
+                ElseIf allMyCustomUserRoles.Count = 1 Then
+                    myCustomUserRole = CType(allMyCustomUserRoles.Item(1), clsCustomUserRole)
+
+                Else
+                    myCustomUserRole = New clsCustomUserRole
+                    With myCustomUserRole
+
+                        If awinSettings.readCostRolesFromDB Then
+                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                        Else
+                            .customUserRole = ptCustomUserRoles.ProjektLeitung
+                        End If
+
+                        .specifics = ""
+                        .userName = dbUsername
+                    End With
+                End If
+
+                ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                Call myCustomUserRole.setNonAllowances()
             End If
-
-            ' jetzt gibt es eine currentUserRole: myCustomUserRole
-            Call myCustomUserRole.setNonAllowances()
-
 
         Else
             ' muss ins logfile
