@@ -130,6 +130,42 @@ Public Class clsCustomUserRole
         isEntitledForMenu = Not _nonAllowance.Contains(menuID)
     End Function
 
+    ''' <summary>
+    ''' verschlüsselt die UserRole, dabei wird die Kennziffer customUserRole und specifics verschlüsselt, sofern es sich um 
+    ''' eine Ressource-Manager Rolel handelt 
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property encrypt() As String
+        Get
+            Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+            Dim encryptedUserRole As String = ""
+            If _customUserRole = ptCustomUserRoles.RessourceManager Then
+                encryptedUserRole = visboCrypto.EncryptData(CInt(_customUserRole).ToString & "#" & _specifics)
+            Else
+                encryptedUserRole = visboCrypto.EncryptData(CInt(_customUserRole).ToString & "#" & "XYZ")
+            End If
+
+            encrypt = encryptedUserRole
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' setzt in der aktuellen Instanz die customUserRole und, falls RessourceManager, die specifics entsprechend 
+    ''' </summary>
+    ''' <param name="encryptedText"></param>
+    Public Sub decrypt(ByVal encryptedText As String)
+
+        Dim visboCrypto As New clsVisboCryptography(visboCryptoKey)
+        Dim decryptedText As String = visboCrypto.DecryptData(encryptedText)
+        Dim tmpstr() As String = decryptedText.Split(New Char() {CChar("#")})
+        _customUserRole = CType(tmpstr(0), ptCustomUserRoles)
+        If _customUserRole = ptCustomUserRoles.RessourceManager Then
+            _specifics = CStr(tmpstr(1))
+        End If
+
+
+    End Sub
+
     Public Property userName As String
         Get
             userName = _userName

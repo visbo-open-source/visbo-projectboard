@@ -37,7 +37,7 @@ Public NotInheritable Class clsVisboCryptography
         If (verschluesselterText <> "") And
             (Not IsNothing(verschluesselterText)) Then
 
-            Dim completeString As String = Me.DecryptData(verschluesselterText)
+            Dim completeString As String = DecryptData(verschluesselterText)
             Dim tmpStr() As String = completeString.Split(New Char() {CChar(vbLf)})
 
             If tmpStr.Length = 5 Then
@@ -68,7 +68,7 @@ Public NotInheritable Class clsVisboCryptography
         If (verschluesselterText <> "") And
             (Not IsNothing(verschluesselterText)) Then
 
-            Dim completeString As String = Me.DecryptData(verschluesselterText)
+            Dim completeString As String = DecryptData(verschluesselterText)
             Dim tmpStr() As String = completeString.Split(New Char() {CChar(vbLf)})
 
             If tmpStr.Length = 5 Then
@@ -113,7 +113,7 @@ Public NotInheritable Class clsVisboCryptography
     ''' <param name="plaintext"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function EncryptData(ByVal plaintext As String) As String
+    Public Function EncryptData(ByVal plaintext As String) As String
 
         ' Convert the plaintext string to a byte array.
         Dim plaintextBytes() As Byte =
@@ -140,7 +140,7 @@ Public NotInheritable Class clsVisboCryptography
     ''' <param name="encryptedtext"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function DecryptData(ByVal encryptedtext As String) As String
+    Public Function DecryptData(ByVal encryptedtext As String) As String
 
         ' Convert the encrypted text string to a byte array.
         Dim encryptedBytes() As Byte = Convert.FromBase64String(encryptedtext)
