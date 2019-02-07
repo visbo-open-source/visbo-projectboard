@@ -4083,17 +4083,21 @@ Public Module Module1
                         .Tags.Add("DBNAME", awinSettings.databaseName)
                     End If
 
-                    If awinSettings.proxyURL.Length > 0 Then
-                        If .Tags.Item("PRXYC").Length > 0 Then
-                            .Tags.Delete("PRXYC")
-                        End If
-                        .Tags.Add("PRXYC", awinSettings.proxyURL)
+                    If Not IsNothing(awinSettings.proxyURL) Then
+                        If awinSettings.proxyURL.Length > 0 Then
+                            If .Tags.Item("PRXYC").Length > 0 Then
+                                .Tags.Delete("PRXYC")
+                            End If
 
-                        If .Tags.Item("PRXYL").Length > 0 Then
-                            .Tags.Delete("PRXYL")
+                            .Tags.Add("PRXYC", awinSettings.proxyURL)
+
+                            If .Tags.Item("PRXYL").Length > 0 Then
+                                .Tags.Delete("PRXYL")
+                            End If
+                            .Tags.Add("PRXYL", awinSettings.proxyURL)
                         End If
-                        .Tags.Add("PRXYL", awinSettings.proxyURL)
                     End If
+
 
                     If .Tags.Item("DBSSL").Length > 0 Then
                         .Tags.Delete("DBSSL")
