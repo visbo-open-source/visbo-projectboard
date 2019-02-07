@@ -472,7 +472,7 @@ Public Class Ribbon1
         Dim msg As String = ""
 
 
-        If userIsEntitled(msg) Then
+        If userIsEntitled(msg, currentSlide) Then
             Dim anzahlProjekte As Integer = smartSlideLists.countProjects
             ' prüfen, ob es eine Smart Slide ist und ob die Projekt-Historien bereits geladen sind ...
             If anzahlProjekte > 0 Then
