@@ -289,7 +289,7 @@ Public Class Request
     Public Function retrieveZeitstempelFromDB(ByVal pvName As String, ByRef err As clsErrorCodeMsg) As Collection
 
         Dim ergebnisCollection As New Collection
-        'token = ""
+
         Try
 
             Dim projectName As String = ""
@@ -342,7 +342,7 @@ Public Class Request
     Public Function retrieveZeitstempelFirstLastFromDB(ByVal pvName As String, ByRef err As clsErrorCodeMsg) As Collection
 
         Dim ergebnisCollection As New Collection
-        'token = ""
+
         Try
 
             Dim projectName As String = ""
@@ -665,21 +665,30 @@ Public Class Request
                 If chkOk Then
 
                     Dim vp As New clsVP
+                    Dim vpList As New List(Of clsVP)
 
                     Dim vpid As String = GETvpid(oldName, err)._id
-                    If VRScache.VPsN.ContainsKey(oldName) Then
+                    If vpid <> "" Then
 
-                        vp = VRScache.VPsN(oldName)
-                        If VRScache.VPsN.Remove(oldName) Then
-                            vp._id = vpid
-                            vp.name = newName
-                            VRScache.VPsN.Add(newName, vp)
+                        If VRScache.VPsN.ContainsKey(oldName) Then
+
+                            vp = VRScache.VPsN(oldName)
+
+                            vpList = PUTOneVP(vpid, vp, err)
+                            ' rename war korrekt, wenn in vplist ein und zwar nur ein VisboProject zurückgegeben wurde.
+                            If vpList.Count = 1 Then
+                                If VRScache.VPsN.Remove(oldName) Then
+                                    vp._id = vpid
+                                    vp.name = newName
+                                    VRScache.VPsN.Add(newName, vp)
+                                End If
+
+                            End If
+
                         End If
 
                     End If
 
-                    Dim vpList As List(Of clsVP) = PUTOneVP(vpid, vp, err)
-                    ' rename war korrekt, wenn in vplist ein und zwar nur ein VisboProject zurückgegeben wurde.
                     result = (vpList.Count = 1)
 
                 End If
@@ -771,7 +780,7 @@ Public Class Request
                     End If
 
                 Else
-                    Throw New ArgumentException("Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
+                    Throw New ArgumentException(err.errorCode & vbLf & "Das VisboProject existiert nicht und konnte auch nicht erzeugt werden!")
                 End If
 
 
@@ -786,7 +795,12 @@ Public Class Request
                 ' schreiben der Basis Variante 
                 Dim erfolgreich As Boolean = POSTOneVPv(vpid, projekt, userName, err)
 
-                projekt.variantName = vname
+                If erfolgreich Then
+                    projekt.variantName = vname
+                Else
+
+                End If
+
 
             Else
                 Try
@@ -853,6 +867,7 @@ Public Class Request
                                     summaryRoleIDs.Add(myCustomUserRole.specifics)
 
                                     Dim newproj As clsProjekt = retrieveOneProjectfromDB(projekt.name, projekt.variantName, Date.Now, errNew)
+
                                     If Not IsNothing(newproj) Then
                                         If Not newproj.isIdenticalTo(projekt) Then
                                             ' Merge der geänderten Ressourcen => neues Projekt "mergeProj"
@@ -870,8 +885,10 @@ Public Class Request
                                 End While
 
                                 result = newResult
-                            End If
 
+                            End If
+                        Case Else
+                            ' nothing to do
                     End Select
 
                 End If
@@ -1304,11 +1321,14 @@ Public Class Request
 
             Dim wpItem As clsWriteProtectionItem = getWriteProtection(pName, vName, err, type)
 
-            If wpItem.isProtected Then
-                result = (wpItem.userName = aktUser.email)
-            Else
-                result = True
+            If Not IsNothing(wpItem) Then
+                If wpItem.isProtected Then
+                    result = (wpItem.userName = aktUser.email)
+                Else
+                    result = True
+                End If
             End If
+
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -1332,31 +1352,37 @@ Public Class Request
         Dim result As New clsWriteProtectionItem
         Try
             Dim vp As clsVP = GETvpid(pName, err, type)
-            result.pvName = calcProjektKey(pName, vName)
-            result.isProtected = False
-            result.isSessionOnly = True
-            result.permanent = False
-            result.lastDateSet = Nothing
-            result.lastDateReleased = Nothing
-            result.userName = ""
-            result.type = type
 
-            If vp.lock.Count > 0 Then
-                For Each vplock As clsVPLock In vp.lock
+            If Not IsNothing(vp) Then
+                result.pvName = calcProjektKey(pName, vName)
+                result.isProtected = False
+                result.isSessionOnly = True
+                result.permanent = False
+                result.lastDateSet = Nothing
+                result.lastDateReleased = Nothing
+                result.userName = ""
+                result.type = type
 
-                    If vplock.variantName = vName Then
-                        If vplock.expiresAt.ToLocalTime > Date.Now Then
-                            result.isProtected = True
-                        Else
-                            result.isProtected = False
+                If vp.lock.Count > 0 Then
+                    For Each vplock As clsVPLock In vp.lock
+
+                        If vplock.variantName = vName Then
+                            If vplock.expiresAt.ToLocalTime > Date.Now Then
+                                result.isProtected = True
+                            Else
+                                result.isProtected = False
+                            End If
+                            result.isSessionOnly = True
+                            result.lastDateSet = vplock.createdAt.ToLocalTime
+                            result.userName = vplock.email
+                            Exit For
+
                         End If
-                        result.isSessionOnly = True
-                        result.lastDateSet = vplock.createdAt.ToLocalTime
-                        result.userName = vplock.email
-                        Exit For
+                    Next
+                End If
 
-                    End If
-                Next
+            Else
+                result = Nothing
             End If
 
 
@@ -1380,32 +1406,42 @@ Public Class Request
         Dim result As Boolean = False
 
         Try
-            Dim pname As String = Projekte.getPnameFromKey(wpItem.pvName)
-            Dim vname As String = Projekte.getVariantnameFromKey(wpItem.pvName)
+            If Not IsNothing(wpItem) Then
+                Dim pname As String = Projekte.getPnameFromKey(wpItem.pvName)
+                Dim vname As String = Projekte.getVariantnameFromKey(wpItem.pvName)
 
-            Dim aktvp As clsVP = GETvpid(pname, err)
-            Dim vpid As String = aktvp._id
-            Dim variantExists As Boolean = False
+                Dim aktvp As clsVP = GETvpid(pname, err)
 
-            For Each var As clsVPvariant In aktvp.Variant
-                If var.variantName = vname Then
-                    variantExists = True
-                    Exit For
+                If Not IsNothing(aktvp) Then
+
+                    Dim vpid As String = aktvp._id
+                    Dim variantExists As Boolean = False
+
+                    For Each var As clsVPvariant In aktvp.Variant
+                        If var.variantName = vname Then
+                            variantExists = True
+                            Exit For
+                        End If
+                    Next
+                    If (vpid <> "" And variantExists) Or (vpid <> "" And vname = "") Then
+
+                        If wpItem.isProtected Then
+                            result = POSTVPLock(vpid, vname, err)
+                        Else
+                            result = DELETEVPLock(vpid, err, vname)
+                        End If
+
+                    Else
+
+                        result = False
+
+                    End If
+
                 End If
-            Next
-            If (vpid <> "" And variantExists) Or (vpid <> "" And vname = "") Then
-
-                If wpItem.isProtected Then
-                    result = POSTVPLock(vpid, vname, err)
-                Else
-                    result = DELETEVPLock(vpid, err, vname)
-                End If
-
             Else
-
                 result = False
-
             End If
+
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -1431,36 +1467,38 @@ Public Class Request
             Dim c As New clsConstellation
 
             intermediate = GETallVP(aktVCid, err, ptPRPFType.portfolio)
-            For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
 
+            If err.errorCode = 200 Then
 
-                If kvp.Value.vpType = ptPRPFType.portfolio Then
+                For Each kvp As KeyValuePair(Of String, clsVP) In intermediate
 
+                    If kvp.Value.vpType = ptPRPFType.portfolio Then
 
-                    Dim vpid As String = kvp.Value._id
-                    Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp, err)
-                    If portfolioVersions.Count > 0 Then
+                        Dim vpid As String = kvp.Value._id
+                        Dim portfolioVersions As SortedList(Of Date, clsVPf) = GETallVPf(vpid, timestamp, err)
+                        If portfolioVersions.Count > 0 Then
 
-                        Dim aktPortfolio As clsVPf = portfolioVersions.Last.Value
+                            Dim aktPortfolio As clsVPf = portfolioVersions.Last.Value
 
-                        c = clsVPf2clsConstellation(aktPortfolio)
+                            c = clsVPf2clsConstellation(aktPortfolio)
 
-                        If Not IsNothing(c) Then
+                            If Not IsNothing(c) Then
 
-                            If Not result.Contains(c.constellationName) Then
-                                result.Add(c)
+                                If Not result.Contains(c.constellationName) Then
+                                    result.Add(c)
+                                End If
+
                             End If
 
                         End If
 
+                    Else
+                        ' kein Portfolio
                     End If
 
-                Else
-                    ' es gibt keine Portfolios
+                Next
+            End If
 
-                End If
-
-            Next
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -1629,8 +1667,10 @@ Public Class Request
                 Dim vname As String = Projekte.getVariantnameFromKey(kvp.Key)
                 wpItem = getWriteProtection(pname, vname, err, ptPRPFType.project)
 
-                If Not result.ContainsKey(wpItem.pvName) Then
-                    result.Add(wpItem.pvName, wpItem)
+                If Not IsNothing(wpItem) Then
+                    If Not result.ContainsKey(wpItem.pvName) Then
+                        result.Add(wpItem.pvName, wpItem)
+                    End If
                 End If
 
             Next
