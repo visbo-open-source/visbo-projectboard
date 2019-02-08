@@ -16571,7 +16571,7 @@ Public Module agm2
                         customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
 
                         If IsNothing(customFieldDefinitions) Then
-                            Call MsgBox(err.errorMsg)
+                            'Call MsgBox(err.errorMsg)
                         End If
                     Catch ex As Exception
 
@@ -16886,7 +16886,12 @@ Public Module agm2
             Else
                 myCustomUserRole = New clsCustomUserRole
                 With myCustomUserRole
-                    .customUserRole = ptCustomUserRoles.OrgaAdmin
+                    If awinSettings.readCostRolesFromDB Then
+                        .customUserRole = ptCustomUserRoles.OrgaAdmin
+                    Else
+                        .customUserRole = ptCustomUserRoles.ProjektLeitung
+                    End If
+
                     .specifics = ""
                     .userName = dbUsername
                 End With

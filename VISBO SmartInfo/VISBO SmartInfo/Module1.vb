@@ -412,14 +412,15 @@ Module Module1
     ''' </summary>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Friend Function userIsEntitled(ByRef msg As String) As Boolean
+    Friend Function userIsEntitled(ByRef msg As String, ByVal sld As PowerPoint.Slide) As Boolean
 
         Dim err As New clsErrorCodeMsg
 
         Dim tmpResult As Boolean = False
 
-        ' tk 27.10.18 rausgenommen, weil smartInfo keine Lizenz benötigt
-        'If userHasValidLicence() Then
+        ' sind die Zugangsdaten mit den aktuellen identisch ?
+        ' wenn nein, dann wird noDBaccess auf false gesetzt 
+        Call getDBsettings(sld)
 
         If noDBAccessInPPT Then
 
@@ -429,12 +430,21 @@ Module Module1
 
                 tmpResult = False
                 If englishLanguage Then
-                    msg = "no database access ... "
+                    msg = "no database access : " & awinSettings.databaseName
                 Else
-                    msg = "kein Datenbank Zugriff ... "
+                    msg = "kein Datenbank Zugriff : " & awinSettings.databaseName
                 End If
                 Call MsgBox(msg)
             Else
+                ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
+                If sld.Tags.Item("PRXYL").Length > 0 Then
+                    sld.Tags.Delete("PRXYL")
+                End If
+
+                If awinSettings.proxyURL.Length > 0 Then
+                    sld.Tags.Add("PRXYL", awinSettings.proxyURL)
+                End If
+
                 tmpResult = True
 
                 ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
@@ -461,10 +471,10 @@ Module Module1
 
                 ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                 Try
-                    customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomfieldsFromDB("", Date.Now, err)
+                    customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
 
                     If IsNothing(customFieldDefinitions) Then
-                        Call MsgBox(err.errorMsg)
+                        'Call MsgBox(err.errorMsg)
                     End If
                 Catch ex As Exception
 
@@ -891,17 +901,21 @@ Module Module1
     ''' bestimmt die Settings der Datenbank, sofern welche da sind 
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub getDBsettings()
-        With currentSlide
+    Friend Sub getDBsettings(ByVal sld As PowerPoint.Slide)
+
+        With sld
 
             If .Tags.Item("DBURL").Length > 0 And
                 .Tags.Item("DBNAME").Length > 0 Then
+
+
 
                 If .Tags.Item("DBURL") = awinSettings.databaseURL And
                     .Tags.Item("DBNAME") = awinSettings.databaseName And Not noDBAccessInPPT Then
                     ' nichts machen, user ist schon berechtigt ...
                 Else
                     noDBAccessInPPT = True
+                    awinSettings.proxyURL = .Tags.Item("PRXYL")
                     awinSettings.databaseURL = .Tags.Item("DBURL")
                     awinSettings.databaseName = .Tags.Item("DBNAME")
                     awinSettings.DBWithSSL = (.Tags.Item("DBSSL") = "True")
@@ -9114,49 +9128,67 @@ Module Module1
 
         Try
             Dim errmsg As String = ""
-            If userIsEntitled(errmsg) Then
 
-                Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
+
+            Dim pres As PowerPoint.Presentation = CType(currentSlide.Parent, PowerPoint.Presentation)
                 Dim formerSlide As PowerPoint.Slide = currentSlide
-                'Dim saveCurrentTimeStamp As Date = currentTimestamp
+            'Dim saveCurrentTimeStamp As Date = currentTimestamp
 
-                For i As Integer = 1 To pres.Slides.Count
-                    Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
-                    If Not IsNothing(sld) Then
-                        If Not (sld.Tags.Item("FROZEN").Length > 0) _
-                        And (sld.Tags.Item("SMART") = "visbo") Then
+            For i As Integer = 1 To pres.Slides.Count
+                Dim sld As PowerPoint.Slide = pres.Slides.Item(i)
 
-                            'currentTimestamp = saveCurrentTimeStamp
+                ' neue Slide , also leer machen ... 
+                smartSlideLists = New clsSmartSlideListen
+
+                If Not IsNothing(sld) Then
+                    If Not (sld.Tags.Item("FROZEN").Length > 0) And (sld.Tags.Item("SMART") = "visbo") Then
+
+                        If userIsEntitled(errmsg, sld) Then
+
                             currentTimestamp = getCurrentTimeStampFromSlide(sld)
                             Call pptAPP_AufbauSmartSlideLists(sld)
                             Call prepareAndPerformBtnAction(ptNavType, specDate, False)
 
+                        Else
+                            ' hier ggf auf invisible setzen, wenn erforderlich 
                         End If
+
+
+
                     End If
-                Next
+                End If
+            Next
 
-                If currentSlide.SlideID <> formerSlide.SlideID Then
+            If currentSlide.SlideID <> formerSlide.SlideID Then
 
-                    currentSlide = formerSlide
-                    currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
-                    ' smartSlideLists für die aktuelle currentslide wieder aufbauen
-                    ' tk 22.8.18
-                    Call pptAPP_AufbauSmartSlideLists(currentSlide)
-                    'Call buildSmartSlideLists()
+                currentSlide = formerSlide
+                currentTimestamp = getCurrentTimeStampFromSlide(currentSlide)
 
+                smartSlideLists = New clsSmartSlideListen
+
+                If Not IsNothing(currentSlide) Then
+                    If Not (currentSlide.Tags.Item("FROZEN").Length > 0) And (currentSlide.Tags.Item("SMART") = "visbo") Then
+
+                        If userIsEntitled(errmsg, currentSlide) Then
+
+                            Call pptAPP_AufbauSmartSlideLists(currentSlide)
+
+                        Else
+                            ' hier ggf auf invisible setzen, wenn erforderlich 
+                        End If
+
+                    End If
                 End If
 
-                ' das Formular ggf, also wenn aktiv,  updaten 
-                If Not IsNothing(changeFrm) Then
-                    changeFrm.neuAufbau()
-                End If
-
-                'Dim ticsEnd As Integer = My.Computer.Clock.TickCount
-                'Call MsgBox("zeit benötigt: " & CStr(ticsEnd - ticsStart))
-
-            Else
-                Call MsgBox(errmsg)
             End If
+
+            ' das Formular ggf, also wenn aktiv,  updaten 
+            If Not IsNothing(changeFrm) Then
+                changeFrm.neuAufbau()
+            End If
+
+            'Dim ticsEnd As Integer = My.Computer.Clock.TickCount
+            'Call MsgBox("zeit benötigt: " & CStr(ticsEnd - ticsStart))
 
 
 
