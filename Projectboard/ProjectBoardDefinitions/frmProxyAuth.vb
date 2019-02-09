@@ -3,7 +3,7 @@ Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Public Class frmProxyAuth
-
+    Public proxyURL As String
     Public domain As String
     Public user As String
     Public pwd As String
@@ -73,6 +73,7 @@ Public Class frmProxyAuth
     End Sub
 
     Private Sub frmProxyAuth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        proxyURLbox.Text = proxyURL
         domainBox.Text = domain
         benutzer.Text = user
         maskedPwd.Text = pwd

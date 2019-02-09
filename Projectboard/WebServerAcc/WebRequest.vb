@@ -2372,7 +2372,18 @@ Public Class Request
                                         ' Abfragen der Proxy-Authentifizierung erforderlich
 
                                         netcred = New NetworkCredential
-                                        credentialsErfragt = askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
+                                        Dim proxyName As String = ""
+
+                                        If awinSettings.proxyURL <> "" Then
+                                            proxyName = awinSettings.proxyURL
+                                        End If
+
+                                        credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                        If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                            myProxy.Address = New Uri(proxyName)
+                                            request.Proxy = myProxy
+                                        End If
 
                                         ' abgefragte Credentials beim Proxy eintragen
                                         If Not IsNothing(request.Proxy) Then
@@ -2444,7 +2455,18 @@ Public Class Request
                                                 ' Abfragen der Proxy-Authentifizierung erforderlich
 
                                                 netcred = New NetworkCredential
-                                                credentialsErfragt = askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
+                                                Dim proxyName As String = ""
+
+                                                If awinSettings.proxyURL <> "" Then
+                                                    proxyName = awinSettings.proxyURL
+                                                End If
+
+                                                credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                                If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                                    myProxy.Address = New Uri(proxyName)
+                                                    request.Proxy = myProxy
+                                                End If
 
                                                 ' ur: für wingate-Proxy
                                                 If Not IsNothing(request.Proxy) Then
