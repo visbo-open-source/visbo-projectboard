@@ -39,7 +39,7 @@ Public Class ThisAddIn
         End If
 
         ' Refresh von Projekte im Cache  in Minuten
-        cacheUpdateDelay = 60
+        cacheUpdateDelay = 10
 
         ' für Demo Zwecke only !! 
         ' vor Auslieferung auf false setzen ! 

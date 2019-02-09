@@ -173,18 +173,26 @@ Public Class Request
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore, err)
 
-                Catch ex As Exception
+                    If result = False Then
 
+                        Select Case err.errorCode
+                            Case 200 ' success
+                                ' nothing to do
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich And err.errorCode = 200 Then
-                            result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).projectNameAlreadyExists(projectname, variantname, storedAtorBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -263,17 +271,26 @@ Public Class Request
                 Try
                     ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
 
-                Catch ex As Exception
+                    If ergebnisCollection.Count <= 0 Then
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                        Select Case err.errorCode
+                            Case 200 ' success
+                                ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFirstLastFromDB(pvName, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -312,17 +329,26 @@ Public Class Request
 
                     ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName, err)
 
-                Catch ex As Exception
+                    If ergebnisCollection.Count <= 0 Then
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                        Select Case err.errorCode
+                            Case 200 ' success
+                                ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    ergebnisCollection = CType(DBAcc, WebServerAcc.Request).retrieveZeitstempelFromDB(pvName, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -368,22 +394,30 @@ Public Class Request
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
                                                                                        zeitraumStart, zeitraumEnde,
                                                                                        storedEarliest, storedLatest, onlyLatest, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
-                                                                                               zeitraumStart, zeitraumEnde,
-                                                                                               storedEarliest, storedLatest,
-                                                                                               onlyLatest, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+                            Case 200 ' success
+                                ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectsFromDB(projectname, variantName,
+                                                                                       zeitraumStart, zeitraumEnde,
+                                                                                       storedEarliest, storedLatest, onlyLatest, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
-
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).retrieveProjectsFromDB(projectname, variantName, zeitraumStart, zeitraumEnde, storedEarliest, storedLatest, onlyLatest)
@@ -408,18 +442,29 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
-                Catch ex As Exception
 
-                    'Call MsgBox(ex.Message)
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+                            Case 200 ' success
+                                ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectNamesByPNRFromDB(projektKDNr, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -455,16 +500,27 @@ Public Class Request
 
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
+
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+                            Case 200 ' success
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
+                    End If
                 Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveOneProjectfromDB(projectname, variantname, storedAtOrBefore, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
-                    End If
+                    Throw New ArgumentException(ex.Message)
+
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -500,16 +556,27 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result = False Then
+
+                        Select Case err.errorCode
+                            Case 200 ' success
+                                ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).renameProjectsInDB(oldName, newName, userName, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -535,29 +602,44 @@ Public Class Request
     ''' <param name="projekt"></param>
     ''' <param name="userName"></param>
     ''' <returns></returns>
-    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef err As clsErrorCodeMsg) As Boolean
+    Public Function storeProjectToDB(ByVal projekt As clsProjekt, ByVal userName As String, ByRef mergedProj As clsProjekt, ByRef err As clsErrorCodeMsg) As Boolean
 
         Dim result As Boolean = False
         Try
+
             ' tk 5.2.19 automatisch setzen des actualdatauntil, wenn denn der Modus AutoSet gesetzt ist 
             If awinSettings.autoSetActualDataDate Then
                 projekt.actualDataUntil = projekt.timeStamp.AddDays(-1 * (projekt.timeStamp.Day + 1)).Date.AddHours(12)
             End If
 
+
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
-                Catch ex As Exception
+                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err)
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).storeProjectToDB(projekt, userName, mergedProj, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -587,16 +669,28 @@ Public Class Request
             If usedWebServer Then
                 Try
                     resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If resultCollection.Count <= 0 Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    resultCollection = CType(DBAcc, WebServerAcc.Request).retrieveVariantNamesFromDB(projectName, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -635,16 +729,28 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectVariantNamesFromDB(zeitraumStart, zeitraumEnde, storedAtOrBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -680,18 +786,30 @@ Public Class Request
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
                                                                                              storedEarliest, storedLatest, err)
-                Catch ex As Exception
+                    If result.liste.Count <= 0 Then
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
-                                                                                                     storedEarliest, storedLatest, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveProjectHistoryFromDB(projectname, variantName,
+                                                                                             storedEarliest, storedLatest, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -724,18 +842,29 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
-                End Try
 
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).deleteProjectTimestampFromDB(projectname, variantName, stored, userName)
@@ -773,16 +902,28 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveFirstContractedPFromDB(projectname, variantname, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -820,20 +961,29 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore, err)
-                Catch ex As Exception
 
-                    'Dim hstr() As String = Split(ex.Message, ":")
-                    'If CInt(hstr(0)) = 401 Then                    ' Token is expired
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
-                End Try
 
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
 
             Else 'es wird eine MongoDB direkt adressiert
                 result = CType(DBAcc, MongoDbAccess.Request).RetrieveLastContractedPFromDB(projectname, variantname, storedAtOrBefore)
@@ -874,16 +1024,28 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, err, type)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, err, type)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).checkChgPermission(pName, vName, userName, err, type)
+                                End If
+
+                            Case Else ' all others
+                                'Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -911,7 +1073,7 @@ Public Class Request
     ''' <returns></returns>
     Public Function getWriteProtection(ByVal pName As String, ByVal vName As String,
                                        ByRef err As clsErrorCodeMsg,
-                                       Optional type As Integer = 0) As clsWriteProtectionItem
+                                       Optional type As ptPRPFType = ptPRPFType.project) As clsWriteProtectionItem
 
         Dim result As New clsWriteProtectionItem
 
@@ -920,17 +1082,30 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, err, type)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, err, type)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If IsNothing(result) Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).getWriteProtection(pName, vName, err, type)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -963,17 +1138,32 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).setWriteProtection(wpItem, err)
+                                End If
+                            Case 404    'DeleteVPLock: not Found
+                                ' nothing to do
+
+                            Case Else ' all others
+                                'Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -1004,17 +1194,30 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveConstellationsFromDB(err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -1044,16 +1247,27 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c, err)
-                Catch ex As Exception
+                    If result = False Then
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).storeConstellationToDB(c, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -1062,8 +1276,12 @@ Public Class Request
             End If
 
         Catch ex As Exception
+            If awinSettings.visboDebug Then
+                Throw New ArgumentException("storeConstellationToDB: " & ex.Message)
+            Else
+                Throw New ArgumentException(ex.Message)
+            End If
 
-            Throw New ArgumentException("storeConstellationToDB: " & ex.Message)
         End Try
 
         storeConstellationToDB = result
@@ -1083,16 +1301,28 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).removeConstellationFromDB(c, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -1178,17 +1408,30 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
-                        End If
-                    Else
-                        Throw New ArgumentException(ex.Message)
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveWriteProtectionsFromDB(AlleProjekte, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -1218,14 +1461,28 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
-                        End If
+                    If result = False Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).cancelWriteProtections(user, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -1294,7 +1551,7 @@ Public Class Request
     End Function
 
     ''' <summary>
-    ''' liest die Rollendefinitionen aus der Datenbank 
+    ''' liest die Rollendefinitionen aus der Datenbank aus Collection vcrole
     ''' </summary>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
@@ -1307,14 +1564,28 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
-                Catch ex As Exception
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
-                        End If
+                    If result.Count <= 0 Then
+
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveRolesFromDB(storedAtOrBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -1334,7 +1605,7 @@ Public Class Request
 
 
     ''' <summary>
-    '''  liest die Kostenartdefinitionen aus der Datenbank 
+    '''  liest die Kostenartdefinitionen aus der Datenbank aus Collection vccost
     ''' </summary>
     ''' <param name="storedAtOrBefore"></param>
     ''' <returns></returns>
@@ -1346,15 +1617,29 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore, err)
-                Catch ex As Exception
+                    If result.Count <= 0 Then
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore, err)
-                        End If
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCostsFromDB(storedAtOrBefore, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
+
 
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -1389,15 +1674,27 @@ Public Class Request
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
 
-                Catch ex As Exception
+                    If result = False Then
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
+                        Select Case err.errorCode
 
-                        End If
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).storeRoleDefinitionToDB(role, insertNewDate, ts, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
             Else 'es wird eine MongoDB direkt adressiert
@@ -1428,14 +1725,27 @@ Public Class Request
             If usedWebServer Then
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
-                Catch ex As Exception
+                    If result = False Then
 
-                    If err.errorCode = 401 Then                    ' Token is expired
-                        loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                        If loginErfolgreich Then
-                            result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
-                        End If
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).storeCostDefinitionToDB(cost, insertNewDate, ts, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
+
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
                 End Try
 
 
@@ -1495,19 +1805,33 @@ Public Class Request
         Dim result As Boolean = False
 
         Try
-
             If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, name, ts, err)
 
-                result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, name, ts, err)
+                    If result = False Then
 
-                ' Token is no longer valid: erneuter Login
-                If err.errorCode = 401 Then
-                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                    If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, name, ts, err)
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).storeVCsettingsToDB(hlist, type, name, ts, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
-                End If
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
             Else 'es wird eine MongoDB direkt adressiert; hier gibt es keine Settings
 
                 result = False
@@ -1526,17 +1850,32 @@ Public Class Request
 
         Try
             If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
 
-                result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
+                    If result.count <= 0 Then
 
-                ' Token is no longer valid: erneuter Login
-                If err.errorCode = 401 Then
-                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                    If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
-                End If
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
             Else
                 ' nothing can be done for direct MongoAccess
             End If
@@ -1555,17 +1894,32 @@ Public Class Request
 
         Try
             If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
 
-                result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
+                    If result.count <= 0 Then
 
-                ' Token is no longer valid: erneuter Login
-                If err.errorCode = 401 Then
-                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                    If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
-                End If
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
             Else
                 ' to do for direct MongoAccess
                 result.allRoles = CType(DBAcc, MongoDbAccess.Request).retrieveRolesFromDB(timestamp)
@@ -1590,17 +1944,31 @@ Public Class Request
 
         Try
             If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
 
-                result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                    If result.count <= 0 Then
 
-                ' Token is no longer valid: erneuter Login
-                If err.errorCode = 401 Then
-                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                    If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
-                End If
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+                End Try
             Else
                 ' to do for direct MongoAccess
                 result = Nothing
@@ -1622,18 +1990,32 @@ Public Class Request
         Try
 
             If usedWebServer Then
+                Try
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
 
-                result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                    If result.Count <= 0 Then
 
-                ' Token is no longer valid: erneuter Login
-                If err.errorCode = 401 Then
-                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                    If loginErfolgreich Then
-                        result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                        Select Case err.errorCode
+
+                            Case 200 ' success
+                                     ' nothing to do
+
+                            Case 401 ' Token is expired
+                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                If loginErfolgreich Then
+                                    result = CType(DBAcc, WebServerAcc.Request).retrieveUserIDFromName(dbUsername, err)
+                                End If
+
+                            Case Else ' all others
+                                Throw New ArgumentException(err.errorMsg)
+                        End Select
+
                     End If
 
-                End If
-            Else
+                Catch ex As Exception
+                    Throw New ArgumentException(ex.Message)
+        End Try
+        Else
                 ' nothing to do for direct MongoAccess
             End If
 
