@@ -9243,14 +9243,31 @@ Public Module agm2
                 lastRowOFProject = tmpZeile
             End If
 
+            ' jetzt muss der pName normiert werden ..
+            If Not isValidProjectName(currentPName) Then
+                currentPName = makeValidProjectName(currentPName)
+            End If
+
             ' lade die Projekt-Variante 
             hproj = getProjektFromSessionOrDB(currentPName, currentVName, AlleProjekte, Date.Now, currentKdNummer)
 
             If IsNothing(hproj) Then
-                logmessage = "Projekt " & currentPName & " existiert nicht ..."
+                If currentKdNummer = "" Then
+                    logmessage = "Projekt " & currentPName & " existiert nicht ..."
+                Else
+                    logmessage = "Projekt " & currentPName & "; " & currentKdNummer & " existiert nicht ..."
+                End If
                 outputCollection.Add(logmessage)
 
                 Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+
+                ' jetzt noch im Input File markieren 
+                CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).Interior.Color = XlRgbColor.rgbRed
+                If Not IsNothing(CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).Comment) Then
+                    CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).ClearComments()
+                End If
+                CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).AddComment(logmessage)
+
             Else
                 If hproj.hasActualValues Then
                     ' noch nicht erlaubt ...
@@ -9428,9 +9445,10 @@ Public Module agm2
 
         Loop
 
-        If outputCollection.Count > 0 Then
-            Call showOutPut(outputCollection, "Import Offline Ressourcen Zuordnungen", "")
-        End If
+        ' wird an der aufrufenden Stelle gezeigt .. 
+        'If outputCollection.Count > 0 Then
+        '    Call showOutPut(outputCollection, "Import Offline Ressourcen Zuordnungen", "")
+        'End If
 
         Call MsgBox("Zeilen gelesen: " & (lastRow - firstRow + 1).ToString & vbLf &
                     "Projekte aktualisiert: " & upDatedProjects)
