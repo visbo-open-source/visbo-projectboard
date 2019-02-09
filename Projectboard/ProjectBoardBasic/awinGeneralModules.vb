@@ -2902,7 +2902,8 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' gibt das hproj zurück, zuerst wird versucht, das aus der AlleProjekte zu holen, dann aus der Datenbank 
+    ''' gibt das hproj zurück, zuerst wird versucht, das aus der AlleProjekte zu holen, dann aus der Datenbank
+    ''' zuerst wird über Name gesucht, dan über Kunden-Nummer 
     ''' wenn es noch gar nicht existiert, wird nothing zurückgegeben
     ''' </summary>
     ''' <param name="pName"></param>

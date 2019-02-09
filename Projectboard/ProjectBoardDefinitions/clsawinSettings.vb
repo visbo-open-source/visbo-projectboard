@@ -342,8 +342,8 @@ Public Class clsawinSettings
         _importUnknownNames = True
         _createUniqueSiblingNames = True
 
-        ' Rollen und Kosten aus DB lesen
-        _readCostRolesFromDB = False
+        ' Rollen und Kosten aus DB lesen; das gilt ja für smartInfo ebenso wie für Visual Board
+        _readCostRolesFromDB = True
 
         ' sollen die MissingDefinitions rausgeschrieben werden ...
         _readWriteMissingDefinitions = False
