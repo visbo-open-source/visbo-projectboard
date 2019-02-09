@@ -2588,8 +2588,10 @@ Public Class clsProjekt
             .latestStart = _latestStart
             .leadPerson = _leadPerson
             .Status = _Status
-            .extendedView = _extendedView
-            .actualDataUntil = _actualDataUntil
+            .extendedView = Me.extendedView
+            .actualDataUntil = Me.actualDataUntil
+            .kundenNummer = Me.kundenNummer
+
             Try
                 .movable = _movable
             Catch ex As Exception
@@ -3041,6 +3043,8 @@ Public Class clsProjekt
 
 
         newProj.variantName = Me.variantName
+        newProj.timeStamp = mProj.timeStamp
+
         deleteAndMerge = newProj
     End Function
 
