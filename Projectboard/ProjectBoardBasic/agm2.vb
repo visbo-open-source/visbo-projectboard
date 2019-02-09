@@ -9109,16 +9109,19 @@ Public Module agm2
     ''' <returns></returns>
     Public Function getDoubleFromExcelCell(ByVal excelCell As Excel.Range) As Double
 
-        Dim tmpTest As Object = CDbl(excelCell.Value)
         Dim tmpResult As Double = 0.0
+        Try
+            If Not IsNothing(excelCell) Then
+                If CStr(excelCell.Value) <> "" Then
+                    If IsNumeric(excelCell.Value) Then
+                        tmpResult = CDbl(excelCell.Value)
+                    End If
+                End If
 
-        If IsNothing(tmpTest) Then
-            ' nichts tun 
-        Else
-            If IsNumeric(tmpTest) Then
-                tmpResult = CDbl(tmpTest)
             End If
-        End If
+        Catch ex As Exception
+            tmpResult = 0.0
+        End Try
 
         getDoubleFromExcelCell = tmpResult
     End Function
@@ -9151,6 +9154,8 @@ Public Module agm2
         Dim newProj As clsProjekt = Nothing
         Dim projektKundenNummer As String = ""
 
+        Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
+
 
         ' welche Rollen sollen gelöscht werden; die werden dann danach gesetzt, ob es sich um einen Ressource-Manager handelt, 
         ' der nur einen Teil importieren kann oder um den Portfolio Manager, der eine neue komplette Vorgabe macht 
@@ -9174,11 +9179,11 @@ Public Module agm2
         Dim colPName As Integer = 1
         Dim colVName As Integer = 2
         Dim colKdNr As Integer = 3
-        Dim colType As Integer = 4
-        Dim colPhaseName As Integer = 5
-        Dim colRoleName As Integer = 6
-        Dim colSumPT As Double = 7
-        Dim colSumTe As Double = 8
+        'Dim colType As Integer = 4
+        Dim colPhaseName As Integer = 4
+        Dim colRoleName As Integer = 5
+        Dim colSumPT As Double = 6
+        Dim colSumTe As Double = 7
 
         ' für logfile 
         Dim tmpanz As Long = 0
@@ -9250,6 +9255,9 @@ Public Module agm2
 
             ' lade die Projekt-Variante 
             hproj = getProjektFromSessionOrDB(currentPName, currentVName, AlleProjekte, Date.Now, currentKdNummer)
+            ' ins Protokoll 
+
+
 
             If IsNothing(hproj) Then
                 If currentKdNummer = "" Then
@@ -9273,6 +9281,25 @@ Public Module agm2
                     ' noch nicht erlaubt ...
 
                 Else
+                    ' Schreiben Protokoll, wenn name und Projektnummer nicht zueinander passen 
+                    If hproj.name = currentPName Then
+                        ' es wurde über den Namen gefunden 
+                        If hproj.kundenNummer <> currentKdNummer And (hproj.kundenNummer <> "" And currentKdNummer <> "") Then
+                            logmessage = "Projekt über Name gefunden, aber Projekt-Nummern passen nicht zueinander; Datei: " & currentKdNummer & "; DB: " & hproj.kundenNummer
+                            outputCollection.Add(logmessage)
+                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                        End If
+                    ElseIf hproj.kundenNummer = currentKdNummer Then
+                        If hproj.name <> currentPName Then
+                            logmessage = "Projekt über Projekt-Nummer, aber Projekt-Namen passen nicht zueinander; Datei: " & currentPName & "; DB: " & hproj.name
+                            outputCollection.Add(logmessage)
+                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                        End If
+
+                    End If
+
+
+
                     Dim anzPhasen As Integer = hproj.CountPhases
 
                     ' enthält die eingeplanten PT für die einzelnen Releases  
@@ -9291,6 +9318,8 @@ Public Module agm2
                     ' enthält, wieviel Manntage von dieser Rolle insgesamt benötigt werden 
                     Dim rolePhaseValues As New SortedList(Of String, Double())
 
+                    ' wenn wenigstens ein Fehler beim Projekt auftritt , dann wird es nicht eingetragen 
+                    Dim atleastOneError As Boolean = False
 
                     For iz As Integer = firstRowOfProject To lastRowOFProject
 
@@ -9299,12 +9328,15 @@ Public Module agm2
 
                         currentCell = CType(currentWS.Cells(iz, colPhaseName), Excel.Range)
                         Dim phaseNameID As String = getPhaseNameIDfromExcelCell(currentCell)
-                        Dim ix As Integer = 0
+                        If phaseNameID = "" Then
+                            phaseNameID = rootPhaseName
+                        End If
+
 
                         ' nur weitermachen, wenn valide Angaben 
                         If phNameIDs.Contains(phaseNameID) And RoleDefinitions.containsNameID(roleNameID) Then
                             Dim curDelRole As String = ""
-                            Dim potentialParentList() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
+
                             curDelRole = RoleDefinitions.chooseParentFromList(roleNameID, potentialParentList)
                             If curDelRole.Length > 0 Then
                                 If Not deleteRoles.Contains(curDelRole) Then
@@ -9315,6 +9347,8 @@ Public Module agm2
 
                             ' bestimme jetzt den Index 
                             Dim found As Boolean = False
+
+                            Dim ix As Integer = 0
                             Do While ix <= phNameIDs.Length - 1 And Not found
                                 If phNameIDs(ix) = phaseNameID Then
                                     found = True
@@ -9323,121 +9357,174 @@ Public Module agm2
                                 End If
                             Loop
 
-                            Dim sumPT As Double = getDoubleFromExcelCell(currentWS.Cells(iz, colSumPT))
-                            Dim sumTE As Double = getDoubleFromExcelCell(currentWS.Cells(iz, colSumTe))
+
                             Dim weiterMachen As Boolean = False
-                            If sumPT > 0 And sumTE = 0 Then
-                                ' Angabe in PT, der Wert passt schon 
-                                weiterMachen = True
-                            ElseIf colSumPT = 0 And colSumTe > 0 Then
-                                ' Angabe in T€
-                                ' der Wert muss in PT umgerechnet werden 
-                                Dim teamID As Integer = -1
-                                Dim tagessatz As Double = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID).tagessatzIntern
-                                If tagessatz <= 0 Then
-                                    weiterMachen = False
-                                Else
-                                    sumPT = sumTE / tagessatz
+
+                            If found Then
+
+                                Dim sumPT As Double = getDoubleFromExcelCell(currentWS.Cells(iz, colSumPT))
+                                Dim sumTE As Double = getDoubleFromExcelCell(currentWS.Cells(iz, colSumTe))
+
+                                If sumPT > 0 And sumTE = 0 Then
+                                    ' Angabe in PT, der Wert passt schon 
                                     weiterMachen = True
+                                ElseIf sumPT = 0 And sumTE > 0 Then
+                                    ' Angabe in T€
+                                    ' der Wert muss in PT umgerechnet werden 
+                                    Dim teamID As Integer = -1
+                                    Dim tagessatz As Double = RoleDefinitions.getRoleDefByIDKennung(roleNameID, teamID).tagessatzIntern
+                                    If tagessatz <= 0 Then
+                                        weiterMachen = False
+                                    Else
+                                        sumPT = sumTE * 1000 / tagessatz
+                                        weiterMachen = True
+                                    End If
+
+                                Else
+                                    ' nichts tun...
+                                    weiterMachen = False
                                 End If
+
+                                If weiterMachen Then
+                                    If rolePhaseValues.ContainsKey(roleNameID) Then
+                                        phValues = rolePhaseValues.Item(roleNameID)
+                                        phValues(ix) = phValues(ix) + sumPT
+                                    Else
+                                        ReDim phValues(anzPhasen - 1)
+                                        phValues(ix) = sumPT
+                                        rolePhaseValues.Add(roleNameID, phValues)
+                                    End If
+
+                                End If
+
 
                             Else
-                                ' nichts tun...
-                                weiterMachen = False
-                            End If
+                                ' Fehler ! kann eigentlich nicht passieren, denn dann wäre er erst gar nicht in den then Zweig gekommen ..? 
+                                atleastOneError = True
+                                Dim errCol As Integer
+                                Dim phaseName As String = CStr(CType(currentWS.Cells(iz, colPhaseName), Excel.Range).Value)
+                                logmessage = "Phase-Name existiert nicht: " & phaseName
+                                errCol = colPhaseName
 
-                            If weiterMachen Then
-                                If rolePhaseValues.ContainsKey(roleNameID) Then
-                                    phValues = rolePhaseValues.Item(roleNameID)
-                                    phValues(ix) = phValues(ix) + sumPT
-                                Else
-                                    ReDim phValues(anzPhasen - 1)
-                                    phValues(ix) = sumPT
-                                    rolePhaseValues.Add(roleNameID, phValues)
+                                outputCollection.Add(logmessage)
+
+                                Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+
+                                ' jetzt noch im Input File markieren 
+                                CType(currentWS.Cells(iz, errCol), Excel.Range).Interior.Color = XlRgbColor.rgbRed
+                                If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
+                                    CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
                                 End If
-
+                                CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
                             End If
 
 
 
                         Else
                             ' nichts tun
+                            Dim errCol As Integer
+
+                            If Not phNameIDs.Contains(phaseNameID) Then
+                                atleastOneError = True
+                                Dim phaseName As String = CStr(CType(currentWS.Cells(iz, colPhaseName), Excel.Range).Value)
+                                logmessage = "Phase-Name existiert nicht: " & phaseName
+                                errCol = colPhaseName
+                            ElseIf Not RoleDefinitions.containsNameID(roleNameID) Then
+                                atleastOneError = True
+                                Dim roleName As String = CStr(CType(currentWS.Cells(iz, colRoleName), Excel.Range).Value)
+                                logmessage = "Rollen-Name existiert nicht: " & roleName
+                                errCol = colRoleName
+                            End If
+
+                            outputCollection.Add(logmessage)
+
+                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+
+                            ' jetzt noch im Input File markieren 
+                            CType(currentWS.Cells(iz, errCol), Excel.Range).Interior.Color = XlRgbColor.rgbRed
+                            If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
+                                CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
+                            End If
+                            CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
 
                         End If
 
 
                     Next
 
-                    ' jetzt muss das Projekt verändert werden 
-                    ' 1. die deleteRoles alle löschen 
+                    ' prüfen, ob auch kein Fehler beim Import aufgetreten ist ... 
+                    If Not atleastOneError Then
+                        ' jetzt muss das Projekt verändert werden 
+                        ' 1. die deleteRoles alle löschen 
 
-                    ' 2. die roleValues ergänzen
+                        ' 2. die roleValues ergänzen
 
-                    ' jetzt wird der Merge auf das Projekt gemacht 
-                    ' dabei wird die updateSummaryRole und alle dazu gehörenden SubRoles gelöscht 
-                    ' es müssen aber auch die Gruppe gelöscht werden ... 
+                        ' jetzt wird der Merge auf das Projekt gemacht 
+                        ' dabei wird die updateSummaryRole und alle dazu gehörenden SubRoles gelöscht 
+                        ' es müssen aber auch die Gruppe gelöscht werden ... 
 
-                    ' test tk 
-                    Dim formerLeft As Integer = showRangeLeft
-                    Dim formerRight As Integer = showRangeRight
-                    showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
-                    showRangeRight = getColumnOfDate(CDate("31.12.2019"))
+                        ' test tk 
+                        Dim formerLeft As Integer = showRangeLeft
+                        Dim formerRight As Integer = showRangeRight
+                        showRangeLeft = getColumnOfDate(CDate("1.1.2019"))
+                        showRangeRight = getColumnOfDate(CDate("31.12.2019"))
 
-                    Dim testprojekte As New clsProjekte
-                    testprojekte.Add(hproj)
+                        Dim testprojekte As New clsProjekte
+                        testprojekte.Add(hproj)
 
-                    Dim gesamtVorher As Double = hproj.getAlleRessourcen().Sum
-                    Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonth("Orga", considerAllSubRoles:=True).Sum
+                        Dim gesamtVorher As Double = hproj.getAlleRessourcen().Sum
+                        Dim gesamtVorher2 As Double = testprojekte.getRoleValuesInMonth("Orga", considerAllSubRoles:=True).Sum
 
-                    ' tk test ...
-                    If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
-                        logmessage = hproj.name & " Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString
-                        outputCollection.Add(logmessage)
-                    End If
-                    ' tk test ...
-
-                    ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
-                    newProj = hproj.deleteRolesAndCosts(deleteRoles, Nothing, True)
-                    Dim gesamtNachher As Double = newProj.getAlleRessourcen().Sum
-
-                    ' tk test ...
-                    For Each tmpRoleName As String In deleteRoles
-                        Dim roleSumNachher As Double = newProj.getRessourcenBedarf(tmpRoleName,
-                                                                                   inclSubRoles:=True).Sum
-
-                        If Not roleSumNachher = 0 Then
-                            logmessage = "Rolle " & tmpRoleName & " wurde nicht gelöscht ... Fehler bei" & newProj.name
+                        ' tk test ...
+                        If Math.Abs(gesamtVorher - gesamtVorher2) >= 0.001 Then
+                            logmessage = hproj.name & " Einzelproj <> Portfolio" & gesamtVorher.ToString & " <> " & gesamtVorher2.ToString
                             outputCollection.Add(logmessage)
                         End If
-                    Next
-                    ' tk test ...
+                        ' tk test ...
+
+                        ' jetzt alle Rollen und SubRoles von updateSummaryRole löschen 
+                        newProj = hproj.deleteRolesAndCosts(deleteRoles, Nothing, True)
+                        Dim gesamtNachher As Double = newProj.getAlleRessourcen().Sum
+
+                        ' tk test ...
+                        For Each tmpRoleName As String In deleteRoles
+                            Dim roleSumNachher As Double = newProj.getRessourcenBedarf(tmpRoleName,
+                                                                                       inclSubRoles:=True).Sum
+
+                            If Not roleSumNachher = 0 Then
+                                logmessage = "Rolle " & tmpRoleName & " wurde nicht gelöscht ... Fehler bei" & newProj.name
+                                outputCollection.Add(logmessage)
+                            End If
+                        Next
+                        ' tk test ...
 
 
-                    ' jetzt alle Rollen / Phasen Werte hinzufügen 
+                        ' jetzt alle Rollen / Phasen Werte hinzufügen 
 
-                    newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
+                        newProj = newProj.merge(rolePhaseValues, phNameIDs, True)
 
-                    ' tk test 
-                    For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
-                        Dim teilErgebnis As Double = newProj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False).Sum
-                        If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
-                            logmessage = "TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
-                            outputCollection.Add(logmessage)
-                        End If
+                        ' tk test 
+                        For Each kvp As KeyValuePair(Of String, Double()) In rolePhaseValues
+                            Dim teilErgebnis As Double = newProj.getRessourcenBedarf(kvp.Key, inclSubRoles:=False).Sum
+                            If Math.Abs(teilErgebnis - kvp.Value.Sum) >= 0.001 Then
+                                logmessage = "TeilErgebnis ungleich Vorgabe: " & teilErgebnis.ToString("#0.##") & " <> " & kvp.Value.Sum.ToString("#0.##")
+                                outputCollection.Add(logmessage)
+                            End If
 
-                    Next
-
-
-                    ' jetzt in die Import-Projekte eintragen 
-                    upDatedProjects = upDatedProjects + 1
-                    ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
-
-                    ' wegen test 
-                    showRangeLeft = formerLeft
-                    showRangeRight = formerRight
+                        Next
 
 
-                End If
+                        ' jetzt in die Import-Projekte eintragen 
+                        upDatedProjects = upDatedProjects + 1
+                        ImportProjekte.Add(newProj, updateCurrentConstellation:=False)
+
+                        ' wegen test 
+                        showRangeLeft = formerLeft
+                        showRangeRight = formerRight
+
+                    End If ' if not atleastOneError ...
+
+                End If ' if hproj.hasActualValues
 
             End If
 
