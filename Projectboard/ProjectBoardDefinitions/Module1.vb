@@ -7643,25 +7643,31 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Function askProxyAuthentication(ByRef proxyURL As String, ByRef usr As String, ByRef pwd As String, ByRef domain As String) As Boolean
         Dim proxyAuth As New frmProxyAuth
-        Dim returnValue As DialogResult
+        Dim returnValue As DialogResult = DialogResult.Retry
+        Dim i As Integer = 0
 
-        With proxyAuth
-            .proxyURL = proxyURL
+        proxyAuth.proxyURL = proxyURL
 
-            returnValue = .ShowDialog
 
-            If returnValue = DialogResult.OK Then
-                proxyURL = .proxyURL
-                domain = .domain
-                usr = .user
-                pwd = .pwd
-            Else
+        While returnValue = DialogResult.Retry And i < 6
 
-            End If
+            returnValue = proxyAuth.ShowDialog
 
-        End With
+        End While
+        If returnValue = DialogResult.Abort Or i >= 5 Then
 
-        Return returnValue = DialogResult.OK
+            askProxyAuthentication = False
+
+        ElseIf returnValue = DialogResult.OK Then
+
+            proxyURL = proxyAuth.proxyURL
+            domain = proxyAuth.domain
+            usr = proxyAuth.user
+            pwd = proxyAuth.pwd
+
+        End If
+
+        askProxyAuthentication = (returnValue = DialogResult.OK)
 
     End Function
 

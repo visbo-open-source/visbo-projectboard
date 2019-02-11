@@ -443,6 +443,7 @@ Module Module1
                 End If
                 Call MsgBox(msg)
             Else
+
                 ' CustomUserRoles holen 
                 Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
                 allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)

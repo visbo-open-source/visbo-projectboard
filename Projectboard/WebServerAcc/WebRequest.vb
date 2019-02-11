@@ -2320,6 +2320,10 @@ Public Class Request
                 While toDo And anzError < 3
                     Try
                         Using requestStream As Stream = request.GetRequestStream()
+
+                            ' ProxyURL merken
+                            awinsettings.proxyURL = myProxy.Address.ToString
+
                             ' Send the data.
                             requestStream.Write(data, 0, data.Length)
                             requestStream.Close()
@@ -2332,6 +2336,30 @@ Public Class Request
                     Catch ex As WebException
 
                         anzError = anzError + 1
+
+                        If ex.Status = WebExceptionStatus.ConnectFailure Then
+
+                            netcred = New NetworkCredential
+                            Dim proxyName As String = ""
+
+                            If awinSettings.proxyURL <> "" Then
+                                proxyName = awinSettings.proxyURL
+                            End If
+
+                            credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                            If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                myProxy.Address = New Uri(proxyName)
+                                request.Proxy = myProxy
+                            End If
+
+                            ' abgefragte Credentials beim Proxy eintragen
+                            If Not IsNothing(request.Proxy) Then
+                                request.Proxy.Credentials = netcred
+
+                            End If
+
+                        End If
 
                         If ex.Status = WebExceptionStatus.ProtocolError Then
 

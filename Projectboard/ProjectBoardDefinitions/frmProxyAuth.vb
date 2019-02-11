@@ -92,12 +92,33 @@ Public Class frmProxyAuth
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
+        Dim uriResult As Uri = Nothing
+        Dim uriOK As Boolean = False
+        DialogResult = DialogResult.OK
+
+        If proxyURLbox.Text <> "" Then
+            uriOK = Uri.TryCreate(proxyURLbox.Text, UriKind.Absolute, uriResult)
+            If uriOK Then
+                uriOK = uriOK And (uriResult.Scheme = Uri.UriSchemeHttp)
+            End If
+        End If
+
+
+
+        If uriOK Then
+            proxyURL = proxyURLbox.Text
+        Else
+            messageBox.Text = "no valid Proxy-URL"
+            DialogResult = DialogResult.Retry
+        End If
         domain = domainBox.Text
         user = benutzer.Text
         pwd = maskedPwd.Text
         If user = "" Or pwd = "" Then
             messageBox.Text = "Username/Passwort für Proxy eingeben!"
+            DialogResult = DialogResult.Retry
         End If
+
     End Sub
 
     Private Sub messageBox_TextChanged(sender As Object, e As EventArgs) Handles messageBox.TextChanged
