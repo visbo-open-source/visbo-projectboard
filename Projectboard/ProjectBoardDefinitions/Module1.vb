@@ -153,8 +153,9 @@ Public Module Module1
     ' welche CustomFields gibt es ? 
     Public customFieldDefinitions As New clsCustomFieldDefinitions
 
-    ' was ist meine CustomUser Role ? 
+    ' was ist meine CustomUser Role, die ich für die aktuelle Slide brauche ? 
     Public myCustomUserRole As New clsCustomUserRole
+
 
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
@@ -4082,10 +4083,32 @@ Public Module Module1
                         .Tags.Add("DBNAME", awinSettings.databaseName)
                     End If
 
+                    If Not IsNothing(awinSettings.proxyURL) Then
+                        If awinSettings.proxyURL.Length > 0 Then
+                            If .Tags.Item("PRXYC").Length > 0 Then
+                                .Tags.Delete("PRXYC")
+                            End If
+
+                            .Tags.Add("PRXYC", awinSettings.proxyURL)
+
+                            If .Tags.Item("PRXYL").Length > 0 Then
+                                .Tags.Delete("PRXYL")
+                            End If
+                            .Tags.Add("PRXYL", awinSettings.proxyURL)
+                        End If
+                    End If
+
+
                     If .Tags.Item("DBSSL").Length > 0 Then
                         .Tags.Delete("DBSSL")
                     End If
                     .Tags.Add("DBSSL", awinSettings.DBWithSSL.ToString)
+
+                    Dim enryptedUserRole As String = myCustomUserRole.encrypt
+                    If .Tags.Item("CURS").Length > 0 Then
+                        .Tags.Delete("CURS")
+                    End If
+                    .Tags.Add("CURS", enryptedUserRole)
 
                 End If
 
@@ -7618,24 +7641,33 @@ Public Module Module1
     ''' ruft das Formular auf, um die Proxy-Authentifizierung zu erfragen
     ''' </summary>
     ''' <remarks></remarks>
-    Public Function askProxyAuthentication(ByRef usr As String, ByRef pwd As String, ByRef domain As String) As Boolean
+    Public Function askProxyAuthentication(ByRef proxyURL As String, ByRef usr As String, ByRef pwd As String, ByRef domain As String) As Boolean
         Dim proxyAuth As New frmProxyAuth
-        Dim returnValue As DialogResult
+        Dim returnValue As DialogResult = DialogResult.Retry
+        Dim i As Integer = 0
 
-        With proxyAuth
+        proxyAuth.proxyURL = proxyURL
 
-            returnValue = .ShowDialog
 
-            If returnValue = DialogResult.OK Then
-                usr = .user
-                pwd = .pwd
-            Else
+        While returnValue = DialogResult.Retry And i < 6
 
-            End If
+            returnValue = proxyAuth.ShowDialog
 
-        End With
+        End While
+        If returnValue = DialogResult.Abort Or i >= 5 Then
 
-        Return returnValue = DialogResult.OK
+            askProxyAuthentication = False
+
+        ElseIf returnValue = DialogResult.OK Then
+
+            proxyURL = proxyAuth.proxyURL
+            domain = proxyAuth.domain
+            usr = proxyAuth.user
+            pwd = proxyAuth.pwd
+
+        End If
+
+        askProxyAuthentication = (returnValue = DialogResult.OK)
 
     End Function
 

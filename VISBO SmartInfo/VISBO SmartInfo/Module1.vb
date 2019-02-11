@@ -44,6 +44,9 @@ Module Module1
     ' die VISBO TimeMachine nimmt alle PRojekte und Timestamps auf 
     Friend timeMachine As New clsPPTTimeMachine
 
+    ' alle meine customUserRoles 
+    Dim allMyCustomUserRoles As Collection = Nothing
+
     ' in der Liste werden für jede Präsentation die beiden Timestamps Previous und current gemerkt 
     ' 0 = previous, 1 = current
     Friend rememberListOfCPTimeStamps As SortedList(Of String, Date()) = Nothing
@@ -422,6 +425,10 @@ Module Module1
         ' wenn nein, dann wird noDBaccess auf false gesetzt 
         Call getDBsettings(sld)
 
+        ' hier muss demnächst die Abfrage rein, ob der anwender auch die entsprechende customUserRole hat, um die Slide zu aktualisieren / zu sehen 
+        ' ... Code ...
+        ' Ende CustomUser Role Behandlung
+
         If noDBAccessInPPT Then
 
             noDBAccessInPPT = Not logInToMongoDB(True)
@@ -436,57 +443,72 @@ Module Module1
                 End If
                 Call MsgBox(msg)
             Else
-                ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
-                If sld.Tags.Item("PRXYL").Length > 0 Then
-                    sld.Tags.Delete("PRXYL")
-                End If
 
-                If awinSettings.proxyURL.Length > 0 Then
-                    sld.Tags.Add("PRXYL", awinSettings.proxyURL)
-                End If
+                ' CustomUserRoles holen 
+                Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+                allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
 
-                tmpResult = True
-
-                ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
-                Dim currentOrga As New clsOrganisation
-                currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
-
-                ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
-                RoleDefinitions = currentOrga.allRoles
-                CostDefinitions = currentOrga.allCosts
-
-                ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
-                ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
-                ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
-
+                ' Behandeln der myUserRole 
                 Dim meldungen As New Collection
 
-                ' jetzt werden die Rollen besetzt 
-                Call setUserRoles(meldungen)
+                ' jetzt wird die für die Slide passende Rolle gesucht 
+                myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"))
 
                 If meldungen.Count > 0 Then
-                    Call showOutPut(meldungen, "Error: setUserRoles", "")
+                    Call showOutPut(meldungen, "Error: Keine Berechtigung", "")
+                Else
+
+                    ' jetzt werden der Proxy Wert eingetragen, der beim letzten Mal funktioniert hat 
+                    If sld.Tags.Item("PRXYL").Length > 0 Then
+                        sld.Tags.Delete("PRXYL")
+                    End If
+
+                    If awinSettings.proxyURL.Length > 0 Then
+                        sld.Tags.Add("PRXYL", awinSettings.proxyURL)
+                    End If
+
+                    tmpResult = True
+
+                    ' Lesen der Organisation aus der Datenbank direkt oder auch von DB
+                    Dim currentOrga As New clsOrganisation
+                    currentOrga = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", Date.Now, False, err)
+
+                    ' hier müssen jetzt die Role- & Cost-Definitions gelesen werden 
+                    RoleDefinitions = currentOrga.allRoles
+                    CostDefinitions = currentOrga.allCosts
+
+                    ' ur:10.01.2019: nun werden die Rollen aus den VCSettings gelesen
+                    ''RoleDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveRolesFromDB(Date.Now, err)
+                    ''CostDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCostsFromDB(Date.Now, err)
+
+                    ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
+                    Try
+                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+
+                        If IsNothing(customFieldDefinitions) Then
+                            'Call MsgBox(err.errorMsg)
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                    ' in allen Slides den Sicht Schutz aufheben 
+                    protectionSolved = True
+                    Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
+
                 End If
 
 
-                ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
-                Try
-                    customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
-
-                    If IsNothing(customFieldDefinitions) Then
-                        'Call MsgBox(err.errorMsg)
-                    End If
-                Catch ex As Exception
-
-                End Try
-
-                ' in allen Slides den Sicht Schutz aufheben 
-                protectionSolved = True
-                Call makeVisboShapesVisible(Microsoft.Office.Core.MsoTriState.msoTrue)
             End If
 
         Else
-            tmpResult = True
+            ' jetzt wird die für die Slide passende Rolle gesucht 
+            myCustomUserRole = getAppropriateUserRole(dbUsername, sld.Tags.Item("CURS"))
+            If IsNothing(myCustomUserRole) Then
+                tmpResult = False
+            Else
+                tmpResult = True
+            End If
         End If
 
         ' tk 27.10.18 - ggf später wieder aktivieren ... aktuell geht es nur darum, heraus zu finden, ob der User schon eingeloggt ist ... 
@@ -590,6 +612,68 @@ Module Module1
         userIsEntitled = tmpResult
 
     End Function
+
+
+    ''' <summary>
+    ''' gibt aus der Liste von customUserRoles, die dem Nutzer zugewiesen sind, die zurück, die zur Slide passt , was also die Slide erfordert ...
+    ''' </summary>
+    ''' <param name="myUserName"></param>
+    ''' <param name="encryptedUserRoleString"></param>
+    ''' <returns></returns>
+    Public Function getAppropriateUserRole(ByVal myUserName As String, ByVal encryptedUserRoleString As String) As clsCustomUserRole
+        Dim result As clsCustomUserRole = Nothing
+
+        Dim err As New clsErrorCodeMsg
+
+        If IsNothing(allMyCustomUserRoles) Then
+            Dim allCustomUserRoles As clsCustomUserRoles = CType(databaseAcc, DBAccLayer.Request).retrieveCustomUserRoles(err)
+            If Not IsNothing(allCustomUserRoles) Then
+                allMyCustomUserRoles = allCustomUserRoles.getCustomUserRoles(dbUsername)
+            Else
+                allMyCustomUserRoles = Nothing
+            End If
+        End If
+
+        If encryptedUserRoleString = "" Then
+            result = New clsCustomUserRole
+            With result
+                .userName = dbUsername
+                .customUserRole = ptCustomUserRoles.Alles
+            End With
+        Else
+            If Not IsNothing(allMyCustomUserRoles) Then
+                Dim pptUserRole As New clsCustomUserRole
+                Call pptUserRole.decrypt(encryptedUserRoleString)
+
+                Dim found As Boolean = False
+                Dim ix As Integer = 0
+
+                Do While ix <= allMyCustomUserRoles.Count - 1 And Not found
+                    If pptUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
+                        found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole And
+                            CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).specifics = pptUserRole.specifics
+
+                    Else
+                        found = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole).customUserRole = pptUserRole.customUserRole
+                    End If
+
+                    If found Then
+                        result = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole)
+                    Else
+                        ix = ix + 1
+                    End If
+                Loop
+
+            Else
+                result = Nothing
+            End If
+        End If
+
+        getAppropriateUserRole = result
+
+    End Function
+
+
 
     Private Function userHasValidLicence() As Boolean
         userHasValidLicence = True
@@ -885,10 +969,12 @@ Module Module1
 
                     End If       'Ende ob SlideIDs ungleich sind
                 Else
-                    currentSlide = Nothing
+                    'ur: ???
+                    'currentSlide = Nothing
                 End If
             Else
-                currentSlide = Nothing
+                'ur: ???
+                'currentSlide = Nothing
             End If ' if currentPresHasVisboElements
 
         Else

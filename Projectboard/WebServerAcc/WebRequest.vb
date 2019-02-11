@@ -1205,12 +1205,14 @@ Public Class Request
 
                     Dim hresult As New List(Of clsProjektWebLong)
 
+                    ' hresult kommt hier aufsteigend sortiert
                     hresult = GETallVPvLong(vpid:=vpid, err:=err, vpvid:="",
                                                 status:="",
                                                 refNext:=True,
                                                 variantName:=variantname,
                                                 storedAtorBefore:=Nothing)
 
+                    ' das erste aus der Liste nehmen
                     If hresult.Count > 0 Then
                         hresult.Item(0).copyto(hproj, vp)
                     Else
@@ -1264,18 +1266,18 @@ Public Class Request
 
                 If vpid <> "" Then
 
-                    ' get specific VisboProjectVersion vpvid
+                    ' get specific VisboProjectVersion 
                     Dim hresult As New List(Of clsProjektWebLong)
 
-
+                    ' hresult kommt hier aufsteigend sortiert
                     hresult = GETallVPvLong(vpid:=vpid, err:=err, vpvid:="",
                                             status:="",
                                             refNext:=False,
                                             variantName:=variantname,
                                             storedAtorBefore:=storedAtOrBefore)
-
+                    ' das letzte aus der Liste nehmen
                     If hresult.Count > 0 Then
-                        hresult.Item(0).copyto(hproj, vp)
+                        hresult.Item(hresult.Count - 1).copyto(hproj, vp)
                     Else
                         hproj = Nothing
                     End If
@@ -2318,6 +2320,10 @@ Public Class Request
                 While toDo And anzError < 3
                     Try
                         Using requestStream As Stream = request.GetRequestStream()
+
+                            ' ProxyURL merken
+                            awinsettings.proxyURL = myProxy.Address.ToString
+
                             ' Send the data.
                             requestStream.Write(data, 0, data.Length)
                             requestStream.Close()
@@ -2330,6 +2336,30 @@ Public Class Request
                     Catch ex As WebException
 
                         anzError = anzError + 1
+
+                        If ex.Status = WebExceptionStatus.ConnectFailure Then
+
+                            netcred = New NetworkCredential
+                            Dim proxyName As String = ""
+
+                            If awinSettings.proxyURL <> "" Then
+                                proxyName = awinSettings.proxyURL
+                            End If
+
+                            credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                            If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                myProxy.Address = New Uri(proxyName)
+                                request.Proxy = myProxy
+                            End If
+
+                            ' abgefragte Credentials beim Proxy eintragen
+                            If Not IsNothing(request.Proxy) Then
+                                request.Proxy.Credentials = netcred
+
+                            End If
+
+                        End If
 
                         If ex.Status = WebExceptionStatus.ProtocolError Then
 
@@ -2370,7 +2400,18 @@ Public Class Request
                                         ' Abfragen der Proxy-Authentifizierung erforderlich
 
                                         netcred = New NetworkCredential
-                                        credentialsErfragt = askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
+                                        Dim proxyName As String = ""
+
+                                        If awinSettings.proxyURL <> "" Then
+                                            proxyName = awinSettings.proxyURL
+                                        End If
+
+                                        credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                        If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                            myProxy.Address = New Uri(proxyName)
+                                            request.Proxy = myProxy
+                                        End If
 
                                         ' abgefragte Credentials beim Proxy eintragen
                                         If Not IsNothing(request.Proxy) Then
@@ -2442,7 +2483,18 @@ Public Class Request
                                                 ' Abfragen der Proxy-Authentifizierung erforderlich
 
                                                 netcred = New NetworkCredential
-                                                credentialsErfragt = askProxyAuthentication(netcred.UserName, netcred.Password, netcred.Domain)
+                                                Dim proxyName As String = ""
+
+                                                If awinSettings.proxyURL <> "" Then
+                                                    proxyName = awinSettings.proxyURL
+                                                End If
+
+                                                credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
+
+                                                If proxyName <> "" And proxyName <> awinSettings.proxyURL Then
+                                                    myProxy.Address = New Uri(proxyName)
+                                                    request.Proxy = myProxy
+                                                End If
 
                                                 ' ur: für wingate-Proxy
                                                 If Not IsNothing(request.Proxy) Then
@@ -3217,9 +3269,9 @@ Public Class Request
                 Dim variantlist As SortedList(Of Date, clsProjektWebLong) = VRScache.VPvs(vpid).Item(variantName).tsLong
 
                 Dim found As Boolean = False
-                Dim i As Integer = variantlist.Count - 1
+                Dim i As Integer = 0
 
-                While Not found And i >= 0
+                While i <= variantlist.Count - 1
                     Dim ts As Date = variantlist.ElementAt(i).Key
                     Dim longproj As clsProjektWebLong = variantlist.ElementAt(i).Value
 
@@ -3228,14 +3280,14 @@ Public Class Request
                         If ts <= storedAtorBefore Then
 
                             result.Add(longproj)
-                            found = True
+
                         Else
                             ' ProjShort in der Liste ist aktuell das am nächsten bei storedAtorBefore
                         End If
                     Else
                         result.Add(longproj)
                     End If
-                    i = i - 1
+                    i = i + 1
                 End While
             Else
 
