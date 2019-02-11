@@ -7649,25 +7649,25 @@ Public Module Module1
         proxyAuth.proxyURL = proxyURL
 
 
-        While returnValue = DialogResult.Retry And i < 6
+        While returnValue <> DialogResult.OK And returnValue <> DialogResult.Cancel
 
             returnValue = proxyAuth.ShowDialog
 
         End While
-        If returnValue = DialogResult.Abort Or i >= 5 Then
 
-            askProxyAuthentication = False
-
-        ElseIf returnValue = DialogResult.OK Then
+        If returnValue = DialogResult.OK Then
 
             proxyURL = proxyAuth.proxyURL
             domain = proxyAuth.domain
             usr = proxyAuth.user
             pwd = proxyAuth.pwd
+        Else
+
+            askProxyAuthentication = True
 
         End If
 
-        askProxyAuthentication = (returnValue = DialogResult.OK)
+        askProxyAuthentication = True
 
     End Function
 

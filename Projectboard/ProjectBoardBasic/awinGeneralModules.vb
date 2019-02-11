@@ -3828,8 +3828,13 @@ Public Module awinGeneralModules
 
         If returnValue Then
             Try
-                ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
-                projectConstellations.Remove(activeConstellation.constellationName)
+                If Not IsNothing(activeConstellation) Then
+                    ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
+                    projectConstellations.Remove(activeConstellation.constellationName)
+                Else
+                    Call MsgBox("Es wurde keine Portfolio ausgewählt")
+                End If
+
             Catch ex1 As Exception
                 Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
             End Try
