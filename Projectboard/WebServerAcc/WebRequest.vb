@@ -2256,6 +2256,8 @@ Public Class Request
 
         Dim myProxy As New System.Net.WebProxy
 
+
+
         If awinSettings.proxyURL <> "" Then
 
             'prox.Address = New Uri("http://versicherung.proxy.allianz:8080")
@@ -2288,6 +2290,7 @@ Public Class Request
 
             If myProxy.Address = Nothing Then
                 request.Proxy = defaultProxy
+
             Else
                 request.Proxy = myProxy
             End If
@@ -2321,14 +2324,20 @@ Public Class Request
                     Try
                         Using requestStream As Stream = request.GetRequestStream()
 
-                            ' ProxyURL merken
-                            awinsettings.proxyURL = myProxy.Address.ToString
-
                             ' Send the data.
                             requestStream.Write(data, 0, data.Length)
                             requestStream.Close()
                             requestStream.Dispose()
                         End Using
+
+                        If Not IsNothing(myProxy.Address) Then
+                            ' ProxyURL merken
+                            awinSettings.proxyURL = myProxy.Address.ToString
+                        Else
+                            myProxy = defaultProxy
+                            awinSettings.proxyURL = myProxy.Address.ToString
+                        End If
+
 
                         hresp = Nothing
                         toDo = False
@@ -2337,13 +2346,23 @@ Public Class Request
 
                         anzError = anzError + 1
 
+
                         If ex.Status = WebExceptionStatus.ConnectFailure Then
+
+                            request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
+                            request.Method = method
+                            request.ContentType = "application/json"
+                            request.Headers.Add("access-key", token)
+                            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+
 
                             netcred = New NetworkCredential
                             Dim proxyName As String = ""
 
                             If awinSettings.proxyURL <> "" Then
                                 proxyName = awinSettings.proxyURL
+
                             End If
 
                             credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
@@ -2404,6 +2423,11 @@ Public Class Request
 
                                         If awinSettings.proxyURL <> "" Then
                                             proxyName = awinSettings.proxyURL
+                                        Else
+                                            If Not IsNothing(hresp) Then
+                                                proxyName = hresp.ResponseUri.ToString
+                                            End If
+
                                         End If
 
                                         credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)

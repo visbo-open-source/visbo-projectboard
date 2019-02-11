@@ -79,11 +79,6 @@ Public Class frmProxyAuth
         maskedPwd.Text = pwd
     End Sub
 
-    Private Sub frmProxyAuth_FormClosed(sender As Object, e As EventArgs) Handles MyBase.FormClosed
-        'domain = ""
-        'user = ""
-        'pwd = ""
-    End Sub
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
         domain = ""
