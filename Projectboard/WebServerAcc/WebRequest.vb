@@ -17,12 +17,20 @@ Imports Microsoft.VisualBasic
 Imports System.Security.Principal
 Imports System.Net
 Imports System.Text
+Imports System.Deployment.Application
 Public Class Request
 
     'public serverUriName ="http://visbo.myhome-server.de:3484" 
     'Public serverUriName As String = "http://localhost:3484"
 
     Private serverUriName As String = ""
+
+    Private version As System.Version
+    Private visboContentType As String = "application/json"
+    Private visboUserAgent As String = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                                                    & My.Computer.Info.OSVersion & ") Client:" & visboClient & "/"
+
+
 
     Private aktVCid As String = ""
 
@@ -76,6 +84,15 @@ Public Class Request
         Dim httpresp_sav As HttpWebResponse
 
         Try
+            If Deployment.Application.ApplicationDeployment.IsNetworkDeployed Then
+                version =
+                  Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion()
+                visboUserAgent = visboUserAgent & version.ToString
+            Else
+                ' Nicht via ClickOnce installiert
+
+            End If
+
             Dim user As New clsUserLoginSignup
             user.email = LCase(username)
             user.password = dbPasswort
@@ -219,16 +236,16 @@ Public Class Request
             ' vorläufig dringelassen - es wird gecheckt, ob der Fall überhaupt auftreten kann bzw. ob das nicht grundsätzlich verhindert werden soll  
             'If vpid <> "" Then
             If vpid <> "" And variantname <> "" Then
-                    ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
-                    For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
-                        If vpVar.variantName = variantname Then
-                            If vpVar.createdAt <= storedAtorBefore Then
-                                result = True
-                                Exit For
-                            End If
+                ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
+                For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
+                    If vpVar.variantName = variantname Then
+                        If vpVar.createdAt <= storedAtorBefore Then
+                            result = True
+                            Exit For
                         End If
-                    Next
-                Else
+                    End If
+                Next
+            Else
                 result = (vpid <> "")
             End If
 
@@ -2288,7 +2305,7 @@ Public Class Request
         Try
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
 
-            If myProxy.Address = Nothing Then
+            If IsNothing(myProxy.Address) Then
                 request.Proxy = defaultProxy
 
             Else
@@ -2305,10 +2322,9 @@ Public Class Request
             request.CookieContainer = cc
 
             request.Method = method
-            request.ContentType = "application/json"
+            request.ContentType = visboContentType
             request.Headers.Add("access-key", token)
-            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+            request.UserAgent = visboUserAgent
 
             Dim toDo As Boolean = False
             Dim anzError As Integer = 0
@@ -2334,8 +2350,8 @@ Public Class Request
                             ' ProxyURL merken
                             awinSettings.proxyURL = myProxy.Address.ToString
                         Else
-                            myProxy = defaultProxy
-                            awinSettings.proxyURL = myProxy.Address.ToString
+                            ' Adresse von defaultProxy hier eintragen
+                            awinSettings.proxyURL = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
                         End If
 
 
@@ -2351,10 +2367,9 @@ Public Class Request
 
                             request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
                             request.Method = method
-                            request.ContentType = "application/json"
+                            request.ContentType = visboContentType
                             request.Headers.Add("access-key", token)
-                            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+                            request.UserAgent = visboUserAgent
 
 
                             netcred = New NetworkCredential
@@ -2389,10 +2404,9 @@ Public Class Request
 
                                 request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
                                 request.Method = method
-                                request.ContentType = "application/json"
+                                request.ContentType = visboContentType
                                 request.Headers.Add("access-key", token)
-                                request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+                                request.UserAgent = visboUserAgent
 
                                 If credentialsErfragt And anzError = 2 Then
                                     Call MsgBox(hresp.Headers.ToString)
