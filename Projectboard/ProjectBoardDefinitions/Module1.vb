@@ -5516,7 +5516,7 @@ Public Module Module1
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                             ' den im Überblick gezeigten specifics nicht noch mal zeigen, falls der aufgeführt ist ... 
-                            Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(myCustomUserRole.specifics, "")
+                            Dim tmpNameID As String = myCustomUserRole.specifics
                             If toDoCollectionR.Contains(tmpNameID) Then
                                 toDoCollectionR.Remove(tmpNameID)
                             End If
@@ -6459,7 +6459,8 @@ Public Module Module1
                 Dim roleName As String = myCustomUserRole.customUserRole.ToString
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                    roleName = roleName & " " & myCustomUserRole.specifics
+                    Dim teamID As Integer = -1
+                    roleName = roleName & " " & RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
                 ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
                 End If
@@ -7041,23 +7042,31 @@ Public Module Module1
     ''' </summary>
     ''' <param name="currentCell"></param>
     ''' <returns></returns>
-    Public Function getRCNameIDfromExcelCell(ByVal currentCell As Excel.Range) As String
+    Public Function getRCNameIDfromExcelCell(ByVal currentCell As Excel.Range,
+                                             Optional ByVal returnOnlyValidNameID As Boolean = False) As String
 
         Dim tmpResult As String = ""
         Try
             If Not IsNothing(currentCell.Value) Then
                 Dim tmpRCname As String = CStr(currentCell.Value).Trim
 
-                If RoleDefinitions.containsName(tmpRCname) Then
-                    Dim tmpComment As Excel.Comment = currentCell.Comment
-                    Dim tmpTeamName As String = ""
-                    If Not IsNothing(tmpComment) Then
-                        tmpTeamName = tmpComment.Text
+                If tmpRCname <> "" Then
+                    If RoleDefinitions.containsName(tmpRCname) Then
+                        Dim tmpComment As Excel.Comment = currentCell.Comment
+                        Dim tmpTeamName As String = ""
+                        If Not IsNothing(tmpComment) Then
+                            tmpTeamName = tmpComment.Text
+                        End If
+                        tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRCname, tmpTeamName)
+                    Else
+                        ' im Falle von Kosten soll erst mal die alte Herangehensweise gelten
+                        If returnOnlyValidNameID Then
+                            tmpResult = ""
+                        Else
+                            tmpResult = tmpRCname
+                        End If
+
                     End If
-                    tmpResult = RoleDefinitions.bestimmeRoleNameID(tmpRCname, tmpTeamName)
-                Else
-                    ' im Falle von Kosten soll erst mal die alte Herangehensweise gelten 
-                    tmpResult = tmpRCname
                 End If
 
             Else
@@ -7197,15 +7206,19 @@ Public Module Module1
         Dim tmpResult As String = ""
 
         Try
-            Dim phaseName As String = CStr(currentCell.Value).Trim
-            Dim phaseNameID As String = calcHryElemKey(phaseName, False)
-            Dim curComment As Excel.Comment = currentCell.Comment
 
-            If Not IsNothing(curComment) Then
-                phaseNameID = curComment.Text.Trim
+            If Not IsNothing(currentCell.Value) Then
+                Dim phaseName As String = CStr(currentCell.Value).Trim
+                Dim phaseNameID As String = calcHryElemKey(phaseName, False)
+                Dim curComment As Excel.Comment = currentCell.Comment
+
+                If Not IsNothing(curComment) Then
+                    phaseNameID = curComment.Text.Trim
+                End If
+
+                tmpResult = phaseNameID
             End If
 
-            tmpResult = phaseNameID
         Catch ex As Exception
             tmpResult = ""
         End Try

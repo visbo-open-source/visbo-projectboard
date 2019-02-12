@@ -1996,20 +1996,24 @@ Public Class Tabelle2
 
         Dim tmpValue As Boolean = False
         Dim weiterMachen As Boolean = False
+        Dim teamID As Integer = -1
 
         ' erstmal prüfen, ob es sich um einen Ressourcen-Manager oder Portfolio Manager handelt; denn dann können nicht alle Werte eingegeben werden 
         If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
             Dim parentCollection As New Collection
-            parentCollection.Add(myCustomUserRole.specifics)
+
+            'parentCollection.Add(myCustomUserRole.specifics)
+            parentCollection.Add(RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name)
 
             If RoleDefinitions.hasAnyChildParentRelationsship(newValue, parentCollection) Then
                 weiterMachen = True
             End If
 
         ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-            Dim idArray() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+            'Dim idArray() As Integer = RoleDefinitions.getIDArray(myCustomUserRole.specifics)
+            Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
             Dim roleNameID As String = RoleDefinitions.bestimmeRoleNameID(newValue, "")
-            Dim teamID As Integer = -1
+
             Dim roleID As Integer = RoleDefinitions.parseRoleNameID(roleNameID, teamID)
 
             If Not RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, idArray) Or

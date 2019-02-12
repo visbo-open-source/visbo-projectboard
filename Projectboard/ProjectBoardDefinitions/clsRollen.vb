@@ -366,7 +366,7 @@ Public Class clsRollen
 
     ''' <summary>
     ''' gibt zu dem übergebenen String, der RoleNames in der Form D-BOSV-KB1; D-BOSV-KB2; etc enthält 
-    ''' die gültigen Namen in Form eines Id-Arrays zurück 
+    ''' die gültigen NameIDs in Form eines Id-Arrays zurück 
     ''' </summary>
     ''' <param name="aufzaehlung"></param>
     ''' <returns></returns>
@@ -1140,16 +1140,7 @@ Public Class clsRollen
             If found Then
                 tmpValue = _allRollen.Item(_allNames.Item(myitem))
             End If
-            'Dim ix As Integer = 0
 
-            'Do While ix <= _allRollen.Count - 1 And Not found
-            '    If _allRollen.ElementAt(ix).Value.name = myitem Then
-            '        found = True
-            '        tmpValue = _allRollen.ElementAt(ix).Value
-            '    Else
-            '        ix = ix + 1
-            '    End If
-            'Loop
 
             getRoledef = tmpValue
 
@@ -1210,47 +1201,52 @@ Public Class clsRollen
     Public Function parseRoleNameID(ByVal selRoleItem As String, ByRef teamID As Integer) As Integer
         ' der Name wird bestimmt, je nachdem ob es sich um eine normale Orga-Einheit , ein Team oder ein Team-Member handelt 
 
-        Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
+
         Dim roleID As Integer = -1
 
         ' Vorbesetzung von teamID 
         teamID = -1
 
-        ' die RoleUID bestimmen 
-        If IsNumeric(tmpStr(0)) Then
-            roleID = CInt(tmpStr(0))
-            If _allRollen.ContainsKey(roleID) Then
-                ' alles ok 
-            Else
-                roleID = -1
-            End If
-        Else
-            If _allNames.ContainsKey(tmpStr(0)) Then
-                roleID = _allNames.Item(tmpStr(0))
-            Else
-                roleID = -1
+        If Not IsNothing(selRoleItem) Then
+            If selRoleItem <> "" Then
+                Dim tmpStr() As String = selRoleItem.Split(New Char() {CChar(";")})
+
+                ' die RoleUID bestimmen 
+                If IsNumeric(tmpStr(0)) Then
+                    roleID = CInt(tmpStr(0))
+                    If _allRollen.ContainsKey(roleID) Then
+                        ' alles ok 
+                    Else
+                        roleID = -1
+                    End If
+                Else
+                    If _allNames.ContainsKey(tmpStr(0)) Then
+                        roleID = _allNames.Item(tmpStr(0))
+                    Else
+                        roleID = -1
+                    End If
+                End If
+
+                ' bestimme teamID
+                If tmpStr.Length = 2 Then
+                    ' hat noch Team Info  
+                    If IsNumeric(tmpStr(1)) Then
+                        teamID = CInt(tmpStr(1))
+                        If _allRollen.ContainsKey(teamID) Then
+                            ' alles ok 
+                        Else
+                            teamID = -1
+                        End If
+                    Else
+                        If _allNames.ContainsKey(tmpStr(1)) Then
+                            teamID = _allNames.Item(tmpStr(1))
+                        Else
+                            teamID = -1
+                        End If
+                    End If
+                End If
             End If
         End If
-
-        ' bestimme teamID
-        If tmpStr.Length = 2 Then
-            ' hat noch Team Info  
-            If IsNumeric(tmpStr(1)) Then
-                teamID = CInt(tmpStr(1))
-                If _allRollen.ContainsKey(teamID) Then
-                    ' alles ok 
-                Else
-                    teamID = -1
-                End If
-            Else
-                If _allNames.ContainsKey(tmpStr(1)) Then
-                    teamID = _allNames.Item(tmpStr(1))
-                Else
-                    teamID = -1
-                End If
-            End If
-        End If
-
 
         parseRoleNameID = roleID
 
