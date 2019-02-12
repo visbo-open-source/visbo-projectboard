@@ -35,7 +35,14 @@ Public Class frmChooseCustomUserRole
                     With currentItem
                         dgv_customUserRoles.Rows(i - 1).Tag = (i).ToString
                         dgv_customUserRoles.Rows(i - 1).Cells(0).Value = .customUserRole.ToString
-                        dgv_customUserRoles.Rows(i - 1).Cells(1).Value = .specifics
+                        If .customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            dgv_customUserRoles.Rows(i - 1).Cells(1).Value = ""
+                        ElseIf .customUserRole = ptCustomUserRoles.RessourceManager Then
+                            dgv_customUserRoles.Rows(i - 1).Cells(1).Value = RoleDefinitions.getRoleDefByID(CInt(.specifics)).name
+                        Else
+                            dgv_customUserRoles.Rows(i - 1).Cells(1).Value = ""
+                        End If
+
                     End With
 
                     'changeListTable.Rows(i).Tag = changeliste.getShapeNameFromChangeList(i + 1)
