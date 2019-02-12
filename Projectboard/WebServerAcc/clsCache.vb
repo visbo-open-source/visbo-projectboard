@@ -372,20 +372,9 @@ Public Class clsCache
                         End If   ' end if von if vps_id
 
 
-                        'Else        ' vpvcount passt nicht
-
-                        '    nothingToDo = nothingToDo And False
-
-                        'End If   ' end if von if vpvid <> ""
-
-                        'Else ' _vpvs.containskey (vnAME)
-
-                        '    nothingToDo = False
-
-                        'End If
 
 
-                    Else
+                Else
                     nothingToDo = nothingToDo And False
 
                 End If
@@ -430,6 +419,8 @@ Public Class clsCache
 
                                     End If
                                 End If
+                            Else
+                                ok = false
                             End If
 
                         Else   ' vname = noVariantname, alle Varianten sind relevant
@@ -478,63 +469,12 @@ Public Class clsCache
 
                             Next
 
-                            ''Dim stdVariante As String = ""
-                            ''If _VPvs(vpid).ContainsKey(stdVariante) Then
 
-                            ''    If Not longVersion Then
-                            ''        timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(stdVariante).timeCShort, Date.Now.ToUniversalTime)
-                            ''        If (_VPvs(vpid)(stdVariante).tsShort.Count > 0) And
-                            ''            (_VPvs(vpid)(stdVariante).tsShort.Count >= _VPvs(vpid)(stdVariante).tsLong.Count) And
-                            ''             timeDiff <= updateDelay Then
-
-                            ''        Else
-
-                            ''            nothingToDo = nothingToDo And False
-                            ''            Exit For
-
-                            ''        End If
-                            ''    Else
-
-                            ''        timeDiff = DateDiff(DateInterval.Minute, _VPvs(vpid)(vName).timeCLong, Date.Now.ToUniversalTime)
-                            ''        If (_VPvs(vpid)(stdVariante).tsLong.Count > 0) And
-                            ''            (_VPvs(vpid)(stdVariante).tsLong.Count = _VPvs(vpid)(stdVariante).tsShort.Count) And
-                            ''            timeDiff <= updateDelay Then
-
-                            ''            nothingToDo = nothingToDo And True
-                            ''        Else
-
-                            ''            nothingToDo = nothingToDo And False
-                            ''            Exit For
-                            ''        End If
-                            ''    End If
-
-
-                            ''End If
 
 
                         End If ' end if von vName <> noVariantName
 
-                        'Dim VPvs_value As SortedList(Of String, clsVarTs) = _VPvs(vpid)
-                        '        If VPvs_value.Count = 0 Then
-                        '            ok = False
-                        '        Else
 
-                        '            Dim varTS As SortedList(Of String, clsVarTs) = _VPvs(vpid)
-                        '            For Each kvp1 As KeyValuePair(Of String, clsVarTs) In varTS
-                        '                vpvid = kvp1.Key
-                        '                timeDiff = DateDiff(DateInterval.Minute, refDate, kvp1.Value.timeCLong)
-                        '                If timeDiff <= updateDelay Then
-                        '                    ok = ok And True
-                        '                Else
-                        '                    ok = False
-                        '                    Exit For
-                        '                End If
-                        '            Next
-                        '        End If
-
-                        '        If Not ok Then
-                        '            Exit For
-                        '        End If
 
                         If ok = False Then
                             Exit For

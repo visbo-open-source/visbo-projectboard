@@ -151,7 +151,13 @@ Imports System.Web
 
         enableOnUpdate = False
 
-        returnValue = removeConstFilterFrm.ShowDialog
+        While returnValue <> DialogResult.OK And returnValue <> DialogResult.Cancel
+
+            ' Formular mit aufgelisteten Portfolios/Filter anzeigen
+            returnValue = removeConstFilterFrm.ShowDialog
+
+        End While
+
 
         If returnValue = DialogResult.OK Then
             If ControlID = deleteDatenbank Or
@@ -201,6 +207,7 @@ Imports System.Web
                 End If
 
             End If
+
         End If
         enableOnUpdate = True
 
