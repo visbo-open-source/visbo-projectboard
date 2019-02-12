@@ -3,6 +3,8 @@
     Public frmOption As String
     Private Sub frmRemoveConstellation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        ListBox1.Items.Clear()
+
         If frmOption = "DBFilter" Then
 
             Me.Text = "DB-Filter löschen"
@@ -52,6 +54,7 @@
 
         Else
             Call MsgBox("bitte einen Eintrag selektieren")
+            DialogResult = System.Windows.Forms.DialogResult.Retry
         End If
 
 

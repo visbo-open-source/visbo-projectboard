@@ -376,11 +376,12 @@ Public Module testModule
                         '    tmpVariantName = portfolioVName
                         'End If
 
-                        bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+                        ' ur: alt: bproj = CType(databaseAcc, DBAccLayer.Request).retrieveFirstContractedPFromDB(hproj.name, vorgabeVariantName, err)
+                        bproj = projekthistorie.beauftragung
                         ' tk 19.1.19 das darf hier nicht mehr gemacht werden. Eine letzte Vorgabe kann später gemacht sein als der Planungsstand ... 
                         'Dim lDate As Date = hproj.timeStamp.AddMinutes(-1)
-                        lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=Date.Now, err:=err)
-
+                        ' ur: alt: lproj = CType(databaseAcc, DBAccLayer.Request).retrieveLastContractedPFromDB(hproj.name, vorgabeVariantName, storedAtOrBefore:=Date.Now, err:=err)
+                        lproj = projekthistorie.lastBeauftragung(Date.Now)
 
 
                     Catch ex As Exception

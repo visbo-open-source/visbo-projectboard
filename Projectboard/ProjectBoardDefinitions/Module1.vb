@@ -7641,24 +7641,33 @@ Public Module Module1
     ''' ruft das Formular auf, um die Proxy-Authentifizierung zu erfragen
     ''' </summary>
     ''' <remarks></remarks>
-    Public Function askProxyAuthentication(ByRef usr As String, ByRef pwd As String, ByRef domain As String) As Boolean
+    Public Function askProxyAuthentication(ByRef proxyURL As String, ByRef usr As String, ByRef pwd As String, ByRef domain As String) As Boolean
         Dim proxyAuth As New frmProxyAuth
-        Dim returnValue As DialogResult
+        Dim returnValue As DialogResult = DialogResult.Retry
+        Dim i As Integer = 0
 
-        With proxyAuth
+        proxyAuth.proxyURL = proxyURL
 
-            returnValue = .ShowDialog
 
-            If returnValue = DialogResult.OK Then
-                usr = .user
-                pwd = .pwd
-            Else
+        While returnValue <> DialogResult.OK And returnValue <> DialogResult.Cancel
 
-            End If
+            returnValue = proxyAuth.ShowDialog
 
-        End With
+        End While
 
-        Return returnValue = DialogResult.OK
+        If returnValue = DialogResult.OK Then
+
+            proxyURL = proxyAuth.proxyURL
+            domain = proxyAuth.domain
+            usr = proxyAuth.user
+            pwd = proxyAuth.pwd
+        Else
+
+            askProxyAuthentication = True
+
+        End If
+
+        askProxyAuthentication = True
 
     End Function
 

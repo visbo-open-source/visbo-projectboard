@@ -3,7 +3,7 @@ Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Public Class frmProxyAuth
-
+    Public proxyURL As String
     Public domain As String
     Public user As String
     Public pwd As String
@@ -73,16 +73,12 @@ Public Class frmProxyAuth
     End Sub
 
     Private Sub frmProxyAuth_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        proxyURLbox.Text = proxyURL
         domainBox.Text = domain
         benutzer.Text = user
         maskedPwd.Text = pwd
     End Sub
 
-    Private Sub frmProxyAuth_FormClosed(sender As Object, e As EventArgs) Handles MyBase.FormClosed
-        'domain = ""
-        'user = ""
-        'pwd = ""
-    End Sub
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
         domain = ""
@@ -91,12 +87,33 @@ Public Class frmProxyAuth
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
+        Dim uriResult As Uri = Nothing
+        Dim uriOK As Boolean = False
+        DialogResult = DialogResult.OK
+
+        If proxyURLbox.Text <> "" Then
+            uriOK = Uri.TryCreate(proxyURLbox.Text, UriKind.Absolute, uriResult)
+            If uriOK Then
+                uriOK = uriOK And (uriResult.Scheme = Uri.UriSchemeHttp)
+            End If
+        End If
+
+
+
+        If uriOK Then
+            proxyURL = proxyURLbox.Text
+        Else
+            messageBox.Text = "no valid Proxy-URL"
+            DialogResult = DialogResult.Retry
+        End If
         domain = domainBox.Text
         user = benutzer.Text
         pwd = maskedPwd.Text
         If user = "" Or pwd = "" Then
             messageBox.Text = "Username/Passwort für Proxy eingeben!"
+            DialogResult = DialogResult.Retry
         End If
+
     End Sub
 
     Private Sub messageBox_TextChanged(sender As Object, e As EventArgs) Handles messageBox.TextChanged
