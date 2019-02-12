@@ -38,6 +38,8 @@ Public Class ThisAddIn
             awinSettings.userNamePWD = My.Settings.userNamePWD
         End If
 
+        visboClient = "VISBO Smartinfo"
+
         ' Refresh von Projekte im Cache  in Minuten
         cacheUpdateDelay = 10
 

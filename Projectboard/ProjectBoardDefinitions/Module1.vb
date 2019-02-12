@@ -29,6 +29,9 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
     Public noDB As Boolean = True
 
+    'Name des VisboClient
+    Public visboClient As String = "VISBO Projectboard"
+
     'Cache - Infos
     Public cacheUpdateDelay As Long
 
