@@ -4870,6 +4870,8 @@ Imports System.Web
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
 
+        Dim ohneFehler As Boolean = True
+
         Dim getInventurImport As New frmSelectImportFiles
         Dim wasNotEmpty As Boolean = False
 
@@ -4925,120 +4927,130 @@ Imports System.Web
                         ImportProjekte.Clear(False)
                         Dim isAllianzImport1 As Boolean = False
 
-                        If scenarioNameP.StartsWith("Allianz-Typ 1") Then
-                            ' das muss noch abgefragt werden ... 
-                            Dim startdate As Date = CDate("1.1.2019")
-                            Dim enddate As Date = CDate("31.12.2019")
+                        Try
+                            If scenarioNameP.StartsWith("Allianz-Typ 1") Then
+                                ' das muss noch abgefragt werden ... 
+                                Dim startdate As Date = CDate("1.1.2019")
+                                Dim enddate As Date = CDate("31.12.2019")
 
-                            isAllianzImport1 = True
-                            Call importAllianzType1(startdate, enddate)
+                                isAllianzImport1 = True
+                                Call importAllianzType1(startdate, enddate)
 
-                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
+                            ElseIf scenarioNameP.StartsWith("Allianz-Typ 2") Then
 
-                            noScenarioCreation = True
-                            Call importAllianzType2()
+                                noScenarioCreation = True
+                                Call importAllianzType2()
 
-                        ElseIf scenarioNameP.StartsWith("Istdaten") Then
-                            ' immer zwei Monate zurück gehen 
-                            ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
+                            ElseIf scenarioNameP.StartsWith("Istdaten") Then
+                                ' immer zwei Monate zurück gehen 
+                                ' erst mal immer automatisch auf aktuelles Datum -1  setzen 
 
-                            Dim editActualDataMonth As New frmProvideActualDataMonth
+                                Dim editActualDataMonth As New frmProvideActualDataMonth
 
-                            If editActualDataMonth.ShowDialog = DialogResult.OK Then
+                                If editActualDataMonth.ShowDialog = DialogResult.OK Then
 
-                                Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
+                                    Dim monat As Integer = CInt(editActualDataMonth.valueMonth.Text)
 
-                                Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
-                                Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
+                                    Dim readPastAndFutureData As Boolean = editActualDataMonth.readPastAndFutureData.Checked
+                                    Dim createUnknownProjects As Boolean = editActualDataMonth.createUnknownProjects.Checked
 
-                                Dim outputCollection As New Collection
-                                Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
+                                    Dim outputCollection As New Collection
+                                    Call ImportAllianzType3(monat, readPastAndFutureData, createUnknownProjects, outputCollection)
 
+                                End If
+
+
+                            ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
+                                Call importAllianzType4()
+
+                            Else
+                                Call awinImportProjektInventur()
                             End If
+                        Catch ex As Exception
 
+                            Call MsgBox("Fehler bei Import : " & ex.Message)
+                            ohneFehler = False
 
-                        ElseIf scenarioNameP.StartsWith("Allianz-Typ 4") Then
-                            Call importAllianzType4()
-
-                        Else
-                            Call awinImportProjektInventur()
-                        End If
-
+                        End Try
 
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                        'sessionConstellationP enthält alle Projekte aus dem Import 
-                        Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
-                        Dim sessionConstellationS As clsConstellation = Nothing
-                        If isAllianzImport1 Then
-                            sessionConstellationS = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
-                        End If
-
-                        'Call sessionConstellationP.calcUnionProject(False)
-                        'Call sessionConstellationS.calcUnionProject(False)
-
-                        ' Testen ..
-                        ' test
-                        If isAllianzImport1 Then
-                            Dim everythingOK As Boolean = testUProjandSingleProjs(sessionConstellationP, False)
-                            If Not everythingOK Then
-                                ReDim logmsg(1)
-                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                logmsg(1) = sessionConstellationP.constellationName
-                                Call logfileSchreiben(logmsg)
+                        If ohneFehler Then
+                            'sessionConstellationP enthält alle Projekte aus dem Import 
+                            Dim sessionConstellationP As clsConstellation = verarbeiteImportProjekte(scenarioNameP, noComparison:=False, considerSummaryProjects:=False)
+                            Dim sessionConstellationS As clsConstellation = Nothing
+                            If isAllianzImport1 Then
+                                sessionConstellationS = verarbeiteImportProjekte(scenarioNameS, noComparison:=True, considerSummaryProjects:=True)
                             End If
-                            ' ende test
 
+                            'Call sessionConstellationP.calcUnionProject(False)
+                            'Call sessionConstellationS.calcUnionProject(False)
 
+                            ' Testen ..
                             ' test
-                            everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
-                            If Not everythingOK Then
-                                ReDim logmsg(1)
-                                logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
-                                logmsg(1) = sessionConstellationP.constellationName
-                                Call logfileSchreiben(logmsg)
-                            End If
-                            ' ende test
-                        End If
-
-
-                        If isAllianzImport1 Then
-                            If sessionConstellationS.count > 0 Then
-
-                                If projectConstellations.Contains(scenarioNameS) Then
-                                    projectConstellations.Remove(scenarioNameS)
+                            If isAllianzImport1 Then
+                                Dim everythingOK As Boolean = testUProjandSingleProjs(sessionConstellationP, False)
+                                If Not everythingOK Then
+                                    ReDim logmsg(1)
+                                    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                    logmsg(1) = sessionConstellationP.constellationName
+                                    Call logfileSchreiben(logmsg)
                                 End If
+                                ' ende test
 
-                                projectConstellations.Add(sessionConstellationS)
-                                ' jetzt auf Projekt-Tafel anzeigen 
 
-                                Call loadSessionConstellation(scenarioNameS, False, True)
-
-                            Else
-                                Call MsgBox("keine Programmlinien importiert ...")
-                            End If
-                        Else
-                            If sessionConstellationP.count > 0 Then
-
-                                If projectConstellations.Contains(scenarioNameP) Then
-                                    projectConstellations.Remove(scenarioNameP)
+                                ' test
+                                everythingOK = testUProjandSingleProjs(sessionConstellationS, False)
+                                If Not everythingOK Then
+                                    ReDim logmsg(1)
+                                    logmsg(0) = "Summary Projekt nicht identisch mit der Liste der Projekt-Vorhaben:"
+                                    logmsg(1) = sessionConstellationP.constellationName
+                                    Call logfileSchreiben(logmsg)
                                 End If
+                                ' ende test
+                            End If
 
-                                projectConstellations.Add(sessionConstellationP)
-                                ' jetzt auf Projekt-Tafel anzeigen 
-                                Call loadSessionConstellation(scenarioNameP, False, True)
 
+                            If isAllianzImport1 Then
+                                If sessionConstellationS.count > 0 Then
+
+                                    If projectConstellations.Contains(scenarioNameS) Then
+                                        projectConstellations.Remove(scenarioNameS)
+                                    End If
+
+                                    projectConstellations.Add(sessionConstellationS)
+                                    ' jetzt auf Projekt-Tafel anzeigen 
+
+                                    Call loadSessionConstellation(scenarioNameS, False, True)
+
+                                Else
+                                    Call MsgBox("keine Programmlinien importiert ...")
+                                End If
                             Else
-                                Call MsgBox("keine Projekte importiert ...")
+                                If sessionConstellationP.count > 0 Then
+
+                                    If projectConstellations.Contains(scenarioNameP) Then
+                                        projectConstellations.Remove(scenarioNameP)
+                                    End If
+
+                                    projectConstellations.Add(sessionConstellationP)
+                                    ' jetzt auf Projekt-Tafel anzeigen 
+                                    Call loadSessionConstellation(scenarioNameP, False, True)
+
+                                Else
+                                    Call MsgBox("keine Projekte importiert ...")
+                                End If
+                            End If
+
+
+
+
+                            If ImportProjekte.Count > 0 Then
+                                ImportProjekte.Clear(False)
                             End If
                         End If
 
 
-
-
-                        If ImportProjekte.Count > 0 Then
-                            ImportProjekte.Clear(False)
-                        End If
                     Else
 
                         Call MsgBox("bitte Datei auswählen ...")
@@ -5968,12 +5980,12 @@ Imports System.Web
             weiterMachen = True
 
         ElseIf anzFiles > 1 Then
-            Dim getOrgaFile As New frmSelectImportFiles
-            getOrgaFile.menueAswhl = PTImpExp.Orga
-            Dim returnValue As DialogResult = getOrgaFile.ShowDialog
+            Dim getUserRoleFile As New frmSelectImportFiles
+            getUserRoleFile.menueAswhl = PTImpExp.customUserRoles
+            Dim returnValue As DialogResult = getUserRoleFile.ShowDialog
 
             If returnValue = DialogResult.OK Then
-                selectedWB = CStr(getOrgaFile.selImportFiles.Item(1))
+                selectedWB = CStr(getUserRoleFile.selImportFiles.Item(1))
                 weiterMachen = True
             End If
         End If
@@ -9735,6 +9747,7 @@ Imports System.Web
 
             Dim comparisonTyp As Integer
             Dim qualifier2 As String = ""
+            Dim teamID As Integer = -1
 
             Dim vorgabeVariantName As String = ptVariantFixNames.pfv.ToString
             If awinSettings.meCompareWithLastVersion Then
@@ -9743,10 +9756,10 @@ Imports System.Web
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken2
-                            qualifier2 = myCustomUserRole.specifics
+                            qualifier2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
 
                         End If
                     End If
@@ -9761,10 +9774,10 @@ Imports System.Web
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
 
                             comparisonTyp = PTprdk.PersonalBalken
-                            qualifier2 = myCustomUserRole.specifics
+                            qualifier2 = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
 
                         End If
                     End If

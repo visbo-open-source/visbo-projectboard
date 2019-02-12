@@ -5513,7 +5513,7 @@ Public Module Module1
 
                         If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                             ' den im Überblick gezeigten specifics nicht noch mal zeigen, falls der aufgeführt ist ... 
-                            Dim tmpNameID As String = RoleDefinitions.bestimmeRoleNameID(myCustomUserRole.specifics, "")
+                            Dim tmpNameID As String = myCustomUserRole.specifics
                             If toDoCollectionR.Contains(tmpNameID) Then
                                 toDoCollectionR.Remove(tmpNameID)
                             End If
@@ -6456,7 +6456,8 @@ Public Module Module1
                 Dim roleName As String = myCustomUserRole.customUserRole.ToString
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
-                    roleName = roleName & " " & myCustomUserRole.specifics
+                    Dim teamID As Integer = -1
+                    roleName = roleName & " " & RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, teamID).name
                 ElseIf myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
 
                 End If

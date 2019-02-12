@@ -6904,9 +6904,11 @@ Public Module agm2
     ''' <returns></returns>
     Public Function isValidCustomUserRole(ByVal userName As String,
                                           ByVal roleType As ptCustomUserRoles,
-                                          ByVal specifics As String) As Boolean
+                                          ByRef specifics As String) As Boolean
 
         Dim stillOk As Boolean = True
+        Dim specificsWithIDs As String = ""
+        Dim tmpNameUID As String = ""
 
         Try
             If userName.Length > 0 And userName.Contains("@") And userName.Contains(".") Then
@@ -6914,6 +6916,8 @@ Public Module agm2
                     If RoleDefinitions.containsName(specifics) Then
                         ' alles ok
                         stillOk = True
+                        Dim teamID As Integer = -1
+                        specificsWithIDs = CStr(RoleDefinitions.getRoledef(specifics).UID)
                     Else
                         stillOk = False
                     End If
@@ -6921,6 +6925,17 @@ Public Module agm2
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
                     For Each tmpName As String In tmpStr
                         stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
+                        If RoleDefinitions.containsName(tmpName.Trim) Then
+                            tmpNameUID = CStr(RoleDefinitions.getRoledef(tmpName.Trim).UID)
+                            If specificsWithIDs = "" Then
+                                specificsWithIDs = tmpNameUID
+                            Else
+                                specificsWithIDs = specificsWithIDs & ";" & tmpNameUID
+                            End If
+
+                        Else
+                            Call MsgBox("unbekannte Orga-Einheit: " & tmpName.Trim)
+                        End If
                     Next
                 End If
             Else
@@ -6931,7 +6946,7 @@ Public Module agm2
             stillOk = False
         End Try
 
-
+        specifics = specificsWithIDs
         isValidCustomUserRole = stillOk
     End Function
 
@@ -8030,12 +8045,12 @@ Public Module agm2
 
         Else
             zeile = 3
-            tmpRoleNames = {"D-BOSV-KB0", "D-BOSV-KB1", "D-BOSV-KB2", "D-BOSV-KB3", "D-BOSV-SBF1", "D-BOSV-SBF2", "DRUCK", "D-BOSV-SBP1", "D-BOSV-SBP2", "D-BOSV-SBP3", "AMIS"}
+            tmpRoleNames = {"D-BITSV-KB0", "D-BITSV-KB1", "D-BITSV-KB2", "D-BITSV-KB3", "D-BITSV-SBF1", "D-BITSV-SBF2", "D-BITSV-SBF-DRUCK", "D-BITSV-SBP1", "D-BITSV-SBP2", "D-BITSV-SBP3", "AMIS"}
             tmpColBz = {"CP1", "CQ1", "CR1", "CS1", "CU1", "CV1", "CW1", "CY1", "CZ1", "DA1", "DB1"}
 
             ReDim tmpCols(tmpRoleNames.Length - 1)
 
-            tmpTEroleNames = {"D-BOKuV", "D-BOLuA", "D-BOKIS", "D-BOEPM", "D-BO-FMV", "D-IT-BVG", "D-IT-KuV", "D-IT-PSQ", "A-IT04", "D-IT-AS", "AMOS", "KX BO", "KX IT", "D-IT-ISM"}
+            tmpTEroleNames = {"D-BITKuV", "D-BITLuA", "D-BITKIS", "D-BITEPM", "D-BIT-FMV", "D-IT-BVG", "D-BITKVI", "D-IT-PSQ", "A-IT04", "D-IT-AS", "AMOS", "KX BIT", "KX IT", "D-IT-ISM"}
             tmpTEcolBZ = {"AN1", "AP1", "AQ1", "AR1", "AS1", "AT1", "AU1", "AV1", "AW1", "AX1", "AY1", "AZ1", "BA1", "BB1"}
 
             ReDim tmpTECols(tmpTEroleNames.Length - 1)
@@ -8167,32 +8182,40 @@ Public Module agm2
             Dim emailAdresse As String = ""
             Dim userRole As String = ""
             Dim roleSpecifics As String = ""
+            Dim saveSpecificsForErrMsg As String = ""
 
             For zeile As Integer = 2 To maxZeile
 
                 Try
-                    emailAdresse = CStr(CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Value).Trim
-                    userRole = CStr(CType(UserRoleSheet.Cells(zeile, 2), Excel.Range).Value).Trim
-                    roleSpecifics = CStr(CType(UserRoleSheet.Cells(zeile, 3), Excel.Range).Value)
 
-                    If Not IsNothing(roleSpecifics) Then
-                        roleSpecifics = roleSpecifics.Trim
-                    Else
-                        roleSpecifics = ""
+                    If Not IsNothing(CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Value) And Not IsNothing(CType(UserRoleSheet.Cells(zeile, 2), Excel.Range).Value) Then
+
+                        emailAdresse = CStr(CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Value).Trim
+                        userRole = CStr(CType(UserRoleSheet.Cells(zeile, 2), Excel.Range).Value).Trim
+                        roleSpecifics = CStr(CType(UserRoleSheet.Cells(zeile, 3), Excel.Range).Value)
+
+                        If Not IsNothing(roleSpecifics) Then
+                            roleSpecifics = roleSpecifics.Trim
+                        Else
+                            roleSpecifics = ""
+                        End If
+
+                        saveSpecificsForErrMsg = roleSpecifics
+
+                        Dim tmpstr() As String = userRole.Split(New Char() {CChar("-")})
+                        curType = CType(tmpstr(0), ptCustomUserRoles)
+
+                        If isValidCustomUserRole(emailAdresse, curType, roleSpecifics) Then
+                            importedUserRoles.addCustomUserRole(emailAdresse, "", curType, roleSpecifics)
+                        Else
+                            errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & saveSpecificsForErrMsg
+                            outputCollection.Add(errMsg)
+                            CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                        End If
                     End If
 
-                    Dim tmpstr() As String = userRole.Split(New Char() {CChar("-")})
-                    curType = CType(tmpstr(0), ptCustomUserRoles)
-
-                    If isValidCustomUserRole(emailAdresse, curType, roleSpecifics) Then
-                        importedUserRoles.addCustomUserRole(emailAdresse, "", curType, roleSpecifics)
-                    Else
-                        errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & roleSpecifics
-                        outputCollection.Add(errMsg)
-                        CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
-                    End If
                 Catch ex As Exception
-                    errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & roleSpecifics
+                    errMsg = "Zeile " & zeile & "- Error: no valid Custom User Role: " & emailAdresse & "; " & userRole & "; " & saveSpecificsForErrMsg
                     outputCollection.Add(errMsg)
                     CType(UserRoleSheet.Cells(zeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
                 End Try
@@ -8557,25 +8580,33 @@ Public Module agm2
                     projektvorhaben(2) = 7
                 End If
 
+                ' jetzt müssen die Dimensionen gesetzt werden 
+                Dim tmpLen As Integer = roleNamesToConsider.Length
+
+                If Not IsNothing(roleNamesToConsider) Then
+
+                    If importType = ptVisboImportTypen.allianzMassImport2 Then
+
+                        If Not IsNothing(TEroleNamesToConsider) Then
+                            tmpLen = tmpLen + TEroleNamesToConsider.Length
+                        End If
+
+                    End If
+
+                    ReDim roleNeeds(tmpLen - 1)
+
+                ElseIf Not IsNothing(TEroleNamesToConsider) Then
+
+                    tmpLen = TEroleNamesToConsider.Length
+                    ReDim roleNeeds(tmpLen - 1)
+
+                End If
 
 
                 While zeile <= lastRow
 
-                    ' jetzt müssen die Werte zurückgesetzt werden 
-                    If Not IsNothing(roleNamesToConsider) Then
-                        Dim tmpLen As Integer = roleNamesToConsider.Length
-
-                        If importType = ptVisboImportTypen.allianzMassImport2 Then
-                            tmpLen = tmpLen + TEroleNamesToConsider.Length
-                        End If
-
-                        ReDim roleNeeds(tmpLen - 1)
-                    End If
-
-                    If Not IsNothing(TEroleNamesToConsider) Then
-                        Dim tmpLen As Integer = roleNamesToConsider.Length
-                        ReDim costNeeds(tmpLen - 1)
-                    End If
+                    ' Werte zurücksetzen ..
+                    ReDim roleNeeds(tmpLen - 1)
 
                     ok = False
 
@@ -9053,7 +9084,7 @@ Public Module agm2
             End With
         Catch ex As Exception
 
-            Throw New Exception("Fehler in Import-Datei" & ex.Message)
+            Throw New Exception("Fehler in Import-Datei: " & ex.Message)
 
         End Try
 
@@ -14724,8 +14755,9 @@ Public Module agm2
 
                                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                                     If myCustomUserRole.specifics.Length > 0 Then
-                                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
-                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoledef(myCustomUserRole.specifics)
+                                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
+                                            Dim trTeamID As Integer = -1
+                                            Dim restrictedTopRole As clsRollenDefinition = RoleDefinitions.getRoleDefByIDKennung(myCustomUserRole.specifics, trTeamID)
 
                                             If RoleDefinitions.hasAnyChildParentRelationsship(roleNameID, restrictedTopRole.UID) Then
                                                 validRole = True
@@ -18878,7 +18910,7 @@ Public Module agm2
 
 
             StartofCalendar = awinSettings.kalenderStart
-            StartofCalendar = StartofCalendar.ToLocalTime()
+            'StartofCalendar = StartofCalendar.ToLocalTime()
 
             historicDate = StartofCalendar
 

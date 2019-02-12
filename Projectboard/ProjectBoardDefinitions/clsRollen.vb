@@ -366,7 +366,7 @@ Public Class clsRollen
 
     ''' <summary>
     ''' gibt zu dem übergebenen String, der RoleNames in der Form D-BOSV-KB1; D-BOSV-KB2; etc enthält 
-    ''' die gültigen Namen in Form eines Id-Arrays zurück 
+    ''' die gültigen NameIDs in Form eines Id-Arrays zurück 
     ''' </summary>
     ''' <param name="aufzaehlung"></param>
     ''' <returns></returns>
@@ -1140,16 +1140,7 @@ Public Class clsRollen
             If found Then
                 tmpValue = _allRollen.Item(_allNames.Item(myitem))
             End If
-            'Dim ix As Integer = 0
 
-            'Do While ix <= _allRollen.Count - 1 And Not found
-            '    If _allRollen.ElementAt(ix).Value.name = myitem Then
-            '        found = True
-            '        tmpValue = _allRollen.ElementAt(ix).Value
-            '    Else
-            '        ix = ix + 1
-            '    End If
-            'Loop
 
             getRoledef = tmpValue
 
