@@ -37,7 +37,7 @@ Public Class Request
     Private token As String = ""
     Private VCs As New List(Of clsVC)
 
-    Public VRScache As New clsCache
+    Private VRScache As New clsCache
     ' hierin werden  alle Visbo-Projects und 
     ' die vom Server bereits angeforderten VisboProjectsVersionsgecacht
     '
@@ -2297,6 +2297,7 @@ Public Class Request
             End If
         Else
             myProxy.Address = Nothing
+
         End If
 
 
@@ -2376,8 +2377,16 @@ Public Class Request
                             Dim proxyName As String = ""
 
                             If awinSettings.proxyURL <> "" Then
-                                proxyName = awinSettings.proxyURL
 
+                                'erneuter Versuch mit myProxy
+
+                                proxyName = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
+                            Else
+                                If Not IsNothing(myProxy) Then
+                                    proxyName = myProxy.Address.ToString
+                                Else
+                                    proxyName = ""
+                                End If
                             End If
 
                             credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
@@ -2390,7 +2399,6 @@ Public Class Request
                             ' abgefragte Credentials beim Proxy eintragen
                             If Not IsNothing(request.Proxy) Then
                                 request.Proxy.Credentials = netcred
-
                             End If
 
                         End If
@@ -5276,6 +5284,32 @@ Public Class Request
         End Try
 
         clsConstItem2clsVPfItem = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' Leeren des VRSCache
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function clearVRSCache() As Boolean
+
+        Dim result As Boolean = False
+        Try
+            ' Cache löschen, indem er neu aufgesetzt wird
+            If Not IsNothing(VRScache) Then
+                VRScache.Clear()
+            Else
+                VRScache = New clsCache
+            End If
+            result = True
+
+        Catch ex As Exception
+            result = False
+        End Try
+
+
+        clearVRSCache = result
 
     End Function
 
