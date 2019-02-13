@@ -2334,8 +2334,9 @@ Public Class Request
                             ' ProxyURL merken
                             awinSettings.proxyURL = myProxy.Address.ToString
                         Else
-                            myProxy = defaultProxy
-                            awinSettings.proxyURL = myProxy.Address.ToString
+                            ' tk 12.2.19 temporär rausgenommen ...
+                            'myProxy = defaultProxy
+                            'awinSettings.proxyURL = myProxy.Address.ToString
                         End If
 
 

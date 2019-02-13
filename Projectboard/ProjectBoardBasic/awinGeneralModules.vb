@@ -3562,10 +3562,10 @@ Public Module awinGeneralModules
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(sproj, dbUsername, mSProj, err) Then
 
                         If awinSettings.englishLanguage Then
-                            outputLine = "saved: " & sproj.name & ", " & sproj.variantName
+                            outputLine = "Portfolio / Summary Project saved: " & sproj.name & ", " & sproj.variantName
                             outPutCollection.Add(outputLine)
                         Else
-                            outputLine = "gespeichert: " & sproj.name & ", " & sproj.variantName
+                            outputLine = "Portfolio / Summary Projekt gespeichert: " & sproj.name & ", " & sproj.variantName
                             outPutCollection.Add(outputLine)
                         End If
 
