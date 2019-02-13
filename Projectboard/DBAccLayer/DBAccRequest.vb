@@ -2014,8 +2014,8 @@ Public Class Request
 
                 Catch ex As Exception
                     Throw New ArgumentException(ex.Message)
-        End Try
-        Else
+                End Try
+            Else
                 ' nothing to do for direct MongoAccess
             End If
 
@@ -2023,5 +2023,15 @@ Public Class Request
 
         End Try
         retrieveUserIDFromName = result
+    End Function
+
+    Public Function clearCache()
+        Dim result As Boolean = False
+        Try
+            result = CType(DBAcc, WebServerAcc.Request).clearVRSCache()
+        Catch ex As Exception
+            Call MsgBox("Fehler beim löschen des Cache")
+        End Try
+        clearCache = result
     End Function
 End Class

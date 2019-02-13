@@ -314,6 +314,13 @@ Public Module awinGeneralModules
             Dim a As String = ex.Message
         End Try
 
+        Dim clearOK As Boolean = False
+        Try
+            clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
+        Catch ex As Exception
+
+        End Try
+
         ' Session gelöscht
 
         appInstance.EnableEvents = True
