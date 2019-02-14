@@ -6069,6 +6069,7 @@ Imports System.Web
 
         'Call projektTafelInit()
 
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -6083,8 +6084,15 @@ Imports System.Web
         CostDefinitions = changedOrga.allCosts
 
         ' Einlesen der Kapas
-        Call readMonthlyExternKapas(outputCollection)
-        Call readRessourcenDetails2(outputCollection)
+        If awinSettings.allianzI2DelRoles.Length > 0 Then
+            ' Allianz Externe Verträge
+            Call readMonthlyExternKapasEV(outputCollection)
+        Else
+            ' VISBO Externe Kapazitäts-Dateien 
+            Call readMonthlyExternKapas(outputCollection)
+        End If
+
+        Call readInterneAnwesenheitslisten(outputCollection)
 
 
         changedOrga.allRoles = RoleDefinitions
@@ -6121,6 +6129,10 @@ Imports System.Web
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
+
+        With CType(CType(appInstance.Workbooks.Item(myProjektTafel), Excel.Workbook).Worksheets(arrWsNames(ptTables.MPT)), Excel.Worksheet)
+            .Activate()
+        End With
         appInstance.ScreenUpdating = True
 
     End Sub
