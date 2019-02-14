@@ -2119,13 +2119,18 @@ Public Module awinGeneralModules
 
                             '
                             ' prüfen, ob es in der Datenbank existiert ... wenn ja,  laden und anzeigen
+                            ' wenn es sich um einen Portfolio Manager handelt: der Vergleich muss mit der letzten Vorgabe stattfinden, weill nur das kann der Portfolio Manager ja auch speichern ... 
 
                             If CType(databaseAcc, DBAccLayer.Request).pingMongoDb() Then
 
-                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, impProjekt.variantName, Date.Now, err) Then
+                                Dim lookForVariantName As String = impProjekt.variantName
+                                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager And lookForVariantName = "" Then
+                                    lookForVariantName = ptVariantFixNames.pfv.ToString
+                                End If
+                                If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(impProjekt.name, lookForVariantName, Date.Now, err) Then
 
                                     ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                                    vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, impProjekt.variantName, Date.Now, err)
+                                    vglProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(impProjekt.name, lookForVariantName, Date.Now, err)
 
                                     If IsNothing(vglProj) Then
                                         ' kann eigentlich nicht sein 

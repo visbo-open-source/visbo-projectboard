@@ -8695,6 +8695,33 @@ Public Module agm2
                                             ' jetzt das union-Projekt erstellen ; 
                                             Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
 
+                                            Try
+                                                ' Test, ob das Budget auch ausreicht
+                                                ' wenn nein, einfach Warning ausgeben 
+                                                Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                                                If unionProj.Erloes - tmpGesamtCost < 0 Then
+                                                    outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie" & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                                    outputCollection.Add(outPutLine)
+
+                                                    Dim logtxt(2) As String
+                                                    logtxt(0) = "Budget-Überschreitung"
+                                                    logtxt(1) = "Programmlinie"
+                                                    logtxt(2) = unionProj.name
+                                                    Dim values(2) As Double
+                                                    values(0) = unionProj.Erloes
+                                                    values(1) = tmpGesamtCost
+                                                    If values(0) > 0 Then
+                                                        values(2) = tmpGesamtCost / unionProj.Erloes
+                                                    Else
+                                                        values(2) = 9999999999
+                                                    End If
+                                                    Call logfileSchreiben(logtxt, values)
+                                                End If
+
+                                            Catch ex As Exception
+
+                                            End Try
+
                                             ' Status gleich auf 1: beauftragt setzen 
                                             unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
 
@@ -8940,6 +8967,33 @@ Public Module agm2
                                                                  description, custFields, businessUnit, responsiblePerson, allianzStatus,
                                                                  zeile, realRoleNamesToConsider, roleNeeds, Nothing, Nothing, phNames, relPrz, False)
 
+                            Try
+                                ' Test, ob das Budget auch ausreicht
+                                ' wenn nein, einfach Warning ausgeben 
+                                Dim tmpGesamtCost As Double = hproj.getGesamtKostenBedarf.Sum
+                                If hproj.Erloes - tmpGesamtCost < 0 Then
+                                    outPutLine = "Warnung: Budget-Überschreitung bei " & pName & " (Budget=" & hproj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                    outputCollection.Add(outPutLine)
+
+                                    Dim logtxt(2) As String
+                                    logtxt(0) = "Budget-Überschreitung"
+                                    logtxt(1) = "Projekt"
+                                    logtxt(2) = pName
+                                    Dim values(2) As Double
+                                    values(0) = hproj.Erloes
+                                    values(1) = tmpGesamtCost
+                                    If values(0) > 0 Then
+                                        values(2) = tmpGesamtCost / hproj.Erloes
+                                    Else
+                                        values(2) = 9999999999
+                                    End If
+                                    Call logfileSchreiben(logtxt, values)
+                                End If
+
+                            Catch ex As Exception
+
+                            End Try
+
                             ' Test tk 
                             Try
                                 ReDim logmsg(0)
@@ -9050,6 +9104,33 @@ Public Module agm2
 
                         ' jetzt das union-Projekt erstellen 
                         Dim unionProj As clsProjekt = calcUnionProject(current1program, True, Date.Now.Date.AddHours(23).AddMinutes(59), budget:=last1Budget)
+
+                        Try
+                            ' Test, ob das Budget auch ausreicht
+                            ' wenn nein, einfach Warning ausgeben 
+                            Dim tmpGesamtCost As Double = unionProj.getGesamtKostenBedarf.Sum
+                            If unionProj.Erloes - tmpGesamtCost < 0 Then
+                                outPutLine = "Warnung: Budget-Überschreitung bei Programmlinie " & unionProj.name & " (Budget=" & unionProj.Erloes.ToString("#0.##") & ", Gesamtkosten=" & tmpGesamtCost.ToString("#0.##")
+                                outputCollection.Add(outPutLine)
+
+                                Dim logtxt(2) As String
+                                logtxt(0) = "Budget-Überschreitung"
+                                logtxt(1) = "Programmlinie"
+                                logtxt(2) = unionProj.name
+                                Dim values(2) As Double
+                                values(0) = unionProj.Erloes
+                                values(1) = tmpGesamtCost
+                                If values(0) > 0 Then
+                                    values(2) = tmpGesamtCost / unionProj.Erloes
+                                Else
+                                    values(2) = 9999999999
+                                End If
+                                Call logfileSchreiben(logtxt, values)
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
 
                         ' Status wird gleich auf 1: beauftragt gesetzt
                         unionProj.Status = ProjektStatus(PTProjektStati.beauftragt)
