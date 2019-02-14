@@ -2353,6 +2353,11 @@ Public Class Request
                         Else
                             ' Adresse von defaultProxy hier eintragen
                             awinSettings.proxyURL = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
+
+                            If awinSettings.proxyURL = awinSettings.databaseURL Then
+                                ' es gibt keinen ProxyServer
+                                awinSettings.proxyURL = ""
+                            End If
                         End If
 
 
@@ -2379,10 +2384,12 @@ Public Class Request
                             If awinSettings.proxyURL <> "" Then
 
                                 'erneuter Versuch mit myProxy
-
                                 proxyName = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
+                                If proxyName = awinSettings.databaseURL Then
+                                    proxyName = ""
+                                End If
                             Else
-                                If Not IsNothing(myProxy) Then
+                                If Not IsNothing(myProxy.Address) Then
                                     proxyName = myProxy.Address.ToString
                                 Else
                                     proxyName = ""
