@@ -314,6 +314,13 @@ Public Module awinGeneralModules
             Dim a As String = ex.Message
         End Try
 
+        Dim clearOK As Boolean = False
+        Try
+            clearOK = CType(databaseAcc, DBAccLayer.Request).clearCache()
+        Catch ex As Exception
+
+        End Try
+
         ' Session gelöscht
 
         appInstance.EnableEvents = True
@@ -7120,11 +7127,11 @@ Public Module awinGeneralModules
 
                 '' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
-                'If demoModusHistory Then
-                '    hproj.timeStamp = historicDate
-                'Else
-                '    hproj.timeStamp = jetzt
-                'End If
+                If demoModusHistory Then
+                    hproj.timeStamp = historicDate
+                Else
+                    hproj.timeStamp = jetzt
+                End If
 
                 ' wenn es sich jetzt um einen Portfolio Manager handelt 
                 ' er kann und darf nur mit Varianten-Name pfv speichern; es sei denn er hat selber eine Variante erzeugt bzw 
@@ -7155,11 +7162,12 @@ Public Module awinGeneralModules
 
                     '' erst hier muss der Wert für hproj.timeStamp = heute gesetzt werden
 
-                    If demoModusHistory Then
-                        hproj.timeStamp = historicDate
-                    Else
-                        hproj.timeStamp = jetzt
-                    End If
+                    ' ur: 14.2.2019 zurückgändert
+                    'If demoModusHistory Then
+                    '    hproj.timeStamp = historicDate
+                    'Else
+                    '    hproj.timeStamp = jetzt
+                    'End If
 
                     If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mProj, err) Then
 
@@ -7326,13 +7334,13 @@ Public Module awinGeneralModules
 
                         Dim pvName As String = calcProjektKey(hproj.name, hproj.variantName)
                         If Not writeProtections.isProtected(pvName, dbUsername) Then
-                            'hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
 
-                            'If demoModusHistory Then
-                            '    hproj.timeStamp = historicDate
-                            'Else
-                            '    hproj.timeStamp = jetzt
-                            'End If
+                            'hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                            If demoModusHistory Then
+                                hproj.timeStamp = historicDate
+                            Else
+                                hproj.timeStamp = jetzt
+                            End If
 
                             Dim storeNeeded As Boolean
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
@@ -7353,12 +7361,13 @@ Public Module awinGeneralModules
 
                                 Dim mproj As clsProjekt = Nothing
 
+                                'ur: 14.2..2019: wieder zurückgeändert
                                 ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
-                                If demoModusHistory Then
-                                    hproj.timeStamp = historicDate
-                                Else
-                                    hproj.timeStamp = jetzt
-                                End If
+                                'If demoModusHistory Then
+                                '    hproj.timeStamp = historicDate
+                                'Else
+                                '    hproj.timeStamp = jetzt
+                                'End If
 
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
 
@@ -7760,14 +7769,14 @@ Public Module awinGeneralModules
 
                             ' ur: 31.1.2019: hier ist es zu früh, den neuen Timestamp zu setzen, 
                             ' denn es muss evt. das Projekt mit dem alten Timestamp nochmals aus DB geholt werden
-
+                            ' ur: 14.2.2019: wieder zurückgeändert
                             '' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
-                            ''If demoModusHistory Then
+                            If demoModusHistory Then
 
-                            ''    hproj.timeStamp = historicDate
-                            ''Else
-                            ''    hproj.timeStamp = jetzt
-                            ''End If
+                                hproj.timeStamp = historicDate
+                            Else
+                                hproj.timeStamp = jetzt
+                            End If
 
                             Dim storeNeeded As Boolean
                             If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(hproj.name, hproj.variantName, hproj.timeStamp, err) Then
@@ -7790,12 +7799,12 @@ Public Module awinGeneralModules
 
                                 ' hier wird der Wert für hproj.timeStamp = heute gesetzt 
                                 ' ur:31.1.2019: erst hier muss der neue Timestamp gesetzt sein.
-
-                                If demoModusHistory Then
-                                    hproj.timeStamp = historicDate
-                                Else
-                                    hproj.timeStamp = jetzt
-                                End If
+                                ' ur: 14.2.2019: wieder zurückgeändert
+                                'If demoModusHistory Then
+                                '    hproj.timeStamp = historicDate
+                                'Else
+                                '    hproj.timeStamp = jetzt
+                                'End If
 
                                 If CType(databaseAcc, DBAccLayer.Request).storeProjectToDB(hproj, dbUsername, mproj, err) Then
 

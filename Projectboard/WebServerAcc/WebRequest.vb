@@ -17,6 +17,7 @@ Imports Microsoft.VisualBasic
 Imports System.Security.Principal
 Imports System.Net
 Imports System.Text
+Imports System.Deployment.Application
 Public Class Request
 
     'public serverUriName ="http://visbo.myhome-server.de:3484" 
@@ -24,12 +25,19 @@ Public Class Request
 
     Private serverUriName As String = ""
 
+    Private version As System.Version
+    Private visboContentType As String = "application/json"
+    Private visboUserAgent As String = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                                                    & My.Computer.Info.OSVersion & ") Client:" & visboClient & "/"
+
+
+
     Private aktVCid As String = ""
 
     Private token As String = ""
     Private VCs As New List(Of clsVC)
 
-    Public VRScache As New clsCache
+    Private VRScache As New clsCache
     ' hierin werden  alle Visbo-Projects und 
     ' die vom Server bereits angeforderten VisboProjectsVersionsgecacht
     '
@@ -76,6 +84,15 @@ Public Class Request
         Dim httpresp_sav As HttpWebResponse
 
         Try
+            If Deployment.Application.ApplicationDeployment.IsNetworkDeployed Then
+                version =
+                  Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion()
+                visboUserAgent = visboUserAgent & version.ToString
+            Else
+                ' Nicht via ClickOnce installiert
+
+            End If
+
             Dim user As New clsUserLoginSignup
             user.email = LCase(username)
             user.password = dbPasswort
@@ -219,16 +236,16 @@ Public Class Request
             ' vorläufig dringelassen - es wird gecheckt, ob der Fall überhaupt auftreten kann bzw. ob das nicht grundsätzlich verhindert werden soll  
             'If vpid <> "" Then
             If vpid <> "" And variantname <> "" Then
-                    ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
-                    For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
-                        If vpVar.variantName = variantname Then
-                            If vpVar.createdAt <= storedAtorBefore Then
-                                result = True
-                                Exit For
-                            End If
+                ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
+                For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
+                    If vpVar.variantName = variantname Then
+                        If vpVar.createdAt <= storedAtorBefore Then
+                            result = True
+                            Exit For
                         End If
-                    Next
-                Else
+                    End If
+                Next
+            Else
                 result = (vpid <> "")
             End If
 
@@ -2280,6 +2297,7 @@ Public Class Request
             End If
         Else
             myProxy.Address = Nothing
+
         End If
 
 
@@ -2288,7 +2306,7 @@ Public Class Request
         Try
             Dim request As HttpWebRequest = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
 
-            If myProxy.Address = Nothing Then
+            If IsNothing(myProxy.Address) Then
                 request.Proxy = defaultProxy
 
             Else
@@ -2305,10 +2323,9 @@ Public Class Request
             request.CookieContainer = cc
 
             request.Method = method
-            request.ContentType = "application/json"
+            request.ContentType = visboContentType
             request.Headers.Add("access-key", token)
-            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+            request.UserAgent = visboUserAgent
 
             Dim toDo As Boolean = False
             Dim anzError As Integer = 0
@@ -2334,9 +2351,14 @@ Public Class Request
                             ' ProxyURL merken
                             awinSettings.proxyURL = myProxy.Address.ToString
                         Else
-                            ' tk 12.2.19 temporär rausgenommen ...
-                            'myProxy = defaultProxy
-                            'awinSettings.proxyURL = myProxy.Address.ToString
+                            ' Adresse von defaultProxy hier eintragen
+                            awinSettings.proxyURL = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
+
+                            If awinSettings.proxyURL = awinSettings.databaseURL Then
+                                ' es gibt keinen ProxyServer
+                                awinSettings.proxyURL = ""
+                            End If
+
                         End If
 
 
@@ -2352,18 +2374,27 @@ Public Class Request
 
                             request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
                             request.Method = method
-                            request.ContentType = "application/json"
+                            request.ContentType = visboContentType
                             request.Headers.Add("access-key", token)
-                            request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+                            request.UserAgent = visboUserAgent
 
 
                             netcred = New NetworkCredential
                             Dim proxyName As String = ""
 
                             If awinSettings.proxyURL <> "" Then
-                                proxyName = awinSettings.proxyURL
 
+                                'erneuter Versuch mit myProxy
+                                proxyName = defaultProxy.GetProxy(New Uri(awinSettings.databaseURL)).ToString
+                                If proxyName = awinSettings.databaseURL Then
+                                    proxyName = ""
+                                End If
+                            Else
+                                If Not IsNothing(myProxy.Address) Then
+                                    proxyName = myProxy.Address.ToString
+                                Else
+                                    proxyName = ""
+                                End If
                             End If
 
                             credentialsErfragt = askProxyAuthentication(proxyName, netcred.UserName, netcred.Password, netcred.Domain)
@@ -2376,7 +2407,6 @@ Public Class Request
                             ' abgefragte Credentials beim Proxy eintragen
                             If Not IsNothing(request.Proxy) Then
                                 request.Proxy.Credentials = netcred
-
                             End If
 
                         End If
@@ -2390,10 +2420,9 @@ Public Class Request
 
                                 request = DirectCast(HttpWebRequest.Create(uri), HttpWebRequest)
                                 request.Method = method
-                                request.ContentType = "application/json"
+                                request.ContentType = visboContentType
                                 request.Headers.Add("access-key", token)
-                                request.UserAgent = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ") Client:VISBO Projectboard/3.5 "
+                                request.UserAgent = visboUserAgent
 
                                 If credentialsErfragt And anzError = 2 Then
                                     Call MsgBox(hresp.Headers.ToString)
@@ -5263,6 +5292,32 @@ Public Class Request
         End Try
 
         clsConstItem2clsVPfItem = result
+
+    End Function
+
+
+    ''' <summary>
+    ''' Leeren des VRSCache
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function clearVRSCache() As Boolean
+
+        Dim result As Boolean = False
+        Try
+            ' Cache löschen, indem er neu aufgesetzt wird
+            If Not IsNothing(VRScache) Then
+                VRScache.Clear()
+            Else
+                VRScache = New clsCache
+            End If
+            result = True
+
+        Catch ex As Exception
+            result = False
+        End Try
+
+
+        clearVRSCache = result
 
     End Function
 

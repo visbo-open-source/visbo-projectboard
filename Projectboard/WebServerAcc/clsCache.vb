@@ -21,7 +21,14 @@ Public Class clsCache
         _updateDelay = cacheUpdateDelay
     End Sub
 
-
+    Public Sub Clear()
+        _VPsN.Clear()
+        _VPsId.Clear()
+        _VPvs.Clear()
+        _VCrole.Clear()
+        _VCcost.Clear()
+        _updateDelay = cacheUpdateDelay
+    End Sub
 
 
     ''' <summary>

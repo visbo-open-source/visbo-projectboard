@@ -29,6 +29,9 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
     Public noDB As Boolean = True
 
+    'Name des VisboClient
+    Public visboClient As String = "VISBO Projectboard"
+
     'Cache - Infos
     Public cacheUpdateDelay As Long
 
@@ -1518,10 +1521,13 @@ Public Module Module1
     Public Function prepProjectForRoles(ByVal hproj As clsProjekt) As clsProjekt
 
         Dim tmpResult As clsProjekt = hproj
-        ' wenn customUserRole = Portfolio 
-        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-            If myCustomUserRole.getAggregationRoleIDs.Length > 1 Then
-                tmpResult = hproj.aggregateForPortfolioMgr(myCustomUserRole.getAggregationRoleIDs)
+
+        If Not IsNothing(hproj) Then
+            ' wenn customUserRole = Portfolio 
+            If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                If myCustomUserRole.getAggregationRoleIDs.Length > 1 Then
+                    tmpResult = hproj.aggregateForPortfolioMgr(myCustomUserRole.getAggregationRoleIDs)
+                End If
             End If
         End If
 
