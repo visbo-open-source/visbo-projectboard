@@ -476,45 +476,49 @@ Public Class clsProjekt
             Dim stillOK As Boolean = False
 
             Try
-                With vProj
+                If Not IsNothing(vProj) Then
 
-                    If Me.name = .name And
-                        Me.variantName = .variantName And
-                        Me.variantDescription = .variantDescription And
-                        Me.description = .description And
-                        Me.projectType = .projectType And
-                        DateDiff(DateInterval.Month, Me.actualDataUntil, .actualDataUntil) = 0 And
-                        Me.kundenNummer = .kundenNummer Then
+                    With vProj
 
-                        If Me.startDate.Date = .startDate.Date And
-                            Me.endeDate.Date = .endeDate.Date Then
+                        If Me.name = .name And
+                            Me.variantName = .variantName And
+                            Me.variantDescription = .variantDescription And
+                            Me.description = .description And
+                            Me.projectType = .projectType And
+                            DateDiff(DateInterval.Month, Me.actualDataUntil, .actualDataUntil) = 0 And
+                            Me.kundenNummer = .kundenNummer Then
 
-                            If Me.ampelStatus = .ampelStatus And
-                                Me.ampelErlaeuterung = .ampelErlaeuterung Then
+                            If Me.startDate.Date = .startDate.Date And
+                                Me.endeDate.Date = .endeDate.Date Then
 
-                                ' es soll nur auf Budget Gelichheit geprüft werden , die Verteilun g macht doch an der Stelle gar keinen Sinn .. . 
-                                ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
-                                If Me.Erloes = .Erloes Then
+                                If Me.ampelStatus = .ampelStatus And
+                                    Me.ampelErlaeuterung = .ampelErlaeuterung Then
+
+                                    ' es soll nur auf Budget Gelichheit geprüft werden , die Verteilun g macht doch an der Stelle gar keinen Sinn .. . 
                                     ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
-                                    'Me.Erloes = .Erloes Then
+                                    If Me.Erloes = .Erloes Then
+                                        ' If (Not arraysAreDifferent(Me.budgetWerte, .budgetWerte) Or IsNothing(Me.budgetWerte) Or IsNothing(.budgetWerte)) And
+                                        'Me.Erloes = .Erloes Then
 
-                                    If Me.businessUnit = .businessUnit And
-                                        Me.complexity = .complexity And
-                                        Me.Status = .Status And
-                                        Me.StrategicFit = .StrategicFit And
-                                        Me.Risiko = .Risiko And
-                                        Me.VorlagenName = .VorlagenName And
-                                        Me.volume = .volume And
-                                        Me.leadPerson = .leadPerson Then
+                                        If Me.businessUnit = .businessUnit And
+                                            Me.complexity = .complexity And
+                                            Me.Status = .Status And
+                                            Me.StrategicFit = .StrategicFit And
+                                            Me.Risiko = .Risiko And
+                                            Me.VorlagenName = .VorlagenName And
+                                            Me.volume = .volume And
+                                            Me.leadPerson = .leadPerson Then
 
-                                        stillOK = True
+                                            stillOK = True
 
-                                        ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
-                                        'Me.earliestStartDate = .earliestStartDate And _
-                                        'Me.latestStartDate = .latestStartDate And _
+                                            ' tk, 30.12.16 das wurde jetzt rausgenommen ... das wird ja bis auf weiteres überhaupt nicht gebraucht 
+                                            'Me.earliestStartDate = .earliestStartDate And _
+                                            'Me.latestStartDate = .latestStartDate And _
+
+                                        End If
+
 
                                     End If
-
 
                                 End If
 
@@ -522,56 +526,39 @@ Public Class clsProjekt
 
                         End If
 
-                    End If
+
+                        ' jetzt die Phasen prüfen, dann die Meilensteine 
+                        If stillOK And Me.CountPhases = .CountPhases Then
+
+                            Dim pNr As Integer = 1
+                            Do While stillOK And pNr <= Me.CountPhases
+                                Dim cPhase As clsPhase = Me.getPhase(pNr)
+                                Dim vPhase As clsPhase = .getPhase(pNr)
+                                If cPhase.isIdenticalTo(vPhase) Then
+                                    ' alles ok 
+                                    pNr = pNr + 1
+                                Else
+                                    stillOK = False
+                                End If
+                            Loop
+
+                        Else
+                            stillOK = False
+                        End If
+
+                        ' jetzt die Custom Fields prüfen 
+                        If stillOK And
+                            Me.customBoolFields.Count = .customBoolFields.Count And
+                            Me.customDblFields.Count = .customDblFields.Count And
+                            Me.customStringFields.Count = .customStringFields.Count Then
+                            ' alle sind gleich , detaillierte Überprüfung lohnt 
 
 
-                    ' jetzt die Phasen prüfen, dann die Meilensteine 
-                    If stillOK And Me.CountPhases = .CountPhases Then
-
-                        Dim pNr As Integer = 1
-                        Do While stillOK And pNr <= Me.CountPhases
-                            Dim cPhase As clsPhase = Me.getPhase(pNr)
-                            Dim vPhase As clsPhase = .getPhase(pNr)
-                            If cPhase.isIdenticalTo(vPhase) Then
-                                ' alles ok 
-                                pNr = pNr + 1
-                            Else
-                                stillOK = False
-                            End If
-                        Loop
-
-                    Else
-                        stillOK = False
-                    End If
-
-                    ' jetzt die Custom Fields prüfen 
-                    If stillOK And
-                        Me.customBoolFields.Count = .customBoolFields.Count And
-                        Me.customDblFields.Count = .customDblFields.Count And
-                        Me.customStringFields.Count = .customStringFields.Count Then
-                        ' alle sind gleich , detaillierte Überprüfung lohnt 
-
-
-                        ' String CustomFields
-                        Dim ix As Integer = 0
-                        Do While stillOK And ix <= Me.customStringFields.Count - 1
-                            Dim cFMe As KeyValuePair(Of Integer, String) = Me.customStringFields.ElementAt(ix)
-                            Dim cFVgl As KeyValuePair(Of Integer, String) = .customStringFields.ElementAt(ix)
-
-                            If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
-                                ix = ix + 1
-                            Else
-                                stillOK = False
-                            End If
-                        Loop
-
-
-                        If stillOK Then
-                            ' prüfe Double Custom Fields
-                            ix = 0
-                            Do While stillOK And ix <= Me.customDblFields.Count - 1
-                                Dim cFMe As KeyValuePair(Of Integer, Double) = Me.customDblFields.ElementAt(ix)
-                                Dim cFVgl As KeyValuePair(Of Integer, Double) = .customDblFields.ElementAt(ix)
+                            ' String CustomFields
+                            Dim ix As Integer = 0
+                            Do While stillOK And ix <= Me.customStringFields.Count - 1
+                                Dim cFMe As KeyValuePair(Of Integer, String) = Me.customStringFields.ElementAt(ix)
+                                Dim cFVgl As KeyValuePair(Of Integer, String) = .customStringFields.ElementAt(ix)
 
                                 If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
                                     ix = ix + 1
@@ -580,12 +567,13 @@ Public Class clsProjekt
                                 End If
                             Loop
 
+
                             If stillOK Then
-                                ' prüfe Bool Custom fields
+                                ' prüfe Double Custom Fields
                                 ix = 0
-                                Do While stillOK And ix <= Me.customBoolFields.Count - 1
-                                    Dim cFMe As KeyValuePair(Of Integer, Boolean) = Me.customBoolFields.ElementAt(ix)
-                                    Dim cFVgl As KeyValuePair(Of Integer, Boolean) = .customBoolFields.ElementAt(ix)
+                                Do While stillOK And ix <= Me.customDblFields.Count - 1
+                                    Dim cFMe As KeyValuePair(Of Integer, Double) = Me.customDblFields.ElementAt(ix)
+                                    Dim cFVgl As KeyValuePair(Of Integer, Double) = .customDblFields.ElementAt(ix)
 
                                     If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
                                         ix = ix + 1
@@ -593,15 +581,34 @@ Public Class clsProjekt
                                         stillOK = False
                                     End If
                                 Loop
+
+                                If stillOK Then
+                                    ' prüfe Bool Custom fields
+                                    ix = 0
+                                    Do While stillOK And ix <= Me.customBoolFields.Count - 1
+                                        Dim cFMe As KeyValuePair(Of Integer, Boolean) = Me.customBoolFields.ElementAt(ix)
+                                        Dim cFVgl As KeyValuePair(Of Integer, Boolean) = .customBoolFields.ElementAt(ix)
+
+                                        If cFMe.Key = cFVgl.Key And cFMe.Value = cFVgl.Value Then
+                                            ix = ix + 1
+                                        Else
+                                            stillOK = False
+                                        End If
+                                    Loop
+                                End If
                             End If
+
+
+                        Else
+                            stillOK = False
                         End If
 
+                    End With
 
-                    Else
-                        stillOK = False
-                    End If
+                Else    ' vproj = nothing
+                    stillOK = False
+                End If
 
-                End With
             Catch ex As Exception
 
                 stillOK = False
