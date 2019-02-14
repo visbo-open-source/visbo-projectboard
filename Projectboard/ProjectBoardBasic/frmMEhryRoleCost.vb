@@ -226,10 +226,12 @@ Public Class frmMEhryRoleCost
 
                 If myCustomUserRole.customUserRole = ptCustomUserRoles.RessourceManager Then
                     If myCustomUserRole.specifics.Length > 0 Then
-                        If RoleDefinitions.containsName(myCustomUserRole.specifics) Then
+                        If RoleDefinitions.containsNameID(myCustomUserRole.specifics) Then
 
                             topNodes.Clear()
-                            topNodes.Add(RoleDefinitions.getRoledef(myCustomUserRole.specifics).UID)
+                            Dim teamID As Integer = -1
+                            Dim roleUID As Integer = RoleDefinitions.parseRoleNameID(myCustomUserRole.specifics, teamID)
+                            topNodes.Add(roleUID)
 
                         End If
                     End If

@@ -217,7 +217,12 @@ Public Class frmProjPortfolioAdmin
                 onlyInactive.Visible = True
                 backToInit.Visible = False
 
-                storeToDBasWell.Visible = True
+                If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                    storeToDBasWell.Visible = True
+                Else
+                    storeToDBasWell.Visible = False
+                End If
+
 
                 chkbxPermanent.Visible = False
 

@@ -74,7 +74,7 @@
                     Dim oldRoleDefinition As clsRollenDefinition = oldRoles.getRoledef(ixr)
                     Dim newRoleDefinition As clsRollenDefinition = _allRoles.getRoleDefByID(oldRoleDefinition.UID)
                     If Not IsNothing(newRoleDefinition) Then
-                        ' schon mal ok 
+                        ' schon mal ok , die beiden haben hier gleiche UID , weil die newRoleDef mit der ID der oldRoleDef geholt wird
                         If newRoleDefinition.name = oldRoleDefinition.name Then
                             ' ok 
                             moveKapas = True
