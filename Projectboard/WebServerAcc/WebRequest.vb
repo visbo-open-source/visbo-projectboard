@@ -238,11 +238,14 @@ Public Class Request
             If vpid <> "" And variantname <> "" Then
                 ' nachsehen, ob im VisboProject diese Variante zum Zeitpunkt storedAtorBefore bereits created war
                 For Each vpVar As clsVPvariant In VRScache.VPsN(projectname).Variant
+
                     If vpVar.variantName = variantname Then
-                        If vpVar.createdAt <= storedAtorBefore Then
+                        ' es muss mindestens eine VPV zu dieser Variante geben
+                        If vpVar.vpvCount > 0 Then
                             result = True
                             Exit For
                         End If
+
                     End If
                 Next
             Else
@@ -1162,8 +1165,9 @@ Public Class Request
             Try
                 Dim vpid As String = ""
 
+                Dim vp As clsVP = GETvpid(projectname, err)
                 ' VPID zu Projekt projectName holen vom WebServer/DB
-                vpid = GETvpid(projectname, err)._id
+                vpid = vp._id
 
                 If vpid <> "" Then
                     ' gewünschte Variante vom Server anfordern
