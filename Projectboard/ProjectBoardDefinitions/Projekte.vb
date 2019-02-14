@@ -24679,6 +24679,25 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' berechnet den Key für eine customUserRole , setzt sich zusammen aus userName, Kennung CustomRole und ggf specifics, 
+    ''' falls es sich um eine RessourceManager Rolle handelt 
+    ''' </summary>
+    ''' <param name="userName"></param>
+    ''' <param name="customRoleType"></param>
+    ''' <param name="specifics"></param>
+    ''' <returns></returns>
+    Public Function calcCurKey(ByVal userName As String, ByVal customRoleType As ptCustomUserRoles, ByVal specifics As String) As String
+        Dim key As String = userName.Trim & CInt(customRoleType).ToString.Trim
+        If customRoleType = ptCustomUserRoles.RessourceManager Then
+            key = key & specifics
+        End If
+
+        calcCurKey = key
+
+    End Function
+
+
+    ''' <summary>
     ''' eine Zahl wird in einen achstelligen String mit führenden Nullen gewandelt, 
     ''' damit das im Falle customTF als sortkey verwendet werden kann 
     ''' </summary>

@@ -19,10 +19,7 @@ Public Class clsCustomUserRolesWeb
 
             Dim internCurole As New clsCustomUserRole
             curole.copyTo(internCurole)
-            curoles.addCustomUserRole(internCurole.userName,
-                                      internCurole.userID,
-                                      internCurole.customUserRole,
-                                      internCurole.specifics)
+            curoles.addCustomUserRole(internCurole)
 
         Next
 

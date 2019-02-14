@@ -1525,9 +1525,13 @@ Public Module Module1
         If Not IsNothing(hproj) Then
             ' wenn customUserRole = Portfolio 
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
-                If myCustomUserRole.getAggregationRoleIDs.Length > 1 Then
-                    tmpResult = hproj.aggregateForPortfolioMgr(myCustomUserRole.getAggregationRoleIDs)
+                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                If Not IsNothing(idArray) Then
+                    If idArray.Length >= 1 Then
+                        tmpResult = hproj.aggregateForPortfolioMgr(idArray)
+                    End If
                 End If
+
             End If
         End If
 
@@ -1537,7 +1541,7 @@ Public Module Module1
 
     ''' <summary>
     ''' prüft, ob es sich um eine Aggregations-Rolle handelt, nur bei Portfolio Mgr relevant;
-    ''' in diesem Fall kann ind er Hierarchie nicht weiter runtergegangen werden
+    ''' in diesem Fall kann in der Hierarchie nicht weiter runtergegangen werden
     ''' </summary>
     ''' <param name="role"></param>
     ''' <returns></returns>
@@ -1545,9 +1549,11 @@ Public Module Module1
         Dim tmpResult As Boolean = False
 
         If Not IsNothing(role) Then
+
             If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                 ' nur dann muss mehr geprüft werden 
-                tmpResult = myCustomUserRole.getAggregationRoleIDs.Contains(role.UID)
+                Dim idArray() As Integer = myCustomUserRole.getAggregationRoleIDs
+                tmpResult = idArray.Contains(role.UID)
             End If
         End If
 
