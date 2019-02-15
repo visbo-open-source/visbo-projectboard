@@ -3348,23 +3348,34 @@ Imports System.Web
                     enableOnUpdate = False
 
                     If meModus = ptModus.massEditRessCost Then
-                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
+                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
+                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
+
                         ' jetzt aufbauen der dbCacheProjekte, names are pvnames
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
                         Call writeOnlineMassEditRessCost(projektTodoliste, showRangeLeft, showRangeRight)
 
                     ElseIf meModus = ptModus.massEditTermine Then
-                        projektTodoliste = substitutePortfolioByProjects(todoListe)
+                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
+                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
+                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
+
                         ' jetzt aufbauen der dbCacheProjekte, names are pvnames
                         Call buildCacheProjekte(projektTodoliste, namesArePvNames:=True)
 
                         Call writeOnlineMassEditTermine(projektTodoliste)
 
                     ElseIf meModus = ptModus.massEditAttribute Then
+                        ' tk 15.2.19 Portfolio Manager darf Summary-Projekte bearbeiten , um sie dann als Vorgaben speichern zu können 
+                        ' das wird in der Funktion substituteListeByPVnameIDs geregelt .. 
+                        projektTodoliste = substituteListeByPVNameIDs(todoListe)
+
                         ' jetzt aufbauen der dbCacheProjekte, names are pNames
                         Call buildCacheProjekte(todoListe, namesArePvNames:=False)
-                        Call writeOnlineMassEditAttribute(todoListe)
+
+                        Call writeOnlineMassEditAttribute(projektTodoliste)
                     Else
                         Exit Sub
                     End If
@@ -3522,12 +3533,17 @@ Imports System.Web
 
         ' check ob auch keine Summary Projects selektiert sind ...
         Dim nameCollection As New Collection
-        If Not noSummaryProjectsareSelected(nameCollection) Then
+
+        If myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
+            ' ist erlaubt 
+
+        ElseIf Not noSummaryProjectsareSelected(nameCollection) Then
+
             Exit Sub
-        Else
-            Call massEditRcTeAt(ptModus.massEditRessCost)
+
         End If
 
+        Call massEditRcTeAt(ptModus.massEditRessCost)
 
 
     End Sub
