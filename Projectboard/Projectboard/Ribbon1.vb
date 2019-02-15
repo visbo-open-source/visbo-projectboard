@@ -6136,6 +6136,8 @@ Imports System.Web
 
 
         Else
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
             Call showOutPut(outputCollection, "Importing Capacities", "")
             Call logfileSchreiben(outputCollection)
         End If

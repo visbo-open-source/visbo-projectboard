@@ -377,6 +377,7 @@ Public Class clsRollen
 
             Dim tmpStr() As String = aufzaehlung.Split(New Char() {CChar(";")})
             For Each tmpName As String In tmpStr
+                tmpName = tmpName.Trim
                 If RoleDefinitions.containsName(tmpName) Then
                     realAnzahl = realAnzahl + 1
                 End If
@@ -386,6 +387,7 @@ Public Class clsRollen
                 ReDim tmpResult(realAnzahl - 1)
                 Dim ix As Integer = 0
                 For Each tmpName As String In tmpStr
+                    tmpName = tmpName.Trim
                     If RoleDefinitions.containsName(tmpName) Then
                         tmpResult(ix) = RoleDefinitions.getRoledef(tmpName).UID
                         ix = ix + 1
