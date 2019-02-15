@@ -27,9 +27,9 @@ Public Class Request
 
     Private version As System.Version
     Private visboContentType As String = "application/json"
-    Private visboUserAgent As String = "VISBO Browser/x.x (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
-                                                    & My.Computer.Info.OSVersion & ") Client:" & visboClient & "/"
 
+    Private visboUserAgent As String = " (" & My.Computer.Info.OSFullName & ":" & My.Computer.Info.OSPlatform & ":" _
+                                                    & My.Computer.Info.OSVersion & ")"
 
 
     Private aktVCid As String = ""
@@ -87,10 +87,10 @@ Public Class Request
             If Deployment.Application.ApplicationDeployment.IsNetworkDeployed Then
                 version =
                   Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion()
-                visboUserAgent = visboUserAgent & version.ToString
+                visboUserAgent = visboClient & version.ToString & visboUserAgent
             Else
                 ' Nicht via ClickOnce installiert
-
+                visboUserAgent = visboClient & visboUserAgent
             End If
 
             Dim user As New clsUserLoginSignup

@@ -42,7 +42,7 @@
     <PublishUrl>C:\publish\VISBO Smartinfo\</PublishUrl>
     <InstallUrl>https://applications.visbo.de/VISBO%2520SmartInfo%2520REST/</InstallUrl>
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>3.0.0.39</ApplicationVersion>
+    <ApplicationVersion>3.0.0.40</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -608,7 +608,7 @@
     </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>D93B0B03D88210D9100FE97AE3F6396FBD503A53</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>05EAA44D40FA9CD0512B1A31F664ED44DBAFCCEE</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestTimestampUrl>
