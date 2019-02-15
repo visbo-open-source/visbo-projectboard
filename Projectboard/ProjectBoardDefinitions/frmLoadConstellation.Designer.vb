@@ -41,12 +41,12 @@ Partial Class frmLoadConstellation
         Me.ListBox1.Location = New System.Drawing.Point(13, 42)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.ListBox1.Size = New System.Drawing.Size(340, 180)
+        Me.ListBox1.Size = New System.Drawing.Size(441, 180)
         Me.ListBox1.TabIndex = 0
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(65, 269)
+        Me.OKButton.Location = New System.Drawing.Point(63, 271)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(80, 22)
         Me.OKButton.TabIndex = 1
@@ -55,7 +55,7 @@ Partial Class frmLoadConstellation
         '
         'Abbrechen
         '
-        Me.Abbrechen.Location = New System.Drawing.Point(204, 269)
+        Me.Abbrechen.Location = New System.Drawing.Point(269, 271)
         Me.Abbrechen.Name = "Abbrechen"
         Me.Abbrechen.Size = New System.Drawing.Size(80, 22)
         Me.Abbrechen.TabIndex = 2
@@ -80,7 +80,7 @@ Partial Class frmLoadConstellation
         '
         Me.lblStandvom.AutoSize = True
         Me.lblStandvom.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblStandvom.Location = New System.Drawing.Point(86, 19)
+        Me.lblStandvom.Location = New System.Drawing.Point(185, 19)
         Me.lblStandvom.Name = "lblStandvom"
         Me.lblStandvom.Size = New System.Drawing.Size(61, 13)
         Me.lblStandvom.TabIndex = 38
@@ -88,7 +88,7 @@ Partial Class frmLoadConstellation
         '
         'requiredDate
         '
-        Me.requiredDate.Location = New System.Drawing.Point(153, 16)
+        Me.requiredDate.Location = New System.Drawing.Point(252, 16)
         Me.requiredDate.Name = "requiredDate"
         Me.requiredDate.Size = New System.Drawing.Size(200, 20)
         Me.requiredDate.TabIndex = 39
@@ -97,12 +97,12 @@ Partial Class frmLoadConstellation
         '
         Me.loadAsSummary.AutoSize = True
         Me.loadAsSummary.Cursor = System.Windows.Forms.Cursors.Default
-        Me.loadAsSummary.Location = New System.Drawing.Point(193, 237)
+        Me.loadAsSummary.Location = New System.Drawing.Point(216, 237)
         Me.loadAsSummary.Name = "loadAsSummary"
         Me.loadAsSummary.RightToLeft = System.Windows.Forms.RightToLeft.Yes
-        Me.loadAsSummary.Size = New System.Drawing.Size(152, 17)
+        Me.loadAsSummary.Size = New System.Drawing.Size(226, 17)
         Me.loadAsSummary.TabIndex = 40
-        Me.loadAsSummary.Text = "nur Summary Projekt laden"
+        Me.loadAsSummary.Text = "Summary Projekt berechnen und anzeigen"
         Me.loadAsSummary.UseVisualStyleBackColor = True
         '
         'frmLoadConstellation
@@ -110,7 +110,7 @@ Partial Class frmLoadConstellation
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(366, 305)
+        Me.ClientSize = New System.Drawing.Size(466, 305)
         Me.Controls.Add(Me.loadAsSummary)
         Me.Controls.Add(Me.requiredDate)
         Me.Controls.Add(Me.lblStandvom)
