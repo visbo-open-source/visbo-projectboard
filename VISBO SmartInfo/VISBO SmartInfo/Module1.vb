@@ -562,6 +562,9 @@ Module Module1
 
                     If found Then
                         result = CType(allMyCustomUserRoles.Item(ix + 1), clsCustomUserRole)
+                        If result.customUserRole = ptCustomUserRoles.PortfolioManager Then
+                            Dim IdArray() As Integer = result.getAggregationRoleIDs
+                        End If
                     Else
                         ix = ix + 1
                     End If

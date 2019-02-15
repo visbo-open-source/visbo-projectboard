@@ -129,7 +129,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="todoListe"></param>
     ''' <returns></returns>
-    Public Function substitutePortfolioByProjects(ByVal todoListe As Collection,
+    Public Function substituteListeByPVNameIDs(ByVal todoListe As Collection,
                                                   Optional ByVal noNeedtoBeInShowProjekte As Boolean = False) As Collection
 
         Dim err As New clsErrorCodeMsg
@@ -143,11 +143,13 @@ Public Module awinGeneralModules
                 Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
 
                 If Not IsNothing(hproj) Then
-                    If Not hproj.projectType Then
+
+                    If hproj.projectType = ptPRPFType.project Or myCustomUserRole.customUserRole = ptCustomUserRoles.PortfolioManager Then
                         key = calcProjektKey(hproj)
                         If Not tmpCollection.Contains(key) Then
                             tmpCollection.Add(key, key)
                         End If
+
                     Else
                         ' muss ersetzt werden 
                         Try
@@ -189,7 +191,7 @@ Public Module awinGeneralModules
                                         ' es handelt sich um ein Summary Projekt, dann muss weiter ersetzt werden 
                                         Dim tmpTodoList As New Collection
                                         tmpTodoList.Add(kvp.Key, kvp.Key)
-                                        Dim teilErgebnis As Collection = substitutePortfolioByProjects(tmpTodoList, True)
+                                        Dim teilErgebnis As Collection = substituteListeByPVNameIDs(tmpTodoList, True)
 
                                         For Each pvname As String In teilErgebnis
                                             If Not tmpCollection.Contains(pvname) Then
@@ -213,7 +215,7 @@ Public Module awinGeneralModules
 
         Next
 
-        substitutePortfolioByProjects = tmpCollection
+        substituteListeByPVNameIDs = tmpCollection
     End Function
 
 

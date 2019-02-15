@@ -69,7 +69,7 @@
     ''' <param name="specifics"></param>
     Public Sub addCustomUserRole(ByVal userName As String, userID As String, ByVal customRoleType As ptCustomUserRoles, ByVal specifics As String)
 
-        Dim key As String = userName.Trim & CInt(customRoleType).ToString.Trim & specifics
+        Dim key As String = calcCurKey(userName, customRoleType, specifics)
         If _customUserRoles.ContainsKey(key) Then
             ' nichts tun, ist ja schon drin ... 
         Else
@@ -83,6 +83,17 @@
             End With
 
             _customUserRoles.Add(key, newCustomUserRole)
+        End If
+
+    End Sub
+
+    Public Sub addCustomUserRole(ByVal curole As clsCustomUserRole)
+
+        Dim key As String = calcCurKey(curole.userName, curole.customUserRole, curole.specifics)
+        If _customUserRoles.ContainsKey(key) Then
+            ' nichts tun, ist ja schon drin ... 
+        Else
+            _customUserRoles.Add(key, curole)
         End If
 
     End Sub

@@ -81,7 +81,16 @@ Public Class frmAuthentication
                 End If
 
             Catch ex As Exception
-                Throw New ArgumentException(ex.Message)
+
+                Dim errMsg As String = "Server down? bitte beenden Sie das Programm ... und starten es wieder .." & vbLf &
+                            " wenn der Fehler wieder auftritt, kontaktieren sie bitte ihren System-Administrator. "
+
+                If awinSettings.englishLanguage Then
+                    errMsg = "Server down? please exit the program ... and start again .." & vbLf &
+                            " if error popsup again, please contact your system-administrator"
+                End If
+
+                Call MsgBox(errMsg)
             End Try
 
         End If
