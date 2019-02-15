@@ -30,7 +30,7 @@ Public Module Module1
     Public noDB As Boolean = True
 
     'Name des VisboClient
-    Public visboClient As String = "VISBO Projectboard"
+    Public visboClient As String = "VISBO Projectboard / "
 
     'Cache - Infos
     Public cacheUpdateDelay As Long
