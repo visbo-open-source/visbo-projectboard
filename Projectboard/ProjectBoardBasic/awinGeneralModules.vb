@@ -4459,7 +4459,12 @@ Public Module awinGeneralModules
 
                 If CType(databaseAcc, DBAccLayer.Request).projectNameAlreadyExists(pName, "", Date.Now, err) Then
                     baseVariantProj = CType(databaseAcc, DBAccLayer.Request).retrieveOneProjectfromDB(pName, "", Date.Now, err)
-                    baseVariantStatus = baseVariantProj.Status
+                    If Not IsNothing(baseVariantProj) Then
+                        baseVariantStatus = baseVariantProj.Status
+                    Else
+                        Call MsgBox("BasisVariante kann nicht gefunden werden")
+                    End If
+
                 End If
             Else
                 baseVariantStatus = baseVariantProj.Status
