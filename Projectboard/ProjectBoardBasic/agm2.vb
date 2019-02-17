@@ -16987,35 +16987,47 @@ Public Module agm2
 
                 End If
 
-                ' tk das läuft aktuell noch auf einen Fehler bei CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
-                ' deshalb wurd das hier rausgenommen ..
+                ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
+                ' 
                 If Not IsNothing(currentOrga) And awinSettings.readCostRolesFromDB Then
 
-                    validOrganisations.addOrga(currentOrga)
+                    If currentOrga.count > 0 Then
+                        validOrganisations.addOrga(currentOrga)
+                    End If
+
 
                     ' Auslesen der Orga, die vor der currentOrga gültig war
                     ' also mit validFrom aus currentOrga lesen - 1 Tag
 
-                    Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                    'Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                    ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
+                    'Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
 
-                    Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
+                    'If Not IsNothing(beforeOrga) Then
 
-                    If Not IsNothing(beforeOrga) Then
-                        validOrganisations.addOrga(beforeOrga)
-                    End If
+                    '    If beforeOrga.count > 0 Then
+                    '        validOrganisations.addOrga(beforeOrga)
+                    '    End If
+
+                    'End If
 
 
                     ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
                     ' also mit validFrom aus currentOrga lesen +  1 Tag
 
-                    Dim validNext As Date = currentOrga.validFrom.AddDays(1)
+                    'Dim validNext As Date = currentOrga.validFrom.AddDays(1)
 
                     ' tk 15.2.19 Fehler - deshalb auskommentiert ... 
                     'Dim nextOrga As clsOrganisation =
                     'CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
 
+
                     'If Not IsNothing(nextOrga) Then
-                    '    validOrganisations.addOrga(nextOrga)
+
+                    '    If nextOrga.count > 0 Then
+                    '        validOrganisations.addOrga(nextOrga)
+                    '    End If
+
                     'End If
 
                     If awinSettings.visboDebug Then
@@ -18361,11 +18373,12 @@ Public Module agm2
 
 
             Dim err As New clsErrorCodeMsg
+            Dim ts As Date = CDate("1.1.1900")
             Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
             Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
                                                                                            CStr(settingTypes(ptSettingTypes.customfields)),
                                                                                            customFieldsName,
-                                                                                           Nothing,
+                                                                                           ts,
                                                                                            err)
             If Not result Then
                 Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & err.errorMsg)
