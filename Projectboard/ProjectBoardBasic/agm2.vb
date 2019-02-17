@@ -9376,21 +9376,22 @@ Public Module agm2
 
 
             If IsNothing(hproj) Then
+                Dim logtxt(1) As String
+                logtxt(0) = "Projekt existiert nicht ... "
+
                 If currentKdNummer = "" Then
-                    logmessage = "Projekt " & currentPName & " existiert nicht ..."
+                    logtxt(1) = currentPName
                 Else
-                    logmessage = "Projekt " & currentPName & "; " & currentKdNummer & " existiert nicht ..."
+                    logtxt(1) = currentPName & "; " & currentKdNummer
                 End If
+
+                logmessage = logtxt(0) & logtxt(1)
                 outputCollection.Add(logmessage)
 
-                Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                Call logfileSchreiben(logtxt)
 
                 ' jetzt noch im Input File markieren 
                 CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).Interior.Color = XlRgbColor.rgbRed
-                If Not IsNothing(CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).Comment) Then
-                    CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).ClearComments()
-                End If
-                CType(currentWS.Cells(firstRowOfProject, colPName), Excel.Range).AddComment(logmessage)
 
             Else
                 If hproj.hasActualValues Then
@@ -9401,15 +9402,32 @@ Public Module agm2
                     If hproj.name = currentPName Then
                         ' es wurde über den Namen gefunden 
                         If hproj.kundenNummer <> currentKdNummer And (hproj.kundenNummer <> "" And currentKdNummer <> "") Then
+
                             logmessage = "Projekt über Name gefunden, aber Projekt-Nummern passen nicht zueinander; Datei: " & currentKdNummer & "; DB: " & hproj.kundenNummer
                             outputCollection.Add(logmessage)
-                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+
+                            Dim logtxt(3) As String
+                            logtxt(0) = "Projekt über Name gefunden, aber Projekt-Nummern passen nicht zueinander"
+                            logtxt(1) = hproj.name
+                            logtxt(2) = currentKdNummer
+                            logtxt(3) = "DB: " & hproj.kundenNummer
+
+                            Call logfileSchreiben(logtxt)
+
+
                         End If
                     ElseIf hproj.kundenNummer = currentKdNummer Then
                         If hproj.name <> currentPName Then
-                            logmessage = "Projekt über Projekt-Nummer, aber Projekt-Namen passen nicht zueinander; Datei: " & currentPName & "; DB: " & hproj.name
+                            logmessage = "Projekt über Projekt-Nummer gefunden, aber Projekt-Namen passen nicht zueinander" & currentPName & "; DB: " & hproj.name
                             outputCollection.Add(logmessage)
-                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+
+                            Dim logtxt(3) As String
+                            logtxt(0) = "Projekt über Projekt-Nummer gefunden, aber Projekt-Namen passen nicht zueinander"
+                            logtxt(1) = currentKdNummer
+                            logtxt(2) = currentPName
+                            logtxt(3) = "DB: " & hproj.name
+
+                            Call logfileSchreiben(logtxt)
                         End If
 
                     End If
@@ -9441,6 +9459,13 @@ Public Module agm2
 
                         Dim currentCell As Excel.Range = CType(currentWS.Cells(iz, colRoleName), Excel.Range)
                         Dim roleNameID As String = getRCNameIDfromExcelCell(currentCell)
+                        Dim chckRoleName As String = ""
+
+                        Try
+                            chckRoleName = CStr(currentCell.Value)
+                        Catch ex As Exception
+
+                        End Try
 
                         currentCell = CType(currentWS.Cells(iz, colPhaseName), Excel.Range)
                         Dim phaseNameID As String = getPhaseNameIDfromExcelCell(currentCell)
@@ -9524,14 +9549,22 @@ Public Module agm2
 
                                 outputCollection.Add(logmessage)
 
-                                Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                                Dim logtxt(2) As String
+                                logtxt(0) = "Phase-Name existiert nicht: "
+                                logtxt(1) = hproj.name
+                                logtxt(2) = phaseName
+
+                                Call logfileSchreiben(logtxt)
+
 
                                 ' jetzt noch im Input File markieren 
                                 CType(currentWS.Cells(iz, errCol), Excel.Range).Interior.Color = XlRgbColor.rgbRed
-                                If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
-                                    CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
-                                End If
-                                CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
+                                ' tk 16.2.19 hier dürfen keine Kommentare geschrieben werden ! 
+                                ' beim nächsten Mal auslesen versucht er das als PhaseID zu interpretieren ! 
+                                'If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
+                                '    CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
+                                'End If
+                                'CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
                             End If
 
 
@@ -9539,29 +9572,41 @@ Public Module agm2
                         Else
                             ' nichts tun
                             Dim errCol As Integer
-
+                            Dim logtxt(2) As String
                             If Not phNameIDs.Contains(phaseNameID) Then
                                 atleastOneError = True
                                 Dim phaseName As String = CStr(CType(currentWS.Cells(iz, colPhaseName), Excel.Range).Value)
                                 logmessage = "Phase-Name existiert nicht: " & phaseName
+
+                                logtxt(0) = "Phase-Name existiert nicht: "
+                                logtxt(1) = currentPName
+                                logtxt(2) = phaseName
+
                                 errCol = colPhaseName
                             ElseIf Not RoleDefinitions.containsNameID(roleNameID) Then
                                 atleastOneError = True
                                 Dim roleName As String = CStr(CType(currentWS.Cells(iz, colRoleName), Excel.Range).Value)
                                 logmessage = "Rollen-Name existiert nicht: " & roleName
+
+                                logtxt(0) = "Rollen-Name existiert nicht: "
+                                logtxt(1) = currentPName
+                                logtxt(2) = roleName
+
                                 errCol = colRoleName
                             End If
 
                             outputCollection.Add(logmessage)
 
-                            Call logfileSchreiben(logmessage, "Import von Offline Ressourcen", tmpanz)
+                            Call logfileSchreiben(logtxt)
 
                             ' jetzt noch im Input File markieren 
                             CType(currentWS.Cells(iz, errCol), Excel.Range).Interior.Color = XlRgbColor.rgbRed
-                            If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
-                                CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
-                            End If
-                            CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
+                            ' tk 16.2.19 hier dürfen keine Kommentare geschrieben werden ! 
+                            ' beim nächsten Mal auslesen versucht er das als PhaseID zu interpretieren ! 
+                            'If Not IsNothing(CType(currentWS.Cells(iz, errCol), Excel.Range).Comment) Then
+                            '    CType(currentWS.Cells(iz, errCol), Excel.Range).ClearComments()
+                            'End If
+                            'CType(currentWS.Cells(iz, errCol), Excel.Range).AddComment(logmessage)
 
                         End If
 
@@ -16942,6 +16987,8 @@ Public Module agm2
 
                 End If
 
+                ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
+                ' 
                 If Not IsNothing(currentOrga) And awinSettings.readCostRolesFromDB Then
 
                     If currentOrga.count > 0 Then
@@ -16952,34 +16999,36 @@ Public Module agm2
                     ' Auslesen der Orga, die vor der currentOrga gültig war
                     ' also mit validFrom aus currentOrga lesen - 1 Tag
 
-                    Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                    'Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
+                    ' tk 17.2.19 - da mehrere Organisationen aktuell noch nicht ausgewertet werden, wird das before und nextOrga erst noch rausgenommen ... 
+                    'Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
 
-                    Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
+                    'If Not IsNothing(beforeOrga) Then
 
-                    If Not IsNothing(beforeOrga) Then
+                    '    If beforeOrga.count > 0 Then
+                    '        validOrganisations.addOrga(beforeOrga)
+                    '    End If
 
-                        If beforeOrga.count > 0 Then
-                            validOrganisations.addOrga(beforeOrga)
-                        End If
-
-                    End If
+                    'End If
 
 
                     ' Auslesen der Orga, die nach der currentOrga gültig sein  wird
                     ' also mit validFrom aus currentOrga lesen +  1 Tag
 
-                    Dim validNext As Date = currentOrga.validFrom.AddDays(1)
+                    'Dim validNext As Date = currentOrga.validFrom.AddDays(1)
 
-                    Dim nextOrga As clsOrganisation =
-                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
+                    ' tk 15.2.19 Fehler - deshalb auskommentiert ... 
+                    'Dim nextOrga As clsOrganisation =
+                    'CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
 
-                    If Not IsNothing(nextOrga) Then
 
-                        If nextOrga.count > 0 Then
-                            validOrganisations.addOrga(nextOrga)
-                        End If
+                    'If Not IsNothing(nextOrga) Then
 
-                    End If
+                    '    If nextOrga.count > 0 Then
+                    '        validOrganisations.addOrga(nextOrga)
+                    '    End If
+
+                    'End If
 
                     If awinSettings.visboDebug Then
                         Call MsgBox("Ende Lesen der Organisationen vorher-aktuell-nachher")
