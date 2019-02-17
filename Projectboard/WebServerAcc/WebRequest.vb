@@ -2047,7 +2047,7 @@ Public Class Request
 
                     newsetting = New clsVCSettingOrganisation
                     CType(newsetting, clsVCSettingOrganisation).name = name         ' customroles '
-                    CType(newsetting, clsVCSettingOrganisation).timestamp = listofOrgaWeb.validFrom.Date
+                    CType(newsetting, clsVCSettingOrganisation).timestamp = listofOrgaWeb.validFrom
                     CType(newsetting, clsVCSettingOrganisation).userId = aktUser._id
                     CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
                     CType(newsetting, clsVCSettingOrganisation).type = type
@@ -2182,10 +2182,12 @@ Public Class Request
 
                         For Each orgaSetting As clsVCSettingOrganisation In orgaSettingsListe
                             If orgaSetting.timestamp > latestOrga.timestamp Then
-                                latestOrga = orgaSetting
+                                If orgaSetting.timestamp <= validfrom Then
+                                    latestOrga = orgaSetting
+                                End If
                             End If
-
                         Next
+
                         webOrganisation = latestOrga.value
 
                     End If
