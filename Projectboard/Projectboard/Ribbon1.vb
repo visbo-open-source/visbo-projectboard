@@ -6153,11 +6153,18 @@ Imports System.Web
             End If
 
         Else
+
             If awinSettings.englishLanguage Then
                 Call MsgBox("No valid organization! Please import one first!")
             Else
                 Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
             End If
+
+
+            Dim errMsg As String = "Kapazitäten wurden nicht aktualisiert - bitte erst die Import-Dateien korrigieren ... "
+            outputCollection.Add(errMsg)
+            Call showOutPut(outputCollection, "Importing Capacities", "")
+            Call logfileSchreiben(outputCollection)
 
         End If
 

@@ -6923,8 +6923,11 @@ Public Module agm2
                     End If
                 ElseIf roleType = ptCustomUserRoles.PortfolioManager Then
                     Dim tmpStr() As String = specifics.Split(New Char() {CChar(";")})
+
                     For Each tmpName As String In tmpStr
+
                         stillOk = stillOk And RoleDefinitions.containsName(tmpName.Trim)
+
                         If RoleDefinitions.containsName(tmpName.Trim) Then
                             tmpNameUID = CStr(RoleDefinitions.getRoledef(tmpName.Trim).UID)
                             If specificsWithIDs = "" Then
@@ -9291,11 +9294,11 @@ Public Module agm2
         Dim colPName As Integer = 1
         Dim colVName As Integer = 2
         Dim colKdNr As Integer = 3
-        'Dim colType As Integer = 4
-        Dim colPhaseName As Integer = 4
-        Dim colRoleName As Integer = 5
-        Dim colSumPT As Double = 6
-        Dim colSumTe As Double = 7
+        Dim colVerantwortlich As Integer = 4
+        Dim colPhaseName As Integer = 5
+        Dim colRoleName As Integer = 6
+        Dim colSumPT As Double = 7
+        Dim colSumTe As Double = 8
 
         ' für logfile 
         Dim tmpanz As Long = 0
@@ -9303,11 +9306,12 @@ Public Module agm2
         ' bestimme die maximale Anzahl Zeilen
         'Dim lastRow As Integer = 0
 
-        With dataRange
-            firstRow = CType(.Rows.Item(2), Excel.Range).Row
-            lastRow = CType(.Rows.Item(.Rows.Count), Excel.Range).Row
-            lastColumn = CType(.Columns.Item(.Columns.Count), Excel.Range).Column
-        End With
+
+        firstRow = CType(dataRange.Rows.Item(2), Excel.Range).Row
+        'lastRow = CType(dataRange, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+        lastRow = CType(currentWS.Cells(dataRange.Rows.Count, "A"), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+        lastColumn = CType(dataRange.Columns.Item(dataRange.Columns.Count), Excel.Range).Column
+
 
 
         ' überprüfe bzw. stelle sicher, dass die Datei sortiert nach Pname, VariantName, PhaseName, RoleName ist
@@ -11171,12 +11175,13 @@ Public Module agm2
 
         Dim spalte As Integer = 2
         Dim blattname As String = "Werte in Euro"
-        Dim currentWS As Excel.Worksheet
+        Dim currentWS As Excel.Worksheet = Nothing
 
         Dim errMsg As String = ""
         Dim anzFehler As Integer = 0
 
-
+        Dim aktzeile As Integer = 1
+        Dim saveNeeded As Boolean = False
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -11225,7 +11230,7 @@ Public Module agm2
 
                                 ' jetzt wird Zeile für Zeile nachgesehen, ob das eine Basic Role ist und dann die Kapas besetzt 
 
-                                Dim aktzeile As Integer = 3
+                                aktzeile = 3
                                 Do While aktzeile <= lastRow
 
                                     Dim subRoleName As String = CStr(CType(currentWS.Cells(aktzeile, colRessource), Excel.Range).Value)
@@ -11299,11 +11304,17 @@ Public Module agm2
                                 errMsg = "File " & dateiName & ": Fehler / Error  ... " & vbLf & ex2.Message
                                 meldungen.Add(errMsg)
                                 Call logfileSchreiben(errMsg, "", anzFehler)
+
+                                If Not IsNothing(currentWS) Then
+                                    CType(currentWS.Cells(aktzeile, 1), Excel.Range).Interior.Color = XlRgbColor.rgbOrangeRed
+                                    saveNeeded = True
+                                End If
+
                             End Try
 
-                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
                         Catch ex As Exception
-                            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                            appInstance.ActiveWorkbook.Close(SaveChanges:=saveNeeded)
                         End Try
 
                     End If
@@ -16868,42 +16879,44 @@ Public Module agm2
                 Dim currentOrga As New clsOrganisation
 
                 If Not awinSettings.readCostRolesFromDB Then
-                    Dim outputCollection As New Collection
 
-                    ' Auslesen der Rollen Definitionen 
-                    Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
+                    ' tlk 15.2.19 Orga soll nur noch aus Import Orga geholt werden .. 
+                    'Dim outputCollection As New Collection
 
-                    If awinSettings.visboDebug Then
-                        Call MsgBox("readRoleDefinitions")
-                    End If
+                    '' Auslesen der Rollen Definitionen 
+                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection)
 
-                    ' Auslesen der Kosten Definitionen 
-                    Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
+                    'If awinSettings.visboDebug Then
+                    '    Call MsgBox("readRoleDefinitions")
+                    'End If
+
+                    '' Auslesen der Kosten Definitionen 
+                    'Call readCostDefinitions(wsName4, CostDefinitions, outputCollection)
 
 
-                    ' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
-                    Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
+                    '' und jetzt werden noch die Gruppen-Definitionen ausgelesen 
+                    'Call readRoleDefinitions(wsName4, RoleDefinitions, outputCollection, readingGroups:=True)
 
-                    If RoleDefinitions.Count > 0 Then
-                        ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
-                        ' jetzt kommt der Validation-Check 
+                    'If RoleDefinitions.Count > 0 Then
+                    '    ' jetzt sind die Rollen alle aufgebaut und auch die Teams definiert 
+                    '    ' jetzt kommt der Validation-Check 
 
-                        Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
-                        Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
+                    '    Dim TeamsAreNotOK As Boolean = checkTeamDefinitions(RoleDefinitions, outputCollection)
+                    '    Dim existingOverloads As Boolean = checkTeamMemberOverloads(RoleDefinitions, outputCollection)
 
-                        If outputCollection.Count > 0 Then
-                            Call showOutPut(outputCollection, "Organisations-Definition", "")
-                        End If
+                    '    If outputCollection.Count > 0 Then
+                    '        Call showOutPut(outputCollection, "Organisations-Definition", "")
+                    '    End If
 
-                    End If
+                    'End If
 
-                    ' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
-                    RoleDefinitions.buildTopNodes()
-                    With currentOrga
-                        .validFrom = StartofCalendar
-                        .allRoles = RoleDefinitions
-                        .allCosts = CostDefinitions
-                    End With
+                    '' jetzt sind die Rollen alle aus CustomizationFile aufgebaut und auch die Teams definiert 
+                    'RoleDefinitions.buildTopNodes()
+                    'With currentOrga
+                    '    .validFrom = StartofCalendar
+                    '    .allRoles = RoleDefinitions
+                    '    .allCosts = CostDefinitions
+                    'End With
 
                 Else
 
@@ -16929,7 +16942,7 @@ Public Module agm2
 
                 End If
 
-                If Not IsNothing(currentOrga) Then
+                If Not IsNothing(currentOrga) And awinSettings.readCostRolesFromDB Then
 
                     If currentOrga.count > 0 Then
                         validOrganisations.addOrga(currentOrga)
@@ -16941,8 +16954,7 @@ Public Module agm2
 
                     Dim validBefore As Date = currentOrga.validFrom.AddDays(-1)
 
-                    Dim beforeOrga As clsOrganisation =
-                    CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
+                    Dim beforeOrga As clsOrganisation = CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
 
                     If Not IsNothing(beforeOrga) Then
 
@@ -17009,6 +17021,18 @@ Public Module agm2
                     Catch ex As Exception
 
                     End Try
+
+                End If
+
+                ' jetzt kommt die Prüfung , ob die awinsettings.allianzdelroles korrekt sind ... 
+                If awinSettings.allianzI2DelRoles <> "" And awinSettings.readCostRolesFromDB Then
+                    Dim idArray() As Integer = RoleDefinitions.getIDArray(awinSettings.allianzI2DelRoles)
+                    Dim tmpstr() As String = awinSettings.allianzI2DelRoles.Split(New Char() {CChar(";")})
+                    If idArray.Length <> tmpstr.Length Then
+                        Dim errMsg As String = "Fehler bei Angabe Ist-Daten Orga-Einheiten : " & vbLf & awinSettings.allianzI2DelRoles
+                        Call MsgBox(errMsg)
+                        Throw New ArgumentException(errMsg)
+                    End If
 
                 End If
 
@@ -17197,7 +17221,7 @@ Public Module agm2
                     projectBoardSheet.Activate()
                     appInstance.EnableEvents = True
 
-                    If Not noDB Then
+                    If Not noDB And awinSettings.readCostRolesFromDB Then
 
                         ' ur: 31.08.2017: Initialisierung
                         beforeFilterConstellation = Nothing
@@ -17216,12 +17240,25 @@ Public Module agm2
                     Dim meldungen As Collection = New Collection
 
                     ' jetzt werden die Rollen besetzt 
-                    Call setUserRoles(meldungen)
+                    If awinSettings.readCostRolesFromDB Then
+                        Call setUserRoles(meldungen)
 
-                    If meldungen.Count > 0 Then
-                        Call showOutPut(meldungen, "Error: setUserRoles", "")
-                        Call logfileSchreiben(meldungen)
+                        If meldungen.Count > 0 Then
+                            Call showOutPut(meldungen, "Error: setUserRoles", "")
+                            Call logfileSchreiben(meldungen)
+                        End If
+                    Else
+                        myCustomUserRole = New clsCustomUserRole
+
+                        With myCustomUserRole
+                            .customUserRole = ptCustomUserRoles.OrgaAdmin
+                            .specifics = ""
+                            .userName = dbUsername
+                        End With
+                        ' jetzt gibt es eine currentUserRole: myCustomUserRole
+                        Call myCustomUserRole.setNonAllowances()
                     End If
+
 
                     ' Logfile wird geschlossen
                     Call logfileSchliessen()
@@ -19116,6 +19153,7 @@ Public Module agm2
 
                 Try
                     awinSettings.allianzI2DelRoles = CStr(.Range("allianzI2DelRoles").Value).Trim
+
                 Catch ex As Exception
                     awinSettings.allianzI2DelRoles = ""
                 End Try
