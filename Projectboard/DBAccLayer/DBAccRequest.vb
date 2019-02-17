@@ -1839,7 +1839,7 @@ Public Class Request
 
         Catch ex As Exception
 
-            Throw New ArgumentException("storeVCSettingsToDB: " & ex.Message)
+            'Call MsgBox("storeVCSettingsToDB: " & ex.Message)
         End Try
         storeVCSettingsToDB = result
 
@@ -1853,22 +1853,26 @@ Public Class Request
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
 
-                    If result.count <= 0 Then
+                    If Not IsNothing(result) Then
 
-                        Select Case err.errorCode
+                        If result.count <= 0 Then
 
-                            Case 200 ' success
+                            Select Case err.errorCode
+
+                                Case 200 ' success
                                      ' nothing to do
 
-                            Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                                If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
-                                End If
+                                Case 401 ' Token is expired
+                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    If loginErfolgreich Then
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomUserRoles(err)
+                                    End If
 
-                            Case Else ' all others
-                                Throw New ArgumentException(err.errorMsg)
-                        End Select
+                                Case Else ' all others
+                                    Throw New ArgumentException(err.errorMsg)
+                            End Select
+
+                        End If
 
                     End If
 
@@ -1897,23 +1901,25 @@ Public Class Request
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
 
-                    If result.count <= 0 Then
+                    If Not IsNothing(result) Then
+                        If result.count <= 0 Then
 
-                        Select Case err.errorCode
+                            Select Case err.errorCode
 
-                            Case 200 ' success
+                                Case 200 ' success
                                      ' nothing to do
 
-                            Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                                If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
-                                End If
+                                Case 401 ' Token is expired
+                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    If loginErfolgreich Then
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveOrganisationFromDB("", timestamp, refnext, err)
+                                    End If
 
-                            Case Else ' all others
-                                Throw New ArgumentException(err.errorMsg)
-                        End Select
+                                Case Else ' all others
+                                    Throw New ArgumentException(err.errorMsg)
+                            End Select
 
+                        End If
                     End If
 
                 Catch ex As Exception
@@ -1947,28 +1953,33 @@ Public Class Request
                 Try
                     result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
 
-                    If result.count <= 0 Then
+                    If Not IsNothing(result) Then
 
-                        Select Case err.errorCode
+                        If result.count <= 0 Then
 
-                            Case 200 ' success
+                            Select Case err.errorCode
+
+                                Case 200 ' success
                                      ' nothing to do
 
-                            Case 401 ' Token is expired
-                                loginErfolgreich = login(dburl, dbname, uname, pwd, err)
-                                If loginErfolgreich Then
-                                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
-                                End If
+                                Case 401 ' Token is expired
+                                    loginErfolgreich = login(dburl, dbname, uname, pwd, err)
+                                    If loginErfolgreich Then
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                                    End If
 
-                            Case Else ' all others
-                                Throw New ArgumentException(err.errorMsg)
-                        End Select
+                                Case Else ' all others
+                                    Throw New ArgumentException(err.errorMsg)
+                            End Select
+
+                        End If
 
                     End If
 
                 Catch ex As Exception
                     Throw New ArgumentException(ex.Message)
                 End Try
+
             Else
                 ' to do for direct MongoAccess
                 result = Nothing
