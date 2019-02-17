@@ -1942,16 +1942,14 @@ Public Class Request
     End Function
 
 
-    Public Function retrieveCustomFieldsFromDB(ByVal name As String,
-                                          ByVal timestamp As Date,
-                                          ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
+    Public Function retrieveCustomFieldsFromDB(ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
 
         Dim result As New clsCustomFieldDefinitions
 
         Try
             If usedWebServer Then
                 Try
-                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                    result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB(err)
 
                     If Not IsNothing(result) Then
 
@@ -1965,7 +1963,7 @@ Public Class Request
                                 Case 401 ' Token is expired
                                     loginErfolgreich = login(dburl, dbname, uname, pwd, err)
                                     If loginErfolgreich Then
-                                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                                        result = CType(DBAcc, WebServerAcc.Request).retrieveCustomFieldsFromDB(err)
                                     End If
 
                                 Case Else ' all others
