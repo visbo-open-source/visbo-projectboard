@@ -17051,7 +17051,7 @@ Public Module agm2
 
                     ' Auslesen der Custom Field Definitions aus den VCSettings über ReST-Server
                     Try
-                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
+                        customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB(err)
 
                         If IsNothing(customFieldDefinitions) Then
                             ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 

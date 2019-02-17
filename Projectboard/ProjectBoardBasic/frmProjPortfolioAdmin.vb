@@ -277,8 +277,8 @@ Public Class frmProjPortfolioAdmin
                 End If
 
 
-                .requiredDate.Visible = True
-                .lblStandvom.Visible = True
+                .requiredDate.Visible = False
+                .lblStandvom.Visible = False
 
                 .SelectionSet.Visible = True
                 .SelectionReset.Visible = True
