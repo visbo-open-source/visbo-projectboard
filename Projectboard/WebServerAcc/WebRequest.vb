@@ -2046,8 +2046,9 @@ Public Class Request
                     ' der Unique-Key für customroles besteht aus: name, type
 
                     newsetting = New clsVCSettingOrganisation
-                    CType(newsetting, clsVCSettingOrganisation).name = name         ' customroles '
-                    CType(newsetting, clsVCSettingOrganisation).timestamp = listofOrgaWeb.validFrom
+                    CType(newsetting, clsVCSettingOrganisation).name = name         ' Oranisation - ... '
+                    Dim validFrom As String = DateTimeToISODate(listofOrgaWeb.validFrom)
+                    CType(newsetting, clsVCSettingOrganisation).timestamp = validFrom
                     CType(newsetting, clsVCSettingOrganisation).userId = aktUser._id
                     CType(newsetting, clsVCSettingOrganisation).vcid = aktVCid
                     CType(newsetting, clsVCSettingOrganisation).type = type
@@ -2218,27 +2219,22 @@ Public Class Request
     ''' <summary>
     ''' liest alle CustomFields aus VCSetting über ReST-Server
     ''' </summary>
-    ''' <param name="name"></param>
-    ''' <param name="ts"></param>
     ''' <param name="err"></param>
     ''' <returns></returns>
-    Public Function retrieveCustomFieldsFromDB(ByVal name As String,
-                                         ByVal ts As Date,
-                                         ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
+    Public Function retrieveCustomFieldsFromDB(ByRef err As clsErrorCodeMsg) As clsCustomFieldDefinitions
 
         Dim result As New clsCustomFieldDefinitions
         Dim setting As Object = Nothing
         Dim settingID As String = ""
         Dim anzSetting As Integer = 0
         Dim type As String = settingTypes(ptSettingTypes.customfields)
-
-        ts = ts.ToUniversalTime
+        Dim name As String = type
 
         Dim webCustomFields As New clsCustomFieldDefinitionsWeb
         Try
 
             setting = New List(Of clsVCSettingCustomfields)
-            setting = GETOneVCsetting(aktVCid, type, name, ts, "", err, False)
+            setting = GETOneVCsetting(aktVCid, type, name, Nothing, "", err, False)
 
             If Not IsNothing(setting) Then
 
@@ -5173,7 +5169,12 @@ Public Class Request
 
         If datumUhrzeit >= Date.MinValue And datumUhrzeit <= Date.MaxValue Then
             ' DatumUhrzeit wird um 1 Sekunde erhöht, dass die 1000-stel keine Rolle spielen
-            datumUhrzeit = datumUhrzeit.AddSeconds(1.0)
+            Dim hours As Integer = datumUhrzeit.Hour
+            Dim minutes As Integer = datumUhrzeit.Minute
+            Dim seconds As Integer = datumUhrzeit.Second
+            Dim milliseconds As Integer = datumUhrzeit.Millisecond
+            datumUhrzeit = datumUhrzeit.Date
+            datumUhrzeit = datumUhrzeit.AddHours(hours).AddMinutes(minutes).AddSeconds(seconds).AddMilliseconds(0)
             ISODateandTime = datumUhrzeit.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         End If
 
