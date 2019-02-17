@@ -16931,7 +16931,10 @@ Public Module agm2
 
                 If Not IsNothing(currentOrga) Then
 
-                    validOrganisations.addOrga(currentOrga)
+                    If currentOrga.count > 0 Then
+                        validOrganisations.addOrga(currentOrga)
+                    End If
+
 
                     ' Auslesen der Orga, die vor der currentOrga gültig war
                     ' also mit validFrom aus currentOrga lesen - 1 Tag
@@ -16942,7 +16945,11 @@ Public Module agm2
                     CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validBefore, False, err)
 
                     If Not IsNothing(beforeOrga) Then
-                        validOrganisations.addOrga(beforeOrga)
+
+                        If beforeOrga.count > 0 Then
+                            validOrganisations.addOrga(beforeOrga)
+                        End If
+
                     End If
 
 
@@ -16955,7 +16962,11 @@ Public Module agm2
                     CType(databaseAcc, DBAccLayer.Request).retrieveOrganisationFromDB("", validNext, True, err)
 
                     If Not IsNothing(nextOrga) Then
-                        validOrganisations.addOrga(nextOrga)
+
+                        If nextOrga.count > 0 Then
+                            validOrganisations.addOrga(nextOrga)
+                        End If
+
                     End If
 
                     If awinSettings.visboDebug Then
@@ -16982,7 +16993,18 @@ Public Module agm2
                         customFieldDefinitions = CType(databaseAcc, DBAccLayer.Request).retrieveCustomFieldsFromDB("", Date.Now, err)
 
                         If IsNothing(customFieldDefinitions) Then
-                            'Call MsgBox(err.errorMsg)
+                            ' nochmal versuchen, denn beim Lesen werden sie dann auch in die Datenbank geschrieben ... 
+                            Try
+                                Call readCustomFieldDefinitions(wsName4)
+                            Catch ex As Exception
+
+                            End Try
+                        ElseIf customFieldDefinitions.count = 0 Then
+                            Try
+                                Call readCustomFieldDefinitions(wsName4)
+                            Catch ex As Exception
+
+                            End Try
                         End If
                     Catch ex As Exception
 
@@ -18265,11 +18287,12 @@ Public Module agm2
 
 
             Dim err As New clsErrorCodeMsg
+            Dim ts As Date = CDate("1.1.1900")
             Dim customFieldsName As String = CStr(settingTypes(ptSettingTypes.customfields))
             Dim result As Boolean = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(customFieldDefinitions,
                                                                                            CStr(settingTypes(ptSettingTypes.customfields)),
                                                                                            customFieldsName,
-                                                                                           Nothing,
+                                                                                           ts,
                                                                                            err)
             If Not result Then
                 Call MsgBox("Fehler beim Speichern der Customfields: " & err.errorCode & err.errorMsg)

@@ -6096,48 +6096,69 @@ Imports System.Web
         Dim outputCollection As New Collection
 
         Dim changedOrga As clsOrganisation = validOrganisations.getOrganisationValidAt(Date.Now)
-        RoleDefinitions = changedOrga.allRoles
-        CostDefinitions = changedOrga.allCosts
 
-        ' Einlesen der Kapas
-        If awinSettings.allianzI2DelRoles.Length > 0 Then
-            ' Allianz Externe Verträge
-            Call readMonthlyExternKapasEV(outputCollection)
-        Else
-            ' VISBO Externe Kapazitäts-Dateien 
-            Call readMonthlyExternKapas(outputCollection)
-        End If
+        If Not IsNothing(changedOrga) Then
 
-        Call readInterneAnwesenheitslisten(outputCollection)
+            If changedOrga.allRoles.Count > 0 Then
+
+                RoleDefinitions = changedOrga.allRoles
+                CostDefinitions = changedOrga.allCosts
+
+                ' Einlesen der Kapas
+                If awinSettings.allianzI2DelRoles.Length > 0 Then
+                    ' Allianz Externe Verträge
+                    Call readMonthlyExternKapasEV(outputCollection)
+                Else
+                    ' VISBO Externe Kapazitäts-Dateien 
+                    Call readMonthlyExternKapas(outputCollection)
+                End If
+
+                Call readInterneAnwesenheitslisten(outputCollection)
 
 
-        changedOrga.allRoles = RoleDefinitions
+                changedOrga.allRoles = RoleDefinitions
 
-        If outputCollection.Count = 0 Then
-            ' keine Fehler aufgetreten ... 
-            ' jetzt wird die Orga als Setting weggespeichert ... 
-            Dim err As New clsErrorCodeMsg
-            Dim result As Boolean = False
-            ' ute -> überprüfen bzw. fertigstellen ... 
-            Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & changedOrga.validFrom.ToString
-            result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
-                                                                            CStr(settingTypes(ptSettingTypes.organisation)),
-                                                                            orgaName,
-                                                                            changedOrga.validFrom,
-                                                                            err)
+                If outputCollection.Count = 0 Then
+                    ' keine Fehler aufgetreten ... 
+                    ' jetzt wird die Orga als Setting weggespeichert ... 
+                    Dim err As New clsErrorCodeMsg
+                    Dim result As Boolean = False
+                    ' ute -> überprüfen bzw. fertigstellen ... 
+                    Dim orgaName As String = ptSettingTypes.organisation.ToString & "-" & changedOrga.validFrom.ToString
+                    result = CType(databaseAcc, DBAccLayer.Request).storeVCSettingsToDB(changedOrga,
+                                                                                CStr(settingTypes(ptSettingTypes.organisation)),
+                                                                                orgaName,
+                                                                                changedOrga.validFrom,
+                                                                                err)
 
-            If result = True Then
-                Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
-                Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                    If result = True Then
+                        Call MsgBox("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...")
+                        Call logfileSchreiben("ok, Capacities in organisation, valid from " & changedOrga.validFrom.ToString & " updated ...", "", -1)
+                    Else
+                        Call MsgBox("Error when writing Organisation to Database")
+                        Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                    End If
+
+
+                Else
+                    Call showOutPut(outputCollection, "Importing Capacities", "")
+                    Call logfileSchreiben(outputCollection)
+                End If
             Else
-                Call MsgBox("Error when writing Organisation to Database")
-                Call logfileSchreiben("Error when writing Organisation to Database...", "", -1)
+                If awinSettings.englishLanguage Then
+                    Call MsgBox("No valid roles! Please import one first!")
+                Else
+                    Call MsgBox("Die gültige Organisation beinhaltet keine Rollen! ")
+                End If
             End If
 
-
         Else
-            Call showOutPut(outputCollection, "Importing Capacities", "")
-            Call logfileSchreiben(outputCollection)
+            If awinSettings.englishLanguage Then
+                Call MsgBox("No valid organization! Please import one first!")
+            Else
+                Call MsgBox("Es existiert keine gültige Organisation! Bitte zuerst Organisation importieren")
+            End If
+
         End If
 
         ' Schließen des LogFiles
